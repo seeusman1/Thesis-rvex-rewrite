@@ -90,6 +90,16 @@ package rvex_intIface_pkg is
   type rvex_3bit_array          is array (natural range <>) of rvex_3bit_type;
   type rvex_limmh_array         is array (natural range <>) of rvex_limmh_type;
   
+  -- Throughout the rvex core, std_logic 'U' values are used to indicate values
+  -- which are not valid yet. As these kinds of signals should never be used,
+  -- this is not a problem for synthesis, and helps discover undefined things
+  -- leaking into the datapaths somehow during simulation. This does however
+  -- result in metavalue spam from numeric_std. If you would like to prevent
+  -- this spam, or have some kind of synthesis tool which does not substitute
+  -- 'U' with something real automatically, you can change the value used for
+  -- undefined values to '0' here.
+  constant RVEX_UNDEF           : std_logic := 'U';
+  
   -----------------------------------------------------------------------------
   -- General purpose register file read/write ports
   -----------------------------------------------------------------------------

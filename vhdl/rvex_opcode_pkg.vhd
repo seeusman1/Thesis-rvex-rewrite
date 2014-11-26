@@ -48,6 +48,7 @@ use IEEE.std_logic_1164.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_intIface_pkg.all;
 use work.rvex_opcodeDatapath_pkg.all;
 use work.rvex_opcodeAlu_pkg.all;
 use work.rvex_opcodeBranch_pkg.all;

@@ -52,6 +52,8 @@ use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_trap_pkg.all;
+use work.rvex_opcode_pkg.all;
+use work.rvex_opcodeDatapath_pkg.all;
 
 --=============================================================================
 -- This entity contains the pipeline logic and instantiates the functional
@@ -296,17 +298,99 @@ architecture Behavioral of rvex_pipelane is
   -----------------------------------------------------------------------------
   -- Pipeline signals
   -----------------------------------------------------------------------------
+  -- Datapath state record.
+  type datapathState_type is record
+    
+    -- Control signals decoded from opcode.
+    c                           : datapathCtrlSignals_type;
+    
+    -- Register selection and read value for general purpose register read
+    -- port A.
+    src1                        : rvex_gpRegAddr_type;
+    read1                       : rvex_data_type;
+    
+    -- Register selection and read value for general purpose register read
+    -- port B.
+    src2                        : rvex_gpRegAddr_type;
+    read2                       : rvex_data_type;
+    
+    -- Register selection and read value for branch register.
+    srcBr                       : rvex_brRegAddr_type;
+    readBr                      : std_logic;
+    
+    -- Read value for link register.
+    readLink                    : rvex_address_type;
+    
+    -- Immediate values for arithmetic and branch operations. These are LIMMH
+    -- extended in the LIMM stage.
+    imm                         : rvex_data_type;
+    brOff                       : rvex_address_type;
+    
+    -- Demuxed operands. op1 and op2 go to the arithmetic units. op3 is the write
+    -- value for a memory operations, where op1 + op2 (resAdd) is the address.
+    op1                         : rvex_data_type;
+    op2                         : rvex_data_type;
+    op3                         : rvex_data_type;
+    opBr                        : std_logic;
+    
+    -- Computed branch targets, used by the branch unit.
+    brTgtLink                   : rvex_address_type;
+    brTgtOff                    : rvex_address_type;
+    
+    -- Results from the functional units.
+    resALU                      : rvex_data_type;
+    resAdd                      : rvex_address_type;
+    resMul                      : rvex_data_type;
+    resMem                      : rvex_data_type;
+    
+    -- Destination register and value for general purpose register file and link
+    -- register.
+    dest                        : rvex_gpRegAddr_type;
+    res                         : rvex_data_type;
+    
+    -- Destination register and value for branch register file.
+    destBr                      : rvex_brRegAddr_type;
+    resBr                       : std_logic;
+    
+  end record;
+  
+  -- Default/initialization value for datapath.
+  constant DATAPATH_STATE_DEFAULT : datapathState_type := (
+    c                           => DP_CTRL_NOP,
+    readBr                      => RVEX_UNDEF,
+    opBr                        => RVEX_UNDEF,
+    resBr                       => RVEX_UNDEF,
+    others                      => (others => RVEX_UNDEF)
+  );
+  
   -- State variable for the execution of a single syllable. This is used for
   -- the pipeline registers.
   type syllableState_type is record
-    banana: std_logic;
+    
+    -- PC for the bundle currently being executed.
+    PC_bundle                   : rvex_address_type;
+    
+    -- PC for the exact instruction being executed.
+    PC_lane                     : rvex_address_type;
+    
+    -- For lanes with a branch unit, this contains PC+1, i.e. the next
+    -- instruction in case no branch occurs.
+    PC_plusOne                  : rvex_address_type;
+    
+    -- Syllable, as received from instruction memory.
+    syllable                    : rvex_syllable_type;
+    
+    -- Datapath signals.
+    dp                          : datapathState_type;
+    
   end record;
   
   -- Initialization value for the state variable. This is assigned to all stage
   -- registers upon reset, and is always assigned to the input of the first
   -- stage.
   constant SYLLABLE_STATE_DEFAULT : syllableState_type := (
-    banana => '0'
+    dp                          => DATAPATH_STATE_DEFAULT,
+    others                      => (others => RVEX_UNDEF)
   );
   
   -- Array type for syllable state.
@@ -386,7 +470,7 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Drive stage outputs
     ---------------------------------------------------------------------------
-    so := s;
+    so <= s;
     
   end process;
     
@@ -397,15 +481,15 @@ begin -- architecture
   begin
     if rising_edge(clk) then
       if reset = '1' then
-        si(F_FIRST+1 to S_LAST) <= (others => SYLLABLE_STATE_DEFAULT);
+        si(S_FIRST+1 to S_LAST) <= (others => SYLLABLE_STATE_DEFAULT);
       elsif clkEn = '1' and stall = '0' then
-        si(F_FIRST+1 to S_LAST) <= si(F_FIRST to S_LAST-1);
+        si(S_FIRST+1 to S_LAST) <= so(S_FIRST to S_LAST-1);
       end if;
     end if;
   end process;
   
   -- Always drive the input of the first pipeline stage with the reset state.
-  si(F_FIRST) <= SYLLABLE_STATE_DEFAULT;
+  si(S_FIRST) <= SYLLABLE_STATE_DEFAULT;
   
   --===========================================================================
   -- Instantiate functional blocks

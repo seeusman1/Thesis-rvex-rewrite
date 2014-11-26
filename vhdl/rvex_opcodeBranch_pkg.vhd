@@ -44,7 +44,10 @@
 -- Copyright (C) 2008-2014 by TU Delft.
 
 library IEEE;
-use IEEE.STD_LOGIC_1164.all;
+use IEEE.std_logic_1164.all;
+
+library work;
+use work.rvex_intIface_pkg.all;
 
 --=============================================================================
 -- This package specifies the control signal encoding for the branch unit.
@@ -101,7 +104,7 @@ package rvex_opcodeBranch_pkg is
   
   -- Undefined value for the branch control signals.
   constant BRANCH_CTRL_UNDEF    : branchCtrlSignals_type := (
-    others                      => 'U'
+    others                      => RVEX_UNDEF
   );
   
   --===========================================================================

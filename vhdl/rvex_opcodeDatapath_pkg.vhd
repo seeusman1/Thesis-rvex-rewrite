@@ -58,81 +58,82 @@ package rvex_opcodeDatapath_pkg is
   -----------------------------------------------------------------------------
   -- The integer datapath is controlled by various control signals to support
   -- the various instruction encodings. These signals are:
-  --
+  -- 
   --  - Syllable bit 23: selects between (long) immediate and general purpose
   --    register file for operand 2.
-  --
+  -- 
   --  - stackOp: selects between the designated fields in the syllable for
   --    general purpose register file source 1 and destination addresses or
   --    register r0.1 for both. It also selects between the regular datapath
   --    for operand 2 and the branch offset field in the syllable. The latter
   --    is used to perform an addition with immediate on r0.1, designated to be
   --    the stack pointer, while an RFI or RETURN instruction is processed.
-  --
+  -- 
   --  - op1LinkReg selects between the current value of the link register and
   --    the value read from the general purpose registers for operand 1.
-  --
+  -- 
   --  - op3LinkReg selects between the current value of the link register and
   --    the value read from the general purpose registers for operand 3.
-  --
-  --  - op1NextPC overrides operand 1 with the next PC value for CALL
-  --    instructions.
-  --
+  -- 
   --  - funcSel controls which functional unit output is sent to the general
   --    purpose register file or the link register.
-  --
+  -- 
   --  - linkWE controls whether the link register should be written to or not.
-  --
+  -- 
   --  - gpRegWE controls whether the general purpose register file should be
   --    written to or not.
-  --
+  -- 
   -- The datapath is also depicted schematically below.
-  --
+  -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-  --                                     
-  -- 22..17 ---o------->|0\                                 
+  -- 
+  -- 22..17 ---o------->|0\
   --           |        |  |--------------------------------------------> dest
   --           |  R1 -->|1/
   --           |         ^
-  --           |         |                   <op1LinkReg>     <op1NextPC>
-  --           |     <stackOp>  .----------.      |                |
-  --           |         |      | Link rd. |--.   v  <op3LinkReg>  |
-  --           |         v      '----------'  o->|1\    |          v
-  -- 26..24 ---+------->|0\     .----------.  |  |  |---+---------|0\
-  --           |        |  |--->| GP. read |--+->|0/    v         |  |--> op1
-  --           |  R1 -->|1/     '----------'  '------->|1\    .-->|1/
-  --           |                                       |  |---+---------> op3
-  --           '------->|1\     .----------.  .------->|0/    |
-  --                    |  |--->| GP. read |--o     <stackOp> |
-  --  10..5 ----------->|0/     '----------'  |           |   |
-  --                     ^                    '->|0\      v   |
-  --                     |                       |  |--->|0\  |
-  --  10..2 ---x---------+---------------------->|1/     |  |-+---------> op2
-  --  limmh ---'         |                        ^   .->|1/  |
-  --     23 -------------o------------------------'   |  .----------.
-  --  23..5 ------------------------------------------o->| Br. unit |
-  --                                                     '----------'
-  --
+  --           |         |                   <op1LinkReg>
+  --           |     <stackOp>  .----------.      |
+  --           |         |      | Link rd. |--.   v  <op3LinkReg>
+  --           |         v      '----------'  o->|1\    |
+  -- 26..24 ---+------->|0\ src1.----------.  |  |  |---+---------------> op1
+  --           |        |  |--->| GP. read |--+->|0/    v
+  --           |  R1 -->|1/     '----------'  o------->|1\
+  --           |                              |        |  |-------------> op3
+  --           '------->|1\ src2.----------.  |     .->|0/
+  --                    |  |--->| GP. read |--+-----o       <stackOp>
+  --  10..5 ----------->|0/     '----------'  |     |           |
+  --                     ^                    |     '->|0\      v
+  --                     |      imm           |        |  |--->|0\
+  --  10..2 ---x---------+--------------------+------->|1/     |  |-----> op2
+  --  limmh ---'         |                    |         ^   .->|1/
+  --     23 -------------o--------------------+---------'   |
+  --  23..5 ---x---------------------------o--+-------------'
+  --  limmh ---'               brOff       |  |
+  --                                       |  |  brTgtLink  .----------.
+  --                                       v  '------------>|  Branch  |
+  --  PC_plusOne ------------------------>(+)-------------->|   unit   |
+  --                                             brTgtOff   '----------'
+  -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-  --
+  -- 
   --                    .-----.                             .----------.
-  --    op1 -------o--->|     |                 <linkWE>--->|WE        |
-  --               |    | MUL |--------------.              | Link wr. |
-  --           .---+--->|     |              | <funcSel> .->|Data      |
-  --           |   |    '-----'              |    |      |  '----------'
-  --           |   |    .-----.              |    v      |
-  --           |   '--->|     |              '-->| \     |
-  --           |        | ALU |----------------->|  |----o   
-  --    op2 ---o------->|     |              .-->| /     |
-  --                    '-----'              |           | 
+  --    op1 -------o--->|     |    resMul       <linkWE>--->|WE        |
+  --               |    | MUL |--------------. <funcSel>    | Link wr. |
+  --           .---+--->|     |              |    |      .->|Data      |
+  --           |   |    '-----'  PC_plusOne  |    v      |  '----------'
+  --           |   |    .-----.       |      '-->| \     |
+  --           |   '--->|     |       '--------->|  \    |
+  --           |        | ALU |----------------->|  |----o
+  --    op2 ---o------->|     |    resALU        |  /    |res
+  --                    '-----'              .-->| /     |
   --                         |    .------.   |           |  .----------.
-  --                         '--->|Addr  |   |           '->|Data      |
+  --                   resAdd'--->|Addr  |   |resMem     '->|Data      |
   --                              | MEM  |   |              | GP write |
   --    op3 --------------------->|DI  DO|---' <gpRegWE>--->|WE        |
   --                              '------'                  |          |
   --   dest ----------------------------------------------->|Addr      |
-  --                                                        '----------' 
-  --
+  --                                                        '----------'
+  -- 
   -----------------------------------------------------------------------------
   -- Branch/carry operand and result datapath
   -----------------------------------------------------------------------------
@@ -141,26 +142,26 @@ package rvex_opcodeDatapath_pkg is
   -- for the branch source and destination registers in the syllable, brWrite
   -- controls whether the branch register file will be written to or not. The
   -- datapath is also depicted schematically below.
-  --
+  -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-  --
-  -- 19..17 ------>|0\                                 .-----------.
-  --               |  |------------------------------->|Addr       |
-  --          .--->|1/                                 |           |
-  --          |     ^                    <brRegWE>---->|WE         |
-  --          |     |                                  |           |
-  --   4..2 --o  <brFmt>                  .----------. | Br. write |
-  --          |     |                  .->| Br. unit | |           |
-  --          |     v                  |  '----------' |           |
-  --          '--->|0\    .----------. |  .-----.      |           |
-  --               |  |-->| Br. read |-o->| ALU |----->|Data       |
-  -- 26..24 ------>|1/    '----------'    '-----'      '-----------'
-  --
+  -- 
+  -- 19..17 ------>|0\             destBr                .-----------.
+  --               |  |--------------------------------->|Addr       |
+  --          .--->|1/                                   |           |
+  --          |     ^                      <brRegWE>---->|WE         |
+  --          |     |                                    |           |
+  --   4..2 --o  <brFmt>                    .----------. | Br. write |
+  --          |     |                opBr.->| Br. unit | |           |
+  --          |     v                    |  '----------' |           |
+  --          '--->|0\ srcBr.----------. |  .-----.      |           |
+  --               |  |---->| Br. read |-o->| ALU |----->|Data       |
+  -- 26..24 ------>|1/      '----------'    '-----'resBr '-----------'
+  -- 
   -----------------------------------------------------------------------------
   -- Branch unit control signals
   -----------------------------------------------------------------------------
   -- Enumeration type for the funcSel control signal.
-  type datapathFuncSel_type is (ALU, MEM, MUL);
+  type datapathFuncSel_type is (ALU, MEM, MUL, PCP1);
   
   -- Data path control signals. Refer to the schematics and documentation above
   -- for more information.
@@ -172,7 +173,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     : std_logic;
     op1LinkReg                  : std_logic;
     op3LinkReg                  : std_logic;
-    op1NextPC                   : std_logic;
     brFmt                       : std_logic;
   end record;
   
@@ -203,7 +203,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -228,7 +227,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '1'
   );
   
@@ -249,7 +247,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -267,7 +264,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '1'
   );
   
@@ -290,7 +286,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -313,7 +308,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -333,7 +327,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -352,7 +345,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -372,7 +364,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '1',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -393,7 +384,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -404,14 +394,13 @@ package rvex_opcodeDatapath_pkg is
   -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
   --
   constant DP_CTRL_BR_LINK      : datapathCtrlSignals_type := (
-    funcSel                     => ALU,
+    funcSel                     => PCP1,
     gpRegWE                     => '0',
     linkWE                      => '1',
     brRegWE                     => '0',
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '1',
     brFmt                       => '0'
   );
   
@@ -429,7 +418,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '1',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -450,7 +438,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '1',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
@@ -468,7 +455,6 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    op1NextPC                   => '0',
     brFmt                       => '0'
   );
   
