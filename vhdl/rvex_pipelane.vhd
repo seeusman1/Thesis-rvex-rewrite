@@ -66,6 +66,9 @@ entity rvex_pipelane is
     ---------------------------------------------------------------------------
     -- Configuration
     ---------------------------------------------------------------------------
+    -- Global configuration.
+    CFG                         : rvex_generic_config_type;
+    
     -- Determines whether this pipelane has a multiplier or not.
     HAS_MUL                     : boolean;
     
@@ -105,8 +108,11 @@ entity rvex_pipelane is
     -- opcode exception.
     cfg2pl_decouple             : in  std_logic;
     
+    -- Number of coupled lane groups.
+    cfg2pl_numGroupsLog2        : in  rvex_2bit_type;
+    
     -- Run bit for this pipelane from the configuration logic.
-    cfg2pl_run                  : in  std_logic;
+    cfg2br_run                  : in  std_logic;
     
     -- Active high reconfiguration block bit. When high, reconfiguration is
     -- not permitted. This is essentially an active low idle flag.
@@ -122,10 +128,42 @@ entity rvex_pipelane is
     
     -- Active high run signal. This is the combined run signal from the
     -- external run input and the BRK flag in the debug control register.
-    cxplif2pl_run               : in  std_logic;
+    cxplif2br_run               : in  std_logic;
     
     -- Active high idle output.
     pl2cxplif_idle              : out std_logic;
+    
+    ---------------------------------------------------------------------------
+    -- Next operation routing interface
+    ---------------------------------------------------------------------------
+    -- The PC for the current instruction, as chosen by the active branch unit
+    -- within the group. The PC is distributed by the context-pipelane
+    -- interface block so all coupled pipelanes have it.
+    br2cxplif_PC                : out rvex_address_array(S_IF to S_IF);
+    cxplif2pl_PC                : in  rvex_address_array(S_IF to S_IF);
+    
+    -- Same as PC, but with the index of the lane within the group of coupled
+    -- lanes added to it, to get the exact address of the syllable which is
+    -- processed by this lane. This should only be used by the VHDL simulation.
+    cxplif2pl_lanePC            : in  rvex_address_array(S_IF to S_IF);
+    
+    -- Whether an instruction fetch is being initiated or not.
+    br2cxplif_limmValid         : out std_logic_vector(S_IF to S_IF);
+    cxplif2pl_limmValid         : in  std_logic_vector(S_IF to S_IF);
+    
+    -- Whether the next instruction is valid and should be committed or not.
+    br2cxplif_valid             : out std_logic_vector(S_IF to S_IF);
+    cxplif2pl_valid             : in  std_logic_vector(S_IF to S_IF);
+    
+    -- Whether breakpoints are valid in the next instruction or not. This is
+    -- low when returning from a debug interrupt.
+    br2cxplif_brkValid          : out std_logic_vector(S_IF to S_IF);
+    cxplif2pl_brkValid          : in  std_logic_vector(S_IF to S_IF);
+    
+    -- Whether or not pipeline stages S_IF+1 to S_BR-1 should be invalidated
+    -- due to a branch or the core stopping.
+    br2cxplif_invalUntilBR      : out std_logic_vector(S_BR to S_BR);
+    cxplif2pl_invalUntilBR      : in  std_logic_vector(S_BR to S_BR);
     
     ---------------------------------------------------------------------------
     -- Instruction memory interface
@@ -192,26 +230,14 @@ entity rvex_pipelane is
     pl2cxplif_brLinkWritePort   : out pl2cxreg_writePort_type;
     
     ---------------------------------------------------------------------------
-    -- Special context register interface
+    -- Special register interface
     ---------------------------------------------------------------------------
-    -- Next value for the PC register, only valid for master lanes with a
-    -- branch unit.
-    br2cxplif_PC                : out rvex_address_array(S_IF to S_IF);
-    
-    -- PC for the current bundle, as stored in the context PC register.
-    cxplif2pl_bundlePC          : in  rvex_address_array(S_IF+1 to S_IF+1);
-    
-    -- Exact PC for the syllable in this lane. When this PC is lower than the
-    -- bundle PC, the syllable should be invalidated. This is necessary to
-    -- support branches to PCs which are not aligned to the current amount of
-    -- lanes working together. It's also used for the simulation disassembly.
-    cxplif2pl_lanePC            : in  rvex_address_array(S_IF+1 to S_IF+1);
-    
-    -- When high, the next PC should be set to the current value of the PC
-    -- register unconditionally. This is high when the debug bus wrote to the
-    -- PC register, and after a (context) reset to ensure that execution starts
-    -- at 0.
-    cxplif2pl_overridePC        : in  std_logic_vector(S_IF+1 to S_IF+1);
+    -- The current value of the context PC register and associated override
+    -- flag. When the override flag is set, the branch unit should behave as if
+    -- there was a branch to the value in contextPC. This happens when the
+    -- debug bus writes to the PC register.
+    cxplif2br_contextPC         : in  rvex_address_array(S_IF+1 to S_IF+1);
+    cxplif2br_overridePC        : in  std_logic_vector(S_IF+1 to S_IF+1);
     
     -- Current trap handler. When the application has marked that it is not
     -- currently capable of accepting a trap, this is set to the panic handler
@@ -222,22 +248,42 @@ entity rvex_pipelane is
     -- any. We can commit this in the branch stage already, because it is
     -- guaranteed that there is no instruction valid in S_MEM while a trap is
     -- entered.
-    pl2cxplif_trapInfo          : out trap_info_array(S_BR to S_BR);
-    pl2cxplif_trapPoint         : out trap_info_array(S_BR to S_BR);
+    br2cxplif_trapInfo          : out trap_info_array(S_BR to S_BR);
+    br2cxplif_trapPoint         : out rvex_address_array(S_BR to S_BR);
+    
+    -- Debug trap information for externally handled breakpoints. When the
+    -- enable bit in the trap information record is high, the BRK bit should
+    -- be set to halt the core and the trap information should be stored for
+    -- the external debugger.
+    br2cxplif_exDbgTrapInfo     : out trap_info_array(S_BR to S_BR);
+    
+    -- Stop signal, goes high when the branch unit is executing a stop
+    -- instruction. When high, the done bit is set and the BRK bit is set to
+    -- halt the core.
+    br2cxplif_stop              : out std_logic_vector(S_BR to S_BR);
+    
+    -- Trap handler return address. This is just connected to the current value
+    -- of the trap point register.
+    cxplif2br_trapReturn        : in  rvex_address_array(S_BR to S_BR);
     
     -- Commands the register logic to reset the trap cause to 0 and restore
     -- the control registers which were saved upon trap entry.
     pl2cxplif_rfi               : out std_logic_vector(S_MEM to S_MEM);
     
-    -- When this (debug) trap is active, BRK must be set and the external debug
-    -- cause value should be set to the trap cause.
-    br2cxplif_brk               : out trap_info_array(S_BR to S_BR);
+    -- Whether debug traps are to be handled normally or by halting execution
+    -- for debugging through the external bebug bus.
+    cxplif2br_extDebug          : in  std_logic_vector(S_BR to S_BR);
+    
+    -- Current value of the debug trap enable bit in the control register.
+    cxplif2pl_debugTrapEnable   : in  std_logic_vector(S_MEM+1 to S_MEM+1);
     
     -- Current breakpoint information.
-    cxplif2brku_breakpoints     : in  cxreg2pl_breakpoint_info_type;
+    cxplif2brku_breakpoints     : in  cxreg2pl_breakpoint_info_array(S_BRK to S_BRK);
     
-    -- When high, breakpoints should be disabled for this instruction.
-    cxplif2pl_ignoreBreakpoint  : in  std_logic_vector(S_IF to S_IF);
+    -- Current value of the stepping flag in the debug control register. When
+    -- high, a step trap must be triggered if there is no other trap and
+    -- breakpoints are enabled.
+    cxplif2brku_stepping        : in  cxreg2pl_breakpoint_info_array(S_BRK to S_BRK);
     
     ---------------------------------------------------------------------------
     -- Long immediate routing interface
@@ -276,7 +322,7 @@ entity rvex_pipelane is
     
     -- Whether a trap is in the pipeline somewhere. When this is high,
     -- instruction fetching can be halted to speed things up.
-    trap2pl_trapPending         : in  trap_info_array(S_TRAP to S_TRAP);
+    trap2pl_trapPending         : in  std_logic_vector(S_TRAP to S_TRAP);
     
     -- Trap disable input. When high, any trap caused by the instruction in the
     -- respective stage should be disabled/ignored, which happens when an
@@ -333,9 +379,9 @@ architecture Behavioral of rvex_pipelane is
     op3                         : rvex_data_type;
     opBr                        : std_logic;
     
-    -- Computed branch targets, used by the branch unit.
+    -- Computed branch targets, for lanes which have a branch unit.
     brTgtLink                   : rvex_address_type;
-    brTgtOff                    : rvex_address_type;
+    brTgtRel                    : rvex_address_type;
     
     -- Results from the functional units.
     resALU                      : rvex_data_type;
@@ -367,18 +413,7 @@ architecture Behavioral of rvex_pipelane is
   -- the pipeline registers.
   type syllableState_type is record
     
-    -- PC for the bundle currently being executed.
-    PC_bundle                   : rvex_address_type;
-    
-    -- PC for the exact instruction being executed.
-    PC_lane                     : rvex_address_type;
-    
-    -- For lanes with a branch unit, this contains PC+1, i.e. the next
-    -- instruction in case no branch occurs.
-    PC_plusOne                  : rvex_address_type;
-    
-    -- Syllable, as received from instruction memory.
-    syllable                    : rvex_syllable_type;
+    -- TODO
     
     -- Datapath signals.
     dp                          : datapathState_type;
@@ -389,8 +424,7 @@ architecture Behavioral of rvex_pipelane is
   -- registers upon reset, and is always assigned to the input of the first
   -- stage.
   constant SYLLABLE_STATE_DEFAULT : syllableState_type := (
-    dp                          => DATAPATH_STATE_DEFAULT,
-    others                      => (others => RVEX_UNDEF)
+    dp                          => DATAPATH_STATE_DEFAULT
   );
   
   -- Array type for syllable state.
@@ -405,20 +439,83 @@ architecture Behavioral of rvex_pipelane is
   -----------------------------------------------------------------------------
   -- Signals between the pipeline and the functional units
   -----------------------------------------------------------------------------
-  -- TODO
+  -- Pipelane <-> branch unit interconnect. Refer to branch unit entity for
+  -- more information about the signals.
+  signal pl2br_PC_plusOne_IFP1  : rvex_address_array(S_IF+1 to S_IF+1);
+  signal pl2br_PC_plusOne_BR    : rvex_address_array(S_BR to S_BR);
+  signal pl2br_brTgtLink        : rvex_address_array(S_BR to S_BR);
+  signal pl2br_brTgtRel         : rvex_address_array(S_BR to S_BR);
+  signal pl2br_brOp             : std_logic_vector(S_BR to S_BR);
+  signal pl2br_trapPending      : std_logic_vector(S_BR to S_BR);
+  signal pl2br_trapToHandleInfo : trap_info_array(S_BR to S_BR);
+  signal pl2br_trapToHandlePoint: rvex_address_array(S_BR to S_BR);
+  signal pl2br_trapToHandleHandler:rvex_address_array(S_BR to S_BR);
+  signal br2pl_rfi              : std_logic_vector(S_BR to S_BR);
+  signal br2pl_trap             : trap_info_array(S_BR to S_BR);
+  
+  -- Pipelane <-> ALU interconnect. Refer to ALU entity for more information
+  -- about the signals.
+  signal pl2alu_opcode          : rvex_opcode_array(S_ALU to S_ALU);
+  signal pl2alu_op1             : rvex_data_array(S_ALU to S_ALU);
+  signal pl2alu_op2             : rvex_data_array(S_ALU to S_ALU);
+  signal pl2alu_opBr            : std_logic_vector(S_ALU to S_ALU);
+  signal alu2pl_resultAdd       : rvex_data_array(S_ALU+L_ALU1 to S_ALU+L_ALU1);
+  signal alu2pl_result          : rvex_data_array(S_ALU+L_ALU1+L_ALU2 to S_ALU+L_ALU1+L_ALU2);
+  signal alu2pl_resultBr        : std_logic_vector(S_ALU+L_ALU1+L_ALU2 to S_ALU+L_ALU1+L_ALU2);
+  
+  -- Pipelane <-> multiply unit interconnect. Refer to multiply unit entity for
+  -- more information about the signals.
+  signal pl2mulu_opcode         : rvex_opcode_array(S_MUL to S_MUL);
+  signal pl2mulu_op1            : rvex_data_array(S_MUL to S_MUL);
+  signal pl2mulu_op2            : rvex_data_array(S_MUL to S_MUL);
+  signal mulu2pl_result         : rvex_data_array(S_MUL+L_MUL to S_MUL+L_MUL);
+  
+  -- Pipelane <-> memory unit interconnect. Refer to memory unit entity for
+  -- more information about the signals.
+  signal pl2memu_opcode         : rvex_opcode_array(S_MEM to S_MEM);
+  signal pl2memu_opAddr         : rvex_address_array(S_MEM to S_MEM);
+  signal pl2memu_opData         : rvex_data_array(S_MEM to S_MEM);
+  signal memu2pl_result         : rvex_data_array(S_MEM+L_MEM to S_MEM+L_MEM);
+  
+  -- Pipelane <-> breakpoint unit interconnect. Refer to the breakpoint unit
+  -- entity for more information about the signals.
+  signal pl2brku_ignoreBreakpoint:std_logic_vector(S_BRK to S_BRK);
+  signal pl2brku_opcode         : rvex_opcode_array(S_BRK to S_BRK);
+  signal pl2brku_opAddr         : rvex_address_array(S_BRK to S_BRK);
+  signal pl2brku_PC_bundle      : rvex_address_array(S_BRK to S_BRK);
+  signal brku2pl_trap           : trap_info_array(S_BRK+L_BRK to S_BRK+L_BRK);
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
   
   --===========================================================================
+  -- Instantiate pipeline registers
+  --===========================================================================
+  regs: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        si(S_FIRST+1 to S_LAST) <= (others => SYLLABLE_STATE_DEFAULT);
+      elsif clkEn = '1' and stall = '0' then
+        si(S_FIRST+1 to S_LAST) <= so(S_FIRST to S_LAST-1);
+      end if;
+    end if;
+  end process;
+  
+  -- Always drive the input of the first pipeline stage with the reset state.
+  si(S_FIRST) <= SYLLABLE_STATE_DEFAULT;
+  
+  --===========================================================================
   -- Generate pipeline logic
   --===========================================================================
   comb: process (
     
+    
     -- Stage register inputs
     ------------------------
     si,
+    
     
     -- Signals from external blocks
     -------------------------------
@@ -426,10 +523,11 @@ begin -- architecture
     stall,
     
     -- Configuration and run control.
-    cfg2pl_decouple,
+    cfg2pl_decouple, cxplif2pl_irq,
     
-    -- Run bit for this pipelane from the configuration logic.
-    cfg2pl_run, cxplif2pl_irq, cxplif2pl_run,
+    -- Next operation routing interface.
+    cxplif2pl_PC, cxplif2pl_lanePC, cxplif2pl_limmValid, cxplif2pl_valid,
+    cxplif2pl_brkValid, cxplif2pl_invalUntilBR,
     
     -- Memory interface.
     imem2pl_syllable, imem2pl_exception, dmsw2pl_exception,
@@ -437,19 +535,32 @@ begin -- architecture
     -- Register file interface.
     gpreg2pl_readPortA, gpreg2pl_readPortB, cxplif2pl_brLinkReadPort,
     
-    -- Special context register interface.
-    cxplif2pl_bundlePC, cxplif2pl_lanePC, cxplif2pl_overridePC,
-    cxplif2pl_trapHandler, cxplif2pl_ignoreBreakpoint,
+    -- Special register interface.
+    cxplif2pl_trapHandler, cxplif2pl_debugTrapEnable,
     
     -- Long immediate routing interface.
     limm2pl_enable, limm2pl_data, limm2pl_error,
     
     -- Trap routing interface.
-    trap2pl_trapToHandle, trap2pl_trapPending, trap2pl_disable, trap2pl_flush
+    trap2pl_trapToHandle, trap2pl_trapPending, trap2pl_disable, trap2pl_flush,
+    
     
     -- Signals from functional units
     --------------------------------
-    -- TODO
+    -- Signals from the branch unit.
+    br2pl_rfi, br2pl_trap,
+    
+    -- Signals from the ALU.
+    alu2pl_resultAdd, alu2pl_result, alu2pl_resultBr,
+    
+    -- Signals from the multiplier.
+    mulu2pl_result,
+    
+    -- Signals from the memory unit.
+    memu2pl_result,
+    
+    -- Signals from the breakpoint unit.
+    brku2pl_trap
     
   ) is
     
@@ -475,26 +586,227 @@ begin -- architecture
   end process;
     
   --===========================================================================
-  -- Instantiate pipeline registers
-  --===========================================================================
-  regs: process (clk) is
-  begin
-    if rising_edge(clk) then
-      if reset = '1' then
-        si(S_FIRST+1 to S_LAST) <= (others => SYLLABLE_STATE_DEFAULT);
-      elsif clkEn = '1' and stall = '0' then
-        si(S_FIRST+1 to S_LAST) <= so(S_FIRST to S_LAST-1);
-      end if;
-    end if;
-  end process;
-  
-  -- Always drive the input of the first pipeline stage with the reset state.
-  si(S_FIRST) <= SYLLABLE_STATE_DEFAULT;
-  
-  --===========================================================================
   -- Instantiate functional blocks
   --===========================================================================
-  -- TODO
+  -- Instantiate the branch unit, if there should be one.
+  br_gen: if HAS_BR generate
+    br: entity work.rvex_br
+      generic map (
+        CFG                             => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+        
+        -- Next operation outputs to IMEM.
+        br2imem_PC(S_IF)                => br2imem_PC(S_IF),
+        br2imem_fetch(S_IF)             => br2imem_fetch(S_IF),
+        br2imem_cancel(S_IF+L_IF)       => br2imem_cancel(S_IF+L_IF),
+        
+        -- Next operation outputs to coupled pipelanes and the context
+        -- registers.
+        br2cxplif_PC(S_IF)              => br2cxplif_PC(S_IF),
+        br2cxplif_limmValid(S_IF)       => br2cxplif_limmValid(S_IF),
+        br2cxplif_valid(S_IF)           => br2cxplif_valid(S_IF),
+        br2cxplif_brkValid(S_IF)        => br2cxplif_brkValid(S_IF),
+        br2cxplif_invalUntilBR(S_BR)    => br2cxplif_invalUntilBR(S_BR),
+        
+        -- Run control signals.
+        cfg2br_run                      => cfg2br_run,
+        cxplif2br_run                   => cxplif2br_run,
+        
+        -- Branch control signals from and to pipelane.
+        pl2br_PC_plusOne_IFP1(S_IF+1)   => pl2br_PC_plusOne_IFP1(S_IF+1),
+        pl2br_PC_plusOne_BR(S_BR)       => pl2br_PC_plusOne_BR(S_BR),
+        pl2br_brTgtLink(S_BR)           => pl2br_brTgtLink(S_BR),
+        pl2br_brTgtRel(S_BR)            => pl2br_brTgtRel(S_BR),
+        pl2br_brOp(S_BR)                => pl2br_brOp(S_BR),
+        pl2br_trapPending(S_BR)         => pl2br_trapPending(S_BR),
+        pl2br_trapToHandleInfo(S_BR)    => pl2br_trapToHandleInfo(S_BR),
+        pl2br_trapToHandlePoint(S_BR)   => pl2br_trapToHandlePoint(S_BR),
+        pl2br_trapToHandleHandler(S_BR) => pl2br_trapToHandleHandler(S_BR),
+        br2pl_rfi(S_BR)                 => br2pl_rfi(S_BR),
+        br2pl_trap(S_BR)                => br2pl_trap(S_BR),
+        
+        -- Branch control signals from and to context registers.
+        cxplif2br_contextPC(S_IF+1)     => cxplif2br_contextPC(S_IF+1),
+        cxplif2br_overridePC(S_IF+1)    => cxplif2br_overridePC(S_IF+1),
+        br2cxplif_trapInfo(S_BR)        => br2cxplif_trapInfo(S_BR),
+        br2cxplif_trapPoint(S_BR)       => br2cxplif_trapPoint(S_BR),
+        br2cxplif_exDbgTrapInfo(S_BR)   => br2cxplif_exDbgTrapInfo(S_BR),
+        br2cxplif_stop(S_BR)            => br2cxplif_stop(S_BR),
+        cxplif2br_trapReturn(S_BR)      => cxplif2br_trapReturn(S_BR),
+        cxplif2br_extDebug(S_BR)        => cxplif2br_extDebug(S_BR)
+        
+      );
+  end generate;
+  no_br_gen: if not HAS_BR generate
+    
+    -- Set the branch unit outputs which are going to this pipelane to
+    -- undefined.
+    br2pl_rfi(S_BR) <= RVEX_UNDEF;
+    br2pl_trap(S_BR) <= TRAP_INFO_NONE;
+    
+    -- Set branch unit outputs going to the instruction memory to hi-Z, so they
+    -- can be easily merged with the signals from the other pipelanes in the
+    -- group.
+    br2imem_PC(S_IF)                    <= (others => 'Z');
+    br2imem_fetch(S_IF)                 <= 'Z';
+    br2imem_cancel(S_IF+L_IF)           <= 'Z';
+    
+    -- Set the signals going to the context-pipelane interface to undefined.
+    br2cxplif_PC(S_IF)                  <= (others => RVEX_UNDEF);
+    br2cxplif_limmValid(S_IF)           <= RVEX_UNDEF;
+    br2cxplif_valid(S_IF)               <= RVEX_UNDEF;
+    br2cxplif_brkValid(S_IF)            <= RVEX_UNDEF;
+    br2cxplif_invalUntilBR(S_BR)        <= RVEX_UNDEF;
+    br2cxplif_trapInfo(S_BR)            <= TRAP_INFO_NONE;
+    br2cxplif_trapPoint(S_BR)           <= (others => RVEX_UNDEF);
+    br2cxplif_exDbgTrapInfo(S_BR)       <= TRAP_INFO_NONE;
+    br2cxplif_stop(S_BR)                <= RVEX_UNDEF;
+    
+  end generate;
+  
+  -- Instantiate the ALU.
+  alu: entity work.rvex_alu
+    generic map (
+      CFG                               => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                             => reset,
+      clk                               => clk,
+      clkEn                             => clkEn,
+      stall                             => stall,
+      
+      -- Operand and control inputs.
+      pl2alu_opcode(S_ALU)              => pl2alu_opcode(S_ALU),
+      pl2alu_op1(S_ALU)                 => pl2alu_op1(S_ALU),
+      pl2alu_op2(S_ALU)                 => pl2alu_op2(S_ALU),
+      pl2alu_opBr(S_ALU)                => pl2alu_opBr(S_ALU),
+      
+      -- Outputs.
+      alu2pl_resultAdd(S_ALU+L_ALU1)    => alu2pl_resultAdd(S_ALU+L_ALU1),
+      alu2pl_result(S_ALU+L_ALU)        => alu2pl_result(S_ALU+L_ALU),
+      alu2pl_resultBr(S_ALU+L_ALU)      => alu2pl_resultBr(S_ALU+L_ALU)
+      
+    );
+  
+  -- Instantiate the multiplier, if there should be one.
+  mulu_gen: if HAS_MUL generate
+    mulu: entity work.rvex_mulu
+      generic map (
+        CFG                             => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+        
+        -- Operand and control inputs.
+        pl2mulu_opcode(S_MUL)           => pl2mulu_opcode(S_MUL),
+        pl2mulu_op1(S_MUL)              => pl2mulu_op1(S_MUL),
+        pl2mulu_op2(S_MUL)              => pl2mulu_op2(S_MUL),
+        
+        -- Outputs.
+        mulu2pl_result(S_MUL+L_MUL)     => mulu2pl_result(S_MUL+L_MUL)
+        
+      );
+  end generate;
+  no_mulu_gen: if not HAS_MUL generate
+    
+    -- Set multiplier unit outputs to undefined.
+    mulu2pl_result(S_MUL+L_MUL) <= (others => RVEX_UNDEF);
+    
+  end generate;
+  
+  -- Instantiate the memory unit, if there should be one.
+  memu_gen: if HAS_MEM generate
+    memu: entity work.rvex_memu
+      generic map (
+        CFG                             => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+        
+        -- Pipelane interface.
+        pl2memu_opcode(S_MEM)           => pl2memu_opcode(S_MEM),
+        pl2memu_opAddr(S_MEM)           => pl2memu_opAddr(S_MEM),
+        pl2memu_opData(S_MEM)           => pl2memu_opData(S_MEM),
+        memu2pl_result(S_MEM+L_MEM)     => memu2pl_result(S_MEM+L_MEM),
+        
+        -- Memory interface.
+        memu2dmsw_addr(S_MEM)           => memu2dmsw_addr(S_MEM),
+        memu2dmsw_writeData(S_MEM)      => memu2dmsw_writeData(S_MEM),
+        memu2dmsw_writeMask(S_MEM)      => memu2dmsw_writeMask(S_MEM),
+        memu2dmsw_writeEnable(S_MEM)    => memu2dmsw_writeEnable(S_MEM),
+        memu2dmsw_readEnable(S_MEM)     => memu2dmsw_readEnable(S_MEM),
+        dmsw2memu_readData(S_MEM+L_MEM) => dmsw2memu_readData(S_MEM+L_MEM)
+        
+      );
+  end generate;
+  no_memu_gen: if not HAS_MEM generate
+    
+    -- Set the memory unit outputs going to this pipelane to undefined.
+    memu2pl_result(S_MEM+L_MEM)   <= (others => RVEX_UNDEF);
+    
+    -- Set the outputs going to the rest of the processor to hi-Z, so they can
+    -- be easily merged with the signals coming from the pipelane in the group
+    -- which does have a memory unit.
+    memu2dmsw_addr(S_MEM)         <= (others => 'Z');
+    memu2dmsw_writeData(S_MEM)    <= (others => 'Z');
+    memu2dmsw_writeMask(S_MEM)    <= (others => 'Z');
+    memu2dmsw_writeEnable(S_MEM)  <= 'Z';
+    memu2dmsw_readEnable(S_MEM)   <= 'Z';
+    
+  end generate;
+  
+  -- Instantiate breakpoint unit, if there should be one.
+  brku_gen: if HAS_BRK generate
+    brku: entity work.rvex_brku
+      generic map (
+        CFG                             => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+        
+        -- Pipelane interface
+        pl2brku_ignoreBreakpoint(S_BRK) => pl2brku_ignoreBreakpoint(S_BRK),
+        pl2brku_opcode(S_BRK)           => pl2brku_opcode(S_BRK),
+        pl2brku_opAddr(S_BRK)           => pl2brku_opAddr(S_BRK),
+        pl2brku_PC_bundle(S_BRK)        => pl2brku_PC_bundle(S_BRK),
+        brku2pl_trap(S_BRK+L_BRK)       => brku2pl_trap(S_BRK+L_BRK),
+        
+        -- Breakpoint information
+        cxplif2brku_breakpoints(S_BRK)  => cxplif2brku_breakpoints(S_BRK),
+        cxplif2brku_stepping(S_BRK)     => cxplif2brku_stepping(S_BRK)
+        
+      );
+  end generate;
+  no_brku_gen: if not HAS_BRK generate
+    
+    -- Drive the trap output with the no-trap signal.
+    brku2pl_trap(S_BRK+L_BRK) <= TRAP_INFO_NONE;
+    
+  end generate;
   
 end Behavioral;
 

@@ -121,7 +121,7 @@ package rvex_pipeline_pkg is
   -- PC+1 block stage. This is a combinatorial block built into
   -- rvex_pipelane.vhd, so there is no latency.
   -- Requirements:
-  --  - S_PCP1 >= 1
+  --  - S_PCP1 = 1 or 2
   constant S_PCP1   : natural := 1;
   
   -- Long immediate forwarding block stage.
@@ -200,13 +200,14 @@ package rvex_pipeline_pkg is
   -- register interface is hardcoded to 1.
   -- Requirements:
   --  - S_MEM >= max(S_RD + L_RD, S_ALU + L_ALU1)
+  --  - L_MEM >= 1 (because of the control registers)
   constant S_MEM    : natural := 4;
   constant L_MEM    : natural := 1;
   
   -- Breakpoint unit stage and latency.
   -- Requirements:
   --  - S_BRK >= max(S_RD + L_RD, S_ALU + L_ALU1)
-  --  - 0 <= L_BRK <= 1
+  --  - L_BRK = 0
   constant S_BRK    : natural := 4;
   constant L_BRK    : natural := 0;
   

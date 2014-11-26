@@ -70,16 +70,19 @@ use work.rvex_trap_pkg.all;
   --  imem <----+-+->| |br  |alu| |mulu  |memu  |brku  |<-+>||fwd|| |
   --            | |  |  - ' '---'  - - '  - - '  - - ' |  | |'---'| |
   --            | |  '================================='  | '-----' |
-  --            | |    ^             ^       ^      ^     |         |
-  --            | |    |             |       |      |     |         |
-  --            | |    v             v       v      v     |         |
-  --            | | .------.       .====.  .----. .----.  |         |
-  --          .-+-+>|cxplif|       |dmsw|  |trap| |limm|  |         |
-  --          | | | '------'       '===='  '----' '----'  |         |
-  --          | | |    ^            ^  ^                  |         |
-  --          | | |    |            |  '------------------+---------+--> dmem
-  -- rctrl <-<  | '----+------------+---------------------'         |
-  --          | |      v            v                               |
+  --            | |    ^             ^       ^      ^     |    ^    |
+  --            | |    |             |       |      |     |    |    |
+  --            | |    v             v       v      v     |    |    |
+  --            | | .------.     .====.    .----. .----.  |    |    |
+  --          .-+-+>|cxplif|     |dmsw|    |trap| |limm|  |    |    |
+  --          | | | '------'     '===='    '----' '----'  |    |    |
+  --          | | |    ^          ^  ^                    |    |    |
+  --          | | |    |          |  '--------------------+----+----+--> dmem
+  --          | | |    |          |                       |    |    |
+  -- rctrl <-<  | '----+----------+-----------------------'    |    |
+  --          | |      |          |                            |    |
+  --          | |      |          |  .-------------------------'    |
+  --          | |      v          v  v                              |
   --          | |   .=====.      .----.      .-----.      .-----.   |
   --          | |   |cxreg|<---->|creg|<---->|gbreg|<---->|     |<--+--> mem
   --          '-+-->|.---.|      '----'      '-----'      | cfg |   |
@@ -101,7 +104,7 @@ use work.rvex_trap_pkg.all;
   --  - br     = BRanch unit                @ rvex_branch.vhd
   --  - alu    = Arith. Logic Unit          @ rvex_alu.vhd
   --  - memu   = MEMory Unit                @ rvex_memu.vhd
-  --  - mulu   = MULtiply Unit              @ rvex_mul.vhd
+  --  - mulu   = MULtiply Unit              @ rvex_mulu.vhd
   --  - brku   = BReaKpoint Unit            @ rvex_breakpoint.vhd
   --  - gpreg  = General Purpose REGisters  @ rvex_gpreg.vhd
   --  - fwd    = ForWarDing logic           @ rvex_forward.vhd
@@ -433,6 +436,9 @@ architecture Behavioral of rvex is
   -- group.
   signal cfg2any_firstGroup           : rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
+  -- log2 of the number of coupled pipelane groups for each pipelane group.
+  signal cfg2any_numGroupsLog2        : rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  
   -- Matrix specifying connections between context and lane group. Indexing is
   -- done using i = laneGroup*numContexts + context.
   signal cfg2any_contextMap           : std_logic_vector(2**CFG.numLaneGroupsLog2*2**CFG.numContextsLog2-1 downto 0);
@@ -483,10 +489,11 @@ architecture Behavioral of rvex is
   signal cxplif2cxreg_trapInfo        : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_trapPoint       : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_rfi             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal cxplif2cxreg_brk             : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_setBrk          : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_brk             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_resume          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_resumed         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_breakpoints     : cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cxreg2cxplif_ignoreBreakpoint: std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -547,6 +554,7 @@ begin -- architecture
       cfg2any_coupled             => cfg2any_coupled,
       cfg2any_decouple            => cfg2any_decouple,
       cfg2any_firstGroup          => cfg2any_firstGroup,
+      cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
       cfg2any_contextMap          => cfg2any_contextMap,
       cfg2any_lastGroupForCtxt    => cfg2any_lastGroupForCtxt,
       
@@ -599,10 +607,11 @@ begin -- architecture
       cxplif2cxreg_trapInfo       => cxplif2cxreg_trapInfo,
       cxplif2cxreg_trapPoint      => cxplif2cxreg_trapPoint,
       cxplif2cxreg_rfi            => cxplif2cxreg_rfi,
-      cxplif2cxreg_brk            => cxplif2cxreg_brk,
+      cxplif2cxreg_setBrk         => cxplif2cxreg_setBrk,
       cxreg2cxplif_brk            => cxreg2cxplif_brk,
-      cxreg2cxplif_breakpoints    => cxreg2cxplif_breakpoints,
-      cxreg2cxplif_ignoreBreakpoint=>cxreg2cxplif_ignoreBreakpoint
+      cxreg2cxplif_resume         => cxreg2cxplif_resume,
+      cxplif2cxreg_resumed        => cxplif2cxreg_resumed,
+      cxreg2cxplif_breakpoints    => cxreg2cxplif_breakpoints
       
     );
   

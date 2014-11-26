@@ -38,16 +38,16 @@ use IEEE.std_logic_1164.all;
 --
 -- Entity TODO list:
 -- [.] rv     = RVex processor             @ rvex.vhd
--- [x] pls    = PipeLaneS                  @ rvex_pipelanes.vhd
+-- [?] pls    = PipeLaneS                  @ rvex_pipelanes.vhd
 -- [.] pl     = PipeLane                   @ rvex_pipelane.vhd
--- [ ] br     = BRanch unit                @ rvex_branch.vhd
--- [?] alu    = Arith. Logic Unit          @ rvex_alu.vhd
--- [ ] memu   = MEMory Unit                @ rvex_memu.vhd
--- [ ] mulu   = MULtiply Unit              @ rvex_mul.vhd
--- [ ] brku   = BReaKpoint Unit            @ rvex_breakpoint.vhd
+-- [.] br     = BRanch unit                @ rvex_branch.vhd
+-- [x] alu    = Arith. Logic Unit          @ rvex_alu.vhd
+-- [.] memu   = MEMory Unit                @ rvex_memu.vhd
+-- [.] mulu   = MULtiply Unit              @ rvex_mul.vhd
+-- [.] brku   = BReaKpoint Unit            @ rvex_breakpoint.vhd
 -- [ ] gpreg  = General Purpose REGisters  @ rvex_gpreg.vhd
 -- [?] fwd    = ForWarDing logic           @ rvex_forward.vhd
--- [.] cxplif = ConteXt Register InterFace @ rvex_contextPipelaneIFace.vhd
+-- [?] cxplif = ConteXt Register InterFace @ rvex_contextPipelaneIFace.vhd
 -- [.] dmsw   = Data Memory SWitch         @ rvex_dmemSwitch.vhd
 -- [.] limm   = Long IMMediate routing     @ rvex_limmRouting.vhd
 -- [.] trap   = TRAP routing               @ rvex_trapRouting.vhd

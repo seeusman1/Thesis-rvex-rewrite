@@ -155,13 +155,20 @@ entity rvex_contextPipelaneIFace is
     
     -- When this (debug) trap is active, BRK must be set and the external debug
     -- cause value should be set to the trap cause.
-    br2cxplif_brk               : in  trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+    br2cxplif_setBrk            : in  trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- This is set by the debug bus in the same cycle that the BRK bit is
+    -- cleared. While high, breakpoints should be ignored for the instruction
+    -- currently being fetched.
+    cxplif2br_resume            : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- This should be driven high by the pipelane when an instruction is
+    -- fetched and will be executed. This clears the resume bit, so following
+    -- instructions have breakpoints enabled again.
+    br2cxplif_resumed           : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
     -- Current breakpoint information.
     cxplif2brku_breakpoints     : out cxreg2pl_breakpoint_info_array(2**CFG.numLanesLog2-1 downto 0);
-    
-    -- When high, breakpoints should be disabled for this instruction.
-    cxplif2pl_ignoreBreakpoint  : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Run control interface
@@ -215,16 +222,23 @@ entity rvex_contextPipelaneIFace is
     
     -- When this (debug) trap is active, BRK must be set and the external debug
     -- cause value should be set to the trap cause.
-    cxplif2cxreg_brk            : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_setBrk         : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
     
     -- Current value of the BRK bit in the debug control register.
     cxreg2cxplif_brk            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- Current breakpoint information for each context.
-    cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0);
+    -- This is set by the debug bus in the same cycle that the BRK bit is
+    -- cleared. While high, breakpoints should be ignored for the instruction
+    -- currently being fetched.
+    cxreg2cxplif_resume         : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- When high, breakpoints should be disabled for this instruction.
-    cxreg2cxplif_ignoreBreakpoint: in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0)
+    -- This should be driven high by the pipelane when an instruction is
+    -- fetched and will be executed. This clears the resume bit, so following
+    -- instructions have breakpoints enabled again.
+    cxplif2cxreg_resumed        : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Current breakpoint information for each context.
+    cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0)
     
   );
 end rvex_contextPipelaneIFace;

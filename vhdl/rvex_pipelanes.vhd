@@ -103,6 +103,9 @@ entity rvex_pipelanes is
     -- group.
     cfg2any_firstGroup          : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
+    -- log2 of the number of coupled pipelane groups for each pipelane group.
+    cfg2any_numGroupsLog2       : in  rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
     -- Matrix specifying connections between context and lane group. Indexing is
     -- done using i = laneGroup*numContexts + context.
     cfg2any_contextMap          : in  std_logic_vector(2**CFG.numLaneGroupsLog2*2**CFG.numContextsLog2-1 downto 0);
@@ -238,16 +241,19 @@ entity rvex_pipelanes is
     
     -- When this (debug) trap is active, BRK must be set and the external debug
     -- cause value should be set to the trap cause.
-    cxplif2cxreg_brk            : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_setBrk         : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
     
     -- Current value of the BRK bit in the debug control register.
     cxreg2cxplif_brk            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- Current breakpoint information for each context.
-    cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0);
+    -- Current value of the resume bit in the debug control register.
+    cxreg2cxplif_resume         : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- When high, breakpoints should be disabled for this instruction.
-    cxreg2cxplif_ignoreBreakpoint: in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0)
+    -- When this is set, the resume bit should be cleared.
+    cxplif2cxreg_resumed        : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Current breakpoint information for each context.
+    cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0)
     
   );
 end rvex_pipelanes;
@@ -271,9 +277,10 @@ architecture Behavioral of rvex_pipelanes is
   signal pl2cxplif_trapInfo         : trap_info_array   (2**CFG.numLanesLog2-1 downto 0);
   signal pl2cxplif_trapPoint        : trap_info_array   (2**CFG.numLanesLog2-1 downto 0);
   signal pl2cxplif_rfi              : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal br2cxplif_brk              : trap_info_array   (2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_setBrk           : trap_info_array   (2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2br_resume           : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_resumed          : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2brku_breakpoints    : cxreg2pl_breakpoint_info_array(2**CFG.numLanesLog2-1 downto 0);
-  signal cxplif2pl_ignoreBreakpoint : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
   
   -- Data memory switch <-> pipelane interconnect signals.
   signal memu2dmsw_addr             : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -333,8 +340,8 @@ begin -- architecture
     constant mem: boolean := (laneIndexRev = 1) or (LANES_PER_GROUP = 1);
     
     -- Whether lane should have a breakpoint unit. We instantiate a breakpoint
-    -- unit for each lane which has a memory unit if breakpoints are enabled.
-    constant brk: boolean := mem and (CFG.numBreakpoints > 0);
+    -- unit for each lane which has a memory unit.
+    constant brk: boolean := mem;
     
     -- Whether lane should have a branch unit. Branches should always be in the
     -- last syllable of a generic binary bundle, so the last lane within a
@@ -345,6 +352,9 @@ begin -- architecture
     
     lane_n: entity work.rvex_pipelane
       generic map (
+        
+        -- Global configuration.
+        CFG                             => CFG,
         
         -- Lane configuration.
         HAS_MUL                         => mul,
@@ -363,6 +373,7 @@ begin -- architecture
         
         -- Configuration and run control.
         cfg2pl_decouple                 => cfg2any_decouple(laneGroup),
+        cfg2pl_numGroupsLog2            => cfg2any_numGroupsLog2(laneGroup),
         cfg2pl_run                      => cfg2pl_run(laneGroup),
         pl2cfg_blockReconfig            => pl2cfg_blockReconfig(lane),
         cxplif2pl_irq(S_MEM+1)          => cxplif2pl_irq(lane),
@@ -404,9 +415,10 @@ begin -- architecture
         pl2cxplif_trapInfo(S_BR)        => pl2cxplif_trapInfo(lane),
         pl2cxplif_trapPoint(S_BR)       => pl2cxplif_trapPoint(lane),
         pl2cxplif_rfi(S_MEM)            => pl2cxplif_rfi(lane),
-        br2cxplif_brk(S_BR)             => br2cxplif_brk(lane),
+        br2cxplif_setBrk(S_BR)          => br2cxplif_setBrk(lane),
+        cxplif2br_resume(S_IF)          => cxplif2br_resume(lane),
+        br2cxplif_resumed(S_IF)         => br2cxplif_resumed(lane),
         cxplif2brku_breakpoints         => cxplif2brku_breakpoints(lane),
-        cxplif2pl_ignoreBreakpoint(S_IF)=> cxplif2pl_ignoreBreakpoint(lane),
         
         -- Long immediate routing interface.
         pl2limm_valid(S_LIMM)           => pl2limm_valid(lane),
@@ -463,9 +475,10 @@ begin -- architecture
       pl2cxplif_trapInfo                => pl2cxplif_trapInfo,
       pl2cxplif_trapPoint               => pl2cxplif_trapPoint,
       pl2cxplif_rfi                     => pl2cxplif_rfi,
-      br2cxplif_brk                     => br2cxplif_brk,
+      br2cxplif_setBrk                  => br2cxplif_setBrk,
+      cxplif2br_resume                  => cxplif2br_resume,
+      br2cxplif_resumed                 => br2cxplif_resumed,
       cxplif2brku_breakpoints           => cxplif2brku_breakpoints,
-      cxplif2pl_ignoreBreakpoint        => cxplif2pl_ignoreBreakpoint,
       
       -- Run control interface.
       rctrl2cxplif_irq                  => rctrl2cxplif_irq,
@@ -483,10 +496,11 @@ begin -- architecture
       cxplif2cxreg_trapInfo             => cxplif2cxreg_trapInfo,
       cxplif2cxreg_trapPoint            => cxplif2cxreg_trapPoint,
       cxplif2cxreg_rfi                  => cxplif2cxreg_rfi,
-      cxplif2cxreg_brk                  => cxplif2cxreg_brk,
+      cxplif2cxreg_setBrk               => cxplif2cxreg_setBrk,
       cxreg2cxplif_brk                  => cxreg2cxplif_brk,
-      cxreg2cxplif_breakpoints          => cxreg2cxplif_breakpoints,
-      cxreg2cxplif_ignoreBreakpoint     => cxreg2cxplif_ignoreBreakpoint
+      cxreg2cxplif_resume               => cxreg2cxplif_resume,
+      cxplif2cxreg_resumed              => cxplif2cxreg_resumed,
+      cxreg2cxplif_breakpoints          => cxreg2cxplif_breakpoints
       
     );
   
