@@ -480,6 +480,7 @@ architecture Behavioral of rvex_pipelane is
   signal pl2memu_opcode         : rvex_opcode_array(S_MEM to S_MEM);
   signal pl2memu_opAddr         : rvex_address_array(S_MEM to S_MEM);
   signal pl2memu_opData         : rvex_data_array(S_MEM to S_MEM);
+  signal memu2pl_trap           : rvex_trap_array(S_MEM to S_MEM);
   signal memu2pl_result         : rvex_data_array(S_MEM+L_MEM to S_MEM+L_MEM);
   
   -- Pipelane <-> breakpoint unit interconnect. Refer to the breakpoint unit
@@ -753,6 +754,7 @@ begin -- architecture
         pl2memu_opcode(S_MEM)           => pl2memu_opcode(S_MEM),
         pl2memu_opAddr(S_MEM)           => pl2memu_opAddr(S_MEM),
         pl2memu_opData(S_MEM)           => pl2memu_opData(S_MEM),
+        memu2pl_trap(S_MEM)             => memu2pl_trap(S_MEM),
         memu2pl_result(S_MEM+L_MEM)     => memu2pl_result(S_MEM+L_MEM),
         
         -- Memory interface.
@@ -767,7 +769,9 @@ begin -- architecture
   end generate;
   no_memu_gen: if not HAS_MEM generate
     
-    -- Set the memory unit outputs going to this pipelane to undefined.
+    -- Set the memory unit result going to this pipelane to undefined and set
+    -- the trap output to no trap.
+    memu2pl_trap(S_MEM)           <= TRAP_INFO_NONE;
     memu2pl_result(S_MEM+L_MEM)   <= (others => RVEX_UNDEF);
     
     -- Set the outputs going to the rest of the processor to hi-Z, so they can

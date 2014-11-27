@@ -52,7 +52,7 @@ use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_opcode_pkg.all;
---use work.rvex_opcodeMemu_pkg.all;
+use work.rvex_opcodeMemory_pkg.all;
 
 --=============================================================================
 -- This entity contains the optional memory unit for a pipelane.
@@ -92,6 +92,9 @@ entity rvex_memu is
     pl2memu_opAddr              : in  rvex_address_array(S_MEM to S_MEM);
     pl2memu_opData              : in  rvex_data_array(S_MEM to S_MEM);
     
+    -- Misaligned access trap output.
+    memu2pl_trap                : out rvex_trap_array(S_MEM to S_MEM);
+    
     -- 32-bit output.
     memu2pl_result              : out rvex_data_array(S_MEM+L_MEM to S_MEM+L_MEM);
     
@@ -116,6 +119,8 @@ end rvex_memu;
 --=============================================================================
 architecture Behavioral of rvex_memu is
 --=============================================================================
+  
+  
   
 --=============================================================================
 begin -- architecture

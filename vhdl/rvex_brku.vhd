@@ -53,7 +53,7 @@ use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_trap_pkg.all;
 use work.rvex_opcode_pkg.all;
---use work.rvex_opcodeMemu_pkg.all;
+use work.rvex_opcodeMemory_pkg.all;
 
 --=============================================================================
 -- This entity contains the optional hardware breakpoint unit for a pipelane.

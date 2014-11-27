@@ -52,6 +52,7 @@ use work.rvex_intIface_pkg.all;
 use work.rvex_opcodeDatapath_pkg.all;
 use work.rvex_opcodeAlu_pkg.all;
 use work.rvex_opcodeBranch_pkg.all;
+use work.rvex_opcodeMemory_pkg.all;
 
 --=============================================================================
 -- This package specifies basic decoding signals for all opcodes. In theory,
@@ -93,6 +94,9 @@ package rvex_opcode_pkg is
     -- Control signals for the branch unit.
     branchCtrl                  : branchCtrlSignals_type;
     
+    -- Control signals for the memory unit.
+    memoryCtrl                  : memoryCtrlSignals_type;
+    
   end record;
   
   -- Default values for an opcode table entry.
@@ -102,7 +106,8 @@ package rvex_opcode_pkg is
     valid => "00",
     datapathCtrl => DP_CTRL_NOP,
     aluCtrl => ALU_CTRL_NOP,
-    branchCtrl => BRANCH_CTRL_NOP
+    branchCtrl => BRANCH_CTRL_NOP,
+    memoryCtrl => MEMORY_CTRL_NOP
   );
   
   -- Array type of the above to get a table. The index of this table is the
@@ -141,7 +146,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_NOP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Forward immediate to other syllable.
@@ -151,7 +157,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_NOP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     ---------------------------------------------------------------------------
@@ -164,7 +171,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ADD,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Bitwise AND.
@@ -174,7 +182,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_AND,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Bitwise AND, with operand 1 one's-complemented.
@@ -184,7 +193,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ANDC,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Computes maximum of the input operands using signed arithmetic.
@@ -194,7 +204,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_MAX,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Computes maximum of the input operands using unsigned arithmetic.
@@ -204,7 +215,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_MAXU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Computes minimum of the input operands using signed arithmetic.
@@ -214,7 +226,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_MIN,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Computes minimum of the input operands using unsigned arithmetic.
@@ -224,7 +237,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_MINU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Bitwise OR.
@@ -234,7 +248,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_OR,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Bitwise OR, with operand 1 one's complemented.
@@ -244,7 +259,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ORC,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- 32 bit addition, operand 1 shifted left by one before adding.
@@ -254,7 +270,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SH1ADD,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- 32 bit addition, operand 1 shifted left by two before adding.
@@ -264,7 +281,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SH2ADD,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- 32 bit addition, operand 1 shifted left by three before adding.
@@ -274,7 +292,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SH3ADD,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- 32 bit addition, operand 2 shifted left by four before adding.
@@ -284,7 +303,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SH4ADD,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Arithmetic/logical shift left.
@@ -294,7 +314,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SHL,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Signed arithmetic shift right.
@@ -304,7 +325,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SHR,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Unsigned arithmetic/logical shift right.
@@ -314,7 +336,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SHRU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Subtract operand 1 from operand 2.
@@ -324,7 +347,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SUB,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Sign extend operand 1 from byte to word.
@@ -334,7 +358,8 @@ package rvex_opcode_pkg is
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SXTB,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Sign extend operand 1 from halfword to word.
@@ -344,7 +369,8 @@ package rvex_opcode_pkg is
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SXTH,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Zero extend operand 1 from byte to word.
@@ -354,7 +380,8 @@ package rvex_opcode_pkg is
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ZXTB,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Zero extend operand 1 from halfword to word.
@@ -364,7 +391,8 @@ package rvex_opcode_pkg is
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ZXTH,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Bitwise XOR.
@@ -374,7 +402,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_XOR,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Copy operand 1, while setting the bit indexed by the immediate.
@@ -384,7 +413,8 @@ package rvex_opcode_pkg is
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SBIT,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Copy operand 1, while clearing the bit indexed by the immediate.
@@ -394,7 +424,8 @@ package rvex_opcode_pkg is
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SBITF,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 == operand 2 -> general purpose register.
@@ -404,7 +435,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPEQ,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 == operand 2 -> branch register.
@@ -414,7 +446,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPEQ,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 >= operand 2 -> general purpose register.
@@ -424,7 +457,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPGE,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 >= operand 2 -> branch register.
@@ -434,7 +468,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPGE,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Unsigned operand 1 >= operand 2 -> general purpose register.
@@ -444,7 +479,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPGEU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Unsigned operand 1 >= operand 2 -> branch register.
@@ -454,7 +490,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPGEU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 > operand 2 -> general purpose register.
@@ -464,7 +501,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPGT,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 > operand 2 -> branch register.
@@ -474,7 +512,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPGT,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Unsigned operand 1 > operand 2 -> general purpose register.
@@ -484,7 +523,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPGTU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Unsigned operand 1 > operand 2 -> branch register.
@@ -494,7 +534,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPGTU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 <= operand 2 -> general purpose register.
@@ -504,7 +545,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPLE,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 <= operand 2 -> branch register.
@@ -514,7 +556,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPLE,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Unsigned operand 1 <= operand 2 -> general purpose register.
@@ -524,7 +567,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPLEU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Unsigned operand 1 <= operand 2 -> branch register.
@@ -534,7 +578,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPLEU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 < operand 2 -> general purpose register.
@@ -544,7 +589,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPLT,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 < operand 2 -> branch register.
@@ -554,7 +600,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPLT,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Unsigned operand 1 < operand 2 -> general purpose register.
@@ -564,7 +611,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPLTU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Unsigned operand 1 < operand 2 -> branch register.
@@ -574,7 +622,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPLTU,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 != operand 2 -> general purpose register.
@@ -584,7 +633,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPNE,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand 1 != operand 2 -> branch register.
@@ -594,7 +644,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPNE,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- !(operand1 && operand2) -> general purpose register.
@@ -604,7 +655,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_NANDL,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- !(operand1 && operand2) -> branch register.
@@ -614,7 +666,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_NANDL,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- !(operand1 || operand2) -> general purpose register.
@@ -624,7 +677,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_NORL,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- !(operand1 || operand2) -> branch register.
@@ -634,7 +688,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_NORL,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand1 || operand2 -> general purpose register.
@@ -644,7 +699,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ORL,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand1 || operand2 -> branch register.
@@ -654,7 +710,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_ORL,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand1 && operand2 -> general purpose register.
@@ -664,7 +721,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ANDL,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Operand1 && operand2 -> branch register.
@@ -674,7 +732,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_ANDL,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Copies the bit in operand 1 indexed by the immediate to a general
@@ -685,7 +744,8 @@ package rvex_opcode_pkg is
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_TBIT,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Copies the bit in operand 1 indexed by the immediate to a branch
@@ -696,7 +756,8 @@ package rvex_opcode_pkg is
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_TBIT,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Inverts and copies the bit in operand 1 indexed by the immediate
@@ -707,7 +768,8 @@ package rvex_opcode_pkg is
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_TBITF,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Inverts and copies the bit in operand 1 indexed by the immediate
@@ -718,7 +780,8 @@ package rvex_opcode_pkg is
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_TBITF,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- 32-bit addition with carry in and out.
@@ -728,7 +791,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOTH,
       aluCtrl => ALU_CTRL_ADDCG,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Division step:
@@ -741,7 +805,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOTH,
       aluCtrl => ALU_CTRL_DIVS,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Select: opBr ? op1 : op2.
@@ -751,7 +816,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SLCT,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Select: opBr ? op2 : op1.
@@ -761,7 +827,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SLCTF,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Count leading zeroes in operand 1.
@@ -771,7 +838,8 @@ package rvex_opcode_pkg is
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CLZ,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Copy general purpose register to link register.
@@ -781,7 +849,8 @@ package rvex_opcode_pkg is
       valid => "01",
       datapathCtrl => DP_CTRL_MTL,
       aluCtrl => ALU_CTRL_FWD_OP1,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Copy link register to general purpose register.
@@ -791,7 +860,8 @@ package rvex_opcode_pkg is
       valid => "01",
       datapathCtrl => DP_CTRL_MFL,
       aluCtrl => ALU_CTRL_FWD_OP1,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     ---------------------------------------------------------------------------
@@ -804,7 +874,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_BR,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_GOTO
+      branchCtrl => BRANCH_CTRL_GOTO,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- IGOTO: unconditional jump to link register.
@@ -814,7 +885,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_BR,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_IGOTO
+      branchCtrl => BRANCH_CTRL_IGOTO,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- CALL: unconditional jump and link.
@@ -824,7 +896,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_BR_LINK,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_CALL
+      branchCtrl => BRANCH_CTRL_CALL,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- ICALL: unconditional jump to link register and link.
@@ -834,7 +907,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_BR_LINK,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_ICALL
+      branchCtrl => BRANCH_CTRL_ICALL,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- BR: branch if true.
@@ -844,7 +918,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_BR,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_BR
+      branchCtrl => BRANCH_CTRL_BR,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- BRF: branch if false.
@@ -854,7 +929,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_BR,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_BRF
+      branchCtrl => BRANCH_CTRL_BRF,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- RETURN: return from function call, add immediate to stack pointer.
@@ -864,7 +940,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_BR_SP,
       aluCtrl => ALU_CTRL_ADD,
-      branchCtrl => BRANCH_CTRL_IGOTO
+      branchCtrl => BRANCH_CTRL_IGOTO,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- RFI: return from trap.
@@ -874,7 +951,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_BR_SP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_RFI
+      branchCtrl => BRANCH_CTRL_RFI,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- TRAP: software trap.
@@ -884,7 +962,8 @@ package rvex_opcode_pkg is
       valid => "11",
       datapathCtrl => DP_CTRL_BR,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_TRAP
+      branchCtrl => BRANCH_CTRL_TRAP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     ---------------------------------------------------------------------------
@@ -899,7 +978,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply unsigned low 16 x low 16 bits.
@@ -909,7 +989,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply signed low 16 (s1) x high 16 (s2) bits.
@@ -919,7 +1000,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply unsigned low 16 (s1) x high 16 (s2) bits.
@@ -929,7 +1011,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply signed high 16 x high 16 bits.
@@ -939,7 +1022,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply unsigned high 16 x high 16 bits.
@@ -949,7 +1033,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply signed low 16 (s2) x 32 (s1) bits.
@@ -959,7 +1044,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply unsigned low 16 (s2) x 32 (s1) bits.
@@ -969,7 +1055,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply signed high 16 (s2) x 32 (s1) bits.
@@ -979,7 +1066,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply unsigned high 16 (s2) x 32 (s1) bits.
@@ -989,7 +1077,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply signed high 16 (s2) x 32 (s1) bits, shift left 16.
@@ -999,7 +1088,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply signed low 16 (s2) x 32 (s1) bits, shift right 32.
@@ -1009,7 +1099,8 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
     
     -- Multiply signed high 16 (s2) x 32 (s1) bits, shift right 16.
@@ -1019,112 +1110,121 @@ package rvex_opcode_pkg is
       valid => "00", -- TODO
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
     ),
   
     ---------------------------------------------------------------------------
     -- MEM operations
     ---------------------------------------------------------------------------
-    -- TODO: none of these are implemented yet.
-    
     -- Load word from memory, send to link register.
     2#00001101# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldl l#.0 = %ih[r#.%r2]                            ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_LINK,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_LOAD32
     ),
     
     -- Load word from memory.
     2#00010000# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldw r#.%r1 = %ih[r#.%r2]                          ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_LOAD32
     ),
     
     -- Load signed halfword from memory.
     2#00010001# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldh r#.%r1 = %ih[r#.%r2]                          ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_LOAD16S
     ),
     
     -- Load unsigned halfword from memory.
     2#00010010# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldhu r#.%r1 = %ih[r#.%r2]                         ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_LOAD16U
     ),
     
     -- Load signed byte from memory.
     2#00010011# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldb r#.%r1 = %ih[r#.%r2]                          ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_LOAD8S
     ),
     
     -- Load unsigned byte from memory.
     2#00010100# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldbu r#.%r1 = %ih[r#.%r2]                         ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_LOAD8U
     ),
     
     -- Store word in memory, from link register.
     2#00001110# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "stl %ih[r#.%r2] = l#.0                            ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_LINK,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_STORE32
     ),
     
     -- Store word in memory.
     2#00010101# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "stw %ih[r#.%r2] = r#.%r1                          ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_GP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_STORE32
     ),
     
     -- Store halfword in memory.
     2#00010110# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "sth %ih[r#.%r2] = r#.%r1                          ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_GP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_STORE16
     ),
     
     -- Store byte in memory.
     2#00010111# => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "stb %ih[r#.%r2] = r#.%r1                          ",
-      valid => "00", -- TODO
+      valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_GP,
       aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_NOP
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_STORE8
     ),
     
     ---------------------------------------------------------------------------
