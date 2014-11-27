@@ -274,6 +274,10 @@ entity rvex_pipelane is
     -- for debugging through the external bebug bus.
     cxplif2br_extDebug          : in  std_logic_vector(S_BR to S_BR);
     
+    -- Set when the current value of the trap cause register maps to a debug
+    -- trap.
+    cxplif2br_handlingDebugTrap : in  std_logic_vector(S_BR to S_BR);
+    
     -- Current value of the debug trap enable bit in the control register.
     cxplif2pl_debugTrapEnable   : in  std_logic_vector(S_MEM+1 to S_MEM+1);
     
@@ -441,11 +445,12 @@ architecture Behavioral of rvex_pipelane is
   -----------------------------------------------------------------------------
   -- Pipelane <-> branch unit interconnect. Refer to branch unit entity for
   -- more information about the signals.
+  signal pl2br_opcode           : rvex_opcode_array(S_BR to S_BR);
   signal pl2br_PC_plusOne_IFP1  : rvex_address_array(S_IF+1 to S_IF+1);
   signal pl2br_PC_plusOne_BR    : rvex_address_array(S_BR to S_BR);
   signal pl2br_brTgtLink        : rvex_address_array(S_BR to S_BR);
   signal pl2br_brTgtRel         : rvex_address_array(S_BR to S_BR);
-  signal pl2br_brOp             : std_logic_vector(S_BR to S_BR);
+  signal pl2br_opBr             : std_logic_vector(S_BR to S_BR);
   signal pl2br_trapPending      : std_logic_vector(S_BR to S_BR);
   signal pl2br_trapToHandleInfo : trap_info_array(S_BR to S_BR);
   signal pl2br_trapToHandlePoint: rvex_address_array(S_BR to S_BR);
@@ -620,11 +625,12 @@ begin -- architecture
         cxplif2br_run                   => cxplif2br_run,
         
         -- Branch control signals from and to pipelane.
+        pl2br_opcode(S_BR)              => pl2br_opcode(S_BR),
         pl2br_PC_plusOne_IFP1(S_IF+1)   => pl2br_PC_plusOne_IFP1(S_IF+1),
         pl2br_PC_plusOne_BR(S_BR)       => pl2br_PC_plusOne_BR(S_BR),
         pl2br_brTgtLink(S_BR)           => pl2br_brTgtLink(S_BR),
         pl2br_brTgtRel(S_BR)            => pl2br_brTgtRel(S_BR),
-        pl2br_brOp(S_BR)                => pl2br_brOp(S_BR),
+        pl2br_opBr(S_BR)                => pl2br_opBr(S_BR),
         pl2br_trapPending(S_BR)         => pl2br_trapPending(S_BR),
         pl2br_trapToHandleInfo(S_BR)    => pl2br_trapToHandleInfo(S_BR),
         pl2br_trapToHandlePoint(S_BR)   => pl2br_trapToHandlePoint(S_BR),
@@ -640,6 +646,7 @@ begin -- architecture
         br2cxplif_exDbgTrapInfo(S_BR)   => br2cxplif_exDbgTrapInfo(S_BR),
         br2cxplif_stop(S_BR)            => br2cxplif_stop(S_BR),
         cxplif2br_trapReturn(S_BR)      => cxplif2br_trapReturn(S_BR),
+        cxplif2br_handlingDebugTrap(S_BR)=>cxplif2br_handlingDebugTrap(S_BR),
         cxplif2br_extDebug(S_BR)        => cxplif2br_extDebug(S_BR)
         
       );

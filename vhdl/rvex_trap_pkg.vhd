@@ -218,6 +218,10 @@ package rvex_trap_pkg is
     )
   );
   
+  -- Shorthand for extracting the isDebugTrap signal from an (encoded)
+  -- trap_info_type record.
+  function rvex_isDebugTrap(t: trap_info_type) return std_logic;
+  
 end rvex_trap_pkg;
 
 --=============================================================================
@@ -229,5 +233,12 @@ package body rvex_trap_pkg is
   begin
     return std_logic_vector(to_unsigned(t, RVEX_TRAP_CAUSE_SIZE));
   end rvex_trap;
+  
+  -- Shorthand for extracting the isDebugTrap signal from an (encoded)
+  -- trap_info_type record.
+  function rvex_isDebugTrap(t: trap_info_type) return std_logic is
+  begin
+    return TRAP_TABLE(to_integer(unsigned(t.cause))).isDebugTrap;
+  end rvex_isDebugTrap;
   
 end rvex_trap_pkg;

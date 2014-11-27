@@ -53,6 +53,21 @@ use IEEE.STD_LOGIC_1164.all;
 package rvex_pkg is
 --=============================================================================
   
+  -- log2 of the size of a syllable in bytes.
+  constant SYLLABLE_SIZE_LOG2B  : natural := 2;
+  
+  -- Subtypes for some common datatypes used within the core.
+  subtype rvex_address_type     is std_logic_vector(31 downto  0); -- Any bus address or PC.
+  subtype rvex_data_type        is std_logic_vector(31 downto  0); -- Any data word.
+  subtype rvex_mask_type        is std_logic_vector( 3 downto  0); -- Byte mask for data words.
+  subtype rvex_syllable_type    is std_logic_vector(31 downto  0); -- Any syllable.
+  
+  -- Array types for the above subtypes.
+  type rvex_address_array       is array (natural range <>) of rvex_address_type;
+  type rvex_data_array          is array (natural range <>) of rvex_data_type;
+  type rvex_mask_array          is array (natural range <>) of rvex_mask_type;
+  type rvex_syllable_array      is array (natural range <>) of rvex_syllable_type;
+  
   -- rvex core configuration record.
   type rvex_generic_config_type is record
     
@@ -106,6 +121,10 @@ package rvex_pkg is
     -- binary bundle.
     limmhFromPreviousPair       : boolean;
     
+    -- Configures the reset address for each context. When less than 8 contexts
+    -- are used, the higher indexed values are unused.
+    resetVectors                : rvex_address_array(7 downto 0);
+    
   end record;
   
   -- Default rvex core configuration.
@@ -118,23 +137,9 @@ package rvex_pkg is
     numBreakpoints              => 4,
     forwarding                  => true,
     limmhFromNeighbor           => true,
-    limmhFromPreviousPair       => true
+    limmhFromPreviousPair       => true,
+    resetVectors                => (others => (others => '0'))
   );
-  
-  -- log2 of the size of a syllable in bytes.
-  constant SYLLABLE_SIZE_LOG2B  : natural := 2;
-  
-  -- Subtypes for some common datatypes used within the core.
-  subtype rvex_address_type     is std_logic_vector(31 downto  0); -- Any bus address or PC.
-  subtype rvex_data_type        is std_logic_vector(31 downto  0); -- Any data word.
-  subtype rvex_mask_type        is std_logic_vector( 3 downto  0); -- Byte mask for data words.
-  subtype rvex_syllable_type    is std_logic_vector(31 downto  0); -- Any syllable.
-  
-  -- Array types for the above subtypes.
-  type rvex_address_array       is array (natural range <>) of rvex_address_type;
-  type rvex_data_array          is array (natural range <>) of rvex_data_type;
-  type rvex_mask_array          is array (natural range <>) of rvex_mask_type;
-  type rvex_syllable_array      is array (natural range <>) of rvex_syllable_type;
   
   -- Component declaration for the rvex processor.
   component rvex is

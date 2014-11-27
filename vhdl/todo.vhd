@@ -40,7 +40,7 @@ use IEEE.std_logic_1164.all;
 -- [.] rv     = RVex processor             @ rvex.vhd
 -- [?] pls    = PipeLaneS                  @ rvex_pipelanes.vhd
 -- [.] pl     = PipeLane                   @ rvex_pipelane.vhd
--- [.] br     = BRanch unit                @ rvex_branch.vhd
+-- [x] br     = BRanch unit                @ rvex_branch.vhd
 -- [x] alu    = Arith. Logic Unit          @ rvex_alu.vhd
 -- [.] memu   = MEMory Unit                @ rvex_memu.vhd
 -- [.] mulu   = MULtiply Unit              @ rvex_mul.vhd
@@ -61,9 +61,6 @@ use IEEE.std_logic_1164.all;
 -- [?] = some work is done, but it's out of date
 -- [.] = entity done
 -- [x] = architecture done
---
--- When all that works...
--- [ ] Single stepping support
 
 entity todo is
 end todo;
