@@ -63,7 +63,7 @@ entity rvex_br is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type := RVEX_DEFAULT_CONFIG
+    CFG                         : rvex_generic_config_type
     
   );
   port (

@@ -287,7 +287,7 @@ entity rvex_pipelane is
     -- Current value of the stepping flag in the debug control register. When
     -- high, a step trap must be triggered if there is no other trap and
     -- breakpoints are enabled.
-    cxplif2brku_stepping        : in  cxreg2pl_breakpoint_info_array(S_BRK to S_BRK);
+    cxplif2brku_stepping        : in  std_logic_vector(S_BRK to S_BRK);
     
     ---------------------------------------------------------------------------
     -- Long immediate routing interface
@@ -480,7 +480,7 @@ architecture Behavioral of rvex_pipelane is
   signal pl2memu_opcode         : rvex_opcode_array(S_MEM to S_MEM);
   signal pl2memu_opAddr         : rvex_address_array(S_MEM to S_MEM);
   signal pl2memu_opData         : rvex_data_array(S_MEM to S_MEM);
-  signal memu2pl_trap           : rvex_trap_array(S_MEM to S_MEM);
+  signal memu2pl_trap           : trap_info_array(S_MEM to S_MEM);
   signal memu2pl_result         : rvex_data_array(S_MEM+L_MEM to S_MEM+L_MEM);
   
   -- Pipelane <-> breakpoint unit interconnect. Refer to the breakpoint unit
@@ -607,6 +607,9 @@ begin -- architecture
         clk                             => clk,
         clkEn                           => clkEn,
         stall                           => stall,
+        
+        -- Configuration inputs.
+        cfg2br_numGroupsLog2            => cfg2pl_numGroupsLog2,
         
         -- Next operation outputs to IMEM.
         br2imem_PC(S_IF)                => br2imem_PC(S_IF),

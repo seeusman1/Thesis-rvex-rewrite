@@ -133,11 +133,16 @@ package rvex_trap_pkg is
   -- Exceptions.
   constant RVEX_TRAP_INVALID_OP         : natural := 1;
   constant RVEX_TRAP_MISALIGNED_BRANCH  : natural := 2;
-  constant RVEX_TRAP_FETCH_FAULT        : natural := 3;
-  constant RVEX_TRAP_DMEM_FAULT         : natural := 4;
+  constant RVEX_TRAP_MISALIGNED_ACCESS  : natural := 3;
+  constant RVEX_TRAP_FETCH_FAULT        : natural := 4;
+  constant RVEX_TRAP_DMEM_FAULT         : natural := 5;
   
-  -- Debugging traps are positioned at the end of the range.
-  constant RVEX_TRAP_SOFT_BREAKPOINT    : natural := 2**RVEX_TRAP_CAUSE_SIZE - 5;
+  -- Debugging traps are positioned at the end of the range. We reserve 8 slots
+  -- so the debug trap signal is easy to decode.
+  constant RVEX_TRAP_SOFT_DEBUG_0       : natural := 2**RVEX_TRAP_CAUSE_SIZE - 8;
+  constant RVEX_TRAP_SOFT_DEBUG_1       : natural := 2**RVEX_TRAP_CAUSE_SIZE - 7;
+  constant RVEX_TRAP_SOFT_DEBUG_2       : natural := 2**RVEX_TRAP_CAUSE_SIZE - 6;
+  constant RVEX_TRAP_STEP_COMPLETE      : natural := 2**RVEX_TRAP_CAUSE_SIZE - 5;
   constant RVEX_TRAP_HW_BREAKPOINT_0    : natural := 2**RVEX_TRAP_CAUSE_SIZE - 4;
   constant RVEX_TRAP_HW_BREAKPOINT_1    : natural := 2**RVEX_TRAP_CAUSE_SIZE - 3;
   constant RVEX_TRAP_HW_BREAKPOINT_2    : natural := 2**RVEX_TRAP_CAUSE_SIZE - 2;
@@ -175,6 +180,12 @@ package rvex_trap_pkg is
       isDebugTrap => '0'
     ),
     
+    -- Misaligned memory access.
+    RVEX_TRAP_MISALIGNED_ACCESS => (
+      name => "trap %c: misaligned access@; address was %x       ",
+      isDebugTrap => '0'
+    ),
+    
     -- Instruction fetch fault.
     RVEX_TRAP_FETCH_FAULT => (
       name => "trap %c: instr. fetch fault@; PC was %x           ",
@@ -187,13 +198,23 @@ package rvex_trap_pkg is
       isDebugTrap => '0'
     ),
     
-    -- Software breakpoint.
-    RVEX_TRAP_SOFT_BREAKPOINT => (
-      name => "trap %c: software breakpoint@                     ",
+    -- Debug traps.
+    RVEX_TRAP_SOFT_DEBUG_0 => (
+      name => "trap %c: software debug trap 0@, address/PC %x    ",
       isDebugTrap => '1'
     ),
-    
-    -- Hardware breakpoints.
+    RVEX_TRAP_SOFT_DEBUG_1 => (
+      name => "trap %c: software debug trap 1@, address/PC %x    ",
+      isDebugTrap => '1'
+    ),
+    RVEX_TRAP_SOFT_DEBUG_2 => (
+      name => "trap %c: software debug trap 2@, address/PC %x    ",
+      isDebugTrap => '1'
+    ),
+    RVEX_TRAP_STEP_COMPLETE => (
+      name => "trap %c: step complete trap@, address/PC %x       ",
+      isDebugTrap => '1'
+    ),
     RVEX_TRAP_HW_BREAKPOINT_0 => (
       name => "trap %c: hardware breakpoint 0@, address/PC %x    ",
       isDebugTrap => '1'

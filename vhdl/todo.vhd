@@ -42,9 +42,9 @@ use IEEE.std_logic_1164.all;
 -- [.] pl     = PipeLane                   @ rvex_pipelane.vhd
 -- [x] br     = BRanch unit                @ rvex_branch.vhd
 -- [x] alu    = Arith. Logic Unit          @ rvex_alu.vhd
--- [.] memu   = MEMory Unit                @ rvex_memu.vhd
+-- [x] memu   = MEMory Unit                @ rvex_memu.vhd
 -- [.] mulu   = MULtiply Unit              @ rvex_mul.vhd
--- [.] brku   = BReaKpoint Unit            @ rvex_breakpoint.vhd
+-- [x] brku   = BReaKpoint Unit            @ rvex_breakpoint.vhd
 -- [ ] gpreg  = General Purpose REGisters  @ rvex_gpreg.vhd
 -- [?] fwd    = ForWarDing logic           @ rvex_forward.vhd
 -- [?] cxplif = ConteXt Register InterFace @ rvex_contextPipelaneIFace.vhd

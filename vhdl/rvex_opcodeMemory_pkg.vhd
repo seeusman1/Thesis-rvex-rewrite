@@ -100,7 +100,7 @@ package rvex_opcodeMemory_pkg is
   -- Read instructions
   -----------------------------------------------------------------------------
   -- 32-bit read.
-  constant MEMORY_CTRL_READ32   : memoryCtrlSignals_type := (
+  constant MEMORY_CTRL_LOAD32   : memoryCtrlSignals_type := (
     isMemoryInstruction         => '1',
     readEnable                  => '1',
     accessSizeBLog2             => ACCESS_SIZE_WORD,
@@ -108,7 +108,7 @@ package rvex_opcodeMemory_pkg is
   );
   
   -- 16-bit signed read.
-  constant MEMORY_CTRL_READ16S  : memoryCtrlSignals_type := (
+  constant MEMORY_CTRL_LOAD16S  : memoryCtrlSignals_type := (
     isMemoryInstruction         => '1',
     readEnable                  => '1',
     accessSizeBLog2             => ACCESS_SIZE_HALFWORD,
@@ -116,7 +116,7 @@ package rvex_opcodeMemory_pkg is
   );
   
   -- 16-bit unsigned read.
-  constant MEMORY_CTRL_READ16U  : memoryCtrlSignals_type := (
+  constant MEMORY_CTRL_LOAD16U  : memoryCtrlSignals_type := (
     isMemoryInstruction         => '1',
     readEnable                  => '1',
     unsignedOp                  => '1',
@@ -125,7 +125,7 @@ package rvex_opcodeMemory_pkg is
   );
   
   -- 8-bit signed read.
-  constant MEMORY_CTRL_READ8S   : memoryCtrlSignals_type := (
+  constant MEMORY_CTRL_LOAD8S   : memoryCtrlSignals_type := (
     isMemoryInstruction         => '1',
     readEnable                  => '1',
     accessSizeBLog2             => ACCESS_SIZE_BYTE,
@@ -133,7 +133,7 @@ package rvex_opcodeMemory_pkg is
   );
   
   -- 8-bit unsigned read.
-  constant MEMORY_CTRL_READ8U   : memoryCtrlSignals_type := (
+  constant MEMORY_CTRL_LOAD8U   : memoryCtrlSignals_type := (
     isMemoryInstruction         => '1',
     readEnable                  => '1',
     unsignedOp                  => '1',
@@ -145,7 +145,7 @@ package rvex_opcodeMemory_pkg is
   -- Write instructions
   -----------------------------------------------------------------------------
   -- 32-bit read.
-  constant MEMORY_CTRL_WRITE32  : memoryCtrlSignals_type := (
+  constant MEMORY_CTRL_STORE32  : memoryCtrlSignals_type := (
     isMemoryInstruction         => '1',
     writeEnable                 => '1',
     accessSizeBLog2             => ACCESS_SIZE_WORD,
@@ -153,7 +153,7 @@ package rvex_opcodeMemory_pkg is
   );
   
   -- 16-bit read.
-  constant MEMORY_CTRL_WRITE32  : memoryCtrlSignals_type := (
+  constant MEMORY_CTRL_STORE16  : memoryCtrlSignals_type := (
     isMemoryInstruction         => '1',
     writeEnable                 => '1',
     accessSizeBLog2             => ACCESS_SIZE_HALFWORD,
@@ -161,7 +161,7 @@ package rvex_opcodeMemory_pkg is
   );
   
   -- 8-bit read.
-  constant MEMORY_CTRL_WRITE32  : memoryCtrlSignals_type := (
+  constant MEMORY_CTRL_STORE8   : memoryCtrlSignals_type := (
     isMemoryInstruction         => '1',
     writeEnable                 => '1',
     accessSizeBLog2             => ACCESS_SIZE_BYTE,

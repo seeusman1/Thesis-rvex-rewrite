@@ -110,7 +110,7 @@ entity rvex_brku is
     -- Current value of the stepping flag in the debug control register. When
     -- high, a step trap must be triggered if there is no other trap and
     -- breakpoints are enabled.
-    cxplif2brku_stepping        : in  cxreg2pl_breakpoint_info_array(S_BRK to S_BRK)
+    cxplif2brku_stepping        : in  std_logic_vector(S_BRK to S_BRK)
     
   );
 end rvex_brku;
@@ -134,6 +134,90 @@ begin -- architecture
     wait;
   end process;
   -- pragma translate_on
+  
+  -- Determine whether to trigger a debug trap or not and if so, which.
+  det_trap: process (
+    pl2brku_ignoreBreakpoint, pl2brku_opcode, pl2brku_opAddr,
+    pl2brku_PC_bundle, cxplif2brku_breakpoints, cxplif2brku_stepping
+  ) is
+    variable compareVal         : rvex_address_type;
+    variable hit                : std_logic;
+  begin
+    
+    -- Set to step complete breakpoint by default, with active set to the
+    -- stepping mode flag.
+    brku2pl_trap(S_BRK) <= (
+      active => cxplif2brku_stepping(S_BRK),
+      cause  => rvex_trap(RVEX_TRAP_STEP_COMPLETE),
+      arg    => (others => '0')
+    );
+    
+    -- Test for breakpoints.
+    for i in 0 to CFG.numBreakpoints-1 loop
+      
+      -- Select between address and PC and select whether the breakpoint should
+      -- be enabled based on breakpoint type.
+      if cxplif2brku_breakpoints(S_BRK).cfg(i)(1) = '1' then
+        
+        -- Access breakpoint.
+        compareVal := pl2brku_opAddr(S_BRK);
+        
+        if cxplif2brku_breakpoints(S_BRK).cfg(i)(0) = '1' then
+          
+          -- Hit on any memory access.
+          hit := OPCODE_TABLE(to_integer(unsigned(pl2brku_opcode(S_MEM)))).memoryCtrl.readEnable
+              or OPCODE_TABLE(to_integer(unsigned(pl2brku_opcode(S_MEM)))).memoryCtrl.writeEnable;
+          
+        else
+          
+          -- Hit only on writes.
+          hit := OPCODE_TABLE(to_integer(unsigned(pl2brku_opcode(S_MEM)))).memoryCtrl.writeEnable;
+          
+        end if;
+        
+      else
+        
+        -- Fetch breakpoint or breakpoint disabled.
+        compareVal := pl2brku_PC_bundle(S_BRK);
+        
+        if cxplif2brku_breakpoints(S_BRK).cfg(i)(0) = '1' then
+          
+          -- Hit unconditionally if we have a match for fetch breakpoints.
+          hit := '1';
+          
+        else
+          
+          -- Breakpoint disabled.
+          hit := '0';
+          
+        end if;
+        
+      end if;
+      
+      -- Perform the address match.
+      if compareVal /= cxplif2brku_breakpoints(S_BRK).addr(i) then
+        hit := '0';
+      end if;
+      
+      -- If we have a hit, activate the debug trap.
+      if hit = '1' then
+        brku2pl_trap(S_BRK).active <= '1';
+        case i is
+          when 0 => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_0);
+          when 1 => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_1);
+          when 2 => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_2);
+          when 3 => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_3);
+        end case;
+      end if;
+      
+    end loop;
+    
+    -- Deactivate if breakpoints should be ignored.
+    if pl2brku_ignoreBreakpoint(S_BRK) = '1' then
+      brku2pl_trap(S_BRK).active <= '0';
+    end if;
+    
+  end process;
   
 end Behavioral;
 
