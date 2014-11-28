@@ -190,6 +190,9 @@ use work.rvex_trap_pkg.all;
   --      -> Similar to rvex_opcode_pkg, this packages contains a decoding
   --         table for trap causes.
   --
+  --  - rvex_utils_pkg
+  --      -> Contains utility methods which are useful for logic generation.
+  --
   --  - rvex_simUtils_pkg
   --      -> Contains simulation-only utility methods, mostly related to string
   --         manipulation.
@@ -347,9 +350,10 @@ entity rvex is
     ---------------------------------------------------------------------------
     -- Data memory interface
     ---------------------------------------------------------------------------
-    -- Data memory addresses from each pipelane group. Note that address
-    -- 0xFFFFFF80 and up is remapped to the core control registers internally,
-    -- so anything external in that range will be inaccessible.
+    -- Data memory addresses from each pipelane group. Note that a section
+    -- of the address space 128 bytes in size must be mapped to the core
+    -- control registers, making that section of the data memory inaccessible.
+    -- The start address of this section is configurable with CFG.
     rv2dmem_addr                : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high read enable from each pipelane group. When a bit in this

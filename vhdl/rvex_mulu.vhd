@@ -109,17 +109,13 @@ architecture Behavioral of rvex_mulu is
 begin -- architecture
 --=============================================================================
   
-  -- Make sure that the pipeline configuration correctly specifies that the
-  -- multiplier latency is 2 cycles.
-  -- pragma translate_off
-  process is
-  begin
-    if L_MUL /= 2 then
-      report "Pipeline configuration: multiply unit latency (L_MUL) must be set to 2." severity failure;
-    end if;
-    wait;
-  end process;
-  -- pragma translate_on
+  -----------------------------------------------------------------------------
+  -- Check configuration
+  -----------------------------------------------------------------------------
+  assert L_MUL = 2
+    report "Pipeline configuration: multiply unit latency (L_MUL) must be set "
+         & "to 2."
+    severity failure;
   
 end Behavioral;
 

@@ -48,8 +48,8 @@ use IEEE.std_logic_1164.all;
 -- [ ] gpreg  = General Purpose REGisters  @ rvex_gpreg.vhd
 -- [?] fwd    = ForWarDing logic           @ rvex_forward.vhd
 -- [?] cxplif = ConteXt Register InterFace @ rvex_contextPipelaneIFace.vhd
--- [.] dmsw   = Data Memory SWitch         @ rvex_dmemSwitch.vhd
--- [.] limm   = Long IMMediate routing     @ rvex_limmRouting.vhd
+-- [x] dmsw   = Data Memory SWitch         @ rvex_dmemSwitch.vhd
+-- [x] limm   = Long IMMediate routing     @ rvex_limmRouting.vhd
 -- [x] trap   = TRAP routing               @ rvex_trapRouting.vhd
 -- [?] cxreg  = ConteXt REGister logic     @ rvex_contextRegLogic.vhd
 -- [?] creg   = Control REGisters          @ rvex_ctrlRegs.vhd

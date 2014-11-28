@@ -102,6 +102,18 @@ package rvex_pkg is
     -- 0, bit 1 to lane 1, etc.
     multiplierLanes             : natural;
     
+    -- Lane index for the memory unit, counting down from the last lane in each
+    -- lane group. So memLaneRevIndex = 0 results in the memory unit being in
+    -- the last lane in each group, memLaneRevIndex = 1 results in it being in
+    -- the second to last lane, etc.
+    memLaneRevIndex             : natural;
+    
+    -- Lane index for the branch unit, counting down from the last lane in each
+    -- lane group. So branchLaneRevIndex = 0 results in the branch unit being
+    -- in the last lane in each group, branchLaneRevIndex = 1 results in it
+    -- being in the second to last lane, etc.
+    branchLaneRevIndex          : natural;
+    
     -- Defines how many hardware breakpoints are evaluated. Maximum is 4 due to
     -- the register map only having space for 4.
     numBreakpoints              : natural;
@@ -121,6 +133,10 @@ package rvex_pkg is
     -- binary bundle.
     limmhFromPreviousPair       : boolean;
     
+    -- Start address in the data address space for the 128-byte control
+    -- register file. Must be aligned to a 128-byte boundary.
+    cregStartAddress            : rvex_address_type;
+    
     -- Configures the reset address for each context. When less than 8 contexts
     -- are used, the higher indexed values are unused.
     resetVectors                : rvex_address_array(7 downto 0);
@@ -134,10 +150,13 @@ package rvex_pkg is
     numContextsLog2             => 2,
     genBundleSizeLog2           => 3,
     multiplierLanes             => 2#11111111#,
+    memLaneRevIndex             => 1,
+    branchLaneRevIndex          => 0,
     numBreakpoints              => 4,
     forwarding                  => true,
     limmhFromNeighbor           => true,
     limmhFromPreviousPair       => true,
+    cregStartAddress            => X"FFFFFF80",
     resetVectors                => (others => (others => '0'))
   );
   

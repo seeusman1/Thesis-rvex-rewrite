@@ -205,6 +205,19 @@ begin -- architecture
 --=============================================================================
   
   -----------------------------------------------------------------------------
+  -- Check configuration
+  -----------------------------------------------------------------------------
+  assert (L_ALU1 = 0) or (L_ALU1 = 1)
+    report "Latency for ALU phase 1 (L_ALU1) must be set to 0 or 1 in "
+         & "pipeline_pkg.vhd."
+    severity failure;
+  
+  assert (L_ALU2 = 0) or (L_ALU2 = 1)
+    report "Latency for ALU phase 2 (L_ALU2) must be set to 0 or 1 in "
+         & "pipeline_pkg.vhd."
+    severity failure;
+  
+  -----------------------------------------------------------------------------
   -- Prepare execution phase 1 (operand mux)
   -----------------------------------------------------------------------------
   -- Simply copy the operands into the record.

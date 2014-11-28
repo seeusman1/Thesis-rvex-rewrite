@@ -86,19 +86,19 @@ entity rvex_dmemSwitch is
     -- Pipelane interface
     ---------------------------------------------------------------------------
     -- Data memory address, shared between read and write command.
-    memu2dmsw_addr              : out rvex_address_array(S_MEM to S_MEM);
+    memu2dmsw_addr              : in  rvex_address_array(S_MEM to S_MEM);
     
     -- Data memory write command.
-    memu2dmsw_writeData         : out rvex_data_array(S_MEM to S_MEM);
-    memu2dmsw_writeMask         : out rvex_mask_array(S_MEM to S_MEM);
-    memu2dmsw_writeEnable       : out std_logic_vector(S_MEM to S_MEM);
+    memu2dmsw_writeData         : in  rvex_data_array(S_MEM to S_MEM);
+    memu2dmsw_writeMask         : in  rvex_mask_array(S_MEM to S_MEM);
+    memu2dmsw_writeEnable       : in  std_logic_vector(S_MEM to S_MEM);
     
     -- Data memory read command and result.
-    memu2dmsw_readEnable        : out std_logic_vector(S_MEM to S_MEM);
-    dmsw2memu_readData          : in  rvex_data_array(S_MEM+L_MEM to S_MEM+L_MEM);
+    memu2dmsw_readEnable        : in  std_logic_vector(S_MEM to S_MEM);
+    dmsw2memu_readData          : out rvex_data_array(S_MEM+L_MEM to S_MEM+L_MEM);
     
     -- Exception input from data memory.
-    dmsw2pl_exception           : in  trap_info_array(S_MEM+L_MEM to S_MEM+L_MEM);
+    dmsw2pl_exception           : out trap_info_array(S_MEM+L_MEM to S_MEM+L_MEM);
     
     ---------------------------------------------------------------------------
     -- Data memory interface
@@ -141,9 +141,117 @@ end rvex_dmemSwitch;
 architecture Behavioral of rvex_dmemSwitch is
 --=============================================================================
   
+  -- Select signal. When low, the data memory bus is selected. When high, the
+  -- control register bus is selected.
+  signal sel                    : std_logic_vector(S_MEM to S_MEM+L_MEM);
+  
+  -- Control register data delay line, for the case where L_MEM > 1.
+  signal cregReadData           : rvex_data_array(S_MEM+1 to S_MEM+L_MEM);
+  
+  -- Requested address delay line, used for the trap argument in case the data
+  -- memory returns a fault signal.
+  signal addr                   : rvex_address_array(S_MEM to S_MEM+L_MEM);
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Check configuration
+  -----------------------------------------------------------------------------
+  assert L_MEM >= 1
+    report "Data memory latency must be at least 1, to match control register "
+         & "access latency."
+    severity failure;
+  
+  assert unsigned(CFG.cregStartAddress(CTRL_REG_SIZE_BLOG2-1 downto 0)) = 0
+    report "Control register start address must be aligned to a "
+         & integer'image(2**CTRL_REG_SIZE_BLOG2) & " byte boundary boundary."
+    severity failure;
+  
+  -----------------------------------------------------------------------------
+  -- Select between data memory and control registers
+  -----------------------------------------------------------------------------
+  -- Select control registers when the MSBs of the address matches the control
+  -- register block selected in the core configuration.
+  sel(S_MEM) <= '1'
+    when memu2dmsw_addr(S_MEM)(rvex_address_type'high downto CTRL_REG_SIZE_BLOG2)
+       = CFG.cregStartAddress(rvex_address_type'high downto CTRL_REG_SIZE_BLOG2)
+    else '0';
+  
+  -----------------------------------------------------------------------------
+  -- Drive memory bus and control register bus command signals
+  -----------------------------------------------------------------------------
+  -- Memory bus command should be issued when sel is low.
+  dmsw2dmem_addr(S_MEM)         <= memu2dmsw_addr(S_MEM);
+  dmsw2dmem_writeData(S_MEM)    <= memu2dmsw_writeData(S_MEM);
+  dmsw2dmem_writeMask(S_MEM)    <= memu2dmsw_writeMask(S_MEM);
+  dmsw2dmem_writeEnable(S_MEM)  <= memu2dmsw_writeEnable(S_MEM) and not sel(S_MEM);
+  dmsw2dmem_readEnable(S_MEM)   <= memu2dmsw_readEnable(S_MEM) and not sel(S_MEM);
+  
+  -- Control register bus command should be issued when sel is high.
+  dmsw2creg_addr(S_MEM)         <= memu2dmsw_addr(S_MEM);
+  dmsw2creg_writeData(S_MEM)    <= memu2dmsw_writeData(S_MEM);
+  dmsw2creg_writeMask(S_MEM)    <= memu2dmsw_writeMask(S_MEM);
+  dmsw2creg_writeEnable(S_MEM)  <= memu2dmsw_writeEnable(S_MEM) and sel(S_MEM);
+  dmsw2creg_readEnable(S_MEM)   <= memu2dmsw_readEnable(S_MEM) and sel(S_MEM);
+  
+  -----------------------------------------------------------------------------
+  -- Delay select and control register read data signals
+  -----------------------------------------------------------------------------
+  -- ... to align them with the memory read data.
+  
+  -- Copy the read data from the control registers and the requested address
+  -- into the first stage of their respective shift registers.
+  cregReadData(S_MEM+1) <= creg2dmsw_readData(S_MEM+1);
+  addr(S_MEM)           <= memu2dmsw_addr(S_MEM);
+  
+  -- Instantiate the shift registers.
+  align_regs: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        
+        sel(S_MEM+1 to S_MEM+L_MEM)
+          <= (others => '0');
+        
+        if L_MEM > 1 then
+          cregReadData(S_MEM+2 to S_MEM+L_MEM)
+            <= (others => (others => '0'));
+        end if;
+        
+        addr(S_MEM+1 to S_MEM+L_MEM)
+          <= (others => (others => '0'));
+        
+      elsif clkEn = '1' and stall = '0' then
+        
+        sel(S_MEM+1 to S_MEM+L_MEM)
+          <= sel(S_MEM to S_MEM+L_MEM-1);
+        
+        if L_MEM > 1 then
+          cregReadData(S_MEM+2 to S_MEM+L_MEM)
+            <= cregReadData(S_MEM+1 to S_MEM+L_MEM-1);
+        end if;
+        
+        addr(S_MEM+1 to S_MEM+L_MEM)
+          <= addr(S_MEM to S_MEM+L_MEM-1);
+        
+      end if;
+    end if;
+  end process;
+  
+  -----------------------------------------------------------------------------
+  -- Drive bus access result signals
+  -----------------------------------------------------------------------------
+  dmsw2memu_readData(S_MEM+L_MEM)
+    <= cregReadData(S_MEM+L_MEM) when sel(S_MEM+L_MEM) = '1'
+    else dmem2dmsw_readData(S_MEM+L_MEM);
+  
+  dmsw2pl_exception(S_MEM+L_MEM) <= (
+    active => dmem2dmsw_exception(S_MEM+L_MEM).active and not sel(S_MEM+L_MEM),
+    cause  => dmem2dmsw_exception(S_MEM+L_MEM).cause,
+    arg    => addr(S_MEM+L_MEM)
+  );
   
 end Behavioral;
 

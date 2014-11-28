@@ -50,6 +50,7 @@ use IEEE.numeric_std.all;
 library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
+use work.rvex_utils_pkg.all;
 
 --=============================================================================
 -- This entity controls long immediate routing between the pipelanes.
@@ -59,7 +60,7 @@ entity rvex_limmRouting is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type
+    CFG                         : rvex_generic_config_type := RVEX_DEFAULT_CONFIG
     
   );
   port (
@@ -86,10 +87,6 @@ entity rvex_limmRouting is
     -- groups. C_i,j is high when pipelane groups i and j are coupled/share a
     -- context, or low when they don't.
     cfg2any_coupled             : in  std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
-    
-    -- Link from any pipelane group to to the first (lowest indexed) coupled
-    -- group.
-    cfg2any_firstGroup          : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Pipelane interface
@@ -121,9 +118,255 @@ end rvex_limmRouting;
 architecture Behavioral of rvex_limmRouting is
 --=============================================================================
   
+  -- LIMMH values and valid bits from the previous cycle, if
+  -- limmhFromPreviousPair is selected in the generic configuration.
+  signal limmh_r                : rvex_limmh_array(2**CFG.numLanesLog2-1 downto 0);
+  signal limmh_r_valid          : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  
+  -- LIMMH from previous pair data and valid signals, routed to the appropriate
+  -- destination lanes.
+  signal limmhFromPrev          : rvex_limmh_array(2**CFG.numLanesLog2-1 downto 0);
+  signal limmhFromPrevValid     : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  
+  -- LIMMH from neighboring lane in pair, routed to the appropriate destination
+  -- lanes.
+  signal limmhFromNeigh         : rvex_limmh_array(2**CFG.numLanesLog2-1 downto 0);
+  signal limmhFromNeighValid    : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Check configuration
+  -----------------------------------------------------------------------------
+  assert CFG.limmhFromNeighbor or CFG.limmhFromPreviousPair
+    report "LIMMH logic is completely disabled, are you sure this is what "
+         & "you want? Check the values for CFG."
+    severity warning;
+    
+  assert (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) >= 1
+    report "Lane group size is only 1, LIMMH logic does not make sense for "
+         & "this configuration."
+    severity failure;
+  
+  -----------------------------------------------------------------------------
+  -- Generate registers for limmhFromPreviousPair
+  -----------------------------------------------------------------------------
+  -- Store the long immediates from the previous cycle if limmhFromPreviousPair
+  -- is enabled.
+  limmh_regs_gen: if CFG.limmhFromPreviousPair generate
+    
+    limmh_regs: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          
+          -- Reset registers and validity flags.
+          limmh_r <= (others => (others => '0'));
+          limmh_r_valid <= (others => '0');
+          
+        elsif clkEn = '1' then
+          for lane in 2**CFG.numLanesLog2-1 downto 0 loop
+            
+            -- Only update the registers when a valid instruction is being
+            -- processed.
+            if stall(lane2group(lane, CFG)) = '0' and pl2limm_valid(lane) = '1' then
+              
+              -- The LIMMH register is valid when the LIMMH instruction has
+              -- target set to 0, because then it is forwarding to the next
+              -- pair, which might be executed in the next cycle.
+              limmh_r(lane) <= pl2limm_data(lane);
+              limmh_r_valid(lane) <= pl2limm_enable(lane) and not pl2limm_target(lane);
+              
+            end if;
+          end loop;
+        end if;
+      end if;
+    end process;
+    
+  end generate;
+  no_limmh_regs_gen: if not CFG.limmhFromPreviousPair generate
+    
+    -- Connect the register data to undefined/disabled values because they
+    -- shouldn't be used.
+    limmh_r <= (others => (others => RVEX_UNDEF));
+    limmh_r_valid <= (others => '0');
+    
+  end generate;
+  
+  -----------------------------------------------------------------------------
+  -- Generate limmhFromPreviousPair routing
+  -----------------------------------------------------------------------------
+  -- Generate LIMMH data routing for limmhFromPreviousPair.
+  limmh_prev_routing_gen: if CFG.limmhFromPreviousPair generate
+    
+    limmh_prev_routing: process (
+      limmh_r, limmh_r_valid,
+      cfg2any_coupled, pl2limm_enable, pl2limm_target, pl2limm_data
+    ) is
+      variable limmhFromPrev_s      : rvex_limmh_array(2**CFG.numLanesLog2-1 downto 0);
+      variable limmhFromPrevValid_s : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+      variable laneA, laneB         : natural;
+      variable coupled              : std_logic;
+    begin
+      
+      -- Load the limmhFromPrev variables with the data from the previous
+      -- cycle, so we can route that properly first.
+      limmhFromPrev_s       := limmh_r;
+      limmhFromPrevValid_s  := limmh_r_valid;
+      
+      -- Construct a binary tree to route the registered LIMMH data from the
+      -- last lane pair to the first pair in a group. Refer to the
+      -- documentation of binTreeIndices in rvex_intIface_pkg.vhd for more
+      -- info on the binary tree structure. Note that we start at level 1
+      -- because we're concerned with pairs, not single lanes.
+      for level in 1 to CFG.numLanesLog2-1 loop
+        for blockIndex in 0 to (2**CFG.numLanesLog2)/2-1 loop
+          binTreeIndices(level, blockIndex, laneA, laneB);
+          
+          -- Determine whether these lanes are coupled.
+          if lane2group(laneA, CFG) = lane2group(laneB, CFG) then
+            coupled := '1';
+          else
+            coupled := cfg2any_coupled(lane2group(laneA, CFG) + lane2group(laneB, CFG) * 2**CFG.numLaneGroupsLog2);
+          end if;
+          
+          -- If the lanes are coupled, route from the higher indexed lane to
+          -- the lower indexed lane.
+          if coupled = '1' then
+            limmhFromPrev_s(laneA)      := limmhFromPrev_s(laneB);
+            limmhFromPrevValid_s(laneA) := limmhFromPrevValid_s(laneB);
+          end if;
+          
+        end loop;
+      end loop;
+      
+      -- Override the routed data with the combinatorial inputs for lanes for
+      -- which the previous pair is executed in the same cycle.
+      for lane in 2 to 2**CFG.numLanesLog2-1 loop
+        laneA := lane - 2;
+        laneB := lane;
+        
+        -- Determine whether these lanes are coupled.
+        if lane2group(laneA, CFG) = lane2group(laneB, CFG) then
+          coupled := '1';
+        else
+          coupled := cfg2any_coupled(lane2group(laneA, CFG) + lane2group(laneB, CFG) * 2**CFG.numLaneGroupsLog2);
+        end if;
+        
+        -- If the lanes are coupled, override the data for the higher indexed
+        -- lane with the combinatorial data from the lower indexed lane. If
+        -- they are not coupled, the registered data from the binary tree is
+        -- valid so we shouldn't do anything.
+        if coupled = '1' then
+          limmhFromPrev_s(laneB)      := pl2limm_data(laneA);
+          limmhFromPrevValid_s(laneB) := pl2limm_enable(laneA) and not pl2limm_target(laneA);
+        end if;
+        
+      end loop;
+      
+      -- Drive the output signals.
+      limmhFromPrev       <= limmhFromPrev_s;
+      limmhFromPrevValid  <= limmhFromPrevValid_s;
+      
+    end process;
+    
+  end generate;
+  no_limmh_prev_routing_gen: if not CFG.limmhFromPreviousPair generate
+    
+    -- Connect the output data to undefined/disabled so it isn't used by the
+    -- muxing logic.
+    limmhFromPrev <= (others => (others => RVEX_UNDEF));
+    limmhFromPrevValid <= (others => '0');
+    
+  end generate;
+  
+  -----------------------------------------------------------------------------
+  -- Generate limmhFromNeighbor routing
+  -----------------------------------------------------------------------------
+  -- Generate LIMMH data routing for limmhFromPreviousPair.
+  limmh_neighbor_routing_gen: if CFG.limmhFromNeighbor generate
+    
+    limmh_neighbor_routing: process (
+      pl2limm_enable, pl2limm_target, pl2limm_data
+    ) is
+      variable otherLane        : natural;
+    begin
+      
+      -- Loop over all the lanes and connect the output to the other lane in
+      -- their pair.
+      for lane in 0 to 2**CFG.numLanesLog2-1 loop
+        
+        -- Flip the LSB of the lane index to get the index for the other lane
+        -- in the pair.
+        otherLane := flipBit(lane, 0);
+        
+        -- The data is valid when the other lane is executing a LIMMH
+        -- instruction with target set to 1.
+        limmhFromNeigh(lane)      <= pl2limm_data(otherLane);
+        limmhFromNeighValid(lane) <= pl2limm_enable(otherLane) and pl2limm_target(otherLane);
+        
+      end loop;
+      
+    end process;
+    
+  end generate;
+  no_limmh_neighbor_routing_gen: if not CFG.limmhFromNeighbor generate
+    
+    -- Connect the output data to undefined/disabled so it isn't used by the
+    -- muxing logic.
+    limmhFromNeigh <= (others => (others => RVEX_UNDEF));
+    limmhFromNeighValid <= (others => '0');
+    
+  end generate;
+  
+  -----------------------------------------------------------------------------
+  -- Mux between LIMMH data signals and generate error signals
+  -----------------------------------------------------------------------------
+  limmh_data_and_error: process (
+    limmhFromPrev, limmhFromPrevValid,
+    limmhFromNeigh, limmhFromNeighValid,
+    pl2limm_valid, pl2limm_enable, pl2limm_target
+  ) is
+  begin
+    for lane in 2**CFG.numLanesLog2-1 downto 0 loop
+      
+      -- Drive the data and valid signals.
+      if limmhFromPrevValid(lane) = '1' then
+        limm2pl_data(lane)   <= limmhFromPrev(lane);
+        limm2pl_enable(lane) <= limmhFromPrevValid(lane);
+      else
+        limm2pl_data(lane)   <= limmhFromNeigh(lane);
+        limm2pl_enable(lane) <= limmhFromNeighValid(lane);
+      end if;
+      
+      -- Drive the error signal. Assume no error, then try to find one.
+      limm2pl_error(lane) <= '0';
+      
+      -- Check for unsupported forwarding requests.
+      if pl2limm_valid(lane) = '1' and pl2limm_enable(lane) = '1' then
+        
+        -- Trying to target neighboring lane in pair.
+        if pl2limm_target(lane) = '1' and not CFG.limmhFromNeighbor then
+          limm2pl_error(lane) <= '1';
+        end if;
+        
+        -- Trying to target next pair.
+        if pl2limm_target(lane) = '0' and not CFG.limmhFromPreviousPair then
+          limm2pl_error(lane) <= '1';
+        end if;
+        
+      end if;
+      
+      -- Check for forwarding collisions (when two lanes try to forward to the
+      -- same lane).
+      if limmhFromPrevValid(lane) = '1' and limmhFromNeighValid(lane) = '1' then
+        limm2pl_error(lane) <= '1';
+      end if;
+      
+    end loop;
+  end process;
   
 end Behavioral;
 

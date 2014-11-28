@@ -52,6 +52,7 @@ use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_trap_pkg.all;
+use work.rvex_utils_pkg.all;
 
 --=============================================================================
 -- This entity controls trap arbitration, merging and forwarding.
@@ -61,7 +62,7 @@ entity rvex_trapRouting is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type := RVEX_DEFAULT_CONFIG
+    CFG                         : rvex_generic_config_type
     
   );
   port (
@@ -104,10 +105,6 @@ end rvex_trapRouting;
 --=============================================================================
 architecture Behavioral of rvex_trapRouting is
 --=============================================================================
-  
-  -- This signal is set to the combined value of all traps amongst coupled
-  -- pipelanes.
-  --signal combinedTraps          : trap_info_stages_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture

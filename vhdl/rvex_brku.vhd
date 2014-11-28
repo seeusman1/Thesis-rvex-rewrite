@@ -125,15 +125,16 @@ begin -- architecture
   
   -- Make sure that the pipeline configuration correctly specifies that the
   -- breakpoint unit is combinatorial.
-  -- pragma translate_off
-  process is
-  begin
-    if L_BRK /= 0 then
-      report "Pipeline configuration: breakpoint unit latency (L_BRK) must be set to 0." severity failure;
-    end if;
-    wait;
-  end process;
-  -- pragma translate_on
+  assert L_BRK = 0
+    report "Pipeline configuration: breakpoint unit latency (L_BRK) must be "
+         & "set to 0."
+    severity failure;
+
+  -- We only support up to 4 breakpoints. Try to throw a nice error before
+  -- killing simulation/synthesis with out-of-range errors.
+  assert CFG.numBreakpoints <= 4
+    report "Cannot support more than 4 breakpoints."
+    severity failure;
   
   -- Determine whether to trigger a debug trap or not and if so, which.
   det_trap: process (

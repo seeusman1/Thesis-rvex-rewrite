@@ -312,6 +312,26 @@ begin -- architecture
 --=============================================================================
   
   -----------------------------------------------------------------------------
+  -- Check configuration
+  -----------------------------------------------------------------------------
+  assert CFG.numLaneGroupsLog2 <= CFG.numLanesLog2
+    report "Cannot have more lane groups than there are lanes."
+    severity failure;
+  
+  assert CFG.genBundleSizeLog2 >= (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
+    report "Cannot support generic binary bundle size smaller than the "
+         & "number of lanes in a group."
+    severity failure;
+  
+  assert CFG.memLaneRevIndex < 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
+    report "Memory lane index out of group range."
+    severity failure;
+  
+  assert CFG.branchLaneRevIndex < 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
+    report "Branch unit lane index out of group range."
+    severity failure;
+  
+  -----------------------------------------------------------------------------
   -- Instantiate the pipelanes
   -----------------------------------------------------------------------------
   gen_lanes: for lane in 2**CFG.numLanesLog2-1 downto 0 generate
@@ -332,21 +352,16 @@ begin -- architecture
     -- Whether lane should have a multiplier.
     constant mul: boolean := ((CFG.multiplierLanes / 2**lane) mod 2) = 1;
     
-    -- Whether lane should have a memory unit. This is assumed to be the
-    -- second-to-last lane in a generic binary bundle, so the second-to-last
-    -- lane in each group needs to have a memory unit. In order to somewhat
-    -- handle having only 1 lane per group, we always instantiate a memory unit
-    -- in that case.
-    constant mem: boolean := (laneIndexRev = 1) or (LANES_PER_GROUP = 1);
+    -- Whether lane should have a memory unit.
+    constant mem: boolean := (laneIndexRev = CFG.memLaneRevIndex) or (LANES_PER_GROUP = 1);
     
     -- Whether lane should have a breakpoint unit. We instantiate a breakpoint
-    -- unit for each lane which has a memory unit.
+    -- unit for each lane which has a memory unit, which is the minimum needed
+    -- to support data memory breakpoints for each runtime configuration.
     constant brk: boolean := mem;
     
-    -- Whether lane should have a branch unit. Branches should always be in the
-    -- last syllable of a generic binary bundle, so the last lane within a
-    -- group should have a branch unit.
-    constant br: boolean := laneIndexRev = 0;
+    -- Whether lane should have a branch unit.
+    constant br: boolean := laneIndexRev = CFG.branchLaneRevIndex;
     
   begin
     
