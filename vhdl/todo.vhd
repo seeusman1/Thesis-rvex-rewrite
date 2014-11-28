@@ -50,7 +50,7 @@ use IEEE.std_logic_1164.all;
 -- [?] cxplif = ConteXt Register InterFace @ rvex_contextPipelaneIFace.vhd
 -- [.] dmsw   = Data Memory SWitch         @ rvex_dmemSwitch.vhd
 -- [.] limm   = Long IMMediate routing     @ rvex_limmRouting.vhd
--- [.] trap   = TRAP routing               @ rvex_trapRouting.vhd
+-- [x] trap   = TRAP routing               @ rvex_trapRouting.vhd
 -- [?] cxreg  = ConteXt REGister logic     @ rvex_contextRegLogic.vhd
 -- [?] creg   = Control REGisters          @ rvex_ctrlRegs.vhd
 -- [ ] gbreg  = GloBal REGister logic      @ rvex_globalRegLogic.vhd

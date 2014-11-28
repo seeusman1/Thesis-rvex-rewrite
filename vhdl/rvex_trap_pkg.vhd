@@ -103,6 +103,10 @@ package rvex_trap_pkg is
     arg    => (others => '0')
   );
   
+  -- Merges two trap info records together, giving priority to the second
+  -- operand.
+  function "&"(l: trap_info_type; r: trap_info_type) return trap_info_type;
+  
   -----------------------------------------------------------------------------
   -- Trap cause decoding table entry type
   -----------------------------------------------------------------------------
@@ -249,6 +253,17 @@ end rvex_trap_pkg;
 package body rvex_trap_pkg is
 --=============================================================================
 
+  -- Merges two trap info records together, giving priority to the second
+  -- operand.
+  function "&"(l: trap_info_type; r: trap_info_type) return trap_info_type is
+  begin
+    if r.active = '1' then
+      return r;
+    else
+      return l;
+    end if;
+  end "&";
+  
   -- Shorthand for converting a natural trap ID to an rvex_trap_type.
   function rvex_trap(t: natural) return rvex_trap_type is
   begin

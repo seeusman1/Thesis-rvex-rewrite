@@ -67,6 +67,30 @@ package rvex_intIface_pkg is
     CFG   : rvex_generic_config_type
   ) return natural;
   
+  -- Converts a group index to the first lane index in it.
+  function group2firstLane (
+    laneGroup : natural;
+    CFG       : rvex_generic_config_type
+  ) return natural;
+  
+  -- Converts a lane index to the index of the first lane in the group.
+  function lane2firstLane (
+    lane      : natural;
+    CFG       : rvex_generic_config_type
+  ) return natural;
+  
+  -----------------------------------------------------------------------------
+  -- Utility functions
+  -----------------------------------------------------------------------------
+  -- Determines the indices for a block in a binary tree. See package body for
+  -- more information.
+  procedure binTreeIndices(
+    level       : in  natural;
+    blockIndex  : in  natural;
+    indexA      : out natural;
+    indexB      : out natural
+  );
+  
   -----------------------------------------------------------------------------
   -- Common datatypes
   -----------------------------------------------------------------------------
@@ -233,11 +257,75 @@ package body rvex_intIface_pkg is
   -----------------------------------------------------------------------------
   -- Converts a lane index to a group index.
   function lane2group (
-    lane  : natural;
-    CFG   : rvex_generic_config_type
+    lane      : natural;
+    CFG       : rvex_generic_config_type
   ) return natural is
   begin
     return lane / 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2);
   end lane2group;
+  
+  -- Converts a group index to the first lane index in it.
+  function group2firstLane (
+    laneGroup : natural;
+    CFG       : rvex_generic_config_type
+  ) return natural is
+  begin
+    return laneGroup * 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2);
+  end group2firstLane;
+  
+  -- Converts a lane index to the index of the first lane in the group.
+  function lane2firstLane (
+    lane      : natural;
+    CFG       : rvex_generic_config_type
+  ) return natural is
+  begin
+    return group2firstLane(lane2group(lane, CFG), CFG);
+  end lane2firstLane;
+  
+  -----------------------------------------------------------------------------
+  -- Utility functions
+  -----------------------------------------------------------------------------
+  -- Used to construct a binary tree network for connecting pipelane groups
+  -- together which looks like this:
+  --                                     indexA, indexB
+  --                                           |
+  --         ___       ___        ___          v
+  --   ---->| 0 |---->| 0 |----->| 0 |-------> 0
+  --        |   |     | __|      | __|
+  --   ---->|___|----->| 1 |----->| 1 |------> 1
+  --         ___      ||   |     || __|
+  --   ---->| 1 |---->||   | ----->| 2 |-----> 2
+  --        |   |      |   |     ||| __|
+  --   ---->|___|----->|___|------->| 3 |----> 3
+  --         ___       ___       ||||   |
+  --   ---->| 2 |---->| 2 |----->||||   | ---> 4
+  --        |   |     | __|       |||   |
+  --   ---->|___|----->| 3 |----->|||   | ---> 5
+  --         ___      ||   |       ||   |
+  --   ---->| 3 |---->||   | ----->||   | ---> 6
+  --        |   |      |   |        |   |
+  --   ---->|___|----->|___|------->|___|----> 7
+  --
+  -- level -> 0          1            2
+  --
+  -- Number in blocks: blockIndex
+  --
+  -- The method takes level and block as parameters and outputs the indices for
+  -- each connection block. The outer loop for level should range from 0 to
+  -- log2(numIndices)-1, the inner loop for blockIndex should range from 0 to
+  -- numIndices/2-1.
+  procedure binTreeIndices(
+    level       : in  natural;
+    blockIndex  : in  natural;
+    indexA      : out natural;
+    indexB      : out natural
+  ) is
+    variable index: natural;
+  begin
+    index   := (blockIndex / 2**level) * 2 * 2**level
+             + (blockIndex mod 2**level);
+    indexA  := index;
+    indexB  := index + 2**level;
+  end procedure;
   
 end rvex_intIface_pkg;
