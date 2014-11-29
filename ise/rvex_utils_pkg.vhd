@@ -89,7 +89,19 @@ package rvex_utils_pkg is
     value       : natural;
     bitIndex    : natural
   ) return natural;
-    
+  
+  -- Returns the minimum value of the two operands.
+  function min_nat(
+    a           : natural;
+    b           : natural
+  ) return natural;
+  
+  -- Returns the maximum value of the two operands.
+  function max_nat(
+    a           : natural;
+    b           : natural
+  ) return natural;
+  
 end rvex_utils_pkg;
 
 --=============================================================================
@@ -178,5 +190,31 @@ package body rvex_utils_pkg is
              (value / (2**bitIndex)) mod 2             -- ... the value at bitIndex...
            )) * (2**bitIndex);                         -- ... and shift it back to its position.
   end flipBit;
+  
+  -- Returns the minimum value of the two operands.
+  function min_nat(
+    a           : natural;
+    b           : natural
+  ) return natural is
+  begin
+    if a > b then
+      return b;
+    else
+      return a;
+    end if;
+  end min_nat;
+  
+  -- Returns the maximum value of the two operands.
+  function max_nat(
+    a           : natural;
+    b           : natural
+  ) return natural is
+  begin
+    if a > b then
+      return a;
+    else
+      return b;
+    end if;
+  end max_nat;
   
 end rvex_utils_pkg;

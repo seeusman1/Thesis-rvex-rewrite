@@ -136,10 +136,11 @@ begin -- architecture
           coupled := cfg2any_coupled(lane2group(laneA, CFG) + lane2group(laneB, CFG) * 2**CFG.numLaneGroupsLog2);
         end if;
         
-        -- Merge the trap signals for each stage.
+        -- Merge the trap signals for each stage, giving priority to the lower
+        -- indexed pipelane.
         if coupled = '1' then
           for stage in S_FIRST to S_LTRP loop
-            combined := combinedTraps(laneB)(stage) & combinedTraps(laneA)(stage);
+            combined := combinedTraps(laneA)(stage) & combinedTraps(laneB)(stage);
             combinedTraps(laneA)(stage) := combined;
             combinedTraps(laneB)(stage) := combined;
           end loop;

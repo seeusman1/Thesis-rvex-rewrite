@@ -65,7 +65,7 @@ package rvex_intIface_pkg is
   -- prefixed with rvex_ mostly for consistency with the basic types which are
   -- also used in the external interface.
   subtype rvex_opcode_type      is std_logic_vector(31 downto 24); -- Opcode portion of a syllable.
-  subtype rvex_gpRegAddr_type   is std_logic_vector( 4 downto  0); -- General purpose register file address (excluding context).
+  subtype rvex_gpRegAddr_type   is std_logic_vector( 5 downto  0); -- General purpose register file address (excluding context).
   subtype rvex_brRegAddr_type   is std_logic_vector( 2 downto  0); -- Branch register file address (excluding context).
   subtype rvex_brRegData_type   is std_logic_vector( 7 downto  0); -- Branch register mask (excluding context), i.e., one bit per flag.
   subtype rvex_2bit_type        is std_logic_vector( 1 downto  0); -- Any 2-bit word, used for configuration control.
@@ -94,6 +94,17 @@ package rvex_intIface_pkg is
   -- undefined values to '0' here.
   constant RVEX_UNDEF           : std_logic := 'U';
   
+  -- Special "general purpose" register which is always tied to 0.
+  constant GPREG_ZERO           : rvex_gpRegAddr_type := "000000";
+  
+  -- Special "general purpose" register which is used as stack pointer by
+  -- return instructions.
+  constant GPREG_STACK          : rvex_gpRegAddr_type := "000001";
+  
+  -- Special "general purpose" register which optionally maps to the link
+  -- register, based on configuration.
+  constant GPREG_LINK           : rvex_gpRegAddr_type := "111111";
+  
   -- Size of the control register file accessible from the core through data
   -- memory operations. TODO: this should go to the appropriate package for the
   -- control register map when it's created.
@@ -118,7 +129,7 @@ package rvex_intIface_pkg is
 
   type gpreg2pl_readPort_type is record
     
-    -- Forwarded read data for all stages which forwarding information. Valid
+    -- Forwarded read data for all stages which are forwarded to. Valid
     -- indicates whether the contents of data are meaningful; when valid is
     -- low, the value from the previous pipeline stage should be used.
     data                        : rvex_data_array(S_RD+L_RD to S_FW);
@@ -166,7 +177,7 @@ package rvex_intIface_pkg is
   -- Branch/link register file read port.
   type cxreg2pl_readPort_type is record
     
-    -- Forwarded read data for all stages which forwarding information.
+    -- Forwarded read data for all stages which are forwarded to.
     brData                      : rvex_brRegData_array(S_SRD to S_SFW);
     linkData                    : rvex_address_array(S_SRD to S_SFW);
     

@@ -217,6 +217,10 @@ begin -- architecture
          & "pipeline_pkg.vhd."
     severity failure;
   
+  assert L_ALU = L_ALU1 + L_ALU2
+    report "Total latency for the ALU must match sum of phase latencies."
+    severity failure;
+  
   -----------------------------------------------------------------------------
   -- Prepare execution phase 1 (operand mux)
   -----------------------------------------------------------------------------

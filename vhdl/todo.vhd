@@ -39,7 +39,7 @@ use IEEE.std_logic_1164.all;
 -- Entity TODO list:
 -- [.] rv     = RVex processor             @ rvex.vhd
 -- [?] pls    = PipeLaneS                  @ rvex_pipelanes.vhd
--- [.] pl     = PipeLane                   @ rvex_pipelane.vhd
+-- [x] pl     = PipeLane                   @ rvex_pipelane.vhd
 -- [x] br     = BRanch unit                @ rvex_branch.vhd
 -- [x] alu    = Arith. Logic Unit          @ rvex_alu.vhd
 -- [x] memu   = MEMory Unit                @ rvex_memu.vhd

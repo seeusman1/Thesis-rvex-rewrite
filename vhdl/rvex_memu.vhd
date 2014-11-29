@@ -86,6 +86,10 @@ entity rvex_memu is
     ---------------------------------------------------------------------------
     -- Pipelane interface
     ---------------------------------------------------------------------------
+    -- Instruction valid bit. Invalid instructions should not commit anything,
+    -- so they should not write to the memory.
+    pl2memu_valid               : in  std_logic_vector(S_MEM to S_MEM);
+    
     -- Opcode.
     pl2memu_opcode              : in  rvex_opcode_array(S_MEM to S_MEM);
     
@@ -215,10 +219,10 @@ begin -- architecture
   -- Setup write enable and read enable based on the control signals and
   -- alignment detection.
   memu2dmsw_readEnable(S_MEM)
-    <= ctrl(S_MEM).readEnable and not misalignedAccess(S_MEM);
+    <= ctrl(S_MEM).readEnable and pl2memu_valid(S_MEM) and not misalignedAccess(S_MEM);
     
   memu2dmsw_writeEnable(S_MEM)
-    <= ctrl(S_MEM).writeEnable and not misalignedAccess(S_MEM);
+    <= ctrl(S_MEM).writeEnable and pl2memu_valid(S_MEM) and not misalignedAccess(S_MEM);
   
   -- Setup the trap output to the pipeline.
   memu2pl_trap(S_MEM) <= (
@@ -283,7 +287,7 @@ begin -- architecture
         
         -- Select the appropriate halfword.
         case readCtrl(S_MEM+L_MEM).addrLSB(1 downto 1) is
-          when "00"   => halfword := dmsw2memu_readData(S_MEM+L_MEM)(31 downto 16);
+          when "0"    => halfword := dmsw2memu_readData(S_MEM+L_MEM)(31 downto 16);
           when others => halfword := dmsw2memu_readData(S_MEM+L_MEM)(15 downto  0);
         end case;
         

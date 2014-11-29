@@ -124,17 +124,17 @@ package rvex_pipeline_pkg is
   --  - S_PCP1 = 1 or 2
   constant S_PCP1   : natural := 1;
   
-  -- Long immediate forwarding block stage.
-  -- Requirements:
-  --  - S_LIMM >= S_IF + L_IF
-  constant S_LIMM   : natural := 2;
-  
   -- Branch target adder stage. This is the adder which adds PC+1 to the
   -- instruction immediate. This is a combinatorial block build into
   -- rvex_pipelane.vhd, so there is no latency.
   -- Requirements:
-  --  - S_BTGT >= max(S_LIMM, S_PCP1)
+  --  - S_BTGT >= S_PCP1
   constant S_BTGT   : natural := 2;
+  
+  -- Long immediate forwarding block stage.
+  -- Requirements:
+  --  - S_LIMM >= S_IF + L_IF
+  constant S_LIMM   : natural := 2;
   
   -- Stage which trap information from the last stage is forwarded to.
   -- Requirements:
@@ -172,7 +172,8 @@ package rvex_pipeline_pkg is
   
   -- Branch determination stage.
   -- Requirement:
-  --  - S_BR >= max(S_BTGT, S_TRAP, S_SRD, S_PCP1)
+  --  - S_BR >= max(S_BTGT, S_SRD, S_PCP1)
+  --  - S_BR > S_TRAP
   constant S_BR     : natural := 3;
   
   -- ALU stage and configuration. L_ALU1 determines whether there are registers
@@ -206,7 +207,7 @@ package rvex_pipeline_pkg is
   
   -- Breakpoint unit stage and latency.
   -- Requirements:
-  --  - S_BRK >= max(S_RD + L_RD, S_ALU + L_ALU1)
+  --  - S_BRK >= S_ALU + L_ALU1
   --  - L_BRK = 0
   constant S_BRK    : natural := 4;
   constant L_BRK    : natural := 0;

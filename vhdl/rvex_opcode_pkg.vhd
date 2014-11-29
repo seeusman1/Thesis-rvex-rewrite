@@ -155,7 +155,19 @@ package rvex_opcode_pkg is
       syntax_reg => "limmh %i1, %i2                                    ",
       syntax_imm => "limmh %i1, %i2                                    ",
       valid => "11",
-      datapathCtrl => DP_CTRL_NOP,
+      datapathCtrl => DP_CTRL_LIMMH,
+      aluCtrl => ALU_CTRL_NOP,
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_NOP
+    ),
+    
+    -- TRAP: software trap. First parameter is the trap argument, second
+    -- parameter is the trap cause byte.
+    2#10010000# => (
+      syntax_reg => "trap r#.%r2, r#.%r3                               ",
+      syntax_imm => "trap r#.%r2, %id                                  ",
+      valid => "11",
+      datapathCtrl => DP_CTRL_TRAP,
       aluCtrl => ALU_CTRL_NOP,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_NOP
@@ -952,17 +964,6 @@ package rvex_opcode_pkg is
       datapathCtrl => DP_CTRL_BR_SP,
       aluCtrl => ALU_CTRL_NOP,
       branchCtrl => BRANCH_CTRL_RFI,
-      memoryCtrl => MEMORY_CTRL_NOP
-    ),
-    
-    -- TRAP: software trap.
-    2#10010000# => (
-      syntax_reg => "trap %iu                                          ",
-      syntax_imm => "trap %iu                                          ",
-      valid => "11",
-      datapathCtrl => DP_CTRL_BR,
-      aluCtrl => ALU_CTRL_NOP,
-      branchCtrl => BRANCH_CTRL_TRAP,
       memoryCtrl => MEMORY_CTRL_NOP
     ),
     

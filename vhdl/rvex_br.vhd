@@ -120,6 +120,14 @@ entity rvex_br is
     -- Run bit for this pipelane from the configuration logic.
     cfg2br_run                  : in  std_logic;
     
+    -- External interrupt identification. Guaranteed to be loaded in the trap
+    -- argument register in the same clkEn'd cycle where irqAck is high.
+    cxplif2br_irqID             : in  rvex_address_array(S_BR to S_BR);
+    
+    -- External interrupt acknowledge signal, active high. and'ed with the
+    -- stall input, so it goes high for exactly one clkEn'abled cycle.
+    br2cxplif_irqAck            : out std_logic_vector(S_BR to S_BR);
+    
     -- Active high run signal. This is the combined run signal from the
     -- external run input and the BRK flag in the debug control register.
     cxplif2br_run               : in  std_logic;
@@ -305,7 +313,7 @@ begin -- architecture
   -- Determine next PC source and control signal states
   -----------------------------------------------------------------------------
   det_branch: process (
-    ctrl, run, run_r,
+    stall, ctrl, run, run_r, cxplif2br_irqID,
     pl2br_opBr,
     pl2br_trapPending, cxplif2br_overridePC,
     pl2br_trapToHandleInfo, pl2br_trapToHandlePoint,
@@ -327,6 +335,9 @@ begin -- architecture
     
     -- Don't clear the breakpoint enable register by default.
     brkptEnableClear(S_BR) <= '0';
+    
+    -- Do not acknowledge interrupts by default.
+    br2cxplif_irqAck(S_BR) <= '0';
     
     if cxplif2br_overridePC(S_IF+1) = '1' then
       
@@ -363,6 +374,13 @@ begin -- architecture
         -- handler.
         nextPCsrc(S_BR) <= NEXT_PC_TRAP_HANDLER;
         br2cxplif_exDbgTrapInfo(S_BR).active <= '0';
+        
+        -- Handle interrupt handshaking and override the trap argument with the
+        -- current interrupt ID.
+        if rvex_isInterruptTrap(pl2br_trapToHandleInfo(S_BR)) = '1' then
+          br2cxplif_trapInfo(S_BR).arg <= cxplif2br_irqID(S_BR);
+          br2cxplif_irqAck(S_BR) <= not stall;
+        end if;
         
       end if;
       

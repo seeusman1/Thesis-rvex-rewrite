@@ -44,7 +44,8 @@
 -- Copyright (C) 2008-2014 by TU Delft.
 
 library IEEE;
-use IEEE.STD_LOGIC_1164.all;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
 
 --=============================================================================
 -- This package contains type definitions and constants relevant both in the
@@ -133,6 +134,11 @@ package rvex_pkg is
     -- binary bundle.
     limmhFromPreviousPair       : boolean;
     
+    -- When true, general purpose register 63 maps directly to the link
+    -- register. When false, MTL, MFL, STL and LDL must be used to access the
+    -- link register.
+    reg63isLink                 : boolean;
+    
     -- Start address in the data address space for the 128-byte control
     -- register file. Must be aligned to a 128-byte boundary.
     cregStartAddress            : rvex_address_type;
@@ -156,6 +162,7 @@ package rvex_pkg is
     forwarding                  => true,
     limmhFromNeighbor           => true,
     limmhFromPreviousPair       => true,
+    reg63isLink                 => false,
     cregStartAddress            => X"FFFFFF80",
     resetVectors                => (others => (others => '0'))
   );

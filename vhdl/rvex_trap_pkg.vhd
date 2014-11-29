@@ -103,6 +103,13 @@ package rvex_trap_pkg is
     arg    => (others => '0')
   );
   
+  -- Undefined value for trap_info_type signals.
+  constant TRAP_INFO_UNDEF      : trap_info_type := (
+    active => RVEX_UNDEF,
+    cause  => (others => RVEX_UNDEF),
+    arg    => (others => RVEX_UNDEF)
+  );
+  
   -- Merges two trap info records together, giving priority to the second
   -- operand.
   function "&"(l: trap_info_type; r: trap_info_type) return trap_info_type;
@@ -122,6 +129,11 @@ package rvex_trap_pkg is
     -- occurs.
     isDebugTrap                 : std_logic;
     
+    -- Defines whether this is an external interrupt trap or not. When set,
+    -- the irqAck signal will be asserted for one cycle when the trap is
+    -- entered.
+    isInterrupt                 : std_logic;
+    
   end record;
   
   -- Array type of the above to get a table. The index of this table is the
@@ -137,9 +149,13 @@ package rvex_trap_pkg is
   -- Exceptions.
   constant RVEX_TRAP_INVALID_OP         : natural := 1;
   constant RVEX_TRAP_MISALIGNED_BRANCH  : natural := 2;
-  constant RVEX_TRAP_MISALIGNED_ACCESS  : natural := 3;
-  constant RVEX_TRAP_FETCH_FAULT        : natural := 4;
+  constant RVEX_TRAP_FETCH_FAULT        : natural := 3;
+  constant RVEX_TRAP_MISALIGNED_ACCESS  : natural := 4;
   constant RVEX_TRAP_DMEM_FAULT         : natural := 5;
+  constant RVEX_TRAP_LIMMH_FAULT        : natural := 6;
+  
+  -- External interrupt trap.
+  constant RVEX_TRAP_EXT_INTERRUPT      : natural := 7;
   
   -- Debugging traps are positioned at the end of the range. We reserve 8 slots
   -- so the debug trap signal is easy to decode.
@@ -164,82 +180,126 @@ package rvex_trap_pkg is
   --   "@"  --> Converts to " at " + trap point represented in hex when known.
   --            When trap point is not specified, the character is removed.
   --   "%x" --> Trap argument represented in hex.
+  --   "%d" --> Trap argument represented in decimal.
   constant TRAP_TABLE : trapTable_type := (
     
     -- Normal operation.
     RVEX_TRAP_NONE => (
       name => "none                                              ",
-      isDebugTrap => '0'
+      isDebugTrap => '0',
+      isInterrupt => '0'
     ),
     
-    -- Invalid operation.
+    -- Invalid operation. Triggered when an unknown opcode or an opcode using
+    -- a functional unit which does not exist in the lane is encountered.
+    -- Argument: exact PC for the lane with the invalid opcode.
     RVEX_TRAP_INVALID_OP => (
       name => "trap %c: invalid opcode@                          ",
-      isDebugTrap => '0'
+      isDebugTrap => '0',
+      isInterrupt => '0'
     ),
     
     -- Misaligned branch target.
+    -- Argument: branch target.
     RVEX_TRAP_MISALIGNED_BRANCH => (
       name => "trap %c: misaligned branch@; target was %x        ",
-      isDebugTrap => '0'
-    ),
-    
-    -- Misaligned memory access.
-    RVEX_TRAP_MISALIGNED_ACCESS => (
-      name => "trap %c: misaligned access@; address was %x       ",
-      isDebugTrap => '0'
+      isDebugTrap => '0',
+      isInterrupt => '0'
     ),
     
     -- Instruction fetch fault.
+    -- Argument: PC which was being fetched.
     RVEX_TRAP_FETCH_FAULT => (
       name => "trap %c: instr. fetch fault@; PC was %x           ",
-      isDebugTrap => '0'
+      isDebugTrap => '0',
+      isInterrupt => '0'
+    ),
+    
+    -- Misaligned memory access.
+    -- Argument: data memory address where access was attempted.
+    RVEX_TRAP_MISALIGNED_ACCESS => (
+      name => "trap %c: misaligned access@; address was %x       ",
+      isDebugTrap => '0',
+      isInterrupt => '0'
     ),
     
     -- Data memory fault.
+    -- Argument: data memory address where access was attempted.
     RVEX_TRAP_DMEM_FAULT => (
       name => "trap %c: data memory fault@; address was %x       ",
-      isDebugTrap => '0'
+      isDebugTrap => '0',
+      isInterrupt => '0'
+    ),
+    
+    -- LIMMH forwarding fault. This occurs when:
+    --  - the requested type of forwarding is not supported by the current
+    --    configuration (triggered in source lane);
+    --  - two LIMMH syllables are attempting to forward to the same lane
+    --    (triggered in destination lane);
+    --  - the destination lane is not using the immediate value (triggered in
+    --    destination lane).
+    -- Argument: exact PC for the source or destination lane (see above).
+    RVEX_TRAP_LIMMH_FAULT => (
+      name => "trap %c: LIMMH forwarding fault@                  ",
+      isDebugTrap => '0',
+      isInterrupt => '0'
+    ),
+    
+    -- External interrupt.
+    -- Argument: interrupt identification.
+    RVEX_TRAP_EXT_INTERRUPT => (
+      name => "trap %c: external interrupt %d                    ",
+      isDebugTrap => '0',
+      isInterrupt => '1'
     ),
     
     -- Debug traps.
     RVEX_TRAP_SOFT_DEBUG_0 => (
       name => "trap %c: software debug trap 0@, address/PC %x    ",
-      isDebugTrap => '1'
+      isDebugTrap => '1',
+      isInterrupt => '0'
     ),
     RVEX_TRAP_SOFT_DEBUG_1 => (
       name => "trap %c: software debug trap 1@, address/PC %x    ",
-      isDebugTrap => '1'
+      isDebugTrap => '1',
+      isInterrupt => '0'
     ),
     RVEX_TRAP_SOFT_DEBUG_2 => (
       name => "trap %c: software debug trap 2@, address/PC %x    ",
-      isDebugTrap => '1'
+      isDebugTrap => '1',
+      isInterrupt => '0'
     ),
     RVEX_TRAP_STEP_COMPLETE => (
       name => "trap %c: step complete trap@, address/PC %x       ",
-      isDebugTrap => '1'
+      isDebugTrap => '1',
+      isInterrupt => '0'
     ),
     RVEX_TRAP_HW_BREAKPOINT_0 => (
       name => "trap %c: hardware breakpoint 0@, address/PC %x    ",
-      isDebugTrap => '1'
+      isDebugTrap => '1',
+      isInterrupt => '0'
     ),
     RVEX_TRAP_HW_BREAKPOINT_1 => (
       name => "trap %c: hardware breakpoint 1@, address/PC %x    ",
-      isDebugTrap => '1'
+      isDebugTrap => '1',
+      isInterrupt => '0'
     ),
     RVEX_TRAP_HW_BREAKPOINT_2 => (
       name => "trap %c: hardware breakpoint 2@, address/PC %x    ",
-      isDebugTrap => '1'
+      isDebugTrap => '1',
+      isInterrupt => '0'
     ),
     RVEX_TRAP_HW_BREAKPOINT_3 => (
       name => "trap %c: hardware breakpoint 3@, address/PC %x    ",
-      isDebugTrap => '1'
+      isDebugTrap => '1',
+      isInterrupt => '0'
     ),
     
     -- All other traps are unknown, but are handled appropriately.
     others => (
       name => "trap %c@ (unknown)                                ",
-      isDebugTrap => '0'
+      isDebugTrap => '0',
+      isInterrupt => '0'
     )
   );
   
@@ -247,20 +307,24 @@ package rvex_trap_pkg is
   -- trap_info_type record.
   function rvex_isDebugTrap(t: trap_info_type) return std_logic;
   
+  -- Shorthand for extracting the isInterrupt signal from an (encoded)
+  -- trap_info_type record.
+  function rvex_isInterruptTrap(t: trap_info_type) return std_logic;
+  
 end rvex_trap_pkg;
 
 --=============================================================================
 package body rvex_trap_pkg is
 --=============================================================================
 
-  -- Merges two trap info records together, giving priority to the second
+  -- Merges two trap info records together, giving priority to the first
   -- operand.
   function "&"(l: trap_info_type; r: trap_info_type) return trap_info_type is
   begin
-    if r.active = '1' then
-      return r;
-    else
+    if l.active = '1' then
       return l;
+    else
+      return r;
     end if;
   end "&";
   
@@ -276,5 +340,12 @@ package body rvex_trap_pkg is
   begin
     return TRAP_TABLE(to_integer(unsigned(t.cause))).isDebugTrap;
   end rvex_isDebugTrap;
+  
+  -- Shorthand for extracting the isInterrupt signal from an (encoded)
+  -- trap_info_type record.
+  function rvex_isInterruptTrap(t: trap_info_type) return std_logic is
+  begin
+    return TRAP_TABLE(to_integer(unsigned(t.cause))).isInterrupt;
+  end rvex_isInterruptTrap;
   
 end rvex_trap_pkg;

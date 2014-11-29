@@ -50,6 +50,7 @@ use IEEE.numeric_std.all;
 library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_trap_pkg.all;
 use work.rvex_opcode_pkg.all;
@@ -122,9 +123,13 @@ entity rvex_pipelane is
     -- by the interrupt enable bit in the control register.
     cxplif2pl_irq               : in  std_logic_vector(S_MEM+1 to S_MEM+1);
     
+    -- External interrupt identification. Guaranteed to be loaded in the trap
+    -- argument register in the same clkEn'd cycle where irqAck is high.
+    cxplif2br_irqID             : in  rvex_address_array(S_BR to S_BR);
+    
     -- External interrupt acknowledge signal, active high. and'ed with the
     -- stall input, so it goes high for exactly one clkEn'abled cycle.
-    pl2cxplif_irqAck            : out std_logic_vector(S_MEM to S_MEM);
+    br2cxplif_irqAck            : out std_logic_vector(S_BR to S_BR);
     
     -- Active high run signal. This is the combined run signal from the
     -- external run input and the BRK flag in the debug control register.
@@ -345,24 +350,35 @@ end rvex_pipelane;
 architecture Behavioral of rvex_pipelane is
 --=============================================================================
   
-  -----------------------------------------------------------------------------
+  --===========================================================================
   -- Pipeline signals
+  --===========================================================================
+  -- This section defines the syllable state type and contains the signal
+  -- declarations for the pipeline registers.
+  
   -----------------------------------------------------------------------------
-  -- Datapath state record.
+  -- Datapath state record
+  -----------------------------------------------------------------------------
+  -- For additional information about the datapath, refer to the schematics in
+  -- rvex_opcodeDatapath_pkg.vhd.
   type datapathState_type is record
     
     -- Control signals decoded from opcode.
     c                           : datapathCtrlSignals_type;
     
     -- Register selection and read value for general purpose register read
-    -- port A.
+    -- port A. read1lo is set to the link register read value in stead of
+    -- read1 when CFG.reg63isLink is set and src1 is set to rx.63.
     src1                        : rvex_gpRegAddr_type;
     read1                       : rvex_data_type;
+    read1lo                     : rvex_data_type;
     
     -- Register selection and read value for general purpose register read
-    -- port B.
+    -- port B. read2lo is set to the link register read value in stead of
+    -- read2 when CFG.reg63isLink is set and src2 is set to rx.63.
     src2                        : rvex_gpRegAddr_type;
     read2                       : rvex_data_type;
+    read2lo                     : rvex_data_type;
     
     -- Register selection and read value for branch register.
     srcBr                       : rvex_brRegAddr_type;
@@ -371,21 +387,20 @@ architecture Behavioral of rvex_pipelane is
     -- Read value for link register.
     readLink                    : rvex_address_type;
     
-    -- Immediate values for arithmetic and branch operations. These are LIMMH
-    -- extended in the LIMM stage.
+    -- Immediate value for arithmetic operations. This is LIMMH extended in
+    -- the LIMMH stage.
     imm                         : rvex_data_type;
-    brOff                       : rvex_address_type;
     
-    -- Demuxed operands. op1 and op2 go to the arithmetic units. op3 is the write
-    -- value for a memory operations, where op1 + op2 (resAdd) is the address.
+    -- Use-immediate control signal. This is tied to syllable bit 23.
+    useImm                      : std_logic;
+    
+    -- Demuxed operands. op1 and op2 go to the arithmetic units. op3 is the
+    -- write value for a memory operations, where op1 + op2 (resAdd) is the
+    -- address.
     op1                         : rvex_data_type;
     op2                         : rvex_data_type;
     op3                         : rvex_data_type;
     opBr                        : std_logic;
-    
-    -- Computed branch targets, for lanes which have a branch unit.
-    brTgtLink                   : rvex_address_type;
-    brTgtRel                    : rvex_address_type;
     
     -- Results from the functional units.
     resALU                      : rvex_data_type;
@@ -393,34 +408,150 @@ architecture Behavioral of rvex_pipelane is
     resMul                      : rvex_data_type;
     resMem                      : rvex_data_type;
     
-    -- Destination register and value for general purpose register file and link
-    -- register.
+    -- Destination register and value for general purpose register file and
+    -- link register. resValid controls whether the result should be stored
+    -- in and forwarded by the general purpose register file, resLinkValid
+    -- has the same function for the link register.
     dest                        : rvex_gpRegAddr_type;
     res                         : rvex_data_type;
+    resValid                    : std_logic;
+    resLinkValid                : std_logic;
     
-    -- Destination register and value for branch register file.
+    -- Copies of the datapath control signals for the general purpose and
+    -- link register write enables, but taking CFG.reg63isLink into account.
+    -- When CFG.reg63isLink is set, c.gpRegWE is high, and dest is rx.63 then
+    -- gpRegWE_lo is forced low and linkWE_lo is forced high.
+    gpRegWE_lo                  : std_logic;
+    linkWE_lo                   : std_logic;
+    
+    -- Destination register and value for branch register file. resBrValid
+    -- controls whether resBr should be stored and forwarded.
     destBr                      : rvex_brRegAddr_type;
-    resBr                       : std_logic;
+    resBr                       : rvex_brRegData_type;
+    resBrValid                  : rvex_brRegData_type;
     
   end record;
   
-  -- Default/initialization value for datapath.
+  -- Default/initialization value for datapath state.
   constant DATAPATH_STATE_DEFAULT : datapathState_type := (
     c                           => DP_CTRL_NOP,
     readBr                      => RVEX_UNDEF,
+    useImm                      => RVEX_UNDEF,
     opBr                        => RVEX_UNDEF,
-    resBr                       => RVEX_UNDEF,
+    resValid                    => '0',
+    resLinkValid                => '0',
+    gpRegWE_lo                  => RVEX_UNDEF,
+    linkWE_lo                   => RVEX_UNDEF,
+    resBrValid                  => (others => '0'),
     others                      => (others => RVEX_UNDEF)
   );
   
+  -----------------------------------------------------------------------------
+  -- Branch/next PC logic state record
+  -----------------------------------------------------------------------------
+  -- Most signals in here are only valid for lanes with a branch unit.
+  type branchState_type is record
+    
+    -- PC for the next bundle.
+    PC_plusOne                  : rvex_address_type;
+    
+    -- Immediate branch offset from the syllable.
+    branchOffset                : rvex_address_type;
+    
+    -- PC-relative branch target.
+    relativeTarget              : rvex_address_type;
+    
+    -- Link register branch target.
+    linkTarget                  : rvex_address_type;
+    
+    -- This goes high when a trap is pending handling by the branch unit, which
+    -- disables instruction fetching.
+    trapPending                 : std_logic;
+    
+    -- Information about the trap which should be handled by the branch unit.
+    trapInfo                    : trap_info_type;
+    trapPoint                   : rvex_address_type;
+    trapHandler                 : rvex_address_type;
+    
+    -- Return-from-interrupt control signal. This should be forwarded to the
+    -- control registers in the S_MEM stage.
+    RFI                         : std_logic;
+    
+  end record;
+  
+  -- Default/initialization value for branch state.
+  constant BRANCH_STATE_DEFAULT : branchState_type := (
+    trapPending                 => RVEX_UNDEF,
+    trapInfo                    => TRAP_INFO_UNDEF,
+    RFI                         => RVEX_UNDEF,
+    others                      => (others => RVEX_UNDEF)
+  );
+  
+  -----------------------------------------------------------------------------
+  -- Trap logic state record
+  -----------------------------------------------------------------------------
+  type trapState_type is record
+    
+    -- Highest priority trap. Debug traps are merged only after the debug
+    -- enable trap bit is valid.
+    trap                        : trap_info_type;
+    
+    -- Highest priority debug trap, before the debug trap enable control
+    -- register value is valid.
+    debugTrap                   : trap_info_type;
+    
+    -- Trap handler for the current trap, loaded in the S_MEM+1 stage, when the
+    -- latest values written to the control registers by the core are valid.
+    trapHandler                 : rvex_address_type;
+    
+  end record;
+  
+  -- Default/initialization value for trap state.
+  constant TRAP_STATE_DEFAULT : trapState_type := (
+    trap                        => TRAP_INFO_NONE,
+    debugTrap                   => TRAP_INFO_NONE,
+    trapHandler                 => (others => RVEX_UNDEF)
+  );
+  
+  -----------------------------------------------------------------------------
+  -- Combined syllable state record
+  -----------------------------------------------------------------------------
   -- State variable for the execution of a single syllable. This is used for
   -- the pipeline registers.
   type syllableState_type is record
     
-    -- TODO
+    -- Syllable from instruction memory and its address.
+    syllable                    : rvex_syllable_type;
+    lanePC                      : rvex_address_type;
+    
+    -- Current PC for the bundle which is being executed.
+    PC                          : rvex_address_type;
+    
+    -- Opcode portion of the syllable.
+    opcode                      : rvex_opcode_type;
+    
+    -- Whether this instruction is valid and should be committed. May be
+    -- disabled throughout the pipeline due to flushing.
+    valid                       : std_logic;
+    
+    -- Whether long immediates are valid. This may be high while valid is not,
+    -- to indicate that possible long immediates for the next instruction
+    -- should be loaded, but nothing else.
+    limmValid                   : std_logic;
+    
+    -- When low, breakpoints are disabled for this instruction. This is the
+    -- case for the first instruction processed after returning from a debug
+    -- trap handler or after resuming the core by clearing the BRK flag.
+    brkValid                    : std_logic;
     
     -- Datapath signals.
     dp                          : datapathState_type;
+    
+    -- Branch/next PC related signals.
+    br                          : branchState_type;
+    
+    -- Trap-related signals.
+    tr                          : trapState_type;
     
   end record;
   
@@ -428,7 +559,13 @@ architecture Behavioral of rvex_pipelane is
   -- registers upon reset, and is always assigned to the input of the first
   -- stage.
   constant SYLLABLE_STATE_DEFAULT : syllableState_type := (
-    dp                          => DATAPATH_STATE_DEFAULT
+    valid                       => '0',
+    limmValid                   => '0',
+    brkValid                    => '0',
+    dp                          => DATAPATH_STATE_DEFAULT,
+    br                          => BRANCH_STATE_DEFAULT,
+    tr                          => TRAP_STATE_DEFAULT,
+    others                      => (others => RVEX_UNDEF)
   );
   
   -- Array type for syllable state.
@@ -440,9 +577,9 @@ architecture Behavioral of rvex_pipelane is
   signal si                     : syllableState_array(S_FIRST to S_LAST);
   signal so                     : syllableState_array(S_FIRST to S_LAST);
   
-  -----------------------------------------------------------------------------
+  --===========================================================================
   -- Signals between the pipeline and the functional units
-  -----------------------------------------------------------------------------
+  --===========================================================================
   -- Pipelane <-> branch unit interconnect. Refer to branch unit entity for
   -- more information about the signals.
   signal pl2br_opcode           : rvex_opcode_array(S_BR to S_BR);
@@ -477,6 +614,7 @@ architecture Behavioral of rvex_pipelane is
   
   -- Pipelane <-> memory unit interconnect. Refer to memory unit entity for
   -- more information about the signals.
+  signal pl2memu_valid          : std_logic_vector(S_MEM to S_MEM);
   signal pl2memu_opcode         : rvex_opcode_array(S_MEM to S_MEM);
   signal pl2memu_opAddr         : rvex_address_array(S_MEM to S_MEM);
   signal pl2memu_opData         : rvex_data_array(S_MEM to S_MEM);
@@ -494,6 +632,170 @@ architecture Behavioral of rvex_pipelane is
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  --===========================================================================
+  -- Check configuration
+  --===========================================================================
+  assert S_FIRST = 1
+    report "First stage must be set to 1."
+    severity failure;
+  
+  -- Check instruction fetch and decode configuration.
+  assert S_IF >= 1
+    report "Instruction fetch cannot be scheduled before the first stage."
+    severity failure;
+  
+  assert S_LIMM >= S_IF + L_IF
+    report "Immediate forwarding cannot be scheduled before the instruction "
+         & "fetch result is valid."
+    severity failure;
+  
+  -- Check general purpose register file read access and forwarding
+  -- configuration.
+  assert S_RD >= S_IF + L_IF
+    report "General purpose register read cannot be done before the "
+         & "instruction fetch result is valid."
+    severity failure;
+  
+  assert S_FW >= S_RD + L_RD
+    report "The last stage for which general purpose register forwarding "
+         & "occurs may not take place before the general purpose register "
+         & "read result is valid. If you wish to disable forwarding, do so "
+         & "using the CFG generic."
+    severity failure;
+  
+  -- Check special (branch and link) register file read access and forwarding
+  -- configuration.
+  assert S_SRD >= S_IF + L_IF
+    report "Special register read cannot be done before the instruction "
+         & "fetch result is valid."
+    severity failure;
+  
+  assert S_SFW >= S_SRD
+    report "The last stage for which special register forwarding occurs may "
+         & "not take place before the special register read result is valid. "
+         & "If you wish to disable forwarding, do so using the CFG generic."
+    severity failure;
+  
+  -- Check branch/next PC determination logic configuration.
+  assert (S_TRAP >= 1) or not HAS_BR
+    report "Trap information can not be forwarded to a cycle before the "
+         & "pipeline starts."
+    severity failure;
+  
+  assert (S_BR > S_TRAP) or not HAS_BR
+    report "Branch determination cannot be done before the stage which traps "
+         & "are forwarded to or in the same stage."
+    severity failure;
+  
+  assert (S_PCP1 = 1) or (S_PCP1 = 2) or not HAS_BR
+    report "PC + 1 computation must be scheduled at the end of the first "
+         & "stage or at the beginning of the second."
+    severity failure;
+  
+  assert (S_BTGT >= S_PCP1) or not HAS_BR
+    report "PC-relative branch target computation must happen after PC + 1 "
+         & "has been determined."
+    severity failure;
+  
+  assert (S_BR >= S_BTGT) or not HAS_BR
+    report "Branch determination cannot be done before the relative branch "
+         & "target has been computed."
+    severity failure;
+  
+  assert (S_BR >= S_SRD) or not HAS_BR
+    report "Branch determination cannot be done before the special registers "
+         & "have been read."
+    severity failure;
+  
+  -- Check ALU dependencies.
+  assert S_ALU >= S_LIMM
+    report "ALU cannot be scheduled before long immediates have been "
+         & "processed."
+    severity failure;
+  
+  assert S_ALU >= S_RD + L_RD
+    report "ALU cannot be scheduled before the general purpose registers have "
+         & "been read."
+    severity failure;
+  
+  assert S_ALU >= S_SRD
+    report "ALU cannot be scheduled before the special registers have been "
+         & "read."
+    severity failure;
+  
+  -- Check multiply unit dependencies.
+  assert (S_MUL >= S_LIMM) or not HAS_MUL
+    report "Multiplication cannot be scheduled before long immediates have "
+         & "been processed."
+    severity failure;
+  
+  assert (S_MUL >= S_RD + L_RD) or not HAS_MUL
+    report "Multiplication cannot be scheduled before the general purpose "
+         & "registers have been read."
+    severity failure;
+  
+  -- Check memory unit dependencies.
+  assert (S_MEM >= S_RD + L_RD) or not HAS_MEM
+    report "Memory command cannot be issued before the general purpose "
+         & "registers have been read."
+    severity failure;
+  
+  assert (S_MEM >= S_ALU + L_ALU1) or not HAS_MEM
+    report "Memory command cannot be issued before the ALU has completed the "
+         & "reg + immediate addition needed for the address."
+    severity failure;
+  
+  -- Check breakpoint unit dependencies.
+  assert (S_BRK >= S_ALU + L_ALU1) or not HAS_BRK
+    report "Breakpoint unit can not be scheduled before the ALU has completed "
+         & "the reg + immediate addition needed for the memory address."
+    severity failure;
+  
+  -- Check general purpose register file writeback dependencies.
+  assert S_WB >= S_ALU + L_ALU
+    report "General purpose register file writeback cannot be scheduled "
+         & "before the ALU result is valid."
+    severity failure;
+  
+  assert (S_WB >= S_MUL + L_MUL) or not HAS_MUL
+    report "General purpose register file writeback cannot be scheduled "
+         & "before the multiplication result is valid."
+    severity failure;
+  
+  assert (S_WB >= S_MEM + L_MEM) or not HAS_MEM
+    report "General purpose register file writeback cannot be scheduled "
+         & "before the memory read data is valid."
+    severity failure;
+  
+  -- Check special register writeback dependencies.
+  assert S_SWB >= S_ALU + L_ALU
+    report "Special register writeback cannot be scheduled before the ALU "
+         & "result is valid."
+    severity failure;
+  
+  -- Make sure that no traps occur after the stage configured to have the last
+  -- trap. Note that it is sufficient to only check for the memory stage here
+  -- only because that stage HAS to be the last one. This does assume that at
+  -- least one of the pipelanes has a memory unit; you're on your own if that's
+  -- not the case.
+  assert S_LTRP >= S_MEM + L_MEM or not HAS_MEM
+    report "The memory unit may generate traps, but the stage configured to "
+         & "generate the last trap is scheduled before that."
+    severity failure;
+  
+  -- Make sure the last stage is configured correctly. It is sufficient to
+  -- check for the branch and writeback stages, because they are dependent on
+  -- everything else.
+  assert S_LAST >= S_BR
+    report "The last stage is configured to take place before branch "
+         & "determination."
+    severity failure;
+  
+  assert S_LAST >= S_WB + L_WB
+    report "The last stage is configured to take place before the general "
+         & "purpose memory write is complete."
+    severity failure;
   
   --===========================================================================
   -- Instantiate pipeline registers
@@ -525,11 +827,8 @@ begin -- architecture
     
     -- Signals from external blocks
     -------------------------------
-    -- Stall signal is needed for the irqAck signal.
-    stall,
-    
     -- Configuration and run control.
-    cfg2pl_decouple, cxplif2pl_irq,
+    cfg2pl_decouple, cfg2pl_numGroupsLog2, cxplif2pl_irq,
     
     -- Next operation routing interface.
     cxplif2pl_PC, cxplif2pl_lanePC, cxplif2pl_limmValid, cxplif2pl_valid,
@@ -563,7 +862,7 @@ begin -- architecture
     mulu2pl_result,
     
     -- Signals from the memory unit.
-    memu2pl_result,
+    memu2pl_result, memu2pl_trap,
     
     -- Signals from the breakpoint unit.
     brku2pl_trap
@@ -573,6 +872,12 @@ begin -- architecture
     -- Instruction state variable between the blocks.
     variable s                  : syllableState_array(S_FIRST to S_LAST);
     
+    -- Naturals used locally in various places.
+    variable i                  : natural;
+    
+    -- std_logics used locally in various places.
+    variable flag               : std_logic;
+    
   begin
     
     ---------------------------------------------------------------------------
@@ -580,9 +885,602 @@ begin -- architecture
     ---------------------------------------------------------------------------
     s := si;
     
+    ---------------------------------------------------------------------------
+    -- Handle instruction fetch result and instruction validity signals
+    ---------------------------------------------------------------------------
+    -- Copy the signals broadcast by the active branch unit into the pipeline.
+    s(S_IF).PC        := cxplif2pl_PC(S_IF);
+    s(S_IF).lanePC    := cxplif2pl_lanePC(S_IF);
+    s(S_IF).valid     := cxplif2pl_valid(S_IF);
+    s(S_IF).limmValid := cxplif2pl_limmValid(S_IF);
+    s(S_IF).brkValid  := cxplif2pl_brkValid(S_IF);
     
+    -- Copy the instruction fetch result into the pipeline.
+    s(S_IF+L_IF).syllable := imem2pl_syllable(S_IF+L_IF);
+    s(S_IF+L_IF).tr.trap  := s(S_IF+L_IF).tr.trap & imem2pl_exception(S_IF+L_IF);
     
+    ---------------------------------------------------------------------------
+    -- Perform basic instruction decoding
+    ---------------------------------------------------------------------------
+    -- Decode opcode.
+    s(S_IF+L_IF).opcode   := s(S_IF+L_IF).syllable(rvex_opcode_type'range);
     
+    -- Decode branch offset immediate.
+    s(S_IF+L_IF).br.branchOffset := (
+      31 downto 22 => s(S_IF+L_IF).syllable(23), -- Replicate sign bit.
+      others       => '0'                        -- Zeros appended after value.
+    );
+    s(S_IF+L_IF).br.branchOffset(21 downto 3)
+      := s(S_IF+L_IF).syllable(23 downto 5);     -- Actual value.
+    
+    -- Decode use-immediate control flag.
+    s(S_IF+L_IF).dp.useImm
+      := s(S_IF+L_IF).syllable(23);
+    
+    -- Decode arithmetic immediate.
+    s(S_IF+L_IF).dp.imm(31 downto 9) := (
+      others       => s(S_IF+L_IF).syllable(10)  -- Replicate sign bit.
+    );
+    s(S_IF+L_IF).dp.imm(8 downto 0)
+      := s(S_IF+L_IF).syllable(10 downto 2);     -- Value.
+    
+    -- Decode datapath control signals. We do this in every stage where the
+    -- signal is valid to save a couple registers. The decoding logic won't
+    -- actually be replicated for every stage because each control signal is
+    -- only used in a single stage.
+    for stage in S_IF+L_IF to S_LAST loop
+      s(stage).dp.c := OPCODE_TABLE(to_integer(unsigned(s(stage).opcode))).datapathCtrl;
+    end loop;
+    
+    -- Determine the general purpose source register for port A.
+    if s(S_RD).dp.c.stackOp = '1' then
+      s(S_RD).dp.src1 := GPREG_STACK;
+    else
+      s(S_RD).dp.src1 := s(S_RD).syllable(16 downto 11);
+    end if;
+    
+    -- Determine the general purpose source register for port B.
+    if s(S_RD).dp.useImm = '1' then
+      s(S_RD).dp.src2 := s(S_RD).syllable(22 downto 17);
+    else
+      s(S_RD).dp.src2 := s(S_RD).syllable(10 downto  5);
+    end if;
+    
+    -- Determine the branch source register.
+    if s(S_SRD).dp.c.brFmt = '1' then
+      s(S_SRD).dp.srcBr := s(S_SRD).syllable(26 downto 24);
+    else
+      s(S_SRD).dp.srcBr := s(S_SRD).syllable( 4 downto  2);
+    end if;
+    
+    -- Determine the general purpose destination register.
+    if s(S_RD).dp.c.stackOp = '1' then
+      s(S_RD).dp.dest := GPREG_STACK;
+    else
+      s(S_RD).dp.dest := s(S_RD).syllable(22 downto 17);
+    end if;
+    
+    -- Determine whether we should write to the general purpose register file
+    -- or the link register.
+    if CFG.reg63isLink and (s(S_RD).dp.dest = GPREG_LINK) then
+      s(S_RD).dp.gpRegWE_lo := '0';
+      s(S_RD).dp.linkWE_lo  := s(S_RD).dp.c.gpRegWE or s(S_RD).dp.c.linkWE;
+    else
+      s(S_RD).dp.gpRegWE_lo := s(S_RD).dp.c.gpRegWE;
+      s(S_RD).dp.linkWE_lo  := s(S_RD).dp.c.linkWE;
+    end if;
+    
+    -- Determine the branch destination register.
+    if s(S_SRD).dp.c.brFmt = '1' then
+      s(S_SRD).dp.destBr := s(S_SRD).syllable( 4 downto  2);
+    else
+      s(S_SRD).dp.destBr := s(S_SRD).syllable(19 downto 17);
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Test for illegal instructions
+    ---------------------------------------------------------------------------
+    -- Figure out if the opcode is known or not.
+    if s(S_IF+L_IF).dp.useImm = '1' then
+      flag
+        := OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).valid(1);
+    else
+      flag
+        := OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).valid(0);
+    end if;
+    
+    -- If we don't have a branch unit, make sure this is not a branch
+    -- operation.
+    if (not HAS_BR) or cfg2pl_decouple = '0' then
+      if OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).branchCtrl.isBranchInstruction = '1' then
+        flag := '1';
+      end if;
+    end if;
+    
+    -- If we don't have a memory unit, make sure this is not a memory
+    -- operation.
+    if (not HAS_MEM) or cfg2pl_decouple = '0' then
+      if OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).memoryCtrl.isMemoryInstruction = '1' then
+        flag := '1';
+      end if;
+    end if;
+    
+    -- Append the illegal opcode exception to the trap listing if our flag is
+    -- set.
+    if flag = '1' then
+      s(S_IF+L_IF).tr.trap := s(S_IF+L_IF).tr.trap & (
+        active => '1',
+        cause  => rvex_trap(RVEX_TRAP_INVALID_OP),
+        arg    => s(S_IF+L_IF).lanePC
+      );
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Perform LIMMH forwarding
+    ---------------------------------------------------------------------------
+    -- Forward control signals to the LIMMH routing unit.
+    pl2limm_valid(S_LIMM)  <= s(S_LIMM).limmValid;
+    pl2limm_enable(S_LIMM) <= s(S_LIMM).dp.c.isLIMMH;
+    pl2limm_target(S_LIMM) <= s(S_LIMM).syllable(25);
+    pl2limm_data(S_LIMM)   <= s(S_LIMM).syllable(rvex_limmh_type'range);
+    
+    -- Use the flag as LIMMH error flag.
+    flag := limm2pl_error(S_LIMM);
+    
+    -- Append forwarded data returned by the routing unit to our lane.
+    if limm2pl_enable(S_LIMM) = '1' then
+      s(S_LIMM).dp.imm(rvex_limmh_type'range) := limm2pl_data(S_LIMM);
+      
+      -- Trigger the LIMMH trap when we're receiving a long immediate but are
+      -- not using it.
+      if s(S_LIMM).dp.useImm = '0' then
+        flag := '1';
+      end if;
+      
+    end if;
+    
+    -- Trigger a LIMMH trap if the error flag is set.
+    if flag = '1' then
+      s(S_LIMM).tr.trap := s(S_LIMM).tr.trap & (
+        active => '1',
+        cause  => rvex_trap(RVEX_TRAP_LIMMH_FAULT),
+        arg    => s(S_LIMM).lanePC
+      );
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Handle register reads
+    ---------------------------------------------------------------------------
+    -- Drive the general purpose register addresses for each forwarded stage.
+    for stage in S_RD to S_FW loop
+      pl2gpreg_readPortA.addr(stage) <= s(stage).dp.src1;
+      pl2gpreg_readPortB.addr(stage) <= s(stage).dp.src2;
+    end loop;
+    
+    -- Copy the read values into the pipeline for each forwarded stage. Only
+    -- copy the value when it is valid, retain the previous value when it isn't
+    -- (necessary for forwarding logic). When the ZERO register is selected,
+    -- override the value from the register file with zero.
+    for stage in S_RD+L_RD to S_FW loop
+      
+      -- Read port A.
+      if s(stage).dp.src1 = GPREG_ZERO then
+        s(stage).dp.read1 := (others => '0');
+      else
+        if gpreg2pl_readPortA.valid(stage) = '1' then
+          s(stage).dp.read1 := gpreg2pl_readPortA.data(stage);
+        end if;
+      end if;
+      
+      -- Read port B.
+      if s(stage).dp.src2 = GPREG_ZERO then
+        s(stage).dp.read2 := (others => '0');
+      else
+        if gpreg2pl_readPortB.valid(stage) = '1' then
+          s(stage).dp.read2 := gpreg2pl_readPortB.data(stage);
+        end if;
+      end if;
+      
+    end loop;
+    
+    -- Copy the branch and link register read data into the pipeline for each
+    -- forwarded stage.
+    for stage in S_SRD to S_SFW loop
+      
+      -- Branch register.
+      s(stage).dp.readBr
+        := cxplif2pl_brLinkReadPort.brData(stage)(
+          to_integer(unsigned(s(stage).dp.srcBr))
+        );
+      
+      -- Link register.
+      s(stage).dp.readLink
+        := cxplif2pl_brLinkReadPort.linkData(stage);
+      
+    end loop;
+    
+    ---------------------------------------------------------------------------
+    -- Instantiate operand selection logic
+    ---------------------------------------------------------------------------
+    -- Select the integer operands to use.
+    for stage in min_nat(S_RD+L_RD, S_SRD) to max_nat(S_FW, S_SFW) loop
+      
+      -- Select read1lo and read2lo. This is just read1 and read2 respectively,
+      -- but overridden by the link register when CFG.reg63isLink is set and
+      -- register 63 is selected.
+      if CFG.reg63isLink and s(stage).dp.src1 = GPREG_LINK then
+        s(stage).dp.read1lo := s(stage).dp.readLink;
+      else
+        s(stage).dp.read1lo := s(stage).dp.read1;
+      end if;
+      
+      if CFG.reg63isLink and s(stage).dp.src2 = GPREG_LINK then
+        s(stage).dp.read2lo := s(stage).dp.readLink;
+      else
+        s(stage).dp.read2lo := s(stage).dp.read2;
+      end if;
+      
+      -- Select operand 1.
+      if s(stage).dp.c.op1LinkReg = '1' then
+        s(stage).dp.op1 := s(stage).dp.readLink;
+      else
+        s(stage).dp.op1 := s(stage).dp.read1lo;
+      end if;
+      
+      -- Select operand 2.
+      if s(stage).dp.c.stackOp = '1' then
+        s(stage).dp.op2 := s(stage).br.branchOffset;
+      elsif s(stage).dp.useImm = '1' then
+        s(stage).dp.op2 := s(stage).dp.imm;
+      else
+        s(stage).dp.op2 := s(stage).dp.read2lo;
+      end if;
+      
+      -- Select operand 3 (memory write data, in which case op1 and op2 are
+      -- added to get the address).
+      if s(stage).dp.c.op3LinkReg = '1' then
+        s(stage).dp.op3 := s(stage).dp.readLink;
+      else
+        s(stage).dp.op3 := s(stage).dp.read2lo;
+      end if;
+      
+    end loop;
+    
+    -- Select the branch operands to use.
+    for stage in S_SRD to S_SFW loop
+      
+      -- There is no muxing here, just copy the value read from the branch
+      -- register file.
+      s(stage).dp.opBr := s(stage).dp.readBr;
+      
+    end loop;
+    
+    ---------------------------------------------------------------------------
+    -- Determine PC + 1 and PC-relative branch target.
+    ---------------------------------------------------------------------------
+    if HAS_BR then
+      
+      -- Determine the logarithm of what needs to be added to the PC and what
+      -- the PC needs to be aligned to.
+      i := SYLLABLE_SIZE_LOG2B                         -- Instr. size per lane.
+         + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)  -- Lanes per group.
+         + to_integer(unsigned(cfg2pl_numGroupsLog2)); -- Number of coupled groups.
+      
+      -- Perform the addition.
+      s(S_PCP1).br.PC_plusOne := std_logic_vector(
+        unsigned(s(S_PCP1).PC)
+        + to_unsigned(2**i, rvex_address_type'length)
+      );
+      
+      -- Align the new PC.
+      s(S_PCP1).br.PC_plusOne(i-1 downto 0) := (others => '0');
+      
+      -- Add branch offset to PC + 1 to get the relative branch target.
+      s(S_BTGT).br.relativeTarget := std_logic_vector(
+        unsigned(s(S_BTGT).br.PC_plusOne)
+        + unsigned(s(S_BTGT).br.branchOffset)
+      );
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Handle trap forwarding
+    ---------------------------------------------------------------------------
+    if HAS_BR then
+      
+      -- Copy the merged and forwarded trap information from the trap routing
+      -- unit into the pipeline.
+      s(S_TRAP).br.trapInfo     := trap2pl_trapToHandle(S_TRAP);
+      s(S_TRAP).br.trapPending  := trap2pl_trapPending(S_TRAP);
+      
+      -- Forward the trap point and handler ourselves.
+      s(S_TRAP).br.trapPoint    := s(S_LTRP).PC;
+      s(S_TRAP).br.trapHandler  := s(S_LTRP).tr.trapHandler;
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Connect pipeline to branch unit
+    ---------------------------------------------------------------------------
+    if HAS_BR then
+      
+      -- Load link target from the link register read data.
+      s(S_BR).br.linkTarget := s(S_BR).dp.readLink;
+      
+      -- Drive branch unit data and control signals.
+      pl2br_opcode(S_BR)              <= s(S_BR).opcode;
+      pl2br_PC_plusOne_IFP1(S_IF+1)   <= s(S_IF+1).br.PC_plusOne;
+      pl2br_PC_plusOne_BR(S_BR)       <= s(S_BR).br.PC_plusOne;
+      pl2br_brTgtLink(S_BR)           <= s(S_BR).br.linkTarget;
+      pl2br_brTgtRel(S_BR)            <= s(S_BR).br.relativeTarget;
+      pl2br_opBr(S_BR)                <= s(S_BR).dp.opBr;
+      pl2br_trapPending(S_BR)         <= s(S_BR).br.trapPending;
+      pl2br_trapToHandleInfo(S_BR)    <= s(S_BR).br.trapInfo;
+      pl2br_trapToHandlePoint(S_BR)   <= s(S_BR).br.trapPoint;
+      pl2br_trapToHandleHandler(S_BR) <= s(S_BR).br.trapHandler;
+      
+      -- Copy the RFI flag into the pipeline and send it to the control
+      -- registers in the memory phase.
+      s(S_BR).br.RFI := br2pl_rfi(S_BR);
+      pl2cxplif_rfi(S_MEM) <= s(S_MEM).br.RFI;
+      
+      -- Copy the trap output from the branch unit into the pipeline.
+      s(S_BR).tr.trap := s(S_BR).tr.trap & br2pl_trap(S_BR);
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Connect pipeline to ALU and optionally select PC+1 as integer result
+    ---------------------------------------------------------------------------
+    -- Drive ALU inputs.
+    pl2alu_opcode(S_ALU)  <= s(S_ALU).opcode;
+    pl2alu_op1(S_ALU)     <= s(S_ALU).dp.op1;
+    pl2alu_op2(S_ALU)     <= s(S_ALU).dp.op2;
+    pl2alu_opBr(S_ALU)    <= s(S_ALU).dp.opBr;
+      
+    -- Copy ALU integer outputs into pipeline.
+    s(S_ALU+L_ALU1).dp.resAdd     := alu2pl_resultAdd(S_ALU+L_ALU1);
+    s(S_ALU+L_ALU).dp.resALU      := alu2pl_result(S_ALU+L_ALU);
+    
+    -- Set the result and result valid bit if the ALU result is selected.
+    if s(S_ALU+L_ALU).dp.c.funcSel = ALU then
+      s(S_ALU+L_ALU).dp.res := s(S_ALU+L_ALU).dp.resALU;
+      s(S_ALU+L_ALU).dp.resValid := s(S_ALU+L_ALU).dp.gpRegWE_lo;
+      s(S_ALU+L_ALU).dp.resLinkValid := s(S_ALU+L_ALU).dp.linkWE_lo;
+    end if;
+    
+    -- Copy ALU branch outputs into pipeline.
+    i := to_integer(unsigned(s(S_ALU+L_ALU).dp.destBr));
+    s(S_ALU+L_ALU).dp.resBr(i) := alu2pl_resultBr(S_ALU+L_ALU);
+    s(S_ALU+L_ALU).dp.resBrValid(i) := s(S_ALU+L_ALU).dp.c.brRegWE;
+    
+    -- Set the result to PC+1 and the result valid bit to 1 when PC+1 is
+    -- selected.
+    if s(S_ALU+L_ALU).dp.c.funcSel = PCP1 then
+      s(S_ALU+L_ALU).dp.res := s(S_ALU+L_ALU).br.PC_plusOne;
+      s(S_ALU+L_ALU).dp.resValid := s(S_ALU+L_ALU).dp.gpRegWE_lo;
+      s(S_ALU+L_ALU).dp.resLinkValid := s(S_ALU+L_ALU).dp.linkWE_lo;
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Connect pipeline to multiplication unit
+    ---------------------------------------------------------------------------
+    if HAS_MUL then
+      
+      -- Drive multiplication unit inputs.
+      pl2mulu_opcode(S_MUL) <= s(S_MUL).opcode;
+      pl2mulu_op1(S_MUL)    <= s(S_MUL).dp.op1;
+      pl2mulu_op2(S_MUL)    <= s(S_MUL).dp.op2;
+      
+      -- Copy multiplication unit output into pipeline.
+      s(S_MUL+L_MUL).dp.resMul      := mulu2pl_result(S_MUL+L_MUL);
+      
+      -- Set the result and result valid bit if the MUL result is selected.
+      if s(S_MUL+L_MUL).dp.c.funcSel = MUL then
+        s(S_MUL+L_MUL).dp.res := s(S_MUL+L_MUL).dp.resMul;
+        s(S_MUL+L_MUL).dp.resValid := s(S_MUL+L_MUL).dp.gpRegWE_lo;
+        s(S_MUL+L_MUL).dp.resLinkValid := s(S_MUL+L_MUL).dp.linkWE_lo;
+      end if;
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Connect pipeline to memory unit result
+    ---------------------------------------------------------------------------
+    if HAS_MEM then
+      
+      -- Copy the result into the pipeline.
+      s(S_MEM+L_MEM).dp.resMem := memu2pl_result(S_MEM+L_MEM);
+      
+      -- Set the result and result valid bit if the memory unit result is
+      -- selected.
+      if s(S_MEM+L_MEM).dp.c.funcSel = MEM then
+        s(S_MEM+L_MEM).dp.res := s(S_MEM+L_MEM).dp.resMem;
+        s(S_MEM+L_MEM).dp.resValid := s(S_MEM+L_MEM).dp.gpRegWE_lo;
+        s(S_MEM+L_MEM).dp.resLinkValid := s(S_MEM+L_MEM).dp.linkWE_lo;
+      end if;
+      
+      -- Copy the memory unit trap output into the pipeline.
+      s(S_MEM).tr.trap
+        := s(S_MEM).tr.trap & memu2pl_trap(S_MEM);
+      
+      -- Copy the data memory/cache trap output into the pipeline.
+      s(S_MEM+L_MEM).tr.trap
+        := s(S_MEM+L_MEM).tr.trap & dmsw2pl_exception(S_MEM+L_MEM);
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Connect pipeline to breakpoint unit
+    ---------------------------------------------------------------------------
+    if HAS_BRK then
+      
+      -- Drive breakpoint unit inputs.
+      pl2brku_ignoreBreakpoint(S_BRK) <= not s(S_BRK).brkValid;
+      pl2brku_opcode(S_BRK)           <= s(S_BRK).opcode;
+      pl2brku_opAddr(S_BRK)           <= s(S_BRK).dp.resAdd;
+      pl2brku_PC_bundle(S_BRK)        <= s(S_BRK).PC;
+      
+      -- Copy the debug trap into the pipeline.
+      s(S_BRK+L_BRK).tr.debugTrap :=
+        s(S_BRK+L_BRK).tr.debugTrap & brku2pl_trap(S_BRK+L_BRK);
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Handle soft trap instruction
+    ---------------------------------------------------------------------------
+    if s(S_BRK).dp.c.isTrap = '1' then
+      
+      -- Trigger a normal or debug trap depending on the trap cause (op2).
+      if TRAP_TABLE(to_integer(unsigned(s(S_BRK).dp.op2(rvex_trap_type'range)))).isDebugTrap = '1' then
+        
+        s(S_BRK).tr.debugTrap := s(S_BRK).tr.debugTrap & (
+          active => '1',
+          cause  => s(S_BRK).dp.op2(rvex_trap_type'range),
+          arg    => s(S_BRK).dp.op1
+        );
+        
+      else
+        
+        s(S_BRK).tr.trap := s(S_BRK).tr.trap & (
+          active => '1',
+          cause  => s(S_BRK).dp.op2(rvex_trap_type'range),
+          arg    => s(S_BRK).dp.op1
+        );
+        
+      end if;
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Handle traps and instantiate invalidation logic related stuff
+    ---------------------------------------------------------------------------
+    -- Merge the debug traps with the regular traps, giving priority to the
+    -- debug traps, if debug traps are enabled.
+    if cxplif2pl_debugTrapEnable(S_MEM+1) = '1' then
+      s(S_MEM+1).tr.trap := s(S_MEM+1).tr.debugTrap & s(S_MEM+1).tr.trap;
+    end if;
+    
+    -- Append external interrupt trap in S_MEM+1 stage.
+    s(S_MEM+1).tr.trap := s(S_MEM+1).tr.trap & (
+      active => '1',
+      cause  => rvex_trap(RVEX_TRAP_EXT_INTERRUPT),
+      arg    => (others => '0')
+    );
+    
+    -- Copy the current trap handler into the pipeline stage where it is valid,
+    -- so it is properly forwarded to the branch unit.
+    s(S_MEM+1).tr.trapHandler := cxplif2pl_trapHandler(S_MEM+1);
+    
+    -- Connect with the trap routing logic.
+    for stage in S_FIRST to S_LTRP loop
+      
+      -- Forward the currently active trap to the trap routing logic.
+      pl2trap_trap(stage) <= s(stage).tr.trap;
+      
+      -- Disable the current trap when a later pipeline stage overrides it
+      -- (because it belongs to an earlier instruction).
+      if trap2pl_disable(stage) = '1' then
+        s(stage).tr.trap.active := '0';
+      end if;
+      
+      -- Invalidate the current instruction when this or a later pipeline stage
+      -- is trapped.
+      if trap2pl_flush(stage) = '1' then
+        s(stage).valid := '0';
+      end if;
+      
+    end loop;
+    
+    -- Flush S_IF+1 through S_BR-1 when the branch unit takes a branch.
+    if cxplif2pl_invalUntilBR(S_BR) = '1' then
+      for stage in S_IF+1 to S_BR-1 loop
+        s(stage).valid := '0';
+      end loop;
+    end if;
+    
+    -- Determine whether the pipeline is idle. Default to yes.
+    flag := '1';
+    
+    -- The pipeline is not idle when there is a valid fetch somewhere in it.
+    for stage in S_FIRST to S_LAST loop
+      if s(stage).limmValid = '1' then
+        flag := '0';
+      end if;
+    end loop;
+    
+    -- The pipeline is also not idle when a trap is pending.
+    for stage in S_TRAP to S_BR loop
+      if (s(stage).br.trapPending = '1') or (s(stage).br.trapInfo.active = '1') then
+        flag := '0';
+      end if;
+    end loop;
+    
+    -- Drive idle output signals.
+    pl2cfg_blockReconfig  <= not flag;
+    pl2cxplif_idle        <= flag;
+    
+    ---------------------------------------------------------------------------
+    -- Connect pipeline to memory unit command
+    ---------------------------------------------------------------------------
+    -- This must be done after trap handling because the memory operation
+    -- should not be issued when a trap is detected in this stage. inb4
+    -- critical path here.
+    if HAS_MEM then
+      
+      pl2memu_valid(S_MEM)  <= s(S_MEM).valid;
+      pl2memu_opcode(S_MEM) <= s(S_MEM).opcode;
+      pl2memu_opAddr(S_MEM) <= s(S_MEM).dp.resAdd;
+      pl2memu_opData(S_MEM) <= s(S_MEM).dp.op3;
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Handle register writes and forwarding
+    ---------------------------------------------------------------------------
+    -- Drive the general purpose register data and forward enable signals.
+    for stage in S_FIRST to S_WB+L_WB loop
+      
+      pl2gpreg_writePort.addr(stage)
+        <= s(stage).dp.dest;
+      
+      pl2gpreg_writePort.data(stage)
+        <= s(stage).dp.res;
+      
+      pl2gpreg_writePort.forwardEnable(stage)
+        <= s(stage).dp.resValid;
+      
+    end loop;
+    
+    -- Drive the branch and link data and forward enable signals.
+    for stage in S_FIRST to S_SWB loop
+      
+      pl2cxplif_brLinkWritePort.brData(stage)
+        <= s(stage).dp.resBr;
+      
+      pl2cxplif_brLinkWritePort.linkData(stage)
+        <= s(stage).dp.res;
+      
+      pl2cxplif_brLinkWritePort.brForwardEnable(stage)
+        <= s(stage).dp.resBrValid;
+      
+      pl2cxplif_brLinkWritePort.linkForwardEnable(stage)
+        <= s(stage).dp.resLinkValid;
+      
+    end loop;
+    
+    -- Drive the write enable signals.
+    pl2gpreg_writePort.writeEnable(S_WB)
+      <= s(S_WB).dp.resValid and s(S_WB).valid;
+    
+    for b in rvex_brRegData_type'range loop
+      pl2cxplif_brLinkWritePort.brWriteEnable(S_SWB)(b)
+        <= s(S_SWB).dp.resBrValid(b) and s(S_SWB).valid;
+    end loop;
+    
+    pl2cxplif_brLinkWritePort.linkWriteEnable(S_SWB)
+      <= s(S_SWB).dp.resLinkValid and s(S_SWB).valid;
     
     ---------------------------------------------------------------------------
     -- Drive stage outputs
@@ -626,6 +1524,8 @@ begin -- architecture
         
         -- Run control signals.
         cfg2br_run                      => cfg2br_run,
+        cxplif2br_irqID(S_BR)           => cxplif2br_irqID(S_BR),
+        br2cxplif_irqAck(S_BR)          => br2cxplif_irqAck(S_BR),
         cxplif2br_run                   => cxplif2br_run,
         
         -- Branch control signals from and to pipelane.
@@ -675,7 +1575,8 @@ begin -- architecture
     br2cxplif_valid(S_IF)               <= RVEX_UNDEF;
     br2cxplif_brkValid(S_IF)            <= RVEX_UNDEF;
     br2cxplif_invalUntilBR(S_BR)        <= RVEX_UNDEF;
-    br2cxplif_trapInfo(S_BR)            <= TRAP_INFO_NONE;
+    br2cxplif_irqAck(S_BR)              <= RVEX_UNDEF;
+    br2cxplif_trapInfo(S_BR)            <= TRAP_INFO_UNDEF;
     br2cxplif_trapPoint(S_BR)           <= (others => RVEX_UNDEF);
     br2cxplif_exDbgTrapInfo(S_BR)       <= TRAP_INFO_NONE;
     br2cxplif_stop(S_BR)                <= RVEX_UNDEF;
@@ -754,6 +1655,7 @@ begin -- architecture
         stall                           => stall,
         
         -- Pipelane interface.
+        pl2memu_valid(S_MEM)            => pl2memu_valid(S_MEM),
         pl2memu_opcode(S_MEM)           => pl2memu_opcode(S_MEM),
         pl2memu_opAddr(S_MEM)           => pl2memu_opAddr(S_MEM),
         pl2memu_opData(S_MEM)           => pl2memu_opData(S_MEM),

@@ -95,7 +95,7 @@ package rvex_opcodeDatapath_pkg is
   --           |     <stackOp>  .----------.      |
   --           |         |      | Link rd. |--.   v  <op3LinkReg>
   --           |         v      '----------'  o->|1\    |
-  -- 26..24 ---+------->|0\ src1.----------.  |  |  |---+---------------> op1
+  -- 16..11 ---+------->|0\ src1.----------.  |  |  |---+---------------> op1
   --           |        |  |--->| GP. read |--+->|0/    v
   --           |  R1 -->|1/     '----------'  o------->|1\
   --           |                              |        |  |-------------> op3
@@ -105,14 +105,14 @@ package rvex_opcodeDatapath_pkg is
   --                     ^                    |     '->|0\      v
   --                     |      imm           |        |  |--->|0\
   --  10..2 ---x---------+--------------------+------->|1/     |  |-----> op2
-  --  limmh ---'         |                    |         ^   .->|1/
+  --  limmh ---'         |     useImm         |         ^   .->|1/
   --     23 -------------o--------------------+---------'   |
   --  23..5 -------------------------------o--+-------------'
-  --                           brOff       |  |
-  --                                       |  |  brTgtLink  .----------.
+  --                   br.branchOffset     |  |
+  --                                       |  |br.linkTarget.----------.
   --                                       v  '------------>|  Branch  |
   --  PC_plusOne ------------------------>(+)-------------->|   unit   |
-  --                                             brTgtOff   '----------'
+  --                                       br.relativeTarget'----------'
   -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   -- 
@@ -174,6 +174,12 @@ package rvex_opcodeDatapath_pkg is
     op1LinkReg                  : std_logic;
     op3LinkReg                  : std_logic;
     brFmt                       : std_logic;
+    
+    -- Special instruction flags. These are set only when the respective
+    -- instruction is executed.
+    isLIMMH                     : std_logic;
+    isTrap                      : std_logic;
+    
   end record;
   
   -- Array type.
@@ -195,6 +201,12 @@ package rvex_opcodeDatapath_pkg is
   -----------------------------------------------------------------------------
   -- No operation
   -----------------------------------------------------------------------------
+  -- Performs no operation.
+  --
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- |    Opcode     |-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|-|S|-|
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  --
   constant DP_CTRL_NOP          : datapathCtrlSignals_type := (
     funcSel                     => ALU,
     gpRegWE                     => '0',
@@ -203,7 +215,58 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
+  );
+  
+  -----------------------------------------------------------------------------
+  -- LIMMH slot
+  -----------------------------------------------------------------------------
+  -- Target selects whether this long immediate should be forwarded to the
+  -- neighboring lane in a pair or to two lanes later. This is selected by the
+  -- t bit, which maps to the LSB of the lane index.
+  --
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- |  Opcode   |t|               Long immediate                |S|-|
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  --
+  constant DP_CTRL_LIMMH        : datapathCtrlSignals_type := (
+    funcSel                     => ALU,
+    gpRegWE                     => '0',
+    linkWE                      => '0',
+    brRegWE                     => '0',
+    stackOp                     => '0',
+    op1LinkReg                  => '0',
+    op3LinkReg                  => '0',
+    brFmt                       => '0',
+    isLIMMH                     => '1',
+    isTrap                      => '0'
+  );
+  
+  -----------------------------------------------------------------------------
+  -- Software trap instruction
+  -----------------------------------------------------------------------------
+  -- Software trap instruction. The trap cause is set to Rs2 or Immediate, the
+  -- trap argument is set to Rs1.
+  --
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- |    Opcode     |0|-|-|-|-|-|-|    Rs1    |    Rs2    |-|-|-|S|-|
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- |    Opcode     |1|-|-|-|-|-|-|    Rs1    |    Immediate    |S|-|
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  --
+  constant DP_CTRL_TRAP         : datapathCtrlSignals_type := (
+    funcSel                     => ALU,
+    gpRegWE                     => '0',
+    linkWE                      => '0',
+    brRegWE                     => '0',
+    stackOp                     => '0',
+    op1LinkReg                  => '0',
+    op3LinkReg                  => '0',
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '1'
   );
   
   -----------------------------------------------------------------------------
@@ -227,7 +290,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '1'
+    brFmt                       => '1',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -- ALU operation, storing the boolean result. The syllable has the following
@@ -247,7 +312,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -- ALU operation, storing the both the integer and boolean results.
@@ -264,7 +331,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '1'
+    brFmt                       => '1',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -286,7 +355,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -308,7 +379,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -- Memory load to link register.
@@ -327,7 +400,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -- Memory store from general purpose register file. The address is determined
@@ -345,7 +420,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -- Memory store from link register.
@@ -364,7 +441,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '1',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -384,7 +463,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -- Branch operations which link.
@@ -401,7 +482,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -- Branch operations which update the stack pointer.
@@ -418,7 +501,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '1',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -438,7 +523,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '1',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   -- Move from general purpose register to link register.
@@ -455,7 +542,9 @@ package rvex_opcodeDatapath_pkg is
     stackOp                     => '0',
     op1LinkReg                  => '0',
     op3LinkReg                  => '0',
-    brFmt                       => '0'
+    brFmt                       => '0',
+    isLIMMH                     => '0',
+    isTrap                      => '0'
   );
   
   

@@ -60,7 +60,7 @@ entity rvex_limmRouting is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type := RVEX_DEFAULT_CONFIG
+    CFG                         : rvex_generic_config_type
     
   );
   port (
@@ -93,9 +93,9 @@ entity rvex_limmRouting is
     ---------------------------------------------------------------------------
     -- LIMMH data from pipelanes. Enable is high when this pipelane is
     -- executing a LIMMH instruction, in which case target selects whether 
-    -- value is intended for the neighboring pipelane (high) or two pipelanes
-    -- ahead (low), and data contains the immediate. When valid is low, the
-    -- LIMMH state is unaffected.
+    -- value is intended for the neighboring pipelane or two pipelanes ahead by
+    -- indexing the LSB of the destination pipelane index, and data contains
+    -- the immediate. When valid is low, the LIMMH state is unaffected.
     pl2limm_valid               : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     pl2limm_enable              : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     pl2limm_target              : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -173,11 +173,13 @@ begin -- architecture
             -- processed.
             if stall(lane2group(lane, CFG)) = '0' and pl2limm_valid(lane) = '1' then
               
-              -- The LIMMH register is valid when the LIMMH instruction has
-              -- target set to 0, because then it is forwarding to the next
-              -- pair, which might be executed in the next cycle.
               limmh_r(lane) <= pl2limm_data(lane);
-              limmh_r_valid(lane) <= pl2limm_enable(lane) and not pl2limm_target(lane);
+              
+              if lane mod 2 = 0 then
+                limmh_r_valid(lane) <= pl2limm_enable(lane) and not pl2limm_target(lane);
+              else
+                limmh_r_valid(lane) <= pl2limm_enable(lane) and pl2limm_target(lane);
+              end if;
               
             end if;
           end loop;
@@ -304,8 +306,12 @@ begin -- architecture
         
         -- The data is valid when the other lane is executing a LIMMH
         -- instruction with target set to 1.
-        limmhFromNeigh(lane)      <= pl2limm_data(otherLane);
-        limmhFromNeighValid(lane) <= pl2limm_enable(otherLane) and pl2limm_target(otherLane);
+        limmhFromNeigh(lane) <= pl2limm_data(otherLane);
+        if lane mod 2 = 0 then
+          limmhFromNeighValid(lane) <= pl2limm_enable(otherLane) and pl2limm_target(otherLane);
+        else
+          limmhFromNeighValid(lane) <= pl2limm_enable(otherLane) and not pl2limm_target(otherLane);
+        end if;
         
       end loop;
       

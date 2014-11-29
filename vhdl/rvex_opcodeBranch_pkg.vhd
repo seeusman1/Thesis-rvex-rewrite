@@ -88,9 +88,6 @@ package rvex_opcodeBranch_pkg is
     -- asserted.
     stop                        : std_logic;
     
-    -- Software trap instruction.
-    trap                        : std_logic;
-    
     -- Return-from-interrupt override signal. When high, the branch logic above
     -- is overridden, and a branch to the trapPoint control register is taken
     -- unconditionally. In addition, the trap control registers are updated
@@ -177,13 +174,6 @@ package rvex_opcodeBranch_pkg is
   constant BRANCH_CTRL_STOP     : branchCtrlSignals_type := (
     isBranchInstruction         => '1',
     stop                        => '1',
-    others                      => '0'
-  );
-  
-  -- Software trap.
-  constant BRANCH_CTRL_TRAP     : branchCtrlSignals_type := (
-    isBranchInstruction         => '1',
-    trap                        => '1',
     others                      => '0'
   );
   
