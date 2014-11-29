@@ -551,7 +551,7 @@ begin -- architecture
       nextPC_s(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B)
         := std_logic_vector(
           unsigned(nextPC(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B))
-          - to_unsigned(2**numCoupledLanesLog2, CFG.genBundleSizeLog2)
+          - to_unsigned(2**(numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B), CFG.genBundleSizeLog2)
         );
       
     end if;
@@ -562,6 +562,11 @@ begin -- architecture
     -- Drive PC output signals.
     br2imem_PC(S_IF)                  <= nextPC_s(S_IF);
     br2cxplif_PC(S_IF)                <= nextPC_s(S_IF);
+    
+    -- Make sure that the request output to the instruction memory is properly
+    -- aligned.
+    br2cxplif_PC(S_IF)(numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B-1 downto 0)
+      <= (others => '0');
     
     -- Drive fetch output signals.
     br2imem_fetch(S_IF)               <= fetch(S_IF);

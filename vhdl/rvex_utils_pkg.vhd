@@ -63,14 +63,41 @@ package rvex_utils_pkg is
     CFG   : rvex_generic_config_type
   ) return natural;
   
+  -- Converts a lane index to the lane index within the lane group it belongs
+  -- to, counting from the first lane.
+  function lane2indexInGroup (
+    lane  : natural;
+    CFG   : rvex_generic_config_type
+  ) return natural;
+  
+  -- Converts a lane index to the lane index within the lane group it belongs
+  -- to, counting from the last lane (last lane in group = 0, second to last
+  -- lane in group = 1 etc,).
+  function lane2indexInGroupRev (
+    lane  : natural;
+    CFG   : rvex_generic_config_type
+  ) return natural;
+  
   -- Converts a group index to the first lane index in it.
   function group2firstLane (
     laneGroup : natural;
     CFG       : rvex_generic_config_type
   ) return natural;
   
+  -- Converts a group index to the last lane index in it.
+  function group2lastLane (
+    laneGroup : natural;
+    CFG       : rvex_generic_config_type
+  ) return natural;
+  
   -- Converts a lane index to the index of the first lane in the group.
   function lane2firstLane (
+    lane      : natural;
+    CFG       : rvex_generic_config_type
+  ) return natural;
+  
+  -- Converts a lane index to the index of the last lane in the group.
+  function lane2lastLane (
     lane      : natural;
     CFG       : rvex_generic_config_type
   ) return natural;
@@ -83,6 +110,12 @@ package rvex_utils_pkg is
     indexA      : out natural;
     indexB      : out natural
   );
+  
+  -- Returns true if the bit in value selected by bitIndex is 1.
+  function testBit(
+    value       : natural;
+    bitIndex    : natural
+  ) return boolean;
   
   -- Inverts the bit in value selected by bitIndex.
   function flipBit(
@@ -117,6 +150,27 @@ package body rvex_utils_pkg is
     return lane / 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2);
   end lane2group;
   
+  -- Converts a lane index to the lane index within the lane group it belongs
+  -- to, counting from the first lane.
+  function lane2indexInGroup (
+    lane  : natural;
+    CFG   : rvex_generic_config_type
+  ) return natural is
+  begin
+    return lane mod 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2);
+  end lane2indexInGroup;
+  
+  -- Converts a lane index to the lane index within the lane group it belongs
+  -- to, counting from the last lane (last lane in group = 0, second to last
+  -- lane in group = 1 etc,).
+  function lane2indexInGroupRev (
+    lane  : natural;
+    CFG   : rvex_generic_config_type
+  ) return natural is
+  begin
+    return (2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2) - lane2indexInGroup(lane, CFG)) - 1;
+  end lane2indexInGroupRev;
+  
   -- Converts a group index to the first lane index in it.
   function group2firstLane (
     laneGroup : natural;
@@ -126,6 +180,15 @@ package body rvex_utils_pkg is
     return laneGroup * 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2);
   end group2firstLane;
   
+  -- Converts a group index to the last lane index in it.
+  function group2lastLane (
+    laneGroup : natural;
+    CFG       : rvex_generic_config_type
+  ) return natural is
+  begin
+    return (laneGroup + 1) * 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2) - 1;
+  end group2lastLane;
+  
   -- Converts a lane index to the index of the first lane in the group.
   function lane2firstLane (
     lane      : natural;
@@ -134,6 +197,15 @@ package body rvex_utils_pkg is
   begin
     return group2firstLane(lane2group(lane, CFG), CFG);
   end lane2firstLane;
+  
+  -- Converts a lane index to the index of the last lane in the group.
+  function lane2lastLane (
+    lane      : natural;
+    CFG       : rvex_generic_config_type
+  ) return natural is
+  begin
+    return group2lastLane(lane2group(lane, CFG), CFG);
+  end lane2lastLane;
   
   -- Used to construct a binary tree network for connecting pipelane groups
   -- together which looks like this:
@@ -177,6 +249,15 @@ package body rvex_utils_pkg is
     indexA  := index;
     indexB  := index + 2**level;
   end procedure;
+  
+  -- Returns true if the bit in value selected by bitIndex is 1.
+  function testBit(
+    value       : natural;
+    bitIndex    : natural
+  ) return boolean is
+  begin
+    return ((value / 2**bitIndex) mod 2) = 1;
+  end testBit;
   
   -- Inverts the bit in value selected by bitIndex.
   function flipBit(

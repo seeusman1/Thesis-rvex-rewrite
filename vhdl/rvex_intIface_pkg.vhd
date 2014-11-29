@@ -84,6 +84,11 @@ package rvex_intIface_pkg is
   -----------------------------------------------------------------------------
   -- Constants which don't belong elsewhere
   -----------------------------------------------------------------------------
+  -- When enabled, a list of strings will be generated pretty much each cycle
+  -- with human-readable information about what the core is doing. Disabling
+  -- this might save some computation time and thus speed up simulation.
+  constant GEN_VHDL_SIM_INFO    : boolean := true;
+  
   -- Throughout the rvex core, std_logic 'U' values are used to indicate values
   -- which are not valid yet. As these kinds of signals should never be used,
   -- this is not a problem for synthesis, and helps discover undefined things

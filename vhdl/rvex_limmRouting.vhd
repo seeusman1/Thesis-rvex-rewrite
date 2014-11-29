@@ -220,7 +220,7 @@ begin -- architecture
       
       -- Construct a binary tree to route the registered LIMMH data from the
       -- last lane pair to the first pair in a group. Refer to the
-      -- documentation of binTreeIndices in rvex_intIface_pkg.vhd for more
+      -- documentation of binTreeIndices in rvex_utils_pkg.vhd for more
       -- info on the binary tree structure. Note that we start at level 1
       -- because we're concerned with pairs, not single lanes.
       for level in 1 to CFG.numLanesLog2-1 loop
@@ -354,12 +354,12 @@ begin -- architecture
       if pl2limm_valid(lane) = '1' and pl2limm_enable(lane) = '1' then
         
         -- Trying to target neighboring lane in pair.
-        if pl2limm_target(lane) = '1' and not CFG.limmhFromNeighbor then
+        if ((pl2limm_target(lane) = '1') = (lane mod 2 = 0)) and not CFG.limmhFromNeighbor then
           limm2pl_error(lane) <= '1';
         end if;
         
         -- Trying to target next pair.
-        if pl2limm_target(lane) = '0' and not CFG.limmhFromPreviousPair then
+        if ((pl2limm_target(lane) = '0') = (lane mod 2 = 0)) and not CFG.limmhFromPreviousPair then
           limm2pl_error(lane) <= '1';
         end if;
         

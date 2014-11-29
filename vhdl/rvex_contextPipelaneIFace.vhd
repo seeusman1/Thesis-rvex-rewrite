@@ -50,6 +50,8 @@ use IEEE.numeric_std.all;
 library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
+use work.rvex_pipeline_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_trap_pkg.all;
 
 --=============================================================================
@@ -90,52 +92,89 @@ entity rvex_contextPipelaneIFace is
     -- context, or low when they don't.
     cfg2any_coupled             : in  std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Matrix specifying connections between context and lane group. Indexing is
-    -- done using i = laneGroup*numContexts + context.
-    cfg2any_contextMap          : in  std_logic_vector(2**CFG.numLaneGroupsLog2*2**CFG.numContextsLog2-1 downto 0);
+    -- Specifies the context associated with the indexed pipelane group.
+    cfg2any_context             : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Last pipelane group associated with each context.
-    cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
-    -- Pipelane interface
+    -- Pipelane interface: configuration and run control
     ---------------------------------------------------------------------------
     -- External interrupt request signal, active high. This is already masked
     -- by the interrupt enable bit in the control register.
     cxplif2pl_irq               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
-    -- External interrupt acknowledge signal, active high.
-    pl2cxplif_irqAck            : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    -- External interrupt identification. Guaranteed to be loaded in the trap
+    -- argument register in the same clkEn'd cycle where irqAck is high.
+    cxplif2br_irqID             : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- External interrupt acknowledge signal, active high. and'ed with the
+    -- stall input, so it goes high for exactly one clkEn'abled cycle.
+    br2cxplif_irqAck            : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
     -- Active high run signal. This is the combined run signal from the
     -- external run input and the BRK flag in the debug control register.
-    cxplif2pl_run               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    cxplif2br_run               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
     -- Active high idle output.
     pl2cxplif_idle              : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
-    -- Branch/link register read ports.
-    cxplif2pl_brLinkReadPort    : out cxreg2pl_readPort_array(2**CFG.numLanesLog2-1 downto 0);
-    
-    -- Branch/link register write ports.
-    pl2cxplif_brLinkWritePort   : in  pl2cxreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
-    
-    -- Next value for the PC register, only valid for master lanes with a
-    -- branch unit.
+    ---------------------------------------------------------------------------
+    -- Pipelane interface: next operation routing
+    ---------------------------------------------------------------------------
+    -- The PC for the current instruction, as chosen by the active branch unit
+    -- within the group. The PC is distributed by the context-pipelane
+    -- interface block so all coupled pipelanes have it.
     br2cxplif_PC                : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    cxplif2pl_PC                : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
-    -- PC for the current bundle for each lane, as stored in the context PC
-    -- register.
-    cxplif2pl_bundlePC          : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-    
-    -- Exact PC for the syllable for each lane.
+    -- Same as PC, but with the index of the lane within the group of coupled
+    -- lanes added to it, to get the exact address of the syllable which is
+    -- processed by this lane. This should only be used by the VHDL simulation.
     cxplif2pl_lanePC            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
-    -- When high, the next PC should be set to the current value of the PC
-    -- register unconditionally. This is high when the debug bus wrote to the
-    -- PC register, and after a (context) reset to ensure that execution starts
-    -- at 0.
-    cxplif2pl_overridePC        : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    -- Whether an instruction fetch is being initiated or not.
+    br2cxplif_limmValid         : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    cxplif2pl_limmValid         : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Whether the next instruction is valid and should be committed or not.
+    br2cxplif_valid             : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    cxplif2pl_valid             : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Whether breakpoints are valid in the next instruction or not. This is
+    -- low when returning from a debug interrupt.
+    br2cxplif_brkValid          : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    cxplif2pl_brkValid          : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Whether or not pipeline stages S_IF+1 to S_BR-1 should be invalidated
+    -- due to a branch or the core stopping.
+    br2cxplif_invalUntilBR      : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    cxplif2pl_invalUntilBR      : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Pipelane interface: branch/link registers
+    ---------------------------------------------------------------------------
+    -- These signals are array'd outside this entity and contain pipeline
+    -- configuration dependent data types, so they need to be put in records.
+    -- The signals are documented in rvex_intIface_pkg.vhd, where the types are
+    -- defined.
+    
+    -- Branch/link register read port.
+    cxplif2pl_brLinkReadPort    : out cxreg2pl_readPort_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Branch/link register write port.
+    pl2cxplif_brLinkWritePort   : in  pl2cxreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Pipelane interface: special registers
+    ---------------------------------------------------------------------------
+    -- The current value of the context PC register and associated override
+    -- flag. When the override flag is set, the branch unit should behave as if
+    -- there was a branch to the value in contextPC. This happens when the
+    -- debug bus writes to the PC register.
+    cxplif2br_contextPC         : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    cxplif2br_overridePC        : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
     -- Current trap handler. When the application has marked that it is not
     -- currently capable of accepting a trap, this is set to the panic handler
@@ -146,48 +185,81 @@ entity rvex_contextPipelaneIFace is
     -- any. We can commit this in the branch stage already, because it is
     -- guaranteed that there is no instruction valid in S_MEM while a trap is
     -- entered.
-    pl2cxplif_trapInfo          : in  trap_info_array(2**CFG.numLanesLog2-1 downto 0);
-    pl2cxplif_trapPoint         : in  trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+    br2cxplif_trapInfo          : in  trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+    br2cxplif_trapPoint         : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Debug trap information for externally handled breakpoints. When the
+    -- enable bit in the trap information record is high, the BRK bit should
+    -- be set to halt the core and the trap information should be stored for
+    -- the external debugger.
+    br2cxplif_exDbgTrapInfo     : in  trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Stop signal, goes high when the branch unit is executing a stop
+    -- instruction. When high, the done bit is set and the BRK bit is set to
+    -- halt the core.
+    br2cxplif_stop              : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Trap handler return address. This is just connected to the current value
+    -- of the trap point register.
+    cxplif2br_trapReturn        : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
     -- Commands the register logic to reset the trap cause to 0 and restore
     -- the control registers which were saved upon trap entry.
     pl2cxplif_rfi               : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
-    -- When this (debug) trap is active, BRK must be set and the external debug
-    -- cause value should be set to the trap cause.
-    br2cxplif_setBrk            : in  trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+    -- Whether debug traps are to be handled normally or by halting execution
+    -- for debugging through the external bebug bus.
+    cxplif2br_extDebug          : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
-    -- This is set by the debug bus in the same cycle that the BRK bit is
-    -- cleared. While high, breakpoints should be ignored for the instruction
-    -- currently being fetched.
-    cxplif2br_resume            : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    -- Set when the current value of the trap cause register maps to a debug
+    -- trap.
+    cxplif2br_handlingDebugTrap : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
-    -- This should be driven high by the pipelane when an instruction is
-    -- fetched and will be executed. This clears the resume bit, so following
-    -- instructions have breakpoints enabled again.
-    br2cxplif_resumed           : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    -- Current value of the debug trap enable bit in the control register.
+    cxplif2pl_debugTrapEnable   : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
     -- Current breakpoint information.
     cxplif2brku_breakpoints     : out cxreg2pl_breakpoint_info_array(2**CFG.numLanesLog2-1 downto 0);
     
+    -- Current value of the stepping flag in the debug control register. When
+    -- high, a step trap must be triggered if there is no other trap and
+    -- breakpoints are enabled.
+    cxplif2brku_stepping        : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
     ---------------------------------------------------------------------------
     -- Run control interface
     ---------------------------------------------------------------------------
-    -- External interrupt request signal for each context, active high.
+    -- External interrupt request signal, active high. This is already masked
+    -- by the interrupt enable bit in the control register.
     rctrl2cxplif_irq            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- External interrupt acknowledge signal for each context, active high.
-    -- Goes high for exactly one clkEn'abled cycle.
+    -- External interrupt identification. Guaranteed to be loaded in the trap
+    -- argument register in the same clkEn'd cycle where irqAck is high.
+    rctrl2cxplif_irqID          : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- External interrupt acknowledge signal, active high. and'ed with the
+    -- stall input, so it goes high for exactly one clkEn'abled cycle.
     cxplif2rctrl_irqAck         : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- Active high run signal.
+    -- Active high run signal. This is the combined run signal from the
+    -- external run input and the BRK flag in the debug control register.
     rctrl2cxplif_run            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     -- Active high idle output.
     cxplif2rctrl_idle           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
-    -- Context register interface
+    -- Context register interface: misc.
+    ---------------------------------------------------------------------------
+    -- When high, the context registers must maintain their current value.
+    cxplif2cxreg_stall          : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- Stop flag. When high, the BRK and done flags in the debug control
+    -- register should be set.
+    cxplif2cxreg_stop           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Context register interface: branch/link registers
     ---------------------------------------------------------------------------
     -- Branch/link register read port for each context.
     cxreg2cxplif_brLinkReadPort : in  cxreg2pl_readPort_array(2**CFG.numContextsLog2-1 downto 0);
@@ -195,50 +267,90 @@ entity rvex_contextPipelaneIFace is
     -- Branch/link register write port for each context.
     cxplif2cxreg_brLinkWritePort: out pl2cxreg_writePort_array(2**CFG.numContextsLog2-1 downto 0);
     
-    -- Next and current value for the PC register for each context.
-    cxplif2cxreg_PC             : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-    cxreg2cxplif_PC             : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- When high, the next PC should be set to the current value of the PC
-    -- register unconditionally. This is high when the debug bus wrote to the
-    -- PC register, and after a (context) reset to ensure that execution starts
-    -- at 0.
+    ---------------------------------------------------------------------------
+    -- Context register interface: program counter
+    ---------------------------------------------------------------------------
+    -- Next value for the PC register. This is written when stall is low and
+    -- overridePC is not asserted.
+    cxplif2cxreg_nextPC         : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+
+    -- Current value of the PC register.
+    cxreg2cxplif_currentPC      : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+
+    -- The overridePC flag is set when the debug bus writes to the context
+    -- registers or when the context or processor is reset. This is reset when
+    -- overridePC_ack is asserted while stall is low. It indicates to the
+    -- branch unit that it should inject a branch to the current PC register
+    -- regardless of the current instruction or state.
     cxreg2cxplif_overridePC     : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Current trap handler for each context. When the application has marked
-    -- that it is not currently capable of accepting a trap, this is set to the
-    -- panic handler register instead.
+    cxplif2cxreg_overridePC_ack : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    ---------------------------------------------------------------------------
+    -- Context register interface: trap handling
+    ---------------------------------------------------------------------------
+    -- Current trap handler. When the application has marked that it is not
+    -- currently capable of accepting a trap, this is set to the panic handler
+    -- register instead.
     cxreg2cxplif_trapHandler    : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Trap information for the trap currently handled by the branch unit
-    -- associated with each context, if any, or no trap for contexts which do
-    -- not currently have a branch unit assigned to them.
+
+    -- Regular trap information. When the trap in trapInfo is active, the trap
+    -- information should be stored in the trap cause/arg registers. In
+    -- addition, the register hardware should save the current value of the
+    -- control register and should clear the ready-for-trap and interrupt-
+    -- enable bits, as well as the debug-trap-enable bit if the trap cause maps
+    -- to a debug trap.
     cxplif2cxreg_trapInfo       : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
-    cxplif2cxreg_trapPoint      : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Commands the register logic to reset the trap cause to 0 and restore
-    -- the control registers which were saved upon trap entry.
+    cxplif2cxreg_trapPoint      : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+
+    -- Connected to the current value of the trap point register. Used by the
+    -- branch unit as the return address for the RFI instruction.
+    cxreg2cxplif_trapReturn     : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+
+    -- RFI flag. When high, the saved control register value should be restored
+    -- and the trap cause field should be set to 0.
     cxplif2cxreg_rfi            : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- When this (debug) trap is active, BRK must be set and the external debug
-    -- cause value should be set to the trap cause.
-    cxplif2cxreg_setBrk         : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Current value of the BRK bit in the debug control register.
+
+    -- Set when the current value of the trap cause register maps to a debug
+    -- trap. This is used by the branch unit to disable breakpoints for the
+    -- first instruction executed after the debug trap returns.
+    cxreg2cxplif_handlingDebugTrap:in std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- Current value of the interrupt-enable flag in the control register.
+    cxreg2cxplif_interruptEnable: in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- Current value of the debug-trap-enable flag in the control register.
+    cxreg2cxplif_debugTrapEnable: in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- Current hardware breakpoint configuration.
+    cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0);
+
+    ---------------------------------------------------------------------------
+    -- Context register interface: external debug control signals
+    ---------------------------------------------------------------------------
+    -- Whether debug traps are to be handled normally or by halting execution
+    -- for debugging through the external bebug bus.
+    cxreg2cxplif_extDebug       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- External debug trap information. When the trap in exDbgTrapInfo is
+    -- active, the trap cause should be stored in the debug control register
+    -- and the BRK flag in the debug control register should be set.
+    cxplif2cxreg_exDbgTrapInfo  : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
+
+    -- BRK flag from the debug control register. When high, the core should
+    -- be halted.
     cxreg2cxplif_brk            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- This is set by the debug bus in the same cycle that the BRK bit is
-    -- cleared. While high, breakpoints should be ignored for the instruction
-    -- currently being fetched.
-    cxreg2cxplif_resume         : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- This should be driven high by the pipelane when an instruction is
-    -- fetched and will be executed. This clears the resume bit, so following
-    -- instructions have breakpoints enabled again.
-    cxplif2cxreg_resumed        : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Current breakpoint information for each context.
-    cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0)
+
+    -- Stepping mode flag from the debug control register. When high,
+    -- executing any instruction which has the brkValid flag set should cause
+    -- a step trap.
+    cxreg2cxplif_stepping       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- Resuming flag. This is set when the BRK flag is cleared by the debug
+    -- bus. It is cleared when the resumed bit is high while stall is low.
+    -- While high, issued instructions should have the brkValid flag cleared,
+    -- so breakpoints and step traps are ignored.
+    cxreg2cxplif_resuming       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_resuming_ack   : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0)
     
   );
 end rvex_contextPipelaneIFace;
@@ -246,10 +358,474 @@ end rvex_contextPipelaneIFace;
 --=============================================================================
 architecture Behavioral of rvex_contextPipelaneIFace is
 --=============================================================================
+  --
+  -- The architecture consists of 4 distinguishable blocks.
+  --
+  -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+  --
+  --                                cfg2any_ctxtEnable,
+  --                             cfg2any_lastGroupForCtxt
+  --                                         |
+  --                       Per          Per  |   Per
+  --                       lane        group v context
+  --                      ,-^-.        ,-^-. _  ,-^-.
+  --              -  - --.     .------.     |g\      .-- -  -
+  --                     |---->| Arb. |--o->|2 |---->|
+  --                     |     '------'  |  |c/      |
+  --                     |               |           | Contexts and
+  --               Lanes |     .------.  |*_arb      | external run
+  --                     |     |      |<-'    _      | control
+  --                     |<----|Broad.|      /c|     |
+  --                     |     |      |<----| 2|<----|
+  --              -  - --'     '------'*_mux \g|     '-- -  -
+  --                                          ^
+  --                                          |
+  --                                   cfg2any_context
+  --
+  -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+  --
+  -- Arb.   = Arbitrator. Merges the signals from coupled lanes together.
+  -- Broad. = Broadcasting block. Broadcasts the signals from the contexts and
+  --          some merged signals from the pipelanes to all coupled pipelanes.
+  -- g2c    = Pipelane group to context mux. Selects the signals from the
+  --          highest indexed group associated with a context, or if the
+  --          context is disabled, it selects a NOP signal.
+  -- c2g    = Context to pipelane group mux. Muxes between the contexts for
+  --          each pipelane group.
+  --
+  -- The *_arb named signals route from the arbitrator to the group-to-context
+  -- mux and the broadcast block. The *_mux named signals route from the
+  -- context-to-group mux to the broadcast block.
+  --
+  -----------------------------------------------------------------------------
+  -- Arbitrator outputs
+  -----------------------------------------------------------------------------
+  -- Names match the inputs from the pipelanes in the entity description. Refer
+  -- to the documentation there for more information.
+  signal irqAck_arb             : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal idle_arb               : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal PC_arb                 : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal lanePC_arb             : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal limmValid_arb          : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal valid_arb              : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal brkValid_arb           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal invalUntilBR_arb       : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal brLinkWritePort_arb    : pl2cxreg_writePort_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal trapInfo_arb           : trap_info_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal trapPoint_arb          : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal exDbgTrapInfo_arb      : trap_info_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal stop_arb               : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal rfi_arb                : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  
+  -----------------------------------------------------------------------------
+  -- Context to group mux outputs
+  -----------------------------------------------------------------------------
+  -- Names match the outputs to the pipelanes in the entity description. Refer
+  -- to the documentation there for more information.
+  signal irq_mux                : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal irqID_mux              : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal run_mux                : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal brLinkReadPort_mux     : cxreg2pl_readPort_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal contextPC_mux          : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal overridePC_mux         : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal trapHandler_mux        : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal trapReturn_mux         : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal extDebug_mux           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal handlingDebugTrap_mux  : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal debugTrapEnable_mux    : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal breakpoints_mux        : cxreg2pl_breakpoint_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal stepping_mux           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal resuming_mux           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+  
+  -----------------------------------------------------------------------------
+  -- Other signals
+  -----------------------------------------------------------------------------
+  -- Masked IRQ flag for each context.
+  signal irq_ctxt               : std_logic_vector  (2**CFG.numContextsLog2-1 downto 0);
+  
+  -- Run flag for each context, taking the external run input and the BRK
+  -- control bits into consideration.
+  signal run_ctxt               : std_logic_vector  (2**CFG.numContextsLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Arbitrator
+  -----------------------------------------------------------------------------
+  arbitrator: process (
+    
+    -- Configuration signal.
+    cfg2any_coupled,
+    
+    -- Signals from pipelanes.
+    br2cxplif_irqAck, pl2cxplif_idle, br2cxplif_PC, br2cxplif_limmValid,
+    br2cxplif_valid, br2cxplif_brkValid, br2cxplif_invalUntilBR,
+    pl2cxplif_brLinkWritePort, br2cxplif_trapInfo, br2cxplif_trapPoint,
+    br2cxplif_exDbgTrapInfo, br2cxplif_stop, pl2cxplif_rfi
+    
+  ) is
+    
+    -- Log2 of the number of bytes in a full instruction for a pipelane group.
+    constant GROUP_INSTR_SIZE_LOG2B : natural
+      := (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + SYLLABLE_SIZE_LOG2B;
+    
+    -- Variables for all the signals we need to route.
+    variable irqAck_v           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable idle_v             : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable PC_v               : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable lanePC_v           : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable limmValid_v        : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable valid_v            : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable brkValid_v         : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable invalUntilBR_v     : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable brLinkWritePort_v  : pl2cxreg_writePort_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable trapPoint_v        : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable trapInfo_v         : trap_info_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable exDbgTrapInfo_v    : trap_info_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable stop_v             : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable rfi_v              : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Indexing/static variables.
+    variable selectedLane       : natural;
+    variable currentLane        : natural;
+    variable groupA, groupB     : natural;
+    variable index              : natural;
+    variable coupled            : std_logic;
+    
+    -- Bitwise or operator for a branch register data array, so we can keep the
+    -- code below sane.
+    function "or" (
+      l: rvex_brRegData_array;
+      r: rvex_brRegData_array
+    ) return rvex_brRegData_array is
+      variable retval: rvex_brRegData_array(l'range);
+    begin
+      for i in l'range loop
+        retval(i) := l(i) or r(i);
+      end loop;
+      return retval;
+    end "or";
+    
+  begin
+    
+    -- Perform static arbitration for all signals except for the branch write
+    -- port and the idle signal: only the signals from the lanes with a branch
+    -- unit are valid for these.
+    for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+      
+      -- Figure out which lane the branch unit is in.
+      selectedLane := group2lastLane(laneGroup, CFG) - CFG.branchLaneRevIndex;
+      
+      -- Select the incoming values from the branch units for signals which are
+      -- only valid for those lanes.
+      irqAck_v(laneGroup)           := br2cxplif_irqAck(selectedLane);
+      PC_v(laneGroup)               := br2cxplif_PC(selectedLane);
+      lanePC_v(laneGroup)           := br2cxplif_PC(selectedLane);
+      limmValid_v(laneGroup)        := br2cxplif_limmValid(selectedLane);
+      valid_v(laneGroup)            := br2cxplif_valid(selectedLane);
+      brkValid_v(laneGroup)         := br2cxplif_brkValid(selectedLane);
+      invalUntilBR_v(laneGroup)     := br2cxplif_invalUntilBR(selectedLane);
+      trapInfo_v(laneGroup)         := br2cxplif_trapInfo(selectedLane);
+      trapPoint_v(laneGroup)        := br2cxplif_trapPoint(selectedLane);
+      exDbgTrapInfo_v(laneGroup)    := br2cxplif_exDbgTrapInfo(selectedLane);
+      stop_v(laneGroup)             := br2cxplif_stop(selectedLane);
+      rfi_v(laneGroup)              := pl2cxplif_rfi(selectedLane);
+      
+      -- Load default values into idle_v and brLinkWritePort_v.
+      idle_v(laneGroup)             := '1';
+      brLinkWritePort_v(laneGroup)  := (
+        brData                      => (others => (others => '0')),
+        linkData                    => (others => (others => '0')),
+        brWriteEnable               => (others => (others => '0')),
+        linkWriteEnable             => (others => '0'),
+        brForwardEnable             => (others => (others => '0')),
+        linkForwardEnable           => (others => '0')
+      );
+      
+      -- Generate merging logic for the idle signal and the branch/link
+      -- register write port. The value written to the link register is
+      -- priority encoded (giving precedence to higher indexed lanes.
+      -- The branch register value - written is wired-or in case of write
+      -- conflicts, because that's cheaper and maybe even useful in some cases.
+      for groupIndex in 0 to 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2)-1 loop
+        currentLane := group2firstLane(laneGroup, CFG) + groupIndex;
+        
+        -- Idle signal is wired-and.
+        idle_v(laneGroup) := idle_v(laneGroup) and pl2cxplif_idle(currentLane);
+        
+        -- Write/forward enable signals are wired-or.
+        brLinkWritePort_v(laneGroup).brWriteEnable
+          := brLinkWritePort_v(laneGroup).brWriteEnable
+          or pl2cxplif_brLinkWritePort(currentLane).brWriteEnable;
+        
+        brLinkWritePort_v(laneGroup).linkWriteEnable
+          := brLinkWritePort_v(laneGroup).linkWriteEnable
+          or pl2cxplif_brLinkWritePort(currentLane).linkWriteEnable;
+        
+        brLinkWritePort_v(laneGroup).brForwardEnable
+          := brLinkWritePort_v(laneGroup).brForwardEnable
+          or pl2cxplif_brLinkWritePort(currentLane).brForwardEnable;
+        
+        brLinkWritePort_v(laneGroup).linkForwardEnable
+          := brLinkWritePort_v(laneGroup).linkForwardEnable
+          or pl2cxplif_brLinkWritePort(currentLane).linkForwardEnable;
+        
+        -- Branch register write data is also wired-or.
+        brLinkWritePort_v(laneGroup).brData
+          := brLinkWritePort_v(laneGroup).brData
+          or pl2cxplif_brLinkWritePort(currentLane).brData;
+        
+      end loop;
+      
+      -- Handle link register write arbitration for each forwarded pipeline
+      -- stage.
+      for stage in S_FIRST to S_SWB loop
+        selectedLane := group2firstLane(laneGroup, CFG);
+        for groupIndex in 0 to 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2)-1 loop
+          currentLane := group2firstLane(laneGroup, CFG) + groupIndex;
+          if pl2cxplif_brLinkWritePort(currentLane).linkForwardEnable(stage) = '1' then
+            selectedLane := currentLane;
+          end if;
+        end loop;
+        
+        -- Mux between the incoming data signal based on the priority encoder
+        -- output.
+        brLinkWritePort_v(laneGroup).linkData(stage)
+          := pl2cxplif_brLinkWritePort(currentLane).linkData(stage);
+        
+      end loop;
+      
+    end loop;
+    
+    -- Use a binary tree to merge the signals coming from the lane groups
+    -- together based on the current configuration. Refer to the documentation
+    -- for binTreeIndices in rvex_utils_pkg.vhd for more information on what
+    -- this tree looks like.
+    for level in 0 to CFG.numLaneGroupsLog2-1 loop
+      for blockIndex in 0 to (2**CFG.numLaneGroupsLog2)/2-1 loop
+        binTreeIndices(level, blockIndex, groupA, groupB);
+        
+        -- Merge the signals from the two groups together when the groups are
+        -- coupled.
+        if cfg2any_coupled(groupA + groupB * 2**CFG.numLaneGroupsLog2) = '1' then
+          
+          -- Copy the signals coming from the branch units in the higher
+          -- indexed lane group to the lower indexed lane group, because the
+          -- higher indexed branch group takes priority.
+          irqAck_v(groupA)       := irqAck_v(groupB);
+          PC_v(groupA)           := PC_v(groupB);
+          lanePC_v(groupA)       := lanePC_v(groupB);
+          limmValid_v(groupA)    := limmValid_v(groupB);
+          valid_v(groupA)        := valid_v(groupB);
+          brkValid_v(groupA)     := brkValid_v(groupB);
+          invalUntilBR_v(groupA) := invalUntilBR_v(groupB);
+          trapInfo_v(groupA)     := trapInfo_v(groupB);
+          trapPoint_v(groupA)    := trapPoint_v(groupB);
+          exDbgTrapInfo_v(groupA):= exDbgTrapInfo_v(groupB);
+          stop_v(groupA)         := stop_v(groupB);
+          rfi_v(groupA)          := rfi_v(groupB);
+          
+          -- Override the lane PC bit for this level appropriately.
+          index := blockIndex + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + SYLLABLE_SIZE_LOG2B;
+          lanePC_v(groupA)(index) := '0';
+          lanePC_v(groupB)(index) := '1';
+          
+          -- Handle wired-and/or signals.
+          idle_v(groupA)
+            := idle_v(groupA)
+           and idle_v(groupB);
+          idle_v(groupB)
+            := idle_v(groupA);
+          
+          brLinkWritePort_v(groupA).brWriteEnable
+            := brLinkWritePort_v(groupA).brWriteEnable
+            or brLinkWritePort_v(groupB).brWriteEnable;
+          brLinkWritePort_v(groupB).brWriteEnable
+            := brLinkWritePort_v(groupA).brWriteEnable;
+          
+          brLinkWritePort_v(groupA).linkWriteEnable
+            := brLinkWritePort_v(groupA).linkWriteEnable
+            or brLinkWritePort_v(groupB).linkWriteEnable;
+          brLinkWritePort_v(groupB).linkWriteEnable
+            := brLinkWritePort_v(groupA).linkWriteEnable;
+          
+          brLinkWritePort_v(groupA).brForwardEnable
+            := brLinkWritePort_v(groupA).brForwardEnable
+            or brLinkWritePort_v(groupB).brForwardEnable;
+          brLinkWritePort_v(groupB).brForwardEnable
+            := brLinkWritePort_v(groupA).brForwardEnable;
+          
+          brLinkWritePort_v(groupA).linkForwardEnable
+            := brLinkWritePort_v(groupA).linkForwardEnable
+            or brLinkWritePort_v(groupB).linkForwardEnable;
+          brLinkWritePort_v(groupB).linkForwardEnable
+            := brLinkWritePort_v(groupA).linkForwardEnable;
+          
+          brLinkWritePort_v(groupA).brData
+            := brLinkWritePort_v(groupA).brData
+            or brLinkWritePort_v(groupB).brData;
+          brLinkWritePort_v(groupB).brData
+            := brLinkWritePort_v(groupA).brData;
+          
+          -- Handle link register write/forward data.
+          for stage in S_FIRST to S_SWB loop
+            if brLinkWritePort_v(groupB).linkForwardEnable(stage) = '1' then
+              brLinkWritePort_v(groupA).linkData
+                := brLinkWritePort_v(groupB).linkData;
+            else
+              brLinkWritePort_v(groupB).linkData
+                := brLinkWritePort_v(groupA).linkData;
+            end if;
+          end loop;
+          
+        end if;
+        
+      end loop;
+    end loop;
+    
+    -- Invalidate lane groups for which lanePC is less than PC to handle trap
+    -- return from the middle of a bundle (which can happen when the processor
+    -- is trapped in a configuration which uses less lanes than what it returns
+    -- in). We only look at the reconfigurable section here.
+    if CFG.numLaneGroupsLog2 > 0 then
+      for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+        if unsigned(lanePC_v(laneGroup)(GROUP_INSTR_SIZE_LOG2B + CFG.numLaneGroupsLog2 - 1 downto GROUP_INSTR_SIZE_LOG2B))
+         < unsigned(    PC_v(laneGroup)(GROUP_INSTR_SIZE_LOG2B + CFG.numLaneGroupsLog2 - 1 downto GROUP_INSTR_SIZE_LOG2B))
+        then
+          valid_v(laneGroup) := '0';
+        end if;
+      end loop;
+    end if;
+    
+    -- Drive output signals.
+    irqAck_arb          <= irqAck_v;
+    idle_arb            <= idle_v;
+    PC_arb              <= PC_v;
+    lanePC_arb          <= lanePC_v;
+    limmValid_arb       <= limmValid_v;
+    valid_arb           <= valid_v;
+    brkValid_arb        <= brkValid_v;
+    invalUntilBR_arb    <= invalUntilBR_v;
+    brLinkWritePort_arb <= brLinkWritePort_v;
+    trapInfo_arb        <= trapInfo_v;
+    trapPoint_arb       <= trapPoint_v;
+    exDbgTrapInfo_arb   <= exDbgTrapInfo_v;
+    stop_arb            <= stop_v;
+    rfi_arb             <= rfi_v;
+    
+  end process;
+  
+  -----------------------------------------------------------------------------
+  -- Broadcasting block
+  -----------------------------------------------------------------------------
+  broadcasting: for lane in 0 to 2**CFG.numLanesLog2-1 generate
+    
+    -- Pipelane group for the current lane.
+    constant laneGroup  : natural := lane2group(lane, CFG);
+    
+    -- Index of the current lane within the group.
+    constant laneIndex  : natural := lane2indexInGroup(lane, CFG);
+    
+    -- Number of LSBs in the lane PC which are fixed per lane due to alignment
+    -- requirements.
+    constant fixedPCBits: natural
+      := (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
+       + SYLLABLE_SIZE_LOG2B;
+    
+  begin
+    
+    -- Broadcast all the normal signals.
+    cxplif2pl_irq(lane)               <= irq_mux(laneGroup);
+    cxplif2br_irqID(lane)             <= irqID_mux(laneGroup);
+    cxplif2br_run(lane)               <= run_mux(laneGroup);
+    cxplif2pl_PC(lane)                <= PC_arb(laneGroup);
+    cxplif2pl_limmValid(lane)         <= limmValid_arb(laneGroup);
+    cxplif2pl_valid(lane)             <= valid_arb(laneGroup);
+    cxplif2pl_brkValid(lane)          <= brkValid_arb(laneGroup)  -- Executing first instr. after debug trap.
+                                 and not resuming_mux(laneGroup); -- Executing first instr. after BRK flag cleared.
+    cxplif2pl_invalUntilBR(lane)      <= invalUntilBR_arb(laneGroup);
+    cxplif2pl_brLinkReadPort(lane)    <= brLinkReadPort_mux(laneGroup);
+    cxplif2br_contextPC(lane)         <= contextPC_mux(laneGroup);
+    cxplif2br_overridePC(lane)        <= overridePC_mux(laneGroup);
+    cxplif2pl_trapHandler(lane)       <= trapHandler_mux(laneGroup);
+    cxplif2br_trapReturn(lane)        <= trapReturn_mux(laneGroup);
+    cxplif2br_extDebug(lane)          <= extDebug_mux(laneGroup);
+    cxplif2br_handlingDebugTrap(lane) <= handlingDebugTrap_mux(laneGroup);
+    cxplif2pl_debugTrapEnable(lane)   <= debugTrapEnable_mux(laneGroup);
+    cxplif2brku_breakpoints(lane)     <= breakpoints_mux(laneGroup);
+    cxplif2brku_stepping(lane)        <= stepping_mux(laneGroup);
+    
+    -- Handle the special lanePC signal, which is different for every pipelane.
+    cxplif2pl_lanePC(lane)(rvex_address_type'high downto fixedPCBits)
+      <= lanePC_arb(laneGroup)(rvex_address_type'high downto fixedPCBits);
+    
+    cxplif2pl_lanePC(lane)(fixedPCBits-1 downto 0)
+      <= std_logic_vector(to_unsigned(
+        laneIndex * 2**SYLLABLE_SIZE_LOG2B, fixedPCBits
+      ));
+    
+  end generate;
+  
+  -----------------------------------------------------------------------------
+  -- Group to context muxing and logic
+  -----------------------------------------------------------------------------
+  group2context: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
+    signal laneGroup: natural;
+  begin
+    
+    -- Determine the group to use for this context.
+    laneGroup <= to_integer(unsigned(cfg2any_lastGroupForCtxt(ctxt)));
+    
+    -- Generate all the muxes.
+    cxplif2rctrl_irqAck(ctxt)           <= irqAck_arb(laneGroup);
+    cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup);
+    cxplif2cxreg_stall(ctxt)            <= stall(laneGroup);
+    cxplif2cxreg_stop(ctxt)             <= stop_arb(laneGroup);
+    cxplif2cxreg_brLinkWritePort(ctxt)  <= brLinkWritePort_arb(laneGroup);
+    cxplif2cxreg_nextPC(ctxt)           <= PC_arb(laneGroup);
+    cxplif2cxreg_overridePC_ack(ctxt)   <= valid_arb(laneGroup);
+    cxplif2cxreg_trapInfo(ctxt)         <= trapInfo_arb(laneGroup);
+    cxplif2cxreg_trapPoint(ctxt)        <= trapPoint_arb(laneGroup);
+    cxplif2cxreg_rfi(ctxt)              <= rfi_arb(laneGroup);
+    cxplif2cxreg_exDbgTrapInfo(ctxt)    <= exDbgTrapInfo_arb(laneGroup);
+    cxplif2cxreg_resuming_ack(ctxt)     <= valid_arb(laneGroup);
+    
+    -- While we're at it, combine the external run control and control register
+    -- data where necessary for each context.
+    irq_ctxt(ctxt) <= rctrl2cxplif_irq(ctxt) and cxreg2cxplif_interruptEnable(ctxt);
+    run_ctxt(ctxt) <= rctrl2cxplif_run(ctxt) and not cxreg2cxplif_brk(ctxt);
+    
+  end generate;
+  
+  -----------------------------------------------------------------------------
+  -- Context to group muxing and logic
+  -----------------------------------------------------------------------------
+  context2group: for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 generate
+    signal ctxt: natural;
+  begin
+    
+    -- Determine the context to use for this group.
+    ctxt <= to_integer(unsigned(cfg2any_context(laneGroup)));
+    
+    -- Generate all the muxes.
+    irq_mux(laneGroup)                <= irq_ctxt(ctxt);
+    irqID_mux(laneGroup)              <= rctrl2cxplif_irqID(ctxt);
+    run_mux(laneGroup)                <= run_ctxt(ctxt);
+    brLinkReadPort_mux(laneGroup)     <= cxreg2cxplif_brLinkReadPort(ctxt);
+    contextPC_mux(laneGroup)          <= cxreg2cxplif_currentPC(ctxt);
+    overridePC_mux(laneGroup)         <= cxreg2cxplif_overridePC(ctxt);
+    trapHandler_mux(laneGroup)        <= cxreg2cxplif_trapHandler(ctxt);
+    trapReturn_mux(laneGroup)         <= cxreg2cxplif_trapReturn(ctxt);
+    extDebug_mux(laneGroup)           <= cxreg2cxplif_extDebug(ctxt);
+    handlingDebugTrap_mux(laneGroup)  <= cxreg2cxplif_handlingDebugTrap(ctxt);
+    debugTrapEnable_mux(laneGroup)    <= cxreg2cxplif_debugTrapEnable(ctxt);
+    breakpoints_mux(laneGroup)        <= cxreg2cxplif_breakpoints(ctxt);
+    stepping_mux(laneGroup)           <= cxreg2cxplif_stepping(ctxt);
+    resuming_mux(laneGroup)           <= cxreg2cxplif_resuming(ctxt);
+    
+  end generate;
   
 end Behavioral;
 

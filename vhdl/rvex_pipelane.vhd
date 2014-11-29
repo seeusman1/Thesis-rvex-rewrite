@@ -56,6 +56,10 @@ use work.rvex_trap_pkg.all;
 use work.rvex_opcode_pkg.all;
 use work.rvex_opcodeDatapath_pkg.all;
 
+-- pragma translate_off
+use work.rvex_simUtils_pkg.all;
+-- pragma translate_on
+
 --=============================================================================
 -- This entity contains the pipeline logic and instantiates the functional
 -- units for a single lane.
@@ -99,6 +103,15 @@ entity rvex_pipelane is
     
     -- Active high stall input.
     stall                       : in  std_logic;
+    
+    ---------------------------------------------------------------------------
+    -- VHDL simulation debug information
+    ---------------------------------------------------------------------------
+    -- pragma translate_off
+    -- String with disassembly, trap info, validity, etc. for the last
+    -- instruction in the pipeline.
+    pl2sim                      : out rvex_string_builder_type;
+    -- pragma translate_on
     
     ---------------------------------------------------------------------------
     -- Configuration and run control
@@ -1481,6 +1494,17 @@ begin -- architecture
     
     pl2cxplif_brLinkWritePort.linkWriteEnable(S_SWB)
       <= s(S_SWB).dp.resLinkValid and s(S_SWB).valid;
+    
+    ---------------------------------------------------------------------------
+    -- Generate VHDL simulation information
+    ---------------------------------------------------------------------------
+    -- pragma translate_off
+    if GEN_VHDL_SIM_INFO then
+      
+      -- TODO
+      
+    end if;
+    -- pragma translate_on
     
     ---------------------------------------------------------------------------
     -- Drive stage outputs

@@ -51,7 +51,12 @@ library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_trap_pkg.all;
+
+-- pragma translate_off
+use work.rvex_simUtils_pkg.all;
+-- pragma translate_on
 
 --=============================================================================
 -- This entity contains all pipeline logic for the entire processor. Everything
@@ -83,6 +88,15 @@ entity rvex_pipelanes is
     -- Active high stall input for each pipelane group.
     stall                       : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
+    ---------------------------------------------------------------------------
+    -- VHDL simulation debug information
+    ---------------------------------------------------------------------------
+    -- pragma translate_off
+    -- String with disassembly, trap info, validity, etc. for the last
+    -- instruction in the pipeline for each lane.
+    pl2sim                      : out rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
+    -- pragma translate_on
+    
     -----------------------------------------------------------------------------
     -- Decoded configuration signals
     -----------------------------------------------------------------------------
@@ -99,16 +113,11 @@ entity rvex_pipelanes is
     -- to the next higher indexed master group.
     cfg2any_decouple            : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Link from any pipelane group to to the first (lowest indexed) coupled
-    -- group.
-    cfg2any_firstGroup          : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-    
     -- log2 of the number of coupled pipelane groups for each pipelane group.
     cfg2any_numGroupsLog2       : in  rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Matrix specifying connections between context and lane group. Indexing is
-    -- done using i = laneGroup*numContexts + context.
-    cfg2any_contextMap          : in  std_logic_vector(2**CFG.numLaneGroupsLog2*2**CFG.numContextsLog2-1 downto 0);
+    -- Specifies the context associated with the indexed pipelane group.
+    cfg2any_context             : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Last pipelane group associated with each context.
     cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -116,21 +125,27 @@ entity rvex_pipelanes is
     ---------------------------------------------------------------------------
     -- Configuration and run control
     ---------------------------------------------------------------------------
-    -- Run bit for each pipelane group from the configuration logic.
-    cfg2pl_run                  : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    -- Run bit for this pipelane from the configuration logic.
+    cfg2br_run                  : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high reconfiguration block bit. When high, reconfiguration is
     -- not permitted. This is essentially an active low idle flag.
     pl2cfg_blockReconfig        : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
-    -- External interrupt request signal for each context, active high.
+    -- External interrupt request signal, active high. This is already masked
+    -- by the interrupt enable bit in the control register.
     rctrl2cxplif_irq            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- External interrupt acknowledge signal for each context, active high.
-    -- Goes high for exactly one clkEn'abled cycle.
+    -- External interrupt identification. Guaranteed to be loaded in the trap
+    -- argument register in the same clkEn'd cycle where irqAck is high.
+    rctrl2cxplif_irqID          : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- External interrupt acknowledge signal, active high. and'ed with the
+    -- stall input, so it goes high for exactly one clkEn'abled cycle.
     cxplif2rctrl_irqAck         : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- Active high run signal.
+    -- Active high run signal. This is the combined run signal from the
+    -- external run input and the BRK flag in the debug control register.
     rctrl2cxplif_run            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     -- Active high idle output.
@@ -214,46 +229,29 @@ entity rvex_pipelanes is
     ---------------------------------------------------------------------------
     -- Special context register interface
     ---------------------------------------------------------------------------
-    -- Next and current value for the PC register for each context.
-    cxplif2cxreg_PC             : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-    cxreg2cxplif_PC             : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- When high, the next PC should be set to the current value of the PC
-    -- register unconditionally. This is high when the debug bus wrote to the
-    -- PC register, and after a (context) reset to ensure that execution starts
-    -- at 0.
+    -- Refer to the documentation in the entity of rvex_contextPipelaneIFace or
+    -- rvex_contextRegLogic for information about the signals.
+    cxplif2cxreg_stall          : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_stop           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_nextPC         : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_currentPC      : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_overridePC     : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Current trap handler for each context. When the application has marked
-    -- that it is not currently capable of accepting a trap, this is set to the
-    -- panic handler register instead.
+    cxplif2cxreg_overridePC_ack : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_trapHandler    : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Trap information for the trap currently handled by the branch unit
-    -- associated with each context, if any, or no trap for contexts which do
-    -- not currently have a branch unit assigned to them.
     cxplif2cxreg_trapInfo       : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
-    cxplif2cxreg_trapPoint      : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Commands the register logic to reset the trap cause to 0 and restore
-    -- the control registers which were saved upon trap entry.
+    cxplif2cxreg_trapPoint      : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_trapReturn     : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
     cxplif2cxreg_rfi            : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- When this (debug) trap is active, BRK must be set and the external debug
-    -- cause value should be set to the trap cause.
-    cxplif2cxreg_setBrk         : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Current value of the BRK bit in the debug control register.
+    cxreg2cxplif_handlingDebugTrap:in std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_interruptEnable: in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_debugTrapEnable: in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_extDebug       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_exDbgTrapInfo  : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_brk            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Current value of the resume bit in the debug control register.
-    cxreg2cxplif_resume         : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- When this is set, the resume bit should be cleared.
-    cxplif2cxreg_resumed        : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- Current breakpoint information for each context.
-    cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0)
+    cxreg2cxplif_stepping       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_resuming       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_resuming_ack   : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0)
     
   );
 end rvex_pipelanes;
@@ -263,47 +261,61 @@ architecture Behavioral of rvex_pipelanes is
 --=============================================================================
   
   -- Context to pipelane interface <-> pipelane interconnect signals.
-  signal cxplif2pl_irq              : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal pl2cxplif_irqAck           : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal cxplif2pl_run              : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal pl2cxplif_idle             : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2pl_irq              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2br_irqID            : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_irqAck           : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2br_run              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2cxplif_idle             : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2pl_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2pl_lanePC           : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_limmValid        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2pl_limmValid        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_valid            : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2pl_valid            : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_brkValid         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2pl_brkValid         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_invalUntilBR     : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2pl_invalUntilBR     : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_brLinkReadPort   : cxreg2pl_readPort_array(2**CFG.numLanesLog2-1 downto 0);
   signal pl2cxplif_brLinkWritePort  : pl2cxreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
-  signal br2cxplif_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-  signal cxplif2pl_bundlePC         : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-  signal cxplif2pl_lanePC           : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-  signal cxplif2pl_overridePC       : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2br_contextPC        : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2br_overridePC       : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_trapHandler      : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-  signal pl2cxplif_trapInfo         : trap_info_array   (2**CFG.numLanesLog2-1 downto 0);
-  signal pl2cxplif_trapPoint        : trap_info_array   (2**CFG.numLanesLog2-1 downto 0);
-  signal pl2cxplif_rfi              : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal br2cxplif_setBrk           : trap_info_array   (2**CFG.numLanesLog2-1 downto 0);
-  signal cxplif2br_resume           : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal br2cxplif_resumed          : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_trapInfo         : trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_trapPoint        : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_exDbgTrapInfo    : trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_stop             : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2br_trapReturn       : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2cxplif_rfi              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2br_extDebug         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2br_handlingDebugTrap: std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2pl_debugTrapEnable  : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2brku_breakpoints    : cxreg2pl_breakpoint_info_array(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2brku_stepping       : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   
   -- Data memory switch <-> pipelane interconnect signals.
   signal memu2dmsw_addr             : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal memu2dmsw_writeData        : rvex_data_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal memu2dmsw_writeMask        : rvex_mask_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal memu2dmsw_writeEnable      : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal memu2dmsw_readEnable       : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal dmsw2memu_readData         : rvex_data_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal dmsw2pl_exception          : trap_info_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal memu2dmsw_writeData        : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal memu2dmsw_writeMask        : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal memu2dmsw_writeEnable      : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal memu2dmsw_readEnable       : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal dmsw2memu_readData         : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal dmsw2pl_exception          : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
   -- Long immediate routing <-> pipelane interconnect signals.
-  signal pl2limm_valid              : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal pl2limm_enable             : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal pl2limm_target             : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal pl2limm_data               : rvex_limmh_array  (2**CFG.numLanesLog2-1 downto 0);
-  signal limm2pl_enable             : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
-  signal limm2pl_data               : rvex_limmh_array  (2**CFG.numLanesLog2-1 downto 0);
-  signal limm2pl_error              : std_logic_vector  (2**CFG.numLanesLog2-1 downto 0);
+  signal pl2limm_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2limm_enable             : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2limm_target             : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2limm_data               : rvex_limmh_array(2**CFG.numLanesLog2-1 downto 0);
+  signal limm2pl_enable             : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal limm2pl_data               : rvex_limmh_array(2**CFG.numLanesLog2-1 downto 0);
+  signal limm2pl_error              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   
   -- Trap routing <-> pipelane interconnect signals.
   signal pl2trap_trap               : trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0);
-  signal trap2pl_trapToHandle       : trap_info_array   (2**CFG.numLanesLog2-1 downto 0);
-  signal trap2pl_trapPending        : trap_info_array   (2**CFG.numLanesLog2-1 downto 0);
+  signal trap2pl_trapToHandle       : trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+  signal trap2pl_trapPending        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_disable            : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_flush              : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
   
@@ -336,24 +348,21 @@ begin -- architecture
   -----------------------------------------------------------------------------
   gen_lanes: for lane in 2**CFG.numLanesLog2-1 downto 0 generate
     
-    -- Number of lanes in a lane group.
-    constant LANES_PER_GROUP: natural := 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2);
-    
     -- Lane group which lane belongs to.
-    constant laneGroup: natural := lane / LANES_PER_GROUP;
+    constant laneGroup: natural := lane2group(lane, CFG);
     
     -- Lane index within the group for lane.
-    constant laneIndex: natural := lane mod LANES_PER_GROUP;
+    constant laneIndex: natural := lane2indexInGroup(lane, CFG);
     
     -- Lane index counting down from the last lane in the group, such that 0 is
     -- the last lane in the group, 1 is the second to last lane, etc.
-    constant laneIndexRev: natural := LANES_PER_GROUP - laneIndex - 1;
+    constant laneIndexRev: natural := lane2indexInGroupRev(lane, CFG);
     
     -- Whether lane should have a multiplier.
-    constant mul: boolean := ((CFG.multiplierLanes / 2**lane) mod 2) = 1;
+    constant mul: boolean := testBit(CFG.multiplierLanes, lane);
     
     -- Whether lane should have a memory unit.
-    constant mem: boolean := (laneIndexRev = CFG.memLaneRevIndex) or (LANES_PER_GROUP = 1);
+    constant mem: boolean := laneIndexRev = CFG.memLaneRevIndex;
     
     -- Whether lane should have a breakpoint unit. We instantiate a breakpoint
     -- unit for each lane which has a memory unit, which is the minimum needed
@@ -369,87 +378,108 @@ begin -- architecture
       generic map (
         
         -- Global configuration.
-        CFG                             => CFG,
+        CFG                               => CFG,
         
         -- Lane configuration.
-        HAS_MUL                         => mul,
-        HAS_MEM                         => mem,
-        HAS_BRK                         => brk,
-        HAS_BR                          => br
+        HAS_MUL                           => mul,
+        HAS_MEM                           => mem,
+        HAS_BRK                           => brk,
+        HAS_BR                            => br
         
       )
       port map (
         
         -- System control.
-        reset                           => reset,
-        clk                             => clk,
-        clkEn                           => clkEn,
-        stall                           => stall(laneGroup),
+        reset                             => reset,
+        clk                               => clk,
+        clkEn                             => clkEn,
+        stall                             => stall(laneGroup),
+        
+        -- VHDL simulation debug information.
+        -- pragma translate_off
+        pl2sim                            => pl2sim(lane),
+        -- pragma translate_on
         
         -- Configuration and run control.
-        cfg2pl_decouple                 => cfg2any_decouple(laneGroup),
-        cfg2pl_numGroupsLog2            => cfg2any_numGroupsLog2(laneGroup),
-        cfg2pl_run                      => cfg2pl_run(laneGroup),
-        pl2cfg_blockReconfig            => pl2cfg_blockReconfig(lane),
-        cxplif2pl_irq(S_MEM+1)          => cxplif2pl_irq(lane),
-        pl2cxplif_irqAck(S_MEM)         => pl2cxplif_irqAck(lane),
-        cxplif2pl_run                   => cxplif2pl_run(lane),
-        pl2cxplif_idle                  => pl2cxplif_idle(lane),
+        cfg2pl_decouple                   => cfg2any_decouple(laneGroup),
+        cfg2pl_numGroupsLog2              => cfg2any_numGroupsLog2(laneGroup),
+        cfg2br_run                        => cfg2br_run(laneGroup),
+        pl2cfg_blockReconfig              => pl2cfg_blockReconfig(lane),
+        cxplif2pl_irq(S_MEM+1)            => cxplif2pl_irq(lane),
+        cxplif2br_irqID(S_BR)             => cxplif2br_irqID(lane),
+        br2cxplif_irqAck(S_BR)            => br2cxplif_irqAck(lane),
+        cxplif2br_run                     => cxplif2br_run(lane),
+        pl2cxplif_idle                    => pl2cxplif_idle(lane),
+        
+        -- Next operation routing interface.
+        br2cxplif_PC(S_IF)                => br2cxplif_PC(lane),
+        cxplif2pl_PC(S_IF)                => cxplif2pl_PC(lane),
+        cxplif2pl_lanePC(S_IF)            => cxplif2pl_lanePC(lane),
+        br2cxplif_limmValid(S_IF)         => br2cxplif_limmValid(lane),
+        cxplif2pl_limmValid(S_IF)         => cxplif2pl_limmValid(lane),
+        br2cxplif_valid(S_IF)             => br2cxplif_valid(lane),
+        cxplif2pl_valid(S_IF)             => cxplif2pl_valid(lane),
+        br2cxplif_brkValid(S_IF)          => br2cxplif_brkValid(lane),
+        cxplif2pl_brkValid(S_IF)          => cxplif2pl_brkValid(lane),
+        br2cxplif_invalUntilBR(S_BR)      => br2cxplif_invalUntilBR(lane),
+        cxplif2pl_invalUntilBR(S_BR)      => cxplif2pl_invalUntilBR(lane),
         
         -- Instruction memory interface.
-        br2imem_PC(S_IF)                => br2imem_PCs(laneGroup),
-        br2imem_fetch(S_IF)             => br2imem_fetch(laneGroup),
-        br2imem_cancel(S_IF+L_IF)       => br2imem_cancel(laneGroup),
-        imem2pl_syllable(S_IF+L_IF)     => imem2pl_instr(lane),
-        imem2pl_exception(S_IF+L_IF)    => imem2pl_exception(laneGroup),
+        br2imem_PC(S_IF)                  => br2imem_PCs(laneGroup),
+        br2imem_fetch(S_IF)               => br2imem_fetch(laneGroup),
+        br2imem_cancel(S_IF+L_IF)         => br2imem_cancel(laneGroup),
+        imem2pl_syllable(S_IF+L_IF)       => imem2pl_instr(lane),
+        imem2pl_exception(S_IF+L_IF)      => imem2pl_exception(laneGroup),
         
         -- Data memory interface.
-        memu2dmsw_addr(S_MEM)           => memu2dmsw_addr(laneGroup),
-        memu2dmsw_writeData(S_MEM)      => memu2dmsw_writeData(laneGroup),
-        memu2dmsw_writeMask(S_MEM)      => memu2dmsw_writeMask(laneGroup),
-        memu2dmsw_writeEnable(S_MEM)    => memu2dmsw_writeEnable(laneGroup),
-        memu2dmsw_readEnable(S_MEM)     => memu2dmsw_readEnable(laneGroup),
-        dmsw2memu_readData(S_MEM+L_MEM) => dmsw2memu_readData(laneGroup),
-        dmsw2pl_exception(S_MEM+L_MEM)  => dmsw2pl_exception(laneGroup),
+        memu2dmsw_addr(S_MEM)             => memu2dmsw_addr(laneGroup),
+        memu2dmsw_writeData(S_MEM)        => memu2dmsw_writeData(laneGroup),
+        memu2dmsw_writeMask(S_MEM)        => memu2dmsw_writeMask(laneGroup),
+        memu2dmsw_writeEnable(S_MEM)      => memu2dmsw_writeEnable(laneGroup),
+        memu2dmsw_readEnable(S_MEM)       => memu2dmsw_readEnable(laneGroup),
+        dmsw2memu_readData(S_MEM+L_MEM)   => dmsw2memu_readData(laneGroup),
+        dmsw2pl_exception(S_MEM+L_MEM)    => dmsw2pl_exception(laneGroup),
         
         -- Register file interface.
-        pl2gpreg_readPortA              => pl2gpreg_readPorts(lane*2+0),
-        gpreg2pl_readPortA              => gpreg2pl_readPorts(lane*2+0),
-        pl2gpreg_readPortB              => pl2gpreg_readPorts(lane*2+1),
-        gpreg2pl_readPortB              => gpreg2pl_readPorts(lane*2+1),
-        pl2gpreg_writePort              => pl2gpreg_writePorts(lane),
-        cxplif2pl_brLinkReadPort        => cxplif2pl_brLinkReadPort(lane),
-        pl2cxplif_brLinkWritePort       => pl2cxplif_brLinkWritePort(lane),
+        pl2gpreg_readPortA                => pl2gpreg_readPorts(lane*2+0),
+        gpreg2pl_readPortA                => gpreg2pl_readPorts(lane*2+0),
+        pl2gpreg_readPortB                => pl2gpreg_readPorts(lane*2+1),
+        gpreg2pl_readPortB                => gpreg2pl_readPorts(lane*2+1),
+        pl2gpreg_writePort                => pl2gpreg_writePorts(lane),
+        cxplif2pl_brLinkReadPort          => cxplif2pl_brLinkReadPort(lane),
+        pl2cxplif_brLinkWritePort         => pl2cxplif_brLinkWritePort(lane),
         
-        -- Special context register interface.
-        br2cxplif_PC(S_IF)              => br2cxplif_PC(lane),
-        cxplif2pl_bundlePC(S_IF+1)      => cxplif2pl_bundlePC(lane),
-        cxplif2pl_lanePC(S_IF+1)        => cxplif2pl_lanePC(lane),
-        cxplif2pl_overridePC(S_IF+1)    => cxplif2pl_overridePC(lane),
-        cxplif2pl_trapHandler(S_MEM+1)  => cxplif2pl_trapHandler(lane),
-        pl2cxplif_trapInfo(S_BR)        => pl2cxplif_trapInfo(lane),
-        pl2cxplif_trapPoint(S_BR)       => pl2cxplif_trapPoint(lane),
-        pl2cxplif_rfi(S_MEM)            => pl2cxplif_rfi(lane),
-        br2cxplif_setBrk(S_BR)          => br2cxplif_setBrk(lane),
-        cxplif2br_resume(S_IF)          => cxplif2br_resume(lane),
-        br2cxplif_resumed(S_IF)         => br2cxplif_resumed(lane),
-        cxplif2brku_breakpoints         => cxplif2brku_breakpoints(lane),
+        -- Special register interface.
+        cxplif2br_contextPC(S_IF+1)       => cxplif2br_contextPC(lane),
+        cxplif2br_overridePC(S_IF+1)      => cxplif2br_overridePC(lane),
+        cxplif2pl_trapHandler(S_MEM+1)    => cxplif2pl_trapHandler(lane),
+        br2cxplif_trapInfo(S_BR)          => br2cxplif_trapInfo(lane),
+        br2cxplif_trapPoint(S_BR)         => br2cxplif_trapPoint(lane),
+        br2cxplif_exDbgTrapInfo(S_BR)     => br2cxplif_exDbgTrapInfo(lane),
+        br2cxplif_stop(S_BR)              => br2cxplif_stop(lane),
+        cxplif2br_trapReturn(S_BR)        => cxplif2br_trapReturn(lane),
+        pl2cxplif_rfi(S_MEM)              => pl2cxplif_rfi(lane),
+        cxplif2br_extDebug(S_BR)          => cxplif2br_extDebug(lane),
+        cxplif2br_handlingDebugTrap(S_BR) => cxplif2br_handlingDebugTrap(lane),
+        cxplif2pl_debugTrapEnable(S_MEM+1)=> cxplif2pl_debugTrapEnable(lane),
+        cxplif2brku_breakpoints(S_BRK)    => cxplif2brku_breakpoints(lane),
+        cxplif2brku_stepping(S_BRK)       => cxplif2brku_stepping(lane),
         
         -- Long immediate routing interface.
-        pl2limm_valid(S_LIMM)           => pl2limm_valid(lane),
-        pl2limm_enable(S_LIMM)          => pl2limm_enable(lane),
-        pl2limm_target(S_LIMM)          => pl2limm_target(lane),
-        pl2limm_data(S_LIMM)            => pl2limm_data(lane),
-        limm2pl_enable(S_LIMM)          => limm2pl_enable(lane),
-        limm2pl_data(S_LIMM)            => limm2pl_data(lane),
-        limm2pl_error(S_LIMM)           => limm2pl_error(lane),
+        pl2limm_valid(S_LIMM)             => pl2limm_valid(lane),
+        pl2limm_enable(S_LIMM)            => pl2limm_enable(lane),
+        pl2limm_target(S_LIMM)            => pl2limm_target(lane),
+        pl2limm_data(S_LIMM)              => pl2limm_data(lane),
+        limm2pl_enable(S_LIMM)            => limm2pl_enable(lane),
+        limm2pl_data(S_LIMM)              => limm2pl_data(lane),
+        limm2pl_error(S_LIMM)             => limm2pl_error(lane),
         
         -- Trap routing interface.
-        pl2trap_trap                    => pl2trap_trap(lane),
-        trap2pl_trapToHandle(S_TRAP)    => trap2pl_trapToHandle(lane),
-        trap2pl_trapPending(S_TRAP)     => trap2pl_trapPending(lane),
-        trap2pl_disable                 => trap2pl_disable(lane),
-        trap2pl_flush                   => trap2pl_flush(lane)
+        pl2trap_trap                      => pl2trap_trap(lane),
+        trap2pl_trapToHandle(S_TRAP)      => trap2pl_trapToHandle(lane),
+        trap2pl_trapPending(S_TRAP)       => trap2pl_trapPending(lane),
+        trap2pl_disable                   => trap2pl_disable(lane),
+        trap2pl_flush                     => trap2pl_flush(lane)
         
       );
     
@@ -472,54 +502,91 @@ begin -- architecture
       
       -- Decoded configuration signals.
       cfg2any_coupled                   => cfg2any_coupled,
-      cfg2any_contextMap                => cfg2any_contextMap,
+      cfg2any_context                   => cfg2any_context,
       cfg2any_lastGroupForCtxt          => cfg2any_lastGroupForCtxt,
       
-      -- Pipelane interface.
+      -- Pipelane interface: configuration and run control.
       cxplif2pl_irq                     => cxplif2pl_irq,
-      pl2cxplif_irqAck                  => pl2cxplif_irqAck,
-      cxplif2pl_run                     => cxplif2pl_run,
+      cxplif2br_irqID                   => cxplif2br_irqID,
+      br2cxplif_irqAck                  => br2cxplif_irqAck,
+      cxplif2br_run                     => cxplif2br_run,
       pl2cxplif_idle                    => pl2cxplif_idle,
+      
+      -- Pipelane interface: next operation routing.
+      br2cxplif_PC                      => br2cxplif_PC,
+      cxplif2pl_PC                      => cxplif2pl_PC,
+      cxplif2pl_lanePC                  => cxplif2pl_lanePC,
+      br2cxplif_limmValid               => br2cxplif_limmValid,
+      cxplif2pl_limmValid               => cxplif2pl_limmValid,
+      br2cxplif_valid                   => br2cxplif_valid,
+      cxplif2pl_valid                   => cxplif2pl_valid,
+      br2cxplif_brkValid                => br2cxplif_brkValid,
+      cxplif2pl_brkValid                => cxplif2pl_brkValid,
+      br2cxplif_invalUntilBR            => br2cxplif_invalUntilBR,
+      cxplif2pl_invalUntilBR            => cxplif2pl_invalUntilBR,
+      
+      -- Pipelane interface: branch/link registers.
       cxplif2pl_brLinkReadPort          => cxplif2pl_brLinkReadPort,
       pl2cxplif_brLinkWritePort         => pl2cxplif_brLinkWritePort,
-      br2cxplif_PC                      => br2cxplif_PC,
-      cxplif2pl_bundlePC                => cxplif2pl_bundlePC,
-      cxplif2pl_lanePC                  => cxplif2pl_lanePC,
-      cxplif2pl_overridePC              => cxplif2pl_overridePC,
+      
+      -- Pipelane interface: special registers.
+      cxplif2br_contextPC               => cxplif2br_contextPC,
+      cxplif2br_overridePC              => cxplif2br_overridePC,
       cxplif2pl_trapHandler             => cxplif2pl_trapHandler,
-      pl2cxplif_trapInfo                => pl2cxplif_trapInfo,
-      pl2cxplif_trapPoint               => pl2cxplif_trapPoint,
+      br2cxplif_trapInfo                => br2cxplif_trapInfo,
+      br2cxplif_trapPoint               => br2cxplif_trapPoint,
+      br2cxplif_exDbgTrapInfo           => br2cxplif_exDbgTrapInfo,
+      br2cxplif_stop                    => br2cxplif_stop,
+      cxplif2br_trapReturn              => cxplif2br_trapReturn,
       pl2cxplif_rfi                     => pl2cxplif_rfi,
-      br2cxplif_setBrk                  => br2cxplif_setBrk,
-      cxplif2br_resume                  => cxplif2br_resume,
-      br2cxplif_resumed                 => br2cxplif_resumed,
+      cxplif2br_extDebug                => cxplif2br_extDebug,
+      cxplif2br_handlingDebugTrap       => cxplif2br_handlingDebugTrap,
+      cxplif2pl_debugTrapEnable         => cxplif2pl_debugTrapEnable,
       cxplif2brku_breakpoints           => cxplif2brku_breakpoints,
+      cxplif2brku_stepping              => cxplif2brku_stepping,
       
       -- Run control interface.
       rctrl2cxplif_irq                  => rctrl2cxplif_irq,
+      rctrl2cxplif_irqID                => rctrl2cxplif_irqID,
       cxplif2rctrl_irqAck               => cxplif2rctrl_irqAck,
       rctrl2cxplif_run                  => rctrl2cxplif_run,
       cxplif2rctrl_idle                 => cxplif2rctrl_idle,
       
-      -- Context register interface.
+      -- Context register interface: misc.
+      cxplif2cxreg_stall                => cxplif2cxreg_stall,
+      cxplif2cxreg_stop                 => cxplif2cxreg_stop,
+      
+      -- Context register interface: branch/link registers.
       cxreg2cxplif_brLinkReadPort       => cxreg2cxplif_brLinkReadPort,
       cxplif2cxreg_brLinkWritePort      => cxplif2cxreg_brLinkWritePort,
-      cxplif2cxreg_PC                   => cxplif2cxreg_PC,
-      cxreg2cxplif_PC                   => cxreg2cxplif_PC,
+      
+      -- Context register interface: program counter.
+      cxplif2cxreg_nextPC               => cxplif2cxreg_nextPC,
+      cxreg2cxplif_currentPC            => cxreg2cxplif_currentPC,
       cxreg2cxplif_overridePC           => cxreg2cxplif_overridePC,
+      cxplif2cxreg_overridePC_ack       => cxplif2cxreg_overridePC_ack,
+
+      -- Context register interface: trap handling.
       cxreg2cxplif_trapHandler          => cxreg2cxplif_trapHandler,
       cxplif2cxreg_trapInfo             => cxplif2cxreg_trapInfo,
       cxplif2cxreg_trapPoint            => cxplif2cxreg_trapPoint,
+      cxreg2cxplif_trapReturn           => cxreg2cxplif_trapReturn,
       cxplif2cxreg_rfi                  => cxplif2cxreg_rfi,
-      cxplif2cxreg_setBrk               => cxplif2cxreg_setBrk,
+      cxreg2cxplif_handlingDebugTrap    => cxreg2cxplif_handlingDebugTrap,
+      cxreg2cxplif_interruptEnable      => cxreg2cxplif_interruptEnable,
+      cxreg2cxplif_debugTrapEnable      => cxreg2cxplif_debugTrapEnable,
+      cxreg2cxplif_breakpoints          => cxreg2cxplif_breakpoints,
+
+      -- Context register interface: external debug control signals.
+      cxreg2cxplif_extDebug             => cxreg2cxplif_extDebug,
+      cxplif2cxreg_exDbgTrapInfo        => cxplif2cxreg_exDbgTrapInfo,
       cxreg2cxplif_brk                  => cxreg2cxplif_brk,
-      cxreg2cxplif_resume               => cxreg2cxplif_resume,
-      cxplif2cxreg_resumed              => cxplif2cxreg_resumed,
-      cxreg2cxplif_breakpoints          => cxreg2cxplif_breakpoints
+      cxreg2cxplif_stepping             => cxreg2cxplif_stepping,
+      cxreg2cxplif_resuming             => cxreg2cxplif_resuming,
+      cxplif2cxreg_resuming_ack         => cxplif2cxreg_resuming_ack
       
     );
   
-    
   -----------------------------------------------------------------------------
   -- Instantiate data memory/control register switches
   -----------------------------------------------------------------------------
@@ -537,55 +604,29 @@ begin -- architecture
         clkEn                           => clkEn,
         stall                           => stall(laneGroup),
         
-        ---------------------------------------------------------------------------
-        -- Pipelane interface
-        ---------------------------------------------------------------------------
-        -- Data memory address, shared between read and write command.
+        -- Pipelane interface.
         memu2dmsw_addr(S_MEM)           => memu2dmsw_addr(laneGroup),
-        
-        -- Data memory write command.
         memu2dmsw_writeData(S_MEM)      => memu2dmsw_writeData(laneGroup),
         memu2dmsw_writeMask(S_MEM)      => memu2dmsw_writeMask(laneGroup),
         memu2dmsw_writeEnable(S_MEM)    => memu2dmsw_writeEnable(laneGroup),
-        
-        -- Data memory read command and result.
         memu2dmsw_readEnable(S_MEM)     => memu2dmsw_readEnable(laneGroup),
         dmsw2memu_readData(S_MEM+L_MEM) => dmsw2memu_readData(laneGroup),
-        
-        -- Exception input from data memory.
         dmsw2pl_exception(S_MEM+L_MEM)  => dmsw2pl_exception(laneGroup),
         
-        ---------------------------------------------------------------------------
-        -- Data memory interface
-        ---------------------------------------------------------------------------
-        -- Data memory address, shared between read and write command.
+        -- Data memory interface.
         dmsw2dmem_addr(S_MEM)           => dmsw2dmem_addr(laneGroup),
-        
-        -- Data memory write command.
         dmsw2dmem_writeData(S_MEM)      => dmsw2dmem_writeData(laneGroup),
         dmsw2dmem_writeMask(S_MEM)      => dmsw2dmem_writeMask(laneGroup),
         dmsw2dmem_writeEnable(S_MEM)    => dmsw2dmem_writeEnable(laneGroup),
-        
-        -- Data memory read command and result.
         dmsw2dmem_readEnable(S_MEM)     => dmsw2dmem_readEnable(laneGroup),
         dmem2dmsw_readData(S_MEM+L_MEM) => dmem2dmsw_readData(laneGroup),
-        
-        -- Exception input from data memory.
         dmem2dmsw_exception(S_MEM+L_MEM)=> dmem2dmsw_exception(laneGroup),
         
-        ---------------------------------------------------------------------------
         -- Control register interface
-        ---------------------------------------------------------------------------
-        -- Data memory address, shared between read and write command.
         dmsw2creg_addr(S_MEM)           => dmsw2creg_addr(laneGroup),
-        
-        -- Data memory write command.
         dmsw2creg_writeData(S_MEM)      => dmsw2creg_writeData(laneGroup),
         dmsw2creg_writeMask(S_MEM)      => dmsw2creg_writeMask(laneGroup),
         dmsw2creg_writeEnable(S_MEM)    => dmsw2creg_writeEnable(laneGroup),
-        
-        -- Data memory read command and result. Note that the latency is fixed to
-        -- one cycle for the control register read data.
         dmsw2creg_readEnable(S_MEM)     => dmsw2creg_readEnable(laneGroup),
         creg2dmsw_readData(S_MEM+1)     => creg2dmsw_readData(laneGroup)
         
@@ -610,7 +651,6 @@ begin -- architecture
       
       -- Decoded configuration signals.
       cfg2any_coupled           => cfg2any_coupled,
-      cfg2any_firstGroup        => cfg2any_firstGroup,
       
       -- Pipelane interface.
       pl2limm_valid             => pl2limm_valid,
