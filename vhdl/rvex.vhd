@@ -176,8 +176,8 @@ use work.rvex_trap_pkg.all;
   --         everything is tested and it's relatively easy to break things
   --         here.
   --
-  --  - rvex_opcode_pkg, rvex_opcodeAlu_pkg, rvex_opcodeMultiply_pkg,
-  --    rvex_opcodeDatapath_pkg, rvex_opcodeBranch_pkg
+  --  - rvex_opcode_pkg, rvex_opcodeAlu_pkg, rvex_opcodeMultiplier_pkg,
+  --    rvex_opcodeDatapath_pkg, rvex_opcodeBranch_pkg, rvex_opcodeMemory_pkg
   --      -> Contains a constant table of all decoding signals based on the
   --         opcode field of a syllable, as well as disassembly information for
   --         simulation. In theory, there should be no other mappings from

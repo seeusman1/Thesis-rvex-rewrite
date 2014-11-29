@@ -43,7 +43,7 @@ use IEEE.std_logic_1164.all;
 -- [x] br     = BRanch unit                @ rvex_branch.vhd
 -- [x] alu    = Arith. Logic Unit          @ rvex_alu.vhd
 -- [x] memu   = MEMory Unit                @ rvex_memu.vhd
--- [.] mulu   = MULtiply Unit              @ rvex_mul.vhd
+-- [x] mulu   = MULtiply Unit              @ rvex_mul.vhd
 -- [x] brku   = BReaKpoint Unit            @ rvex_breakpoint.vhd
 -- [ ] gpreg  = General Purpose REGisters  @ rvex_gpreg.vhd
 -- [?] fwd    = ForWarDing logic           @ rvex_forward.vhd

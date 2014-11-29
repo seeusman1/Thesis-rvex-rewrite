@@ -1018,6 +1018,14 @@ begin -- architecture
       end if;
     end if;
     
+    -- If we don't have a multiplier, make sure this is not a multiply
+    -- operation.
+    if not HAS_MUL then
+      if OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).multiplierCtrl.isMultiplyInstruction = '1' then
+        flag := '1';
+      end if;
+    end if;
+    
     -- Append the illegal opcode exception to the trap listing if our flag is
     -- set.
     if flag = '1' then

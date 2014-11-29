@@ -52,7 +52,7 @@ use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_opcode_pkg.all;
---use work.rvex_opcodeMulu_pkg.all;
+use work.rvex_opcodeMultiplier_pkg.all;
 
 --=============================================================================
 -- This entity contains the optional multiply unit for a pipelane.
@@ -99,11 +99,39 @@ entity rvex_mulu is
     mulu2pl_result              : out rvex_data_array(S_MUL+L_MUL to S_MUL+L_MUL)
     
   );
+  
+  -- Hint to XST that we want it to retime the registers in this entity to get
+  -- a balanced pipeline.
+  attribute mult_style              : string;
+  attribute mult_style of rvex_mulu : entity is "pipe_block";
+  
 end rvex_mulu;
 
 --=============================================================================
 architecture Behavioral of rvex_mulu is
 --=============================================================================
+  
+  -- Opcode delay line.
+  signal opcode                 : rvex_opcode_array(S_MUL to S_MUL+L_MUL);
+  
+  -- Decoded control signals.
+  signal ctrl_inMux             : multiplierCtrlSignals_array(S_MUL to S_MUL);
+  signal ctrl_outMux            : multiplierCtrlSignals_array(S_MUL+L_MUL to S_MUL+L_MUL);
+  
+  -- Operand 1 mux output.
+  subtype op1mux_type is std_logic_vector(32 downto 0);
+  type op1mux_array is array (natural range <>) of op1mux_type;
+  signal op1mux                 : op1mux_array(S_MUL to S_MUL+L_MUL1);
+  
+  -- Operand 2 mux output.
+  subtype op2mux_type is std_logic_vector(16 downto 0);
+  type op2mux_array is array (natural range <>) of op2mux_type;
+  signal op2mux                 : op2mux_array(S_MUL to S_MUL+L_MUL1);
+  
+  -- Multiplication result before muxing.
+  subtype result_type is std_logic_vector(49 downto 0);
+  type result_array is array (natural range <>) of result_type;
+  signal result                 : result_array(S_MUL+L_MUL1 to S_MUL+L_MUL);
   
 --=============================================================================
 begin -- architecture
@@ -112,10 +140,171 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Check configuration
   -----------------------------------------------------------------------------
-  assert L_MUL = 2
+  assert L_MUL = L_MUL1 + L_MUL2
     report "Pipeline configuration: multiply unit latency (L_MUL) must be set "
-         & "to 2."
+         & "to L_MUL1 + L_MUL2."
     severity failure;
+  
+  assert L_MUL1 <= 2
+    report "XST can only absorb two pipeline stages before the multiplier "
+         & "into the multiplier itself; it does not make sense to make the "
+         & "longer."
+    severity warning;
+  
+  assert L_MUL2 <= 2
+    report "XST can only absorb two pipeline stages after the multiplier "
+         & "into the multiplier itself; it does not make sense to make the "
+         & "longer."
+    severity warning;
+  
+  -----------------------------------------------------------------------------
+  -- Generate pipeline registers
+  -----------------------------------------------------------------------------
+  regs: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        opcode(S_MUL+1 to S_MUL+L_MUL) <= (others => (others => '0'));
+        op1mux(S_MUL+1 to S_MUL+L_MUL1) <= (others => (others => '0'));
+        op2mux(S_MUL+1 to S_MUL+L_MUL1) <= (others => (others => '0'));
+        result(S_MUL+L_MUL1+1 to S_MUL+L_MUL) <= (others => (others => '0'));
+      elsif clkEn = '1' and stall = '0' then
+        opcode(S_MUL+1 to S_MUL+L_MUL) <= opcode(S_MUL to S_MUL+L_MUL-1);
+        op1mux(S_MUL+1 to S_MUL+L_MUL1) <= op1mux(S_MUL to S_MUL+L_MUL1-1);
+        op2mux(S_MUL+1 to S_MUL+L_MUL1) <= op2mux(S_MUL to S_MUL+L_MUL1-1);
+        result(S_MUL+L_MUL1+1 to S_MUL+L_MUL) <= result(S_MUL+L_MUL1 to S_MUL+L_MUL-1);
+      end if;
+    end if;
+  end process;
+  
+  -----------------------------------------------------------------------------
+  -- Generate opcode decoding logic
+  -----------------------------------------------------------------------------
+  -- Copy the opcode into the delay line.
+  opcode(S_MUL) <= pl2mulu_opcode(S_MUL);
+  
+  -- Decode in the first stage (for input muxing) and the final stage (for
+  -- output muxing).
+  ctrl_inMux(S_MUL)
+    <= OPCODE_TABLE(to_integer(unsigned(opcode(S_MUL)))).multiplierCtrl;
+  
+  ctrl_outMux(S_MUL+L_MUL)
+    <= OPCODE_TABLE(to_integer(unsigned(opcode(S_MUL+L_MUL)))).multiplierCtrl;
+  
+  -----------------------------------------------------------------------------
+  -- Perform input muxing
+  -----------------------------------------------------------------------------
+  -- Perform muxing for operand 1.
+  det_op1mux: process (ctrl_inMux, pl2mulu_op1) is
+  begin
+    case ctrl_inMux(S_MUL).op1sel is
+      
+      when LOW_HALF =>
+        
+        -- Select lower halfword.
+        op1mux(S_MUL)(15 downto 0) <= pl2mulu_op1(S_MUL)(15 downto 0);
+        
+        -- Sign/zero extend.
+        op1mux(S_MUL)(32 downto 16) <= (others => 
+          pl2mulu_op1(S_MUL)(15) and not ctrl_inMux(S_MUL).op1unsigned
+        );
+        
+      when HIGH_HALF =>
+        
+        -- Select upper halfword.
+        op1mux(S_MUL)(15 downto 0) <= pl2mulu_op1(S_MUL)(31 downto 16);
+        
+        -- Sign/zero extend.
+        op1mux(S_MUL)(32 downto 16) <= (others => 
+          pl2mulu_op1(S_MUL)(31) and not ctrl_inMux(S_MUL).op1unsigned
+        );
+        
+      when WORD =>
+        
+        -- Select the full word.
+        op1mux(S_MUL)(31 downto 0) <= pl2mulu_op1(S_MUL)(31 downto 0);
+        
+        -- Sign/zero extend.
+        op1mux(S_MUL)(32)
+          <= pl2mulu_op1(S_MUL)(31) and not ctrl_inMux(S_MUL).op1unsigned;
+        
+    end case;
+  end process;
+  
+  -- Perform muxing for operand 2.
+  det_op2mux: process (ctrl_inMux, pl2mulu_op2) is
+  begin
+    case ctrl_inMux(S_MUL).op2sel is
+      
+      when LOW_HALF =>
+        
+        -- Select lower halfword.
+        op2mux(S_MUL)(15 downto 0) <= pl2mulu_op2(S_MUL)(15 downto 0);
+        
+        -- Sign/zero extend.
+        op2mux(S_MUL)(16)
+          <= pl2mulu_op2(S_MUL)(15) and not ctrl_inMux(S_MUL).op2unsigned;
+        
+      when HIGH_HALF =>
+        
+        -- Select upper halfword.
+        op2mux(S_MUL)(15 downto 0) <= pl2mulu_op2(S_MUL)(31 downto 16);
+        
+        -- Sign/zero extend.
+        op2mux(S_MUL)(16)
+          <= pl2mulu_op2(S_MUL)(31) and not ctrl_inMux(S_MUL).op2unsigned;
+        
+    end case;
+  end process;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate multiplier
+  -----------------------------------------------------------------------------
+  -- We let XST (or whatever synthesizer you're using) take complete care of
+  -- this - we just perform a numeric_std signed multiplication.
+  result(S_MUL+L_MUL1) <= std_logic_vector(
+    signed(op1mux(S_MUL+L_MUL1)) * signed(op2mux(S_MUL+L_MUL1))
+  );
+  
+  -----------------------------------------------------------------------------
+  -- Perform output muxing
+  -----------------------------------------------------------------------------
+  det_result: process (ctrl_outMux, result) is
+  begin
+    case ctrl_outMux(S_MUL+L_MUL).resultSel is
+      
+      when PASS =>
+        
+        -- Passthrough without shifting.
+        mulu2pl_result(S_MUL+L_MUL)(31 downto 0)
+          <= result(S_MUL+L_MUL)(31 downto 0);
+        
+      when SHR16 =>
+        
+        -- Shift right 16 bits.
+        mulu2pl_result(S_MUL+L_MUL)(31 downto 0)
+          <= result(S_MUL+L_MUL)(47 downto 16);
+        
+      when SHR32 =>
+        
+        -- Shift right 32 bits and sign extend.
+        mulu2pl_result(S_MUL+L_MUL)(15 downto 0)
+          <= result(S_MUL+L_MUL)(47 downto 32);
+        
+        mulu2pl_result(S_MUL+L_MUL)(31 downto 16) <= (others =>
+          result(S_MUL+L_MUL)(47)
+        );
+        
+      when SHL16 =>
+        
+        -- Shift left by 16 bits.
+        mulu2pl_result(S_MUL+L_MUL)(31 downto 16)
+          <= result(S_MUL+L_MUL)(15 downto 0);
+        
+        mulu2pl_result(S_MUL+L_MUL)(15 downto 0) <= (others => '0');
+        
+    end case;
+  end process;
   
 end Behavioral;
 

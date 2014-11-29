@@ -189,12 +189,19 @@ package rvex_pipeline_pkg is
   constant L_ALU2   : natural := 1;
   constant L_ALU    : natural := L_ALU1 + L_ALU2;
   
-  -- Multiplier stage and latency.
+  -- Multiplier stage and latency. Pragmas are used to get XST to balance the
+  -- pipeline around the multiplier. XST can absorb up to 2 registers before
+  -- and up to two registers after the multiplication (not sure if the total
+  -- it can absorb is also two, but it probably is). The latency before the
+  -- multiplication is set by L_MUL1, the latency after the multiplication is
+  -- set to L_MUL2. Latencies of more than 2 cycles are supported by the code,
+  -- but probably won't do you any good timing-wise.
   -- Requirements:
   --  - S_MUL >= max(S_LIMM, S_RD + L_RD)
-  --  - L_MUL = 2 (unless multiplier code is changed)
   constant S_MUL    : natural := 3;
-  constant L_MUL    : natural := 2;
+  constant L_MUL1   : natural := 1;
+  constant L_MUL2   : natural := 1;
+  constant L_MUL    : natural := L_MUL1 + L_MUL2;
   
   -- Data memory access stage and latency. The latency value should be set to
   -- the latency of the data memory. Note that the latency for the control
