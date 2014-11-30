@@ -5,11 +5,16 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 --=============================================================================
--- This package contains simulation-only utilities, primarily focussed on
--- string manipulation.
+-- This package contains basic simulation/elaboration-only utilities, primarily
+-- focussed on string manipulation.
 -------------------------------------------------------------------------------
 package rvex_simUtils_pkg is
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Basic string manipulation
+  -----------------------------------------------------------------------------
+  -- Kinda abstracting away from VHDL's inherent insanity.
   
   -- Global string length for all operations which operate on fixed string
   -- lengths for simplicity.
@@ -58,6 +63,9 @@ package rvex_simUtils_pkg is
   function rvs_hex(value: std_logic_vector) return string;
   function rvs_hex(value: std_logic_vector; digits: natural) return string;
   
+  -----------------------------------------------------------------------------
+  -- Misc. methods
+  -----------------------------------------------------------------------------
   -- Extracts the range (high downto low) from value, with safeguards to
   -- prevent errors when the range does not (fully) exist in value of when
   -- value has an ascending (x to y) range. Bits which do not exist in value
@@ -69,6 +77,11 @@ end rvex_simUtils_pkg;
 --=============================================================================
 package body rvex_simUtils_pkg is
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Basic string manipulation
+  -----------------------------------------------------------------------------
+  -- Kinda abstracting away from VHDL's inherent insanity.
   
   -- Clears a string builder.
   procedure rvs_clear(sb: inout rvex_string_builder_type) is
@@ -220,6 +233,9 @@ package body rvex_simUtils_pkg is
     return s;
   end rvs_hex;
   
+  -----------------------------------------------------------------------------
+  -- Misc. methods
+  -----------------------------------------------------------------------------
   -- Extracts the range (high downto low) from value, with safeguards to
   -- prevent errors when the range does not (fully) exist in value of when
   -- value has an ascending (x to y) range. Bits which do not exist in value

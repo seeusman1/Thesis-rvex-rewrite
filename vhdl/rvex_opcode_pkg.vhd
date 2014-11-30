@@ -49,6 +49,7 @@ use IEEE.std_logic_1164.all;
 library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
+use work.rvex_simUtils_asDisas_pkg.all;
 use work.rvex_opcodeDatapath_pkg.all;
 use work.rvex_opcodeAlu_pkg.all;
 use work.rvex_opcodeBranch_pkg.all;
@@ -77,8 +78,8 @@ package rvex_opcode_pkg is
     -- is for syllables with bit 23 cleared, syntax_imm is for syllables with
     -- bit 23 set. See also the documentation just below the =Opcode decoding
     -- table= header.
-    syntax_reg                  : string(1 to 50);
-    syntax_imm                  : string(1 to 50);
+    syntax_reg                  : rvsp_assemblyLine_type;
+    syntax_imm                  : rvsp_assemblyLine_type;
     
     -- Instruction valid. When this is low, attempting to execute this
     -- instruction raises an invalid instruction exception. This is indexed
@@ -105,8 +106,8 @@ package rvex_opcode_pkg is
   
   -- Default values for an opcode table entry.
   constant opcodeTableEntry_default : opcodeTableEntry_type := (
-    syntax_reg => "Unknown                                           ",
-    syntax_imm => "Unknown                                           ",
+    syntax_reg => "Unknown                                                               ",
+    syntax_imm => "Unknown                                                               ",
     valid => "00",
     datapathCtrl => DP_CTRL_NOP,
     aluCtrl => ALU_CTRL_NOP,
@@ -146,8 +147,8 @@ package rvex_opcode_pkg is
     ---------------------------------------------------------------------------
     -- No operation.
     2#01100000# => (
-      syntax_reg => "nop                                               ",
-      syntax_imm => "nop                                               ",
+      syntax_reg => "nop                                                                   ",
+      syntax_imm => "nop                                                                   ",
       valid => "11",
       datapathCtrl => DP_CTRL_NOP,
       aluCtrl => ALU_CTRL_NOP,
@@ -158,8 +159,8 @@ package rvex_opcode_pkg is
     
     -- Forward immediate to other syllable.
     2#10000000# to 2#10001111# => (
-      syntax_reg => "limmh %i1, %i2                                    ",
-      syntax_imm => "limmh %i1, %i2                                    ",
+      syntax_reg => "limmh %i1, %i2                                                        ",
+      syntax_imm => "limmh %i1, %i2                                                        ",
       valid => "11",
       datapathCtrl => DP_CTRL_LIMMH,
       aluCtrl => ALU_CTRL_NOP,
@@ -171,8 +172,8 @@ package rvex_opcode_pkg is
     -- TRAP: software trap. First parameter is the trap argument, second
     -- parameter is the trap cause byte.
     2#10010000# => (
-      syntax_reg => "trap r#.%r2, r#.%r3                               ",
-      syntax_imm => "trap r#.%r2, %id                                  ",
+      syntax_reg => "trap r#.%r2, r#.%r3                                                   ",
+      syntax_imm => "trap r#.%r2, %id                                                      ",
       valid => "11",
       datapathCtrl => DP_CTRL_TRAP,
       aluCtrl => ALU_CTRL_NOP,
@@ -186,8 +187,8 @@ package rvex_opcode_pkg is
     ---------------------------------------------------------------------------
     -- Signed or unsigned 32-bit addition.
     2#01100010# => (
-      syntax_reg => "add r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "add r#.%r1 = r#.%r2, %id                          ",
+      syntax_reg => "add r#.%r1 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "add r#.%r1 = r#.%r2, %id                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ADD,
@@ -198,8 +199,8 @@ package rvex_opcode_pkg is
     
     -- Bitwise AND.
     2#01100011# => (
-      syntax_reg => "and r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "and r#.%r1 = r#.%r2, %ih                          ",
+      syntax_reg => "and r#.%r1 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "and r#.%r1 = r#.%r2, %ih                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_AND,
@@ -210,8 +211,8 @@ package rvex_opcode_pkg is
     
     -- Bitwise AND, with operand 1 one's-complemented.
     2#01100100# => (
-      syntax_reg => "andc r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "andc r#.%r1 = r#.%r2, %ih                         ",
+      syntax_reg => "andc r#.%r1 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "andc r#.%r1 = r#.%r2, %ih                                             ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ANDC,
@@ -222,8 +223,8 @@ package rvex_opcode_pkg is
     
     -- Computes maximum of the input operands using signed arithmetic.
     2#01100101# => (
-      syntax_reg => "max r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "max r#.%r1 = r#.%r2, %id                          ",
+      syntax_reg => "max r#.%r1 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "max r#.%r1 = r#.%r2, %id                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_MAX,
@@ -234,8 +235,8 @@ package rvex_opcode_pkg is
     
     -- Computes maximum of the input operands using unsigned arithmetic.
     2#01100110# => (
-      syntax_reg => "maxu r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "maxu r#.%r1 = r#.%r2, %iu                         ",
+      syntax_reg => "maxu r#.%r1 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "maxu r#.%r1 = r#.%r2, %iu                                             ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_MAXU,
@@ -246,8 +247,8 @@ package rvex_opcode_pkg is
     
     -- Computes minimum of the input operands using signed arithmetic.
     2#01100111# => (
-      syntax_reg => "min r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "min r#.%r1 = r#.%r2, %id                          ",
+      syntax_reg => "min r#.%r1 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "min r#.%r1 = r#.%r2, %id                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_MIN,
@@ -258,8 +259,8 @@ package rvex_opcode_pkg is
     
     -- Computes minimum of the input operands using unsigned arithmetic.
     2#01101000# => (
-      syntax_reg => "minu r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "minu r#.%r1 = r#.%r2, %iu                         ",
+      syntax_reg => "minu r#.%r1 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "minu r#.%r1 = r#.%r2, %iu                                             ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_MINU,
@@ -270,8 +271,8 @@ package rvex_opcode_pkg is
     
     -- Bitwise OR.
     2#01101001# => (
-      syntax_reg => "or r#.%r1 = r#.%r2, r#.%r3                        ",
-      syntax_imm => "or r#.%r1 = r#.%r2, %ih                           ",
+      syntax_reg => "or r#.%r1 = r#.%r2, r#.%r3                                            ",
+      syntax_imm => "or r#.%r1 = r#.%r2, %ih                                               ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_OR,
@@ -282,8 +283,8 @@ package rvex_opcode_pkg is
     
     -- Bitwise OR, with operand 1 one's complemented.
     2#01101010# => (
-      syntax_reg => "orc r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "orc r#.%r1 = r#.%r2, %ih                          ",
+      syntax_reg => "orc r#.%r1 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "orc r#.%r1 = r#.%r2, %ih                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ORC,
@@ -294,8 +295,8 @@ package rvex_opcode_pkg is
     
     -- 32 bit addition, operand 1 shifted left by one before adding.
     2#01101011# => (
-      syntax_reg => "sh1add r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "sh1add r#.%r1 = r#.%r2, %id                       ",
+      syntax_reg => "sh1add r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "sh1add r#.%r1 = r#.%r2, %id                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SH1ADD,
@@ -306,8 +307,8 @@ package rvex_opcode_pkg is
     
     -- 32 bit addition, operand 1 shifted left by two before adding.
     2#01101100# => (
-      syntax_reg => "sh2add r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "sh2add r#.%r1 = r#.%r2, %id                       ",
+      syntax_reg => "sh2add r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "sh2add r#.%r1 = r#.%r2, %id                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SH2ADD,
@@ -318,8 +319,8 @@ package rvex_opcode_pkg is
     
     -- 32 bit addition, operand 1 shifted left by three before adding.
     2#01101101# => (
-      syntax_reg => "sh3add r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "sh3add r#.%r1 = r#.%r2, %id                       ",
+      syntax_reg => "sh3add r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "sh3add r#.%r1 = r#.%r2, %id                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SH3ADD,
@@ -330,8 +331,8 @@ package rvex_opcode_pkg is
     
     -- 32 bit addition, operand 2 shifted left by four before adding.
     2#01101110# => (
-      syntax_reg => "sh4add r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "sh4add r#.%r1 = r#.%r2, %id                       ",
+      syntax_reg => "sh4add r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "sh4add r#.%r1 = r#.%r2, %id                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SH4ADD,
@@ -342,8 +343,8 @@ package rvex_opcode_pkg is
     
     -- Arithmetic/logical shift left.
     2#01101111# => (
-      syntax_reg => "shl r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "shl r#.%r1 = r#.%r2, %iu                          ",
+      syntax_reg => "shl r#.%r1 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "shl r#.%r1 = r#.%r2, %iu                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SHL,
@@ -354,8 +355,8 @@ package rvex_opcode_pkg is
     
     -- Signed arithmetic shift right.
     2#00011000# => (
-      syntax_reg => "shr r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "shr r#.%r1 = r#.%r2, %iu                          ",
+      syntax_reg => "shr r#.%r1 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "shr r#.%r1 = r#.%r2, %iu                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SHR,
@@ -366,8 +367,8 @@ package rvex_opcode_pkg is
     
     -- Unsigned arithmetic/logical shift right.
     2#00011001# => (
-      syntax_reg => "shru r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "shru r#.%r1 = r#.%r2, %iu                         ",
+      syntax_reg => "shru r#.%r1 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "shru r#.%r1 = r#.%r2, %iu                                             ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SHRU,
@@ -378,8 +379,8 @@ package rvex_opcode_pkg is
     
     -- Subtract operand 1 from operand 2.
     2#00011010# => (
-      syntax_reg => "sub r#.%r1 = r#.%r3, r#.%r2                       ",
-      syntax_imm => "sub r#.%r1 = %id, r#.%r2                          ",
+      syntax_reg => "sub r#.%r1 = r#.%r3, r#.%r2                                           ",
+      syntax_imm => "sub r#.%r1 = %id, r#.%r2                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SUB,
@@ -390,8 +391,8 @@ package rvex_opcode_pkg is
     
     -- Sign extend operand 1 from byte to word.
     2#00011011# => (
-      syntax_reg => "sxtb r#.%r1 = r#.%r2                              ",
-      syntax_imm => "unknown                                           ",
+      syntax_reg => "sxtb r#.%r1 = r#.%r2                                                  ",
+      syntax_imm => "unknown                                                               ",
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SXTB,
@@ -402,8 +403,8 @@ package rvex_opcode_pkg is
     
     -- Sign extend operand 1 from halfword to word.
     2#00011100# => (
-      syntax_reg => "sxth r#.%r1 = r#.%r2                              ",
-      syntax_imm => "unknown                                           ",
+      syntax_reg => "sxth r#.%r1 = r#.%r2                                                  ",
+      syntax_imm => "unknown                                                               ",
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SXTH,
@@ -414,8 +415,8 @@ package rvex_opcode_pkg is
     
     -- Zero extend operand 1 from byte to word.
     2#00011101# => (
-      syntax_reg => "zxtb r#.%r1 = r#.%r2                              ",
-      syntax_imm => "unknown                                           ",
+      syntax_reg => "zxtb r#.%r1 = r#.%r2                                                  ",
+      syntax_imm => "unknown                                                               ",
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ZXTB,
@@ -426,8 +427,8 @@ package rvex_opcode_pkg is
     
     -- Zero extend operand 1 from halfword to word.
     2#00011110# => (
-      syntax_reg => "zxth r#.%r1 = r#.%r2                              ",
-      syntax_imm => "unknown                                           ",
+      syntax_reg => "zxth r#.%r1 = r#.%r2                                                  ",
+      syntax_imm => "unknown                                                               ",
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ZXTH,
@@ -438,8 +439,8 @@ package rvex_opcode_pkg is
     
     -- Bitwise XOR.
     2#00011111# => (
-      syntax_reg => "xor r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "xor r#.%r1 = r#.%r2, %ih                          ",
+      syntax_reg => "xor r#.%r1 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "xor r#.%r1 = r#.%r2, %ih                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_XOR,
@@ -450,8 +451,8 @@ package rvex_opcode_pkg is
     
     -- Copy operand 1, while setting the bit indexed by the immediate.
     2#00101100# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "sbit r#.%r1 = r#.%r2, %iu                         ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "sbit r#.%r1 = r#.%r2, %iu                                             ",
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SBIT,
@@ -462,8 +463,8 @@ package rvex_opcode_pkg is
     
     -- Copy operand 1, while clearing the bit indexed by the immediate.
     2#00101101# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "sbitf r#.%r1 = r#.%r2, %iu                        ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "sbitf r#.%r1 = r#.%r2, %iu                                            ",
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SBITF,
@@ -474,8 +475,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 == operand 2 -> general purpose register.
     2#01000000# => (
-      syntax_reg => "cmpeq r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpeq r#.%r1 = r#.%r2, %id (= %ih)                ",
+      syntax_reg => "cmpeq r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmpeq r#.%r1 = r#.%r2, %id (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPEQ,
@@ -486,8 +487,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 == operand 2 -> branch register.
     2#01000001# => (
-      syntax_reg => "cmpeq b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpeq b#.%b2 = r#.%r2, %id (= %ih)                ",
+      syntax_reg => "cmpeq b#.%b2 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmpeq b#.%b2 = r#.%r2, %id (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPEQ,
@@ -498,8 +499,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 >= operand 2 -> general purpose register.
     2#01000010# => (
-      syntax_reg => "cmpge r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpge r#.%r1 = r#.%r2, %id                        ",
+      syntax_reg => "cmpge r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmpge r#.%r1 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPGE,
@@ -510,8 +511,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 >= operand 2 -> branch register.
     2#01000011# => (
-      syntax_reg => "cmpge b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpge b#.%b2 = r#.%r2, %id                        ",
+      syntax_reg => "cmpge b#.%b2 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmpge b#.%b2 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPGE,
@@ -522,8 +523,8 @@ package rvex_opcode_pkg is
     
     -- Unsigned operand 1 >= operand 2 -> general purpose register.
     2#01000100# => (
-      syntax_reg => "cmpgeu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgeu r#.%r1 = r#.%r2, %iu                       ",
+      syntax_reg => "cmpgeu r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "cmpgeu r#.%r1 = r#.%r2, %iu                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPGEU,
@@ -534,8 +535,8 @@ package rvex_opcode_pkg is
     
     -- Unsigned operand 1 >= operand 2 -> branch register.
     2#01000101# => (
-      syntax_reg => "cmpgeu b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgeu b#.%b2 = r#.%r2, %iu                       ",
+      syntax_reg => "cmpgeu b#.%b2 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "cmpgeu b#.%b2 = r#.%r2, %iu                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPGEU,
@@ -546,8 +547,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 > operand 2 -> general purpose register.
     2#01000110# => (
-      syntax_reg => "cmpgt r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpgt r#.%r1 = r#.%r2, %id                        ",
+      syntax_reg => "cmpgt r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmpgt r#.%r1 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPGT,
@@ -558,8 +559,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 > operand 2 -> branch register.
     2#01000111# => (
-      syntax_reg => "cmpgt b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpgt b#.%b2 = r#.%r2, %id                        ",
+      syntax_reg => "cmpgt b#.%b2 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmpgt b#.%b2 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPGT,
@@ -570,8 +571,8 @@ package rvex_opcode_pkg is
     
     -- Unsigned operand 1 > operand 2 -> general purpose register.
     2#01001000# => (
-      syntax_reg => "cmpgtu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgtu r#.%r1 = r#.%r2, %iu                       ",
+      syntax_reg => "cmpgtu r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "cmpgtu r#.%r1 = r#.%r2, %iu                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPGTU,
@@ -582,8 +583,8 @@ package rvex_opcode_pkg is
     
     -- Unsigned operand 1 > operand 2 -> branch register.
     2#01001001# => (
-      syntax_reg => "cmpgtu b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgtu b#.%b2 = r#.%r2, %iu                       ",
+      syntax_reg => "cmpgtu b#.%b2 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "cmpgtu b#.%b2 = r#.%r2, %iu                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPGTU,
@@ -594,8 +595,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 <= operand 2 -> general purpose register.
     2#01001010# => (
-      syntax_reg => "cmple r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmple r#.%r1 = r#.%r2, %id                        ",
+      syntax_reg => "cmple r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmple r#.%r1 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPLE,
@@ -606,8 +607,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 <= operand 2 -> branch register.
     2#01001011# => (
-      syntax_reg => "cmple b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmple b#.%b2 = r#.%r2, %id                        ",
+      syntax_reg => "cmple b#.%b2 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmple b#.%b2 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPLE,
@@ -618,8 +619,8 @@ package rvex_opcode_pkg is
     
     -- Unsigned operand 1 <= operand 2 -> general purpose register.
     2#01001100# => (
-      syntax_reg => "cmpleu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpleu r#.%r1 = r#.%r2, %iu                       ",
+      syntax_reg => "cmpleu r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "cmpleu r#.%r1 = r#.%r2, %iu                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPLEU,
@@ -630,8 +631,8 @@ package rvex_opcode_pkg is
     
     -- Unsigned operand 1 <= operand 2 -> branch register.
     2#01001101# => (
-      syntax_reg => "cmpleu b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpleu b#.%b2 = r#.%r2, %iu                       ",
+      syntax_reg => "cmpleu b#.%b2 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "cmpleu b#.%b2 = r#.%r2, %iu                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPLEU,
@@ -642,8 +643,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 < operand 2 -> general purpose register.
     2#01001110# => (
-      syntax_reg => "cmplt r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmplt r#.%r1 = r#.%r2, %id                        ",
+      syntax_reg => "cmplt r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmplt r#.%r1 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPLT,
@@ -654,8 +655,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 < operand 2 -> branch register.
     2#01001111# => (
-      syntax_reg => "cmplt b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmplt b#.%b2 = r#.%r2, %id                        ",
+      syntax_reg => "cmplt b#.%b2 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmplt b#.%b2 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPLT,
@@ -666,8 +667,8 @@ package rvex_opcode_pkg is
     
     -- Unsigned operand 1 < operand 2 -> general purpose register.
     2#01010000# => (
-      syntax_reg => "cmpltu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpltu r#.%r1 = r#.%r2, %iu                       ",
+      syntax_reg => "cmpltu r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "cmpltu r#.%r1 = r#.%r2, %iu                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPLTU,
@@ -678,8 +679,8 @@ package rvex_opcode_pkg is
     
     -- Unsigned operand 1 < operand 2 -> branch register.
     2#01010001# => (
-      syntax_reg => "cmpltu b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpltu b#.%b2 = r#.%r2, %iu                       ",
+      syntax_reg => "cmpltu b#.%b2 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "cmpltu b#.%b2 = r#.%r2, %iu                                           ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPLTU,
@@ -690,8 +691,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 != operand 2 -> general purpose register.
     2#01010010# => (
-      syntax_reg => "cmpne r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpne r#.%r1 = r#.%r2, %id (= %ih)                ",
+      syntax_reg => "cmpne r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmpne r#.%r1 = r#.%r2, %id (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPNE,
@@ -702,8 +703,8 @@ package rvex_opcode_pkg is
     
     -- Operand 1 != operand 2 -> branch register.
     2#01010011# => (
-      syntax_reg => "cmpne b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpne b#.%b2 = r#.%r2, %id (= %ih)                ",
+      syntax_reg => "cmpne b#.%b2 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "cmpne b#.%b2 = r#.%r2, %id (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPNE,
@@ -714,8 +715,8 @@ package rvex_opcode_pkg is
     
     -- !(operand1 && operand2) -> general purpose register.
     2#01010100# => (
-      syntax_reg => "nandl r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "nandl r#.%r1 = r#.%r2, %id                        ",
+      syntax_reg => "nandl r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "nandl r#.%r1 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_NANDL,
@@ -726,8 +727,8 @@ package rvex_opcode_pkg is
     
     -- !(operand1 && operand2) -> branch register.
     2#01010101# => (
-      syntax_reg => "nandl b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "nandl b#.%b2 = r#.%r2, %id                        ",
+      syntax_reg => "nandl b#.%b2 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "nandl b#.%b2 = r#.%r2, %id                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_NANDL,
@@ -738,8 +739,8 @@ package rvex_opcode_pkg is
     
     -- !(operand1 || operand2) -> general purpose register.
     2#01010110# => (
-      syntax_reg => "norl r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "norl r#.%r1 = r#.%r2, %id                         ",
+      syntax_reg => "norl r#.%r1 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "norl r#.%r1 = r#.%r2, %id                                             ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_NORL,
@@ -750,8 +751,8 @@ package rvex_opcode_pkg is
     
     -- !(operand1 || operand2) -> branch register.
     2#01010111# => (
-      syntax_reg => "norl b#.%b2 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "norl b#.%b2 = r#.%r2, %id                         ",
+      syntax_reg => "norl b#.%b2 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "norl b#.%b2 = r#.%r2, %id                                             ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_NORL,
@@ -762,8 +763,8 @@ package rvex_opcode_pkg is
     
     -- Operand1 || operand2 -> general purpose register.
     2#01011000# => (
-      syntax_reg => "orl r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "orl r#.%r1 = r#.%r2, %id                          ",
+      syntax_reg => "orl r#.%r1 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "orl r#.%r1 = r#.%r2, %id                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ORL,
@@ -774,8 +775,8 @@ package rvex_opcode_pkg is
     
     -- Operand1 || operand2 -> branch register.
     2#01011001# => (
-      syntax_reg => "orl b#.%b2 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "orl b#.%b2 = r#.%r2, %id                          ",
+      syntax_reg => "orl b#.%b2 = r#.%r2, r#.%r3                                           ",
+      syntax_imm => "orl b#.%b2 = r#.%r2, %id                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_ORL,
@@ -786,8 +787,8 @@ package rvex_opcode_pkg is
     
     -- Operand1 && operand2 -> general purpose register.
     2#01011010# => (
-      syntax_reg => "andl r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "andl r#.%r1 = r#.%r2, %id                         ",
+      syntax_reg => "andl r#.%r1 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "andl r#.%r1 = r#.%r2, %id                                             ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_ANDL,
@@ -798,8 +799,8 @@ package rvex_opcode_pkg is
     
     -- Operand1 && operand2 -> branch register.
     2#01011011# => (
-      syntax_reg => "andl b#.%b2 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "andl b#.%b2 = r#.%r2, %id                         ",
+      syntax_reg => "andl b#.%b2 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "andl b#.%b2 = r#.%r2, %id                                             ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_ANDL,
@@ -811,8 +812,8 @@ package rvex_opcode_pkg is
     -- Copies the bit in operand 1 indexed by the immediate to a general
     -- purpose register.
     2#01011100# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "tbit r#.%r1 = r#.%r2, %id                         ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "tbit r#.%r1 = r#.%r2, %id                                             ",
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_TBIT,
@@ -824,8 +825,8 @@ package rvex_opcode_pkg is
     -- Copies the bit in operand 1 indexed by the immediate to a branch
     -- register.
     2#01011101# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "tbit b#.%b2 = r#.%r2, %id                         ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "tbit b#.%b2 = r#.%r2, %id                                             ",
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_TBIT,
@@ -837,8 +838,8 @@ package rvex_opcode_pkg is
     -- Inverts and copies the bit in operand 1 indexed by the immediate
     -- to a general purpose register.
     2#01011110# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "tbitf r#.%r1 = r#.%r2, %id                        ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "tbitf r#.%r1 = r#.%r2, %id                                            ",
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_TBITF,
@@ -850,8 +851,8 @@ package rvex_opcode_pkg is
     -- Inverts and copies the bit in operand 1 indexed by the immediate
     -- to a branch register.
     2#01011111# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "tbitf b#.%b2 = r#.%r2, %id                        ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "tbitf b#.%b2 = r#.%r2, %id                                            ",
       valid => "10",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_TBITF,
@@ -862,8 +863,8 @@ package rvex_opcode_pkg is
     
     -- 32-bit addition with carry in and out.
     2#01111000# to 2#01111111# => (
-      syntax_reg => "addcg r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3     ",
-      syntax_imm => "addcg r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3     ",
+      syntax_reg => "addcg r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3                         ",
+      syntax_imm => "addcg r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3                         ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOTH,
       aluCtrl => ALU_CTRL_ADDCG,
@@ -877,8 +878,8 @@ package rvex_opcode_pkg is
     --   result := op1(31) ? (tmp + op2) : (tmp - op2)
     --   branch result := op1(31)
     2#01110000# to 2#01110111# => (
-      syntax_reg => "divs r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3      ",
-      syntax_imm => "divs r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3      ",
+      syntax_reg => "divs r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3                          ",
+      syntax_imm => "divs r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3                          ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOTH,
       aluCtrl => ALU_CTRL_DIVS,
@@ -889,8 +890,8 @@ package rvex_opcode_pkg is
     
     -- Select: opBr ? op1 : op2.
     2#00111000# to 2#00111111# => (
-      syntax_reg => "slct r#.%r1 = b#.%b1, r#.%r2, r#.%r3              ",
-      syntax_imm => "slct r#.%r1 = b#.%b1, r#.%r2, %id (= %ih)         ",
+      syntax_reg => "slct r#.%r1 = b#.%b1, r#.%r2, r#.%r3                                  ",
+      syntax_imm => "slct r#.%r1 = b#.%b1, r#.%r2, %id (= %ih)                             ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SLCT,
@@ -901,8 +902,8 @@ package rvex_opcode_pkg is
     
     -- Select: opBr ? op2 : op1.
     2#00110000# to 2#00110111# => (
-      syntax_reg => "slctf r#.%r1 = b#.%b1, r#.%r2, r#.%r3             ",
-      syntax_imm => "slctf r#.%r1 = b#.%b1, r#.%r2, %id (= %ih)        ",
+      syntax_reg => "slctf r#.%r1 = b#.%b1, r#.%r2, r#.%r3                                 ",
+      syntax_imm => "slctf r#.%r1 = b#.%b1, r#.%r2, %id (= %ih)                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SLCTF,
@@ -913,8 +914,8 @@ package rvex_opcode_pkg is
     
     -- Count leading zeroes in operand 1.
     2#10010001# => (
-      syntax_reg => "clz r#.%r1 = r#.%r2                               ",
-      syntax_imm => "unknown                                           ",
+      syntax_reg => "clz r#.%r1 = r#.%r2                                                   ",
+      syntax_imm => "unknown                                                               ",
       valid => "01",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CLZ,
@@ -925,8 +926,8 @@ package rvex_opcode_pkg is
     
     -- Copy general purpose register to link register.
     2#00001011# => (
-      syntax_reg => "mtl l#.0 = r#.%r2                                 ",
-      syntax_imm => "unknown                                           ",
+      syntax_reg => "mtl l#.0 = r#.%r2                                                     ",
+      syntax_imm => "unknown                                                               ",
       valid => "01",
       datapathCtrl => DP_CTRL_MTL,
       aluCtrl => ALU_CTRL_FWD_OP1,
@@ -937,8 +938,8 @@ package rvex_opcode_pkg is
     
     -- Copy link register to general purpose register.
     2#00001100# => (
-      syntax_reg => "mfl r#.%r1 = l#.0                                 ",
-      syntax_imm => "unknown                                           ",
+      syntax_reg => "mfl r#.%r1 = l#.0                                                     ",
+      syntax_imm => "unknown                                                               ",
       valid => "01",
       datapathCtrl => DP_CTRL_MFL,
       aluCtrl => ALU_CTRL_FWD_OP1,
@@ -952,8 +953,8 @@ package rvex_opcode_pkg is
     ---------------------------------------------------------------------------
     -- GOTO: unconditional jump.
     2#00100000# => (
-      syntax_reg => "goto %bt                                          ",
-      syntax_imm => "goto %bt                                          ",
+      syntax_reg => "goto %bt                                                              ",
+      syntax_imm => "goto %bt                                                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR,
       aluCtrl => ALU_CTRL_NOP,
@@ -964,8 +965,8 @@ package rvex_opcode_pkg is
     
     -- IGOTO: unconditional jump to link register.
     2#00100001# => (
-      syntax_reg => "igoto l#.0                                        ",
-      syntax_imm => "igoto l#.0                                        ",
+      syntax_reg => "igoto l#.0                                                            ",
+      syntax_imm => "igoto l#.0                                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR,
       aluCtrl => ALU_CTRL_NOP,
@@ -976,8 +977,8 @@ package rvex_opcode_pkg is
     
     -- CALL: unconditional jump and link.
     2#00100010# => (
-      syntax_reg => "call l#.0 = %bt                                   ",
-      syntax_imm => "call l#.0 = %bt                                   ",
+      syntax_reg => "call l#.0 = %bt                                                       ",
+      syntax_imm => "call l#.0 = %bt                                                       ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR_LINK,
       aluCtrl => ALU_CTRL_NOP,
@@ -988,8 +989,8 @@ package rvex_opcode_pkg is
     
     -- ICALL: unconditional jump to link register and link.
     2#00100011# => (
-      syntax_reg => "icall l#.0 = l#.0                                 ",
-      syntax_imm => "icall l#.0 = l#.0                                 ",
+      syntax_reg => "icall l#.0 = l#.0                                                     ",
+      syntax_imm => "icall l#.0 = l#.0                                                     ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR_LINK,
       aluCtrl => ALU_CTRL_NOP,
@@ -1000,8 +1001,8 @@ package rvex_opcode_pkg is
     
     -- BR: branch if true.
     2#00100100# => (
-      syntax_reg => "br b#.%b3, %bt                                    ",
-      syntax_imm => "br b#.%b3, %bt                                    ",
+      syntax_reg => "br b#.%b3, %bt                                                        ",
+      syntax_imm => "br b#.%b3, %bt                                                        ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR,
       aluCtrl => ALU_CTRL_NOP,
@@ -1012,8 +1013,8 @@ package rvex_opcode_pkg is
     
     -- BRF: branch if false.
     2#00100101# => (
-      syntax_reg => "brf b#.%b3, %bt                                   ",
-      syntax_imm => "brf b#.%b3, %bt                                   ",
+      syntax_reg => "brf b#.%b3, %bt                                                       ",
+      syntax_imm => "brf b#.%b3, %bt                                                       ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR,
       aluCtrl => ALU_CTRL_NOP,
@@ -1024,8 +1025,8 @@ package rvex_opcode_pkg is
     
     -- RETURN: return from function call, add immediate to stack pointer.
     2#00100110# => (
-      syntax_reg => "return r#.1 = r#.1, %bi, l#.0                     ",
-      syntax_imm => "return r#.1 = r#.1, %bi, l#.0                     ",
+      syntax_reg => "return r#.1 = r#.1, %bi, l#.0                                         ",
+      syntax_imm => "return r#.1 = r#.1, %bi, l#.0                                         ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR_SP,
       aluCtrl => ALU_CTRL_ADD,
@@ -1036,8 +1037,8 @@ package rvex_opcode_pkg is
     
     -- RFI: return from trap.
     2#00100111# => (
-      syntax_reg => "rfi r#.1 = r#.1, %bi, l#.0                        ",
-      syntax_imm => "rfi r#.1 = r#.1, %bi, l#.0                        ",
+      syntax_reg => "rfi r#.1 = r#.1, %bi, l#.0                                            ",
+      syntax_imm => "rfi r#.1 = r#.1, %bi, l#.0                                            ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR_SP,
       aluCtrl => ALU_CTRL_NOP,
@@ -1051,8 +1052,8 @@ package rvex_opcode_pkg is
     ---------------------------------------------------------------------------
     -- Multiply signed low 16 x low 16 bits.
     2#00000000# => (
-      syntax_reg => "mpyll r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpyll r#.%r1 = r#.%r2, %id (= %ih)                ",
+      syntax_reg => "mpyll r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "mpyll r#.%r1 = r#.%r2, %id (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1063,8 +1064,8 @@ package rvex_opcode_pkg is
     
     -- Multiply unsigned low 16 x low 16 bits.
     2#00000001# => (
-      syntax_reg => "mpyllu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "mpyllu r#.%r1 = r#.%r2, %iu (= %ih)               ",
+      syntax_reg => "mpyllu r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "mpyllu r#.%r1 = r#.%r2, %iu (= %ih)                                   ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1075,8 +1076,8 @@ package rvex_opcode_pkg is
     
     -- Multiply signed low 16 (s1) x high 16 (s2) bits.
     2#00000010# => (
-      syntax_reg => "mpylh r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpylh r#.%r1 = r#.%r2, %id (= %ih)                ",
+      syntax_reg => "mpylh r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "mpylh r#.%r1 = r#.%r2, %id (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1087,8 +1088,8 @@ package rvex_opcode_pkg is
     
     -- Multiply unsigned low 16 (s1) x high 16 (s2) bits.
     2#00000011# => (
-      syntax_reg => "mpylhu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "mpylhu r#.%r1 = r#.%r2, %iu (= %ih)               ",
+      syntax_reg => "mpylhu r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "mpylhu r#.%r1 = r#.%r2, %iu (= %ih)                                   ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1099,8 +1100,8 @@ package rvex_opcode_pkg is
     
     -- Multiply signed high 16 x high 16 bits.
     2#00000100# => (
-      syntax_reg => "mpyhh r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpyhh r#.%r1 = r#.%r2, %id (= %ih)                ",
+      syntax_reg => "mpyhh r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "mpyhh r#.%r1 = r#.%r2, %id (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1111,8 +1112,8 @@ package rvex_opcode_pkg is
     
     -- Multiply unsigned high 16 x high 16 bits.
     2#00000101# => (
-      syntax_reg => "mpyhhu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "mpyhhu r#.%r1 = r#.%r2, %iu (= %ih)               ",
+      syntax_reg => "mpyhhu r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "mpyhhu r#.%r1 = r#.%r2, %iu (= %ih)                                   ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1123,8 +1124,8 @@ package rvex_opcode_pkg is
     
     -- Multiply signed low 16 (s2) x 32 (s1) bits.
     2#00000110# => (
-      syntax_reg => "mpyl r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "mpyl r#.%r1 = r#.%r2, %id (= %ih)                 ",
+      syntax_reg => "mpyl r#.%r1 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "mpyl r#.%r1 = r#.%r2, %id (= %ih)                                     ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1135,8 +1136,8 @@ package rvex_opcode_pkg is
     
     -- Multiply unsigned low 16 (s2) x 32 (s1) bits.
     2#00000111# => (
-      syntax_reg => "mpylu r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpylu r#.%r1 = r#.%r2, %iu (= %ih)                ",
+      syntax_reg => "mpylu r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "mpylu r#.%r1 = r#.%r2, %iu (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1147,8 +1148,8 @@ package rvex_opcode_pkg is
     
     -- Multiply signed high 16 (s2) x 32 (s1) bits.
     2#00001000# => (
-      syntax_reg => "mpyh r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "mpyh r#.%r1 = r#.%r2, %id (= %ih)                 ",
+      syntax_reg => "mpyh r#.%r1 = r#.%r2, r#.%r3                                          ",
+      syntax_imm => "mpyh r#.%r1 = r#.%r2, %id (= %ih)                                     ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1159,8 +1160,8 @@ package rvex_opcode_pkg is
     
     -- Multiply unsigned high 16 (s2) x 32 (s1) bits.
     2#00001001# => (
-      syntax_reg => "mpyhu r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpyhu r#.%r1 = r#.%r2, %iu (= %ih)                ",
+      syntax_reg => "mpyhu r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "mpyhu r#.%r1 = r#.%r2, %iu (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1171,8 +1172,8 @@ package rvex_opcode_pkg is
     
     -- Multiply signed high 16 (s2) x 32 (s1) bits, shift left 16.
     2#00001010# => (
-      syntax_reg => "mpyhs r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpyhs r#.%r1 = r#.%r2, %id (= %ih)                ",
+      syntax_reg => "mpyhs r#.%r1 = r#.%r2, r#.%r3                                         ",
+      syntax_imm => "mpyhs r#.%r1 = r#.%r2, %id (= %ih)                                    ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1183,8 +1184,8 @@ package rvex_opcode_pkg is
     
     -- Multiply signed low 16 (s2) x 32 (s1) bits, shift right 32.
     2#10010010# => (
-      syntax_reg => "mpylhus r#.%r1 = r#.%r2, r#.%r3                   ",
-      syntax_imm => "mpylhus r#.%r1 = r#.%r2, %id (= %ih)              ",
+      syntax_reg => "mpylhus r#.%r1 = r#.%r2, r#.%r3                                       ",
+      syntax_imm => "mpylhus r#.%r1 = r#.%r2, %id (= %ih)                                  ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1195,8 +1196,8 @@ package rvex_opcode_pkg is
     
     -- Multiply signed high 16 (s2) x 32 (s1) bits, shift right 16.
     2#10010011# => (
-      syntax_reg => "mpyhhs r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "mpyhhs r#.%r1 = r#.%r2, %id (= %ih)               ",
+      syntax_reg => "mpyhhs r#.%r1 = r#.%r2, r#.%r3                                        ",
+      syntax_imm => "mpyhhs r#.%r1 = r#.%r2, %id (= %ih)                                   ",
       valid => "11",
       datapathCtrl => DP_CTRL_MUL,
       aluCtrl => ALU_CTRL_NOP,
@@ -1210,8 +1211,8 @@ package rvex_opcode_pkg is
     ---------------------------------------------------------------------------
     -- Load word from memory, send to link register.
     2#00001101# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "ldl l#.0 = %ih[r#.%r2]                            ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "ldl l#.0 = %ih[r#.%r2]                                                ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_LINK,
       aluCtrl => ALU_CTRL_NOP,
@@ -1222,8 +1223,8 @@ package rvex_opcode_pkg is
     
     -- Load word from memory.
     2#00010000# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "ldw r#.%r1 = %ih[r#.%r2]                          ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "ldw r#.%r1 = %ih[r#.%r2]                                              ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
@@ -1234,8 +1235,8 @@ package rvex_opcode_pkg is
     
     -- Load signed halfword from memory.
     2#00010001# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "ldh r#.%r1 = %ih[r#.%r2]                          ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "ldh r#.%r1 = %ih[r#.%r2]                                              ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
@@ -1246,8 +1247,8 @@ package rvex_opcode_pkg is
     
     -- Load unsigned halfword from memory.
     2#00010010# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "ldhu r#.%r1 = %ih[r#.%r2]                         ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "ldhu r#.%r1 = %ih[r#.%r2]                                             ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
@@ -1258,8 +1259,8 @@ package rvex_opcode_pkg is
     
     -- Load signed byte from memory.
     2#00010011# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "ldb r#.%r1 = %ih[r#.%r2]                          ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "ldb r#.%r1 = %ih[r#.%r2]                                              ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
@@ -1270,8 +1271,8 @@ package rvex_opcode_pkg is
     
     -- Load unsigned byte from memory.
     2#00010100# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "ldbu r#.%r1 = %ih[r#.%r2]                         ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "ldbu r#.%r1 = %ih[r#.%r2]                                             ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
       aluCtrl => ALU_CTRL_NOP,
@@ -1282,8 +1283,8 @@ package rvex_opcode_pkg is
     
     -- Store word in memory, from link register.
     2#00001110# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "stl %ih[r#.%r2] = l#.0                            ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "stl %ih[r#.%r2] = l#.0                                                ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_LINK,
       aluCtrl => ALU_CTRL_NOP,
@@ -1294,8 +1295,8 @@ package rvex_opcode_pkg is
     
     -- Store word in memory.
     2#00010101# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "stw %ih[r#.%r2] = r#.%r1                          ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "stw %ih[r#.%r2] = r#.%r1                                              ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_GP,
       aluCtrl => ALU_CTRL_NOP,
@@ -1306,8 +1307,8 @@ package rvex_opcode_pkg is
     
     -- Store halfword in memory.
     2#00010110# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "sth %ih[r#.%r2] = r#.%r1                          ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "sth %ih[r#.%r2] = r#.%r1                                              ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_GP,
       aluCtrl => ALU_CTRL_NOP,
@@ -1318,8 +1319,8 @@ package rvex_opcode_pkg is
     
     -- Store byte in memory.
     2#00010111# => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "stb %ih[r#.%r2] = r#.%r1                          ",
+      syntax_reg => "unknown                                                               ",
+      syntax_imm => "stb %ih[r#.%r2] = r#.%r1                                              ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_GP,
       aluCtrl => ALU_CTRL_NOP,
