@@ -88,15 +88,6 @@ entity rvex_pipelanes is
     -- Active high stall input for each pipelane group.
     stall                       : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    ---------------------------------------------------------------------------
-    -- VHDL simulation debug information
-    ---------------------------------------------------------------------------
-    -- pragma translate_off
-    -- String with disassembly, trap info, validity, etc. for the last
-    -- instruction in the pipeline for each lane.
-    pl2sim                      : out rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
-    -- pragma translate_on
-    
     -----------------------------------------------------------------------------
     -- Decoded configuration signals
     -----------------------------------------------------------------------------
@@ -394,11 +385,6 @@ begin -- architecture
         clk                               => clk,
         clkEn                             => clkEn,
         stall                             => stall(laneGroup),
-        
-        -- VHDL simulation debug information.
-        -- pragma translate_off
-        pl2sim                            => pl2sim(lane),
-        -- pragma translate_on
         
         -- Configuration and run control.
         cfg2pl_decouple                   => cfg2any_decouple(laneGroup),

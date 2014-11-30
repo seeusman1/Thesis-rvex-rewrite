@@ -14,8 +14,39 @@ package rvex_simUtils_pkg is
   -----------------------------------------------------------------------------
   -- Basic string manipulation
   -----------------------------------------------------------------------------
-  -- Kinda abstracting away from VHDL's inherent insanity.
+  -- Returns true if given character is alphabetical.
+  function isAlphaChar(c: character) return boolean;
   
+  -- Returns true if given character is numeric.
+  function isNumericChar(c: character) return boolean;
+  
+  -- Returns true if given character is alphanumerical.
+  function isAlphaNumericChar(c: character) return boolean;
+  
+  -- Returns true if given character is a special character (not alphanumerical
+  -- or a space).
+  function isSpecialChar(c: character) return boolean;
+  
+  -- Converts a character to uppercase.
+  function upperChar(c: character) return character;
+  
+  -- Converts a character to its numeric value, supporting all hexadecimal
+  -- digits. Returns -1 when the character is not hexadecimal.
+  function charToDigitVal(c: character) return integer;
+  
+  -- Tests whether two characters match, ignoring case.
+  function charsEqual(a: character; b: character) return boolean;
+  
+  -- Tests whether line contains match at position pos (case insensitive).
+  function matchAt(
+    line  : in string;   -- String to match in.
+    pos   : in positive; -- Position in line where matching should start.
+    match : in string    -- The string to match.
+  ) return boolean;
+  
+  -----------------------------------------------------------------------------
+  -- Fixed-length string manipulation
+  -----------------------------------------------------------------------------
   -- Global string length for all operations which operate on fixed string
   -- lengths for simplicity.
   constant RVEX_STR_LEN         : positive := 256;
@@ -35,21 +66,33 @@ package rvex_simUtils_pkg is
   -- Clears a string builder.
   procedure rvs_clear(sb: inout rvex_string_builder_type);
   
+  -- Removes trailing spaces from a string builder.
+  procedure rvs_trimTrailingSpaces(sb: inout rvex_string_builder_type);
+  
+  -- Capitalizes the first character in a string builder.
+  procedure rvs_capitalize(sb: inout rvex_string_builder_type);
+  
   -- Converts a VHDL unbounded string to a string builder.
   function to_rvs(input: string) return rvex_string_builder_type;
   
-  -- Concatenation operator for two string builders.
-  function "&"(L: rvex_string_builder_type; R: rvex_string_builder_type) return rvex_string_builder_type;
-  
-  -- Concatenation operator for a string builder and a VHDL string.
-  function "&"(L: rvex_string_builder_type; R: string) return rvex_string_builder_type;
+  -- Appends a character to a string builder.
+  procedure rvs_append(sb: inout rvex_string_builder_type; c: character);
+  function "&"(L: rvex_string_builder_type; R: character) return rvex_string_builder_type;
   
   -- Appends a VHDL string to a string builder.
   procedure rvs_append(sb: inout rvex_string_builder_type; s: string);
+  function "&"(L: rvex_string_builder_type; R: string) return rvex_string_builder_type;
   
-  -- Converts a nul-terminated fixed length string, VHDL string or string
-  -- builder to a whitespace-terminated fixed length string for simulation.
+  -- Appends a string builder to a string builder.
+  procedure rvs_append(sb: inout rvex_string_builder_type; sb2: rvex_string_builder_type);
+  function "&"(L: rvex_string_builder_type; R: rvex_string_builder_type) return rvex_string_builder_type;
+  
+  -- Converts a string builder into a whitespace-terminated fixed length string
+  -- for simulation.
   function rvs2sim(input: rvex_string_builder_type) return rvex_string_type;
+  
+  -- Converts a string builder into a variable-length string.
+  function rvs2str(input: rvex_string_builder_type) return string;
   
   -- Converts an unsigned std_logic_vector to a string, representing it in
   -- decimal notation.
@@ -78,16 +121,195 @@ end rvex_simUtils_pkg;
 package body rvex_simUtils_pkg is
 --=============================================================================
   
-  -----------------------------------------------------------------------------
-  -- Basic string manipulation
-  -----------------------------------------------------------------------------
-  -- Kinda abstracting away from VHDL's inherent insanity.
+  -- Returns true if given character is alphabetical.
+  function isAlphaChar(c: character) return boolean is
+    variable result: boolean;
+  begin
+    case c is
+      when 'a' => result := true; when 'A' => result := true;
+      when 'b' => result := true; when 'B' => result := true;
+      when 'c' => result := true; when 'C' => result := true;
+      when 'd' => result := true; when 'D' => result := true;
+      when 'e' => result := true; when 'E' => result := true;
+      when 'f' => result := true; when 'F' => result := true;
+      when 'g' => result := true; when 'G' => result := true;
+      when 'h' => result := true; when 'H' => result := true;
+      when 'i' => result := true; when 'I' => result := true;
+      when 'j' => result := true; when 'J' => result := true;
+      when 'k' => result := true; when 'K' => result := true;
+      when 'l' => result := true; when 'L' => result := true;
+      when 'm' => result := true; when 'M' => result := true;
+      when 'n' => result := true; when 'N' => result := true;
+      when 'o' => result := true; when 'O' => result := true;
+      when 'p' => result := true; when 'P' => result := true;
+      when 'q' => result := true; when 'Q' => result := true;
+      when 'r' => result := true; when 'R' => result := true;
+      when 's' => result := true; when 'S' => result := true;
+      when 't' => result := true; when 'T' => result := true;
+      when 'u' => result := true; when 'U' => result := true;
+      when 'v' => result := true; when 'V' => result := true;
+      when 'w' => result := true; when 'W' => result := true;
+      when 'x' => result := true; when 'X' => result := true;
+      when 'y' => result := true; when 'Y' => result := true;
+      when 'z' => result := true; when 'Z' => result := true;
+      when others => result := false;
+    end case;
+    return result;
+  end isAlphaChar;
   
+  -- Returns true if given character is numeric.
+  function isNumericChar(c: character) return boolean is
+    variable result: boolean;
+  begin
+    case c is
+      when '0' => result := true; when '1' => result := true;
+      when '2' => result := true; when '3' => result := true;
+      when '4' => result := true; when '5' => result := true;
+      when '6' => result := true; when '7' => result := true;
+      when '8' => result := true; when '9' => result := true;
+      when others => result := false;
+    end case;
+    return result;
+  end isNumericChar;
+  
+  -- Returns true if given character is alphanumerical.
+  function isAlphaNumericChar(c: character) return boolean is
+  begin
+    return isAlphaChar(c) or isNumericChar(c);
+  end isAlphaNumericChar;
+  
+  -- Returns true if given character is a special character.
+  function isSpecialChar(c: character) return boolean is
+  begin
+    return not isAlphaNumericChar(c) and c /= ' ';
+  end isSpecialChar;
+  
+  -- Converts a character to uppercase.
+  function upperChar(
+    c: character
+  ) return character is
+    variable result: character;
+  begin
+    case c is
+      when 'a' => result := 'A';
+      when 'b' => result := 'B';
+      when 'c' => result := 'C';
+      when 'd' => result := 'D';
+      when 'e' => result := 'E';
+      when 'f' => result := 'F';
+      when 'g' => result := 'G';
+      when 'h' => result := 'H';
+      when 'i' => result := 'I';
+      when 'j' => result := 'J';
+      when 'k' => result := 'K';
+      when 'l' => result := 'L';
+      when 'm' => result := 'M';
+      when 'n' => result := 'N';
+      when 'o' => result := 'O';
+      when 'p' => result := 'P';
+      when 'q' => result := 'Q';
+      when 'r' => result := 'R';
+      when 's' => result := 'S';
+      when 't' => result := 'T';
+      when 'u' => result := 'U';
+      when 'v' => result := 'V';
+      when 'w' => result := 'W';
+      when 'x' => result := 'X';
+      when 'y' => result := 'Y';
+      when 'z' => result := 'Z';
+      when others => result := c;
+    end case;
+    return result;
+  end upperChar;
+  
+  -- Converts a character to its numeric value, supporting all hexadecimal
+  -- digits. Returns -1 when the character is not hexadecimal.
+  function charToDigitVal(
+    c: character
+  ) return integer is
+    variable result: integer;
+  begin
+    case c is
+      when '0' => result := 0;
+      when '1' => result := 1;
+      when '2' => result := 2;
+      when '3' => result := 3;
+      when '4' => result := 4;
+      when '5' => result := 5;
+      when '6' => result := 6;
+      when '7' => result := 7;
+      when '8' => result := 8;
+      when '9' => result := 9;
+      when 'a' => result := 10;
+      when 'b' => result := 11;
+      when 'c' => result := 12;
+      when 'd' => result := 13;
+      when 'e' => result := 14;
+      when 'f' => result := 15;
+      when 'A' => result := 10;
+      when 'B' => result := 11;
+      when 'C' => result := 12;
+      when 'D' => result := 13;
+      when 'E' => result := 14;
+      when 'F' => result := 15;
+      when others => result := -1;
+    end case;
+    return result;
+  end charToDigitVal;
+  
+  -- Tests whether two characters match, ignoring case.
+  function charsEqual(
+    a: character;
+    b: character
+  ) return boolean is
+  begin
+    return upperChar(a) = upperChar(b);
+  end charsEqual;
+  
+  -- Tests whether line contains match at position pos (case insensitive).
+  function matchAt(
+    line  : in string;
+    pos   : in positive;
+    match : in string
+  ) return boolean is
+    variable posInt: positive;
+  begin
+    posInt := pos;
+    for matchPos in match'range loop
+      if posInt > line'length then
+        return false;
+      end if;
+      if not charsEqual(match(matchPos), line(posInt)) then
+        return false;
+      end if;
+      posInt := posInt + 1;
+    end loop;
+    return true;
+  end matchAt;
+  
+  -----------------------------------------------------------------------------
+  -- Fixed-length string manipulation
+  -----------------------------------------------------------------------------
   -- Clears a string builder.
   procedure rvs_clear(sb: inout rvex_string_builder_type) is
   begin
     sb.len := 0;
   end rvs_clear;
+  
+  -- Removes trailing spaces from a string builder.
+  procedure rvs_trimTrailingSpaces(sb: inout rvex_string_builder_type) is
+  begin
+    while sb.len > 0 loop
+      exit when sb.s(sb.len) /= ' ';
+      sb.len := sb.len - 1;
+    end loop;
+  end rvs_trimTrailingSpaces;
+  
+  -- Capitalizes the first character in a string builder.
+  procedure rvs_capitalize(sb: inout rvex_string_builder_type) is
+  begin
+    sb.s(1) := upperChar(sb.s(1));
+  end rvs_capitalize;
   
   -- Converts a VHDL unbounded string to a string builder.
   function to_rvs(input: string) return rvex_string_builder_type is
@@ -103,23 +325,15 @@ package body rvex_simUtils_pkg is
     return result;
   end to_rvs;
   
-  -- Concatenation operator for two string builders.
-  function "&"(L: rvex_string_builder_type; R: rvex_string_builder_type) return rvex_string_builder_type is
-    variable result: rvex_string_builder_type;
+  -- Appends a character to a string builder.
+  procedure rvs_append(sb: inout rvex_string_builder_type; c: character) is
   begin
-    result.s := L.s;
-    if L.len + R.len <= RVEX_STR_LEN then
-      result.s(L.len+1 to L.len+R.len) := R.s(1 to R.len);
-      result.len := L.len + R.len;
-    else
-      result.s(L.len+1 to RVEX_STR_LEN) := R.s(1 to RVEX_STR_LEN-L.len);
-      result.len := RVEX_STR_LEN;
+    if sb.len < RVEX_STR_LEN then
+      sb.len := sb.len + 1;
+      sb.s(sb.len) := c;
     end if;
-    return result;
-  end "&";
-  
-  -- Concatenation operator for a string builder and a VHDL string.
-  function "&"(L: rvex_string_builder_type; R: string) return rvex_string_builder_type is
+  end rvs_append;
+  function "&"(L: rvex_string_builder_type; R: character) return rvex_string_builder_type is
     variable result: rvex_string_builder_type;
   begin
     result := L;
@@ -138,9 +352,35 @@ package body rvex_simUtils_pkg is
       sb.len := sb.len + s'length;
     end if;
   end rvs_append;
+  function "&"(L: rvex_string_builder_type; R: string) return rvex_string_builder_type is
+    variable result: rvex_string_builder_type;
+  begin
+    result := L;
+    rvs_append(result, R);
+    return result;
+  end "&";
   
-  -- Converts a nul-terminated fixed length string, VHDL string or string
-  -- builder to a whitespace-terminated fixed length string for simulation.
+  -- Appends a string builder to a string builder.
+  procedure rvs_append(sb: inout rvex_string_builder_type; sb2: rvex_string_builder_type) is
+  begin
+    if sb.len + sb2.len <= RVEX_STR_LEN then
+      sb.s(sb.len+1 to sb.len+sb2.len) := sb2.s(1 to sb2.len);
+      sb.len := sb.len + sb2.len;
+    else
+      sb.s(sb.len+1 to RVEX_STR_LEN) := sb2.s(1 to RVEX_STR_LEN-sb.len);
+      sb.len := RVEX_STR_LEN;
+    end if;
+  end rvs_append;
+  function "&"(L: rvex_string_builder_type; R: rvex_string_builder_type) return rvex_string_builder_type is
+    variable result: rvex_string_builder_type;
+  begin
+    result := L;
+    rvs_append(result, R);
+    return result;
+  end "&";
+  
+  -- Converts a string builder into a whitespace-terminated fixed length string
+  -- for simulation.
   function rvs2sim(input: rvex_string_builder_type) return rvex_string_type is
     variable result: rvex_string_type;
   begin
@@ -148,6 +388,12 @@ package body rvex_simUtils_pkg is
     result(1 to input.len) := input.s(1 to input.len);
     return result; 
   end rvs2sim;
+  
+  -- Converts a string builder into a variable-length string.
+  function rvs2str(input: rvex_string_builder_type) return string is
+  begin
+    return input.s(1 to input.len);
+  end rvs2str;
   
   -- Converts an unsigned std_logic_vector to a string, representing it in
   -- decimal notation.

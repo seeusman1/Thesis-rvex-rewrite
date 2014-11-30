@@ -60,6 +60,173 @@ use work.rvex_opcodeDatapath_pkg.all;
 use work.rvex_simUtils_pkg.all;
 -- pragma translate_on
 
+
+
+
+
+
+
+
+
+
+
+--=============================================================================
+-- READ ME PLEASE
+--=============================================================================
+-- 
+-- If you just want a broad idea of what the rvex pipeline looks like, you're
+-- probably better off looking at the following two diagrams instead of
+-- reading this file:
+--  - the pipeline diagram in rvex_pipeline_pkg.vhd
+--  - the datapath diagram in rvex_opcodeDatapath_pkg,vhd
+-- 
+-- If you want to tweak the timing of the pipeline, there's also no need to
+-- understand this file - just go to rvex_pipeline_pkg.vhd and adjust the
+-- timing there. There's assertions in all relevant files which make sure you
+-- can't really do anything wrong there accidentally without
+-- simulation/synthesis complaining.
+-- 
+-- If you're looking for specifics or want to modify the datapath, though,
+-- you're in the right place, so read on. This section is here to hopefully
+-- give you a starting point in comprehending what's going on here, so you
+-- don't have to start at zero in an almost 2kLOC (at the time of writing)
+-- VHDL file.
+-- 
+-- Note that it's by design that it's large: it's not large because it's
+-- complicated, but because of the following reasons:
+--
+--  - I wanted as much of the documentation needed to understand a single file
+--    to be in that file itself. Having to ctrl+f for signal names or functions
+--    in a bunch of files is, in my opinion, worse than only having to do it in
+--    a single file.
+--
+--  - I wanted the pipeline to be described in chronological order. And not
+--    just by strategically moving bits of code around to make it look that way
+--    (because that's just going to break over time) but I wanted it to
+--    actually be functional. The only real way to do that in VHDL that I know
+--    of is to put everything in a single process. Which is obviously going to
+--    be big.
+-- 
+--  - Most people (me included) find pipelines a difficult concept to grasp,
+--    and especially to debug. So I wanted a way to somewhat abstract away from
+--    that somehow, without greatly affecting the final synthesis result, in
+--    such a way that it's easy to debug and hard to do wrong. Part of what I
+--    did to accomplish this as best I could is to have almost* all the
+--    pipeline registers in one place, for which the most logical place of
+--    course is this file.
+-- 
+-- * Almost all, because functional units can still have local pipeline
+-- registers. It made sense to allow this, as you can't exactly model the
+-- entire memory in the pipeline of course.
+-- 
+-- Theory of operation
+-- -------------------
+-- All operations in the pipeline are modelled as sequential operations on
+-- an execution state vector in a single process, wherein the execution state
+-- vector is simply a variable. Because it is a variable, it should be
+-- modified for each execution phase/functional unit in chronological order,
+-- or things won't make sense or work anymore.
+-- 
+-- In stead of somehow inserting pipeline stages in the state vector in the
+-- middle of the process, the process models the execution of an instruction as
+-- if all execution phases/functional units were combinatorial. In fact, for
+-- as far as the pipeline logic is concerned, they can be. Which is exactly
+-- what we want, because then we don't have to think about the pipeline
+-- anymore. But if everything is (seemingly) combinatorial, how can there be
+-- pipeline stages?
+--
+-- Let's say we have a simplified datapath with three execution phases, which,
+-- if there were no pipeline stages, would be spread out over a singla clock
+-- cycle as follows.
+--
+--         clk                                                  clk
+--          :                                                    :
+--          : .------------------------. .---------. .---------. :
+--          : |        Phase 1         | | Phase 2 | | Phase 3 | :
+--          : '------------------------' '---------' '---------' :
+-- 
+-- Now let's say we want to pipeline this by injecting a stage between phases
+-- 1 and 2. We can do this by duplicating the execution state vector,
+-- performing phase 1 on the first execution state vector (stage 1) and phases
+-- 2 and 3 on the second state vector (stage 2), like this.
+-- 
+--                      clk                          clk
+--                       :                            :
+--                       : .------------------------. :
+--               Stage 1 : |        Phase 1         | :
+--                       : '------------------------' :
+--                       :                            :
+--                       : .---------. .---------.    :
+--               Stage 2 : | Phase 2 | | Phase 3 |    :
+--                       : '---------' '---------'    :
+-- 
+-- Now observe that if we connect the output execution state vector output
+-- from stage 1 to the input for stage 2 through a register, we get the
+-- pipeline we wanted.
+-- 
+--      clk                          clk                          clk
+--       :                            :                            :
+--       : .------------------------. : .---------. .---------.    :
+--       : |        Phase 1         | : | Phase 2 | | Phase 3 |    :
+--       : '------------------------' : '---------' '---------'    :
+-- 
+-- Note that to do this, all we had to do was connect a phase to a different
+-- stage - no logic had to be changed. We can do this arbitrarily as long as
+-- later phases execute in either the same stage or a later stage than the
+-- phases it depends on. So this is exactly how the pipeline is modelled.
+-- 
+-- The execution state vector and all pipeline-related input/output signals
+-- are indexed by the stage they belong to. These stages are named S_* and
+-- are defined in rvex_pipeline_pkg.vhd. In addition to these, the L_*
+-- constants (defined in the same file) define the latency from input signal
+-- to output signal for some blocks. When this happens, we just connect the
+-- inputs of the block to the execution state vector belonging to its first
+-- stage, and connect its outputs to the state vector belonging to its first
+-- stage plus its latency.
+-- 
+-- In a nutshell, as long as we don't connect signals belonging to different
+-- stages together without having a good reason (i.e. forwarding), we can
+-- model any pipeline as an easy to comprehend combinatorial process.
+-- 
+-- Obviously, in order to keep everything simple like we want, we're
+-- essentially requesting registers for EVERYTHING in the execution state
+-- vector between every two stages, while a great amount of these registers
+-- are not actually used. The nice thing about synthesis tools though, is that
+-- one of their prime optimizations is finding components which only have their
+-- inputs or only their have outputs connected to anything, and removing those
+-- components from the design. Thus, synthesis tools won't actually instantiate
+-- all these unused things. They may, however, generate a very large stream of
+-- "unused register" or "unconnected signal" warnings.
+-- 
+-- They are still visible in simulation though. While this probably makes
+-- simulation a little slower, actually makes comprehending what's going on
+-- that much easier. When you want to debug an execution phase in a certain
+-- stage, you just look up the state vector signal for that stage in simulation
+-- (you'll want "si" for the input of the stage and "so" for the output) and
+-- you instantly have everything in one place, all aligned to the same clock 
+-- cycle.
+-- 
+-- Where to go from here
+-- ---------------------
+-- The two most important parts in this file are the specification and
+-- documentation of the execution state vector and the process which describes
+-- the operations on it. You can quickly find the start of these sections by
+-- searching for "Pipeline signals" or "Generate pipeline logic" respectively,
+-- or you can scroll all the way to the end of the file to get to the end of
+-- the pipeline logic process.
+-- 
+--=============================================================================
+
+
+
+
+
+
+
+
+
+
+
 --=============================================================================
 -- This entity contains the pipeline logic and instantiates the functional
 -- units for a single lane.
@@ -103,15 +270,6 @@ entity rvex_pipelane is
     
     -- Active high stall input.
     stall                       : in  std_logic;
-    
-    ---------------------------------------------------------------------------
-    -- VHDL simulation debug information
-    ---------------------------------------------------------------------------
-    -- pragma translate_off
-    -- String with disassembly, trap info, validity, etc. for the last
-    -- instruction in the pipeline.
-    pl2sim                      : out rvex_string_builder_type;
-    -- pragma translate_on
     
     ---------------------------------------------------------------------------
     -- Configuration and run control
@@ -811,6 +969,241 @@ begin -- architecture
     severity failure;
   
   --===========================================================================
+  -- Instantiate functional blocks
+  --===========================================================================
+  -- Instantiate the branch unit, if there should be one.
+  br_gen: if HAS_BR generate
+    br_inst: entity work.rvex_br
+      generic map (
+        CFG                             => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+        
+        -- Configuration inputs.
+        cfg2br_numGroupsLog2            => cfg2pl_numGroupsLog2,
+        
+        -- Next operation outputs to IMEM.
+        br2imem_PC(S_IF)                => br2imem_PC(S_IF),
+        br2imem_fetch(S_IF)             => br2imem_fetch(S_IF),
+        br2imem_cancel(S_IF+L_IF)       => br2imem_cancel(S_IF+L_IF),
+        
+        -- Next operation outputs to coupled pipelanes and the context
+        -- registers.
+        br2cxplif_PC(S_IF)              => br2cxplif_PC(S_IF),
+        br2cxplif_limmValid(S_IF)       => br2cxplif_limmValid(S_IF),
+        br2cxplif_valid(S_IF)           => br2cxplif_valid(S_IF),
+        br2cxplif_brkValid(S_IF)        => br2cxplif_brkValid(S_IF),
+        br2cxplif_invalUntilBR(S_BR)    => br2cxplif_invalUntilBR(S_BR),
+        
+        -- Run control signals.
+        cfg2br_run                      => cfg2br_run,
+        cxplif2br_irqID(S_BR)           => cxplif2br_irqID(S_BR),
+        br2cxplif_irqAck(S_BR)          => br2cxplif_irqAck(S_BR),
+        cxplif2br_run                   => cxplif2br_run,
+        
+        -- Branch control signals from and to pipelane.
+        pl2br_opcode(S_BR)              => pl2br_opcode(S_BR),
+        pl2br_PC_plusOne_IFP1(S_IF+1)   => pl2br_PC_plusOne_IFP1(S_IF+1),
+        pl2br_PC_plusOne_BR(S_BR)       => pl2br_PC_plusOne_BR(S_BR),
+        pl2br_brTgtLink(S_BR)           => pl2br_brTgtLink(S_BR),
+        pl2br_brTgtRel(S_BR)            => pl2br_brTgtRel(S_BR),
+        pl2br_opBr(S_BR)                => pl2br_opBr(S_BR),
+        pl2br_trapPending(S_BR)         => pl2br_trapPending(S_BR),
+        pl2br_trapToHandleInfo(S_BR)    => pl2br_trapToHandleInfo(S_BR),
+        pl2br_trapToHandlePoint(S_BR)   => pl2br_trapToHandlePoint(S_BR),
+        pl2br_trapToHandleHandler(S_BR) => pl2br_trapToHandleHandler(S_BR),
+        br2pl_rfi(S_BR)                 => br2pl_rfi(S_BR),
+        br2pl_trap(S_BR)                => br2pl_trap(S_BR),
+        
+        -- Branch control signals from and to context registers.
+        cxplif2br_contextPC(S_IF+1)     => cxplif2br_contextPC(S_IF+1),
+        cxplif2br_overridePC(S_IF+1)    => cxplif2br_overridePC(S_IF+1),
+        br2cxplif_trapInfo(S_BR)        => br2cxplif_trapInfo(S_BR),
+        br2cxplif_trapPoint(S_BR)       => br2cxplif_trapPoint(S_BR),
+        br2cxplif_exDbgTrapInfo(S_BR)   => br2cxplif_exDbgTrapInfo(S_BR),
+        br2cxplif_stop(S_BR)            => br2cxplif_stop(S_BR),
+        cxplif2br_trapReturn(S_BR)      => cxplif2br_trapReturn(S_BR),
+        cxplif2br_handlingDebugTrap(S_BR)=>cxplif2br_handlingDebugTrap(S_BR),
+        cxplif2br_extDebug(S_BR)        => cxplif2br_extDebug(S_BR)
+        
+      );
+  end generate;
+  no_br_gen: if not HAS_BR generate
+    
+    -- Set the branch unit outputs which are going to this pipelane to
+    -- undefined.
+    br2pl_rfi(S_BR) <= RVEX_UNDEF;
+    br2pl_trap(S_BR) <= TRAP_INFO_NONE;
+    
+    -- Set branch unit outputs going to the instruction memory to hi-Z, so they
+    -- can be easily merged with the signals from the other pipelanes in the
+    -- group.
+    br2imem_PC(S_IF)                    <= (others => 'Z');
+    br2imem_fetch(S_IF)                 <= 'Z';
+    br2imem_cancel(S_IF+L_IF)           <= 'Z';
+    
+    -- Set the signals going to the context-pipelane interface to undefined.
+    br2cxplif_PC(S_IF)                  <= (others => RVEX_UNDEF);
+    br2cxplif_limmValid(S_IF)           <= RVEX_UNDEF;
+    br2cxplif_valid(S_IF)               <= RVEX_UNDEF;
+    br2cxplif_brkValid(S_IF)            <= RVEX_UNDEF;
+    br2cxplif_invalUntilBR(S_BR)        <= RVEX_UNDEF;
+    br2cxplif_irqAck(S_BR)              <= RVEX_UNDEF;
+    br2cxplif_trapInfo(S_BR)            <= TRAP_INFO_UNDEF;
+    br2cxplif_trapPoint(S_BR)           <= (others => RVEX_UNDEF);
+    br2cxplif_exDbgTrapInfo(S_BR)       <= TRAP_INFO_NONE;
+    br2cxplif_stop(S_BR)                <= RVEX_UNDEF;
+    
+  end generate;
+  
+  -- Instantiate the ALU.
+  alu_inst: entity work.rvex_alu
+    generic map (
+      CFG                               => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                             => reset,
+      clk                               => clk,
+      clkEn                             => clkEn,
+      stall                             => stall,
+      
+      -- Operand and control inputs.
+      pl2alu_opcode(S_ALU)              => pl2alu_opcode(S_ALU),
+      pl2alu_op1(S_ALU)                 => pl2alu_op1(S_ALU),
+      pl2alu_op2(S_ALU)                 => pl2alu_op2(S_ALU),
+      pl2alu_opBr(S_ALU)                => pl2alu_opBr(S_ALU),
+      
+      -- Outputs.
+      alu2pl_resultAdd(S_ALU+L_ALU1)    => alu2pl_resultAdd(S_ALU+L_ALU1),
+      alu2pl_result(S_ALU+L_ALU)        => alu2pl_result(S_ALU+L_ALU),
+      alu2pl_resultBr(S_ALU+L_ALU)      => alu2pl_resultBr(S_ALU+L_ALU)
+      
+    );
+  
+  -- Instantiate the multiplier, if there should be one.
+  mulu_gen: if HAS_MUL generate
+    mulu_inst: entity work.rvex_mulu
+      generic map (
+        CFG                             => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+        
+        -- Operand and control inputs.
+        pl2mulu_opcode(S_MUL)           => pl2mulu_opcode(S_MUL),
+        pl2mulu_op1(S_MUL)              => pl2mulu_op1(S_MUL),
+        pl2mulu_op2(S_MUL)              => pl2mulu_op2(S_MUL),
+        
+        -- Outputs.
+        mulu2pl_result(S_MUL+L_MUL)     => mulu2pl_result(S_MUL+L_MUL)
+        
+      );
+  end generate;
+  no_mulu_gen: if not HAS_MUL generate
+    
+    -- Set multiplier unit outputs to undefined.
+    mulu2pl_result(S_MUL+L_MUL) <= (others => RVEX_UNDEF);
+    
+  end generate;
+  
+  -- Instantiate the memory unit, if there should be one.
+  memu_gen: if HAS_MEM generate
+    memu_inst: entity work.rvex_memu
+      generic map (
+        CFG                             => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+        
+        -- Pipelane interface.
+        pl2memu_valid(S_MEM)            => pl2memu_valid(S_MEM),
+        pl2memu_opcode(S_MEM)           => pl2memu_opcode(S_MEM),
+        pl2memu_opAddr(S_MEM)           => pl2memu_opAddr(S_MEM),
+        pl2memu_opData(S_MEM)           => pl2memu_opData(S_MEM),
+        memu2pl_trap(S_MEM)             => memu2pl_trap(S_MEM),
+        memu2pl_result(S_MEM+L_MEM)     => memu2pl_result(S_MEM+L_MEM),
+        
+        -- Memory interface.
+        memu2dmsw_addr(S_MEM)           => memu2dmsw_addr(S_MEM),
+        memu2dmsw_writeData(S_MEM)      => memu2dmsw_writeData(S_MEM),
+        memu2dmsw_writeMask(S_MEM)      => memu2dmsw_writeMask(S_MEM),
+        memu2dmsw_writeEnable(S_MEM)    => memu2dmsw_writeEnable(S_MEM),
+        memu2dmsw_readEnable(S_MEM)     => memu2dmsw_readEnable(S_MEM),
+        dmsw2memu_readData(S_MEM+L_MEM) => dmsw2memu_readData(S_MEM+L_MEM)
+        
+      );
+  end generate;
+  no_memu_gen: if not HAS_MEM generate
+    
+    -- Set the memory unit result going to this pipelane to undefined and set
+    -- the trap output to no trap.
+    memu2pl_trap(S_MEM)           <= TRAP_INFO_NONE;
+    memu2pl_result(S_MEM+L_MEM)   <= (others => RVEX_UNDEF);
+    
+    -- Set the outputs going to the rest of the processor to hi-Z, so they can
+    -- be easily merged with the signals coming from the pipelane in the group
+    -- which does have a memory unit.
+    memu2dmsw_addr(S_MEM)         <= (others => 'Z');
+    memu2dmsw_writeData(S_MEM)    <= (others => 'Z');
+    memu2dmsw_writeMask(S_MEM)    <= (others => 'Z');
+    memu2dmsw_writeEnable(S_MEM)  <= 'Z';
+    memu2dmsw_readEnable(S_MEM)   <= 'Z';
+    
+  end generate;
+  
+  -- Instantiate breakpoint unit, if there should be one.
+  brku_gen: if HAS_BRK generate
+    brku: entity work.rvex_brku
+      generic map (
+        CFG                             => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+        
+        -- Pipelane interface
+        pl2brku_ignoreBreakpoint(S_BRK) => pl2brku_ignoreBreakpoint(S_BRK),
+        pl2brku_opcode(S_BRK)           => pl2brku_opcode(S_BRK),
+        pl2brku_opAddr(S_BRK)           => pl2brku_opAddr(S_BRK),
+        pl2brku_PC_bundle(S_BRK)        => pl2brku_PC_bundle(S_BRK),
+        brku2pl_trap(S_BRK+L_BRK)       => brku2pl_trap(S_BRK+L_BRK),
+        
+        -- Breakpoint information
+        cxplif2brku_breakpoints(S_BRK)  => cxplif2brku_breakpoints(S_BRK),
+        cxplif2brku_stepping(S_BRK)     => cxplif2brku_stepping(S_BRK)
+        
+      );
+  end generate;
+  no_brku_gen: if not HAS_BRK generate
+    
+    -- Drive the trap output with the no-trap signal.
+    brku2pl_trap(S_BRK+L_BRK) <= TRAP_INFO_NONE;
+    
+  end generate;
+  
+  --===========================================================================
   -- Instantiate pipeline registers
   --===========================================================================
   regs: process (clk) is
@@ -890,6 +1283,14 @@ begin -- architecture
     
     -- std_logics used locally in various places.
     variable flag               : std_logic;
+    
+    -- Whether the pipeline is currently idle.
+    variable idle               : std_logic;
+    
+    -- String builder for debug information.
+    -- pragma translate_off
+    variable debug              : rvex_string_builder_type;
+    -- pragma translate_on
     
   begin
     
@@ -1148,9 +1549,12 @@ begin -- architecture
         s(stage).dp.op1 := s(stage).dp.read1lo;
       end if;
       
-      -- Select operand 2.
+      -- Select operand 2. When using the branch offset, shift right by 3
+      -- because the 3 LSB of the branch offset are tied to 0 and we want to
+      -- be able to update the stack pointer byte-oriented.
       if s(stage).dp.c.stackOp = '1' then
-        s(stage).dp.op2 := s(stage).br.branchOffset;
+        s(stage).dp.op2(28 downto 0) := s(stage).br.branchOffset(31 downto 3);
+        s(stage).dp.op2(31 downto 29) := (others => s(stage).br.branchOffset(31));
       elsif s(stage).dp.useImm = '1' then
         s(stage).dp.op2 := s(stage).dp.imm;
       else
@@ -1422,25 +1826,25 @@ begin -- architecture
     end if;
     
     -- Determine whether the pipeline is idle. Default to yes.
-    flag := '1';
+    idle := '1';
     
     -- The pipeline is not idle when there is a valid fetch somewhere in it.
     for stage in S_FIRST to S_LAST loop
       if s(stage).limmValid = '1' then
-        flag := '0';
+        idle := '0';
       end if;
     end loop;
     
     -- The pipeline is also not idle when a trap is pending.
     for stage in S_TRAP to S_BR loop
       if (s(stage).br.trapPending = '1') or (s(stage).br.trapInfo.active = '1') then
-        flag := '0';
+        idle := '0';
       end if;
     end loop;
     
     -- Drive idle output signals.
-    pl2cfg_blockReconfig  <= not flag;
-    pl2cxplif_idle        <= flag;
+    pl2cfg_blockReconfig  <= not idle;
+    pl2cxplif_idle        <= idle;
     
     ---------------------------------------------------------------------------
     -- Connect pipeline to memory unit command
@@ -1503,16 +1907,58 @@ begin -- architecture
     pl2cxplif_brLinkWritePort.linkWriteEnable(S_SWB)
       <= s(S_SWB).dp.resLinkValid and s(S_SWB).valid;
     
-    ---------------------------------------------------------------------------
-    -- Generate VHDL simulation information
-    ---------------------------------------------------------------------------
-    -- pragma translate_off
-    if GEN_VHDL_SIM_INFO then
-      
-      -- TODO
-      
-    end if;
-    -- pragma translate_on
+--  Will replace the following with a trace output which also works on the
+--  hardware platform :)
+--    ---------------------------------------------------------------------------
+--    -- Generate VHDL simulation information
+--    ---------------------------------------------------------------------------
+--    -- pragma translate_off
+--    if GEN_VHDL_SIM_INFO then
+--      
+--      rvs_clear(debug);
+--      
+--      -- Display commit/trap information.
+--      if idle = '1' then
+--        rvs_append(debug, "pipeline idle; ");
+--      end if;
+--      if (s(S_LAST).valid = '1')
+--        or ((s(S_LAST).limmValid = '1') and (s(S_LAST).dp.c.isLIMMH = '1'))
+--      then
+--        rvs_append(debug, "commit ");
+--        if s(S_LAST).brkValid = '0' then
+--          rvs_append(debug, "(no brkpts) ");
+--        end if;
+--      elsif s(S_LAST).tr.trap.active = '1' then
+--        rvs_append(debug, prettyPrintTrap(s(S_LAST).tr.trap));
+--        rvs_append(debug, " occurred at ");
+--      else
+--        rvs_append(debug, "do not commit ");
+--      end if;
+--      
+--      -- Display PC for the current syllable.
+--      rvs_append(debug, rvs_hex(s(S_LAST).lanePC, 8));
+--      rvs_append(debug, ": ");
+--      
+--      -- Append disassembly.
+--      if HAS_BR then
+--        rvs_append(debug, disassemble(
+--          syllable    => s(S_LAST).syllable,
+--          limmh       => s(S_LAST).dp.imm,
+--          PC_plusOne  => s(S_LAST).br.PC_plusOne
+--        ));
+--      else
+--        rvs_append(debug, disassemble(
+--          syllable    => s(S_LAST).syllable,
+--          limmh       => s(S_LAST).dp.imm
+--        ));
+--      end if;
+--      
+--      -- Because why not.
+--      rvs_capitalize(debug);
+--      pl2sim <= debug;
+--      
+--    end if;
+--    -- pragma translate_on
     
     ---------------------------------------------------------------------------
     -- Drive stage outputs
@@ -1520,241 +1966,6 @@ begin -- architecture
     so <= s;
     
   end process;
-    
-  --===========================================================================
-  -- Instantiate functional blocks
-  --===========================================================================
-  -- Instantiate the branch unit, if there should be one.
-  br_gen: if HAS_BR generate
-    br: entity work.rvex_br
-      generic map (
-        CFG                             => CFG
-      )
-      port map (
-        
-        -- System control.
-        reset                           => reset,
-        clk                             => clk,
-        clkEn                           => clkEn,
-        stall                           => stall,
-        
-        -- Configuration inputs.
-        cfg2br_numGroupsLog2            => cfg2pl_numGroupsLog2,
-        
-        -- Next operation outputs to IMEM.
-        br2imem_PC(S_IF)                => br2imem_PC(S_IF),
-        br2imem_fetch(S_IF)             => br2imem_fetch(S_IF),
-        br2imem_cancel(S_IF+L_IF)       => br2imem_cancel(S_IF+L_IF),
-        
-        -- Next operation outputs to coupled pipelanes and the context
-        -- registers.
-        br2cxplif_PC(S_IF)              => br2cxplif_PC(S_IF),
-        br2cxplif_limmValid(S_IF)       => br2cxplif_limmValid(S_IF),
-        br2cxplif_valid(S_IF)           => br2cxplif_valid(S_IF),
-        br2cxplif_brkValid(S_IF)        => br2cxplif_brkValid(S_IF),
-        br2cxplif_invalUntilBR(S_BR)    => br2cxplif_invalUntilBR(S_BR),
-        
-        -- Run control signals.
-        cfg2br_run                      => cfg2br_run,
-        cxplif2br_irqID(S_BR)           => cxplif2br_irqID(S_BR),
-        br2cxplif_irqAck(S_BR)          => br2cxplif_irqAck(S_BR),
-        cxplif2br_run                   => cxplif2br_run,
-        
-        -- Branch control signals from and to pipelane.
-        pl2br_opcode(S_BR)              => pl2br_opcode(S_BR),
-        pl2br_PC_plusOne_IFP1(S_IF+1)   => pl2br_PC_plusOne_IFP1(S_IF+1),
-        pl2br_PC_plusOne_BR(S_BR)       => pl2br_PC_plusOne_BR(S_BR),
-        pl2br_brTgtLink(S_BR)           => pl2br_brTgtLink(S_BR),
-        pl2br_brTgtRel(S_BR)            => pl2br_brTgtRel(S_BR),
-        pl2br_opBr(S_BR)                => pl2br_opBr(S_BR),
-        pl2br_trapPending(S_BR)         => pl2br_trapPending(S_BR),
-        pl2br_trapToHandleInfo(S_BR)    => pl2br_trapToHandleInfo(S_BR),
-        pl2br_trapToHandlePoint(S_BR)   => pl2br_trapToHandlePoint(S_BR),
-        pl2br_trapToHandleHandler(S_BR) => pl2br_trapToHandleHandler(S_BR),
-        br2pl_rfi(S_BR)                 => br2pl_rfi(S_BR),
-        br2pl_trap(S_BR)                => br2pl_trap(S_BR),
-        
-        -- Branch control signals from and to context registers.
-        cxplif2br_contextPC(S_IF+1)     => cxplif2br_contextPC(S_IF+1),
-        cxplif2br_overridePC(S_IF+1)    => cxplif2br_overridePC(S_IF+1),
-        br2cxplif_trapInfo(S_BR)        => br2cxplif_trapInfo(S_BR),
-        br2cxplif_trapPoint(S_BR)       => br2cxplif_trapPoint(S_BR),
-        br2cxplif_exDbgTrapInfo(S_BR)   => br2cxplif_exDbgTrapInfo(S_BR),
-        br2cxplif_stop(S_BR)            => br2cxplif_stop(S_BR),
-        cxplif2br_trapReturn(S_BR)      => cxplif2br_trapReturn(S_BR),
-        cxplif2br_handlingDebugTrap(S_BR)=>cxplif2br_handlingDebugTrap(S_BR),
-        cxplif2br_extDebug(S_BR)        => cxplif2br_extDebug(S_BR)
-        
-      );
-  end generate;
-  no_br_gen: if not HAS_BR generate
-    
-    -- Set the branch unit outputs which are going to this pipelane to
-    -- undefined.
-    br2pl_rfi(S_BR) <= RVEX_UNDEF;
-    br2pl_trap(S_BR) <= TRAP_INFO_NONE;
-    
-    -- Set branch unit outputs going to the instruction memory to hi-Z, so they
-    -- can be easily merged with the signals from the other pipelanes in the
-    -- group.
-    br2imem_PC(S_IF)                    <= (others => 'Z');
-    br2imem_fetch(S_IF)                 <= 'Z';
-    br2imem_cancel(S_IF+L_IF)           <= 'Z';
-    
-    -- Set the signals going to the context-pipelane interface to undefined.
-    br2cxplif_PC(S_IF)                  <= (others => RVEX_UNDEF);
-    br2cxplif_limmValid(S_IF)           <= RVEX_UNDEF;
-    br2cxplif_valid(S_IF)               <= RVEX_UNDEF;
-    br2cxplif_brkValid(S_IF)            <= RVEX_UNDEF;
-    br2cxplif_invalUntilBR(S_BR)        <= RVEX_UNDEF;
-    br2cxplif_irqAck(S_BR)              <= RVEX_UNDEF;
-    br2cxplif_trapInfo(S_BR)            <= TRAP_INFO_UNDEF;
-    br2cxplif_trapPoint(S_BR)           <= (others => RVEX_UNDEF);
-    br2cxplif_exDbgTrapInfo(S_BR)       <= TRAP_INFO_NONE;
-    br2cxplif_stop(S_BR)                <= RVEX_UNDEF;
-    
-  end generate;
-  
-  -- Instantiate the ALU.
-  alu: entity work.rvex_alu
-    generic map (
-      CFG                               => CFG
-    )
-    port map (
-      
-      -- System control.
-      reset                             => reset,
-      clk                               => clk,
-      clkEn                             => clkEn,
-      stall                             => stall,
-      
-      -- Operand and control inputs.
-      pl2alu_opcode(S_ALU)              => pl2alu_opcode(S_ALU),
-      pl2alu_op1(S_ALU)                 => pl2alu_op1(S_ALU),
-      pl2alu_op2(S_ALU)                 => pl2alu_op2(S_ALU),
-      pl2alu_opBr(S_ALU)                => pl2alu_opBr(S_ALU),
-      
-      -- Outputs.
-      alu2pl_resultAdd(S_ALU+L_ALU1)    => alu2pl_resultAdd(S_ALU+L_ALU1),
-      alu2pl_result(S_ALU+L_ALU)        => alu2pl_result(S_ALU+L_ALU),
-      alu2pl_resultBr(S_ALU+L_ALU)      => alu2pl_resultBr(S_ALU+L_ALU)
-      
-    );
-  
-  -- Instantiate the multiplier, if there should be one.
-  mulu_gen: if HAS_MUL generate
-    mulu: entity work.rvex_mulu
-      generic map (
-        CFG                             => CFG
-      )
-      port map (
-        
-        -- System control.
-        reset                           => reset,
-        clk                             => clk,
-        clkEn                           => clkEn,
-        stall                           => stall,
-        
-        -- Operand and control inputs.
-        pl2mulu_opcode(S_MUL)           => pl2mulu_opcode(S_MUL),
-        pl2mulu_op1(S_MUL)              => pl2mulu_op1(S_MUL),
-        pl2mulu_op2(S_MUL)              => pl2mulu_op2(S_MUL),
-        
-        -- Outputs.
-        mulu2pl_result(S_MUL+L_MUL)     => mulu2pl_result(S_MUL+L_MUL)
-        
-      );
-  end generate;
-  no_mulu_gen: if not HAS_MUL generate
-    
-    -- Set multiplier unit outputs to undefined.
-    mulu2pl_result(S_MUL+L_MUL) <= (others => RVEX_UNDEF);
-    
-  end generate;
-  
-  -- Instantiate the memory unit, if there should be one.
-  memu_gen: if HAS_MEM generate
-    memu: entity work.rvex_memu
-      generic map (
-        CFG                             => CFG
-      )
-      port map (
-        
-        -- System control.
-        reset                           => reset,
-        clk                             => clk,
-        clkEn                           => clkEn,
-        stall                           => stall,
-        
-        -- Pipelane interface.
-        pl2memu_valid(S_MEM)            => pl2memu_valid(S_MEM),
-        pl2memu_opcode(S_MEM)           => pl2memu_opcode(S_MEM),
-        pl2memu_opAddr(S_MEM)           => pl2memu_opAddr(S_MEM),
-        pl2memu_opData(S_MEM)           => pl2memu_opData(S_MEM),
-        memu2pl_trap(S_MEM)             => memu2pl_trap(S_MEM),
-        memu2pl_result(S_MEM+L_MEM)     => memu2pl_result(S_MEM+L_MEM),
-        
-        -- Memory interface.
-        memu2dmsw_addr(S_MEM)           => memu2dmsw_addr(S_MEM),
-        memu2dmsw_writeData(S_MEM)      => memu2dmsw_writeData(S_MEM),
-        memu2dmsw_writeMask(S_MEM)      => memu2dmsw_writeMask(S_MEM),
-        memu2dmsw_writeEnable(S_MEM)    => memu2dmsw_writeEnable(S_MEM),
-        memu2dmsw_readEnable(S_MEM)     => memu2dmsw_readEnable(S_MEM),
-        dmsw2memu_readData(S_MEM+L_MEM) => dmsw2memu_readData(S_MEM+L_MEM)
-        
-      );
-  end generate;
-  no_memu_gen: if not HAS_MEM generate
-    
-    -- Set the memory unit result going to this pipelane to undefined and set
-    -- the trap output to no trap.
-    memu2pl_trap(S_MEM)           <= TRAP_INFO_NONE;
-    memu2pl_result(S_MEM+L_MEM)   <= (others => RVEX_UNDEF);
-    
-    -- Set the outputs going to the rest of the processor to hi-Z, so they can
-    -- be easily merged with the signals coming from the pipelane in the group
-    -- which does have a memory unit.
-    memu2dmsw_addr(S_MEM)         <= (others => 'Z');
-    memu2dmsw_writeData(S_MEM)    <= (others => 'Z');
-    memu2dmsw_writeMask(S_MEM)    <= (others => 'Z');
-    memu2dmsw_writeEnable(S_MEM)  <= 'Z';
-    memu2dmsw_readEnable(S_MEM)   <= 'Z';
-    
-  end generate;
-  
-  -- Instantiate breakpoint unit, if there should be one.
-  brku_gen: if HAS_BRK generate
-    brku: entity work.rvex_brku
-      generic map (
-        CFG                             => CFG
-      )
-      port map (
-        
-        -- System control.
-        reset                           => reset,
-        clk                             => clk,
-        clkEn                           => clkEn,
-        stall                           => stall,
-        
-        -- Pipelane interface
-        pl2brku_ignoreBreakpoint(S_BRK) => pl2brku_ignoreBreakpoint(S_BRK),
-        pl2brku_opcode(S_BRK)           => pl2brku_opcode(S_BRK),
-        pl2brku_opAddr(S_BRK)           => pl2brku_opAddr(S_BRK),
-        pl2brku_PC_bundle(S_BRK)        => pl2brku_PC_bundle(S_BRK),
-        brku2pl_trap(S_BRK+L_BRK)       => brku2pl_trap(S_BRK+L_BRK),
-        
-        -- Breakpoint information
-        cxplif2brku_breakpoints(S_BRK)  => cxplif2brku_breakpoints(S_BRK),
-        cxplif2brku_stepping(S_BRK)     => cxplif2brku_stepping(S_BRK)
-        
-      );
-  end generate;
-  no_brku_gen: if not HAS_BRK generate
-    
-    -- Drive the trap output with the no-trap signal.
-    brku2pl_trap(S_BRK+L_BRK) <= TRAP_INFO_NONE;
-    
-  end generate;
   
 end Behavioral;
 

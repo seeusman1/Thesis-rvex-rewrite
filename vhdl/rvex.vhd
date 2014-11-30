@@ -88,7 +88,7 @@ use work.rvex_trap_pkg.all;
   --          '-+-->|.---.|      '----'      '-----'      | cfg |   |
   --            |   ||fwd||         ^           ^   ...<--|     |   |
   --            |   |'---'|---------+-----------+-------->|     |   |
-  --            |   '====='         |           |         '-----'   |
+  --            |   '====='         |           |         '-----'   |--> trace
   --            '-------------------+-----------+-------------------'
   --                                |           |
   --                                v           |
@@ -116,6 +116,7 @@ use work.rvex_trap_pkg.all;
   --  - creg   = Control REGisters          @ rvex_ctrlRegs.vhd
   --  - gbreg  = GloBal REGister logic      @ rvex_globalRegLogic.vhd
   --  - cfg    = ConFiGuration control      @ rvex_cfgCtrl.vhd
+  --  - trace  = TRACE subsystem            @ rvex_trace.vhd
   --  - mem    = interface common to instruction and data MEMory/cache
   --  - imem   = Instruction MEMory/cache
   --  - dmem   = Data MEMory/cache
@@ -189,6 +190,9 @@ use work.rvex_trap_pkg.all;
   --  - rvex_trap_pkg
   --      -> Similar to rvex_opcode_pkg, this packages contains a decoding
   --         table for trap causes.
+  --
+  --  - rvex_trace_pkg
+  --      -> Contains signals related to the trace subsystem.
   --
   --  - rvex_utils_pkg
   --      -> Contains utility methods which are useful for logic generation.
