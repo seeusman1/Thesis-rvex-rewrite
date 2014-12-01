@@ -120,7 +120,7 @@ entity rvex_pipelanes is
     cfg2any_context             : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Last pipelane group associated with each context.
-    cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Configuration and run control

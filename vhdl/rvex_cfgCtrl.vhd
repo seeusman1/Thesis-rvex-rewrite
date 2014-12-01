@@ -38,9 +38,14 @@ entity rvex_cfgCtrl is
     ---------------------------------------------------------------------------
     -- Configuration request inputs
     ---------------------------------------------------------------------------
-    -- These signals use the encoding defined in rvex_ctrlRegs_pkg.vhd; they
-    -- can be connected directly to the request registers for each context. The
-    -- enable signal is active high, and should be connected to the write
+    -- Each nibble in the data word corresponds to a pipelane group, of which
+    -- bit 3 specifies whether the pipelane group should be disabled (high) or
+    -- enabled (low) and, if low, bit 2..0 specify the context it should run
+    -- on. Bits which are not supported by the core (as specified in the CFG
+    -- generic) should be written zero or the request will be ignored (as
+    -- specified by the error flag in the global control register file).
+    --
+    -- The enable signal is active high, and should be connected to the write
     -- signal coming from the registers. This means that the enable signals are
     -- high one clock cycle BEFORE the data register is updated, because the
     -- enable signal triggers the update of the external register. When
@@ -54,8 +59,7 @@ entity rvex_cfgCtrl is
     ---------------------------------------------------------------------------
     -- Configuration status outputs
     ---------------------------------------------------------------------------
-    -- Current configuration, using the encoding specified in
-    -- rvex_ctrlRegs_pkg.vhd.
+    -- Current configuration, using the same encoding as the request data.
     cfg2gbreg_currentCfg        : out rvex_data_type;
     
     -- Configuration busy signal. When set, new configuration requests are not

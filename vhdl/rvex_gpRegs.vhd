@@ -52,21 +52,15 @@ use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
 
 --=============================================================================
--- This instantiates an additional synchronous read port for an
--- rvex_ctrlRegs_bank instance.
+-- This entity contains the general purpose register file and associated
+-- forwarding logic.
 -------------------------------------------------------------------------------
-entity rvex_ctrlRegs_readPort is
+entity rvex_gpRegs is
 --=============================================================================
   generic (
     
-    ---------------------------------------------------------------------------
-    -- Configuration
-    ---------------------------------------------------------------------------
-    -- Starting address for the registers.
-    OFFSET                      : natural;
-    
-    -- Number of words.
-    NUM_WORDS                   : natural
+    -- Configuration.
+    CFG                         : rvex_generic_config_type
     
   );
   port (
@@ -83,57 +77,60 @@ entity rvex_ctrlRegs_readPort is
     -- Active high global clock enable input.
     clkEn                       : in  std_logic;
     
-    ---------------------------------------------------------------------------
-    -- Register interface
-    ---------------------------------------------------------------------------
-    -- Connect this to the creg2logic output of the rvex_ctrlRegs_bank
-    -- instance.
-    creg2logic                  : in  creg2logic_array(OFFSET to OFFSET + NUM_WORDS - 1);
+    -- Active high stall signal for each lane group.
+    stall                       : in  std_logic_vector(CFG.numLaneGroupsLog2-1 downto 0);
+
+    -----------------------------------------------------------------------------
+    -- Decoded configuration signals
+    -----------------------------------------------------------------------------
+    -- Specifies the context associated with the indexed pipelane group.
+    cfg2any_context             : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -----------------------------------------------------------------------------
+    -- Read and write ports
+    -----------------------------------------------------------------------------
+    -- Read ports. There's two for each lane. The read value is provided for all
+    -- lanes which receive forwarding information.
+    pl2gpreg_readPorts           : in  pl2gpreg_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
+    gpreg2pl_readPorts           : out gpreg2pl_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Write ports and forwarding information. There's one write port for each
+    -- lane.
+    pl2gpreg_writePorts          : in  pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
-    -- Read port
+    -- Debug interface
     ---------------------------------------------------------------------------
-    -- Address for the request.
-    addr                        : in  rvex_address_type;
+    -- When claim is high (and stall is high, which will always be the case)
+    -- one of the processor ports should be connected to the port below. stall
+    -- will always stay high one cycle longer than claim, so any read command
+    -- which the processor was requesting will be requested again so the output
+    -- is valid when stall is released again.
     
-    -- Active high read enable signal.
-    readEnable                  : in  std_logic;
+    -- When high, connect the bus to the general purpose register file.
+    creg2gpreg_claim            : in  std_logic;
     
-    -- Read data. Will be set to 'Z' when block is not addressed.
-    readData                    : out rvex_data_type
+    -- Register address and context.
+    creg2gpreg_addr             : in  rvex_gpRegAddr_type;
+    creg2gpreg_ctxt             : in  std_logic_vector(CFG.numContextsLog2-1 downto 0);
+    
+    -- Write command.
+    creg2gpreg_writeEnable      : in  std_logic;
+    creg2gpreg_writeData        : in  rvex_data_type;
+    
+    -- Read data returned one cycle after the claim.
+    gpreg2creg_readData         : out rvex_data_type
     
   );
-end rvex_ctrlRegs_readPort;
+end rvex_gpRegs;
 
 --=============================================================================
-architecture Behavioral of rvex_ctrlRegs_readPort is
+architecture Behavioral of rvex_gpRegs is
 --=============================================================================
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
-  
-  -- Process bus reads.
-  bus_reads: process (clk) is
-    variable a: integer;
-  begin
-    if rising_edge(clk) then
-      if reset = '1' then
-        readData <= (others => 'Z');
-      elsif clkEn = '1' then
-        if readEnable = '1' then
-          a := to_integer(unsigned(addr(31 downto 2)));
-          if a >= OFFSET and a < OFFSET + NUM_WORDS then
-            readData <= creg2logic(a).readData;
-          else
-            readData <= (others => 'Z');
-          end if;
-        else
-          readData <= (others => 'Z');
-        end if;
-      end if;
-    end if;
-  end process;
   
 end Behavioral;
 

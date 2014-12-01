@@ -66,9 +66,9 @@ use work.rvex_trap_pkg.all;
   --            | | pls (pipelanes)                       |         |
   --            | |  .=================================.  | .-----. |
   --            | |  | pl (pipelane)                   |  | |gpreg| |
-  --            | |  |  - . .---.  - - .  - - .  - - . |  | |.---.| |
+  --            | |  |  - . .---.  - - .  - - .  - - . |  | |.===.| |
   --  imem <----+-+->| |br  |alu| |mulu  |memu  |brku  |<-+>||fwd|| |
-  --            | |  |  - ' '---'  - - '  - - '  - - ' |  | |'---'| |
+  --            | |  |  - ' '---'  - - '  - - '  - - ' |  | |'==='| |
   --            | |  '================================='  | '-----' |
   --            | |    ^             ^       ^      ^     |    ^    |
   --            | |    |             |       |      |     |    |    |
@@ -85,9 +85,9 @@ use work.rvex_trap_pkg.all;
   --          | |      v          v  v                              |
   --          | |   .=====.      .----.      .-----.      .-----.   |
   --          | |   |cxreg|<---->|creg|<---->|gbreg|<---->|     |<--+--> mem
-  --          '-+-->|.---.|      '----'      '-----'      | cfg |   |
+  --          '-+-->|.===.|      '----'      '-----'      | cfg |   |
   --            |   ||fwd||         ^           ^   ...<--|     |   |
-  --            |   |'---'|---------+-----------+-------->|     |   |
+  --            |   |'==='|---------+-----------+-------->|     |   |
   --            |   '====='         |           |         '-----'   |
   --            '-------------------+-----------+-------------------'
   --                                |           |
@@ -106,7 +106,7 @@ use work.rvex_trap_pkg.all;
   --  - memu   = MEMory Unit                @ rvex_memu.vhd
   --  - mulu   = MULtiply Unit              @ rvex_mulu.vhd
   --  - brku   = BReaKpoint Unit            @ rvex_breakpoint.vhd
-  --  - gpreg  = General Purpose REGisters  @ rvex_gpreg.vhd
+  --  - gpreg  = General Purpose REGisters  @ rvex_gpRegs.vhd
   --  - fwd    = ForWarDing logic           @ rvex_forward.vhd
   --  - cxplif = ConteXt-PipeLane InterFace @ rvex_contextPipelaneIFace.vhd
   --  - dmsw   = Data Memory SWitch         @ rvex_dmemSwitch.vhd
