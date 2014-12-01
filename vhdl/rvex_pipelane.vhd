@@ -58,6 +58,7 @@ use work.rvex_opcodeDatapath_pkg.all;
 
 -- pragma translate_off
 use work.rvex_simUtils_pkg.all;
+use work.rvex_simUtils_asDisas_pkg.all;
 -- pragma translate_on
 
 
@@ -270,6 +271,21 @@ entity rvex_pipelane is
     
     -- Active high stall input.
     stall                       : in  std_logic;
+    
+    ---------------------------------------------------------------------------
+    -- VHDL simulation debug information
+    ---------------------------------------------------------------------------
+    -- pragma translate_off
+    
+    -- String with disassembly, trap info, validity, etc. for the last
+    -- instruction in the pipeline.
+    pl2sim                      : out rvex_string_builder_type;
+    
+    -- String with branch information for the last instruction, if the branch
+    -- unit is active.
+    br2sim                      : out rvex_string_builder_type;
+    
+    -- pragma translate_on
     
     ---------------------------------------------------------------------------
     -- Configuration and run control
@@ -648,6 +664,11 @@ architecture Behavioral of rvex_pipelane is
     -- control registers in the S_MEM stage.
     RFI                         : std_logic;
     
+    -- Simulation information from branch unit.
+    -- pragma translate_off
+    br2sim                      : rvex_string_builder_type;
+    -- pragma translate_on
+    
   end record;
   
   -- Default/initialization value for branch state.
@@ -655,6 +676,9 @@ architecture Behavioral of rvex_pipelane is
     trapPending                 => RVEX_UNDEF,
     trapInfo                    => TRAP_INFO_UNDEF,
     RFI                         => RVEX_UNDEF,
+    -- pragma translate_off
+    br2sim                      => to_rvs("no info"),
+    -- pragma translate_on
     others                      => (others => RVEX_UNDEF)
   );
   
@@ -765,6 +789,9 @@ architecture Behavioral of rvex_pipelane is
   signal pl2br_trapToHandleHandler:rvex_address_array(S_BR to S_BR);
   signal br2pl_rfi              : std_logic_vector(S_BR to S_BR);
   signal br2pl_trap             : trap_info_array(S_BR to S_BR);
+  -- pragma translate_off
+  signal br2pl_sim              : rvex_string_builder_array(S_IF to S_IF);
+  -- pragma translate_on
   
   -- Pipelane <-> ALU interconnect. Refer to ALU entity for more information
   -- about the signals.
@@ -984,6 +1011,11 @@ begin -- architecture
         clk                             => clk,
         clkEn                           => clkEn,
         stall                           => stall,
+        
+        -- Simulation output.
+        -- pragma translate_off
+        br2pl_sim(S_IF)                 => br2pl_sim(S_IF),
+        -- pragma translate_on
         
         -- Configuration inputs.
         cfg2br_numGroupsLog2            => cfg2pl_numGroupsLog2,
@@ -1907,58 +1939,64 @@ begin -- architecture
     pl2cxplif_brLinkWritePort.linkWriteEnable(S_SWB)
       <= s(S_SWB).dp.resLinkValid and s(S_SWB).valid;
     
---  Will replace the following with a trace output which also works on the
---  hardware platform :)
---    ---------------------------------------------------------------------------
---    -- Generate VHDL simulation information
---    ---------------------------------------------------------------------------
---    -- pragma translate_off
---    if GEN_VHDL_SIM_INFO then
---      
---      rvs_clear(debug);
---      
---      -- Display commit/trap information.
---      if idle = '1' then
---        rvs_append(debug, "pipeline idle; ");
---      end if;
---      if (s(S_LAST).valid = '1')
---        or ((s(S_LAST).limmValid = '1') and (s(S_LAST).dp.c.isLIMMH = '1'))
---      then
---        rvs_append(debug, "commit ");
---        if s(S_LAST).brkValid = '0' then
---          rvs_append(debug, "(no brkpts) ");
---        end if;
---      elsif s(S_LAST).tr.trap.active = '1' then
---        rvs_append(debug, prettyPrintTrap(s(S_LAST).tr.trap));
---        rvs_append(debug, " occurred at ");
---      else
---        rvs_append(debug, "do not commit ");
---      end if;
---      
---      -- Display PC for the current syllable.
---      rvs_append(debug, rvs_hex(s(S_LAST).lanePC, 8));
---      rvs_append(debug, ": ");
---      
---      -- Append disassembly.
---      if HAS_BR then
---        rvs_append(debug, disassemble(
---          syllable    => s(S_LAST).syllable,
---          limmh       => s(S_LAST).dp.imm,
---          PC_plusOne  => s(S_LAST).br.PC_plusOne
---        ));
---      else
---        rvs_append(debug, disassemble(
---          syllable    => s(S_LAST).syllable,
---          limmh       => s(S_LAST).dp.imm
---        ));
---      end if;
---      
---      -- Because why not.
---      rvs_capitalize(debug);
---      pl2sim <= debug;
---      
---    end if;
---    -- pragma translate_on
+    ---------------------------------------------------------------------------
+    -- Generate VHDL simulation information
+    ---------------------------------------------------------------------------
+    -- pragma translate_off
+    if GEN_VHDL_SIM_INFO then
+      
+      if HAS_BR then
+        
+        -- Copy branch unit information input pipeline.
+        s(S_IF).br.br2sim := br2pl_sim(S_IF);
+        
+      end if;
+      
+      rvs_clear(debug);
+      
+      -- Display commit/trap information.
+      if idle = '1' then
+        rvs_append(debug, "pipeline idle; ");
+      end if;
+      if (s(S_LAST).valid = '1')
+        or ((s(S_LAST).limmValid = '1') and (s(S_LAST).dp.c.isLIMMH = '1'))
+      then
+        rvs_append(debug, "commit ");
+        if s(S_LAST).brkValid = '0' then
+          rvs_append(debug, "(no brkpts) ");
+        end if;
+      elsif s(S_LAST).tr.trap.active = '1' then
+        --rvs_append(debug, prettyPrintTrap(s(S_LAST).tr.trap));
+        rvs_append(debug, " occurred at ");
+      else
+        rvs_append(debug, "do not commit ");
+      end if;
+      
+      -- Display PC for the current syllable.
+      rvs_append(debug, rvs_hex(s(S_LAST).lanePC, 8));
+      rvs_append(debug, ": ");
+      
+      -- Append disassembly.
+      if HAS_BR then
+        rvs_append(debug, disassemble(
+          syllable    => s(S_LAST).syllable,
+          limmh       => s(S_LAST).dp.imm,
+          PC_plusOne  => s(S_LAST).br.PC_plusOne
+        ));
+      else
+        rvs_append(debug, disassemble(
+          syllable    => s(S_LAST).syllable,
+          limmh       => s(S_LAST).dp.imm
+        ));
+      end if;
+      
+      -- Because why not.
+      rvs_capitalize(debug);
+      pl2sim <= debug;
+      br2sim <= s(S_LAST).br.br2sim;
+      
+    end if;
+    -- pragma translate_on
     
     ---------------------------------------------------------------------------
     -- Drive stage outputs

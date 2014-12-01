@@ -55,6 +55,10 @@ use work.rvex_trap_pkg.all;
 use work.rvex_opcode_pkg.all;
 use work.rvex_opcodeBranch_pkg.all;
 
+-- pragma translate_off
+use work.rvex_simUtils_pkg.all;
+-- pragma translate_on
+
 --=============================================================================
 -- This entity contains the optional branch unit for a pipelane.
 -------------------------------------------------------------------------------
@@ -82,6 +86,13 @@ entity rvex_br is
     
     -- Active high stall input for the pipeline.
     stall                       : in  std_logic;
+    
+    ---------------------------------------------------------------------------
+    -- VHDL simulation debug information
+    ---------------------------------------------------------------------------
+    -- pragma translate_off
+    br2pl_sim                   : out rvex_string_builder_array(S_IF to S_IF);
+    -- pragma translate_on
     
     ---------------------------------------------------------------------------
     -- Configuration inputs
@@ -267,6 +278,16 @@ architecture Behavioral of rvex_br is
   -- single group.
   signal nextPCMisaligned       : std_logic_vector(S_IF to S_IF);
   
+  -- Branch reason, for simulation.
+  -- pragma translate_off
+  signal simReason              : rvex_string_builder_type;
+  -- pragma translate_on
+  
+  -- Action taken, for simulation.
+  -- pragma translate_off
+  signal simAction              : rvex_string_builder_type;
+  -- pragma translate_on
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -344,6 +365,10 @@ begin -- architecture
       -- Branch to the address in the context PC register when requested.
       nextPCsrc(S_BR) <= NEXT_PC_CURRENT;
       
+      -- pragma translate_off
+      simReason <= to_rvs("resuming");
+      -- pragma translate_on
+      
     elsif pl2br_trapToHandleInfo(S_BR).active = '1' then
       
       -- Handle traps.
@@ -356,6 +381,10 @@ begin -- architecture
         br2cxplif_trapInfo(S_BR).active <= '0';
         br2cxplif_exDbgTrapInfo(S_BR).active <= '0';
         
+        -- pragma translate_off
+        simReason <= to_rvs("halting, deferring trap");
+        -- pragma translate_on
+        
       elsif cxplif2br_extDebug(S_BR) = '1' and rvex_isDebugTrap(pl2br_trapToHandleInfo(S_BR)) = '1' then
         
         -- This is a debug trap, and external debugging is turned on. Disable
@@ -364,6 +393,10 @@ begin -- architecture
         -- resumption address/PC to the trap point.
         nextPCsrc(S_BR) <= NEXT_PC_TRAP_POINT;
         br2cxplif_trapInfo(S_BR).active <= '0';
+        
+        -- pragma translate_off
+        simReason <= to_rvs("ext. debug trap");
+        -- pragma translate_on
         
       else
         
@@ -382,6 +415,10 @@ begin -- architecture
           br2cxplif_irqAck(S_BR) <= not stall;
         end if;
         
+        -- pragma translate_off
+        simReason <= to_rvs("trap");
+        -- pragma translate_on
+        
       end if;
       
     elsif ctrl(S_BR).RFI = '1' then
@@ -396,6 +433,10 @@ begin -- architecture
       -- the next cycle.
       brkptEnableClear(S_BR) <= cxplif2br_handlingDebugTrap(S_BR);
       
+      -- pragma translate_off
+      simReason <= to_rvs("RFI instr.");
+      -- pragma translate_on
+      
     elsif ctrl(S_BR).stop = '1' then
       
       -- Stop instruction. Stop the core by setting the BRK flag and set the
@@ -405,6 +446,10 @@ begin -- architecture
       nextPCsrc(S_BR) <= NEXT_PC_STOP;
       br2cxplif_stop(S_BR) <= '1';
       
+      -- pragma translate_off
+      simReason <= to_rvs("STOP instr.");
+      -- pragma translate_on
+      
     elsif (
       (ctrl(S_BR).branchIfTrue  and     pl2br_opBr(S_BR)) or
       (ctrl(S_BR).branchIfFalse and not pl2br_opBr(S_BR))
@@ -413,8 +458,14 @@ begin -- architecture
       -- Regular branch instruction. Jump to the selected branch target.
       if ctrl(S_BR).branchToLink = '1' then
         nextPCsrc(S_BR) <= NEXT_PC_BR_LINK;
+        -- pragma translate_off
+        simReason <= to_rvs("branch to link");
+        -- pragma translate_on
       else
         nextPCsrc(S_BR) <= NEXT_PC_BR_RELATIVE;
+        -- pragma translate_off
+        simReason <= to_rvs("relative branch");
+        -- pragma translate_on
       end if;
       
     elsif run(S_BR) = '0' or pl2br_trapPending(S_BR) = '1' then
@@ -428,12 +479,20 @@ begin -- architecture
       -- the PC register.
       noLimmPrefetch(S_BR) <= '1';
       
+      -- pragma translate_off
+      simReason <= to_rvs("halting");
+      -- pragma translate_on
+      
     elsif run_r(S_BR) = '0' then
       
       -- (Re)start the core. We need to actively jump to the context PC
       -- register in order to start at that address and not the address
       -- immediately following.
       nextPCsrc(S_BR) <= NEXT_PC_CURRENT;
+      
+      -- pragma translate_off
+      simReason <= to_rvs("resuming");
+      -- pragma translate_on
       
     else
       
@@ -445,6 +504,9 @@ begin -- architecture
       -- executed in order.
       noLimmPrefetch(S_BR) <= '1';
       
+      -- pragma translate_off
+      simReason <= to_rvs("running");
+      -- pragma translate_on
     end if;
     
   end process;
@@ -498,10 +560,13 @@ begin -- architecture
     nextPC, branching, noLimmPrefetch, cfg2br_numGroupsLog2, run, run_r,
     pl2br_trapPending, brkptEnable, nextPCMisaligned
   ) is
-    variable nextPC_s           : rvex_address_array(S_IF to S_IF);
+    variable nextPC_v           : rvex_address_array(S_IF to S_IF);
     variable fetch              : std_logic_vector(S_IF to S_IF);
     variable fetchOnly          : std_logic_vector(S_IF to S_IF);
     variable numCoupledLanesLog2: natural;
+    -- pragma translate_off
+    variable simAction_v        : rvex_string_builder_type;
+    -- pragma translate_on
   begin
     
     -- Determine log2(number of coupled lanes).
@@ -541,14 +606,14 @@ begin -- architecture
     
     -- Subtract 1 from the PC when we need to fetch the previous instruction
     -- first.
-    nextPC_s(S_IF) := nextPC(S_IF);
+    nextPC_v(S_IF) := nextPC(S_IF);
     if fetchOnly(S_IF) = '1' then
       
       -- This does not need to be a full subtractor, because we never
       -- subtract beyond addresses aligned by the generic bundle size
       -- (because there will never be relevant long immediate instructions
       -- in the previous generic binary bundle).
-      nextPC_s(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B)
+      nextPC_v(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B)
         := std_logic_vector(
           unsigned(nextPC(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B))
           - to_unsigned(2**(numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B), CFG.genBundleSizeLog2)
@@ -560,8 +625,8 @@ begin -- architecture
     fetch(S_IF) := run(S_BR) and not pl2br_trapPending(S_BR) and not nextPCMisaligned(S_IF);
     
     -- Drive PC output signals.
-    br2imem_PC(S_IF)                  <= nextPC_s(S_IF);
-    br2cxplif_PC(S_IF)                <= nextPC_s(S_IF);
+    br2imem_PC(S_IF)                  <= nextPC_v(S_IF);
+    br2cxplif_PC(S_IF)                <= nextPC_v(S_IF);
     
     -- Make sure that the request output to the instruction memory is properly
     -- aligned.
@@ -583,8 +648,26 @@ begin -- architecture
     br2imem_cancel(S_IF+L_IF)         <= branching(S_BR);
     br2cxplif_invalUntilBR(S_BR)      <= branching(S_BR);
     
+    -- Generate simulation information.
+    -- pragma translate_off
+    rvs_clear(simAction_v);
+    if fetch(S_IF) = '0' then
+      rvs_append(simAction_v, "not ");
+    elsif fetchOnly(S_IF) = '1' then
+      rvs_append(simAction_v, "pre");
+    end if;
+    rvs_append(simAction_v, "fetching ");
+    rvs_append(simAction_v, rvs_hex(nextPC_v(S_IF)));
+    rvs_append(simAction_v, "; ");
+    simAction <= simAction_v;
+    -- pragma translate_on
+    
   end process;
   
+  -- Merge debugging information.
+  -- pragma translate_off
+  br2pl_sim(S_IF) <= simAction & simReason;
+  -- pragma translate_on
   
 end Behavioral;
 

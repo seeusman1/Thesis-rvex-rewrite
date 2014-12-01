@@ -59,9 +59,15 @@ package rvex_simUtils_pkg is
   -- length to prevent recomputation all the time.
   type rvex_string_builder_type is record
     s: rvex_string_type;
-    len: positive range 1 to RVEX_STR_LEN;
+    len: natural range 0 to RVEX_STR_LEN;
   end record;
   type rvex_string_builder_array is array (natural range <>) of rvex_string_builder_type;
+  
+  -- Empty string builder constant.
+  constant RVS_EMPTY: rvex_string_builder_type := (
+    s => (others => ' '),
+    len => 0
+  );
   
   -- Clears a string builder.
   procedure rvs_clear(sb: inout rvex_string_builder_type);
