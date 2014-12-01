@@ -193,15 +193,15 @@ entity rvex_pipelanes is
     ---------------------------------------------------------------------------
     -- Control register interface
     ---------------------------------------------------------------------------
-    -- Data memory address, shared between read and write command.
+    -- Control register address, shared between read and write command.
     dmsw2creg_addr              : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Data memory write command.
+    -- Control register write command.
     dmsw2creg_writeData         : out rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     dmsw2creg_writeMask         : out rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     dmsw2creg_writeEnable       : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Data memory read command and result.
+    -- Control register read command and result.
     dmsw2creg_readEnable        : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     creg2dmsw_readData          : in  rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     

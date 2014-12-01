@@ -46,13 +46,13 @@ use IEEE.std_logic_1164.all;
 -- [x] mulu   = MULtiply Unit              @ rvex_mul.vhd
 -- [x] brku   = BReaKpoint Unit            @ rvex_breakpoint.vhd
 -- [ ] gpreg  = General Purpose REGisters  @ rvex_gpreg.vhd
--- [?] fwd    = ForWarDing logic           @ rvex_forward.vhd
+-- [x] fwd    = ForWarDing logic           @ rvex_forward.vhd
 -- [x] cxplif = ConteXt Register InterFace @ rvex_contextPipelaneIFace.vhd
 -- [x] dmsw   = Data Memory SWitch         @ rvex_dmemSwitch.vhd
 -- [x] limm   = Long IMMediate routing     @ rvex_limmRouting.vhd
 -- [x] trap   = TRAP routing               @ rvex_trapRouting.vhd
--- [?] cxreg  = ConteXt REGister logic     @ rvex_contextRegLogic.vhd
--- [?] creg   = Control REGisters          @ rvex_ctrlRegs.vhd
+-- [ ] cxreg  = ConteXt REGister logic     @ rvex_contextRegLogic.vhd
+-- [.] creg   = Control REGisters          @ rvex_ctrlRegs.vhd
 -- [ ] gbreg  = GloBal REGister logic      @ rvex_globalRegLogic.vhd
 -- [?] cfg    = ConFiGuration control      @ rvex_cfgCtrl.vhd
 --

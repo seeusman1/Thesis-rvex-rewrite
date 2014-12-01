@@ -22,9 +22,62 @@
   <sourceproject xmlns="http://www.xilinx.com/XMLSchema" xil_pn:fileType="FILE_XISE" xil_pn:name="rvex-rewrite.xise"/>
 
   <files xmlns="http://www.xilinx.com/XMLSchema">
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="isim"/>
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="rvex_ctrlRegBank_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="rvex_ctrlRegReadPort_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="rvex_ctrlRegs_bank_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="rvex_ctrlRegs_readPort_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="rvex_ctrlRegs_stx_beh.prj"/>
     <file xil_pn:fileType="FILE_NCD" xil_pn:name="rvex_limmRouting_guide.ncd" xil_pn:origination="imported"/>
+    <file xil_pn:fileType="FILE_INI" xil_pn:name="xilinxsim.ini"/>
   </files>
 
-  <transforms xmlns="http://www.xilinx.com/XMLSchema"/>
+  <transforms xmlns="http://www.xilinx.com/XMLSchema">
+    <transform xil_pn:end_ts="1417451516" xil_pn:name="TRAN_copyInitialToAbstractSimulation" xil_pn:start_ts="1417451516">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1417453086" xil_pn:in_ck="-5445098034939972796" xil_pn:name="TRAN_copyAbstractToPostAbstractSimulation" xil_pn:start_ts="1417453086">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="../test/mul_cmp_tb.vhd"/>
+      <outfile xil_pn:name="../test/mul_orig.vhd"/>
+      <outfile xil_pn:name="../test/opcode_pkg_orig.vhd"/>
+      <outfile xil_pn:name="../test/random_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_alu.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_br.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_brku.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_cfgCtrl.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_cfgCtrl_decode.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_cfgCtrl_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_contextPipelaneIFace.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_ctrlRegs.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_ctrlRegs_bank.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_ctrlRegs_readPort.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_dmemSwitch.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_forward.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_intIface_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_limmRouting.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_memu.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_mulu.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_opcodeAlu_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_opcodeBranch_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_opcodeDatapath_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_opcodeMemory_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_opcodeMultiplier_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_opcode_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_pipelane.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_pipelanes.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_pipeline_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_simUtils_asDisas_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_simUtils_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_trapRouting.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_trap_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/rvex_utils_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/todo.vhd"/>
+    </transform>
+  </transforms>
 
 </generated_project>
