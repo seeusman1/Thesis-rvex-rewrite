@@ -78,7 +78,7 @@ entity rvex_gpRegs is
     clkEn                       : in  std_logic;
     
     -- Active high stall signal for each lane group.
-    stall                       : in  std_logic_vector(CFG.numLaneGroupsLog2-1 downto 0);
+    stall                       : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
 
     -----------------------------------------------------------------------------
     -- Decoded configuration signals
@@ -91,12 +91,12 @@ entity rvex_gpRegs is
     -----------------------------------------------------------------------------
     -- Read ports. There's two for each lane. The read value is provided for all
     -- lanes which receive forwarding information.
-    pl2gpreg_readPorts           : in  pl2gpreg_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
-    gpreg2pl_readPorts           : out gpreg2pl_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
+    pl2gpreg_readPorts          : in  pl2gpreg_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
+    gpreg2pl_readPorts          : out gpreg2pl_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
     
     -- Write ports and forwarding information. There's one write port for each
     -- lane.
-    pl2gpreg_writePorts          : in  pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
+    pl2gpreg_writePorts         : in  pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Debug interface

@@ -101,6 +101,10 @@ entity rvex_contextPipelaneIFace is
     ---------------------------------------------------------------------------
     -- Pipelane interface: configuration and run control
     ---------------------------------------------------------------------------
+    -- Indicates whether the pipelane is ready for reconfiguration. This is
+    -- essentially an active low idle output.
+    pl2cxplif_blockReconfig     : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
     -- External interrupt request signal, active high. This is already masked
     -- by the interrupt enable bit in the control register.
     cxplif2pl_irq               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -247,6 +251,17 @@ entity rvex_contextPipelaneIFace is
     
     -- Active high idle output.
     cxplif2rctrl_idle           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Configuration control interface
+    ---------------------------------------------------------------------------
+    -- Run bit for the pipelanes per context from the configuration logic.
+    cfg2cxplif_run              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Active high reconfiguration block bit. When high, reconfiguration is
+    -- not permitted for the indexed context. This is essentially an active low
+    -- idle flag.
+    cxplif2cfg_blockReconfig    : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Context register interface: misc.
@@ -402,6 +417,7 @@ architecture Behavioral of rvex_contextPipelaneIFace is
   -----------------------------------------------------------------------------
   -- Names match the inputs from the pipelanes in the entity description. Refer
   -- to the documentation there for more information.
+  signal blockReconfig_arb      : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal irqAck_arb             : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal idle_arb               : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal PC_arb                 : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -472,6 +488,7 @@ begin -- architecture
       := (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + SYLLABLE_SIZE_LOG2B;
     
     -- Variables for all the signals we need to route.
+    variable blockReconfig_v    : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable irqAck_v           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable idle_v             : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable PC_v               : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -533,7 +550,9 @@ begin -- architecture
       stop_v(laneGroup)             := br2cxplif_stop(selectedLane);
       rfi_v(laneGroup)              := pl2cxplif_rfi(selectedLane);
       
-      -- Load default values into idle_v and brLinkWritePort_v.
+      -- Load default values into blockReconfig_v, idle_v and
+      -- brLinkWritePort_v.
+      blockReconfig_v(laneGroup)    := '0';
       idle_v(laneGroup)             := '1';
       brLinkWritePort_v(laneGroup)  := (
         brData                      => (others => (others => '0')),
@@ -544,16 +563,24 @@ begin -- architecture
         linkForwardEnable           => (others => '0')
       );
       
-      -- Generate merging logic for the idle signal and the branch/link
-      -- register write port. The value written to the link register is
-      -- priority encoded (giving precedence to higher indexed lanes.
-      -- The branch register value - written is wired-or in case of write
-      -- conflicts, because that's cheaper and maybe even useful in some cases.
+      -- Generate merging logic for the idle signal, blockReconfig signal and
+      -- the branch/link register write port. The value written to the link
+      -- register is priority encoded (giving precedence to higher indexed
+      -- lanes. The branch register value - written is wired-or in case of
+      -- write conflicts, because that's cheaper and maybe even useful in some
+      -- cases.
       for groupIndex in 0 to 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2)-1 loop
         currentLane := group2firstLane(laneGroup, CFG) + groupIndex;
         
+        -- BlockReconfig signal is wired-or.
+        blockReconfig_v(laneGroup)
+          := blockReconfig_v(laneGroup)
+          or pl2cxplif_blockReconfig(currentLane);
+        
         -- Idle signal is wired-and.
-        idle_v(laneGroup) := idle_v(laneGroup) and pl2cxplif_idle(currentLane);
+        idle_v(laneGroup)
+          := idle_v(laneGroup)
+          and pl2cxplif_idle(currentLane);
         
         -- Write/forward enable signals are wired-or.
         brLinkWritePort_v(laneGroup).brWriteEnable
@@ -633,6 +660,12 @@ begin -- architecture
           lanePC_v(groupB)(index) := '1';
           
           -- Handle wired-and/or signals.
+          blockReconfig_v(groupA)
+            := blockReconfig_v(groupA)
+            or blockReconfig_v(groupB);
+          blockReconfig_v(groupB)
+            := blockReconfig_v(groupA);
+          
           idle_v(groupA)
             := idle_v(groupA)
            and idle_v(groupB);
@@ -700,6 +733,7 @@ begin -- architecture
     end if;
     
     -- Drive output signals.
+    blockReconfig_arb   <= blockReconfig_v;
     irqAck_arb          <= irqAck_v;
     idle_arb            <= idle_v;
     PC_arb              <= PC_v;
@@ -779,6 +813,7 @@ begin -- architecture
     laneGroup <= to_integer(unsigned(cfg2any_lastGroupForCtxt(ctxt)));
     
     -- Generate all the muxes.
+    cxplif2cfg_blockReconfig(ctxt)      <= blockReconfig_arb(laneGroup);
     cxplif2rctrl_irqAck(ctxt)           <= irqAck_arb(laneGroup);
     cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup);
     cxplif2cxreg_stall(ctxt)            <= stall(laneGroup);
@@ -795,7 +830,7 @@ begin -- architecture
     -- While we're at it, combine the external run control and control register
     -- data where necessary for each context.
     irq_ctxt(ctxt) <= rctrl2cxplif_irq(ctxt) and cxreg2cxplif_interruptEnable(ctxt);
-    run_ctxt(ctxt) <= rctrl2cxplif_run(ctxt) and not cxreg2cxplif_brk(ctxt);
+    run_ctxt(ctxt) <= rctrl2cxplif_run(ctxt) and cfg2cxplif_run(ctxt) and not cxreg2cxplif_brk(ctxt);
     
   end generate;
   

@@ -128,9 +128,6 @@ entity rvex_br is
     ---------------------------------------------------------------------------
     -- Run control signals
     ---------------------------------------------------------------------------
-    -- Run bit for this pipelane from the configuration logic.
-    cfg2br_run                  : in  std_logic;
-    
     -- External interrupt identification. Guaranteed to be loaded in the trap
     -- argument register in the same clkEn'd cycle where irqAck is high.
     cxplif2br_irqID             : in  rvex_address_array(S_BR to S_BR);
@@ -298,8 +295,8 @@ begin -- architecture
   -- Decode the opcode.
   ctrl(S_BR) <= OPCODE_TABLE(to_integer(unsigned(pl2br_opcode(S_BR)))).branchCtrl;
   
-  -- Combine the incoming run signals.
-  run(S_BR) <= cfg2br_run and cxplif2br_run;
+  -- Load the incoming run signal into a local signal for convenience.
+  run(S_BR) <= cxplif2br_run;
   
   -- Generate the register used to delay run with.
   run_reg_gen: process (clk) is
@@ -650,23 +647,28 @@ begin -- architecture
     
     -- Generate simulation information.
     -- pragma translate_off
-    rvs_clear(simAction_v);
-    if fetch(S_IF) = '0' then
-      rvs_append(simAction_v, "not ");
-    elsif fetchOnly(S_IF) = '1' then
-      rvs_append(simAction_v, "pre");
+    if GEN_VHDL_SIM_INFO then
+      rvs_clear(simAction_v);
+      if fetch(S_IF) = '0' then
+        rvs_append(simAction_v, "did not fetch ");
+      elsif fetchOnly(S_IF) = '1' then
+        rvs_append(simAction_v, "LIMMH-fetched ");
+      else
+        rvs_append(simAction_v, "fetched ");
+      end if;
+      rvs_append(simAction_v, rvs_hex(nextPC_v(S_IF)));
+      rvs_append(simAction_v, "; ");
+      simAction <= simAction_v;
     end if;
-    rvs_append(simAction_v, "fetching ");
-    rvs_append(simAction_v, rvs_hex(nextPC_v(S_IF)));
-    rvs_append(simAction_v, "; ");
-    simAction <= simAction_v;
     -- pragma translate_on
     
   end process;
   
   -- Merge debugging information.
   -- pragma translate_off
-  br2pl_sim(S_IF) <= simAction & simReason;
+  sim_info_gen: if GEN_VHDL_SIM_INFO generate
+    br2pl_sim(S_IF) <= simAction & simReason;
+  end generate;
   -- pragma translate_on
   
 end Behavioral;

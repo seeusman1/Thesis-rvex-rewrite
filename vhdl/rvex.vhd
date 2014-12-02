@@ -51,6 +51,12 @@ library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_trap_pkg.all;
+use work.rvex_utils_pkg.all;
+
+-- pragma translate_off
+use work.rvex_simUtils_pkg.all;
+-- pragma translate_on
+
 
   -----------------------------------------------------------------------------
   -- Processor overview and naming conventions
@@ -60,39 +66,39 @@ use work.rvex_trap_pkg.all;
   -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   --
-  --            .---------------------------------------------------.
-  --            | rv                                                |
-  --            | .---------------------------------------.         |
-  --            | | pls (pipelanes)                       |         |
-  --            | |  .=================================.  | .-----. |
-  --            | |  | pl (pipelane)                   |  | |gpreg| |
-  --            | |  |  - . .---.  - - .  - - .  - - . |  | |.===.| |
-  --  imem <----+-+->| |br  |alu| |mulu  |memu  |brku  |<-+>||fwd|| |
-  --            | |  |  - ' '---'  - - '  - - '  - - ' |  | |'==='| |
-  --            | |  '================================='  | '-----' |
-  --            | |    ^             ^       ^      ^     |    ^    |
-  --            | |    |             |       |      |     |    |    |
-  --            | |    v             v       v      v     |    |    |
-  --            | | .------.     .====.    .----. .----.  |    |    |
-  --          .-+-+>|cxplif|     |dmsw|    |trap| |limm|  |    |    |
-  --          | | | '------'     '===='    '----' '----'  |    |    |
-  --          | | |    ^          ^  ^                    |    |    |
-  --          | | |    |          |  '--------------------+----+----+--> dmem
-  --          | | |    |          |                       |    |    |
-  -- rctrl <-<  | '----+----------+-----------------------'    |    |
-  --          | |      |          |                            |    |
-  --          | |      |          |  .-------------------------'    |
-  --          | |      v          v  v                              |
-  --          | |   .=====.      .----.      .-----.      .-----.   |
-  --          | |   |cxreg|<---->|creg|<---->|gbreg|<---->|     |<--+--> mem
-  --          '-+-->|.===.|      '----'      '-----'      | cfg |   |
-  --            |   ||fwd||         ^           ^   ...<--|     |   |
-  --            |   |'==='|---------+-----------+-------->|     |   |
-  --            |   '====='         |           |         '-----'   |
-  --            '-------------------+-----------+-------------------'
-  --                                |           |
-  --                                v           |
-  --                               dbg    imem affinity
+  --          .---------------------------------------------------.
+  --          | rv                                                |
+  --          | .---------------------------------------.         |
+  --          | | pls (pipelanes)                       |         |
+  --          | |  .=================================.  | .-----. |
+  --          | |  | pl (pipelane)                   |  | |gpreg| |
+  --          | |  |  - . .---.  - - .  - - .  - - . |  | |.===.| |
+  --  imem <--+-+->| |br  |alu| |mulu  |memu  |brku  |<-+>||fwd|| |
+  --          | |  |  - ' '---'  - - '  - - '  - - ' |  | |'==='| |
+  --          | |  '================================='  | '-----' |
+  --          | |    ^             ^      ^       ^     |    ^    |
+  --          | |    |             |      |       |     |    |    |
+  --          | |    v             v      v       v     |    |    |
+  --          | | .------.     .====.   .----.  .----.  |    |    |
+  -- rctrl <--+-+>|cxplif|     |dmsw|   |trap|  |limm|  |    |    |
+  --          | | '------'     '===='   '----'  '----'  |    |    |
+  --          | |    ^          ^  ^                    |    |    |
+  --          | |    |          |  '--------------------+----+----+--> dmem
+  --          | |    |          |                       |    |    |
+  --          | '----+----------+-----------------------'    |    |
+  --          |      |          |                            |    |
+  --          |      |          |  .-------------------------'    |
+  --          |      v          v  v                              |
+  --          |   .=====.      .----.      .-----.      .-----.   |
+  -- rctrl    |   |cxreg|<---->|creg|<---->|gbreg|<---->|     |<--+--> mem
+  -- reset <--+-->|.===.|      '----'      '-----'      | cfg |   |
+  -- and done |   ||fwd||         ^           ^   ...<--|     |   |
+  --          |   |'==='|---------+-----------+-------->|     |   |
+  --          |   '====='         |           |         '-----'   |--> sim
+  --          '-------------------+-----------+-------------------'
+  --                              |           |
+  --                              v           |
+  --                             dbg    imem affinity
   --
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   --
@@ -121,6 +127,7 @@ use work.rvex_trap_pkg.all;
   --  - dmem   = Data MEMory/cache
   --  - dbg    = DeBuG bus interface
   --  - rctrl  = Run ConTRoL
+  --  - sim    = vhdl SIMulation only
   --
   -- The pipelane (pl), ALU and multiplier blocks are instantiated for each
   -- pipelane (although the multiplier can be disabled for selected pipelanes
@@ -223,10 +230,29 @@ entity rvex is
     clkEn                       : in  std_logic;
     
     ---------------------------------------------------------------------------
+    -- VHDL simulation debug information
+    ---------------------------------------------------------------------------
+    -- pragma translate_off
+    
+    -- Describes the current state of the processor, aligned with the last
+    -- pipeline stage. Only generated when GEN_VHDL_SIM_INFO in
+    -- rvex_intIface_pkg is true. You don't need to connect anything to this
+    -- (and with such a complicated config-dependent array size you don't want
+    -- to either); just leave it open but add it to the simulation trace if
+    -- you want to see what the processor is doing.
+    rv2sim                      : out rvex_string_array(1 to 2*2**CFG.numLanesLog2+2**CFG.numLaneGroupsLog2+2**CFG.numContextsLog2);
+    
+    -- pragma translate_on
+    
+    ---------------------------------------------------------------------------
     -- Run control interface
     ---------------------------------------------------------------------------
     -- External interrupt request signal, active high.
     rctrl2rv_irq                : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
+    
+    -- External interrupt identification. Guaranteed to be loaded in the trap
+    -- argument register in the same clkEn'd cycle where irqAck is high.
+    rctrl2rv_irqID              : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0) := (others => (others => '0'));
     
     -- External interrupt acknowledge signal, active high. Goes high for one
     -- clkEn'abled cycle.
@@ -436,19 +462,14 @@ architecture Behavioral of rvex is
   -- to the next higher indexed master group.
   signal cfg2any_decouple             : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   
-  -- Link from any pipelane group to to the first (lowest indexed) coupled
-  -- group.
-  signal cfg2any_firstGroup           : rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  
   -- log2 of the number of coupled pipelane groups for each pipelane group.
   signal cfg2any_numGroupsLog2        : rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
-  -- Matrix specifying connections between context and lane group. Indexing is
-  -- done using i = laneGroup*numContexts + context.
-  signal cfg2any_contextMap           : std_logic_vector(2**CFG.numLaneGroupsLog2*2**CFG.numContextsLog2-1 downto 0);
+  -- Specifies the context associated with the indexed pipelane group.
+  signal cfg2any_context              : rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
   -- Last pipelane group associated with each context.
-  signal cfg2any_lastGroupForCtxt     : rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal cfg2any_lastGroupForCtxt     : rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
   
   -----------------------------------------------------------------------------
   -- Internal signals
@@ -456,20 +477,29 @@ architecture Behavioral of rvex is
   -- Stall signal for each pipelane group.
   signal stall                        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   
+  -- Debug bus access stall signals. For every debug bus access, the rvex core
+  -- is stalled for two cycles. This is done to allow the debug bus to make use
+  -- of the existing bus networks by claiming the bus from one of the
+  -- pipelanes.
+  signal debugBusStall                : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  
   -- Extended memory exception trap information. These are decoded from the
   -- fault flags coming from the memory into a trap information record which
   -- the processor knows how to deal with.
-  signal imem2rv_exception            : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal dmem2rv_exception            : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal imem2pl_exception            : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal dmem2dmsw_exception          : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
   -----------------------------------------------------------------------------
   -- Interconnect signals
   -----------------------------------------------------------------------------
-  -- Pipelane <-> configuration controller interconnect signals.
-  signal cfg2pl_run                   : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal pl2cfg_blockReconfig         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  -- For all the signals below: refer to the entity description of their source
+  -- or destination block for documentation.
   
-  -- Data memory switch <-> control register bus interconnect signals.
+  -- Pipelane <-> configuration control signals.
+  signal cfg2cxplif_run               : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cfg_blockReconfig     : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  
+  -- Data memory switch <-> control register signals.
   signal dmsw2creg_addr               : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal dmsw2creg_writeData          : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal dmsw2creg_writeMask          : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -477,28 +507,75 @@ architecture Behavioral of rvex is
   signal dmsw2creg_readEnable         : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal creg2dmsw_readData           : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
-  -- Pipelane <-> general purpose register file interconnect signals.
+  -- Pipelane <-> general purpose register file signals.
   signal pl2gpreg_readPorts           : pl2gpreg_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
   signal gpreg2pl_readPorts           : gpreg2pl_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
   signal pl2gpreg_writePorts          : pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
   
-  -- Context register map <-> context to pipelane interface interconnect
-  -- signals.
+  -- Control registers <-> general purpose register file signals.
+  signal creg2gpreg_claim             : std_logic;
+  signal creg2gpreg_addr              : rvex_gpRegAddr_type;
+  signal creg2gpreg_ctxt              : std_logic_vector(CFG.numContextsLog2-1 downto 0);
+  signal creg2gpreg_writeEnable       : std_logic;
+  signal creg2gpreg_writeData         : rvex_data_type;
+  signal gpreg2creg_readData          : rvex_data_type;
+  
+  -- Control registers <-> global control register logic signals.
+  signal gbreg2creg                   : gbreg2creg_type;
+  signal creg2gbreg                   : creg2gbreg_type;
+  signal gbreg2creg_context           : std_logic_vector(CFG.numContextsLog2-1 downto 0);
+  signal gbreg2creg_gpregBank         : std_logic;
+  
+  -- Control registers <-> context control register logic signals.
+  signal cxreg2creg                   : cxreg2creg_array(2**CFG.numContextsLog2-1 downto 0);
+  signal creg2cxreg                   : creg2cxreg_array(2**CFG.numContextsLog2-1 downto 0);
+  
+  -- Context register <-> context-pipelane interface signals.
   signal cxreg2cxplif_brLinkReadPort  : cxreg2pl_readPort_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_brLinkWritePort : pl2cxreg_writePort_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cxplif2cxreg_PC              : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cxreg2cxplif_PC              : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_stall           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_stop            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_nextPC          : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_currentPC       : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_overridePC      : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_overridePC_ack  : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_trapHandler     : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_trapInfo        : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cxplif2cxreg_trapPoint       : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_trapPoint       : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_trapReturn      : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_rfi             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal cxplif2cxreg_setBrk          : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cxreg2cxplif_brk             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal cxreg2cxplif_resume          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal cxplif2cxreg_resumed         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_handlingDebugTrap:std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_interruptEnable : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_debugTrapEnable : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_breakpoints     : cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_extDebug        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_exDbgTrapInfo   : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_brk             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_stepping        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_resuming        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_resuming_ack    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
+  -- Context register logic <-> configuration control signals.
+  signal cxreg2cfg_requestData_r      : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cfg_requestEnable      : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  
+  -- Global register logic <-> configuration control signals.
+  signal gbreg2cfg_requestData_r      : rvex_data_type;
+  signal gbreg2cfg_requestEnable      : std_logic;
+  signal cfg2gbreg_currentCfg         : rvex_data_type;
+  signal cfg2gbreg_busy               : std_logic;
+  signal cfg2gbreg_error              : std_logic;
+  signal cfg2gbreg_requesterID        : std_logic_vector(3 downto 0);
+  
+  -----------------------------------------------------------------------------
+  -- Simulation-only signals
+  -----------------------------------------------------------------------------
+  -- pragma translate_off
+  signal pl2sim_instr                 : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2sim_op                    : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
+  signal br2sim                       : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
+  -- pragma translate_on
+    
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -506,9 +583,9 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Generate stalling logic
   -----------------------------------------------------------------------------
-  -- The rvex core does not generate stall signals on its own, and the memory
-  -- is the only external thing which can stall the core.
-  stall <= mem2rv_stallIn;
+  -- The rvex core stalls when either the memory stalls or the debug bus makes
+  -- an access.
+  stall <= mem2rv_stallIn or debugBusStall;
   
   -- Forward the internal stall signal to the memory.
   rv2mem_stallOut <= stall;
@@ -523,7 +600,7 @@ begin -- architecture
     -- There is only one instruction memory fault. Note that the arg parameter
     -- will be overwritten by the PC of the bundle which was being fetched in
     -- the pipelane.
-    imem2rv_exception(laneGroup) <= (
+    imem2pl_exception(laneGroup) <= (
       active => imem2rv_fault(laneGroup),
       cause  => rvex_trap(RVEX_TRAP_FETCH_FAULT),
       arg    => (others => '0')
@@ -531,7 +608,7 @@ begin -- architecture
     
     -- There is only one data memory fault. Note that the arg parameter will be
     -- overwritten by the address which was being accessed in the pipelane.
-    dmem2rv_exception(laneGroup) <= (
+    dmem2dmsw_exception(laneGroup) <= (
       active => dmem2rv_fault(laneGroup),
       cause  => rvex_trap(RVEX_TRAP_DMEM_FAULT),
       arg    => (others => '0')
@@ -542,82 +619,448 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the pipelanes
   -----------------------------------------------------------------------------
-  pipelanes: entity work.rvex_pipelanes
+  pls_inst: entity work.rvex_pipelanes
     generic map (
-      CFG                         => CFG
+      CFG                           => CFG
     )
     port map (
       
       -- System control.
-      reset                       => reset,
-      clk                         => clk,
-      clkEn                       => clkEn,
-      stall                       => stall,
+      reset                         => reset,
+      clk                           => clk,
+      clkEn                         => clkEn,
+      stall                         => stall,
+      
+      -- VHDL simulation debug information.
+      -- pragma translate_off
+      pl2sim_instr                  => pl2sim_instr,
+      pl2sim_op                     => pl2sim_op,
+      br2sim                        => br2sim,
+      -- pragma translate_on
       
       -- Decoded configuration signals.
-      cfg2any_coupled             => cfg2any_coupled,
-      cfg2any_decouple            => cfg2any_decouple,
-      cfg2any_firstGroup          => cfg2any_firstGroup,
-      cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
-      cfg2any_contextMap          => cfg2any_contextMap,
-      cfg2any_lastGroupForCtxt    => cfg2any_lastGroupForCtxt,
+      cfg2any_coupled               => cfg2any_coupled,
+      cfg2any_decouple              => cfg2any_decouple,
+      cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2,
+      cfg2any_context               => cfg2any_context,
+      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
       
-      -- Configuration and run control.
-      cfg2pl_run                  => cfg2pl_run,
-      pl2cfg_blockReconfig        => pl2cfg_blockReconfig,
-      rctrl2cxplif_irq            => rctrl2rv_irq,
-      cxplif2rctrl_irqAck         => rv2rctrl_irqAck,
-      rctrl2cxplif_run            => rctrl2rv_run,
-      cxplif2rctrl_idle           => rv2rctrl_idle,
+      -- Configuration signals.
+      cfg2cxplif_run                => cfg2cxplif_run,
+      cxplif2cfg_blockReconfig      => cxplif2cfg_blockReconfig,
+      
+      -- External run control signals.
+      rctrl2cxplif_irq              => rctrl2rv_irq,
+      rctrl2cxplif_irqID            => rctrl2rv_irqID,
+      cxplif2rctrl_irqAck           => rv2rctrl_irqAck,
+      rctrl2cxplif_run              => rctrl2rv_run,
+      cxplif2rctrl_idle             => rv2rctrl_idle,
       
       -- Instruction memory interface.
-      br2imem_PCs                 => rv2imem_PCs,
-      br2imem_fetch               => rv2imem_fetch,
-      br2imem_cancel              => rv2imem_cancel,
-      imem2pl_instr               => imem2rv_instr,
-      imem2pl_exception           => imem2rv_exception,
+      br2imem_PCs                   => rv2imem_PCs,
+      br2imem_fetch                 => rv2imem_fetch,
+      br2imem_cancel                => rv2imem_cancel,
+      imem2pl_instr                 => imem2rv_instr,
+      imem2pl_exception             => imem2pl_exception,
       
       -- Data memory interface.
-      dmsw2dmem_addr              => rv2dmem_addr,
-      dmsw2dmem_writeData         => rv2dmem_writeData,
-      dmsw2dmem_writeMask         => rv2dmem_writeMask,
-      dmsw2dmem_writeEnable       => rv2dmem_writeEnable,
-      dmsw2dmem_readEnable        => rv2dmem_readEnable,
-      dmem2dmsw_readData          => dmem2rv_readData,
-      dmem2dmsw_exception         => dmem2rv_exception,
+      dmsw2dmem_addr                => rv2dmem_addr,
+      dmsw2dmem_writeData           => rv2dmem_writeData,
+      dmsw2dmem_writeMask           => rv2dmem_writeMask,
+      dmsw2dmem_writeEnable         => rv2dmem_writeEnable,
+      dmsw2dmem_readEnable          => rv2dmem_readEnable,
+      dmem2dmsw_readData            => dmem2rv_readData,
+      dmem2dmsw_exception           => dmem2dmsw_exception,
       
       -- Control register interface.
-      dmsw2creg_addr              => dmsw2creg_addr,
-      dmsw2creg_writeData         => dmsw2creg_writeData,
-      dmsw2creg_writeMask         => dmsw2creg_writeMask,
-      dmsw2creg_writeEnable       => dmsw2creg_writeEnable,
-      dmsw2creg_readEnable        => dmsw2creg_readEnable,
-      creg2dmsw_readData          => creg2dmsw_readData,
+      dmsw2creg_addr                => dmsw2creg_addr,
+      dmsw2creg_writeData           => dmsw2creg_writeData,
+      dmsw2creg_writeMask           => dmsw2creg_writeMask,
+      dmsw2creg_writeEnable         => dmsw2creg_writeEnable,
+      dmsw2creg_readEnable          => dmsw2creg_readEnable,
+      creg2dmsw_readData            => creg2dmsw_readData,
       
-      -- General purpose register file interface.
-      pl2gpreg_readPorts          => pl2gpreg_readPorts,
-      gpreg2pl_readPorts          => gpreg2pl_readPorts,
-      pl2gpreg_writePorts         => pl2gpreg_writePorts,
-      
-      -- Branch/link register file interface.
-      cxreg2cxplif_brLinkReadPort => cxreg2cxplif_brLinkReadPort,
-      cxplif2cxreg_brLinkWritePort=> cxplif2cxreg_brLinkWritePort,
+      -- Register file interface.
+      pl2gpreg_readPorts            => pl2gpreg_readPorts,
+      gpreg2pl_readPorts            => gpreg2pl_readPorts,
+      pl2gpreg_writePorts           => pl2gpreg_writePorts,
+      cxreg2cxplif_brLinkReadPort   => cxreg2cxplif_brLinkReadPort,
+      cxplif2cxreg_brLinkWritePort  => cxplif2cxreg_brLinkWritePort,
       
       -- Special context register interface.
-      cxplif2cxreg_PC             => cxplif2cxreg_PC,
-      cxreg2cxplif_PC             => cxreg2cxplif_PC,
-      cxreg2cxplif_overridePC     => cxreg2cxplif_overridePC,
-      cxreg2cxplif_trapHandler    => cxreg2cxplif_trapHandler,
-      cxplif2cxreg_trapInfo       => cxplif2cxreg_trapInfo,
-      cxplif2cxreg_trapPoint      => cxplif2cxreg_trapPoint,
-      cxplif2cxreg_rfi            => cxplif2cxreg_rfi,
-      cxplif2cxreg_setBrk         => cxplif2cxreg_setBrk,
-      cxreg2cxplif_brk            => cxreg2cxplif_brk,
-      cxreg2cxplif_resume         => cxreg2cxplif_resume,
-      cxplif2cxreg_resumed        => cxplif2cxreg_resumed,
-      cxreg2cxplif_breakpoints    => cxreg2cxplif_breakpoints
+      cxplif2cxreg_stall            => cxplif2cxreg_stall,
+      cxplif2cxreg_stop             => cxplif2cxreg_stop,
+      cxplif2cxreg_nextPC           => cxplif2cxreg_nextPC,
+      cxreg2cxplif_currentPC        => cxreg2cxplif_currentPC,
+      cxreg2cxplif_overridePC       => cxreg2cxplif_overridePC,
+      cxplif2cxreg_overridePC_ack   => cxplif2cxreg_overridePC_ack,
+      cxreg2cxplif_trapHandler      => cxreg2cxplif_trapHandler,
+      cxplif2cxreg_trapInfo         => cxplif2cxreg_trapInfo,
+      cxplif2cxreg_trapPoint        => cxplif2cxreg_trapPoint,
+      cxreg2cxplif_trapReturn       => cxreg2cxplif_trapReturn,
+      cxplif2cxreg_rfi              => cxplif2cxreg_rfi,
+      cxreg2cxplif_handlingDebugTrap=> cxreg2cxplif_handlingDebugTrap,
+      cxreg2cxplif_interruptEnable  => cxreg2cxplif_interruptEnable,
+      cxreg2cxplif_debugTrapEnable  => cxreg2cxplif_debugTrapEnable,
+      cxreg2cxplif_breakpoints      => cxreg2cxplif_breakpoints,
+      cxreg2cxplif_extDebug         => cxreg2cxplif_extDebug,
+      cxplif2cxreg_exDbgTrapInfo    => cxplif2cxreg_exDbgTrapInfo,
+      cxreg2cxplif_brk              => cxreg2cxplif_brk,
+      cxreg2cxplif_stepping         => cxreg2cxplif_stepping,
+      cxreg2cxplif_resuming         => cxreg2cxplif_resuming,
+      cxplif2cxreg_resuming_ack     => cxplif2cxreg_resuming_ack
       
     );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the general purpose register file
+  -----------------------------------------------------------------------------
+  gpreg_inst: entity work.rvex_gpRegs
+    generic map (
+      CFG                           => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                         => reset,
+      clk                           => clk,
+      clkEn                         => clkEn,
+      stall                         => stall,
+
+      -- Decoded configuration signals.
+      cfg2any_context               => cfg2any_context,
+      
+      -- Read and write ports.
+      pl2gpreg_readPorts            => pl2gpreg_readPorts,
+      gpreg2pl_readPorts            => gpreg2pl_readPorts,
+      pl2gpreg_writePorts           => pl2gpreg_writePorts,
+      
+      -- Debug interface.
+      creg2gpreg_claim              => creg2gpreg_claim,
+      creg2gpreg_addr               => creg2gpreg_addr,
+      creg2gpreg_ctxt               => creg2gpreg_ctxt,
+      creg2gpreg_writeEnable        => creg2gpreg_writeEnable,
+      creg2gpreg_writeData          => creg2gpreg_writeData,
+      gpreg2creg_readData           => gpreg2creg_readData
+      
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the control registers
+  -----------------------------------------------------------------------------
+  creg_inst: entity work.rvex_ctrlRegs
+    generic map (
+      CFG                           => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                         => reset,
+      clk                           => clk,
+      clkEn                         => clkEn,
+      stallIn                       => stall,
+      stallOut                      => debugBusStall,
+      
+      -- Decoded configuration signals.
+      cfg2any_context               => cfg2any_context,
+      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
+      
+      -- Core bus interfaces.
+      dmsw2creg_addr                => dmsw2creg_addr,
+      dmsw2creg_writeEnable         => dmsw2creg_writeEnable,
+      dmsw2creg_writeMask           => dmsw2creg_writeMask,
+      dmsw2creg_writeData           => dmsw2creg_writeData,
+      dmsw2creg_readEnable          => dmsw2creg_readEnable,
+      creg2dmsw_readData            => creg2dmsw_readData,
+      
+      -- Debug bus interface.
+      dbg2creg_addr                 => dbg2rv_addr,
+      dbg2creg_writeEnable          => dbg2rv_writeEnable,
+      dbg2creg_writeMask            => dbg2rv_writeMask,
+      dbg2creg_writeData            => dbg2rv_writeData,
+      dbg2creg_readEnable           => dbg2rv_readEnable,
+      creg2dbg_readData             => rv2dbg_readData,
+      
+      -- General purpose register file interface.
+      creg2gpreg_claim              => creg2gpreg_claim,
+      creg2gpreg_addr               => creg2gpreg_addr,
+      creg2gpreg_ctxt               => creg2gpreg_ctxt,
+      creg2gpreg_writeEnable        => creg2gpreg_writeEnable,
+      creg2gpreg_writeData          => creg2gpreg_writeData,
+      gpreg2creg_readData           => gpreg2creg_readData,
+      
+      -- Global register logic interface.
+      gbreg2creg                    => gbreg2creg,
+      creg2gbreg                    => creg2gbreg,
+      gbreg2creg_context            => gbreg2creg_context,
+      gbreg2creg_gpregBank          => gbreg2creg_gpregBank,
+      
+      -- Context register logic interface.
+      cxreg2creg                    => cxreg2creg,
+      creg2cxreg                    => creg2cxreg
+      
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the context-based control register logic
+  -----------------------------------------------------------------------------
+  cxreg_gen: for ctxt in 2**CFG.numContextsLog2-1 downto 0 generate
+    cxreg_inst: entity work.rvex_contextRegLogic
+      generic map (
+        CFG                         => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                       => reset,
+        clk                         => clk,
+        clkEn                       => clkEn,
+        
+        -- Interface with the control registers and bus logic.
+        cxreg2creg                  => cxreg2creg(ctxt),
+        creg2cxreg                  => creg2cxreg(ctxt),
+        
+        -- Pipelane interface.
+        cxplif2cxreg_stall          => cxplif2cxreg_stall(ctxt),
+        cxplif2cxreg_stop           => cxplif2cxreg_stop(ctxt),
+        cxreg2cxplif_brLinkReadPort => cxreg2cxplif_brLinkReadPort(ctxt),
+        cxplif2cxreg_brLinkWritePort=> cxplif2cxreg_brLinkWritePort(ctxt),
+        cxplif2cxreg_nextPC         => cxplif2cxreg_nextPC(ctxt),
+        cxreg2cxplif_currentPC      => cxreg2cxplif_currentPC(ctxt),
+        cxreg2cxplif_overridePC     => cxreg2cxplif_overridePC(ctxt),
+        cxplif2cxreg_overridePC_ack => cxplif2cxreg_overridePC_ack(ctxt),
+        cxreg2cxplif_trapHandler    => cxreg2cxplif_trapHandler(ctxt),
+        cxplif2cxreg_trapInfo       => cxplif2cxreg_trapInfo(ctxt),
+        cxplif2cxreg_trapPoint      => cxplif2cxreg_trapPoint(ctxt),
+        cxreg2cxplif_trapReturn     => cxreg2cxplif_trapReturn(ctxt),
+        cxplif2cxreg_rfi            => cxplif2cxreg_rfi(ctxt),
+        cxreg2cxplif_handlingDebugTrap=>cxreg2cxplif_handlingDebugTrap(ctxt),
+        cxreg2cxplif_interruptEnable=> cxreg2cxplif_interruptEnable(ctxt),
+        cxreg2cxplif_debugTrapEnable=> cxreg2cxplif_debugTrapEnable(ctxt),
+        cxreg2cxplif_breakpoints    => cxreg2cxplif_breakpoints(ctxt),
+        cxreg2cxplif_extDebug       => cxreg2cxplif_extDebug(ctxt),
+        cxplif2cxreg_exDbgTrapInfo  => cxplif2cxreg_exDbgTrapInfo(ctxt),
+        cxreg2cxplif_brk            => cxreg2cxplif_brk(ctxt),
+        cxreg2cxplif_stepping       => cxreg2cxplif_stepping(ctxt),
+        cxreg2cxplif_resuming       => cxreg2cxplif_resuming(ctxt),
+        cxplif2cxreg_resuming_ack   => cxplif2cxreg_resuming_ack(ctxt),
+        
+        -- Interface with configuration logic.
+        cxreg2cfg_requestData_r     => cxreg2cfg_requestData_r(ctxt),
+        cxreg2cfg_requestEnable     => cxreg2cfg_requestEnable(ctxt)
+        
+      );
+  end generate;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the global (common to all contexts) control register logic
+  -----------------------------------------------------------------------------
+  gbreg_inst: entity work.rvex_globalRegLogic
+    generic map (
+      CFG                           => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                         => reset,
+      clk                           => clk,
+      clkEn                         => clkEn,
+      
+      -- Interface with the control registers and bus logic.
+      gbreg2creg                    => gbreg2creg,
+      creg2gbreg                    => creg2gbreg,
+      gbreg2creg_context            => gbreg2creg_context,
+      gbreg2creg_gpregBank          => gbreg2creg_gpregBank,
+      
+      -- Interface with configuration logic.
+      gbreg2cfg_requestData_r       => gbreg2cfg_requestData_r,
+      gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
+      cfg2gbreg_currentCfg          => cfg2gbreg_currentCfg,
+      cfg2gbreg_busy                => cfg2gbreg_busy,
+      cfg2gbreg_error               => cfg2gbreg_error,
+      cfg2gbreg_requesterID         => cfg2gbreg_requesterID,
+      
+      -- Interface with memory
+      imem2gbreg_affinity           => imem2rv_affinity
+      
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate configuration logic
+  -----------------------------------------------------------------------------
+  cfg_inst: entity work.rvex_cfgCtrl
+    generic map (
+      CFG                           => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                         => reset,
+      clk                           => clk,
+      clkEn                         => clkEn,
+      
+      -- Configuration request inputs.
+      cxreg2cfg_requestData_r       => cxreg2cfg_requestData_r,
+      cxreg2cfg_requestEnable       => cxreg2cfg_requestEnable,
+      gbreg2cfg_requestData_r       => gbreg2cfg_requestData_r,
+      gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
+      
+      -- Configuration status outputs.
+      cfg2gbreg_currentCfg          => cfg2gbreg_currentCfg,
+      cfg2gbreg_busy                => cfg2gbreg_busy,
+      cfg2gbreg_error               => cfg2gbreg_error,
+      cfg2gbreg_requesterID         => cfg2gbreg_requesterID,
+      
+      -- Branch unit interface (through context-pipelane interface).
+      cfg2cxplif_run                => cfg2cxplif_run,
+      cxplif2cfg_blockReconfig      => cxplif2cfg_blockReconfig,
+      
+      -- Memory interface.
+      mem2cfg_blockReconfig         => mem2rv_blockReconfig,
+      
+      -- Decoded configuration control signals
+      cfg2any_coupled               => cfg2any_coupled,
+      cfg2any_decouple              => cfg2any_decouple,
+      cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2,
+      cfg2any_context               => cfg2any_context,
+      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt
+      
+    );
+  
+  -- Connect the external decouple signal to the decouple signal from the
+  -- configuration logic.
+  rv2mem_decouple <= cfg2any_decouple;
+  
+  -----------------------------------------------------------------------------
+  -- Generate simulation information
+  -----------------------------------------------------------------------------
+  -- pragma translate_off
+  sim_info_gen: if GEN_VHDL_SIM_INFO generate
+    sim_info: process (
+      pl2sim_instr, pl2sim_op, br2sim, cfg2gbreg_currentCfg, cfg2any_context,
+      cxreg2cxplif_currentPC
+    ) is
+      
+      -- Number of lines in the string list shown in simulation.
+      constant NUM_LINES          : natural :=
+        2*2**CFG.numLanesLog2+2**CFG.numLaneGroupsLog2+2**CFG.numContextsLog2;
+      
+      type bool_array is array(natural range <>) of boolean;
+      
+      variable sb                 : rvex_string_builder_type;
+      variable line               : positive;
+      variable curContext         : integer;
+      variable prevContext        : integer;
+      variable processedContexts  : bool_array(2**CFG.numContextsLog2-1 downto 0);
+      
+    begin
+      
+      -- This doesn't work like this; if the simulation is very slow look into
+      -- this some more.
+      ---- To speed up simulation, wait for all incoming signals to become
+      ---- stable before continuing, so we're not potentially doing the string
+      ---- manipulation more than once per cycle due to delta-delay signal
+      ---- propagation.
+      --wait until pl2sim_instr'stable and pl2sim_op'stable and br2sim'stable
+      --   and cfg2br_run'stable and cfg2any_context'stable
+      --   and cxreg2cxplif_currentPC'stable;
+      
+      -- Add information about all active lanes/contexts to the simulation.
+      line := 1;
+      prevContext := -1;
+      processedContexts := (others => false);
+      for lane in 0 to 2**CFG.numLanesLog2-1 loop
+        
+        -- Ignore lanes which aren't active.
+        if cfg2gbreg_currentCfg(lane2group(lane, CFG)*4+3) = '1' then
+          prevContext := -1;
+          next;
+        end if;
+        
+        -- Figure out the context running on the current lane.
+        curContext := to_integer(unsigned(cfg2any_context(lane2group(lane, CFG))));
+        
+        -- If this lane is operating in a different context than the previous
+        -- lane, inject a line of whitespace and a line with context
+        -- information.
+        if curContext /= prevContext then
+          
+          -- Inject a line of whitespace if this isn't the first line.
+          if line /= 1 then
+            rvs_clear(sb);
+            rv2sim(line) <= rvs2sim(sb);
+            line := line + 1;
+          end if;
+          
+          -- Pretty-print context information.
+          rvs_clear(sb);
+          rvs_append(sb, "Ctxt " & integer'image(curContext) & ": ");
+          rvs_append(sb, br2sim(
+            group2lastLane(
+              to_integer(unsigned(cfg2any_lastGroupForCtxt(curContext))), CFG
+            ) - CFG.branchLaneRevIndex
+          ));
+          rv2sim(line) <= rvs2sim(sb);
+          line := line + 1;
+          
+        end if;
+        
+        -- Print lane instruction information.
+        rvs_clear(sb);
+        rvs_append(sb, " '- Ln" & integer'image(lane) & ": ");
+        rvs_append(sb, pl2sim_instr(lane));
+        rv2sim(line) <= rvs2sim(sb);
+        line := line + 1;
+        
+        -- Print lane operation information.
+        rvs_clear(sb);
+        rvs_append(sb, "      '- ");
+        rvs_append(sb, pl2sim_op(lane));
+        rv2sim(line) <= rvs2sim(sb);
+        line := line + 1;
+        
+        -- Store the fact that information for the context belonging to this
+        -- lane has been added to the simulation information.
+        processedContexts(curContext) := true;
+        
+        -- Store the context belonging to this lane for the next loop
+        -- iteration.
+        prevContext := curContext;
+        
+      end loop;
+      
+      -- Inject a line of whitespace.
+      if line /= 1 then
+        rvs_clear(sb);
+        rv2sim(line) <= rvs2sim(sb);
+        line := line + 1;
+      end if;
+      
+      -- Add the current PCs for all non-active contexts to simulation.
+      for ctxt in 0 to 2**CFG.numContextsLog2-1 loop
+        if processedContexts(ctxt) = false then
+        
+          -- Pretty-print halted context information.
+          rvs_clear(sb);
+          rvs_append(sb, "Ctxt " & integer'image(ctxt) & ": halted at PC=");
+          rvs_append(sb, rvs_hex(cxreg2cxplif_currentPC(ctxt), 8));
+          rv2sim(line) <= rvs2sim(sb);
+          line := line + 1;
+          
+        end if;
+      end loop;
+      
+      -- Finish by writing an empty string to all lines which we're not
+      -- currently using.
+      rvs_clear(sb);
+      while line <= NUM_LINES loop
+        rv2sim(line) <= rvs2sim(sb);
+        line := line + 1;
+      end loop;
+      
+    end process;
+  end generate;
+  -- pragma translate_on
   
 end Behavioral;
 

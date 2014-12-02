@@ -50,6 +50,7 @@ use IEEE.numeric_std.all;
 library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
+use work.rvex_trap_pkg.all;
 
 --=============================================================================
 -- This entity contains the specifications and logic for the control registers

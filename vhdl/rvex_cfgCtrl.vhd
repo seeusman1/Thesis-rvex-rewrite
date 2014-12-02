@@ -7,6 +7,7 @@ use IEEE.numeric_std.all;
 library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
+use work.rvex_utils_pkg.all;
 
 --=============================================================================
 -- This entity contains the control logic which arbitrates between
@@ -76,16 +77,16 @@ entity rvex_cfgCtrl is
     cfg2gbreg_requesterID       : out std_logic_vector(3 downto 0);
     
     ---------------------------------------------------------------------------
-    -- Branch unit interface
+    -- Branch unit interface (through context-pipelane interface)
     ---------------------------------------------------------------------------
     -- Run enable signal. This serves a dual purpose: when a reconfiguration is
     -- requested, these bits are forced low; under normal circumstances these
     -- bits are tied to the run bits in the current configuration.
-    cfg2br_run                  : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cfg2cxplif_run              : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     -- Active high reconfiguration block input from the branch units. When this
     -- is low, associated contexts may not be reconfigured.
-    br2cfg_blockReconfig        : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cfg_blockReconfig    : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Memory interface
@@ -103,32 +104,27 @@ entity rvex_cfgCtrl is
     -- doing it in the pipeline essentially every cycle saves a lot of time in
     -- the interconnect networks at the cost of a few extra registers.
     
-    -- Pipelane group to context mapping. When there are less than 8 groups,
-    -- the MSBs in here will always be zero.
-    cfg2any_context             : out rvex_3bit_array(2**CFG.numLanesLog2-1 downto 0);
+    -- Diagonal block matrix of n*n size, where n is the number of pipelane
+    -- groups. C_i,j is high when pipelane groups i and j are coupled/share a
+    -- context, or low when they don't.
+    cfg2any_coupled             : out std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Context to last pipelane group mapping. When there are less than 8
-    -- groups, the MSBs in here will always be zero. This value may be
-    -- undefined for contexts where run is low.
-    cfg2any_lastGroupForCtxt    : out rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
+    -- Decouple vector. This is just another way to look at the coupled matrix.
+    -- The vector is assigned such that dec_i = not C_i,i+1. The MSB in the
+    -- vector is always high. This representation is useful because the bits
+    -- can also be regarded as master/slave bits: when the decouple bit for
+    -- a group is high, it is a master, otherwise it is a slave. Slaves answer
+    -- to the next higher indexed master group.
+    cfg2any_decouple            : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- log2 of the number of groups per context for each context, used to
-    -- determine PC increment value. This value may be undefined for contexts
-    -- where run is low.
-    cfg2any_numGroupsLog2ForCtxt: out rvex_2bit_array(2**CFG.numContextsLog2-1 downto 0);
+    -- log2 of the number of coupled pipelane groups for each pipelane group.
+    cfg2any_numGroupsLog2       : out rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Same as above, but multiplexed per lane.
-    cfg2any_numGroupsLog2ForLane: out rvex_2bit_array(2**CFG.numLanesLog2-1 downto 0);
+    -- Specifies the context associated with the indexed pipelane group.
+    cfg2any_context             : out rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Diagonal block matrix of n*n size, where n is the number of pipelanes.
-    -- C_n,m is high when lane n and m are coupled/share a context, or low when
-    -- they don't. Used by the forwarding logic.
-    cfg2any_coupled             : out std_logic_vector(4**CFG.numLanesLog2-1 downto 0);
-    
-    -- Decouple/master bits. Bit n in this vector is set when pipelane group
-    -- n is running independently from pipelane group n+1. The MSB is always
-    -- set.
-    cfg2any_decouple            : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0)
+    -- Last pipelane group associated with each context.
+    cfg2any_lastGroupForCtxt    : out rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0)
     
   );
 end rvex_cfgCtrl;
@@ -428,9 +424,9 @@ begin -- architecture
       -- that case. Otherwise, connect them to the current configuration
       -- register.
       if busy_r = '1' and decoderBusy = '0' and contextsToUpdate(i) = '1' then
-        cfg2br_run(i) <= '0';
+        cfg2cxplif_run(i) <= '0';
       else
-        cfg2br_run(i) <= curContextEnable_r(i);
+        cfg2cxplif_run(i) <= curContextEnable_r(i);
       end if;
       
     end loop;
@@ -440,7 +436,7 @@ begin -- architecture
   -- is still high, while all the contexts with their contextsToUpdate bit set
   -- are idle.
   gen_commit: process (
-    contextsToUpdate, decoderBusy, busy_r, br2cfg_blockReconfig,
+    contextsToUpdate, decoderBusy, busy_r, cxplif2cfg_blockReconfig,
     curContextEnable_r, curLastPipelaneGroupForContext_r, mem2cfg_blockReconfig
   ) is
     variable laneGroup : natural;
@@ -455,7 +451,7 @@ begin -- architecture
       commit <= '1';
       for i in 2**CFG.numContextsLog2-1 downto 0 loop
         if contextsToUpdate(i) = '1' then
-          if br2cfg_blockReconfig(i) = '1' then
+          if cxplif2cfg_blockReconfig(i) = '1' then
             commit <= '0';
           end if;
           if curContextEnable_r(i) = '1' then
@@ -506,34 +502,19 @@ begin -- architecture
   -- Forward the trivial signals.
   cfg2gbreg_currentCfg <= curConfiguration_r;
   cfg2any_lastGroupForCtxt <= curLastPipelaneGroupForContext_r;
-  cfg2any_numGroupsLog2ForCtxt <= curNumPipelaneGroupsLog2ForContext_r;
+  cfg2any_coupled <= curCoupleMatrix_r;
   
   -- Construct the vector containing the number of groups working together for
-  -- each lane and extract the contexts from the configuration vector.
+  -- each lane group and extract the contexts from the configuration vector.
   num_groups_per_lane_gen: process (curConfiguration_r, curNumPipelaneGroupsLog2ForContext_r) is
-    variable pipelaneGroup : integer;
-    variable contextBits : rvex_3bit_type;
-    variable context : integer;
+    variable contextBits  : rvex_3bit_type;
+    variable context      : natural;
   begin
-    for i in 0 to 2**CFG.numLanesLog2-1 loop
-      pipelaneGroup := i / (2**(CFG.numLanesLog2-CFG.numLaneGroupsLog2));
-      contextBits := curConfiguration_r(pipelaneGroup*4+2 downto pipelaneGroup*4);
-      cfg2any_context(i) <= contextBits;
+    for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+      contextBits := curConfiguration_r(laneGroup*4+2 downto laneGroup*4);
+      cfg2any_context(laneGroup) <= contextBits;
       context := to_integer(unsigned(contextBits(CFG.numContextsLog2-1 downto 0)));
-      cfg2any_numGroupsLog2ForLane(i) <= curNumPipelaneGroupsLog2ForContext_r(context);
-    end loop;
-  end process;
-  
-  -- Construct the coupled matrix from pipelane to pipelane from the coupled
-  -- matrix from pipelane group to pipelane group.
-  pipelane_couple_matrix_gen: process (curCoupleMatrix_r) is
-    constant LANES_PER_GROUP : natural := 2**(CFG.numLanesLog2-CFG.numLaneGroupsLog2);
-  begin
-    for i in 0 to 2**CFG.numLanesLog2-1 loop
-      for j in 0 to 2**CFG.numLanesLog2-1 loop
-        cfg2any_coupled(i*2**CFG.numLanesLog2 + j) <=
-          curCoupleMatrix_r((i/LANES_PER_GROUP)*2**CFG.numLaneGroupsLog2 + j/LANES_PER_GROUP);
-      end loop;
+      cfg2any_numGroupsLog2(laneGroup) <= curNumPipelaneGroupsLog2ForContext_r(context);
     end loop;
   end process;
   

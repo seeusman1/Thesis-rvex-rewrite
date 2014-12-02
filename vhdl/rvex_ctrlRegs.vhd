@@ -87,11 +87,11 @@ entity rvex_ctrlRegs is
     clkEn                       : in  std_logic;
     
     -- Active high stall signals from each context/core.
-    stallIn                     : in  std_logic_vector(CFG.numLaneGroupsLog2-1 downto 0);
+    stallIn                     : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high stall signals to each context/core, active when a debug bus
     -- access is in progress.
-    stallOut                    : out std_logic_vector(CFG.numLaneGroupsLog2-1 downto 0);
+    stallOut                    : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -----------------------------------------------------------------------------
     -- Decoded configuration signals
@@ -190,9 +190,10 @@ architecture Behavioral of rvex_ctrlRegs is
 begin -- architecture
 --=============================================================================
   
-  assert CTRL_REG_TOTAL_WORDS = 64 and CTRL_REG_SIZE_BLOG2 = 7
-    report "Size of the control register file is hardcoded to 64 words in the "
-         & "control register code, but configuration specifies otherwise."
+  assert CTRL_REG_TOTAL_WORDS = 32 and CTRL_REG_SIZE_BLOG2 = 7
+    report "Size of the control register file is hardcoded to 32 words (not "
+         & "counting gp. reg access) in the control register code, but "
+         & "configuration specifies otherwise."
     severity failure;
   
   assert CTRL_REG_GLOB_WORDS <= CTRL_REG_TOTAL_WORDS

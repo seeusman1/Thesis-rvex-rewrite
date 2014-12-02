@@ -43,23 +43,6 @@
 
 -- Copyright (C) 2008-2014 by TU Delft.
 
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-
-library work;
-use work.rvex_pkg.all;
-use work.rvex_intIface_pkg.all;
-use work.rvex_utils_pkg.all;
-use work.rvex_pipeline_pkg.all;
-use work.rvex_trap_pkg.all;
-use work.rvex_opcode_pkg.all;
-use work.rvex_opcodeDatapath_pkg.all;
-
--- pragma translate_off
-use work.rvex_simUtils_pkg.all;
-use work.rvex_simUtils_asDisas_pkg.all;
--- pragma translate_on
 
 
 
@@ -226,7 +209,24 @@ use work.rvex_simUtils_asDisas_pkg.all;
 
 
 
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
 
+library work;
+use work.rvex_pkg.all;
+use work.rvex_intIface_pkg.all;
+use work.rvex_utils_pkg.all;
+use work.rvex_pipeline_pkg.all;
+use work.rvex_trap_pkg.all;
+use work.rvex_opcode_pkg.all;
+use work.rvex_opcodeDatapath_pkg.all;
+
+-- pragma translate_off
+use work.rvex_simUtils_pkg.all;
+use work.rvex_simUtils_asDisas_pkg.all;
+use work.rvex_opcodeMemory_pkg.all;
+-- pragma translate_on
 
 --=============================================================================
 -- This entity contains the pipeline logic and instantiates the functional
@@ -277,9 +277,13 @@ entity rvex_pipelane is
     ---------------------------------------------------------------------------
     -- pragma translate_off
     
-    -- String with disassembly, trap info, validity, etc. for the last
-    -- instruction in the pipeline.
-    pl2sim                      : out rvex_string_builder_type;
+    -- String with commit information, exact PC, disassembly and trap info for
+    -- the last instruction in the pipeline.
+    pl2sim_instr                : out rvex_string_builder_type;
+    
+    -- String with register write and data memory access information for the
+    -- last instruction in the pipeline.
+    pl2sim_op                   : out rvex_string_builder_type;
     
     -- String with branch information for the last instruction, if the branch
     -- unit is active.
@@ -299,12 +303,9 @@ entity rvex_pipelane is
     -- Number of coupled lane groups.
     cfg2pl_numGroupsLog2        : in  rvex_2bit_type;
     
-    -- Run bit for this pipelane from the configuration logic.
-    cfg2br_run                  : in  std_logic;
-    
     -- Active high reconfiguration block bit. When high, reconfiguration is
     -- not permitted. This is essentially an active low idle flag.
-    pl2cfg_blockReconfig        : out std_logic;
+    pl2cxplif_blockReconfig     : out std_logic;
     
     -- External interrupt request signal, active high. This is already masked
     -- by the interrupt enable bit in the control register.
@@ -319,7 +320,8 @@ entity rvex_pipelane is
     br2cxplif_irqAck            : out std_logic_vector(S_BR to S_BR);
     
     -- Active high run signal. This is the combined run signal from the
-    -- external run input and the BRK flag in the debug control register.
+    -- external run input, the BRK flag in the debug control register and the
+    -- run bit from the configuration logic.
     cxplif2br_run               : in  std_logic;
     
     -- Active high idle output.
@@ -664,9 +666,9 @@ architecture Behavioral of rvex_pipelane is
     -- control registers in the S_MEM stage.
     RFI                         : std_logic;
     
-    -- Simulation information from branch unit.
     -- pragma translate_off
-    br2sim                      : rvex_string_builder_type;
+      -- Simulation information from branch unit.
+      br2sim                    : rvex_string_builder_type;
     -- pragma translate_on
     
   end record;
@@ -677,7 +679,7 @@ architecture Behavioral of rvex_pipelane is
     trapInfo                    => TRAP_INFO_UNDEF,
     RFI                         => RVEX_UNDEF,
     -- pragma translate_off
-    br2sim                      => to_rvs("no info"),
+      br2sim                    => to_rvs("no info"),
     -- pragma translate_on
     others                      => (others => RVEX_UNDEF)
   );
@@ -748,6 +750,20 @@ architecture Behavioral of rvex_pipelane is
     -- Trap-related signals.
     tr                          : trapState_type;
     
+    -- pragma translate_off
+      -- Whether a memory access was requested or not.
+      memRequested              : boolean;
+      
+      -- Whether an exception related to the memory access occured.
+      memError                  : boolean;
+      
+      -- Whether a general purpose register, branch register or link register
+      -- write was requested.
+      gpRegWriteRequested       : std_logic;
+      brRegWriteRequested       : rvex_brRegData_type;
+      linkRegWriteRequested     : std_logic;
+    -- pragma translate_on
+    
   end record;
   
   -- Initialization value for the state variable. This is assigned to all stage
@@ -760,6 +776,13 @@ architecture Behavioral of rvex_pipelane is
     dp                          => DATAPATH_STATE_DEFAULT,
     br                          => BRANCH_STATE_DEFAULT,
     tr                          => TRAP_STATE_DEFAULT,
+    -- pragma translate_off
+      memRequested              => false,
+      memError                  => false,
+      gpRegWriteRequested       => '0',
+      brRegWriteRequested       => (others => '0'),
+      linkRegWriteRequested     => '0',
+    -- pragma translate_on
     others                      => (others => RVEX_UNDEF)
   );
   
@@ -1034,7 +1057,6 @@ begin -- architecture
         br2cxplif_invalUntilBR(S_BR)    => br2cxplif_invalUntilBR(S_BR),
         
         -- Run control signals.
-        cfg2br_run                      => cfg2br_run,
         cxplif2br_irqID(S_BR)           => cxplif2br_irqID(S_BR),
         br2cxplif_irqAck(S_BR)          => br2cxplif_irqAck(S_BR),
         cxplif2br_run                   => cxplif2br_run,
@@ -1203,7 +1225,7 @@ begin -- architecture
   
   -- Instantiate breakpoint unit, if there should be one.
   brku_gen: if HAS_BRK generate
-    brku: entity work.rvex_brku
+    brku_inst: entity work.rvex_brku
       generic map (
         CFG                             => CFG
       )
@@ -1875,8 +1897,8 @@ begin -- architecture
     end loop;
     
     -- Drive idle output signals.
-    pl2cfg_blockReconfig  <= not idle;
-    pl2cxplif_idle        <= idle;
+    pl2cxplif_blockReconfig <= not idle;
+    pl2cxplif_idle          <= idle;
     
     ---------------------------------------------------------------------------
     -- Connect pipeline to memory unit command
@@ -1945,23 +1967,26 @@ begin -- architecture
     -- pragma translate_off
     if GEN_VHDL_SIM_INFO then
       
+      -- Copy branch unit information input pipeline and forward it in the last
+      -- pipeline stage.
       if HAS_BR then
-        
-        -- Copy branch unit information input pipeline.
         s(S_IF).br.br2sim := br2pl_sim(S_IF);
-        
       end if;
+      br2sim <= s(S_LAST).br.br2sim;
       
+      
+      -- Generate instruction debug information
+      -- --------------------------------------
       rvs_clear(debug);
       
       -- Display commit/trap information.
       if idle = '1' then
-        rvs_append(debug, "pipeline idle; ");
+        rvs_append(debug, "idle; ");
       end if;
       if (s(S_LAST).valid = '1')
         or ((s(S_LAST).limmValid = '1') and (s(S_LAST).dp.c.isLIMMH = '1'))
       then
-        rvs_append(debug, "commit ");
+        rvs_append(debug, "committing ");
         if s(S_LAST).brkValid = '0' then
           rvs_append(debug, "(no brkpts) ");
         end if;
@@ -1969,12 +1994,12 @@ begin -- architecture
         --rvs_append(debug, prettyPrintTrap(s(S_LAST).tr.trap));
         rvs_append(debug, " occurred at ");
       else
-        rvs_append(debug, "do not commit ");
+        rvs_append(debug, "ignoring ");
       end if;
       
       -- Display PC for the current syllable.
       rvs_append(debug, rvs_hex(s(S_LAST).lanePC, 8));
-      rvs_append(debug, ": ");
+      rvs_append(debug, " = ");
       
       -- Append disassembly.
       if HAS_BR then
@@ -1990,10 +2015,122 @@ begin -- architecture
         ));
       end if;
       
-      -- Because why not.
-      rvs_capitalize(debug);
-      pl2sim <= debug;
-      br2sim <= s(S_LAST).br.br2sim;
+      -- Forward debug information.
+      pl2sim_instr <= debug;
+      
+      
+      -- Generate register/dmem access debug information
+      -- -----------------------------------------------
+      rvs_clear(debug);
+      
+      -- Use the general purpose flag to store whether we've written anything
+      -- here yet.
+      flag := '0';
+      
+      -- Save whether we're doing a memory access and whether it was
+      -- successful or not.
+      s(S_MEM).memRequested := s(S_MEM).valid = '1';
+      if memu2pl_trap(S_MEM).active = '1' then
+        s(S_MEM).memError := true;
+      end if;
+      if dmsw2pl_exception(S_MEM+L_MEM).active = '1' then
+        s(S_MEM+L_MEM).memError := true;
+      end if;
+      
+      -- Display memory operation, if one was performed.
+      if s(S_LAST).memRequested then
+        
+        if OPCODE_TABLE(to_integer(unsigned(s(S_LAST).opcode))).memoryCtrl.writeEnable = '1' then
+          rvs_append(debug, "mem(");
+          rvs_append(debug, rvs_hex(s(S_LAST).dp.resAdd, 8));
+          rvs_append(debug, ") := ");
+          case OPCODE_TABLE(to_integer(unsigned(s(S_LAST).opcode))).memoryCtrl.accessSizeBLog2 is
+            
+            when ACCESS_SIZE_BYTE =>
+              rvs_append(debug, rvs_hex(s(S_LAST).dp.op3(7 downto 0), 2));
+              
+            when ACCESS_SIZE_HALFWORD =>
+              rvs_append(debug, rvs_hex(s(S_LAST).dp.op3(15 downto 0), 4));
+            
+            when others =>
+              rvs_append(debug, rvs_hex(s(S_LAST).dp.op3, 8));
+            
+          end case;
+        else
+          rvs_append(debug, "read mem(");
+          rvs_append(debug, rvs_hex(s(S_LAST).dp.resAdd, 8));
+          rvs_append(debug, ")");
+        end if;
+        if s(S_LAST).memError then
+          rvs_append(debug, " -> error");
+        end if;
+        
+        -- We've written stuff to the debug information string.
+        flag := '1';
+        
+      end if;
+      
+      -- Save whether we're writing to a general purpose register.
+      s(S_WB).gpRegWriteRequested
+        := s(S_WB).dp.resValid and s(S_WB).valid;
+      
+      -- Display information about the general purpose register write.
+      if s(S_WB).gpRegWriteRequested = '1' then
+        if flag = '0' then
+          flag := '1';
+        else
+          rvs_append(debug, "; ");
+        end if;
+        rvs_append(debug, "r0." & integer'image(to_integer(unsigned(s(S_LAST).dp.dest))) & " := ");
+        rvs_append(debug, rvs_hex(s(S_LAST).dp.res, 8));
+      end if;
+      
+      -- Save whether we're writing to the link register.
+      s(S_SWB).linkRegWriteRequested
+        := s(S_SWB).dp.resLinkValid and s(S_SWB).valid;
+      
+      -- Display information about the link register write.
+      if s(S_WB).linkRegWriteRequested = '1' then
+        if flag = '0' then
+          flag := '1';
+        else
+          rvs_append(debug, "; ");
+        end if;
+        rvs_append(debug, "l0.0 := ");
+        rvs_append(debug, rvs_hex(s(S_LAST).dp.res, 8));
+      end if;
+      
+      -- Show link register operations.
+      for b in rvex_brRegData_type'range loop
+        
+        -- Save whether we're writing to this link register.
+        s(S_SWB).brRegWriteRequested(b)
+          := s(S_SWB).dp.resBrValid(b) and s(S_SWB).valid;
+        
+        -- Display information about the link register write.
+        if s(S_WB).brRegWriteRequested(b) = '1' then
+          if flag = '0' then
+            flag := '1';
+          else
+            rvs_append(debug, "; ");
+          end if;
+          rvs_append(debug, "b0." & integer'image(b) & " := ");
+          if s(S_LAST).dp.resBr(b) = '1' then
+            rvs_append(debug, "1");
+          else
+            rvs_append(debug, "0");
+          end if;
+        end if;
+        
+      end loop;
+      
+      -- Make sure we display something if we haven't done so already.
+      if flag = '0' then
+        rvs_append(debug, "no ops performed");
+      end if;
+      
+      -- Forward debug information.
+      pl2sim_op <= debug;
       
     end if;
     -- pragma translate_on

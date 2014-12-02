@@ -29,9 +29,15 @@ architecture Behavioral of rvex_cfgCtrl_tb is
     numContextsLog2             => 2,
     genBundleSizeLog2           => 3,
     multiplierLanes             => 2#11111111#,
+    memLaneRevIndex             => 1,
+    branchLaneRevIndex          => 0,
+    numBreakpoints              => 4,
     forwarding                  => true,
     limmhFromNeighbor           => true,
-    limmhFromPreviousPair       => true
+    limmhFromPreviousPair       => true,
+    reg63isLink                 => false,
+    cregStartAddress            => X"FFFFFF80",
+    resetVectors                => (others => (others => '0'))
   );
   
   -- Signals from and to the configuration controller.
@@ -46,16 +52,15 @@ architecture Behavioral of rvex_cfgCtrl_tb is
   signal cfg2gbreg_busy              : std_logic;
   signal cfg2gbreg_error             : std_logic;
   signal cfg2gbreg_requesterID       : std_logic_vector(3 downto 0);
-  signal cfg2br_run                  : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal br2cfg_blockReconfig        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cfg2cxplif_run              : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cfg_blockReconfig    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal mem2cfg_blockReconfig       : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal cfg2any_context             : rvex_3bit_array(2**CFG.numLanesLog2-1 downto 0);
-  signal cfg2any_lastGroupForCtxt    : rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cfg2any_numGroupsLog2ForCtxt: rvex_2bit_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cfg2any_numGroupsLog2ForLane: rvex_2bit_array(2**CFG.numLanesLog2-1 downto 0);
-  signal cfg2any_coupled             : std_logic_vector(4**CFG.numLanesLog2-1 downto 0);
+  signal cfg2any_coupled             : std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
   signal cfg2any_decouple            : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  
+  signal cfg2any_numGroupsLog2       : rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal cfg2any_context             : rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal cfg2any_lastGroupForCtxt    : rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
+    
   -- Synchronization signal. This has a rising edge at every 10ns mark. It is
   -- used to align things to make them look nice in simulation.
   signal sync                        : std_logic := '0';
@@ -84,18 +89,18 @@ begin
       cfg2gbreg_busy              => cfg2gbreg_busy,
       cfg2gbreg_error             => cfg2gbreg_error,
       cfg2gbreg_requesterID       => cfg2gbreg_requesterID,
-      br2cfg_blockReconfig        => br2cfg_blockReconfig,
+      cfg2cxplif_run              => cfg2cxplif_run,
+      cxplif2cfg_blockReconfig    => cxplif2cfg_blockReconfig,
       mem2cfg_blockReconfig       => mem2cfg_blockReconfig,
-      cfg2any_context             => cfg2any_context,
-      cfg2any_lastGroupForCtxt    => cfg2any_lastGroupForCtxt,
-      cfg2any_numGroupsLog2ForCtxt=> cfg2any_numGroupsLog2ForCtxt,
-      cfg2any_numGroupsLog2ForLane=> cfg2any_numGroupsLog2ForLane,
       cfg2any_coupled             => cfg2any_coupled,
-      cfg2any_decouple            => cfg2any_decouple
+      cfg2any_decouple            => cfg2any_decouple,
+      cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
+      cfg2any_context             => cfg2any_context,
+      cfg2any_lastGroupForCtxt    => cfg2any_lastGroupForCtxt
     );
   
   -- Drive the configuration block signals low, so reconfiguration is instant.
-  br2cfg_blockReconfig <= (others => '0');
+  cxplif2cfg_blockReconfig <= (others => '0');
   mem2cfg_blockReconfig <= (others => '0');
   
   -- Load default values into the requests from the contexts, we're not using

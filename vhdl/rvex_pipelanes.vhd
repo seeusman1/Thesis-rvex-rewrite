@@ -92,9 +92,19 @@ entity rvex_pipelanes is
     -- VHDL simulation debug information
     ---------------------------------------------------------------------------
     -- pragma translate_off
-    -- String with disassembly, trap info, validity, etc. for the last
-    -- instruction in the pipeline for each lane.
-    pl2sim                      : out rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- String with commit information, exact PC, disassembly and trap info for
+    -- the last instruction in the pipeline.
+    pl2sim_instr                : out rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- String with register write and data memory access information for the
+    -- last instruction in the pipeline.
+    pl2sim_op                   : out rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- String with branch information for the last instruction, if the branch
+    -- unit is active.
+    br2sim                      : out rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
+    
     -- pragma translate_on
     
     -----------------------------------------------------------------------------
@@ -125,12 +135,13 @@ entity rvex_pipelanes is
     ---------------------------------------------------------------------------
     -- Configuration and run control
     ---------------------------------------------------------------------------
-    -- Run bit for this pipelane from the configuration logic.
-    cfg2br_run                  : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    -- Run bit for the pipelanes per context from the configuration logic.
+    cfg2cxplif_run              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     -- Active high reconfiguration block bit. When high, reconfiguration is
-    -- not permitted. This is essentially an active low idle flag.
-    pl2cfg_blockReconfig        : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    -- not permitted for the indexed context. This is essentially an active low
+    -- idle flag.
+    cxplif2cfg_blockReconfig    : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     -- External interrupt request signal, active high. This is already masked
     -- by the interrupt enable bit in the control register.
@@ -261,6 +272,7 @@ architecture Behavioral of rvex_pipelanes is
 --=============================================================================
   
   -- Context to pipelane interface <-> pipelane interconnect signals.
+  signal pl2cxplif_blockReconfig    : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_irq              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2br_irqID            : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_irqAck           : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -346,7 +358,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the pipelanes
   -----------------------------------------------------------------------------
-  gen_lanes: for lane in 2**CFG.numLanesLog2-1 downto 0 generate
+  pl_gen: for lane in 2**CFG.numLanesLog2-1 downto 0 generate
     
     -- Lane group which lane belongs to.
     constant laneGroup: natural := lane2group(lane, CFG);
@@ -374,7 +386,7 @@ begin -- architecture
     
   begin
     
-    lane_n: entity work.rvex_pipelane
+    pl_inst: entity work.rvex_pipelane
       generic map (
         
         -- Global configuration.
@@ -397,14 +409,15 @@ begin -- architecture
         
         -- VHDL simulation debug information.
         -- pragma translate_off
-        pl2sim                            => pl2sim(lane),
+        pl2sim_instr                      => pl2sim_instr(lane),
+        pl2sim_op                         => pl2sim_op(lane),
+        br2sim                            => br2sim(lane),
         -- pragma translate_on
         
         -- Configuration and run control.
         cfg2pl_decouple                   => cfg2any_decouple(laneGroup),
         cfg2pl_numGroupsLog2              => cfg2any_numGroupsLog2(laneGroup),
-        cfg2br_run                        => cfg2br_run(laneGroup),
-        pl2cfg_blockReconfig              => pl2cfg_blockReconfig(lane),
+        pl2cxplif_blockReconfig           => pl2cxplif_blockReconfig(lane),
         cxplif2pl_irq(S_MEM+1)            => cxplif2pl_irq(lane),
         cxplif2br_irqID(S_BR)             => cxplif2br_irqID(lane),
         br2cxplif_irqAck(S_BR)            => br2cxplif_irqAck(lane),
@@ -488,7 +501,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate context to pipelane interface
   -----------------------------------------------------------------------------
-  context_pipelane_iface: entity work.rvex_contextPipelaneIFace
+  cxplif_inst: entity work.rvex_contextPipelaneIFace
     generic map (
       CFG                               => CFG
     )
@@ -506,6 +519,7 @@ begin -- architecture
       cfg2any_lastGroupForCtxt          => cfg2any_lastGroupForCtxt,
       
       -- Pipelane interface: configuration and run control.
+      pl2cxplif_blockReconfig           => pl2cxplif_blockReconfig,
       cxplif2pl_irq                     => cxplif2pl_irq,
       cxplif2br_irqID                   => cxplif2br_irqID,
       br2cxplif_irqAck                  => br2cxplif_irqAck,
@@ -552,6 +566,10 @@ begin -- architecture
       rctrl2cxplif_run                  => rctrl2cxplif_run,
       cxplif2rctrl_idle                 => cxplif2rctrl_idle,
       
+      -- Configuration control interface.
+      cfg2cxplif_run                    => cfg2cxplif_run,
+      cxplif2cfg_blockReconfig          => cxplif2cfg_blockReconfig,
+      
       -- Context register interface: misc.
       cxplif2cxreg_stall                => cxplif2cxreg_stall,
       cxplif2cxreg_stop                 => cxplif2cxreg_stop,
@@ -590,9 +608,9 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate data memory/control register switches
   -----------------------------------------------------------------------------
-  gen_dmem_switches: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
+  dmsw_gen: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
     
-    dmem_switch_n: entity work.rvex_dmemSwitch
+    dmsw_inst: entity work.rvex_dmemSwitch
       generic map (
         CFG                             => CFG
       )
@@ -637,7 +655,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate LIMM routing network
   -----------------------------------------------------------------------------
-  limm_routing: entity work.rvex_limmRouting
+  limm_inst: entity work.rvex_limmRouting
     generic map (
       CFG                       => CFG
     )
@@ -666,7 +684,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate trap routing network
   -----------------------------------------------------------------------------
-  trap_routing: entity work.rvex_trapRouting
+  trap_inst: entity work.rvex_trapRouting
     generic map (
       CFG                       => CFG
     )
