@@ -83,10 +83,6 @@ entity rvex_ctrlRegs_bank is
     -- Active high global clock enable input.
     clkEn                       : in  std_logic;
     
-    -- Stall input from the core. When high, synchronous hardware writes are
-    -- disabled, but the bus still works.
-    stall                       : in  std_logic;
-    
     ---------------------------------------------------------------------------
     -- Bus interface
     ---------------------------------------------------------------------------
@@ -106,12 +102,12 @@ entity rvex_ctrlRegs_bank is
     writeData                   : in  rvex_data_type;
     
     -- Origin of the request, used to select which write permission to use.
-    -- Set high for core access, low for external debug bus access.
+    -- Set low for core access, high for external debug bus access.
     origin                      : in  std_logic;
     
     -- (one clock cycle delay with clkEn high)
     
-    -- Read data. Will be set to 'Z' when block is not addressed.
+    -- Read data.
     readData                    : out rvex_data_type;
     
     ---------------------------------------------------------------------------
@@ -167,7 +163,7 @@ begin -- architecture
             if writeMask(i) = '1' then
               
               -- Byte is in bytemask, write if we have permission.
-              if origin = '1' then
+              if origin = '0' then
                 bw(a)(i*8+7 downto i*8) <= logic2creg(a).coreCanWrite(i*8+7 downto i*8);
               else
                 bw(a)(i*8+7 downto i*8) <= logic2creg(a).dbgBusCanWrite(i*8+7 downto i*8);
@@ -215,7 +211,7 @@ begin -- architecture
           for i in 0 to 31 loop
             
             -- Perform the write. Hardware takes precedence over bus.
-            if logic2creg(a).writeEnable(i) = '1' and stall = '0' then
+            if logic2creg(a).writeEnable(i) = '1' then
               
               -- Hardware write.
               r(a)(i) <= logic2creg(a).writeData(i);
@@ -273,17 +269,17 @@ begin -- architecture
   begin
     if rising_edge(clk) then
       if reset = '1' then
-        readData <= (others => 'Z');
+        readData <= (others => RVEX_UNDEF);
       elsif clkEn = '1' then
         if readEnable = '1' then
           a := to_integer(unsigned(addr(31 downto 2)));
           if a >= OFFSET and a < OFFSET + NUM_WORDS then
             readData <= rOvr(a);
           else
-            readData <= (others => 'Z');
+            readData <= (others => RVEX_UNDEF);
           end if;
         else
-          readData <= (others => 'Z');
+          readData <= (others => RVEX_UNDEF);
         end if;
       end if;
     end if;

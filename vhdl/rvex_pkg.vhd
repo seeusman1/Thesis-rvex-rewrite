@@ -167,6 +167,24 @@ package rvex_pkg is
     resetVectors                => (others => (others => '0'))
   );
   
+  -- Minimal rvex core configuration.
+  constant RVEX_MINIMAL_CONFIG  : rvex_generic_config_type := (
+    numLanesLog2                => 1,
+    numLaneGroupsLog2           => 0,
+    numContextsLog2             => 0,
+    genBundleSizeLog2           => 3,
+    multiplierLanes             => 2#00#,
+    memLaneRevIndex             => 1,
+    branchLaneRevIndex          => 0,
+    numBreakpoints              => 0,
+    forwarding                  => false,
+    limmhFromNeighbor           => true,
+    limmhFromPreviousPair       => false,
+    reg63isLink                 => false,
+    cregStartAddress            => X"FFFFFF80",
+    resetVectors                => (others => (others => '0'))
+  );
+  
   -- Component declaration for the rvex processor.
   component rvex is
     generic (

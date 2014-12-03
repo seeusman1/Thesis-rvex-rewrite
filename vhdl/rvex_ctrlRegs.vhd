@@ -69,7 +69,7 @@ entity rvex_ctrlRegs is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type := RVEX_DEFAULT_CONFIG
+    CFG                         : rvex_generic_config_type
     
   );
   port (
@@ -98,9 +98,6 @@ entity rvex_ctrlRegs is
     -----------------------------------------------------------------------------
     -- Specifies the context associated with the indexed pipelane group.
     cfg2any_context             : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-    
-    -- Last pipelane group associated with each context.
-    cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Core bus interfaces
@@ -234,8 +231,13 @@ architecture Behavioral of rvex_ctrlRegs is
   --
   
   -- Busses between the global register read ports and the lane groups (through
-  -- a bus switch).
+  -- a bus switch). The *_nc signals are not used, because the contexts cannot
+  -- write to the global registers.
   signal grpBus_glob_addr           : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal grpBus_glob_addr_raw       : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal grpBus_glob_writeEnable_nc : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal grpBus_glob_writeMask_nc   : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal grpBus_glob_writeData_nc   : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_glob_readEnable     : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_glob_readData       : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
@@ -243,6 +245,7 @@ architecture Behavioral of rvex_ctrlRegs is
   -- (through a bus switch). Address bits 6..0 are from the memory unit of the
   -- lane group, bits 9..7 are set to the current context.
   signal grpBus_ctxt_addr           : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal grpBus_ctxt_addr_raw       : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_ctxt_writeEnable    : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_ctxt_writeMask      : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_ctxt_writeData      : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -251,6 +254,7 @@ architecture Behavioral of rvex_ctrlRegs is
   
   -- Busses between the debug bus and the global registers.
   signal dbgBus_glob_addr           : rvex_address_type;
+  signal dbgBus_glob_addr_raw       : rvex_address_type;
   signal dbgBus_glob_writeEnable    : std_logic;
   signal dbgBus_glob_writeMask      : rvex_mask_type;
   signal dbgBus_glob_writeData      : rvex_data_type;
@@ -261,6 +265,7 @@ architecture Behavioral of rvex_ctrlRegs is
   -- 6..0 are from the debug bus address, bits 9..7 are from the debug bus
   -- context bank input.
   signal dbgBus_ctxt_addr           : rvex_address_type;
+  signal dbgBus_ctxt_addr_raw       : rvex_address_type;
   signal dbgBus_ctxt_writeEnable    : std_logic;
   signal dbgBus_ctxt_writeMask      : rvex_mask_type;
   signal dbgBus_ctxt_writeData      : rvex_data_type;
@@ -272,6 +277,7 @@ architecture Behavioral of rvex_ctrlRegs is
   -- to the general purpose register bank selection input, and bit 10..8 are
   -- connected to the debug bus context bank input.
   signal dbgBus_gpreg_addr          : rvex_address_type;
+  signal dbgBus_gpreg_addr_raw      : rvex_address_type;
   signal dbgBus_gpreg_writeEnable   : std_logic;
   signal dbgBus_gpreg_writeMask     : rvex_mask_type;
   signal dbgBus_gpreg_writeData     : rvex_data_type;
@@ -298,6 +304,19 @@ architecture Behavioral of rvex_ctrlRegs is
   signal grpDbgBus_ctxt_writeData   : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpDbgBus_ctxt_readEnable  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpDbgBus_ctxt_readData    : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  
+  -- Busses between the context bus switching logic and the registers. Only
+  -- address bits 6..0 are used.
+  signal ctxtBus_addr               : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+  signal ctxtBus_writeEnable        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal ctxtBus_writeMask          : rvex_mask_array(2**CFG.numContextsLog2-1 downto 0);
+  signal ctxtBus_writeData          : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+  signal ctxtBus_readEnable         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal ctxtBus_readData           : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+  
+  -- Local copy of the global register signal from registers to control logic,
+  -- which we need to instantiate the extra read ports.
+  signal creg2gbreg_s               : creg2gbreg_type;
   
 --=============================================================================
 begin -- architecture
@@ -349,28 +368,26 @@ begin -- architecture
         sw2mstr_readData              => creg2dmsw_readData(laneGroup),
         mstr2sw_stall                 => stallIn(laneGroup),
         
-        -- Global register bus.
-        sw2slave_addr(0)(6 downto 0)  => grpBus_glob_addr(laneGroup)(6 downto 0),
---        sw2slave_addr(0)(31 downto 7) => open,
---        sw2slave_writeEnable(0)       => open,
---        sw2slave_writeMask(0)         => open,
---        sw2slave_writeData(0)         => open,
-        sw2slave_readEnable(0)        => grpBus_glob_readEnable(laneGroup),
-        slave2sw_readData(0)          => grpBus_glob_readData(laneGroup),
-        
-        -- Context register bus.
-        sw2slave_addr(1)(6 downto 0)  => grpBus_ctxt_addr(laneGroup)(6 downto 0),
---        sw2slave_addr(1)(31 downto 7) => open,
+        -- Slave busses.
+        sw2slave_addr(0)              => grpBus_glob_addr_raw(laneGroup),
+        sw2slave_addr(1)              => grpBus_ctxt_addr_raw(laneGroup),
+        sw2slave_writeEnable(0)       => grpBus_glob_writeEnable_nc(laneGroup),
         sw2slave_writeEnable(1)       => grpBus_ctxt_writeEnable(laneGroup),
+        sw2slave_writeMask(0)         => grpBus_glob_writeMask_nc(laneGroup),
         sw2slave_writeMask(1)         => grpBus_ctxt_writeMask(laneGroup),
+        sw2slave_writeData(0)         => grpBus_glob_writeData_nc(laneGroup),
         sw2slave_writeData(1)         => grpBus_ctxt_writeData(laneGroup),
+        sw2slave_readEnable(0)        => grpBus_glob_readEnable(laneGroup),
         sw2slave_readEnable(1)        => grpBus_ctxt_readEnable(laneGroup),
+        slave2sw_readData(0)          => grpBus_glob_readData(laneGroup),
         slave2sw_readData(1)          => grpBus_ctxt_readData(laneGroup)
         
       );
     
-    -- Connect the rest of the address bits.
+    -- Compile the different parts of the slave addresses.
+    grpBus_glob_addr(laneGroup)(6 downto 0)   <= grpBus_glob_addr_raw(laneGroup)(6 downto 0);
     grpBus_glob_addr(laneGroup)(31 downto 7)  <= (others => '0');
+    grpBus_ctxt_addr(laneGroup)(6 downto 0)   <= grpBus_ctxt_addr_raw(laneGroup)(6 downto 0);
     grpBus_ctxt_addr(laneGroup)(9 downto 7)   <= cfg2any_context(laneGroup);
     grpBus_ctxt_addr(laneGroup)(31 downto 10) <= (others => '0');
     
@@ -403,42 +420,96 @@ begin -- architecture
       sw2mstr_readData              => creg2dbg_readData,
       mstr2sw_stall                 => '0',
       
-      -- Global register bus.
-      sw2slave_addr(0)(6 downto 0)  => dbgBus_glob_addr,
---      sw2slave_addr(0)(31 downto 7) => open,
+      -- Slave busses.
+      sw2slave_addr(0)              => dbgBus_glob_addr_raw,
+      sw2slave_addr(1)              => dbgBus_ctxt_addr_raw,
+      sw2slave_addr(2)              => dbgBus_gpreg_addr_raw,
       sw2slave_writeEnable(0)       => dbgBus_glob_writeEnable,
-      sw2slave_writeMask(0)         => dbgBus_glob_writeMask,
-      sw2slave_writeData(0)         => dbgBus_glob_writeData,
-      sw2slave_readEnable(0)        => dbgBus_glob_readEnable,
-      slave2sw_readData(0)          => dbgBus_glob_readData,
-      
-      -- Context register bus.
-      sw2slave_addr(1)(6 downto 0)  => dbgBus_ctxt_addr(6 downto 0),
---      sw2slave_addr(1)(31 downto 7) => open,
       sw2slave_writeEnable(1)       => dbgBus_ctxt_writeEnable,
-      sw2slave_writeMask(1)         => dbgBus_ctxt_writeMask,
-      sw2slave_writeData(1)         => dbgBus_ctxt_writeData,
-      sw2slave_readEnable(1)        => dbgBus_ctxt_readEnable,
-      slave2sw_readData(1)          => dbgBus_ctxt_readData,
-      
-      -- General purpose register bus.
-      sw2slave_addr(2)(6 downto 0)  => dbgBus_gpreg_addr(6 downto 0),
---      sw2slave_addr(2)(31 downto 7) => open,
       sw2slave_writeEnable(2)       => dbgBus_gpreg_writeEnable,
+      sw2slave_writeMask(0)         => dbgBus_glob_writeMask,
+      sw2slave_writeMask(1)         => dbgBus_ctxt_writeMask,
       sw2slave_writeMask(2)         => dbgBus_gpreg_writeMask,
+      sw2slave_writeData(0)         => dbgBus_glob_writeData,
+      sw2slave_writeData(1)         => dbgBus_ctxt_writeData,
       sw2slave_writeData(2)         => dbgBus_gpreg_writeData,
+      sw2slave_readEnable(0)        => dbgBus_glob_readEnable,
+      sw2slave_readEnable(1)        => dbgBus_ctxt_readEnable,
       sw2slave_readEnable(2)        => dbgBus_gpreg_readEnable,
+      slave2sw_readData(0)          => dbgBus_glob_readData,
+      slave2sw_readData(1)          => dbgBus_ctxt_readData,
       slave2sw_readData(2)          => dbgBus_gpreg_readData
       
     );
   
   -- Connect the rest of the address bits.
+  dbgBus_glob_addr(6 downto 0) <= dbgBus_glob_addr_raw(6 downto 0);
   dbgBus_glob_addr(31 downto 7) <= (others => '0');
+  dbgBus_ctxt_addr(6 downto 0) <= dbgBus_ctxt_addr_raw(6 downto 0);
   dbgBus_ctxt_addr(7+CFG.numContextsLog2-1 downto 7) <= gbreg2creg_context;
   dbgBus_ctxt_addr(31 downto 7+CFG.numContextsLog2) <= (others => '0');
-  dbgBus_gpreg_addr(9) <= gbreg2creg_gpregBank;
+  dbgBus_gpreg_addr(6 downto 0) <= dbgBus_gpreg_addr_raw(6 downto 0);
+  dbgBus_gpreg_addr(7) <= gbreg2creg_gpregBank;
   dbgBus_gpreg_addr(8+CFG.numContextsLog2-1 downto 8) <= gbreg2creg_context;
   dbgBus_gpreg_addr(31 downto 8+CFG.numContextsLog2) <= (others => '0');
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the global control registers
+  -----------------------------------------------------------------------------
+  global_reg_bank: entity work.rvex_ctrlRegs_bank
+    generic map (
+      OFFSET                    => 0,
+      NUM_WORDS                 => CTRL_REG_GLOB_WORDS
+    )
+    port map (
+      
+      -- System control.
+      reset                     => reset,
+      clk                       => clk,
+      clkEn                     => clkEn,
+      
+      -- Bus interface.
+      addr                      => dbgBus_glob_addr,
+      origin                    => '1', -- Debug bus access.
+      writeEnable               => dbgBus_glob_writeEnable,
+      writeMask                 => dbgBus_glob_writeMask,
+      writeData                 => dbgBus_glob_writeData,
+      readEnable                => dbgBus_glob_readEnable,
+      readData                  => dbgBus_glob_readData,
+      
+      -- Hardware interface.
+      logic2creg                => gbreg2creg,
+      creg2logic                => creg2gbreg_s
+      
+    );
+  
+  -- Forward the local hardware output to the global control register logic.
+  creg2gbreg <= creg2gbreg_s;
+  
+  -- Instantiate the extra read ports for each lane group/memory unit.
+  global_reg_bank_port_gen: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
+    global_reg_bank_port: entity work.rvex_ctrlRegs_readPort
+      generic map (
+        OFFSET                  => 0,
+        NUM_WORDS               => CTRL_REG_GLOB_WORDS
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- Register interface.
+        creg2logic              => creg2gbreg_s,
+        
+        -- Read port.
+        addr                    => grpBus_glob_addr(laneGroup),
+        readEnable              => grpBus_glob_readEnable(laneGroup),
+        readData                => grpBus_glob_readData(laneGroup)
+        
+      );
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Generate claim signal and stall output
@@ -510,16 +581,18 @@ begin -- architecture
     <= dbgBus_ctxt_readEnable   when dbg_claim = '1' else grpBus_ctxt_readEnable(0);
   
   -- Connect the rest of the context register bus commands.
-  grpDbgBus_ctxt_addr         (2**CFG.numLaneGroupsLog2-1 downto 1)
-    <= grpBus_ctxt_addr       (2**CFG.numLaneGroupsLog2-1 downto 1);
-  grpDbgBus_ctxt_writeEnable  (2**CFG.numLaneGroupsLog2-1 downto 1)
-    <= grpBus_ctxt_writeEnable(2**CFG.numLaneGroupsLog2-1 downto 1);
-  grpDbgBus_ctxt_writeMask    (2**CFG.numLaneGroupsLog2-1 downto 1)
-    <= grpBus_ctxt_writeMask  (2**CFG.numLaneGroupsLog2-1 downto 1);
-  grpDbgBus_ctxt_writeData    (2**CFG.numLaneGroupsLog2-1 downto 1)
-    <= grpBus_ctxt_writeData  (2**CFG.numLaneGroupsLog2-1 downto 1);
-  grpDbgBus_ctxt_readEnable   (2**CFG.numLaneGroupsLog2-1 downto 1)
-    <= grpBus_ctxt_readEnable (2**CFG.numLaneGroupsLog2-1 downto 1);
+  connect_other_groups_gen: if CFG.numLaneGroupsLog2 > 0 generate
+    grpDbgBus_ctxt_addr         (2**CFG.numLaneGroupsLog2-1 downto 1)
+      <= grpBus_ctxt_addr       (2**CFG.numLaneGroupsLog2-1 downto 1);
+    grpDbgBus_ctxt_writeEnable  (2**CFG.numLaneGroupsLog2-1 downto 1)
+      <= grpBus_ctxt_writeEnable(2**CFG.numLaneGroupsLog2-1 downto 1);
+    grpDbgBus_ctxt_writeMask    (2**CFG.numLaneGroupsLog2-1 downto 1)
+      <= grpBus_ctxt_writeMask  (2**CFG.numLaneGroupsLog2-1 downto 1);
+    grpDbgBus_ctxt_writeData    (2**CFG.numLaneGroupsLog2-1 downto 1)
+      <= grpBus_ctxt_writeData  (2**CFG.numLaneGroupsLog2-1 downto 1);
+    grpDbgBus_ctxt_readEnable   (2**CFG.numLaneGroupsLog2-1 downto 1)
+      <= grpBus_ctxt_readEnable (2**CFG.numLaneGroupsLog2-1 downto 1);
+  end generate;
   
   -- Connect context read data signals.
   grpBus_ctxt_readData <= grpDbgBus_ctxt_readData;
@@ -534,6 +607,70 @@ begin -- architecture
                          and dbgBus_gpreg_writeMask(2) and dbgBus_gpreg_writeMask(3);
   creg2gpreg_writeData    <= dbgBus_gpreg_writeData;
   dbgBus_gpreg_readData   <= gpreg2creg_readData;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate lane group to context bus switch
+  -----------------------------------------------------------------------------
+  context_lane_switch: entity work.rvex_ctrlRegs_contextLaneSwitch
+    generic map (
+      CFG                       => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                     => reset,
+      clk                       => clk,
+      clkEn                     => clkEn,
+      
+      -- Pipelane group bus interfaces.
+      plgrp2sw_addr             => grpDbgBus_ctxt_addr,
+      plgrp2sw_writeEnable      => grpDbgBus_ctxt_writeEnable,
+      plgrp2sw_writeMask        => grpDbgBus_ctxt_writeMask,
+      plgrp2sw_writeData        => grpDbgBus_ctxt_writeData,
+      plgrp2sw_readEnable       => grpDbgBus_ctxt_readEnable,
+      sw2plgrp_readData         => grpDbgBus_ctxt_readData,
+      
+      -- Context interface.
+      sw2ctxt_addr              => ctxtBus_addr,
+      sw2ctxt_writeEnable       => ctxtBus_writeEnable,
+      sw2ctxt_writeMask         => ctxtBus_writeMask,
+      sw2ctxt_writeData         => ctxtBus_writeData,
+      sw2ctxt_readEnable        => ctxtBus_readEnable,
+      ctxt2sw_readData          => ctxtBus_readData
+      
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the context control registers
+  -----------------------------------------------------------------------------
+  context_reg_bank_gen: for ctxt in 2**CFG.numContextsLog2-1 downto 0 generate
+    context_reg_bank: entity work.rvex_ctrlRegs_bank
+      generic map (
+        OFFSET                    => CTRL_REG_GLOB_WORDS,
+        NUM_WORDS                 => CTRL_REG_TOTAL_WORDS - CTRL_REG_GLOB_WORDS
+      )
+      port map (
+        
+        -- System control.
+        reset                     => reset,
+        clk                       => clk,
+        clkEn                     => clkEn,
+        
+        -- Bus interface.
+        addr                      => ctxtBus_addr(ctxt),
+        origin                    => dbg_claim,
+        writeEnable               => ctxtBus_writeEnable(ctxt),
+        writeMask                 => ctxtBus_writeMask(ctxt),
+        writeData                 => ctxtBus_writeData(ctxt),
+        readEnable                => ctxtBus_readEnable(ctxt),
+        readData                  => ctxtBus_readData(ctxt),
+        
+        -- Hardware interface.
+        logic2creg                => cxreg2creg(ctxt),
+        creg2logic                => creg2cxreg(ctxt)
+        
+      );
+  end generate;
   
 end Behavioral;
 

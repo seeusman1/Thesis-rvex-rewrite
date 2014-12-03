@@ -763,7 +763,6 @@ begin -- architecture
       
       -- Decoded configuration signals.
       cfg2any_context               => cfg2any_context,
-      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
       
       -- Core bus interfaces.
       dmsw2creg_addr                => dmsw2creg_addr,

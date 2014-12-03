@@ -52,7 +52,7 @@ use IEEE.std_logic_1164.all;
 -- [x] limm   = Long IMMediate routing     @ rvex_limmRouting.vhd
 -- [x] trap   = TRAP routing               @ rvex_trapRouting.vhd
 -- [.] cxreg  = ConteXt REGister logic     @ rvex_contextRegLogic.vhd
--- [.] creg   = Control REGisters          @ rvex_ctrlRegs.vhd
+-- [x] creg   = Control REGisters          @ rvex_ctrlRegs.vhd
 -- [.] gbreg  = GloBal REGister logic      @ rvex_globalRegLogic.vhd
 -- [x] cfg    = ConFiGuration control      @ rvex_cfgCtrl.vhd
 --
@@ -65,7 +65,7 @@ use IEEE.std_logic_1164.all;
 -- More specific TODO list now that the core code is almost done:
 -- [ ] Make the pretty-print procedure for trap information to finish
 --     pretty-printed simulation output.
--- [ ] Make bus logic stuff for control registers.
+-- [x] Make bus logic stuff for control registers.
 -- [ ] Make package with procedures which allow procedural
 --     generation/configuration of the control registers, so cxreg and gbreg
 --     don't become one big mess.

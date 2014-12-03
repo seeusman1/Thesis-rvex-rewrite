@@ -150,7 +150,7 @@ begin -- architecture
     
     -- Perform range checking.
     sel <= (others => '0');
-    for i in NUM_SLAVES-1 downto 1 loop
+    for i in 1 to NUM_SLAVES-1 loop
       if unsigned(maskedAddr) >= unsigned(BOUNDARIES(i)) then
         sel <= std_logic_vector(to_unsigned(i, SEL_WIDTH));
       end if;

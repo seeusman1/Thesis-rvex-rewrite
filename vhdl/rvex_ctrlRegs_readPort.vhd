@@ -99,7 +99,7 @@ entity rvex_ctrlRegs_readPort is
     -- Active high read enable signal.
     readEnable                  : in  std_logic;
     
-    -- Read data. Will be set to 'Z' when block is not addressed.
+    -- Read data.
     readData                    : out rvex_data_type
     
   );
@@ -119,17 +119,17 @@ begin -- architecture
   begin
     if rising_edge(clk) then
       if reset = '1' then
-        readData <= (others => 'Z');
+        readData <= (others => RVEX_UNDEF);
       elsif clkEn = '1' then
         if readEnable = '1' then
           a := to_integer(unsigned(addr(31 downto 2)));
           if a >= OFFSET and a < OFFSET + NUM_WORDS then
             readData <= creg2logic(a).readData;
           else
-            readData <= (others => 'Z');
+            readData <= (others => RVEX_UNDEF);
           end if;
         else
-          readData <= (others => 'Z');
+          readData <= (others => RVEX_UNDEF);
         end if;
       end if;
     end if;
