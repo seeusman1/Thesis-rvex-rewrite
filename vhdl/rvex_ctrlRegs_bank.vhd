@@ -116,9 +116,14 @@ entity rvex_ctrlRegs_bank is
     -- Refer to the documentation for hw2bit_type and bit2hw_type types in
     -- rvex_ctrlRegs_pkg.vhd for more information.
     
-    -- Interface for the global registers.
+    -- Interface for combinatorial register control logic.
     logic2creg                  : in  logic2creg_array(OFFSET to OFFSET + NUM_WORDS - 1);
-    creg2logic                  : out creg2logic_array(OFFSET to OFFSET + NUM_WORDS - 1)
+    creg2logic                  : out creg2logic_array(OFFSET to OFFSET + NUM_WORDS - 1);
+    
+    -- Resets the context control register file. Hardware and bus writes going
+    -- on in the same cycle take precedence, allowing the context to reset
+    -- directly into debug mode.
+    logic2creg_reset            : in  std_logic
     
   );
 end rvex_ctrlRegs_bank;
@@ -220,6 +225,11 @@ begin -- architecture
               
               -- Bus write.
               r(a)(i) <= writeData(i);
+              
+            elsif logic2creg_reset = '1' then
+              
+              -- Reset.
+              r(a)(i) <= logic2creg(a).resetValue(i);
               
             end if;
             

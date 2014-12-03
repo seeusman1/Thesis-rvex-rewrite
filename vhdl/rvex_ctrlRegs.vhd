@@ -174,7 +174,12 @@ entity rvex_ctrlRegs is
     ---------------------------------------------------------------------------
     -- Interface for the context register logic.
     cxreg2creg                  : in  cxreg2creg_array(2**CFG.numContextsLog2-1 downto 0);
-    creg2cxreg                  : out creg2cxreg_array(2**CFG.numContextsLog2-1 downto 0)
+    creg2cxreg                  : out creg2cxreg_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Resets the context control register file. Hardware and bus writes going
+    -- on in the same cycle take precedence, allowing the context to reset
+    -- directly into debug mode.
+    cxreg2creg_reset            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0)
     
   );
 end rvex_ctrlRegs;
@@ -479,7 +484,8 @@ begin -- architecture
       
       -- Hardware interface.
       logic2creg                => gbreg2creg,
-      creg2logic                => creg2gbreg_s
+      creg2logic                => creg2gbreg_s,
+      logic2creg_reset          => '0'
       
     );
   
@@ -667,7 +673,8 @@ begin -- architecture
         
         -- Hardware interface.
         logic2creg                => cxreg2creg(ctxt),
-        creg2logic                => creg2cxreg(ctxt)
+        creg2logic                => creg2cxreg(ctxt),
+        logic2creg_reset          => cxreg2creg_reset(ctxt)
         
       );
   end generate;

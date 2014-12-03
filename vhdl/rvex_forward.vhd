@@ -51,6 +51,9 @@ entity rvex_forward is
     -- Read data output with forwarding.
     readDataOut                 : out std_logic_vector(DATA_WIDTH-1 downto 0);
     
+    -- Whether readDataOut is forwarded (high) or from readDataIn (low).
+    readDataForwarded           : out std_logic;
+    
     ---------------------------------------------------------------------------
     -- Queued write signals
     ---------------------------------------------------------------------------
@@ -161,6 +164,7 @@ begin -- architecture
       
       -- Select the regular register read by default.
       readDataOut <= readDataIn;
+      readDataForwarded <= '0';
       
       -- If anyMatch is high, perform forwarding.
       if anyMatch = '1' then
@@ -170,6 +174,7 @@ begin -- architecture
         -- VHDL is concerned.
         if sel < NUM_LANES*NUM_STAGES_TO_FORWARD then
           readDataOut <= writeDatas(DATA_WIDTH*sel+DATA_WIDTH-1 downto DATA_WIDTH*sel);
+          readDataForwarded <= '1';
         end if;
       end if;
       
@@ -184,6 +189,7 @@ begin -- architecture
     
     -- Simply forward the register read.
     readDataOut <= readDataIn;
+    readDataForwarded <= '0';
     
   end generate forwarding_disabled;
   

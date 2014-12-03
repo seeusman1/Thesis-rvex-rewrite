@@ -474,6 +474,13 @@ architecture Behavioral of rvex is
   -----------------------------------------------------------------------------
   -- Internal signals
   -----------------------------------------------------------------------------
+  -- Reset signal from the global control registers.
+  signal gbreg2rv_reset               : std_logic;
+  
+  -- Internal reset signal, asserted when either the external reset signal or
+  -- the signal from the global control registers is asserted.
+  signal reset_s                      : std_logic;
+  
   -- Stall signal for each pipelane group.
   signal stall                        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   
@@ -529,6 +536,7 @@ architecture Behavioral of rvex is
   -- Control registers <-> context control register logic signals.
   signal cxreg2creg                   : cxreg2creg_array(2**CFG.numContextsLog2-1 downto 0);
   signal creg2cxreg                   : creg2cxreg_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2creg_reset             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
   -- Context register <-> context-pipelane interface signals.
   signal cxreg2cxplif_brLinkReadPort  : cxreg2pl_readPort_array(2**CFG.numContextsLog2-1 downto 0);
@@ -581,8 +589,11 @@ begin -- architecture
 --=============================================================================
   
   -----------------------------------------------------------------------------
-  -- Generate stalling logic
+  -- Generate reset and stalling logic
   -----------------------------------------------------------------------------
+  -- Combine the reset signals.
+  reset_s <= reset or gbreg2rv_reset;
+  
   -- The rvex core stalls when either the memory stalls or the debug bus makes
   -- an access.
   stall <= mem2rv_stallIn or debugBusStall;
@@ -626,7 +637,7 @@ begin -- architecture
     port map (
       
       -- System control.
-      reset                         => reset,
+      reset                         => reset_s,
       clk                           => clk,
       clkEn                         => clkEn,
       stall                         => stall,
@@ -722,7 +733,7 @@ begin -- architecture
     port map (
       
       -- System control.
-      reset                         => reset,
+      reset                         => reset_s,
       clk                           => clk,
       clkEn                         => clkEn,
       stall                         => stall,
@@ -755,7 +766,7 @@ begin -- architecture
     port map (
       
       -- System control.
-      reset                         => reset,
+      reset                         => reset_s,
       clk                           => clk,
       clkEn                         => clkEn,
       stallIn                       => stall,
@@ -796,7 +807,8 @@ begin -- architecture
       
       -- Context register logic interface.
       cxreg2creg                    => cxreg2creg,
-      creg2cxreg                    => creg2cxreg
+      creg2cxreg                    => creg2cxreg,
+      cxreg2creg_reset              => cxreg2creg_reset
       
     );
   
@@ -806,18 +818,24 @@ begin -- architecture
   cxreg_gen: for ctxt in 2**CFG.numContextsLog2-1 downto 0 generate
     cxreg_inst: entity work.rvex_contextRegLogic
       generic map (
-        CFG                         => CFG
+        CFG                         => CFG,
+        CONTEXT_INDEX               => ctxt
       )
       port map (
         
         -- System control.
-        reset                       => reset,
+        reset                       => reset_s,
         clk                         => clk,
         clkEn                       => clkEn,
         
         -- Interface with the control registers and bus logic.
         cxreg2creg                  => cxreg2creg(ctxt),
         creg2cxreg                  => creg2cxreg(ctxt),
+        cxreg2creg_reset            => cxreg2creg_reset(ctxt),
+        
+        -- Run control interface.
+        rctrl2cxreg_reset           => rctrl2rv_reset(ctxt),
+        cxreg2rctrl_done            => rv2rctrl_done(ctxt),
         
         -- Pipelane interface.
         cxplif2cxreg_stall          => cxplif2cxreg_stall(ctxt),
@@ -861,7 +879,8 @@ begin -- architecture
     port map (
       
       -- System control.
-      reset                         => reset,
+      resetIn                       => reset_s,
+      resetOut                      => gbreg2rv_reset,
       clk                           => clk,
       clkEn                         => clkEn,
       
@@ -894,7 +913,7 @@ begin -- architecture
     port map (
       
       -- System control.
-      reset                         => reset,
+      reset                         => reset_s,
       clk                           => clk,
       clkEn                         => clkEn,
       

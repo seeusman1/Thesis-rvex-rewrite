@@ -787,7 +787,8 @@ begin -- architecture
     cxplif2br_trapReturn(lane)        <= trapReturn_mux(laneGroup);
     cxplif2br_extDebug(lane)          <= extDebug_mux(laneGroup);
     cxplif2br_handlingDebugTrap(lane) <= handlingDebugTrap_mux(laneGroup);
-    cxplif2pl_debugTrapEnable(lane)   <= debugTrapEnable_mux(laneGroup);
+    cxplif2pl_debugTrapEnable(lane)   <= debugTrapEnable_mux(laneGroup)
+                                      or extDebug_mux(laneGroup); -- Always enable debug traps in external debug mode.
     cxplif2brku_breakpoints(lane)     <= breakpoints_mux(laneGroup);
     cxplif2brku_stepping(lane)        <= stepping_mux(laneGroup);
     
@@ -813,10 +814,10 @@ begin -- architecture
     laneGroup <= to_integer(unsigned(cfg2any_lastGroupForCtxt(ctxt)));
     
     -- Generate all the muxes.
-    cxplif2cfg_blockReconfig(ctxt)      <= blockReconfig_arb(laneGroup);
-    cxplif2rctrl_irqAck(ctxt)           <= irqAck_arb(laneGroup);
-    cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup);
-    cxplif2cxreg_stall(ctxt)            <= stall(laneGroup);
+    cxplif2cfg_blockReconfig(ctxt)      <= blockReconfig_arb(laneGroup) and cfg2cxplif_run(ctxt);
+    cxplif2rctrl_irqAck(ctxt)           <= irqAck_arb(laneGroup) and cfg2cxplif_run(ctxt);
+    cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_run(ctxt);
+    cxplif2cxreg_stall(ctxt)            <= stall(laneGroup) or not cfg2cxplif_run(ctxt);
     cxplif2cxreg_stop(ctxt)             <= stop_arb(laneGroup);
     cxplif2cxreg_brLinkWritePort(ctxt)  <= brLinkWritePort_arb(laneGroup);
     cxplif2cxreg_nextPC(ctxt)           <= PC_arb(laneGroup);

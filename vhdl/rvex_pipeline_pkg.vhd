@@ -44,7 +44,7 @@
 -- Copyright (C) 2008-2014 by TU Delft.
 
 library IEEE;
-use IEEE.STD_LOGIC_1164.all;
+use IEEE.std_logic_1164.all;
 
 --=============================================================================
 -- This package configures the pipeline used by the rvex.

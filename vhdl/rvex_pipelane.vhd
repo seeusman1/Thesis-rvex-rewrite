@@ -472,7 +472,8 @@ entity rvex_pipelane is
     -- trap.
     cxplif2br_handlingDebugTrap : in  std_logic_vector(S_BR to S_BR);
     
-    -- Current value of the debug trap enable bit in the control register.
+    -- Current value of the debug trap enable bit in the control register, or'd
+    -- with the current value of the external debug flag.
     cxplif2pl_debugTrapEnable   : in  std_logic_vector(S_MEM+1 to S_MEM+1);
     
     -- Current breakpoint information.
