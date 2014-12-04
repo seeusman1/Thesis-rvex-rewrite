@@ -806,12 +806,12 @@ begin -- architecture
     signal writeDatas           : std_logic_vector(32*stagesToForward-1 downto 0);
     signal writeEnables         : std_logic_vector(stagesToForward-1 downto 0);
   begin
-    br_fwd_gen_stageIndices: for index in 0 to stagesToForward-1 generate
+    link_fwd_gen_stageIndices: for index in 0 to stagesToForward-1 generate
       writeDatas(32*index+31 downto 32*index) <= cxplif2cxreg_brLinkWritePort.linkData(stage + index + 1);
       writeEnables(index) <= cxplif2cxreg_brLinkWritePort.linkForwardEnable(stage + index + 1);
     end generate;
     
-    br_fwd: entity work.rvex_forward
+    link_fwd: entity work.rvex_forward
       generic map (
         ENABLE_FORWARDING       => CFG.forwarding,
         DATA_WIDTH              => 32,

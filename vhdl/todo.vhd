@@ -45,16 +45,18 @@ use IEEE.std_logic_1164.all;
 -- [x] memu   = MEMory Unit                @ rvex_memu.vhd
 -- [x] mulu   = MULtiply Unit              @ rvex_mul.vhd
 -- [x] brku   = BReaKpoint Unit            @ rvex_breakpoint.vhd
--- [.] gpreg  = General Purpose REGisters  @ rvex_gpreg.vhd
+-- [x] gpreg  = General Purpose REGisters  @ rvex_gpreg.vhd
 -- [x] fwd    = ForWarDing logic           @ rvex_forward.vhd
 -- [x] cxplif = ConteXt Register InterFace @ rvex_contextPipelaneIFace.vhd
 -- [x] dmsw   = Data Memory SWitch         @ rvex_dmemSwitch.vhd
 -- [x] limm   = Long IMMediate routing     @ rvex_limmRouting.vhd
 -- [x] trap   = TRAP routing               @ rvex_trapRouting.vhd
--- [.] cxreg  = ConteXt REGister logic     @ rvex_contextRegLogic.vhd
+-- [x] cxreg  = ConteXt REGister logic     @ rvex_contextRegLogic.vhd
 -- [x] creg   = Control REGisters          @ rvex_ctrlRegs.vhd
--- [.] gbreg  = GloBal REGister logic      @ rvex_globalRegLogic.vhd
+-- [x] gbreg  = GloBal REGister logic      @ rvex_globalRegLogic.vhd
 -- [x] cfg    = ConFiGuration control      @ rvex_cfgCtrl.vhd
+--
+-- *yay*
 --
 -- Key for the entity TODO list:
 -- [ ] = nothing done
@@ -66,16 +68,16 @@ use IEEE.std_logic_1164.all;
 -- [ ] Make the pretty-print procedure for trap information to finish
 --     pretty-printed simulation output.
 -- [x] Make bus logic stuff for control registers.
--- [ ] Make package with procedures which allow procedural
+-- [x] Make package with procedures which allow procedural
 --     generation/configuration of the control registers, so cxreg and gbreg
 --     don't become one big mess.
 -- [ ] On that note, making the opcode package more procedurally generated to
 --     compress the VHDL code a bit is not a bad thing either.
--- [ ] Figure out the register map again, with all changes that I've implicitly
+-- [x] Figure out the register map again, with all changes that I've implicitly
 --     made embedded in it.
--- [ ] Code cxreg and gbreg, (hopefully) in such a way that the code is neatly
+-- [x] Code cxreg and gbreg, (hopefully) in such a way that the code is neatly
 --     formatted enough to double as a register map table.
--- [ ] Port general purpose register file from current rvex design to the code
+-- [x] Port general purpose register file from current rvex design to the code
 --     style of the new design and add the debug bus interface and forwarding
 --     to it.
 -- [ ] Make a testbench for the processor which accepts a bunch of test cases

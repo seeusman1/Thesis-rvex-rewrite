@@ -7,16 +7,17 @@
    <ItemView engineview="SynthesisOnly" guiview="Source" compilemode="AutoCompile" >
       <ClosedNodes>
          <ClosedNodesVersion>2</ClosedNodesVersion>
+         <ClosedNode>/rvex - Behavioral E:|GIT|rvex-rewrite|vhdl|rvex.vhd/rvex_simUtils_asDisas_pkg</ClosedNode>
          <ClosedNode>/rvex_cfgCtrl - Behavioral E:|GIT|rvex-rewrite|vhdl|rvex_cfgCtrl.vhd</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>todo - Behavioral (E:/GIT/rvex-rewrite/vhdl/todo.vhd)</SelectedItem>
+         <SelectedItem>sim_mem - rvex_gpRegs_sim - Behavioral (E:/GIT/rvex-rewrite/vhdl/rvex_gpRegs_sim.vhd)</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >9</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff0000000000000001000000010000000000000000000000000000000002020000000100000001000000640000027e000000020000000000000000000000000200000064ffffffff0000008100000003000000020000027e0000000100000003000000000000000100000003</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002a2000000020000000000000000000000000200000064ffffffff000000810000000300000002000002a20000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
-      <CurrentItem>todo - Behavioral (E:/GIT/rvex-rewrite/vhdl/todo.vhd)</CurrentItem>
+      <CurrentItem>sim_mem - rvex_gpRegs_sim - Behavioral (E:/GIT/rvex-rewrite/vhdl/rvex_gpRegs_sim.vhd)</CurrentItem>
    </ItemView>
    <ItemView engineview="SynthesisOnly" sourcetype="" guiview="Process" >
       <ClosedNodes>
@@ -39,9 +40,9 @@
       <SelectedItems>
          <SelectedItem>..\vhdl\rvex_pkg.vhd</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >6</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >12</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000000000000010000000000000000000000000000000000000238000000040101000100000000000000000000000064ffffffff000000810000000000000004000000f60000000100000000000000240000000100000000000000660000000100000000000000b80000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000000000000010000000000000000000000000000000000000391000000040101000100000000000000000000000064ffffffff000000810000000000000004000000f60000000100000000000000240000000100000000000000660000000100000000000002110000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
       <CurrentItem>..\vhdl\rvex_pkg.vhd</CurrentItem>
    </ItemView>
@@ -69,13 +70,13 @@
          <ClosedNode>User Constraints</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem></SelectedItem>
+         <SelectedItem>Check Syntax</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000248000000010000000100000000000000000000000064ffffffff000000810000000000000001000002480000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem></CurrentItem>
+      <CurrentItem>Check Syntax</CurrentItem>
    </ItemView>
    <SourceProcessView>000000ff0000000000000002000001a2000000fd01000000040100000002</SourceProcessView>
    <CurrentView>Implementation</CurrentView>
@@ -87,13 +88,13 @@
          <ClosedNode>/rvex_opcode_pkg E:|GIT|rvex-rewrite|vhdl|rvex_opcode_pkg.vhd</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>creg_inst - rvex_ctrlRegs - Behavioral (E:/GIT/rvex-rewrite/vhdl/rvex_ctrlRegs.vhd)</SelectedItem>
+         <SelectedItem>rvex - Behavioral (E:/GIT/rvex-rewrite/vhdl/rvex.vhd)</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff0000000000000001000000010000000000000000000000000000000002020000000100000001000000640000027e000000020000000000000000000000000200000064ffffffff0000008100000003000000020000027e0000000100000003000000000000000100000003</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002a2000000020000000000000000000000000200000064ffffffff000000810000000300000002000002a20000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
-      <CurrentItem>creg_inst - rvex_ctrlRegs - Behavioral (E:/GIT/rvex-rewrite/vhdl/rvex_ctrlRegs.vhd)</CurrentItem>
+      <CurrentItem>rvex - Behavioral (E:/GIT/rvex-rewrite/vhdl/rvex.vhd)</CurrentItem>
    </ItemView>
    <ItemView engineview="BehavioralSim" sourcetype="" guiview="Process" >
       <ClosedNodes>
@@ -114,13 +115,13 @@
          <ClosedNodesVersion>1</ClosedNodesVersion>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem></SelectedItem>
+         <SelectedItem>Behavioral Check Syntax</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000248000000010000000100000000000000000000000064ffffffff000000810000000000000001000002480000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem></CurrentItem>
+      <CurrentItem>Behavioral Check Syntax</CurrentItem>
    </ItemView>
    <ItemView engineview="SynthesisOnly" sourcetype="DESUT_VHDL_PACKAGE_DECL" guiview="Process" >
       <ClosedNodes>

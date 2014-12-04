@@ -739,6 +739,7 @@ begin -- architecture
       stall                         => stall,
 
       -- Decoded configuration signals.
+      cfg2any_coupled               => cfg2any_coupled,
       cfg2any_context               => cfg2any_context,
       
       -- Read and write ports.

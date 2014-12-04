@@ -476,10 +476,10 @@ begin -- architecture
     cfg2any_coupled,
     
     -- Signals from pipelanes.
-    br2cxplif_irqAck, pl2cxplif_idle, br2cxplif_PC, br2cxplif_limmValid,
-    br2cxplif_valid, br2cxplif_brkValid, br2cxplif_invalUntilBR,
-    pl2cxplif_brLinkWritePort, br2cxplif_trapInfo, br2cxplif_trapPoint,
-    br2cxplif_exDbgTrapInfo, br2cxplif_stop, pl2cxplif_rfi
+    br2cxplif_irqAck, pl2cxplif_idle, pl2cxplif_blockReconfig, br2cxplif_PC,
+    br2cxplif_limmValid, br2cxplif_valid, br2cxplif_brkValid,
+    br2cxplif_invalUntilBR, pl2cxplif_brLinkWritePort, br2cxplif_trapInfo,
+    br2cxplif_trapPoint, br2cxplif_exDbgTrapInfo, br2cxplif_stop, pl2cxplif_rfi
     
   ) is
     

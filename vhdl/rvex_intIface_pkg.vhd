@@ -89,6 +89,12 @@ package rvex_intIface_pkg is
   -- this might save some computation time and thus speed up simulation.
   constant GEN_VHDL_SIM_INFO    : boolean := true;
   
+  -- When false, a simulation-only model of the general purpose register file
+  -- is used to speed up simulation and make it easier to see what the actual
+  -- state of the memory is. When true, the synthesized general purpose
+  -- register file is used for simulation.
+  constant SIM_FULL_GPREG_FILE  : boolean := false;
+  
   -- Throughout the rvex core, std_logic 'U' values are used to indicate values
   -- which are not valid yet. As these kinds of signals should never be used,
   -- this is not a problem for synthesis, and helps discover undefined things

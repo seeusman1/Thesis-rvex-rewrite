@@ -199,6 +199,7 @@ package rvex_pkg is
       
       -- Run control interface.
       rctrl2rv_irq                : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
+      rctrl2rv_irqID              : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0) := (others => (others => '0'));
       rv2rctrl_irqAck             : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
       rctrl2rv_run                : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '1');
       rv2rctrl_idle               : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
@@ -212,7 +213,7 @@ package rvex_pkg is
       rv2mem_stallOut             : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
       
       -- Instruction memory interface.
-      rv2imem_pcs                 : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+      rv2imem_PCs                 : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
       rv2imem_fetch               : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
       rv2imem_cancel              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
       imem2rv_instr               : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);

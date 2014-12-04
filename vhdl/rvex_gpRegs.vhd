@@ -50,6 +50,8 @@ use IEEE.numeric_std.all;
 library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
+use work.rvex_utils_pkg.all;
+use work.rvex_pipeline_pkg.all;
 
 --=============================================================================
 -- This entity contains the general purpose register file and associated
@@ -83,6 +85,11 @@ entity rvex_gpRegs is
     -----------------------------------------------------------------------------
     -- Decoded configuration signals
     -----------------------------------------------------------------------------
+    -- Diagonal block matrix of n*n size, where n is the number of pipelane
+    -- groups. C_i,j is high when pipelane groups i and j are coupled/share a
+    -- context, or low when they don't.
+    cfg2any_coupled             : in  std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
+    
     -- Specifies the context associated with the indexed pipelane group.
     cfg2any_context             : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
@@ -128,9 +135,259 @@ end rvex_gpRegs;
 architecture Behavioral of rvex_gpRegs is
 --=============================================================================
   
+  -- This constant determines whether the block ram implementation (true) or
+  -- the simulation only model thereof (false) is instantiated.
+  constant INST_SYNTH_MEM         : boolean :=
+    -- pragma translate_off
+    SIM_FULL_GPREG_FILE and
+    -- pragma translate_on
+    true;
+  
+  -- 64 general purpose registers per context.
+  constant NUM_REGS_PER_CTXT_LOG2 : natural := 6;
+  constant NUM_REGS_LOG2          : natural := CFG.numContextsLog2 + NUM_REGS_PER_CTXT_LOG2;
+  
+  -- Two read ports and one write port per lane.
+  constant NUM_READ_PORTS         : natural := 2*2**CFG.numLanesLog2;
+  constant NUM_WRITE_PORTS        : natural := 2**CFG.numLanesLog2;
+  
+  -- Internal signals connecting to the general purpose register memory banks.
+  signal writeEnable              : std_logic_vector(NUM_WRITE_PORTS-1 downto 0);
+  signal writeAddr                : rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
+  signal writeData                : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+  signal readAddr                 : rvex_address_array(NUM_READ_PORTS-1 downto 0);
+  signal readData                 : rvex_data_array(NUM_READ_PORTS-1 downto 0);
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Connect internal command signals to interface
+  -----------------------------------------------------------------------------
+  -- Connect read commands. The read result is connected through the forwarding
+  -- logic.
+  iface_connect_read_gen: for readPort in 0 to NUM_READ_PORTS-1 generate
+    constant ADDR_UNUSED : std_logic_vector(31 downto NUM_REGS_LOG2) := (others => '0');
+    constant laneGroup   : natural := lane2group(readPort / 2, CFG);
+  begin
+    
+    -- Connect read address.
+    readAddr(readPort)
+      <= (
+        
+        -- Pipelane connection.
+        ADDR_UNUSED
+        & cfg2any_context(laneGroup)(CFG.numContextsLog2-1 downto 0)
+        & pl2gpreg_readPorts(readPort).addr(S_RD)
+        
+      ) when creg2gpreg_claim = '0' or readPort /= 0 else (
+        
+        -- Debug override connection.
+        ADDR_UNUSED
+        & creg2gpreg_ctxt
+        & creg2gpreg_addr
+        
+      );
+    
+  end generate;
+  
+  -- Connect write commands.
+  iface_connect_write_gen: for writePort in 0 to NUM_WRITE_PORTS-1 generate
+    constant ADDR_UNUSED : std_logic_vector(31 downto NUM_REGS_LOG2) := (others => '0');
+    constant laneGroup   : natural := lane2group(writePort, CFG);
+  begin
+    
+    -- Connect write address.
+    writeAddr(writePort)
+      <= (
+        
+        -- Pipelane connection.
+        ADDR_UNUSED
+        & cfg2any_context(laneGroup)(CFG.numContextsLog2-1 downto 0)
+        & pl2gpreg_writePorts(writePort).addr(S_WB)
+        
+      ) when creg2gpreg_claim = '0' or writePort /= 0 else (
+        
+        -- Debug override connection.
+        ADDR_UNUSED
+        & creg2gpreg_ctxt
+        & creg2gpreg_addr
+        
+      );
+    
+    -- Connect write data.
+    writeData(writePort)
+      <= (
+        
+        -- Pipelane connection.
+        pl2gpreg_writePorts(writePort).data(S_WB)
+        
+      ) when creg2gpreg_claim = '0' or writePort /= 0 else (
+        
+        -- Debug override connection.
+        creg2gpreg_writeData
+        
+      );
+    
+    -- Connect write enable.
+    writeEnable(writePort)
+      <= (
+        
+        -- Pipelane connection.
+        pl2gpreg_writePorts(writePort).writeEnable(S_WB)
+        and not stall(laneGroup)
+        
+      ) when creg2gpreg_claim = '0' or writePort /= 0 else (
+        
+        -- Debug override connection.
+        creg2gpreg_writeEnable
+        
+      );
+    
+  end generate;
+  
+  -- Connect the debug override read data result to the read output of read
+  -- port 1.
+  gpreg2creg_readData <= readData(0);
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate forwarding logic
+  -----------------------------------------------------------------------------
+  br_fwd_gen_stage: for stage in S_RD+L_RD to S_FW generate
+    constant stagesToForward    : natural := S_WB+L_WB-stage;
+    signal writeAddresses       : std_logic_vector(NUM_WRITE_PORTS * stagesToForward * NUM_REGS_PER_CTXT_LOG2 - 1 downto 0);
+    signal writeDatas           : std_logic_vector(NUM_WRITE_PORTS * stagesToForward * 32 - 1 downto 0);
+    signal writeEnables         : std_logic_vector(NUM_WRITE_PORTS * stagesToForward - 1 downto 0);
+  begin
+    
+    -- Load the forwarding information into signals which are in the correct
+    -- format for the forwarding logic.
+    fwd_gen_stageIndices: for index in 0 to stagesToForward-1 generate
+      fwd_gen_writePorts: for writePort in 0 to NUM_WRITE_PORTS-1 generate
+        constant ei : natural := index * NUM_WRITE_PORTS + writePort;
+        constant ai : natural := ei * NUM_REGS_PER_CTXT_LOG2;
+        constant di : natural := ei * 32;
+      begin
+        
+        writeAddresses(ai + NUM_REGS_PER_CTXT_LOG2 - 1 downto ai)
+          <= pl2gpreg_writePorts(writePort).addr(stage + index + 1);
+        
+        writeDatas(di + 31 downto di)
+          <= pl2gpreg_writePorts(writePort).data(stage + index + 1);
+        
+        writeEnables(ei)
+          <= pl2gpreg_writePorts(writePort).forwardEnable(stage + index + 1);
+        
+      end generate;
+    end generate;
+    
+    -- Generate a forwarding block for each read port.
+    forwarding_gen: for readPort in 0 to NUM_READ_PORTS-1 generate
+      signal forwarded          : std_logic;
+      signal coupled            : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    begin
+      
+      -- Make use of the fact that coupled pipelanes always share the same
+      -- context bits, so we don't have to do unnecessarily wide address
+      -- matching when we have more than one context.
+      fwd_coupled_gen: for lane in 0 to 2**CFG.numLanesLog2-1 generate
+        coupled(lane) <= cfg2any_coupled(
+          2**CFG.numLaneGroupsLog2 * lane2group(lane, CFG)
+          + lane2group(readPort / 2, CFG)
+        );
+      end generate;
+      
+      -- Generate the forwarding for this stage and read port.
+      forwarding_inst: entity work.rvex_forward
+        generic map (
+          ENABLE_FORWARDING     => CFG.forwarding,
+          DATA_WIDTH            => 32,
+          ADDRESS_WIDTH         => NUM_REGS_PER_CTXT_LOG2,
+          NUM_LANES             => NUM_WRITE_PORTS,
+          NUM_STAGES_TO_FORWARD => stagesToForward
+        )
+        port map (
+          
+          -- Register read connections.
+          readAddress           => pl2gpreg_readPorts(readPort).addr(stage),
+          readDataIn            => readData(readPort),
+          readDataOut           => gpreg2pl_readPorts(readPort).data(stage),
+          readDataForwarded     => forwarded,
+          
+          -- Queued write signals.
+          writeAddresses        => writeAddresses,
+          writeDatas            => writeDatas,
+          writeEnables          => writeEnables,
+          coupled               => coupled
+          
+        );
+      
+      -- Data is always valid in the stage where the data from the register
+      -- file is valid, but is only valid in other stages when it comes from
+      -- the forwarding logic.
+      gpreg2pl_readPorts(readPort).valid(stage)
+        <= '1' when stage = S_RD else forwarded;
+      
+    end generate;
+  end generate;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate memory
+  -----------------------------------------------------------------------------
+  -- Block RAM based memory for synthesis.
+  synth_mem_gen: if INST_SYNTH_MEM generate
+    synth_mem: entity work.rvex_gpRegs_mem
+      generic map (
+        NUM_REGS_LOG2           => NUM_REGS_LOG2,
+        NUM_WRITE_PORTS         => NUM_WRITE_PORTS,
+        NUM_READ_PORTS          => NUM_READ_PORTS
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- Write ports.
+        writeEnable             => writeEnable,
+        writeAddr               => writeAddr,
+        writeData               => writeData,
+        
+        -- Read ports.
+        readAddr                => readAddr,
+        readData                => readData
+        
+      );
+  end generate;
+  
+  -- Simulation only model of the block RAM based memory.
+  sim_mem_gen: if not INST_SYNTH_MEM generate
+    sim_mem: entity work.rvex_gpRegs_sim
+      generic map (
+        NUM_REGS_LOG2           => NUM_REGS_LOG2,
+        NUM_WRITE_PORTS         => NUM_WRITE_PORTS,
+        NUM_READ_PORTS          => NUM_READ_PORTS
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- Write ports.
+        writeEnable             => writeEnable,
+        writeAddr               => writeAddr,
+        writeData               => writeData,
+        
+        -- Read ports.
+        readAddr                => readAddr,
+        readData                => readData
+        
+      );
+  end generate;
   
 end Behavioral;
 
