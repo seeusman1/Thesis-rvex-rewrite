@@ -204,10 +204,10 @@ begin -- architecture
       if hit = '1' then
         brku2pl_trap(S_BRK).active <= '1';
         case i is
-          when 0 => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_0);
-          when 1 => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_1);
-          when 2 => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_2);
-          when 3 => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_3);
+          when 0      => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_0);
+          when 1      => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_1);
+          when 2      => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_2);
+          when others => brku2pl_trap(S_BRK).cause <= rvex_trap(RVEX_TRAP_HW_BREAKPOINT_3);
         end case;
       end if;
       

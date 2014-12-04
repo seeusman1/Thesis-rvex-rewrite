@@ -26,6 +26,15 @@ package rvex_simUtils_asDisas_pkg is
   -- Assembler instruction memory output type.
   type rvsp_assembledProgram_type is array (0 to RVSP_MAX_SYLLABLES-1) of rvex_syllable_type;
   
+  -- Attempts to assemble a single instruction.
+  procedure assembleLine(
+    source    : in string;
+    line      : in positive;
+    syllable  : out rvex_syllable_type;
+    ok        : out boolean;
+    error     : out rvex_string_builder_type
+  );
+  
   -- Attempts to assemble a program. errorLevel indicates what type of report
   -- should be made when a parse error occurs. Limitations:
   --  - Empty lines and comments are not allowed.
@@ -515,7 +524,7 @@ package body rvex_simUtils_asDisas_pkg is
   -----------------------------------------------------------------------------
   -- Attempts to assemble an instruction with all patterns in the opcode list
   -----------------------------------------------------------------------------
-  procedure asAttempt(
+  procedure assembleLine(
     
     -- Line of source code.
     source    : in string;
@@ -615,7 +624,7 @@ package body rvex_simUtils_asDisas_pkg is
     ok := false;
     return;
     
-  end asAttempt;
+  end assembleLine;
   
   -----------------------------------------------------------------------------
   -- Assembles a program
@@ -644,7 +653,7 @@ package body rvex_simUtils_asDisas_pkg is
     for line in source'range loop
       
       -- Attempt to assemble.
-      asAttempt(
+      assembleLine(
         source    => source(line),
         line      => line + 1,
         syllable  => imem(line),
