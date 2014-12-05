@@ -1,8 +1,52 @@
--- insert license here
+-- r-VEX processor
+-- Copyright (C) 2008-2014 by TU Delft.
+-- All Rights Reserved.
+
+-- THIS IS A LEGAL DOCUMENT, BY USING r-VEX,
+-- YOU ARE AGREEING TO THESE TERMS AND CONDITIONS.
+
+-- No portion of this work may be used by any commercial entity, or for any
+-- commercial purpose, without the prior, written permission of TU Delft.
+-- Nonprofit and noncommercial use is permitted as described below.
+
+-- 1. r-VEX is provided AS IS, with no warranty of any kind, express
+-- or implied. The user of the code accepts full responsibility for the
+-- application of the code and the use of any results.
+
+-- 2. Nonprofit and noncommercial use is encouraged. r-VEX may be
+-- downloaded, compiled, synthesized, copied, and modified solely for nonprofit,
+-- educational, noncommercial research, and noncommercial scholarship
+-- purposes provided that this notice in its entirety accompanies all copies.
+-- Copies of the modified software can be delivered to persons who use it
+-- solely for nonprofit, educational, noncommercial research, and
+-- noncommercial scholarship purposes provided that this notice in its
+-- entirety accompanies all copies.
+
+-- 3. ALL COMMERCIAL USE, AND ALL USE BY FOR PROFIT ENTITIES, IS EXPRESSLY
+-- PROHIBITED WITHOUT A LICENSE FROM TU Delft (J.S.S.M.Wong@tudelft.nl).
+
+-- 4. No nonprofit user may place any restrictions on the use of this software,
+-- including as modified by the user, by any other authorized user.
+
+-- 5. Noncommercial and nonprofit users may distribute copies of r-VEX
+-- in compiled or binary form as set forth in Section 2, provided that
+-- either: (A) it is accompanied by the corresponding machine-readable source
+-- code, or (B) it is accompanied by a written offer, with no time limit, to
+-- give anyone a machine-readable copy of the corresponding source code in
+-- return for reimbursement of the cost of distribution. This written offer
+-- must permit verbatim duplication by anyone, or (C) it is distributed by
+-- someone who received only the executable form, and is accompanied by a
+-- copy of the written offer of source code.
+
+-- 6. r-VEX was developed by Stephan Wong, Thijs van As, Fakhar Anjam, Roel Seedorf,
+-- Anthony Brandon. r-VEX is currently maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).
+
+-- Copyright (C) 2008-2014 by TU Delft.
 
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use IEEE.math_real.all;
 
 --=============================================================================
 -- This package contains basic simulation/elaboration-only utilities, primarily
@@ -33,6 +77,10 @@ package rvex_simUtils_pkg is
   -- Converts a character to its numeric value, supporting all hexadecimal
   -- digits. Returns -1 when the character is not hexadecimal.
   function charToDigitVal(c: character) return integer;
+  
+  -- Converts a hex character to an std_logic_vector of length 4. U and X are
+  -- supported.
+  function charToStdLogic(c: character) return std_logic_vector;
   
   -- Tests whether two characters match, ignoring case.
   function charsEqual(a: character; b: character) return boolean;
@@ -108,9 +156,15 @@ package rvex_simUtils_pkg is
   -- notation.
   function rvs_int(value: std_logic_vector) return string;
   
-  -- Converts an std_logic_vector to a string in hexadecimal notation.
+  -- Converts an std_logic_vector to a string in hexadecimal notation,
+  -- prefixing 0x.
   function rvs_hex(value: std_logic_vector) return string;
   function rvs_hex(value: std_logic_vector; digits: natural) return string;
+  
+  -- Converts an std_logic_vector to a string in hexadecimal notation,
+  -- WITHOUT prefixing 0x.
+  function rvs_hex_no0x(value: std_logic_vector) return string;
+  function rvs_hex_no0x(value: std_logic_vector; digits: natural) return string;
   
   -----------------------------------------------------------------------------
   -- Misc. methods
@@ -120,6 +174,12 @@ package rvex_simUtils_pkg is
   -- value has an ascending (x to y) range. Bits which do not exist in value
   -- are substituted with def.
   function rvs_extractStdLogicVectRange(value: std_logic_vector; high: natural; low: natural; def: std_logic) return std_logic_vector;
+  
+  -- Shifts a range like (5 downto 3) to a range like (2 downto 0).
+  function rvs_shiftVectToIndexZero(value: std_logic_vector) return std_logic_vector;
+  
+  -- Randomizes the contents of the supplied std_logic_vector.
+  procedure rvs_randomVect(seed1: inout positive; seed2: inout positive; value: inout std_logic_vector);
   
 end rvex_simUtils_pkg;
 
@@ -262,6 +322,25 @@ package body rvex_simUtils_pkg is
     end case;
     return result;
   end charToDigitVal;
+  
+  -- Converts a hex character to an std_logic_vector of length 4. Special
+  -- characters are supported.
+  function charToStdLogic(c: character) return std_logic_vector is
+    variable intVal : integer;
+  begin
+    intVal := charToDigitVal(c);
+    if intVal > -1 then 
+      return std_logic_vector(to_unsigned(intVal, 4));
+    end if;
+    case c is
+      when 'L' => return "LLLL";
+      when 'H' => return "HHHH";
+      when 'U' => return "UUUU";
+      when 'Z' => return "ZZZZ";
+      when '-' => return "----";
+      when others => return "XXXX";
+    end case;
+  end charToStdLogic;
   
   -- Tests whether two characters match, ignoring case.
   function charsEqual(
@@ -448,42 +527,60 @@ package body rvex_simUtils_pkg is
     end if;
   end rvs_int;
   
-  -- Converts an std_logic_vector to a string in hexadecimal notation.
+  -- Converts an std_logic_vector to a string in hexadecimal notation,
+  -- prefixing 0x.
   function rvs_hex(value: std_logic_vector) return string is
   begin
-    return rvs_hex(value, value'high / 4 + 1);
+    return "0x" & rvs_hex_no0x(value);
   end rvs_hex;
   function rvs_hex(value: std_logic_vector; digits: natural) return string is
-    variable s : string(1 to digits + 2);
+  begin
+    return "0x" & rvs_hex_no0x(value, digits);
+  end rvs_hex;
+  
+  -- Converts an std_logic_vector to a string in hexadecimal notation,
+  -- WITHOUT prefixing 0x.
+  function rvs_hex_no0x(value: std_logic_vector) return string is
+  begin
+    return rvs_hex_no0x(value, value'high / 4 + 1);
+  end rvs_hex_no0x;
+  function rvs_hex_no0x(value: std_logic_vector; digits: natural) return string is
+    variable s : string(1 to digits);
     variable temp : std_logic_vector(3 downto 0);
   begin
-    s(1 to 2) := "0x";
     for i in 0 to digits-1 loop
       temp := to_X01Z(rvs_extractStdLogicVectRange(value, i*4+3, i*4, '0'));
       case temp is
-        when "0000" => s(digits+2-i) := '0';
-        when "0001" => s(digits+2-i) := '1';
-        when "0010" => s(digits+2-i) := '2';
-        when "0011" => s(digits+2-i) := '3';
-        when "0100" => s(digits+2-i) := '4';
-        when "0101" => s(digits+2-i) := '5';
-        when "0110" => s(digits+2-i) := '6';
-        when "0111" => s(digits+2-i) := '7';
-        when "1000" => s(digits+2-i) := '8';
-        when "1001" => s(digits+2-i) := '9';
-        when "1010" => s(digits+2-i) := 'A';
-        when "1011" => s(digits+2-i) := 'B';
-        when "1100" => s(digits+2-i) := 'C';
-        when "1101" => s(digits+2-i) := 'D';
-        when "1110" => s(digits+2-i) := 'E';
-        when "1111" => s(digits+2-i) := 'F';
-        when "XXXX" => s(digits+2-i) := 'X';
-        when "ZZZZ" => s(digits+2-i) := 'Z';
-        when others => s(digits+2-i) := '?';
+        when "0000" => s(digits-i) := '0';
+        when "0001" => s(digits-i) := '1';
+        when "0010" => s(digits-i) := '2';
+        when "0011" => s(digits-i) := '3';
+        when "0100" => s(digits-i) := '4';
+        when "0101" => s(digits-i) := '5';
+        when "0110" => s(digits-i) := '6';
+        when "0111" => s(digits-i) := '7';
+        when "1000" => s(digits-i) := '8';
+        when "1001" => s(digits-i) := '9';
+        when "1010" => s(digits-i) := 'A';
+        when "1011" => s(digits-i) := 'B';
+        when "1100" => s(digits-i) := 'C';
+        when "1101" => s(digits-i) := 'D';
+        when "1110" => s(digits-i) := 'E';
+        when "1111" => s(digits-i) := 'F';
+        when others =>
+          case rvs_extractStdLogicVectRange(value, i*4+3, i*4, '0') is
+            when "XXXX" => s(digits-i) := 'X';
+            when "UUUU" => s(digits-i) := 'U';
+            when "LLLL" => s(digits-i) := 'L';
+            when "HHHH" => s(digits-i) := 'H';
+            when "ZZZZ" => s(digits-i) := 'Z';
+            when "----" => s(digits-i) := '-';
+            when others => s(digits-i) := '?';
+          end case;
       end case;
     end loop;
     return s;
-  end rvs_hex;
+  end rvs_hex_no0x;
   
   -----------------------------------------------------------------------------
   -- Misc. methods
@@ -504,5 +601,32 @@ package body rvex_simUtils_pkg is
     end loop;
     return result;
   end rvs_extractStdLogicVectRange;
+  
+  -- Shifts a range like (5 downto 3) to a range like (2 downto 0).
+  function rvs_shiftVectToIndexZero(value: std_logic_vector) return std_logic_vector is
+    variable result : std_logic_vector(value'length-1 downto 0);
+  begin
+    result := value;
+    return result;
+  end rvs_shiftVectToIndexZero;
+  
+  -- Randomizes the contents of the supplied std_logic_vector.
+  procedure rvs_randomVect(seed1: inout positive; seed2: inout positive; value: inout std_logic_vector) is
+    variable rv     : real;
+    variable iv     : natural;
+    variable iters  : natural;
+    variable remain : natural;
+  begin
+    for i in 0 to (value'length / 8) - 1 loop
+      uniform(seed1, seed2, rv);
+      iv := integer(trunc(rv * 256.0));
+      value(value'low + i*8 + 7 downto value'low + i*8) := std_logic_vector(to_unsigned(iv, 8));
+    end loop;
+    if (value'length mod 8) /= 0 then
+      uniform(seed1, seed2, rv);
+      iv := integer(trunc(rv * 256.0));
+      value(value'high downto value'high - 7) := std_logic_vector(to_unsigned(iv, 8));
+    end if;
+  end rvs_randomVect;
   
 end rvex_simUtils_pkg;

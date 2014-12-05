@@ -1,0 +1,5 @@
+-- Because VHDL can't list files in a directory, we need some kind of index
+-- file to help it. Just list every file you want to conformance test in this
+-- file.
+
+sanity01.test
