@@ -691,7 +691,7 @@ begin -- architecture
       clear       => (cxplif2cxreg_resuming_ack and not cxplif2cxreg_stall),
       permissions => DEBUG_CAN_WRITE
     );
-    cxreg2cxplif_brk <= creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_BREAK);
+    cxreg2cxplif_resuming <= creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_RESUME);
     
     -- Generate the external/internal debug flag.
     creg_makeSetClearFlag(l2c, c2l, CR_DCR, CR_DCR_EXT_DBG, CR_DCR_INT_DBG,

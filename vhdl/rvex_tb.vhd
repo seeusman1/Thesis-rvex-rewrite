@@ -521,7 +521,7 @@ begin -- architecture
         
         -- Handle instruction memory access for each lane.
         fault := '0';
-        for lane in 1 to 2**CFG.numLanesLog2-1 loop
+        for lane in 0 to 2**CFG.numLanesLog2-1 loop
           
           -- If fetch is high and the group is not stalled, return the syllable
           -- at the decoded PC and load the fault signal from the flag memory.
@@ -547,7 +547,7 @@ begin -- architecture
         end loop;
         
         -- Handle data memory access for each lane group.
-        for laneGroup in 1 to 2**CFG.numLaneGroupsLog2-1 loop
+        for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
           
           -- Default to no fault and invalid returned data.
           dmem2rv_fault(laneGroup) <= '0';

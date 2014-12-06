@@ -185,9 +185,6 @@ package rvex_simUtils_pkg is
   -- are substituted with def.
   function rvs_extractStdLogicVectRange(value: std_logic_vector; high: natural; low: natural; def: std_logic) return std_logic_vector;
   
-  -- Shifts a range like (5 downto 3) to a range like (2 downto 0).
-  function rvs_shiftVectToIndexZero(value: std_logic_vector) return std_logic_vector;
-  
   -- Randomizes the contents of the supplied std_logic_vector.
   procedure rvs_randomVect(seed1: inout positive; seed2: inout positive; value: inout std_logic_vector);
   
@@ -536,7 +533,7 @@ package body rvex_simUtils_pkg is
   -- Converts an unsigned std_logic_vector to a string, representing it in
   -- decimal notation.
   function rvs_uint(value: std_logic_vector) return string is
-    variable temp : unsigned(value'range);
+    variable temp : unsigned(value'length-1 downto 0);
     variable digit : integer;
     variable s : string(1 to RVEX_STR_LEN);
     variable index : natural;
@@ -570,13 +567,15 @@ package body rvex_simUtils_pkg is
   -- Converts a signed std_logic_vector to a string, representing it in decimal
   -- notation.
   function rvs_int(value: std_logic_vector) return string is
+    variable temp : signed(value'length-1 downto 0);
   begin
-    if signed(value) = 0 then
+    temp := signed(value);
+    if temp = 0 then
       return "0";
-    elsif signed(value) > 0 then
-      return rvs_uint(value);
+    elsif temp > 0 then
+      return rvs_uint(std_logic_vector(temp));
     else
-      return "-" & rvs_uint(std_logic_vector(0-unsigned(value)));
+      return "-" & rvs_uint(std_logic_vector(0-temp));
     end if;
   end rvs_int;
   
@@ -595,14 +594,16 @@ package body rvex_simUtils_pkg is
   -- WITHOUT prefixing 0x.
   function rvs_hex_no0x(value: std_logic_vector) return string is
   begin
-    return rvs_hex_no0x(value, value'high / 4 + 1);
+    return rvs_hex_no0x(value, (value'length-1) / 4 + 1);
   end rvs_hex_no0x;
   function rvs_hex_no0x(value: std_logic_vector; digits: natural) return string is
+    variable normalized : std_logic_vector(value'length-1 downto 0);
     variable s : string(1 to digits);
     variable temp : std_logic_vector(3 downto 0);
   begin
+    normalized := value;
     for i in 0 to digits-1 loop
-      temp := to_X01Z(rvs_extractStdLogicVectRange(value, i*4+3, i*4, '0'));
+      temp := to_X01Z(rvs_extractStdLogicVectRange(normalized, i*4+3, i*4, '0'));
       case temp is
         when "0000" => s(digits-i) := '0';
         when "0001" => s(digits-i) := '1';
@@ -621,7 +622,7 @@ package body rvex_simUtils_pkg is
         when "1110" => s(digits-i) := 'E';
         when "1111" => s(digits-i) := 'F';
         when others =>
-          temp := rvs_extractStdLogicVectRange(value, i*4+3, i*4, '0');
+          temp := rvs_extractStdLogicVectRange(normalized, i*4+3, i*4, '0');
           case temp is
             when "XXXX" => s(digits-i) := 'X';
             when "UUUU" => s(digits-i) := 'U';
@@ -655,14 +656,6 @@ package body rvex_simUtils_pkg is
     end loop;
     return result;
   end rvs_extractStdLogicVectRange;
-  
-  -- Shifts a range like (5 downto 3) to a range like (2 downto 0).
-  function rvs_shiftVectToIndexZero(value: std_logic_vector) return std_logic_vector is
-    variable result : std_logic_vector(value'length-1 downto 0);
-  begin
-    result := value;
-    return result;
-  end rvs_shiftVectToIndexZero;
   
   -- Randomizes the contents of the supplied std_logic_vector.
   procedure rvs_randomVect(seed1: inout positive; seed2: inout positive; value: inout std_logic_vector) is

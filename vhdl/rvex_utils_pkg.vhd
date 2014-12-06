@@ -146,6 +146,14 @@ package rvex_utils_pkg is
     b           : natural
   ) return natural;
   
+  -- Normalizes an std_logic_vector, i.e.:
+  --  - Converts to descending range.
+  --  - Shifts lowest index to 0.
+  -- It does not modify the value in any way.
+  function norm(
+    value: std_logic_vector
+  ) return std_logic_vector;
+  
 end rvex_utils_pkg;
 
 --=============================================================================
@@ -370,5 +378,16 @@ package body rvex_utils_pkg is
       return b;
     end if;
   end max_nat;
+  
+  -- Normalizes an std_logic_vector, i.e.:
+  --  - Converts to descending range.
+  --  - Shifts lowest index to 0.
+  -- It does not modify the value in any way.
+  function norm(value: std_logic_vector) return std_logic_vector is
+    variable result : std_logic_vector(value'length-1 downto 0);
+  begin
+    result := value;
+    return result;
+  end norm;
   
 end rvex_utils_pkg;

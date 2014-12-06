@@ -174,7 +174,7 @@ begin -- architecture
       end loop;
       
       -- Drive trapPending signal.
-      trap2pl_trapPending(lane) <= trapInPipeline;
+      trap2pl_trapPending(lane) <= trapInPipeline and not combinedTraps(firstLane)(S_LTRP).active;
       
       -- Drive trapToHandle signal.
       trap2pl_trapToHandle(lane) <= combinedTraps(firstLane)(S_LTRP);

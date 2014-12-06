@@ -655,7 +655,7 @@ begin -- architecture
           rfi_v(groupA)          := rfi_v(groupB);
           
           -- Override the lane PC bit for this level appropriately.
-          index := blockIndex + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + SYLLABLE_SIZE_LOG2B;
+          index := level + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + SYLLABLE_SIZE_LOG2B;
           lanePC_v(groupA)(index) := '0';
           lanePC_v(groupB)(index) := '1';
           

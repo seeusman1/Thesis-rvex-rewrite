@@ -52,6 +52,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_simUtils_pkg.all;
 
 --=============================================================================
@@ -795,7 +796,7 @@ package body rvex_simUtils_mem_pkg is
     -- the memory address because the memory is word-aligned.
     readFromNode(
       node  => mem.root,
-      addr  => rvs_shiftVectToIndexZero(addr(31 downto 2)),
+      addr  => norm(addr(31 downto 2)),
       def   => mem.default,
       res   => value
     );
@@ -824,7 +825,7 @@ package body rvex_simUtils_mem_pkg is
     -- the memory address because the memory is word-aligned.
     writeToNode(
       node  => mem.root,
-      addr  => rvs_shiftVectToIndexZero(addr(31 downto 2)),
+      addr  => norm(addr(31 downto 2)),
       value => value,
       mask  => mask,
       def   => mem.default

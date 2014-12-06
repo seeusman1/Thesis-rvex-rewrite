@@ -1451,11 +1451,9 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Figure out if the opcode is known or not.
     if s(S_IF+L_IF).dp.useImm = '1' then
-      flag
-        := OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).valid(1);
+      flag := not OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).valid(1);
     else
-      flag
-        := OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).valid(0);
+      flag := not OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).valid(0);
     end if;
     
     -- If we don't have a branch unit, make sure this is not a branch
@@ -2042,8 +2040,14 @@ begin -- architecture
       
       -- Display memory operation, if one was performed.
       if s(S_LAST).memRequested then
-        
         if OPCODE_TABLE(vect2uint(s(S_LAST).opcode)).memoryCtrl.writeEnable = '1' then
+          
+          -- Display memory writes.
+          if flag = '0' then
+            flag := '1';
+          else
+            rvs_append(debug, "; ");
+          end if;
           rvs_append(debug, "mem(");
           rvs_append(debug, rvs_hex(s(S_LAST).dp.resAdd, 8));
           rvs_append(debug, ") := ");
@@ -2059,18 +2063,31 @@ begin -- architecture
               rvs_append(debug, rvs_hex(s(S_LAST).dp.op3, 8));
             
           end case;
-        else
+          
+          -- Display errors.
+          if s(S_LAST).memError then
+            rvs_append(debug, " -> error");
+          end if;
+          
+        end if;
+        if OPCODE_TABLE(vect2uint(s(S_LAST).opcode)).memoryCtrl.readEnable = '1' then
+          
+          -- Display memory reads.
+          if flag = '0' then
+            flag := '1';
+          else
+            rvs_append(debug, "; ");
+          end if;
           rvs_append(debug, "read mem(");
           rvs_append(debug, rvs_hex(s(S_LAST).dp.resAdd, 8));
           rvs_append(debug, ")");
+          
+          -- Display errors.
+          if s(S_LAST).memError then
+            rvs_append(debug, " -> error");
+          end if;
+          
         end if;
-        if s(S_LAST).memError then
-          rvs_append(debug, " -> error");
-        end if;
-        
-        -- We've written stuff to the debug information string.
-        flag := '1';
-        
       end if;
       
       -- Save whether we're writing to a general purpose register.
