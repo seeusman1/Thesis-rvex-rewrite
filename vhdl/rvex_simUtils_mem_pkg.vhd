@@ -123,10 +123,11 @@ package rvex_simUtils_mem_pkg is
   
   -- Returns the word which is currently in the memory at the given address.
   -- The 2 LSB of the address are ignored.
-  function rvmem_read(
-    mem   : in    rvmem_memoryState_type;
-    addr  : in    rvex_address_type
-  ) return rvex_data_type;
+  procedure rvmem_read(
+    mem   : inout rvmem_memoryState_type;
+    addr  : in    rvex_address_type;
+    value : out   rvex_data_type
+  );
   
   -- Writes the given value to memory. The 2 LSB of the address are ignored.
   procedure rvmem_write(
@@ -195,14 +196,18 @@ package body rvex_simUtils_mem_pkg is
   
   -- Reads from a node at the specified address. def is returned if the
   -- addressed location has not been allocated.
-  function readFromNode(
-    node  : in    rvmem_node_type;
+  procedure readFromNode(
+    node  : inout rvmem_node_type;
     addr  : in    std_logic_vector;
-    def   : in    rvex_data_type
-  ) return rvex_data_type is
+    def   : in    rvex_data_type;
+    res   : out   rvex_data_type
+  ) is
     variable addrInt  : natural;
     variable memVal   : rvex_data_type;
   begin
+    
+    -- Default to returning the default value.
+    res := def;
     
     if addr'length < RVMEM_LEAF_SIZE_LOG2 then
       
@@ -216,12 +221,12 @@ package body rvex_simUtils_mem_pkg is
       -- We're reading from a leaf node now. Make sure the leaf data is
       -- initialized.
       if node.leafData = null then
-        return def;
+        return;
       end if;
       
       -- Read the value.
       addrInt := to_integer(unsigned(addr));
-      return node.leafData.all(addrInt);
+      res := node.leafData.all(addrInt);
       
     elsif addr'length < RVMEM_NODE_SIZE_LOG2 then
       
@@ -235,21 +240,19 @@ package body rvex_simUtils_mem_pkg is
       -- We're still in a non-leaf node. Make sure the array of child nodes is
       -- initialized.
       if node.children = null then
-        return def;
+        return;
       end if;
       
       -- Make a recursive call to ourselves to handle the child node.
       addrInt := to_integer(unsigned(addr(addr'high downto (addr'high - RVMEM_NODE_SIZE_LOG2) + 1)));
-      return readFromNode(
+      readFromNode(
         node  => node.children.all.list(addrInt),
         addr  => addr(addr'high - RVMEM_NODE_SIZE_LOG2 downto 0),
-        def   => def
+        def   => def,
+        res   => res
       );
       
     end if;
-    
-    -- I don't think execution can ever get here, but still.
-    return def;
     
   end readFromNode;
   
@@ -278,7 +281,7 @@ package body rvex_simUtils_mem_pkg is
       -- We're writing to a leaf node. Make sure the leaf is initialized.
       if node.leafData = null then
         node.leafData := new rvmem_bank_type;
-        node.leafData.all := (others => def);
+        node.leafData.all := (0 to 2**RVMEM_LEAF_SIZE_LOG2-1 => def);
       end if;
       
       -- Read the current value of the memory.
@@ -611,7 +614,7 @@ package body rvex_simUtils_mem_pkg is
   
   -- Deallocates everything in a node.
   procedure dumpNode(
-    node    : in    rvmem_node_type;
+    node    : inout rvmem_node_type;
     file f  :       text;
     format  : in    dumpFormat_type;
     count   : inout natural;
@@ -775,23 +778,26 @@ package body rvex_simUtils_mem_pkg is
   
   -- Returns the word which is currently in the memory at the given address.
   -- The 2 LSB of the address are ignored.
-  function rvmem_read(
-    mem   : in    rvmem_memoryState_type;
-    addr  : in    rvex_address_type
-  ) return rvex_data_type is
+  procedure rvmem_read(
+    mem   : inout rvmem_memoryState_type;
+    addr  : in    rvex_address_type;
+    value : out   rvex_data_type
+  ) is
   begin
     
     -- If we're reading from an undefined address, always return X.
     if is_X(addr(31 downto 2)) then
-      return (others => 'X');
+      value := (others => 'X');
+      return;
     end if;
     
     -- Defer to the private tree-walking read method. Ignore the two LSBs in
     -- the memory address because the memory is word-aligned.
-    return readFromNode(
+    readFromNode(
       node  => mem.root,
       addr  => rvs_shiftVectToIndexZero(addr(31 downto 2)),
-      def   => mem.default
+      def   => mem.default,
+      res   => value
     );
     
   end rvmem_read;

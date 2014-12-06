@@ -621,7 +621,8 @@ package body rvex_simUtils_pkg is
         when "1110" => s(digits-i) := 'E';
         when "1111" => s(digits-i) := 'F';
         when others =>
-          case rvs_extractStdLogicVectRange(value, i*4+3, i*4, '0') is
+          temp := rvs_extractStdLogicVectRange(value, i*4+3, i*4, '0');
+          case temp is
             when "XXXX" => s(digits-i) := 'X';
             when "UUUU" => s(digits-i) := 'U';
             when "LLLL" => s(digits-i) := 'L';

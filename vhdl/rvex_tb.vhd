@@ -481,6 +481,7 @@ begin -- architecture
     variable revDecouple        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     variable fault              : std_logic;
     variable flags              : rvex_data_type;
+    variable result             : rvex_data_type;
     
   begin
     
@@ -525,8 +526,10 @@ begin -- architecture
           -- If fetch is high and the group is not stalled, return the syllable
           -- at the decoded PC and load the fault signal from the flag memory.
           if (fetch(lane) = '1') and (rv2mem_stallOut(lane2group(lane, CFG)) = '0') then
-            imem2rv_instr(lane) <= rvmem_read(imem, lanePCs(lane));
-            fault := fault or rvmem_read(fmem, lanePCs(lane))(FLAG_IM_FAULT_BIT);
+            rvmem_read(imem, lanePCs(lane), result);
+            imem2rv_instr(lane) <= result;
+            rvmem_read(fmem, lanePCs(lane), result);
+            fault := fault or result(FLAG_IM_FAULT_BIT);
           else
             imem2rv_instr(lane) <= (others => RVEX_UNDEF);
           end if;
@@ -557,7 +560,8 @@ begin -- architecture
               
               -- Handle writes. Only perform the write if we do not return a
               -- fault.
-              fault := rvmem_read(fmem, rv2dmem_addr(laneGroup))(FLAG_DM_FAULT_BIT);
+              rvmem_read(fmem, rv2dmem_addr(laneGroup), result);
+              fault := result(FLAG_DM_FAULT_BIT);
               if fault = '0' then
                 rvmem_write(
                   mem   => dmem,
@@ -571,8 +575,10 @@ begin -- architecture
             elsif rv2dmem_readEnable(laneGroup) = '1' then
               
               -- Handle reads.
-              dmem2rv_fault(laneGroup)    <= rvmem_read(fmem, rv2dmem_addr(laneGroup))(FLAG_DM_FAULT_BIT);
-              dmem2rv_readData(laneGroup) <= rvmem_read(dmem, rv2dmem_addr(laneGroup));
+              rvmem_read(fmem, rv2dmem_addr(laneGroup), result);
+              dmem2rv_fault(laneGroup)    <= result(FLAG_DM_FAULT_BIT);
+              rvmem_read(dmem, rv2dmem_addr(laneGroup), result);
+              dmem2rv_readData(laneGroup) <= result;
               
             end if;
           end if;
@@ -613,23 +619,27 @@ begin -- architecture
       
       -- Handle reads.
       if stim2mem_select = IMEM_SELECT then
-        mem2stim_readData <= rvmem_read(
+        rvmem_read(
           mem   => imem, -- Instruction memory.
-          addr  => stim2mem_addr
+          addr  => stim2mem_addr,
+          value => result
         );
       else
-        mem2stim_readData <= rvmem_read(
+        rvmem_read(
           mem   => dmem, -- Data memory.
-          addr  => stim2mem_addr
+          addr  => stim2mem_addr,
+          value => result
         );
       end if;
+      mem2stim_readData <= result;
       
     elsif rising_edge(stim2mem_faultEnable) then
       
       -- Read the current value of the flags.
-      flags := rvmem_read(
+      rvmem_read(
         mem   => fmem,
-        addr  => stim2mem_addr
+        addr  => stim2mem_addr,
+        value => flags
       );
       
       -- Set or clear the requested bit.

@@ -721,7 +721,7 @@ package body rvex_simUtils_asDisas_pkg is
   ) return rvex_string_builder_type is
     
     -- Syntax specification for the given opcode and immediate switch.
-    variable syntax       : string(1 to trapTableEntry_type.name'length);
+    variable syntax       : string(1 to TRAP_TABLE(RVEX_TRAP_NONE).name'length);
     variable pos          : positive;
     variable output       : rvex_string_builder_type;
     
