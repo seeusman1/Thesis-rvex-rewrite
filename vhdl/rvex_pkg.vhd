@@ -72,12 +72,6 @@ package rvex_pkg is
   -- rvex core configuration record.
   type rvex_generic_config_type is record
     
-    -- Enables borrowing long immediates from preceding syllable pair. This
-    -- allows lane 2 to borrow from 0, lane 3 from 1, lane 4 from 2, etc. Lane
-    -- 0 and 1 do not have an extra borrow slot. Note that special logic will
-    -- be instantiated to ensure correct behavior even when the total number of
-    -- lanes in the core is less than the generic binary bundle size specified.
-
     -- log2 of the number of lanes to instantiate.
     numLanesLog2                : natural;
     

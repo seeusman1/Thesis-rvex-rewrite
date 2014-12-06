@@ -7,7 +7,7 @@ cfg     memLaneRevIndex     1
 cfg     branchLaneRevIndex  0
 
 -- Initialize memories.
-init    imem 64 dmem 64
+init
 
 -- 0x00
 load    nop

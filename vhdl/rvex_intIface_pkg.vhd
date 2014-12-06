@@ -103,7 +103,7 @@ package rvex_intIface_pkg is
   -- this spam, or have some kind of synthesis tool which does not substitute
   -- 'U' with something real automatically, you can change the value used for
   -- undefined values to '0' here.
-  constant RVEX_UNDEF           : std_logic := 'U';
+  constant RVEX_UNDEF           : std_logic := '0';
   
   -- Special "general purpose" register which is always tied to 0.
   constant GPREG_ZERO           : rvex_gpRegAddr_type := "000000";

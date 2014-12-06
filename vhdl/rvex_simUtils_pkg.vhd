@@ -67,8 +67,11 @@ package rvex_simUtils_pkg is
   -- Returns true if given character is alphanumerical.
   function isAlphaNumericChar(c: character) return boolean;
   
+  -- Returns true if given character is whitespace.
+  function isWhitespace(c: character) return boolean;
+  
   -- Returns true if given character is a special character (not alphanumerical
-  -- or a space).
+  -- and not whitespace).
   function isSpecialChar(c: character) return boolean;
   
   -- Converts a character to uppercase.
@@ -244,10 +247,25 @@ package body rvex_simUtils_pkg is
     return isAlphaChar(c) or isNumericChar(c);
   end isAlphaNumericChar;
   
-  -- Returns true if given character is a special character.
+  -- Returns true if given character is whitespace.
+  function isWhitespace(c: character) return boolean is
+    variable result: boolean;
+  begin
+    case c is
+      when ' ' => result := true;
+      when HT => result := true;
+      when LF => result := true;
+      when CR => result := true;
+      when others => result := false;
+    end case;
+    return result;
+  end isWhitespace;
+  
+  -- Returns true if given character is a special character (not alphanumerical
+  -- and not whitespace).
   function isSpecialChar(c: character) return boolean is
   begin
-    return not isAlphaNumericChar(c) and c /= ' ';
+    return not isAlphaNumericChar(c) and not isWhitespace(c);
   end isSpecialChar;
   
   -- Converts a character to uppercase.
