@@ -1,4 +1,47 @@
--- Insert license here
+-- r-VEX processor
+-- Copyright (C) 2008-2014 by TU Delft.
+-- All Rights Reserved.
+
+-- THIS IS A LEGAL DOCUMENT, BY USING r-VEX,
+-- YOU ARE AGREEING TO THESE TERMS AND CONDITIONS.
+
+-- No portion of this work may be used by any commercial entity, or for any
+-- commercial purpose, without the prior, written permission of TU Delft.
+-- Nonprofit and noncommercial use is permitted as described below.
+
+-- 1. r-VEX is provided AS IS, with no warranty of any kind, express
+-- or implied. The user of the code accepts full responsibility for the
+-- application of the code and the use of any results.
+
+-- 2. Nonprofit and noncommercial use is encouraged. r-VEX may be
+-- downloaded, compiled, synthesized, copied, and modified solely for nonprofit,
+-- educational, noncommercial research, and noncommercial scholarship
+-- purposes provided that this notice in its entirety accompanies all copies.
+-- Copies of the modified software can be delivered to persons who use it
+-- solely for nonprofit, educational, noncommercial research, and
+-- noncommercial scholarship purposes provided that this notice in its
+-- entirety accompanies all copies.
+
+-- 3. ALL COMMERCIAL USE, AND ALL USE BY FOR PROFIT ENTITIES, IS EXPRESSLY
+-- PROHIBITED WITHOUT A LICENSE FROM TU Delft (J.S.S.M.Wong@tudelft.nl).
+
+-- 4. No nonprofit user may place any restrictions on the use of this software,
+-- including as modified by the user, by any other authorized user.
+
+-- 5. Noncommercial and nonprofit users may distribute copies of r-VEX
+-- in compiled or binary form as set forth in Section 2, provided that
+-- either: (A) it is accompanied by the corresponding machine-readable source
+-- code, or (B) it is accompanied by a written offer, with no time limit, to
+-- give anyone a machine-readable copy of the corresponding source code in
+-- return for reimbursement of the cost of distribution. This written offer
+-- must permit verbatim duplication by anyone, or (C) it is distributed by
+-- someone who received only the executable form, and is accompanied by a
+-- copy of the written offer of source code.
+
+-- 6. r-VEX was developed by Stephan Wong, Thijs van As, Fakhar Anjam, Roel Seedorf,
+-- Anthony Brandon. r-VEX is currently maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).
+
+-- Copyright (C) 2008-2014 by TU Delft.
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -260,7 +303,7 @@ begin -- architecture
   
   -- Generate the reconfigRequestError signal.
   reconfigRequestError <= '0' when
-    unsigned(newConfiguration and not CONFIGURATION_MASK) = 0
+    vect2unsigned(newConfiguration and not CONFIGURATION_MASK) = 0
     else reconfigRequest;
   
   -- Generate the reconfigRequestOK signal.
@@ -283,7 +326,7 @@ begin -- architecture
     if gbreg2cfg_requestEnable = '0' then
       for i in 2**CFG.numContextsLog2-1 downto 0 loop
         if cxreg2cfg_requestEnable(i) = '1' then
-          requesterID <= std_logic_vector(to_unsigned(i, 4));
+          requesterID <= uint2vect(i, 4);
         end if;
       end loop;
     end if;
@@ -299,7 +342,7 @@ begin -- architecture
   begin
     
     -- Convert the mux selection signal to something we can work with.
-    sel := to_integer(unsigned(requesterID));
+    sel := vect2uint(requesterID);
     
     -- Select the right data signal.
     if sel < 2**CFG.numContextsLog2 then
@@ -455,9 +498,9 @@ begin -- architecture
             commit <= '0';
           end if;
           if curContextEnable_r(i) = '1' then
-            laneGroup := to_integer(unsigned(
+            laneGroup := vect2uint(
               curLastPipelaneGroupForContext_r(i)(CFG.numContextsLog2-1 downto 0)
-            ));
+            );
             if mem2cfg_blockReconfig(laneGroup) = '1' then
               commit <= '0';
             end if;
@@ -478,9 +521,9 @@ begin -- architecture
         curConfiguration_r <= (others => '0');
         curContextEnable_r <= (0 => '1', others => '0');
         curLastPipelaneGroupForContext_r <= (others =>
-          std_logic_vector(to_unsigned(2**CFG.numLaneGroupsLog2-1, 3)));
+          uint2vect(2**CFG.numLaneGroupsLog2-1, 3));
         curNumPipelaneGroupsLog2ForContext_r <= (others =>
-          std_logic_vector(to_unsigned(CFG.numLaneGroupsLog2, 2)));
+          uint2vect(CFG.numLaneGroupsLog2, 2));
         curCoupleMatrix_r <= (others => '1');
         
       elsif clkEn = '1' and commit = '1' then
@@ -513,7 +556,7 @@ begin -- architecture
     for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
       contextBits := curConfiguration_r(laneGroup*4+2 downto laneGroup*4);
       cfg2any_context(laneGroup) <= contextBits;
-      context := to_integer(unsigned(contextBits(CFG.numContextsLog2-1 downto 0)));
+      context := vect2uint(contextBits(CFG.numContextsLog2-1 downto 0));
       cfg2any_numGroupsLog2(laneGroup) <= curNumPipelaneGroupsLog2ForContext_r(context);
     end loop;
   end process;

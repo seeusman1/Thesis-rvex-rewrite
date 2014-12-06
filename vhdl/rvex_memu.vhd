@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_trap_pkg.all;
@@ -157,7 +158,7 @@ begin -- architecture
   -- Command logic (S_MEM)
   -----------------------------------------------------------------------------
   -- Decode control signals.
-  ctrl(S_MEM) <= OPCODE_TABLE(to_integer(unsigned(pl2memu_opcode(S_MEM)))).memoryCtrl;
+  ctrl(S_MEM) <= OPCODE_TABLE(vect2uint(pl2memu_opcode(S_MEM))).memoryCtrl;
   
   -- Forward the address directly to the memory.
   memu2dmsw_addr(S_MEM) <= pl2memu_opAddr(S_MEM);

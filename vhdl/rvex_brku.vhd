@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_trap_pkg.all;
@@ -166,13 +167,13 @@ begin -- architecture
         if cxplif2brku_breakpoints(S_BRK).cfg(i)(0) = '1' then
           
           -- Hit on any memory access.
-          hit := OPCODE_TABLE(to_integer(unsigned(pl2brku_opcode(S_MEM)))).memoryCtrl.readEnable
-              or OPCODE_TABLE(to_integer(unsigned(pl2brku_opcode(S_MEM)))).memoryCtrl.writeEnable;
+          hit := OPCODE_TABLE(vect2uint(pl2brku_opcode(S_MEM))).memoryCtrl.readEnable
+              or OPCODE_TABLE(vect2uint(pl2brku_opcode(S_MEM))).memoryCtrl.writeEnable;
           
         else
           
           -- Hit only on writes.
-          hit := OPCODE_TABLE(to_integer(unsigned(pl2brku_opcode(S_MEM)))).memoryCtrl.writeEnable;
+          hit := OPCODE_TABLE(vect2uint(pl2brku_opcode(S_MEM))).memoryCtrl.writeEnable;
           
         end if;
         

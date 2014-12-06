@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_opcode_pkg.all;
@@ -230,7 +231,7 @@ begin -- architecture
   si(P_OM).opBr <= pl2alu_opBr(S_ALU);
   
   -- Decode the control signals based on the opcode.
-  si(P_OM).ctrl <= OPCODE_TABLE(to_integer(unsigned(pl2alu_opcode(S_ALU)))).aluCtrl;
+  si(P_OM).ctrl <= OPCODE_TABLE(vect2uint(pl2alu_opcode(S_ALU))).aluCtrl;
   
   -----------------------------------------------------------------------------
   -- Execute phase 1 (operand mux)
@@ -365,9 +366,9 @@ begin -- architecture
     -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     -- Perform the addition.
     carry_vect := (others => si(P_AR).opBrMuxed);
-    adderResult := unsigned(si(P_AR).op1Muxed)
-                 + unsigned(si(P_AR).op2Muxed)
-                 + unsigned(carry_vect);
+    adderResult := vect2unsigned(si(P_AR).op1Muxed)
+                 + vect2unsigned(si(P_AR).op2Muxed)
+                 + vect2unsigned(carry_vect);
     
     -- Extract value and carry.
     so(P_AR).adderResult <= std_logic_vector(adderResult(31 downto 0));
@@ -391,9 +392,9 @@ begin -- architecture
       
       when SET_BIT =>
         so(P_AR).bitwiseResult <= si(P_AR).op1Muxed(31 downto 0);
-        if unsigned(si(P_AR).op2Muxed(15 downto 5)) = 0 then
+        if vect2uint(si(P_AR).op2Muxed(15 downto 5)) = 0 then
           so(P_AR).bitwiseResult(
-            to_integer(unsigned(si(P_AR).op2Muxed(4 downto 0)))
+            vect2uint(si(P_AR).op2Muxed(4 downto 0))
           ) <= si(P_AR).opBrMuxed;
         end if;
       
@@ -403,9 +404,9 @@ begin -- architecture
     end case;
     
     -- Perform bit test regardless of selected operation.
-    if unsigned(si(P_AR).op2Muxed(15 downto 5)) = 0 then
+    if vect2uint(si(P_AR).op2Muxed(15 downto 5)) = 0 then
       so(P_AR).bitTestResult <= si(P_AR).op1Muxed(
-        to_integer(unsigned(si(P_AR).op2Muxed(4 downto 0)))
+        vect2uint(si(P_AR).op2Muxed(4 downto 0))
       );
     else
       so(P_AR).bitTestResult <= '0';
@@ -477,7 +478,7 @@ begin -- architecture
         exit;
       end if;
     end loop;
-    so(P_AR).clzResult <= std_logic_vector(to_unsigned(count, 32));
+    so(P_AR).clzResult <= uint2vect(count, 32);
     
     -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     -- Compare unit 1
@@ -499,7 +500,7 @@ begin -- architecture
     -- Compare unit 2
     -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     -- Compare operand 2 with 0.
-    if unsigned(si(P_AR).op2Muxed(31 downto 0)) = 0 then
+    if vect2uint(si(P_AR).op2Muxed(31 downto 0)) = 0 then
       so(P_AR).cmp2Result <= '1';
     else
       so(P_AR).cmp2Result <= '0';

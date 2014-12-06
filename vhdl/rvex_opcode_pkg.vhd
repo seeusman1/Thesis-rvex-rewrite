@@ -1050,6 +1050,18 @@ package rvex_opcode_pkg is
       multiplierCtrl => MUL_CTRL_NOP
     ),
     
+    -- STOP: stop execution and set done flag.
+    2#00101000# => (
+      syntax_reg => "stop                                              ",
+      syntax_imm => "stop                                              ",
+      valid => "11",
+      datapathCtrl => DP_CTRL_BR,
+      aluCtrl => ALU_CTRL_NOP,
+      branchCtrl => BRANCH_CTRL_STOP,
+      memoryCtrl => MEMORY_CTRL_NOP,
+      multiplierCtrl => MUL_CTRL_NOP
+    ),
+    
     ---------------------------------------------------------------------------
     -- MUL operations
     ---------------------------------------------------------------------------

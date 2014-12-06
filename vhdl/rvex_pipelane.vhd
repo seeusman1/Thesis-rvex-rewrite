@@ -1398,7 +1398,7 @@ begin -- architecture
     -- actually be replicated for every stage because each control signal is
     -- only used in a single stage.
     for stage in S_IF+L_IF to S_LAST loop
-      s(stage).dp.c := OPCODE_TABLE(to_integer(unsigned(s(stage).opcode))).datapathCtrl;
+      s(stage).dp.c := OPCODE_TABLE(vect2uint(s(stage).opcode)).datapathCtrl;
     end loop;
     
     -- Determine the general purpose source register for port A.
@@ -1452,16 +1452,16 @@ begin -- architecture
     -- Figure out if the opcode is known or not.
     if s(S_IF+L_IF).dp.useImm = '1' then
       flag
-        := OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).valid(1);
+        := OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).valid(1);
     else
       flag
-        := OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).valid(0);
+        := OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).valid(0);
     end if;
     
     -- If we don't have a branch unit, make sure this is not a branch
     -- operation.
     if (not HAS_BR) or cfg2pl_decouple = '0' then
-      if OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).branchCtrl.isBranchInstruction = '1' then
+      if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).branchCtrl.isBranchInstruction = '1' then
         flag := '1';
       end if;
     end if;
@@ -1469,7 +1469,7 @@ begin -- architecture
     -- If we don't have a memory unit, make sure this is not a memory
     -- operation.
     if (not HAS_MEM) or cfg2pl_decouple = '0' then
-      if OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).memoryCtrl.isMemoryInstruction = '1' then
+      if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).memoryCtrl.isMemoryInstruction = '1' then
         flag := '1';
       end if;
     end if;
@@ -1477,14 +1477,14 @@ begin -- architecture
     -- If we don't have a multiplier, make sure this is not a multiply
     -- operation.
     if not HAS_MUL then
-      if OPCODE_TABLE(to_integer(unsigned(s(S_IF+L_IF).opcode))).multiplierCtrl.isMultiplyInstruction = '1' then
+      if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).multiplierCtrl.isMultiplyInstruction = '1' then
         flag := '1';
       end if;
     end if;
     
     -- Append the illegal opcode exception to the trap listing if our flag is
     -- set.
-    if flag = '1' then
+    if flag = '1' and s(S_IF+L_IF).valid = '1' then
       s(S_IF+L_IF).tr.trap := s(S_IF+L_IF).tr.trap & (
         active => '1',
         cause  => rvex_trap(RVEX_TRAP_INVALID_OP),
@@ -1567,7 +1567,7 @@ begin -- architecture
       -- Branch register.
       s(stage).dp.readBr
         := cxplif2pl_brLinkReadPort.brData(stage)(
-          to_integer(unsigned(s(stage).dp.srcBr))
+          vect2uint(s(stage).dp.srcBr)
         );
       
       -- Link register.
@@ -1644,11 +1644,11 @@ begin -- architecture
       -- the PC needs to be aligned to.
       i := SYLLABLE_SIZE_LOG2B                         -- Instr. size per lane.
          + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)  -- Lanes per group.
-         + to_integer(unsigned(cfg2pl_numGroupsLog2)); -- Number of coupled groups.
+         + vect2uint(cfg2pl_numGroupsLog2);            -- Number of coupled groups.
       
       -- Perform the addition.
       s(S_PCP1).br.PC_plusOne := std_logic_vector(
-        unsigned(s(S_PCP1).PC)
+        vect2unsigned(s(S_PCP1).PC)
         + to_unsigned(2**i, rvex_address_type'length)
       );
       
@@ -1657,7 +1657,7 @@ begin -- architecture
       
       -- Add branch offset to PC + 1 to get the relative branch target.
       s(S_BTGT).br.relativeTarget := std_logic_vector(
-        unsigned(s(S_BTGT).br.PC_plusOne)
+        vect2unsigned(s(S_BTGT).br.PC_plusOne)
         + unsigned(s(S_BTGT).br.branchOffset)
       );
       
@@ -1730,7 +1730,7 @@ begin -- architecture
     end if;
     
     -- Copy ALU branch outputs into pipeline.
-    i := to_integer(unsigned(s(S_ALU+L_ALU).dp.destBr));
+    i := vect2uint(s(S_ALU+L_ALU).dp.destBr);
     s(S_ALU+L_ALU).dp.resBr(i) := alu2pl_resultBr(S_ALU+L_ALU);
     s(S_ALU+L_ALU).dp.resBrValid(i) := s(S_ALU+L_ALU).dp.c.brRegWE;
     
@@ -1813,7 +1813,7 @@ begin -- architecture
     if s(S_BRK).dp.c.isTrap = '1' then
       
       -- Trigger a normal or debug trap depending on the trap cause (op2).
-      if TRAP_TABLE(to_integer(unsigned(s(S_BRK).dp.op2(rvex_trap_type'range)))).isDebugTrap = '1' then
+      if TRAP_TABLE(vect2uint(s(S_BRK).dp.op2(rvex_trap_type'range))).isDebugTrap = '1' then
         
         s(S_BRK).tr.debugTrap := s(S_BRK).tr.debugTrap & (
           active => '1',
@@ -1843,11 +1843,13 @@ begin -- architecture
     end if;
     
     -- Append external interrupt trap in S_MEM+1 stage.
-    s(S_MEM+1).tr.trap := s(S_MEM+1).tr.trap & (
-      active => '1',
-      cause  => rvex_trap(RVEX_TRAP_EXT_INTERRUPT),
-      arg    => (others => '0')
-    );
+    if cxplif2pl_irq(S_MEM+1) = '1' then
+      s(S_MEM+1).tr.trap := s(S_MEM+1).tr.trap & (
+        active => '1',
+        cause  => rvex_trap(RVEX_TRAP_EXT_INTERRUPT),
+        arg    => (others => '0') -- Argument is set in the exact cycle where
+      );                          -- the trap handler is entered.
+    end if;
     
     -- Copy the current trap handler into the pipeline stage where it is valid,
     -- so it is properly forwarded to the branch unit.
@@ -1992,7 +1994,7 @@ begin -- architecture
           rvs_append(debug, "(no brkpts) ");
         end if;
       elsif s(S_LAST).tr.trap.active = '1' then
-        --rvs_append(debug, prettyPrintTrap(s(S_LAST).tr.trap));
+        rvs_append(debug, prettyPrintTrap(s(S_LAST).tr.trap));
         rvs_append(debug, " occurred at ");
       else
         rvs_append(debug, "ignoring ");
@@ -2041,11 +2043,11 @@ begin -- architecture
       -- Display memory operation, if one was performed.
       if s(S_LAST).memRequested then
         
-        if OPCODE_TABLE(to_integer(unsigned(s(S_LAST).opcode))).memoryCtrl.writeEnable = '1' then
+        if OPCODE_TABLE(vect2uint(s(S_LAST).opcode)).memoryCtrl.writeEnable = '1' then
           rvs_append(debug, "mem(");
           rvs_append(debug, rvs_hex(s(S_LAST).dp.resAdd, 8));
           rvs_append(debug, ") := ");
-          case OPCODE_TABLE(to_integer(unsigned(s(S_LAST).opcode))).memoryCtrl.accessSizeBLog2 is
+          case OPCODE_TABLE(vect2uint(s(S_LAST).opcode)).memoryCtrl.accessSizeBLog2 is
             
             when ACCESS_SIZE_BYTE =>
               rvs_append(debug, rvs_hex(s(S_LAST).dp.op3(7 downto 0), 2));
@@ -2082,7 +2084,7 @@ begin -- architecture
         else
           rvs_append(debug, "; ");
         end if;
-        rvs_append(debug, "r0." & integer'image(to_integer(unsigned(s(S_LAST).dp.dest))) & " := ");
+        rvs_append(debug, "r0." & integer'image(vect2uint(s(S_LAST).dp.dest)) & " := ");
         rvs_append(debug, rvs_hex(s(S_LAST).dp.res, 8));
       end if;
       

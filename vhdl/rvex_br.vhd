@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_trap_pkg.all;
@@ -293,7 +294,7 @@ begin -- architecture
   -- Generate internal control signals
   -----------------------------------------------------------------------------
   -- Decode the opcode.
-  ctrl(S_BR) <= OPCODE_TABLE(to_integer(unsigned(pl2br_opcode(S_BR)))).branchCtrl;
+  ctrl(S_BR) <= OPCODE_TABLE(vect2uint(pl2br_opcode(S_BR))).branchCtrl;
   
   -- Load the incoming run signal into a local signal for convenience.
   run(S_BR) <= cxplif2br_run;
@@ -538,7 +539,7 @@ begin -- architecture
   -- Determine if the branch target is aligned.
   nextPCMisaligned(S_IF) <=
     '0' when
-      unsigned(nextPC(S_IF)(
+      vect2uint(nextPC(S_IF)(
         (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B downto 0
       )) = 0
     else '1';
@@ -568,7 +569,7 @@ begin -- architecture
     
     -- Determine log2(number of coupled lanes).
     numCoupledLanesLog2 :=
-      to_integer(unsigned(cfg2br_numGroupsLog2))  -- Number of coupled groups.
+      vect2uint(cfg2br_numGroupsLog2)             -- Number of coupled groups.
       + (CFG.numLanesLog2-CFG.numLaneGroupsLog2); -- Number of lanes per group.
     
     -- Check if we need to fetch the previous instruction first for the
@@ -582,13 +583,13 @@ begin -- architecture
       --  - the next PC is NOT aligned to the generic binary bunble size.
       
       -- Test alignment to number of coupled lanes.
-      if unsigned(nextPC(S_IF)(
+      if vect2uint(nextPC(S_IF)(
         numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B-1 downto
         (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
       )) = 0 then
         
         -- Test misalignment to generic bundle size.
-        if unsigned(nextPC(S_IF)(
+        if vect2uint(nextPC(S_IF)(
           CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto
           (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
         )) /= 0 then
@@ -612,7 +613,7 @@ begin -- architecture
       -- in the previous generic binary bundle).
       nextPC_v(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B)
         := std_logic_vector(
-          unsigned(nextPC(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B))
+          vect2unsigned(nextPC(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B))
           - to_unsigned(2**(numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B), CFG.genBundleSizeLog2)
         );
       

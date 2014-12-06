@@ -724,8 +724,8 @@ begin -- architecture
     -- in). We only look at the reconfigurable section here.
     if CFG.numLaneGroupsLog2 > 0 then
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-        if unsigned(lanePC_v(laneGroup)(GROUP_INSTR_SIZE_LOG2B + CFG.numLaneGroupsLog2 - 1 downto GROUP_INSTR_SIZE_LOG2B))
-         < unsigned(    PC_v(laneGroup)(GROUP_INSTR_SIZE_LOG2B + CFG.numLaneGroupsLog2 - 1 downto GROUP_INSTR_SIZE_LOG2B))
+        if vect2unsigned(lanePC_v(laneGroup)(GROUP_INSTR_SIZE_LOG2B + CFG.numLaneGroupsLog2 - 1 downto GROUP_INSTR_SIZE_LOG2B))
+         < vect2unsigned(    PC_v(laneGroup)(GROUP_INSTR_SIZE_LOG2B + CFG.numLaneGroupsLog2 - 1 downto GROUP_INSTR_SIZE_LOG2B))
         then
           valid_v(laneGroup) := '0';
         end if;
@@ -797,9 +797,9 @@ begin -- architecture
       <= lanePC_arb(laneGroup)(rvex_address_type'high downto fixedPCBits);
     
     cxplif2pl_lanePC(lane)(fixedPCBits-1 downto 0)
-      <= std_logic_vector(to_unsigned(
+      <= uint2vect(
         laneIndex * 2**SYLLABLE_SIZE_LOG2B, fixedPCBits
-      ));
+      );
     
   end generate;
   
@@ -811,7 +811,7 @@ begin -- architecture
   begin
     
     -- Determine the group to use for this context.
-    laneGroup <= to_integer(unsigned(cfg2any_lastGroupForCtxt(ctxt)));
+    laneGroup <= vect2uint(cfg2any_lastGroupForCtxt(ctxt));
     
     -- Generate all the muxes.
     cxplif2cfg_blockReconfig(ctxt)      <= blockReconfig_arb(laneGroup) and cfg2cxplif_run(ctxt);
@@ -843,7 +843,7 @@ begin -- architecture
   begin
     
     -- Determine the context to use for this group.
-    ctxt <= to_integer(unsigned(cfg2any_context(laneGroup)));
+    ctxt <= vect2uint(cfg2any_context(laneGroup));
     
     -- Generate all the muxes.
     irq_mux(laneGroup)                <= irq_ctxt(ctxt);

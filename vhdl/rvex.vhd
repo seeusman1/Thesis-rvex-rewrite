@@ -997,7 +997,7 @@ begin -- architecture
         end if;
         
         -- Figure out the context running on the current lane.
-        curContext := to_integer(unsigned(cfg2any_context(lane2group(lane, CFG))));
+        curContext := vect2uint(cfg2any_context(lane2group(lane, CFG)));
         
         -- If this lane is operating in a different context than the previous
         -- lane, inject a line of whitespace and a line with context
@@ -1016,7 +1016,7 @@ begin -- architecture
           rvs_append(sb, "Ctxt " & integer'image(curContext) & ": ");
           rvs_append(sb, br2sim(
             group2lastLane(
-              to_integer(unsigned(cfg2any_lastGroupForCtxt(curContext))), CFG
+              vect2uint(cfg2any_lastGroupForCtxt(curContext)), CFG
             ) - CFG.branchLaneRevIndex
           ));
           rv2sim(line) <= rvs2sim(sb);

@@ -50,6 +50,7 @@ use IEEE.math_real.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 
 --=============================================================================
@@ -136,9 +137,9 @@ begin -- architecture
         if rising_edge(clk) then
           if clkEn = '1' then
             if writeEnable(writePort) = '1' then
-              ram(to_integer(unsigned(writeAddr(writePort)(NUM_REGS_LOG2-1 downto 0)))) <= writeData(writePort);
+              ram(vect2uint(writeAddr(writePort)(NUM_REGS_LOG2-1 downto 0))) <= writeData(writePort);
             end if;
-            readData_int(writePort) <= ram(to_integer(unsigned(readAddr(readPort)(NUM_REGS_LOG2-1 downto 0))));
+            readData_int(writePort) <= ram(vect2uint(readAddr(readPort)(NUM_REGS_LOG2-1 downto 0)));
           end if;
         end if;
       end process;
@@ -146,15 +147,9 @@ begin -- architecture
     end generate;
     
     -- Mux between the read values based on the bank which was last written to.
-    readData(readPort) <= readData_int(
-      to_integer(unsigned(
-        lastWrite(
-          to_integer(unsigned(
-            readAddr(readPort)(NUM_REGS_LOG2-1 downto 0)
-          ))
-        )
-      ))
-    );
+    readData(readPort) <= readData_int(vect2uint(lastWrite(
+      vect2uint(readAddr(readPort)(NUM_REGS_LOG2-1 downto 0))
+    )));
     
   end generate;
   
@@ -171,9 +166,9 @@ begin -- architecture
         elsif clkEn = '1' then
           for writePort in 0 to NUM_WRITE_PORTS-1 loop
             if writeAddr(writePort)(NUM_REGS_LOG2-1 downto 0) & writeEnable(writePort)
-              = std_logic_vector(to_unsigned(reg, NUM_REGS_LOG2)) & "1"
+              = uint2vect(reg, NUM_REGS_LOG2) & "1"
             then
-              lastWrite(reg) <= std_logic_vector(to_unsigned(writePort, LAST_WRITE_SIZE));
+              lastWrite(reg) <= uint2vect(writePort, LAST_WRITE_SIZE);
             end if;
           end loop;
         end if;

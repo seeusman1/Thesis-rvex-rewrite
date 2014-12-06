@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_ctrlRegs_pkg.all;
 
@@ -201,7 +202,7 @@ begin -- architecture
     gbreg2creg_context <= creg_readRegisterVect(l2c, c2l, CR_GSR, CFG.numContextsLog2, 1);
     
     -- Make the CTNUM field.
-    creg_makeHardwiredField(l2c, c2l, CR_GSR, 7, 4, std_logic_vector(to_unsigned(2**CFG.numContextsLog2-1, 3)) & "1");
+    creg_makeHardwiredField(l2c, c2l, CR_GSR, 7, 4, uint2vect(2**CFG.numContextsLog2-1, 3) & "1");
     
     -- Make the requester ID field.
     creg_makeHardwiredField(l2c, c2l, CR_GSR, 11, 8, cfg2gbreg_requesterID);

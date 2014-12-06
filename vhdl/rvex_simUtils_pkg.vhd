@@ -68,7 +68,7 @@ package rvex_simUtils_pkg is
   function isAlphaNumericChar(c: character) return boolean;
   
   -- Returns true if given character is whitespace.
-  function isWhitespace(c: character) return boolean;
+  function isWhitespaceChar(c: character) return boolean;
   
   -- Returns true if given character is a special character (not alphanumerical
   -- and not whitespace).
@@ -87,6 +87,12 @@ package rvex_simUtils_pkg is
   
   -- Tests whether two characters match, ignoring case.
   function charsEqual(a: character; b: character) return boolean;
+  
+  -- Tests whether line equals match, case insensitive.
+  function matchStr(
+    s1    : in string;
+    s2    : in string
+  ) return boolean;
   
   -- Tests whether line contains match at position pos (case insensitive).
   function matchAt(
@@ -148,8 +154,9 @@ package rvex_simUtils_pkg is
   -- for simulation.
   function rvs2sim(input: rvex_string_builder_type) return rvex_string_type;
   
-  -- Converts a string builder into a variable-length string.
+  -- Converts a string builder or fixed-length string into a variable-length string.
   function rvs2str(input: rvex_string_builder_type) return string;
+  function rvs2str(input: rvex_string_type) return string;
   
   -- Converts an unsigned std_logic_vector to a string, representing it in
   -- decimal notation.
@@ -190,6 +197,9 @@ end rvex_simUtils_pkg;
 package body rvex_simUtils_pkg is
 --=============================================================================
   
+  -----------------------------------------------------------------------------
+  -- Basic string manipulation
+  -----------------------------------------------------------------------------
   -- Returns true if given character is alphabetical.
   function isAlphaChar(c: character) return boolean is
     variable result: boolean;
@@ -248,7 +258,7 @@ package body rvex_simUtils_pkg is
   end isAlphaNumericChar;
   
   -- Returns true if given character is whitespace.
-  function isWhitespace(c: character) return boolean is
+  function isWhitespaceChar(c: character) return boolean is
     variable result: boolean;
   begin
     case c is
@@ -259,13 +269,13 @@ package body rvex_simUtils_pkg is
       when others => result := false;
     end case;
     return result;
-  end isWhitespace;
+  end isWhitespaceChar;
   
   -- Returns true if given character is a special character (not alphanumerical
   -- and not whitespace).
   function isSpecialChar(c: character) return boolean is
   begin
-    return not isAlphaNumericChar(c) and not isWhitespace(c);
+    return not isAlphaNumericChar(c) and not isWhitespaceChar(c);
   end isSpecialChar;
   
   -- Converts a character to uppercase.
@@ -369,6 +379,23 @@ package body rvex_simUtils_pkg is
     return upperChar(a) = upperChar(b);
   end charsEqual;
   
+  -- Tests whether line equals match, case insensitive.
+  function matchStr(
+    s1    : in string;
+    s2    : in string
+  ) return boolean is
+  begin
+    if s1'length /= s2'length then
+      return false;
+    end if;
+    for i in s1'range loop
+      if not charsEqual(s1(i), s2(i+s2'low-s1'low)) then
+        return false;
+      end if;
+    end loop;
+    return true;
+  end matchStr;
+  
   -- Tests whether line contains match at position pos (case insensitive).
   function matchAt(
     line  : in string;
@@ -419,10 +446,10 @@ package body rvex_simUtils_pkg is
     variable result: rvex_string_builder_type;
   begin
     if input'high > RVEX_STR_LEN then
-      result.s := input(1 to RVEX_STR_LEN);
+      result.s := input(input'low to RVEX_STR_LEN+input'low-1);
       result.len := RVEX_STR_LEN;
     else
-      result.s(input'range) := input;
+      result.s(1 to input'length) := input;
       result.len := input'length;
     end if;
     return result;
@@ -492,10 +519,18 @@ package body rvex_simUtils_pkg is
     return result; 
   end rvs2sim;
   
-  -- Converts a string builder into a variable-length string.
+  -- Converts a string builder or fixed-length string into a variable-length
+  -- string.
   function rvs2str(input: rvex_string_builder_type) return string is
   begin
     return input.s(1 to input.len);
+  end rvs2str;
+  function rvs2str(input: rvex_string_type) return string is
+    variable sb : rvex_string_builder_type;
+  begin
+    sb := to_rvs(input);
+    rvs_trimTrailingSpaces(sb);
+    return rvs2str(sb);
   end rvs2str;
   
   -- Converts an unsigned std_logic_vector to a string, representing it in

@@ -46,6 +46,7 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
+use IEEE.math_real.all;
 
 library std;
 use std.textio.all;
@@ -53,7 +54,9 @@ use std.textio.all;
 library work;
 use work.rvex_pkg.all;
 use work.rvex_intIface_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_simUtils_pkg.all;
+use work.rvex_simUtils_scanner_pkg.all;
 use work.rvex_simUtils_asDisas_pkg.all;
 use work.rvex_simUtils_mem_pkg.all;
 use work.rvex_utils_pkg.all;
@@ -126,12 +129,14 @@ use work.rvex_utils_pkg.all;
 -- fillnops <ptr>
 --   Same as at, but inserts NOPs from the current loading pointer up to <ptr>.
 -- 
--- wait <cycles> [memw <ptr> [or fail] [<value> [or fail]] | meml <ptr> [or fail]]
+-- (TODO FROM HERE ONWARDS)
+-- 
+-- wait <cycles> [memw <ptr> [exclusive] [<value> [exclusive]] | meml <ptr> [exclusive]]
 --   Waits for at least <cycles> cycles. If memw or meml is not specified, the
 --   wait will succeed, otherwise it will fail unless a memory write or memory
 --   load to the specified location occurs within that time. When the expected
 --   memory write/load occurs, execution will continue without waiting for the
---   timeout. If "or fail" is specified after the address, any write/read to
+--   timeout. If "exclusive" is specified after the address, any write/read to
 --   ANOTHER address will cause failure. Same logic applies to the value. The
 --   checks are insensitive to which memory port requested the operation or to
 --   the access size.
@@ -140,7 +145,8 @@ use work.rvex_utils_pkg.all;
 -- read [dbg] <word|half|byte> <ptr> <expected>
 --   Set memory at <ptr> to <value> or check that the value at that location is
 --   <expected>. If dbg is specified, the debug bus is accessed instead of the
---   data memory, which takes a cycle to complete.
+--   data memory, which takes a cycle to complete. <ptr> may be specified as a
+--   numerical value, or as a CR_* register index (see also rvex_ctrlRegs_pkg).
 --   
 -- fault <set|clear> <imem|dmem> <ptr>
 --   Marks the given memory location as faulty or clears the marking. When a
@@ -164,7 +170,7 @@ use work.rvex_utils_pkg.all;
 --   Ensures that the given context is (not) idle/done, fails otherwise.
 -- 
 -- reset
---   Resets the entire processor. Waits for a couple cycles to ensure 
+--   Resets the entire processor. Takes one cycle to complete.
 -- 
 -------------------------------------------------------------------------------
 -- Numeric data entry
@@ -173,9 +179,6 @@ use work.rvex_utils_pkg.all;
 --  - In decimal.
 --  - In hexadecimal, by prefixing the number with 0x.
 --  - In binary, by prefixing the number with 0b.
---  - As any CR_* word address (rvex_ctrlRegs_pkg), which will be converted to
---    a byte address relative to address 0. This is useful for debug bus
---    accesses.
 -- 
 -------------------------------------------------------------------------------
 entity rvex_tb is
@@ -264,6 +267,10 @@ architecture Behavioral of rvex_tb is
     
   );
   
+  -- This signal strobes every 100 us, marking the start of a new test case,
+  -- keeping the simulation nice and clean.
+  signal sync                   : std_logic;
+  
   -----------------------------------------------------------------------------
   -- Signals going to and coming from the rvex
   -----------------------------------------------------------------------------
@@ -337,6 +344,8 @@ architecture Behavioral of rvex_tb is
   -- Selects between accessing the instruction memory (high) and the data
   -- memory (low). Ignored for clear operations.
   signal stim2mem_select        : std_logic;
+  constant IMEM_SELECT          : std_logic := '1';
+  constant DMEM_SELECT          : std_logic := '0';
   
   -- Address to operate on. Ignored for clear operations.
   signal stim2mem_addr          : rvex_address_type;
@@ -378,7 +387,6 @@ architecture Behavioral of rvex_tb is
   
   -- These signal will strobe for every failed test case.
   signal sim_failure            : std_logic;
-  
   
 --=============================================================================
 begin -- architecture
@@ -469,7 +477,7 @@ begin -- architecture
     
     -- Locals/shorthands.
     variable lanePCs            : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-    variable fetch              : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable fetch              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     variable revDecouple        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     variable fault              : std_logic;
     variable flags              : rvex_data_type;
@@ -505,7 +513,7 @@ begin -- architecture
         revDecouple := rv2mem_decouple(2**CFG.numLaneGroupsLog2-2 downto 0) & "1";
         for lane in 1 to 2**CFG.numLanesLog2-1 loop
           if lane2group(lane, CFG) = lane2group(lane-1, CFG) or revDecouple(lane2group(lane, CFG)) = '0' then
-            lanePCs(lane) := std_logic_vector(unsigned(lanePCs(lane-1)) + 4);
+            lanePCs(lane) := std_logic_vector(vect2unsigned(lanePCs(lane-1)) + 4);
             fetch(lane) := fetch(lane-1);
           end if;
         end loop;
@@ -585,7 +593,7 @@ begin -- architecture
     elsif rising_edge(stim2mem_writeEnable) then
       
       -- Handle writes.
-      if stim2mem_select = '1' then
+      if stim2mem_select = IMEM_SELECT then
         rvmem_write(
           mem   => imem, -- Instruction memory.
           addr  => stim2mem_addr,
@@ -604,7 +612,7 @@ begin -- architecture
     elsif rising_edge(stim2mem_readEnable) then
       
       -- Handle reads.
-      if stim2mem_select = '1' then
+      if stim2mem_select = IMEM_SELECT then
         mem2stim_readData <= rvmem_read(
           mem   => imem, -- Instruction memory.
           addr  => stim2mem_addr
@@ -625,7 +633,7 @@ begin -- architecture
       );
       
       -- Set or clear the requested bit.
-      if stim2mem_select = '1' then
+      if stim2mem_select = IMEM_SELECT then
         flags(FLAG_IM_FAULT_BIT) := stim2mem_writeData(0);
       else
         flags(FLAG_DM_FAULT_BIT) := stim2mem_writeData(0);
@@ -683,23 +691,477 @@ begin -- architecture
   --===========================================================================
   -- Test case runner
   --===========================================================================
+  sync_gen: process is
+  begin
+    sync <= '0';
+    wait for 100 us;
+    sync <= '1';
+    wait for 0 ns;
+  end process;
   test_cases: process is
     
+    -- Result code for the test case command running method. Continue means
+    -- that the runner should proceed to the next command. Success, fail and
+    -- abort mean that the test should be terminated with either success,
+    -- failure or unknown respectively. The latter is returned when something
+    -- went wrong with the test runner itself and the test cannot be completed.
+    type testCommandResult_type is (TCCR_CONTINUE, TCCR_SUCCESS, TCCR_FAIL, TCCR_ABORT);
+    
+    -- Test success/failed counters.
+    variable testCount    : natural := 0;
+    variable failedTests  : natural := 0;
+    variable abortedTests : natural := 0;
+    
+    -- Seed variables for random generators.
+    variable seed1        : positive := 1;
+    variable seed2        : positive := 1;
+    
+    -- Loading pointer for at, load, loadhex and fillnops.
+    variable loadPtr      : rvex_address_type;
+    
+    -- Current line number in the test case file.
+    variable curLineNr    : natural;
+    
     ---------------------------------------------------------------------------
-    -- Runs a test case/test suite.
+    -- Generates a number of clock cycles
+    ---------------------------------------------------------------------------
+    procedure cycles(
+      count     : in natural;
+      clkEnProb : in real := 1.0
+    ) is
+      variable counter  : natural;
+      variable r        : real;
+    begin
+      clkEn <= '1';
+      counter := 0;
+      while counter < count loop
+        
+        -- Generate clkEn signal.
+        if clkEnProb < 1.0 then
+          uniform(seed1, seed2, r);
+          if r < clkEnProb then
+            clkEn <= '1';
+            counter := counter + 1;
+          else
+            clkEn <= '0';
+          end if;
+        else
+          counter := counter + 1;
+        end if;
+        
+        -- Generate a clock cycle.
+        wait for 5 ns;
+        clk <= '0';
+        wait for 5 ns;
+        clk <= '1';
+        wait for 0 ns;
+        
+      end loop;
+    end cycles;
+    
+    ---------------------------------------------------------------------------
+    -- Executes a 'config' command
+    ---------------------------------------------------------------------------
+    -- config <key> <value> [<mask>]
+    procedure executeConfig(
+      l       : in    string;
+      pos     : inout positive;
+      result  : out   testCommandResult_type
+    ) is
+      
+      -- Token containing the key name.
+      variable token  : line;
+      
+      -- Actual value, requested value and mask.
+      variable actVal : signed(32 downto 0);
+      variable reqVal : signed(32 downto 0);
+      variable mask   : signed(32 downto 0);
+      
+      -- Local indicating whether numeric parsing was successful.
+      variable ok     : boolean;
+      
+    begin
+      
+      -- Scan the key token.
+      scanToken(l, pos, token);
+      if token = null then
+        report "Error parsing test case 'config' command: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Load the value of the key.
+      if matchStr(token.all, "numLanes") then
+        actVal := to_signed(2**CFG.numLaneGroupsLog2, 33);
+      elsif matchStr(token.all, "numLaneGroups") then
+        actVal := to_signed(2**CFG.numLaneGroupsLog2, 33);
+      elsif matchStr(token.all, "numContexts") then
+        actVal := to_signed(2**CFG.numContextsLog2, 33);
+      elsif matchStr(token.all, "genBundleSize") then
+        actVal := to_signed(2**CFG.genBundleSizeLog2, 33);
+      elsif matchStr(token.all, "multiplierLanes") then
+        actVal := to_signed(CFG.multiplierLanes, 33);
+      elsif matchStr(token.all, "memLaneRevIndex") then
+        actVal := to_signed(CFG.memLaneRevIndex, 33);
+      elsif matchStr(token.all, "branchLaneRevIndex") then
+        actVal := to_signed(CFG.branchLaneRevIndex, 33);
+      elsif matchStr(token.all, "numBreakpoints") then
+        actVal := to_signed(CFG.numBreakpoints, 33);
+      elsif matchStr(token.all, "forwarding") then
+        if CFG.forwarding then
+          actVal := to_signed(1, 33);
+        else
+          actVal := to_signed(0, 33);
+        end if;
+      elsif matchStr(token.all, "limmhFromNeighbor") then
+        if CFG.limmhFromNeighbor then
+          actVal := to_signed(1, 33);
+        else
+          actVal := to_signed(0, 33);
+        end if;
+      elsif matchStr(token.all, "limmhFromPreviousPair") then
+        if CFG.limmhFromPreviousPair then
+          actVal := to_signed(1, 33);
+        else
+          actVal := to_signed(0, 33);
+        end if;
+      elsif matchStr(token.all, "reg63isLink") then
+        if CFG.reg63isLink then
+          actVal := to_signed(1, 33);
+        else
+          actVal := to_signed(0, 33);
+        end if;
+      elsif matchStr(token.all, "cregStartAddress") then
+        actVal := "0" & signed(CFG.cregStartAddress);
+      else
+        report "Unknown config key: '" & token.all & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Scan the expected/requested value.
+      scanNumeric(l, pos, reqVal, ok);
+      if not ok then
+        report "Error parsing test case 'config' command: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Scan the optional bitmask.
+      scanNumeric(l, pos, mask, ok);
+      if not ok then
+        mask := (others => '1');
+      end if;
+      
+      -- Perform the comparison.
+      if (actVal and mask) /= (reqVal and mask) then
+        report "Test case requires that configuration key '" & token.all
+             & "' is set to a different value. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Everything is OK.
+      result := TCCR_CONTINUE;
+      
+    end executeConfig;
+    
+    ---------------------------------------------------------------------------
+    -- Executes an 'at' command
+    ---------------------------------------------------------------------------
+    -- at <ptr>
+    procedure executeAt(
+      l       : in    string;
+      pos     : inout positive;
+      result  : out   testCommandResult_type
+    ) is
+      
+      -- New value for the loading pointer, as scanNumeric returns it.
+      variable newVal : signed(32 downto 0);
+      
+      -- Local indicating whether numeric parsing was successful.
+      variable ok     : boolean;
+      
+    begin
+      
+      -- Scan the new pointer.
+      scanNumeric(l, pos, newVal, ok);
+      if not ok then
+        report "Error parsing test case 'at' command: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Set the loading pointer.
+      loadPtr := std_logic_vector(newVal(31 downto 0));
+      
+      -- Everything is OK.
+      result := TCCR_CONTINUE;
+      
+    end executeAt;
+    
+    ---------------------------------------------------------------------------
+    -- Executes a 'load' command
+    ---------------------------------------------------------------------------
+    -- load <assembly syllable>
+    procedure executeLoad(
+      l       : in    string;
+      pos     : inout positive;
+      result  : out   testCommandResult_type
+    ) is
+      variable assembly : string(1 to l'length+1-pos);
+      variable syllable : rvex_syllable_type;
+      variable ok       : boolean;
+      variable error    : rvex_string_builder_type;
+    begin
+      
+      -- Defer to rvex_simUtils_asDisas_pkg.
+      assembly := l(pos to l'length);
+      assembleLine(
+        source    => assembly,
+        line      => curLineNr,
+        syllable  => syllable,
+        ok        => ok,
+        error     => error
+      );
+      
+      -- Check for errors.
+      if not ok then
+        report "Assembly error: " & rvs2str(error) & ". Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Load the word into memory.
+      stim2mem_writeEnable <= '1';
+      stim2mem_select <= IMEM_SELECT;
+      stim2mem_addr <= loadPtr;
+      stim2mem_writeMask <= (others => '1');
+      stim2mem_writeData <= syllable;
+      wait for 0 ns;
+      stim2mem_writeEnable <= '0';
+      wait for 0 ns;
+      
+      -- Increment the loading pointer.
+      loadPtr := std_logic_vector(vect2unsigned(loadPtr) + 4);
+      
+      -- Everything is OK.
+      result := TCCR_CONTINUE;
+      
+    end executeLoad;
+    
+    ---------------------------------------------------------------------------
+    -- Executes a 'loadhex' command
+    ---------------------------------------------------------------------------
+    -- loadhex <value>
+    procedure executeLoadHex(
+      l       : in    string;
+      pos     : inout positive;
+      result  : out   testCommandResult_type
+    ) is
+      variable val    : signed(32 downto 0);
+      variable ok     : boolean;
+    begin
+      
+      -- Scan the new pointer.
+      scanNumeric(l, pos, val, ok);
+      if not ok then
+        report "Error parsing test case 'loadhex' command: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Load the word into memory.
+      stim2mem_writeEnable <= '1';
+      stim2mem_select <= IMEM_SELECT;
+      stim2mem_addr <= loadPtr;
+      stim2mem_writeMask <= (others => '1');
+      stim2mem_writeData <= std_logic_vector(val(31 downto 0));
+      wait for 0 ns;
+      stim2mem_writeEnable <= '0';
+      wait for 0 ns;
+      
+      -- Increment the loading pointer.
+      loadPtr := std_logic_vector(vect2unsigned(loadPtr) + 4);
+      
+      -- Everything is OK.
+      result := TCCR_CONTINUE;
+      
+    end executeLoadHex;
+    
+    ---------------------------------------------------------------------------
+    -- Executes a 'fillnops' command
+    ---------------------------------------------------------------------------
+    -- load <assembly syllable>
+    procedure executeFillNops(
+      l       : in    string;
+      pos     : inout positive;
+      result  : out   testCommandResult_type
+    ) is
+      variable syllable : rvex_syllable_type;
+      variable error    : rvex_string_builder_type;
+      variable untilPtr : signed(32 downto 0);
+      variable ok       : boolean;
+    begin
+      
+      -- Scan the new pointer.
+      scanNumeric(l, pos, untilPtr, ok);
+      if not ok then
+        report "Error parsing test case 'fillnops' command: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      if "0" & vect2signed(loadPtr) > untilPtr then
+        report "Error in 'fillnops' command: load pointer is greater than the "
+             & "end pointer. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Assemble a NOP instruction.
+      assembleLine(
+        source    => "nop",
+        line      => curLineNr,
+        syllable  => syllable,
+        ok        => ok,
+        error     => error
+      );
+      if not ok then
+        report "Could not assembly nop instruction: " & rvs2sim(error) & ". Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Replicate the NOP instruction.
+      while "0" & vect2signed(loadPtr) < untilPtr loop
+        
+        -- Load the NOP.
+        stim2mem_writeEnable <= '1';
+        stim2mem_select <= IMEM_SELECT;
+        stim2mem_addr <= loadPtr;
+        stim2mem_writeMask <= (others => '1');
+        stim2mem_writeData <= syllable;
+        wait for 0 ns;
+        stim2mem_writeEnable <= '0';
+        wait for 0 ns;
+      
+        -- Increment the loading pointer.
+        loadPtr := std_logic_vector(vect2unsigned(loadPtr) + 4);
+        
+      end loop;
+      
+      -- Everything is OK.
+      result := TCCR_CONTINUE;
+      
+    end executeFillNops;
+    
+    ---------------------------------------------------------------------------
+    -- Executes a line in a test case file
+    ---------------------------------------------------------------------------
+    procedure executeLine(
+      l       : in  string;
+      result  : out testCommandResult_type
+    ) is
+      variable pos    : positive;
+      variable token  : line;
+    begin
+      
+      -- Set result to continue by default.
+      result := TCCR_CONTINUE;
+      
+      -- Scan the first token.
+      pos := 1;
+      scanToken(l, pos, token);
+      if token = null then
+        report "Error parsing test case command: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Execute the command.
+      if matchStr(token.all, "name") then
+        sim_currentTest <= rvs2sim(to_rvs(l(pos to l'length)));
+      elsif matchStr(token.all, "config") then
+        executeConfig(l, pos, result);
+      elsif matchStr(token.all, "at") then
+        executeAt(l, pos, result);
+      elsif matchStr(token.all, "load") then
+        executeLoad(l, pos, result);
+      elsif matchStr(token.all, "loadhex") then
+        executeLoadHex(l, pos, result);
+      elsif matchStr(token.all, "fillnops") then
+        executeFillNops(l, pos, result);
+      elsif matchStr(token.all, "init") then
+        if pos <= l'length then
+          report "Garbage at end of line in test case file. Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+        end if;
+        stim2mem_clearEnable <= '1';
+        wait for 0 ns;
+        stim2mem_clearEnable <= '0';
+        wait for 0 ns;
+        loadPtr := (others => '0');
+      else
+        -- Unknown command, abort.
+        report "Unknown command in test case file: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+      end if;
+      
+    end executeLine;
+    
+    ---------------------------------------------------------------------------
+    -- Runs a test case/test suite
     ---------------------------------------------------------------------------
     procedure handleFile(
-      fname   : in string
+      fname   : in  string
     ) is
-      type test_file_type is (TF_SUITE, TF_TEST);
       
+      -- File handle for the input file.
       file     f      : text;
+      
+      -- File opening result.
       variable status : file_open_status;
+      
+      -- This is set to the path of the input file name, up to and including
+      -- the last (back)slash.
       variable path   : rvex_string_builder_type;
-      variable ftype  : test_file_type;
+      
+      -- File type specification. Determined based on the filename.
+      type testFileType_type is (TF_SUITE, TF_TEST);
+      variable ftype  : testFileType_type;
+      
+      -- Line manipulation variables.
       variable l, l2  : line;
       variable lstart : natural;
       variable lend   : natural;
+      
+      -- Current line number.
+      variable lNr    : natural;
+      
+      -- Test result code.
+      variable testRes: testCommandResult_type;
+      
     begin
       
       -- Determine the file type.
@@ -735,29 +1197,49 @@ begin -- architecture
         return;
       end if;
       
+      -- If this is a test case file, do some housekeeping.
+      if ftype = TF_TEST then
+        
+        -- Align to a large time boundary in  simulation time to keep the test
+        -- cases easily distinguishable.
+        wait until rising_edge(sync);
+        
+        -- Clear the success and failure signals.
+        sim_complete <= '0';
+        sim_failure <= '0';
+        
+        -- Set the name of the test case to the filename until a name command
+        -- is executed.
+        sim_currentTest <= rvs2sim(to_rvs(fname));
+        
+      end if;
+      
       -- Report that we've loaded a file.
       if ftype = TF_SUITE then
         report "Entering test suite " & fname & "..." severity note;
       elsif ftype = TF_TEST then
         report "Running test case file " & fname & "..." severity note;
-        sim_currentTest <= rvs2sim(to_rvs(fname));
       end if;
       
       -- Read the file line by line.
+      testRes := TCCR_CONTINUE;
+      lNr := 0;
       while not endfile(f) loop
         
         -- Read a line.
         readline(f, l);
+        lNr := lNr + 1;
+        curLineNr := lNr;
         
         -- Strip comments and whitespace, and skip empty lines.
         for i in 1 to l.all'length loop
           lstart := i;
-          exit when not isWhitespace(l.all(i));
+          exit when not isWhitespaceChar(l.all(i));
         end loop;
         lend := lstart - 1;
         for i in lstart to l.all'length loop
           exit when (i < l.all'length) and l.all(i to i+1) = "--";
-          if not isWhitespace(l.all(i)) then
+          if not isWhitespaceChar(l.all(i)) then
             lend := i;
           end if;
         end loop;
@@ -777,10 +1259,73 @@ begin -- architecture
           next;
         end if;
         
+        -- If this is a test case file, defer the line handling to the
+        -- appropriate method.
+        if ftype = TF_TEST then
+          executeLine(
+            l       => l.all,
+            result  => testRes
+          );
+          case testRes is
+            when TCCR_CONTINUE => next;
+            when others        => exit;
+          end case;
+        end if;
         
-        report "About to process test case line : '" & l.all & "'" severity note;
+        -- Handle unknown file types.
+        report "Trying to process " & testFileType_type'image(ftype) & " file, "
+             & "but no handler exists. Aborting."
+          severity warning;
+        exit;
         
       end loop;
+      
+      -- Wait for a delta delay to make sure signals we assigned are valid (in
+      -- particular the name of the test case).
+      wait for 0 ns;
+      
+      if ftype = TF_TEST then
+        
+        -- Report test case results.
+        case testRes is
+          
+          when TCCR_CONTINUE =>
+            testCount := testCount + 1;
+            sim_complete <= '1';
+            report "Reached end of test case "
+                 & rvs2str(sim_currentTest)
+                 & ": SUCCESS."
+              severity note;
+            
+          when TCCR_SUCCESS =>
+            testCount := testCount + 1;
+            sim_complete <= '1';
+            report rvs2str(sim_currentTest)
+                 & " line " & integer'image(lNr) & ": SUCCESS."
+              severity note;
+            
+          when TCCR_FAIL =>
+            testCount := testCount + 1;
+            sim_complete <= '1';
+            failedTests := failedTests + 1;
+            sim_failure <= 'X';
+            report rvs2str(sim_currentTest)
+                 & " line " & integer'image(lNr) & ": FAILURE."
+              severity warning;
+            
+          when TCCR_ABORT =>
+            abortedTests := abortedTests + 1;
+            report rvs2str(sim_currentTest)
+                 & " line " & integer'image(lNr) & ": ABORT due to "
+                 & "aforementioned error in the testbench."
+              severity warning;
+            
+        end case;
+        
+        -- Generate a few extra clock cycles.
+        cycles(20);
+        
+      end if;
       
       -- Close the file.
       file_close(f);
@@ -819,17 +1364,22 @@ begin -- architecture
     
     -- Send a couple clocks to reset.
     wait for 10 ns;
-    clk                     <= '1';
-    wait for 5 ns;
-    clk                     <= '0';
-    wait for 5 ns;
-    clk                     <= '1';
-    wait for 5 ns;
-    clk                     <= '0';
-    wait for 5 ns;
+    cycles(2);
+    
+    -- Clear reset state.
+    reset <= '0';
     
     -- Handle the root file.
     handleFile(ROOT_FILE);
+    
+    -- Show the results.
+    wait until rising_edge(sync);
+    report "Test suite complete: "
+         & integer'image(testCount) & " test(s) run of which "
+         & integer'image(failedTests) & " failed; "
+         & integer'image(abortedTests) & " test case(s) aborted due to simulation errors."
+      severity failure;
+    
     wait;
     
   end process;

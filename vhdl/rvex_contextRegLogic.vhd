@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_trap_pkg.all;
 use work.rvex_ctrlRegs_pkg.all;
@@ -383,10 +384,10 @@ begin -- architecture
     if cxplif2cxreg_rfi = '1' and cxplif2cxreg_stall = '0' then
       creg_writeRegisterVect(l2c, c2l, CR_TA, 31, 24, "00000000");
     end if;
-    cxreg2cxplif_handlingDebugTrap <= TRAP_TABLE(to_integer(unsigned(creg_readRegisterVect(l2c, c2l, CR_CCR, 31, 24)))).isDebugTrap;
+    cxreg2cxplif_handlingDebugTrap <= TRAP_TABLE(vect2uint(creg_readRegisterVect(l2c, c2l, CR_CCR, 31, 24))).isDebugTrap;
     
     -- Make the ID field.
-    creg_makeHardwiredField(l2c, c2l, CR_SCCR, 31, 24, std_logic_vector(to_unsigned(CONTEXT_INDEX, 8)));
+    creg_makeHardwiredField(l2c, c2l, CR_SCCR, 31, 24, uint2vect(CONTEXT_INDEX, 8));
     
     ---------------------------------------------------------------------------
     -- Link register (LR)

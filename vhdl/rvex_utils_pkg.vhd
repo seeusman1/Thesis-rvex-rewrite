@@ -45,6 +45,7 @@
 
 library IEEE;
 use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
@@ -56,6 +57,16 @@ use work.rvex_pipeline_pkg.all;
 -------------------------------------------------------------------------------
 package rvex_utils_pkg is
 --=============================================================================
+  
+  -- The methods below are shorthands/wrappers for methods from numeric_std.
+  -- Where applicable, they also cancel out some of the warning messages which
+  -- numeric_std normally spams around.
+  function vect2int(v: std_logic_vector) return integer;
+  function vect2uint(v: std_logic_vector) return natural;
+  function int2vect(i: integer; bits: natural) return std_logic_vector;
+  function uint2vect(n: natural; bits: natural) return std_logic_vector;
+  function vect2unsigned(v: std_logic_vector) return unsigned;
+  function vect2signed(v: std_logic_vector) return signed;
   
   -- Converts a lane index to a group index.
   function lane2group (
@@ -141,6 +152,68 @@ end rvex_utils_pkg;
 package body rvex_utils_pkg is
 --=============================================================================
 
+  -- The methods below are shorthands/wrappers for methods from numeric_std.
+  -- Where applicable, they also cancel out some of the warning messages which
+  -- numeric_std normally spams around.
+  
+  constant NULL_STD_LOGIC_VECTOR : std_logic_vector(-1 downto 0) := (others => '0');
+  constant NULL_UNSIGNED         : unsigned        (-1 downto 0) := (others => '0');
+  constant NULL_SIGNED           : signed          (-1 downto 0) := (others => '0');
+  
+  function vect2int(v: std_logic_vector) return integer is
+  begin
+    if v'length = 0 then
+      return 0;
+    end if;
+    if is_X(v) then
+      return 0;
+    end if;
+    return to_integer(signed(v));
+  end vect2int;
+  
+  function vect2uint(v: std_logic_vector) return natural is
+  begin
+    if v'length = 0 then
+      return 0;
+    end if;
+    if is_X(v) then
+      return 0;
+    end if;
+    return to_integer(unsigned(v));
+  end vect2uint;
+  
+  function int2vect(i: integer; bits: natural) return std_logic_vector is
+  begin
+    if bits = 0 then
+      return NULL_STD_LOGIC_VECTOR;
+    end if;
+    return std_logic_vector(to_signed(i, bits));
+  end int2vect;
+  
+  function uint2vect(n: natural; bits: natural) return std_logic_vector is
+  begin
+    if bits = 0 then
+      return NULL_STD_LOGIC_VECTOR;
+    end if;
+    return std_logic_vector(to_unsigned(n, bits));
+  end uint2vect;
+  
+  function vect2unsigned(v: std_logic_vector) return unsigned is
+  begin
+    if is_X(v) then
+      return to_unsigned(0, v'length);
+    end if;
+    return unsigned(v);
+  end vect2unsigned;
+  
+  function vect2signed(v: std_logic_vector) return signed is
+  begin
+    if is_X(v) then
+      return to_signed(0, v'length);
+    end if;
+    return signed(v);
+  end vect2signed;
+  
   -- Converts a lane index to a group index.
   function lane2group (
     lane      : natural;

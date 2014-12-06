@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_opcode_pkg.all;
@@ -186,10 +187,10 @@ begin -- architecture
   -- Decode in the first stage (for input muxing) and the final stage (for
   -- output muxing).
   ctrl_inMux(S_MUL)
-    <= OPCODE_TABLE(to_integer(unsigned(opcode(S_MUL)))).multiplierCtrl;
+    <= OPCODE_TABLE(vect2uint(opcode(S_MUL))).multiplierCtrl;
   
   ctrl_outMux(S_MUL+L_MUL)
-    <= OPCODE_TABLE(to_integer(unsigned(opcode(S_MUL+L_MUL)))).multiplierCtrl;
+    <= OPCODE_TABLE(vect2uint(opcode(S_MUL+L_MUL))).multiplierCtrl;
   
   -----------------------------------------------------------------------------
   -- Perform input muxing
@@ -263,7 +264,7 @@ begin -- architecture
   -- We let XST (or whatever synthesizer you're using) take complete care of
   -- this - we just perform a numeric_std signed multiplication.
   result(S_MUL+L_MUL1) <= std_logic_vector(
-    signed(op1mux(S_MUL+L_MUL1)) * signed(op2mux(S_MUL+L_MUL1))
+    vect2signed(op1mux(S_MUL+L_MUL1)) * vect2signed(op2mux(S_MUL+L_MUL1))
   );
   
   -----------------------------------------------------------------------------

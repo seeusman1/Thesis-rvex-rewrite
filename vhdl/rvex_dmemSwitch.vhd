@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_trap_pkg.all;
@@ -164,7 +165,7 @@ begin -- architecture
          & "access latency."
     severity failure;
   
-  assert unsigned(CFG.cregStartAddress(CTRL_REG_SIZE_BLOG2-1 downto 0)) = 0
+  assert vect2unsigned(CFG.cregStartAddress(CTRL_REG_SIZE_BLOG2-1 downto 0)) = 0
     report "Control register start address must be aligned to a "
          & integer'image(2**CTRL_REG_SIZE_BLOG2) & " byte boundary boundary."
     severity failure;

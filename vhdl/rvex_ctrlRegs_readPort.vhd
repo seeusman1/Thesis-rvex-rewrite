@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 
 --=============================================================================
@@ -122,7 +123,7 @@ begin -- architecture
         readData <= (others => RVEX_UNDEF);
       elsif clkEn = '1' then
         if readEnable = '1' then
-          a := to_integer(unsigned(addr(31 downto 2)));
+          a := vect2uint(addr(31 downto 2));
           if a >= OFFSET and a < OFFSET + NUM_WORDS then
             readData <= creg2logic(a).readData;
           else

@@ -2,9 +2,9 @@
 name    Test STW and STOP instructions.
 
 -- Check configuration.
-cfg     genBundleSize       8
-cfg     memLaneRevIndex     1
-cfg     branchLaneRevIndex  0
+config  genBundleSize       8
+config  memLaneRevIndex     1
+config  branchLaneRevIndex  0
 
 -- Initialize memories.
 init

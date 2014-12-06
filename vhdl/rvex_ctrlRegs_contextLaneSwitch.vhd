@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 
 --=============================================================================
@@ -150,13 +151,13 @@ begin -- architecture
       
       -- Override lane group choice when a lane group tries to access ctxt.
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-        if CFG.numContextsLog2 = 0 or to_integer(unsigned(
+        if CFG.numContextsLog2 = 0 or vect2uint(
           plgrp2sw_addr(laneGroup)(7+CFG.numContextsLog2-1 downto 7)
-        )) = ctxt then
+        ) = ctxt then
           if plgrp2sw_readEnable(laneGroup) = '1'
             or plgrp2sw_writeEnable(laneGroup) = '1'
           then
-            contextMap(ctxt) <= std_logic_vector(to_unsigned(laneGroup, CFG.numLaneGroupsLog2));
+            contextMap(ctxt) <= uint2vect(laneGroup, CFG.numLaneGroupsLog2);
             contextEnable(ctxt) <= '1';
           end if;
         end if;
@@ -167,11 +168,11 @@ begin -- architecture
   
   -- Generate the command muxes.
   command_mux_gen: for ctxt in 2**CFG.numContextsLog2-1 downto 0 generate
-    sw2ctxt_addr(ctxt)        <= plgrp2sw_addr(to_integer(unsigned(contextMap(ctxt)))) and X"0000008F";
-    sw2ctxt_writeEnable(ctxt) <= plgrp2sw_writeEnable(to_integer(unsigned(contextMap(ctxt)))) and contextEnable(ctxt);
-    sw2ctxt_writeMask(ctxt)   <= plgrp2sw_writeMask(to_integer(unsigned(contextMap(ctxt))));
-    sw2ctxt_writeData(ctxt)   <= plgrp2sw_writeData(to_integer(unsigned(contextMap(ctxt))));
-    sw2ctxt_readEnable(ctxt)  <= plgrp2sw_readEnable(to_integer(unsigned(contextMap(ctxt)))) and contextEnable(ctxt);
+    sw2ctxt_addr(ctxt)        <= plgrp2sw_addr(vect2uint(contextMap(ctxt))) and X"0000008F";
+    sw2ctxt_writeEnable(ctxt) <= plgrp2sw_writeEnable(vect2uint(contextMap(ctxt))) and contextEnable(ctxt);
+    sw2ctxt_writeMask(ctxt)   <= plgrp2sw_writeMask(vect2uint(contextMap(ctxt)));
+    sw2ctxt_writeData(ctxt)   <= plgrp2sw_writeData(vect2uint(contextMap(ctxt)));
+    sw2ctxt_readEnable(ctxt)  <= plgrp2sw_readEnable(vect2uint(contextMap(ctxt))) and contextEnable(ctxt);
   end generate;
   
   -----------------------------------------------------------------------------
@@ -194,7 +195,7 @@ begin -- architecture
   
   -- Generate the result muxes.
   result_mux_gen: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
-    sw2plgrp_readData(laneGroup) <= ctxt2sw_readData(to_integer(unsigned(laneGroupMap_r(laneGroup))));
+    sw2plgrp_readData(laneGroup) <= ctxt2sw_readData(vect2uint(laneGroupMap_r(laneGroup)));
   end generate;
   
 end Behavioral;

@@ -50,6 +50,7 @@ use IEEE.math_real.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 use work.rvex_trap_pkg.all;
@@ -151,8 +152,8 @@ begin -- architecture
     -- Perform range checking.
     sel <= (others => '0');
     for i in 1 to NUM_SLAVES-1 loop
-      if unsigned(maskedAddr) >= unsigned(BOUNDARIES(i)) then
-        sel <= std_logic_vector(to_unsigned(i, SEL_WIDTH));
+      if vect2unsigned(maskedAddr) >= vect2unsigned(BOUNDARIES(i)) then
+        sel <= uint2vect(i, SEL_WIDTH);
       end if;
     end loop;
     
@@ -182,10 +183,10 @@ begin -- architecture
     
     -- Forward read enable and write enable only to the selected slave.
     sw2slave_writeEnable(slave)
-      <= (mstr2sw_writeEnable and not mstr2sw_stall) when to_integer(unsigned(sel)) = slave else '0';
+      <= (mstr2sw_writeEnable and not mstr2sw_stall) when vect2uint(sel) = slave else '0';
     
     sw2slave_readEnable(slave)
-      <= mstr2sw_readEnable when to_integer(unsigned(sel)) = slave else '0';
+      <= mstr2sw_readEnable when vect2uint(sel) = slave else '0';
     
   end generate;
   
@@ -193,8 +194,8 @@ begin -- architecture
   -- Drive master bus read data signal
   -----------------------------------------------------------------------------
   sw2mstr_readData
-    <= (others => RVEX_UNDEF) when to_integer(unsigned(sel_r)) >= NUM_SLAVES
-    else slave2sw_readData(to_integer(unsigned(sel_r)));
+    <= (others => RVEX_UNDEF) when vect2uint(sel_r) >= NUM_SLAVES
+    else slave2sw_readData(vect2uint(sel_r));
   
 end Behavioral;
 

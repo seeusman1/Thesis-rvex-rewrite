@@ -50,6 +50,7 @@ use IEEE.math_real.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 
 --=============================================================================
@@ -136,21 +137,21 @@ begin -- architecture
         -- block behavior, where a read-while-write returns an undefined value.
         for writePort in 0 to NUM_WRITE_PORTS-1 loop
           if writeEnable(writePort) = '1' then
-            addr := to_integer(unsigned(writeAddr(writePort)(NUM_REGS_LOG2-1 downto 0)));
+            addr := vect2uint(writeAddr(writePort)(NUM_REGS_LOG2-1 downto 0));
             ram(addr) := (others => 'U');
           end if;
         end loop;
         
         -- Perform reads while the newly written locations are undefined.
         for readPort in 0 to NUM_READ_PORTS-1 loop
-          addr := to_integer(unsigned(readAddr(readPort)(NUM_REGS_LOG2-1 downto 0)));
+          addr := vect2uint(readAddr(readPort)(NUM_REGS_LOG2-1 downto 0));
           readData(readPort) <= ram(addr);
         end loop;
         
         -- Perform the writes properly.
         for writePort in 0 to NUM_WRITE_PORTS-1 loop
           if writeEnable(writePort) = '1' then
-            addr := to_integer(unsigned(writeAddr(writePort)(NUM_REGS_LOG2-1 downto 0)));
+            addr := vect2uint(writeAddr(writePort)(NUM_REGS_LOG2-1 downto 0));
             ram(addr) := writeData(writePort);
           end if;
         end loop;

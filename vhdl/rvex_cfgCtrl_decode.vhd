@@ -1,4 +1,47 @@
--- Insert license here
+-- r-VEX processor
+-- Copyright (C) 2008-2014 by TU Delft.
+-- All Rights Reserved.
+
+-- THIS IS A LEGAL DOCUMENT, BY USING r-VEX,
+-- YOU ARE AGREEING TO THESE TERMS AND CONDITIONS.
+
+-- No portion of this work may be used by any commercial entity, or for any
+-- commercial purpose, without the prior, written permission of TU Delft.
+-- Nonprofit and noncommercial use is permitted as described below.
+
+-- 1. r-VEX is provided AS IS, with no warranty of any kind, express
+-- or implied. The user of the code accepts full responsibility for the
+-- application of the code and the use of any results.
+
+-- 2. Nonprofit and noncommercial use is encouraged. r-VEX may be
+-- downloaded, compiled, synthesized, copied, and modified solely for nonprofit,
+-- educational, noncommercial research, and noncommercial scholarship
+-- purposes provided that this notice in its entirety accompanies all copies.
+-- Copies of the modified software can be delivered to persons who use it
+-- solely for nonprofit, educational, noncommercial research, and
+-- noncommercial scholarship purposes provided that this notice in its
+-- entirety accompanies all copies.
+
+-- 3. ALL COMMERCIAL USE, AND ALL USE BY FOR PROFIT ENTITIES, IS EXPRESSLY
+-- PROHIBITED WITHOUT A LICENSE FROM TU Delft (J.S.S.M.Wong@tudelft.nl).
+
+-- 4. No nonprofit user may place any restrictions on the use of this software,
+-- including as modified by the user, by any other authorized user.
+
+-- 5. Noncommercial and nonprofit users may distribute copies of r-VEX
+-- in compiled or binary form as set forth in Section 2, provided that
+-- either: (A) it is accompanied by the corresponding machine-readable source
+-- code, or (B) it is accompanied by a written offer, with no time limit, to
+-- give anyone a machine-readable copy of the corresponding source code in
+-- return for reimbursement of the cost of distribution. This written offer
+-- must permit verbatim duplication by anyone, or (C) it is distributed by
+-- someone who received only the executable form, and is accompanied by a
+-- copy of the written offer of source code.
+
+-- 6. r-VEX was developed by Stephan Wong, Thijs van As, Fakhar Anjam, Roel Seedorf,
+-- Anthony Brandon. r-VEX is currently maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).
+
+-- Copyright (C) 2008-2014 by TU Delft.
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -6,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 
 --=============================================================================
@@ -185,9 +229,9 @@ begin -- architecture
         newConfiguration_r <= (others => '0');
         contextEnable <= (0 => '1', others => '0');
         lastPipelaneGroupForContext <= (others =>
-          std_logic_vector(to_unsigned(2**CFG.numLaneGroupsLog2-1, 3)));
+          uint2vect(2**CFG.numLaneGroupsLog2-1, 3));
         numPipelaneGroupsLog2ForContext <= (others =>
-          std_logic_vector(to_unsigned(CFG.numLaneGroupsLog2, 2)));
+          uint2vect(CFG.numLaneGroupsLog2, 2));
         coupleMatrix <= (others => '1');
         
         -- Start idle.
@@ -204,9 +248,9 @@ begin -- architecture
           -- Reset everything when we're starting to decode.
           contextEnable <= (others => '0');
           lastPipelaneGroupForContext <= (others =>
-            std_logic_vector(to_unsigned(2**CFG.numLaneGroupsLog2-1, 3)));
+            uint2vect(2**CFG.numLaneGroupsLog2-1, 3));
           numPipelaneGroupsLog2ForContext <= (others =>
-            std_logic_vector(to_unsigned(CFG.numLaneGroupsLog2, 2)));
+            uint2vect(CFG.numLaneGroupsLog2, 2));
           coupleMatrix <= (others => '0');
           
           -- Start decoding.
@@ -225,7 +269,7 @@ begin -- architecture
           -- update in the couple matrix, we only need to update context
           -- related registers when the current group ID maps to a context.
           if currentGroupID(GROUP_ID_SIZE-1) = '0' then
-            contextID := to_integer(unsigned(currentGroupID(CFG.numContextsLog2-1 downto 0)));
+            contextID := vect2uint(currentGroupID(CFG.numContextsLog2-1 downto 0));
             
             -- Enable the context specified by the current group index.
             contextEnable(contextID) <= '1';
@@ -291,7 +335,7 @@ begin -- architecture
     
     -- Infer the subtractor.
     nextPipelaneGroup <=
-      std_logic_vector(unsigned(currentPipelaneGroup_r) - decCount);
+      std_logic_vector(vect2unsigned(currentPipelaneGroup_r) - decCount);
     
   end process;
   
@@ -305,7 +349,7 @@ begin -- architecture
       if newConfiguration_r(4*i+3) = '1' then
         
         -- Lane disabled, set group ID to pipelane group index, with bit 3 set.
-        groupIDs(i) <= "1" & std_logic_vector(to_unsigned(i, GROUP_ID_SIZE-1));
+        groupIDs(i) <= "1" & uint2vect(i, GROUP_ID_SIZE-1);
          
       else
         
@@ -320,7 +364,7 @@ begin -- architecture
   end process;
   
   -- Generate the mux which selects the current group ID.
-  currentGroupID <= groupIDs(to_integer(unsigned(currentPipelaneGroup_r)));
+  currentGroupID <= groupIDs(vect2uint(currentPipelaneGroup_r));
   
   -- Generate the match units.
   match_gen: process (groupIDs, currentGroupID) is
@@ -429,7 +473,7 @@ begin -- architecture
       -- Instantiate the priority encoder for anyFullGroup, in conjunction with
       -- the default value for size set just before the lvl loop.
       if anyFullGroup = '1' then
-        numPipelaneGroupsLog2 <= std_logic_vector(to_unsigned(lvl + 1, 2));
+        numPipelaneGroupsLog2 <= uint2vect(lvl + 1, 2);
       end if;
       
     end loop;

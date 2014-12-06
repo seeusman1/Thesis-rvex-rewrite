@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 
 --=============================================================================
@@ -352,7 +353,7 @@ begin -- architecture
       generic map (
         NUM_SLAVES                    => 2,
         BOUNDARIES                    => (
-          1 => std_logic_vector(to_unsigned(CTRL_REG_GLOB_WORDS * 4, 32)),
+          1 => uint2vect(CTRL_REG_GLOB_WORDS * 4, 32),
           others => (others => RVEX_UNDEF)
         ),
         BOUND_MASK                    => X"0000007F"
@@ -403,7 +404,7 @@ begin -- architecture
     generic map (
       NUM_SLAVES                    => 3,
       BOUNDARIES                    => (
-        1 => std_logic_vector(to_unsigned(CTRL_REG_GLOB_WORDS * 4, 32)),
+        1 => uint2vect(CTRL_REG_GLOB_WORDS * 4, 32),
         2 => X"00000080",
         others => (others => RVEX_UNDEF)
       ),

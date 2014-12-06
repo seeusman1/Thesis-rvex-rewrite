@@ -180,7 +180,8 @@ package rvex_trap_pkg is
   --   "@"  --> Converts to " at " + trap point represented in hex when known.
   --            When trap point is not specified, the character is removed.
   --   "%x" --> Trap argument represented in hex.
-  --   "%d" --> Trap argument represented in decimal.
+  --   "%d" --> Trap argument represented in signed decimal.
+  --   "%u" --> Trap argument represented in unsigned decimal.
   constant TRAP_TABLE : trapTable_type := (
     
     -- Normal operation.

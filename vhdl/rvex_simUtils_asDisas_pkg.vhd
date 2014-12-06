@@ -1,4 +1,47 @@
--- insert license here
+-- r-VEX processor
+-- Copyright (C) 2008-2014 by TU Delft.
+-- All Rights Reserved.
+
+-- THIS IS A LEGAL DOCUMENT, BY USING r-VEX,
+-- YOU ARE AGREEING TO THESE TERMS AND CONDITIONS.
+
+-- No portion of this work may be used by any commercial entity, or for any
+-- commercial purpose, without the prior, written permission of TU Delft.
+-- Nonprofit and noncommercial use is permitted as described below.
+
+-- 1. r-VEX is provided AS IS, with no warranty of any kind, express
+-- or implied. The user of the code accepts full responsibility for the
+-- application of the code and the use of any results.
+
+-- 2. Nonprofit and noncommercial use is encouraged. r-VEX may be
+-- downloaded, compiled, synthesized, copied, and modified solely for nonprofit,
+-- educational, noncommercial research, and noncommercial scholarship
+-- purposes provided that this notice in its entirety accompanies all copies.
+-- Copies of the modified software can be delivered to persons who use it
+-- solely for nonprofit, educational, noncommercial research, and
+-- noncommercial scholarship purposes provided that this notice in its
+-- entirety accompanies all copies.
+
+-- 3. ALL COMMERCIAL USE, AND ALL USE BY FOR PROFIT ENTITIES, IS EXPRESSLY
+-- PROHIBITED WITHOUT A LICENSE FROM TU Delft (J.S.S.M.Wong@tudelft.nl).
+
+-- 4. No nonprofit user may place any restrictions on the use of this software,
+-- including as modified by the user, by any other authorized user.
+
+-- 5. Noncommercial and nonprofit users may distribute copies of r-VEX
+-- in compiled or binary form as set forth in Section 2, provided that
+-- either: (A) it is accompanied by the corresponding machine-readable source
+-- code, or (B) it is accompanied by a written offer, with no time limit, to
+-- give anyone a machine-readable copy of the corresponding source code in
+-- return for reimbursement of the cost of distribution. This written offer
+-- must permit verbatim duplication by anyone, or (C) it is distributed by
+-- someone who received only the executable form, and is accompanied by a
+-- copy of the written offer of source code.
+
+-- 6. r-VEX was developed by Stephan Wong, Thijs van As, Fakhar Anjam, Roel Seedorf,
+-- Anthony Brandon. r-VEX is currently maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).
+
+-- Copyright (C) 2008-2014 by TU Delft.
 
 library IEEE;
 use IEEE.std_logic_1164.all;
@@ -6,12 +49,16 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_simUtils_pkg.all;
+use work.rvex_simUtils_scanner_pkg.all;
 use work.rvex_opcode_pkg.all;
+use work.rvex_trap_pkg.all;
 
 --=============================================================================
 -- This package contains simulation/elaboration-only methods for basic
--- assembly and disassembly.
+-- assembly and disassembly. It also has a method which can pretty-print trap
+-- information.
 -------------------------------------------------------------------------------
 package rvex_simUtils_asDisas_pkg is
 --=============================================================================
@@ -55,212 +102,17 @@ package rvex_simUtils_asDisas_pkg is
     PC_plusOne  : in  rvex_address_type := (others => 'U')
   ) return rvex_string_builder_type;
   
+  -- Pretty print the given trap information using the syntax specifications
+  -- in rvex_trap_pkg.
+  function prettyPrintTrap(
+    ti          : in  trap_info_type
+  ) return rvex_string_builder_type;
+  
 end rvex_simUtils_asDisas_pkg;
 
 --=============================================================================
 package body rvex_simUtils_asDisas_pkg is
 --=============================================================================
-  
-  -----------------------------------------------------------------------------
-  -- Increases pos until it points to the first non-whitespace character
-  -- encountered
-  -----------------------------------------------------------------------------
-  procedure scanToEndOfWhitespace(
-    line  : in string;
-    pos   : inout positive
-  ) is
-  begin
-    while pos <= line'length loop
-      exit when line(pos) /= ' ';
-      pos := pos + 1;
-    end loop;
-  end scanToEndOfWhitespace;
-  
-  -----------------------------------------------------------------------------
-  -- Compares and scans an identifier
-  -----------------------------------------------------------------------------
-  procedure scanAndCompareIdentifier(
-    line1 : in string;
-    pos1  : inout positive;
-    line2 : in string;
-    pos2  : inout positive;
-    ok    : out boolean
-  ) is
-  begin
-    
-    -- Make sure that an identifier is beginning on both inputs.
-    if (not isAlphaChar(line1(pos1))) or (not isAlphaChar(line2(pos2))) then
-      ok := false;
-      return;
-    end if;
-    
-    -- Scan the identifier.
-    while (pos1 <= line1'length) and (pos2 <= line2'length) loop
-      
-      -- If both lines are no longer alphanumerical, we've successfully
-      -- scanned. Trim whitespace off the ends before returning success.
-      if (not isAlphaNumericChar(line1(pos1))) and (not isAlphaNumericChar(line2(pos2))) then
-        scanToEndOfWhitespace(line1, pos1);
-        scanToEndOfWhitespace(line2, pos2);
-        ok := true;
-        return;
-      end if;
-      
-      -- Fail if the characters are not equal or not alphanumeric.
-      if not charsEqual(line1(pos1), line2(pos2)) then
-        ok := false;
-        return;
-      end if;
-      
-      -- Increment positions.
-      pos1 := pos1 + 1;
-      pos2 := pos2 + 1;
-      
-    end loop;
-    
-    -- One of the strings ended before the other, fail.
-    ok := false;
-    
-  end scanAndCompareIdentifier;
-  
-  -----------------------------------------------------------------------------
-  -- Compares and scans a single special character
-  -----------------------------------------------------------------------------
-  procedure scanAndCompareSpecial(
-    line1 : in string;
-    pos1  : inout positive;
-    line2 : in string;
-    pos2  : inout positive;
-    ok    : out boolean
-  ) is
-  begin
-    
-    -- Make sure that a special character is present on both lines.
-    if (not isSpecialChar(line1(pos1))) or (not isSPecialChar(line2(pos2))) then
-      ok := false;
-      return;
-    end if;
-    
-    -- Fail if the characters are not equal.
-    if line1(pos1) /= line2(pos2) then
-      ok := false;
-      return;
-    end if;
-    
-    -- Increment scanner positions by one.
-    pos1 := pos1 + 1;
-    pos2 := pos2 + 1;
-    
-    -- Read to end of whitespace.
-    scanToEndOfWhitespace(line1, pos1);
-    scanToEndOfWhitespace(line2, pos2);
-    
-    -- Success.
-    ok := true;
-    
-  end scanAndCompareSpecial;
-  
-  -----------------------------------------------------------------------------
-  -- Attempts to scan a numeric value (0xHEX and decimal are allowed)
-  -----------------------------------------------------------------------------
-  procedure scanNumeric(
-    line  : in string;
-    pos   : inout positive;
-    val   : inout signed(32 downto 0);
-    ok    : out boolean
-  ) is
-    variable radix    : natural;
-    variable negative : boolean;
-    variable charVal  : integer;
-  begin
-    val := (others => '0');
-    ok := false;
-    
-    -- Test for negative number marker.
-    if matchAt(line, pos, "-") then
-      radix := 10;
-      negative := true;
-      pos := pos + 1;
-    end if;
-    
-    -- Skip whitespace between unary minus and number.
-    scanToEndOfWhitespace(line, pos);
-    
-    -- Make sure the previous did not place us at the end of the string.
-    if pos > line'length then
-      return;
-    end if;
-    
-    -- Test for radix specifiers.
-    if matchAt(line, pos, "0x") then
-      
-      -- Hexadecimal entry.
-      radix := 16;
-      pos := pos + 2;
-      
-    elsif matchAt(line, pos, "0b") then
-      
-      -- Binary entry.
-      radix := 2;
-      pos := pos + 2;
-      
-    elsif matchAt(line, pos, "0") then
-      
-      -- Octal entry.
-      radix := 8;
-      pos := pos + 1;
-      
-      -- In this case we've already processed a digit, so the result is valid.
-      ok := true;
-      
-    else
-      
-      -- Decimal entry.
-      radix := 10;
-      
-    end if;
-    
-    -- Make sure the previous did not place us at the end of the string.
-    if pos > line'length then
-      return;
-    end if;
-    
-    -- Scan the remainder of the literal.
-    while pos <= line'length loop
-      
-      -- Break if the current character is not alphanumeric.
-      exit when not isAlphaNumericChar(line(pos));
-      
-      -- Get the value of the current digit.
-      charVal := charToDigitVal(line(pos));
-      
-      -- Make sure the character is valid for the current radix.
-      if (charVal = -1) or (charVal >= radix) then
-        ok := false;
-        return;
-      end if;
-      
-      -- Add the digit to the value.
-      val := resize(val * to_signed(radix, 33), 33) + to_signed(charVal, 33);
-      
-      -- We've processed at least one digit, so this is a valid number unless
-      -- there is garbage at the end.
-      ok := true;
-      
-      -- Increase scanner position.
-      pos := pos + 1;
-      
-    end loop;
-    
-    -- Scan past trailing whitespace.
-    scanToEndOfWhitespace(line, pos);
-    
-    -- Negate result if we started with a dash.
-    if negative then
-      val := -val;
-    end if;
-    
-  end scanNumeric;
   
   -----------------------------------------------------------------------------
   -- Attempts to assemble the given instruction with the given pattern
@@ -564,7 +416,7 @@ package body rvex_simUtils_asDisas_pkg is
       -- Try the syllable using a register for operand 2.
       if OPCODE_TABLE(opcode).valid(0) = '1' then
         tempSyllable := (others => '0');
-        tempSyllable(31 downto 24) := std_logic_vector(to_unsigned(opcode, 8));
+        tempSyllable(31 downto 24) := uint2vect(opcode, 8);
         asAttemptPattern(
           source, OPCODE_TABLE(opcode).syntax_reg, tempSyllable,
           tempOK, tempCharsValid, tempError
@@ -589,7 +441,7 @@ package body rvex_simUtils_asDisas_pkg is
       -- Try the syllable using an immediate.
       if OPCODE_TABLE(opcode).valid(1) = '1' then
         tempSyllable := (others => '0');
-        tempSyllable(31 downto 24) := std_logic_vector(to_unsigned(opcode, 8));
+        tempSyllable(31 downto 24) := uint2vect(opcode, 8);
         tempSyllable(23) := '1';
         asAttemptPattern(
           source, OPCODE_TABLE(opcode).syntax_imm, tempSyllable,
@@ -694,9 +546,9 @@ package body rvex_simUtils_asDisas_pkg is
     
     -- Look up the syntax specification for this syllable.
     if syllable(23) = '0' then
-      syntax := OPCODE_TABLE(to_integer(unsigned(syllable(31 downto 24)))).syntax_reg;
+      syntax := OPCODE_TABLE(vect2uint(syllable(31 downto 24))).syntax_reg;
     else
-      syntax := OPCODE_TABLE(to_integer(unsigned(syllable(31 downto 24)))).syntax_imm;
+      syntax := OPCODE_TABLE(vect2uint(syllable(31 downto 24))).syntax_imm;
     end if;
     
     -- Loop through the syntax and perform replacements as we go.
@@ -816,7 +668,7 @@ package body rvex_simUtils_asDisas_pkg is
           if PC_plusOne(31) /= 'U' then
             rvs_append(disassembly, '=');
             rvs_append(disassembly, rvs_hex(std_logic_vector(
-              signed(PC_plusOne) + signed(branchOff)
+              vect2signed(PC_plusOne) + vect2signed(branchOff)
             )));
           else
             if syllable(23) = '0' then
@@ -825,7 +677,7 @@ package body rvex_simUtils_asDisas_pkg is
             else
               rvs_append(disassembly, '-');
               rvs_append(disassembly, rvs_hex(std_logic_vector(
-                -signed(branchOff(21 downto 0))
+                -vect2signed(branchOff(21 downto 0))
               )));
             end if;
           end if;
@@ -859,5 +711,85 @@ package body rvex_simUtils_asDisas_pkg is
     return disassembly;
     
   end disassemble;
+  
+  -----------------------------------------------------------------------------
+  -- Pretty print the given trap information using the syntax specifications
+  -- in rvex_trap_pkg
+  -----------------------------------------------------------------------------
+  function prettyPrintTrap(
+    ti          : in  trap_info_type
+  ) return rvex_string_builder_type is
+    
+    -- Syntax specification for the given opcode and immediate switch.
+    variable syntax       : string(1 to trapTableEntry_type.name'length);
+    variable pos          : positive;
+    variable output       : rvex_string_builder_type;
+    
+  begin
+    
+    -- Look up the syntax specification for this trap.
+    if ti.active = '0' then
+      syntax := TRAP_TABLE(RVEX_TRAP_NONE).name;
+    else
+      syntax := TRAP_TABLE(vect2uint(ti.cause)).name;
+    end if;
+    
+    -- Loop through the syntax and perform replacements as we go.
+    rvs_clear(output);
+    pos := 1;
+    while pos <= syntax'length loop
+      
+      -- Handle replace sequences.
+      if syntax(pos) = '%' then
+        if matchAt(syntax, pos+1, "c") then
+          
+          -- "%c" --> Trap cause represented as an unsigned integer.
+          pos := pos + 3;
+          rvs_append(output, rvs_uint(ti.cause));
+          next;
+          
+        elsif matchAt(syntax, pos+1, "x") then
+          
+          -- "%x" --> Trap argument in hex.
+          pos := pos + 3;
+          rvs_append(output, rvs_hex(ti.arg, 8));
+          next;
+          
+        elsif matchAt(syntax, pos+1, "d") then
+          
+          -- "%d" --> Trap argument in signed decimal.
+          pos := pos + 3;
+          rvs_append(output, rvs_int(ti.arg));
+          next;
+          
+        elsif matchAt(syntax, pos+1, "u") then
+          
+          -- "%u" --> Trap argument in unsigned decimal.
+          pos := pos + 3;
+          rvs_append(output, rvs_uint(ti.arg));
+          next;
+          
+        end if;
+      elsif syntax(pos) = '@' then
+        
+        -- "@" --> Trap point, if specified.
+        -- It's not specified, so ignore this character.
+        pos := pos + 1;
+        next;
+        
+      end if;
+      
+      -- Handle literal characters.
+      rvs_append(output, syntax(pos));
+      pos := pos + 1;
+      next;
+      
+    end loop;
+    
+    -- Remove trailing spaces and return.
+    rvs_trimTrailingSpaces(output);
+    
+    return output;
+  end prettyPrintTrap;
   
 end rvex_simUtils_asDisas_pkg;
