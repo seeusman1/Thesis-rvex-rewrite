@@ -65,7 +65,7 @@ use IEEE.std_logic_1164.all;
 -- [x] = architecture done
 --
 -- More specific TODO list now that the core code is almost done:
--- [ ] Make the pretty-print procedure for trap information to finish
+-- [x] Make the pretty-print procedure for trap information to finish
 --     pretty-printed simulation output.
 -- [x] Make bus logic stuff for control registers.
 -- [x] Make package with procedures which allow procedural

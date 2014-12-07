@@ -60,6 +60,7 @@ use work.rvex_simUtils_scanner_pkg.all;
 use work.rvex_simUtils_asDisas_pkg.all;
 use work.rvex_simUtils_mem_pkg.all;
 use work.rvex_utils_pkg.all;
+use work.rvex_ctrlRegs_pkg.all;
 
 --=============================================================================
 -- This testbench runs test suites for the rvex core. The test suites are
@@ -129,25 +130,32 @@ use work.rvex_utils_pkg.all;
 -- fillnops <ptr>
 --   Same as at, but inserts NOPs from the current loading pointer up to <ptr>.
 -- 
+-- reset
+--   Resets the entire processor. Takes one cycle to complete.
+-- 
+-- wait <cycles> [
+--     write <group> [<ptr> [exclusive] [<value> [exclusive]]] 
+--   | read <group> [<ptr> [exclusive]]
+--   | idle <context>
+--   | done <context>
+--   | irqHandled <context>
+-- ]
+--   Waits for <cycles> cycles, unless the specified condition occurs. If no
+--   condition is specified, wait always succeeds; otherwise, the cycle count
+--   works as a timeout and wait only succeeds if the condition occurs within
+--   the set amount of time, after which it will return immediately. The
+--   exclusive markers for the memory write and read conditions specifies that
+--   a write/read to an address or value other than what is specified should
+--   cause the wait to fail.
+--   
+-- write <dmem|imem|dbg> <word|half|byte> <ptr> <value>
+-- read  <dmem|imem|dbg> <word|half|byte> <ptr> <expected>
+--   Set memory at <ptr> to <value> or check that the value at that location is
+--   <expected>. <ptr> may be specified as a numerical value, or as a CR_*
+--   register index (see also rvex_ctrlRegs_pkg).
+--   
 -- (TODO FROM HERE ONWARDS)
 -- 
--- wait <cycles> [memw <ptr> [exclusive] [<value> [exclusive]] | meml <ptr> [exclusive]]
---   Waits for at least <cycles> cycles. If memw or meml is not specified, the
---   wait will succeed, otherwise it will fail unless a memory write or memory
---   load to the specified location occurs within that time. When the expected
---   memory write/load occurs, execution will continue without waiting for the
---   timeout. If "exclusive" is specified after the address, any write/read to
---   ANOTHER address will cause failure. Same logic applies to the value. The
---   checks are insensitive to which memory port requested the operation or to
---   the access size.
---   
--- write [dbg] <word|half|byte> <ptr> <value>
--- read [dbg] <word|half|byte> <ptr> <expected>
---   Set memory at <ptr> to <value> or check that the value at that location is
---   <expected>. If dbg is specified, the debug bus is accessed instead of the
---   data memory, which takes a cycle to complete. <ptr> may be specified as a
---   numerical value, or as a CR_* register index (see also rvex_ctrlRegs_pkg).
---   
 -- fault <set|clear> <imem|dmem> <ptr>
 --   Marks the given memory location as faulty or clears the marking. When a
 --   fauly memory location is accessed, the fault signal to the rvex will be
@@ -166,11 +174,8 @@ use work.rvex_utils_pkg.all;
 -- rctrl <ctxt> run
 --   Asserts the run flag for the specified context.
 -- 
--- rctrl <ctxt> chk [not] <idle|done|irq>
+-- rctrl <ctxt> assert <idle|done|irq> <low|high>
 --   Ensures that the given context is (not) idle/done, fails otherwise.
--- 
--- reset
---   Resets the entire processor. Takes one cycle to complete.
 -- 
 -------------------------------------------------------------------------------
 -- Numeric data entry
@@ -760,11 +765,11 @@ begin -- architecture
         end if;
         
         -- Generate a clock cycle.
-        wait for 5 ns;
+        wait for 4990 ps;
         clk <= '0';
         wait for 5 ns;
         clk <= '1';
-        wait for 0 ns;
+        wait for 10 ps;
         
       end loop;
     end cycles;
@@ -1014,7 +1019,7 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Executes a 'fillnops' command
     ---------------------------------------------------------------------------
-    -- load <assembly syllable>
+    -- fillnops <ptr>
     procedure executeFillNops(
       l       : in    string;
       pos     : inout positive;
@@ -1082,6 +1087,527 @@ begin -- architecture
     end executeFillNops;
     
     ---------------------------------------------------------------------------
+    -- Executes a 'wait' command
+    ---------------------------------------------------------------------------
+    -- wait <cycles> [
+    --     write <group> [<ptr> [exclusive] [<value> [exclusive]]] 
+    --   | read <group> [<ptr> [exclusive]]
+    --   | idle <context>
+    --   | done <context>
+    --   | irqHandled <context>
+    -- ]
+    procedure executeWait(
+      l       : in    string;
+      pos     : inout positive;
+      result  : out   testCommandResult_type
+    ) is
+      variable token    : line;
+      variable val      : signed(32 downto 0);
+      variable ok       : boolean;
+      variable pos2     : positive;
+      
+      -- Type of wait instruction.
+      type waitType_type is (
+        WAIT_NORMAL, WAIT_WRITE, WAIT_READ, WAIT_IDLE, WAIT_DONE, WAIT_IRQ
+      );
+      variable waitType : waitType_type;
+      
+      -- Wait parameters.
+      variable ctxtGrp  : natural;
+      variable addr     : rvex_address_type;
+      variable addrEx   : boolean;
+      variable value    : rvex_data_type;
+      variable valueEx  : boolean;
+      
+      -- Number of cycles remaining.
+      variable cycleCnt : integer;
+      
+    begin
+      
+      -- Scan the number of cycles.
+      scanNumeric(l, pos, val, ok);
+      if not ok then
+        report "Error parsing test case 'wait' command: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      cycleCnt := to_integer(val);
+      
+      -- Parse the "write" or "read" tokens if they exist.
+      if pos > l'length then
+        waitType := WAIT_NORMAL;
+        ok := true;
+      else
+        scanToken(l, pos, token);
+        if token = null then
+          ok := false;
+        elsif matchStr(token.all, "write") then
+          waitType := WAIT_WRITE;
+          ok := true;
+        elsif matchStr(token.all, "read") then
+          waitType := WAIT_READ;
+          ok := true;
+        elsif matchStr(token.all, "idle") then
+          waitType := WAIT_IDLE;
+          ok := true;
+        elsif matchStr(token.all, "done") then
+          waitType := WAIT_DONE;
+          ok := true;
+        elsif matchStr(token.all, "irqHandled") then
+          waitType := WAIT_IRQ;
+          ok := true;
+        else
+          ok := false;
+        end if;
+      end if;
+      if not ok then
+        report "Error parsing test case 'wait' command: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Parse the context/group index for 'wait' commands with parameters.
+      if waitType /= WAIT_NORMAL then
+        scanNumeric(l, pos, val, ok);
+        if not ok then
+          report "Error parsing test case 'wait' command: '" & l & "'. "
+               & "Context/group specified expected. Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+          return;
+        end if;
+        ctxtGrp := to_integer(val);
+      end if;
+      
+      -- Make sure ctxtGrp is within range.
+      if waitType = WAIT_WRITE or waitType = WAIT_READ then
+        if ctxtGrp >= 2**CFG.numLaneGroupsLog2 then
+          report "Error parsing test case 'wait' command: '" & l & "'. "
+               & "Lane group " & integer'image(ctxtGrp) & " is out of range. "
+               & "Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+          return;
+        end if;
+      elsif waitType = WAIT_IDLE or waitType = WAIT_DONE or waitType = WAIT_IRQ then
+        if ctxtGrp >= 2**CFG.numContextsLog2 then
+          report "Error parsing test case 'wait' command: '" & l & "'. "
+               & "Context " & integer'image(ctxtGrp) & " is out of range. "
+               & "Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+          return;
+        end if;
+      end if;
+      
+      -- Default to not caring about address or data.
+      addr := (others => '-');
+      value := (others => '-');
+      addrEx := false;
+      valueEx := false;
+      
+      -- Parse the optional pointer and exclusive marker for "write" or "read"
+      -- waits.
+      if waitType = WAIT_WRITE or waitType = WAIT_READ then
+        
+        -- Scan the address.
+        if pos <= l'length then
+          scanNumeric(l, pos, val, ok);
+          if not ok then
+            report "Error parsing test case 'wait' command: '" & l & "'. "
+                 & "Aborting."
+              severity warning;
+            result := TCCR_ABORT;
+            return;
+          end if;
+          addr := std_logic_vector(val(31 downto 0));
+        end if;
+        
+        -- Scan optional exclusive marker.
+        if pos <= l'length then
+          pos2 := pos;
+          scanToken(l, pos2, token);
+          if token = null then
+            report "Error parsing test case 'wait' command: '" & l & "'. "
+                 & "Aborting."
+              severity warning;
+            result := TCCR_ABORT;
+            return;
+          end if;
+          if matchStr(token.all, "exclusive") then
+            addrEx := true;
+            pos := pos2;
+          end if;
+        end if;
+        
+      end if;
+      
+      -- Parse the optional expected write value for "write" waits.
+      if waitType = WAIT_WRITE then
+        
+        -- Scan the value.
+        if pos <= l'length then
+          scanNumeric(l, pos, val, ok);
+          if not ok then
+            report "Error parsing test case 'wait' command: '" & l & "'. "
+                 & "Aborting."
+              severity warning;
+            result := TCCR_ABORT;
+            return;
+          end if;
+          value := std_logic_vector(val(31 downto 0));
+        end if;
+        
+        -- Scan optional exclusive marker.
+        if pos <= l'length then
+          pos2 := pos;
+          scanToken(l, pos2, token);
+          if token = null then
+            report "Error parsing test case 'wait' command: '" & l & "'. "
+                 & "Aborting."
+              severity warning;
+            result := TCCR_ABORT;
+            return;
+          end if;
+          if matchStr(token.all, "exclusive") then
+            valueEx := true;
+            pos := pos2;
+          end if;
+        end if;
+        
+      end if;
+      
+      -- We should be at the end of the line now.
+      if pos <= l'length then
+        report "Error parsing test case 'wait' command: '" & l & "'. "
+             & "Garbage at end of line. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Actually handle the command.
+      while cycleCnt > 0 loop
+        
+        -- Make a cycle pass.
+        cycles(1);
+        
+        -- Test for conditions, if specified.
+        if waitType = WAIT_WRITE then
+          if rv2mem_stallOut(ctxtGrp) = '0'
+            and rv2dmem_writeEnable(ctxtGrp) = '1'
+            and rv2dmem_writeMask(ctxtGrp) = "1111"
+          then
+            if std_match(rv2dmem_addr(ctxtGrp), addr) then
+              if std_match(rv2dmem_writeData(ctxtGrp), value) then
+                
+                -- Expected write encountered.
+                result := TCCR_CONTINUE;
+                return;
+                
+              elsif valueEx then
+                
+                -- Incorrect value written in exclusive mode, fail.
+                report "Expected processor to write " & rvs_hex(value)
+                     & " to " & rvs_hex(addr) & ", but it wrote "
+                     & rvs_hex(rv2dmem_addr(ctxtGrp)) & "."
+                  severity warning;
+                result := TCCR_FAIL;
+                return;
+                
+              end if;
+            elsif addrEx or valueEx then
+              
+              -- Incorrect address written in exclusive mode, fail.
+              report "Expected processor to write to " & rvs_hex(addr)
+                   & " but it wrote to " & rvs_hex(rv2dmem_addr(ctxtGrp))
+                   & "."
+                severity warning;
+              result := TCCR_FAIL;
+              return;
+              
+            end if;
+          end if;
+        elsif waitType = WAIT_READ then
+          if rv2mem_stallOut(ctxtGrp) = '0'
+            and rv2dmem_readEnable(ctxtGrp) = '1'
+          then
+            if std_match(rv2dmem_addr(ctxtGrp), addr) then
+                
+              -- Expected read encountered.
+              result := TCCR_CONTINUE;
+              return;
+                
+            elsif addrEx or valueEx then
+              
+              -- Incorrect address read in exclusive mode, fail.
+              report "Expected processor to read from " & rvs_hex(addr)
+                   & " but it read from " & rvs_hex(rv2dmem_addr(ctxtGrp))
+                   & "."
+                severity warning;
+              result := TCCR_FAIL;
+              return;
+              
+            end if;
+          end if;
+        elsif waitType = WAIT_IDLE then
+          if rv2rctrl_idle(ctxtGrp) = '1' then
+            result := TCCR_CONTINUE;
+            return;
+          end if;
+        elsif waitType = WAIT_DONE then
+          if rv2rctrl_done(ctxtGrp) = '1' then
+            result := TCCR_CONTINUE;
+            return;
+          end if;
+        elsif waitType = WAIT_IRQ then
+          if rctrl2rv_irq(ctxtGrp) = '0' then
+            result := TCCR_CONTINUE;
+            return;
+          end if;
+        end if;
+        
+        -- Decrement counter.
+        cycleCnt := cycleCnt - 1;
+        
+      end loop;
+      
+      if waitType = WAIT_NORMAL then
+        
+        -- Normal wait, everything is OK.
+        result := TCCR_CONTINUE;
+        
+      else
+        
+        -- Timeout.
+        report "Timeout occured while waiting for '" & l & "'."
+          severity warning;
+        result := TCCR_FAIL;
+        
+      end if;
+      
+    end executeWait;
+    
+    ---------------------------------------------------------------------------
+    -- Executes a read/write command
+    ---------------------------------------------------------------------------
+    -- write <dmem|imem|dbg> <word|half|byte> <ptr> <value>
+    -- read  <dmem|imem|dbg> <word|half|byte> <ptr> <expected>
+    procedure executeReadWrite(
+      l       : in    string;
+      pos     : inout positive;
+      isRead  : in    boolean;
+      result  : out   testCommandResult_type
+    ) is
+      variable token      : line;
+      variable val        : signed(32 downto 0);
+      variable ok         : boolean;
+      variable pos2       : positive;
+      
+      -- Memory to access.
+      type memoryType_type is (MEM_DMEM, MEM_IMEM, MEM_DBG);
+      variable memType    : memoryType_type;
+      
+      -- Size of the access.
+      type accessSize_type is (MEM_WORD, MEM_HALF, MEM_BYTE);
+      variable accessSize : accessSize_type;
+      
+      -- Address and data.
+      variable addr       : rvex_address_type;
+      variable mask       : rvex_mask_type;
+      variable value      : rvex_data_type;
+      
+    begin
+      
+      -- Parse the memory selection token.
+      scanToken(l, pos, token);
+      if token = null then
+        report "Error parsing test case 'read' or 'write' command: '" & l
+             & "'. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      elsif matchStr(token.all, "dmem") then memType := MEM_DMEM;
+      elsif matchStr(token.all, "imem") then memType := MEM_IMEM;
+      elsif matchStr(token.all, "dbg" ) then memType := MEM_DBG;
+      else
+        report "Error parsing test case 'read' or 'write' command: '" & l
+             & "'. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Parse the access size token.
+      scanToken(l, pos, token);
+      if token = null then
+        report "Error parsing test case 'read' or 'write' command: '" & l
+             & "'. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      elsif matchStr(token.all, "word") then accessSize := MEM_WORD;
+      elsif matchStr(token.all, "half") then accessSize := MEM_HALF;
+      elsif matchStr(token.all, "byte") then accessSize := MEM_BYTE;
+      else
+        report "Error parsing test case 'read' or 'write' command: '" & l
+             & "'. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Parse the pointer. First try to match against debug bus register
+      -- names.
+      pos2 := pos;
+      scanToken(l, pos2, token);
+      ok := true;
+      if    token = null                   then ok := false;
+      elsif matchStr(token.all, "CR_GSR" ) then addr := uint2vect(CR_GSR  * 4, 32);
+      elsif matchStr(token.all, "CR_BCRR") then addr := uint2vect(CR_BCRR * 4, 32);
+      elsif matchStr(token.all, "CR_CC"  ) then addr := uint2vect(CR_CC   * 4, 32);
+      elsif matchStr(token.all, "CR_AFF" ) then addr := uint2vect(CR_AFF  * 4, 32);
+      elsif matchStr(token.all, "CR_CCR" ) then addr := uint2vect(CR_CCR  * 4, 32);
+      elsif matchStr(token.all, "CR_SCCR") then addr := uint2vect(CR_SCCR * 4, 32);
+      elsif matchStr(token.all, "CR_LR"  ) then addr := uint2vect(CR_LR   * 4, 32);
+      elsif matchStr(token.all, "CR_PC"  ) then addr := uint2vect(CR_PC   * 4, 32);
+      elsif matchStr(token.all, "CR_TH"  ) then addr := uint2vect(CR_TH   * 4, 32);
+      elsif matchStr(token.all, "CR_PH"  ) then addr := uint2vect(CR_PH   * 4, 32);
+      elsif matchStr(token.all, "CR_TP"  ) then addr := uint2vect(CR_TP   * 4, 32);
+      elsif matchStr(token.all, "CR_TA"  ) then addr := uint2vect(CR_TA   * 4, 32);
+      elsif matchStr(token.all, "CR_BR0" ) then addr := uint2vect(CR_BR0  * 4, 32);
+      elsif matchStr(token.all, "CR_BR1" ) then addr := uint2vect(CR_BR1  * 4, 32);
+      elsif matchStr(token.all, "CR_BR2" ) then addr := uint2vect(CR_BR2  * 4, 32);
+      elsif matchStr(token.all, "CR_BR3" ) then addr := uint2vect(CR_BR3  * 4, 32);
+      elsif matchStr(token.all, "CR_DCR" ) then addr := uint2vect(CR_DCR  * 4, 32);
+      elsif matchStr(token.all, "CR_CRR" ) then addr := uint2vect(CR_CRR  * 4, 32);
+      elsif true                           then ok := false;
+      end if;
+      if ok then
+        pos := pos2;
+      else
+        scanNumeric(l, pos, val, ok);
+        if not ok then
+          report "Error parsing test case 'read' or 'write' command: '" & l
+               & "'. Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+          return;
+        end if;
+        addr := std_logic_vector(val(31 downto 0));
+      end if;
+      
+      -- Parse the expected value/value to write.
+      scanNumeric(l, pos, val, ok);
+      if not ok then
+        report "Error parsing test case 'read' or 'write' command: '" & l
+             & "'. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      value := std_logic_vector(val(31 downto 0));
+      
+      -- We should be at the end of the line now.
+      if pos <= l'length then
+        report "Error parsing test case 'read' or 'write' command: '" & l
+             & "'. Garbage at end of line. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Decode given address and access size into word address and mask.
+      if accessSize = MEM_WORD then
+        mask := "1111";
+      elsif accessSize = MEM_HALF then
+        if addr(1) = '0' then
+          mask := "1100";
+        else
+          mask := "0011";
+        end if;
+      else
+        if addr(1 downto 0) = "00" then
+          mask := "1000";
+        elsif addr(1 downto 0) = "01" then
+          mask := "0100";
+        elsif addr(1 downto 0) = "10" then
+          mask := "0010";
+        else
+          mask := "0001";
+        end if;
+      end if;
+      addr(1 downto 0) := "00";
+      
+      -- Actually handle the command.
+      if memType = MEM_DMEM or memType = MEM_IMEM then
+        stim2mem_addr <= addr;
+        if memType = MEM_DMEM then
+          stim2mem_select <= DMEM_SELECT;
+        else
+          stim2mem_select <= IMEM_SELECT;
+        end if;
+        if isRead then
+          stim2mem_readEnable <= '1';
+          stim2mem_writeEnable <= '0';
+          stim2mem_writeMask <= (others => '0');
+          stim2mem_writeData <= (others => '0');
+        else
+          stim2mem_readEnable <= '0';
+          stim2mem_writeEnable <= '1';
+          stim2mem_writeMask <= mask;
+          stim2mem_writeData <= value;
+        end if;
+        wait for 0 ns;
+        stim2mem_readEnable <= '0';
+        stim2mem_writeEnable <= '0';
+        wait for 0 ns;
+        if isRead then
+          if mem2stim_readData /= value then
+            report "Did not read the expected value for 'read' command '" & l
+                 & "'; actual value was " & rvs_hex(mem2stim_readData, 8) & "."
+              severity warning;
+            result := TCCR_ABORT;
+            return;
+          end if;
+        end if;
+      else
+        dbg2rv_addr <= addr;
+        if isRead then
+          dbg2rv_readEnable <= '1';
+          dbg2rv_writeEnable <= '0';
+          dbg2rv_writeMask <= (others => '0');
+          dbg2rv_writeData <= (others => '0');
+        else
+          dbg2rv_readEnable <= '0';
+          dbg2rv_writeEnable <= '1';
+          dbg2rv_writeMask <= mask;
+          dbg2rv_writeData <= value;
+        end if;
+        cycles(1);
+        dbg2rv_readEnable <= '0';
+        dbg2rv_writeEnable <= '0';
+        if isRead then
+          if rv2dbg_readData /= value then
+            report "Did not read the expected value for 'read' command '" & l
+                 & "'; actual value was " & rvs_hex(rv2dbg_readData, 8) & "."
+              severity warning;
+            result := TCCR_ABORT;
+            return;
+          end if;
+        end if;
+      end if;
+      
+      -- Command handled.
+      result := TCCR_CONTINUE;
+      
+    end executeReadWrite;
+    
+    ---------------------------------------------------------------------------
     -- Executes a line in a test case file
     ---------------------------------------------------------------------------
     procedure executeLine(
@@ -1119,6 +1645,21 @@ begin -- architecture
         executeLoadHex(l, pos, result);
       elsif matchStr(token.all, "fillnops") then
         executeFillNops(l, pos, result);
+      elsif matchStr(token.all, "reset") then
+        if pos <= l'length then
+          report "Garbage at end of line in test case file. Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+        end if;
+        reset <= '1';
+        cycles(1);
+        reset <= '0';
+      elsif matchStr(token.all, "wait") then
+        executeWait(l, pos, result);
+      elsif matchStr(token.all, "read") then
+        executeReadWrite(l, pos, true, result);
+      elsif matchStr(token.all, "write") then
+        executeReadWrite(l, pos, false, result);
       elsif matchStr(token.all, "init") then
         if pos <= l'length then
           report "Garbage at end of line in test case file. Aborting."
@@ -1372,8 +1913,10 @@ begin -- architecture
     sim_failure             <= '0';
     clk                     <= '0';
     
-    -- Send a couple clocks to reset.
+    -- Synchronize such that the rising edges occur aligned to 10 ns
+    -- boundaries, and send a couple clocks to reset.
     wait for 10 ns;
+    wait for 10 ps;
     cycles(2);
     
     -- Clear reset state.

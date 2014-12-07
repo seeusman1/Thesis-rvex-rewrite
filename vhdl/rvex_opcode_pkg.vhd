@@ -1230,7 +1230,7 @@ package rvex_opcode_pkg is
       syntax_imm => "ldl l#.0 = %ih[r#.%r2]                            ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_LINK,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_LOAD32,
       multiplierCtrl => MUL_CTRL_NOP
@@ -1242,7 +1242,7 @@ package rvex_opcode_pkg is
       syntax_imm => "ldw r#.%r1 = %ih[r#.%r2]                          ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_LOAD32,
       multiplierCtrl => MUL_CTRL_NOP
@@ -1254,7 +1254,7 @@ package rvex_opcode_pkg is
       syntax_imm => "ldh r#.%r1 = %ih[r#.%r2]                          ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_LOAD16S,
       multiplierCtrl => MUL_CTRL_NOP
@@ -1266,7 +1266,7 @@ package rvex_opcode_pkg is
       syntax_imm => "ldhu r#.%r1 = %ih[r#.%r2]                         ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_LOAD16U,
       multiplierCtrl => MUL_CTRL_NOP
@@ -1278,7 +1278,7 @@ package rvex_opcode_pkg is
       syntax_imm => "ldb r#.%r1 = %ih[r#.%r2]                          ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_LOAD8S,
       multiplierCtrl => MUL_CTRL_NOP
@@ -1290,7 +1290,7 @@ package rvex_opcode_pkg is
       syntax_imm => "ldbu r#.%r1 = %ih[r#.%r2]                         ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_LD_GP,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_LOAD8U,
       multiplierCtrl => MUL_CTRL_NOP
@@ -1302,7 +1302,7 @@ package rvex_opcode_pkg is
       syntax_imm => "stl %ih[r#.%r2] = l#.0                            ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_LINK,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_STORE32,
       multiplierCtrl => MUL_CTRL_NOP
@@ -1314,7 +1314,7 @@ package rvex_opcode_pkg is
       syntax_imm => "stw %ih[r#.%r2] = r#.%r1                          ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_GP,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_STORE32,
       multiplierCtrl => MUL_CTRL_NOP
@@ -1326,7 +1326,7 @@ package rvex_opcode_pkg is
       syntax_imm => "sth %ih[r#.%r2] = r#.%r1                          ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_GP,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_STORE16,
       multiplierCtrl => MUL_CTRL_NOP
@@ -1338,7 +1338,7 @@ package rvex_opcode_pkg is
       syntax_imm => "stb %ih[r#.%r2] = r#.%r1                          ",
       valid => "10",
       datapathCtrl => DP_CTRL_MEM_ST_GP,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_STORE8,
       multiplierCtrl => MUL_CTRL_NOP

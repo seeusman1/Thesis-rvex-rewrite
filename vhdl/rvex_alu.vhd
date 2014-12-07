@@ -511,7 +511,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Forward phase 2 outputs
   -----------------------------------------------------------------------------
-  alu2pl_resultAdd(S_ALU+L_ALU1) <= si(P_SEL).adderResult;
+  alu2pl_resultAdd(S_ALU+L_ALU1) <= so(P_AR).adderResult;
   
   -----------------------------------------------------------------------------
   -- Phase 2 to phase 3 forwarding
