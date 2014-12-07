@@ -327,7 +327,7 @@ begin -- architecture
       -- file is valid, but is only valid in other stages when it comes from
       -- the forwarding logic.
       gpreg2pl_readPorts(readPort).valid(stage)
-        <= '1' when stage = S_RD else forwarded;
+        <= '1' when stage = S_RD+L_RD else forwarded;
       
     end generate;
   end generate;

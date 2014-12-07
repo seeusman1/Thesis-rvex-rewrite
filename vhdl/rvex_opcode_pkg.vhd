@@ -1040,8 +1040,8 @@ package rvex_opcode_pkg is
     
     -- RFI: return from trap.
     2#00100111# => (
-      syntax_reg => "rfi r#.1 = r#.1, %bi, l#.0                        ",
-      syntax_imm => "rfi r#.1 = r#.1, %bi, l#.0                        ",
+      syntax_reg => "rfi r#.1 = r#.1, %bi                              ",
+      syntax_imm => "rfi r#.1 = r#.1, %bi                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR_SP,
       aluCtrl => ALU_CTRL_NOP,

@@ -166,16 +166,16 @@ entity rvex_pipelanes is
     -- Instruction memory interface
     ---------------------------------------------------------------------------
     -- Addresses of the syllables to fetch for each group.
-    br2imem_PCs                 : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    cxplif2imem_PCs             : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high fetch enable signal for each group.
-    br2imem_fetch               : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    cxplif2imem_fetch           : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high cancel signal for the previous fetch. This is a hint to the
     -- memory/cache that, if it would need to stall the core to fetch the
     -- previously requested opcode, it can stop the fetch and allow the core to
     -- continue.
-    br2imem_cancel              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    cxplif2imem_cancel          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Instruction bundle(s) from the instruction memory.
     imem2pl_instr               : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
@@ -289,6 +289,8 @@ architecture Behavioral of rvex_pipelanes is
   signal cxplif2pl_brkValid         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_invalUntilBR     : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_invalUntilBR     : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_imemFetch        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_imemCancel       : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_brLinkReadPort   : cxreg2pl_readPort_array(2**CFG.numLanesLog2-1 downto 0);
   signal pl2cxplif_brLinkWritePort  : pl2cxreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2br_contextPC        : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
@@ -418,7 +420,7 @@ begin -- architecture
         cfg2pl_decouple                   => cfg2any_decouple(laneGroup),
         cfg2pl_numGroupsLog2              => cfg2any_numGroupsLog2(laneGroup),
         pl2cxplif_blockReconfig           => pl2cxplif_blockReconfig(lane),
-        cxplif2pl_irq(S_MEM+1)            => cxplif2pl_irq(lane),
+        cxplif2pl_irq(S_MEM)              => cxplif2pl_irq(lane),
         cxplif2br_irqID(S_BR)             => cxplif2br_irqID(lane),
         br2cxplif_irqAck(S_BR)            => br2cxplif_irqAck(lane),
         cxplif2br_run                     => cxplif2br_run(lane),
@@ -438,9 +440,8 @@ begin -- architecture
         cxplif2pl_invalUntilBR(S_BR)      => cxplif2pl_invalUntilBR(lane),
         
         -- Instruction memory interface.
-        br2imem_PC(S_IF)                  => br2imem_PCs(laneGroup),
-        br2imem_fetch(S_IF)               => br2imem_fetch(laneGroup),
-        br2imem_cancel(S_IF+L_IF)         => br2imem_cancel(laneGroup),
+        br2cxplif_imemFetch(S_IF)         => br2cxplif_imemFetch(lane),
+        br2cxplif_imemCancel(S_IF+L_IF)   => br2cxplif_imemCancel(lane),
         imem2pl_syllable(S_IF+L_IF)       => imem2pl_instr(lane),
         imem2pl_exception(S_IF+L_IF)      => imem2pl_exception(laneGroup),
         
@@ -465,7 +466,7 @@ begin -- architecture
         -- Special register interface.
         cxplif2br_contextPC(S_IF+1)       => cxplif2br_contextPC(lane),
         cxplif2br_overridePC(S_IF+1)      => cxplif2br_overridePC(lane),
-        cxplif2pl_trapHandler(S_MEM+1)    => cxplif2pl_trapHandler(lane),
+        cxplif2pl_trapHandler(S_MEM)      => cxplif2pl_trapHandler(lane),
         br2cxplif_trapInfo(S_BR)          => br2cxplif_trapInfo(lane),
         br2cxplif_trapPoint(S_BR)         => br2cxplif_trapPoint(lane),
         br2cxplif_exDbgTrapInfo(S_BR)     => br2cxplif_exDbgTrapInfo(lane),
@@ -474,7 +475,7 @@ begin -- architecture
         pl2cxplif_rfi(S_MEM)              => pl2cxplif_rfi(lane),
         cxplif2br_extDebug(S_BR)          => cxplif2br_extDebug(lane),
         cxplif2br_handlingDebugTrap(S_BR) => cxplif2br_handlingDebugTrap(lane),
-        cxplif2pl_debugTrapEnable(S_MEM+1)=> cxplif2pl_debugTrapEnable(lane),
+        cxplif2pl_debugTrapEnable(S_MEM)  => cxplif2pl_debugTrapEnable(lane),
         cxplif2brku_breakpoints(S_BRK)    => cxplif2brku_breakpoints(lane),
         cxplif2brku_stepping(S_BRK)       => cxplif2brku_stepping(lane),
         
@@ -539,6 +540,10 @@ begin -- architecture
       br2cxplif_invalUntilBR            => br2cxplif_invalUntilBR,
       cxplif2pl_invalUntilBR            => cxplif2pl_invalUntilBR,
       
+      -- Pipelane interface: instruction memory command routing.
+      br2cxplif_imemFetch               => br2cxplif_imemFetch,
+      br2cxplif_imemCancel              => br2cxplif_imemCancel,
+      
       -- Pipelane interface: branch/link registers.
       cxplif2pl_brLinkReadPort          => cxplif2pl_brLinkReadPort,
       pl2cxplif_brLinkWritePort         => pl2cxplif_brLinkWritePort,
@@ -565,6 +570,11 @@ begin -- architecture
       cxplif2rctrl_irqAck               => cxplif2rctrl_irqAck,
       rctrl2cxplif_run                  => rctrl2cxplif_run,
       cxplif2rctrl_idle                 => cxplif2rctrl_idle,
+      
+      -- Instruction memory interface.
+      cxplif2imem_PCs                   => cxplif2imem_PCs,
+      cxplif2imem_fetch                 => cxplif2imem_fetch,
+      cxplif2imem_cancel                => cxplif2imem_cancel,
       
       -- Configuration control interface.
       cfg2cxplif_run                    => cfg2cxplif_run,

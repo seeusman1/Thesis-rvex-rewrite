@@ -341,8 +341,8 @@ package body rvex_simUtils_asDisas_pkg is
         
       else
         
-        -- Match special characters.
-        scanAndCompareSpecial(source, sourcePos, pattern, patternPos, stepOk);
+        -- Match special characters and digits.
+        scanAndCompareCharacter(source, sourcePos, pattern, patternPos, stepOk);
         if not stepOk then
           error := to_rvs("invalid token");
           return;

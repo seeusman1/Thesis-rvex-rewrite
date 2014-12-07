@@ -392,7 +392,7 @@ begin -- architecture
       
       when SET_BIT =>
         so(P_AR).bitwiseResult <= si(P_AR).op1Muxed(31 downto 0);
-        if vect2uint(si(P_AR).op2Muxed(15 downto 5)) = 0 then
+        if vect2unsigned(si(P_AR).op2Muxed(15 downto 5)) = 0 then
           so(P_AR).bitwiseResult(
             vect2uint(si(P_AR).op2Muxed(4 downto 0))
           ) <= si(P_AR).opBrMuxed;
@@ -404,7 +404,7 @@ begin -- architecture
     end case;
     
     -- Perform bit test regardless of selected operation.
-    if vect2uint(si(P_AR).op2Muxed(15 downto 5)) = 0 then
+    if vect2unsigned(si(P_AR).op2Muxed(15 downto 5)) = 0 then
       so(P_AR).bitTestResult <= si(P_AR).op1Muxed(
         vect2uint(si(P_AR).op2Muxed(4 downto 0))
       );
@@ -500,7 +500,7 @@ begin -- architecture
     -- Compare unit 2
     -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     -- Compare operand 2 with 0.
-    if vect2uint(si(P_AR).op2Muxed(31 downto 0)) = 0 then
+    if vect2unsigned(si(P_AR).op2Muxed(31 downto 0)) = 0 then
       so(P_AR).cmp2Result <= '1';
     else
       so(P_AR).cmp2Result <= '0';

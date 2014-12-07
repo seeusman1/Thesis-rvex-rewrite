@@ -227,7 +227,7 @@ begin -- architecture
   
   -- Setup the trap output to the pipeline.
   memu2pl_trap(S_MEM) <= (
-    active => misalignedAccess(S_MEM),
+    active => misalignedAccess(S_MEM) and (ctrl(S_MEM).readEnable or ctrl(S_MEM).writeEnable) and pl2memu_valid(S_MEM),
     cause  => rvex_trap(RVEX_TRAP_MISALIGNED_ACCESS),
     arg    => pl2memu_opAddr(S_MEM)
   );

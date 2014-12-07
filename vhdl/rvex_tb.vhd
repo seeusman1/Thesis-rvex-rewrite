@@ -174,7 +174,7 @@ use work.rvex_ctrlRegs_pkg.all;
 -- rctrl <ctxt> run
 --   Asserts the run flag for the specified context.
 -- 
--- rctrl <ctxt> assert <idle|done|irq> <low|high>
+-- rctrl <ctxt> check <idle|done|irq> <low|high>
 --   Ensures that the given context is (not) idle/done, fails otherwise.
 -- 
 -------------------------------------------------------------------------------
@@ -483,7 +483,6 @@ begin -- architecture
     -- Locals/shorthands.
     variable lanePCs            : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     variable fetch              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
-    variable revDecouple        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     variable fault              : std_logic;
     variable flags              : rvex_data_type;
     variable result             : rvex_data_type;
@@ -505,20 +504,14 @@ begin -- architecture
         -- Determine the active bundle program counter and fetch for each lane
         -- group.
         for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 loop
-          if rv2mem_decouple(laneGroup) = '1' or laneGroup = 2**CFG.numLaneGroupsLog2-1 then
-            lanePCs(group2firstLane(laneGroup, CFG)) := rv2imem_PCs(laneGroup);
-            fetch(group2firstLane(laneGroup, CFG)) := rv2imem_fetch(laneGroup);
-          else
-            lanePCs(group2firstLane(laneGroup, CFG)) := lanePCs(group2firstLane(laneGroup+1, CFG));
-            fetch(group2firstLane(laneGroup, CFG)) := fetch(group2firstLane(laneGroup+1, CFG));
-          end if;
+          lanePCs(group2firstLane(laneGroup, CFG)) := rv2imem_PCs(laneGroup);
+          fetch(group2firstLane(laneGroup, CFG)) := rv2imem_fetch(laneGroup);
         end loop;
         
-        -- Go through the lane groups in increasing order and increment by 4
-        -- for each coupled lane.
-        revDecouple := rv2mem_decouple(2**CFG.numLaneGroupsLog2-2 downto 0) & "1";
+        -- Go through the lanes within the lane groups in increasing order and
+        -- increment by 4 for each coupled lane.
         for lane in 1 to 2**CFG.numLanesLog2-1 loop
-          if lane2group(lane, CFG) = lane2group(lane-1, CFG) or revDecouple(lane2group(lane, CFG)) = '0' then
+          if lane2group(lane, CFG) = lane2group(lane-1, CFG) then
             lanePCs(lane) := std_logic_vector(vect2unsigned(lanePCs(lane-1)) + 4);
             fetch(lane) := fetch(lane-1);
           end if;
@@ -1565,13 +1558,15 @@ begin -- architecture
         wait for 0 ns;
         stim2mem_readEnable <= '0';
         stim2mem_writeEnable <= '0';
+        stim2mem_writeMask <= (others => '0');
+        stim2mem_writeData <= (others => '0');
         wait for 0 ns;
         if isRead then
           if mem2stim_readData /= value then
             report "Did not read the expected value for 'read' command '" & l
                  & "'; actual value was " & rvs_hex(mem2stim_readData, 8) & "."
               severity warning;
-            result := TCCR_ABORT;
+            result := TCCR_FAIL;
             return;
           end if;
         end if;
@@ -1591,12 +1586,14 @@ begin -- architecture
         cycles(1);
         dbg2rv_readEnable <= '0';
         dbg2rv_writeEnable <= '0';
+        dbg2rv_writeMask <= (others => '0');
+        dbg2rv_writeData <= (others => '0');
         if isRead then
           if rv2dbg_readData /= value then
             report "Did not read the expected value for 'read' command '" & l
                  & "'; actual value was " & rvs_hex(rv2dbg_readData, 8) & "."
               severity warning;
-            result := TCCR_ABORT;
+            result := TCCR_FAIL;
             return;
           end if;
         end if;
@@ -1930,7 +1927,8 @@ begin -- architecture
     report "Test suite complete: "
          & integer'image(testCount) & " test(s) run of which "
          & integer'image(failedTests) & " failed; "
-         & integer'image(abortedTests) & " test case(s) aborted due to simulation errors."
+         & integer'image(abortedTests) & " test case(s) aborted due to "
+         & "simulation errors or incompatible CFG vector."
       severity failure;
     
     wait;

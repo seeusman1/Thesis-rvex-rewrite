@@ -309,7 +309,7 @@ entity rvex_pipelane is
     
     -- External interrupt request signal, active high. This is already masked
     -- by the interrupt enable bit in the control register.
-    cxplif2pl_irq               : in  std_logic_vector(S_MEM+1 to S_MEM+1);
+    cxplif2pl_irq               : in  std_logic_vector(S_MEM to S_MEM);
     
     -- External interrupt identification. Guaranteed to be loaded in the trap
     -- argument register in the same clkEn'd cycle where irqAck is high.
@@ -362,17 +362,14 @@ entity rvex_pipelane is
     ---------------------------------------------------------------------------
     -- Instruction memory interface
     ---------------------------------------------------------------------------
-    -- Address of the bundle to fetch.
-    br2imem_PC                  : out rvex_address_array(S_IF to S_IF);
-    
     -- Active high fetch enable signal.
-    br2imem_fetch               : out std_logic_vector(S_IF to S_IF);
+    br2cxplif_imemFetch         : out std_logic_vector(S_IF to S_IF);
     
     -- Active high cancel signal for the previous fetch. This is a hint to the
     -- memory/cache that, if it would need to stall the core to fetch the
     -- previously requested opcode, it can stop the fetch and allow the core to
     -- continue.
-    br2imem_cancel              : out std_logic_vector(S_IF+L_IF to S_IF+L_IF);
+    br2cxplif_imemCancel        : out std_logic_vector(S_IF+L_IF to S_IF+L_IF);
     
     -- Syllable from the instruction memory.
     imem2pl_syllable            : in  rvex_syllable_array(S_IF+L_IF to S_IF+L_IF);
@@ -436,7 +433,7 @@ entity rvex_pipelane is
     -- Current trap handler. When the application has marked that it is not
     -- currently capable of accepting a trap, this is set to the panic handler
     -- register instead.
-    cxplif2pl_trapHandler       : in  rvex_address_array(S_MEM+1 to S_MEM+1);
+    cxplif2pl_trapHandler       : in  rvex_address_array(S_MEM to S_MEM);
     
     -- Trap information for the trap currently handled by the branch unit, if
     -- any. We can commit this in the branch stage already, because it is
@@ -474,7 +471,7 @@ entity rvex_pipelane is
     
     -- Current value of the debug trap enable bit in the control register, or'd
     -- with the current value of the external debug flag.
-    cxplif2pl_debugTrapEnable   : in  std_logic_vector(S_MEM+1 to S_MEM+1);
+    cxplif2pl_debugTrapEnable   : in  std_logic_vector(S_MEM to S_MEM);
     
     -- Current breakpoint information.
     cxplif2brku_breakpoints     : in  cxreg2pl_breakpoint_info_array(S_BRK to S_BRK);
@@ -1044,10 +1041,9 @@ begin -- architecture
         -- Configuration inputs.
         cfg2br_numGroupsLog2            => cfg2pl_numGroupsLog2,
         
-        -- Next operation outputs to IMEM.
-        br2imem_PC(S_IF)                => br2imem_PC(S_IF),
-        br2imem_fetch(S_IF)             => br2imem_fetch(S_IF),
-        br2imem_cancel(S_IF+L_IF)       => br2imem_cancel(S_IF+L_IF),
+        -- Next operation outputs to IMEM through routing in cxplif.
+        br2cxplif_imemFetch(S_IF)       => br2cxplif_imemFetch(S_IF),
+        br2cxplif_imemCancel(S_IF+L_IF) => br2cxplif_imemCancel(S_IF+L_IF),
         
         -- Next operation outputs to coupled pipelanes and the context
         -- registers.
@@ -1096,19 +1092,14 @@ begin -- architecture
     br2pl_rfi(S_BR) <= RVEX_UNDEF;
     br2pl_trap(S_BR) <= TRAP_INFO_NONE;
     
-    -- Set branch unit outputs going to the instruction memory to hi-Z, so they
-    -- can be easily merged with the signals from the other pipelanes in the
-    -- group.
-    br2imem_PC(S_IF)                    <= (others => 'Z');
-    br2imem_fetch(S_IF)                 <= 'Z';
-    br2imem_cancel(S_IF+L_IF)           <= 'Z';
-    
     -- Set the signals going to the context-pipelane interface to undefined.
     br2cxplif_PC(S_IF)                  <= (others => RVEX_UNDEF);
     br2cxplif_limmValid(S_IF)           <= RVEX_UNDEF;
     br2cxplif_valid(S_IF)               <= RVEX_UNDEF;
     br2cxplif_brkValid(S_IF)            <= RVEX_UNDEF;
     br2cxplif_invalUntilBR(S_BR)        <= RVEX_UNDEF;
+    br2cxplif_imemFetch(S_IF)           <= RVEX_UNDEF;
+    br2cxplif_imemCancel(S_IF+L_IF)     <= RVEX_UNDEF;
     br2cxplif_irqAck(S_BR)              <= RVEX_UNDEF;
     br2cxplif_trapInfo(S_BR)            <= TRAP_INFO_UNDEF;
     br2cxplif_trapPoint(S_BR)           <= (others => RVEX_UNDEF);
@@ -1497,7 +1488,7 @@ begin -- architecture
     pl2limm_valid(S_LIMM)  <= s(S_LIMM).limmValid;
     pl2limm_enable(S_LIMM) <= s(S_LIMM).dp.c.isLIMMH;
     pl2limm_target(S_LIMM) <= s(S_LIMM).syllable(25);
-    pl2limm_data(S_LIMM)   <= s(S_LIMM).syllable(rvex_limmh_type'range);
+    pl2limm_data(S_LIMM)   <= s(S_LIMM).syllable(24 downto 2);
     
     -- Use the flag as LIMMH error flag.
     flag := limm2pl_error(S_LIMM);
@@ -1697,10 +1688,10 @@ begin -- architecture
       pl2br_trapToHandlePoint(S_BR)   <= s(S_BR).br.trapPoint;
       pl2br_trapToHandleHandler(S_BR) <= s(S_BR).br.trapHandler;
       
-      -- Copy the RFI flag into the pipeline and send it to the control
-      -- registers in the memory phase.
+      -- Copy the RFI flag into the pipeline. This will be forwarded in the
+      -- S_MEM phase, but only if there have not been traps yet, so this is
+      -- forwarded after trap invalidation has been evaluated.
       s(S_BR).br.RFI := br2pl_rfi(S_BR);
-      pl2cxplif_rfi(S_MEM) <= s(S_MEM).br.RFI;
       
       -- Copy the trap output from the branch unit into the pipeline.
       s(S_BR).tr.trap := s(S_BR).tr.trap & br2pl_trap(S_BR);
@@ -1835,14 +1826,17 @@ begin -- architecture
     -- Handle traps and instantiate invalidation logic related stuff
     ---------------------------------------------------------------------------
     -- Merge the debug traps with the regular traps, giving priority to the
-    -- debug traps, if debug traps are enabled.
-    if cxplif2pl_debugTrapEnable(S_MEM+1) = '1' then
-      s(S_MEM+1).tr.trap := s(S_MEM+1).tr.debugTrap & s(S_MEM+1).tr.trap;
+    -- debug traps, if debug traps are enabled. This is done in the S_MEM
+    -- stage, such that when debugs are disabled by a memory write, they become
+    -- disabled from the instruction after the write onwards.
+    if cxplif2pl_debugTrapEnable(S_MEM) = '1' then
+      s(S_MEM).tr.trap := s(S_MEM).tr.debugTrap & s(S_MEM).tr.trap;
     end if;
     
-    -- Append external interrupt trap in S_MEM+1 stage.
-    if cxplif2pl_irq(S_MEM+1) = '1' then
-      s(S_MEM+1).tr.trap := s(S_MEM+1).tr.trap & (
+    -- Append external interrupt trap in S_MEM stage, for the same reason as
+    -- the debug traps.
+    if cxplif2pl_irq(S_MEM) = '1' then
+      s(S_MEM).tr.trap := s(S_MEM).tr.trap & (
         active => '1',
         cause  => rvex_trap(RVEX_TRAP_EXT_INTERRUPT),
         arg    => (others => '0') -- Argument is set in the exact cycle where
@@ -1850,8 +1844,10 @@ begin -- architecture
     end if;
     
     -- Copy the current trap handler into the pipeline stage where it is valid,
-    -- so it is properly forwarded to the branch unit.
-    s(S_MEM+1).tr.trapHandler := cxplif2pl_trapHandler(S_MEM+1);
+    -- so it is properly forwarded to the branch unit. This is the S_MEM stage
+    -- again, because we want changes to the control registers to take effect
+    -- from the instruction immediately following the change.
+    s(S_MEM).tr.trapHandler := cxplif2pl_trapHandler(S_MEM);
     
     -- Connect with the trap routing logic.
     for stage in S_FIRST to S_LTRP loop
@@ -1902,11 +1898,19 @@ begin -- architecture
     pl2cxplif_idle          <= idle;
     
     ---------------------------------------------------------------------------
+    -- Connect RFI restore command signal.
+    ---------------------------------------------------------------------------
+    -- This must be done after trap handling because context restoring should
+    -- not be done when a trap is detected in this stage.
+    if HAS_BR then
+      pl2cxplif_rfi(S_MEM) <= s(S_MEM).br.RFI and s(S_MEM).valid;
+    end if;
+      
+    ---------------------------------------------------------------------------
     -- Connect pipeline to memory unit command
     ---------------------------------------------------------------------------
     -- This must be done after trap handling because the memory operation
-    -- should not be issued when a trap is detected in this stage. inb4
-    -- critical path here.
+    -- should not be issued when a trap is detected in this stage.
     if HAS_MEM then
       
       pl2memu_valid(S_MEM)  <= s(S_MEM).valid;
@@ -1919,6 +1923,29 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Handle register writes and forwarding
     ---------------------------------------------------------------------------
+    -- Note on forward enable signals using si(stage).valid (si instead of s):
+    -- we do this in order to not make the forward enable path unnecessarily
+    -- long. This speed optimization only affects the case where stages are
+    -- invalidated due to a branch, because in this case there will not be a
+    -- full pipeline flush. In the trivial case where s is used, any forwarding
+    -- from instructions currently executing before the branch stage, which
+    -- are disabled by the branch, will not be forwarded to IF due to
+    -- s(stage).valid going low (marked with a * in the diagram). In the
+    -- optimized case, these signals would be (incorrectly) forwarded. This is
+    -- not a problem as long as no register forwarding occurs to the S_IF
+    -- stage AND stages are never invalidated individually, but always all the
+    -- way back to the S_IF stage.
+    --
+    -- .--.--.--.--.--.--.--.
+    -- |IF|..|..|BR|..|..|..|    (branch occurs in this instruction)
+    -- '--+--+--+|-+--+--+--+--.
+    --    |IF|..||*|  |  |  |  |    (disabled due to branch, signals from * still forwarded)
+    --    '--+--+|-+--+--+--+--+--.
+    --       |IF||*|  |  |  |  |  |    (disabled due to branch, signals from * still forwarded)
+    --       '--+v-+--+--+--+--+--+--.
+    --          |IF|..|..|BR|..|..|..|    (instruction at branch target)
+    --          '--'--'--'--'--'--'--'
+    
     -- Drive the general purpose register data and forward enable signals.
     for stage in S_FIRST to S_WB+L_WB loop
       
@@ -1929,7 +1956,7 @@ begin -- architecture
         <= s(stage).dp.res;
       
       pl2gpreg_writePort.forwardEnable(stage)
-        <= s(stage).dp.resValid;
+        <= s(stage).dp.resValid and si(stage).valid; -- See note above.
       
     end loop;
     
@@ -1942,11 +1969,13 @@ begin -- architecture
       pl2cxplif_brLinkWritePort.linkData(stage)
         <= s(stage).dp.res;
       
-      pl2cxplif_brLinkWritePort.brForwardEnable(stage)
-        <= s(stage).dp.resBrValid;
+      for b in rvex_brRegData_type'range loop
+        pl2cxplif_brLinkWritePort.brForwardEnable(stage)(b)
+          <= s(stage).dp.resBrValid(b) and si(stage).valid; -- See note above.
+      end loop;
       
       pl2cxplif_brLinkWritePort.linkForwardEnable(stage)
-        <= s(stage).dp.resLinkValid;
+        <= s(stage).dp.resLinkValid and si(stage).valid; -- See note above.
       
     end loop;
     
@@ -1984,23 +2013,23 @@ begin -- architecture
       if idle = '1' then
         rvs_append(debug, "idle; ");
       end if;
-      if (s(S_LAST).valid = '1')
+      if s(S_LAST).tr.trap.active = '1' then
+        rvs_append(debug, prettyPrintTrap(s(S_LAST).tr.trap));
+        rvs_append(debug, " occurred at ");
+      elsif (s(S_LAST).valid = '1')
         or ((s(S_LAST).limmValid = '1') and (s(S_LAST).dp.c.isLIMMH = '1'))
       then
         rvs_append(debug, "committing ");
         if s(S_LAST).brkValid = '0' then
           rvs_append(debug, "(no brkpts) ");
         end if;
-      elsif s(S_LAST).tr.trap.active = '1' then
-        rvs_append(debug, prettyPrintTrap(s(S_LAST).tr.trap));
-        rvs_append(debug, " occurred at ");
       else
         rvs_append(debug, "ignoring ");
       end if;
       
       -- Display PC for the current syllable.
       rvs_append(debug, rvs_hex(s(S_LAST).lanePC, 8));
-      rvs_append(debug, " = ");
+      rvs_append(debug, " => ");
       
       -- Append disassembly.
       if HAS_BR then
@@ -2095,7 +2124,7 @@ begin -- architecture
         := s(S_WB).dp.resValid and s(S_WB).valid;
       
       -- Display information about the general purpose register write.
-      if s(S_WB).gpRegWriteRequested = '1' then
+      if s(S_LAST).gpRegWriteRequested = '1' then
         if flag = '0' then
           flag := '1';
         else
@@ -2110,7 +2139,7 @@ begin -- architecture
         := s(S_SWB).dp.resLinkValid and s(S_SWB).valid;
       
       -- Display information about the link register write.
-      if s(S_WB).linkRegWriteRequested = '1' then
+      if s(S_LAST).linkRegWriteRequested = '1' then
         if flag = '0' then
           flag := '1';
         else
@@ -2120,15 +2149,15 @@ begin -- architecture
         rvs_append(debug, rvs_hex(s(S_LAST).dp.res, 8));
       end if;
       
-      -- Show link register operations.
+      -- Show branch register operations.
       for b in rvex_brRegData_type'range loop
         
-        -- Save whether we're writing to this link register.
+        -- Save whether we're writing to this branch register.
         s(S_SWB).brRegWriteRequested(b)
           := s(S_SWB).dp.resBrValid(b) and s(S_SWB).valid;
         
-        -- Display information about the link register write.
-        if s(S_WB).brRegWriteRequested(b) = '1' then
+        -- Display information about the branch register write.
+        if s(S_LAST).brRegWriteRequested(b) = '1' then
           if flag = '0' then
             flag := '1';
           else

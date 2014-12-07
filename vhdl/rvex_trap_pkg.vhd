@@ -49,6 +49,7 @@ use IEEE.numeric_std.all;
 
 library work;
 use work.rvex_pkg.all;
+use work.rvex_utils_pkg.all;
 use work.rvex_intIface_pkg.all;
 use work.rvex_pipeline_pkg.all;
 
@@ -157,6 +158,9 @@ package rvex_trap_pkg is
   -- External interrupt trap.
   constant RVEX_TRAP_EXT_INTERRUPT      : natural := 7;
   
+  -- Stop trap.
+  constant RVEX_TRAP_STOP               : natural := 8;
+  
   -- Debugging traps are positioned at the end of the range. We reserve 8 slots
   -- so the debug trap signal is easy to decode.
   constant RVEX_TRAP_SOFT_DEBUG_0       : natural := 2**RVEX_TRAP_CAUSE_SIZE - 8;
@@ -254,6 +258,14 @@ package rvex_trap_pkg is
       isInterrupt => '1'
     ),
     
+    -- Stop trap.
+    -- Argument: unused.
+    RVEX_TRAP_STOP => (
+      name => "trap %c: stop request 2@, address/PC %x           ",
+      isDebugTrap => '1',
+      isInterrupt => '0'
+    ),
+    
     -- Debug traps.
     RVEX_TRAP_SOFT_DEBUG_0 => (
       name => "trap %c: software debug trap 0@, address/PC %x    ",
@@ -312,6 +324,9 @@ package rvex_trap_pkg is
   -- trap_info_type record.
   function rvex_isInterruptTrap(t: trap_info_type) return std_logic;
   
+  -- Returns '1' only when the trap cause is set to RVEX_TRAP_STOP.
+  function rvex_isStopTrap(t: trap_info_type) return std_logic;
+  
 end rvex_trap_pkg;
 
 --=============================================================================
@@ -332,21 +347,31 @@ package body rvex_trap_pkg is
   -- Shorthand for converting a natural trap ID to an rvex_trap_type.
   function rvex_trap(t: natural) return rvex_trap_type is
   begin
-    return std_logic_vector(to_unsigned(t, RVEX_TRAP_CAUSE_SIZE));
+    return uint2vect(t, RVEX_TRAP_CAUSE_SIZE);
   end rvex_trap;
   
   -- Shorthand for extracting the isDebugTrap signal from an (encoded)
   -- trap_info_type record.
   function rvex_isDebugTrap(t: trap_info_type) return std_logic is
   begin
-    return TRAP_TABLE(to_integer(unsigned(t.cause))).isDebugTrap;
+    return TRAP_TABLE(vect2uint(t.cause)).isDebugTrap;
   end rvex_isDebugTrap;
   
   -- Shorthand for extracting the isInterrupt signal from an (encoded)
   -- trap_info_type record.
   function rvex_isInterruptTrap(t: trap_info_type) return std_logic is
   begin
-    return TRAP_TABLE(to_integer(unsigned(t.cause))).isInterrupt;
+    return TRAP_TABLE(vect2uint(t.cause)).isInterrupt;
   end rvex_isInterruptTrap;
+  
+  -- Returns '1' only when the trap cause is set to RVEX_TRAP_STOP.
+  function rvex_isStopTrap(t: trap_info_type) return std_logic is
+  begin
+    if vect2uint(t.cause) = RVEX_TRAP_STOP then
+      return '1';
+    else
+      return '0';
+    end if;
+  end rvex_isStopTrap;
   
 end rvex_trap_pkg;

@@ -157,6 +157,18 @@ entity rvex_contextPipelaneIFace is
     cxplif2pl_invalUntilBR      : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
+    -- Pipelane interface: instruction memory command routing
+    ---------------------------------------------------------------------------
+    -- Active high fetch enable signal from each branch unit.
+    br2cxplif_imemFetch         : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Active high cancel signal for the previous fetch. This is a hint to the
+    -- memory/cache that, if it would need to stall the core to fetch the
+    -- previously requested opcode, it can stop the fetch and allow the core to
+    -- continue.
+    br2cxplif_imemCancel        : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
     -- Pipelane interface: branch/link registers
     ---------------------------------------------------------------------------
     -- These signals are array'd outside this entity and contain pipeline
@@ -251,6 +263,21 @@ entity rvex_contextPipelaneIFace is
     
     -- Active high idle output.
     cxplif2rctrl_idle           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Instruction memory interface
+    ---------------------------------------------------------------------------
+    -- Addresses of the syllables to fetch for each group.
+    cxplif2imem_PCs             : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Active high fetch enable signal for each group.
+    cxplif2imem_fetch           : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Active high cancel signal for the previous fetch. This is a hint to the
+    -- memory/cache that, if it would need to stall the core to fetch the
+    -- previously requested opcode, it can stop the fetch and allow the core to
+    -- continue.
+    cxplif2imem_cancel          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Configuration control interface
@@ -412,6 +439,9 @@ architecture Behavioral of rvex_contextPipelaneIFace is
   -- mux and the broadcast block. The *_mux named signals route from the
   -- context-to-group mux to the broadcast block.
   --
+  -- Not depicted is the interconnect from the *_arb signals to the instruciton
+  -- memory.
+  --
   -----------------------------------------------------------------------------
   -- Arbitrator outputs
   -----------------------------------------------------------------------------
@@ -497,6 +527,8 @@ begin -- architecture
     variable valid_v            : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable brkValid_v         : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable invalUntilBR_v     : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable imemFetch_v        : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable imemCancel_v       : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable brLinkWritePort_v  : pl2cxreg_writePort_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     variable trapPoint_v        : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     variable trapInfo_v         : trap_info_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -544,6 +576,8 @@ begin -- architecture
       valid_v(laneGroup)            := br2cxplif_valid(selectedLane);
       brkValid_v(laneGroup)         := br2cxplif_brkValid(selectedLane);
       invalUntilBR_v(laneGroup)     := br2cxplif_invalUntilBR(selectedLane);
+      imemFetch_v(laneGroup)        := br2cxplif_imemFetch(selectedLane);
+      imemCancel_v(laneGroup)       := br2cxplif_imemCancel(selectedLane);
       trapInfo_v(laneGroup)         := br2cxplif_trapInfo(selectedLane);
       trapPoint_v(laneGroup)        := br2cxplif_trapPoint(selectedLane);
       exDbgTrapInfo_v(laneGroup)    := br2cxplif_exDbgTrapInfo(selectedLane);
@@ -648,13 +682,15 @@ begin -- architecture
           valid_v(groupA)        := valid_v(groupB);
           brkValid_v(groupA)     := brkValid_v(groupB);
           invalUntilBR_v(groupA) := invalUntilBR_v(groupB);
+          imemFetch_v(groupA)    := imemFetch_v(groupB);
+          imemCancel_v(groupA)   := imemCancel_v(groupB);
           trapInfo_v(groupA)     := trapInfo_v(groupB);
           trapPoint_v(groupA)    := trapPoint_v(groupB);
           exDbgTrapInfo_v(groupA):= exDbgTrapInfo_v(groupB);
           stop_v(groupA)         := stop_v(groupB);
           rfi_v(groupA)          := rfi_v(groupB);
           
-          -- Override the lane PC bit for this level appropriately.
+          -- Override the PC bits for this level appropriately.
           index := level + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + SYLLABLE_SIZE_LOG2B;
           lanePC_v(groupA)(index) := '0';
           lanePC_v(groupB)(index) := '1';
@@ -732,7 +768,7 @@ begin -- architecture
       end loop;
     end if;
     
-    -- Drive output signals.
+    -- Drive *_arb output signals.
     blockReconfig_arb   <= blockReconfig_v;
     irqAck_arb          <= irqAck_v;
     idle_arb            <= idle_v;
@@ -748,6 +784,18 @@ begin -- architecture
     exDbgTrapInfo_arb   <= exDbgTrapInfo_v;
     stop_arb            <= stop_v;
     rfi_arb             <= rfi_v;
+    
+    -- Drive instruction memory output signals.
+    cxplif2imem_PCs     <= lanePC_v;
+    cxplif2imem_fetch   <= imemFetch_v;
+    cxplif2imem_cancel  <= imemCancel_v;
+    
+    -- Override the LSBs of the PC with zero to force alignment. They should
+    -- be aligned anyway though.
+    for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+      cxplif2imem_PCs(laneGroup)(GROUP_INSTR_SIZE_LOG2B-1 downto 0)
+        <= (others => '0');
+    end loop;
     
   end process;
   

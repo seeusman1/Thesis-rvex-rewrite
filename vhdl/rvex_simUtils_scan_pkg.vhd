@@ -78,8 +78,8 @@ package rvex_simUtils_scanner_pkg is
     ok    : out boolean
   );
   
-  -- Compares and scans a single special character.
-  procedure scanAndCompareSpecial(
+  -- Compares and scans a single special character or digit.
+  procedure scanAndCompareCharacter(
     line1 : in string;
     pos1  : inout positive;
     line2 : in string;
@@ -198,9 +198,9 @@ package body rvex_simUtils_scanner_pkg is
   end scanAndCompareIdentifier;
   
   -----------------------------------------------------------------------------
-  -- Compares and scans a single special character
+  -- Compares and scans a single character
   -----------------------------------------------------------------------------
-  procedure scanAndCompareSpecial(
+  procedure scanAndCompareCharacter(
     line1 : in string;
     pos1  : inout positive;
     line2 : in string;
@@ -209,8 +209,8 @@ package body rvex_simUtils_scanner_pkg is
   ) is
   begin
     
-    -- Make sure that a special character is present on both lines.
-    if (not isSpecialChar(line1(pos1))) or (not isSPecialChar(line2(pos2))) then
+    -- Make sure that a normal character is present on both lines.
+    if isWhitespaceChar(line1(pos1)) or isWhitespaceChar(line2(pos2)) then
       ok := false;
       return;
     end if;
@@ -232,7 +232,7 @@ package body rvex_simUtils_scanner_pkg is
     -- Success.
     ok := true;
     
-  end scanAndCompareSpecial;
+  end scanAndCompareCharacter;
   
   -----------------------------------------------------------------------------
   -- Attempts to scan a numeric value (0xHEX and decimal are allowed)

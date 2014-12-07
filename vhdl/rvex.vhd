@@ -284,19 +284,14 @@ entity rvex is
     -- bit is low, the pipelane group is a slave to the first higher-indexed
     -- group which has a high decouple bit. In such a case, the following
     -- interfacing rules apply:
-    --  - The signals from the rvex to the memories from all groups with
-    --    decouple set low must be ignored; only the highest indexed pipelane
-    --    group in a core issues commands to the memories.
-    --  - When multiple pipelane groups work together, the instruction memory
-    --    must provide syllables to all pipelanes in the group, sending the
-    --    first syllable of a bundle to the lower indexed pipelane (groups).
-    --    For example, when pipelanes 0 through 3 are working together and the
-    --    group is requesting the instruction at 0x12345670, the instruction
-    --    memory must provide mem(0x12345670) to pipelane 0, mem(0x12345674) to
-    --    pipelane 1, mem(0x12345678) to pipelane 2 and mem(0x1234567C) to
-    --    pipelane 3.
-    --  - There are no such restrictions on the data memory; the data memory
-    --    read value is ignored by pipelane groups with decouple set to 0.
+    --  - The signals from the rvex to the data memory from all groups with
+    --    decouple set low may be ignored; only the highest indexed pipelane
+    --    group in a core issues commands to the data memory.
+    --  - All groups will issue instruction memory read commands regardless of
+    --    decouple state. However, coupled groups will always make aligned
+    --    accesses. In other words, you could for example only use the PC from
+    --    the lowest indexed pipelane group just make wider memory accesses to
+    --    deliver all the syllables.
     --  - The memories must provide equal stall and blockReconfig signals to
     --    coupled pipelane groups or behavior will be undefined.
     --  - The memories must provide equal stall signals to coupled pipelane
@@ -668,9 +663,9 @@ begin -- architecture
       cxplif2rctrl_idle             => rv2rctrl_idle,
       
       -- Instruction memory interface.
-      br2imem_PCs                   => rv2imem_PCs,
-      br2imem_fetch                 => rv2imem_fetch,
-      br2imem_cancel                => rv2imem_cancel,
+      cxplif2imem_PCs               => rv2imem_PCs,
+      cxplif2imem_fetch             => rv2imem_fetch,
+      cxplif2imem_cancel            => rv2imem_cancel,
       imem2pl_instr                 => imem2rv_instr,
       imem2pl_exception             => imem2pl_exception,
       

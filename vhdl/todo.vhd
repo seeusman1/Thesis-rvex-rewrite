@@ -80,8 +80,8 @@ use IEEE.std_logic_1164.all;
 -- [x] Port general purpose register file from current rvex design to the code
 --     style of the new design and add the debug bus interface and forwarding
 --     to it.
--- [ ] Make a testbench for the processor which accepts a bunch of test cases
---     with assembly input and a set of expected memory accesses.
+-- [.] Make a testbench for the processor which accepts a bunch of test cases
+--     with assembly input and a set of expected memory accesses. (mostly done)
 -- [ ] Make a lot of those test cases.
 -- [ ] Debug core.
 -- [ ] Make synthesizable standalone core design to synthesize and test on the

@@ -107,11 +107,10 @@ entity rvex_br is
     -- The PC for the current instruction, as chosen by the active branch unit
     -- within the group. The PC is distributed by the context-pipelane
     -- interface block so all coupled pipelanes have it.
-    br2imem_PC                  : out rvex_address_array(S_IF to S_IF);
     br2cxplif_PC                : out rvex_address_array(S_IF to S_IF);
     
     -- Whether an instruction fetch is being initiated or not.
-    br2imem_fetch               : out std_logic_vector(S_IF to S_IF);
+    br2cxplif_imemFetch         : out std_logic_vector(S_IF to S_IF);
     br2cxplif_limmValid         : out std_logic_vector(S_IF to S_IF);
     
     -- Whether the next instruction is valid and should be committed or not.
@@ -123,7 +122,7 @@ entity rvex_br is
     
     -- Whether or not pipeline stages S_IF+1 to S_BR-1 should be invalidated
     -- due to a branch or the core stopping.
-    br2imem_cancel              : out std_logic_vector(S_IF+L_IF to S_IF+L_IF);
+    br2cxplif_imemCancel        : out std_logic_vector(S_IF+L_IF to S_IF+L_IF);
     br2cxplif_invalUntilBR      : out std_logic_vector(S_BR to S_BR);
     
     ---------------------------------------------------------------------------
@@ -237,6 +236,10 @@ architecture Behavioral of rvex_br is
   -- after a halt can be detected.
   signal run, run_r             : std_logic_vector(S_BR to S_BR);
   
+  -- Stop flags. When stop or stop_r are active, instruction fetching should be
+  -- disabled, and if stop_r is active, a stop trap should be generated.
+  signal stop, stop_r           : std_logic_vector(S_BR to S_BR);
+  
   -- Breakpoint enable signal for the next instruction. Goes low for the first
   -- valid instruction after leaving a debug trap.
   signal brkptEnable            : std_logic_vector(S_IF to S_IF);
@@ -254,7 +257,6 @@ architecture Behavioral of rvex_br is
   constant NEXT_PC_TRAP_RETURN  : nextPCsrc_type := "100"; -- Trap return address (trap point register)
   constant NEXT_PC_BR_RELATIVE  : nextPCsrc_type := "101"; -- PC+1+offset
   constant NEXT_PC_BR_LINK      : nextPCsrc_type := "110"; -- Link register
-  constant NEXT_PC_STOP         : nextPCsrc_type := "111"; -- PC(BR-1)
   type nextPCsrc_array is array (natural range <>) of nextPCsrc_type;
   signal nextPCsrc              : nextPCsrc_array(S_BR to S_BR);
   
@@ -299,14 +301,16 @@ begin -- architecture
   -- Load the incoming run signal into a local signal for convenience.
   run(S_BR) <= cxplif2br_run;
   
-  -- Generate the register used to delay run with.
-  run_reg_gen: process (clk) is
+  -- Generate the registers used to delay run and stop with.
+  run_stop_reg_gen: process (clk) is
   begin
     if rising_edge(clk) then
       if reset = '1' then
         run_r(S_BR) <= '0';
+        stop_r(S_BR) <= '0';
       elsif clkEn = '1' and stall = '0' then
         run_r(S_BR) <= run(S_BR);
+        stop_r(S_BR) <= stop(S_BR);
       end if;
     end if;
   end process;
@@ -332,7 +336,7 @@ begin -- architecture
   -- Determine next PC source and control signal states
   -----------------------------------------------------------------------------
   det_branch: process (
-    stall, ctrl, run, run_r, cxplif2br_irqID,
+    stall, ctrl, run, run_r, stop_r, cxplif2br_irqID,
     pl2br_opBr,
     pl2br_trapPending, cxplif2br_overridePC,
     pl2br_trapToHandleInfo, pl2br_trapToHandlePoint,
@@ -351,6 +355,7 @@ begin -- architecture
     -- Set special instruction flags low by default.
     br2pl_rfi(S_BR) <= '0';
     br2cxplif_stop(S_BR) <= '0';
+    stop(S_BR) <= '0';
     
     -- Don't clear the breakpoint enable register by default.
     brkptEnableClear(S_BR) <= '0';
@@ -383,18 +388,35 @@ begin -- architecture
         simReason <= to_rvs("halting, deferring trap");
         -- pragma translate_on
         
-      elsif cxplif2br_extDebug(S_BR) = '1' and rvex_isDebugTrap(pl2br_trapToHandleInfo(S_BR)) = '1' then
+      elsif (rvex_isDebugTrap(pl2br_trapToHandleInfo(S_BR)) = '1' and cxplif2br_extDebug(S_BR) = '1')
+         or (rvex_isStopTrap(pl2br_trapToHandleInfo(S_BR)) = '1')
+      then
         
-        -- This is a debug trap, and external debugging is turned on. Disable
+        -- This is a debug trap and external debugging is turned on, or this is
+        -- a stop trap (issued one cycle after a stop instruction). Disable
         -- regular trapping behavior; instead, halt the core (this happens
-        -- automatically based on the exDbgTrapInfo.active signal) and set the
-        -- resumption address/PC to the trap point.
+        -- automatically based on the exDbgTrapInfo.active signal or by means
+        -- of the stop output signal) and set the resumption address/PC to the
+        -- trap point.
         nextPCsrc(S_BR) <= NEXT_PC_TRAP_POINT;
         br2cxplif_trapInfo(S_BR).active <= '0';
         
-        -- pragma translate_off
-        simReason <= to_rvs("ext. debug trap");
-        -- pragma translate_on
+        if rvex_isStopTrap(pl2br_trapToHandleInfo(S_BR)) = '1' then
+          
+          -- Assert the stop control signal, which sets the brk and done flags.
+          br2cxplif_stop(S_BR) <= '1';
+          
+          -- pragma translate_off
+          simReason <= to_rvs("stop trap");
+          -- pragma translate_on
+          
+        else
+          
+          -- pragma translate_off
+          simReason <= to_rvs("ext. debug trap");
+          -- pragma translate_on
+          
+        end if;
         
       else
         
@@ -437,12 +459,14 @@ begin -- architecture
       
     elsif ctrl(S_BR).stop = '1' then
       
-      -- Stop instruction. Stop the core by setting the BRK flag and set the
-      -- done flag in the debug control register by sending the stop flag to
-      -- the context control register logic, and set the continuation address
-      -- to the next instruction.
-      nextPCsrc(S_BR) <= NEXT_PC_STOP;
-      br2cxplif_stop(S_BR) <= '1';
+      -- Stop instruction. We want to generate a stop trap with the trap point
+      -- set to PC+1; easiest way to do that is to just proceed to the next
+      -- instruction and cause a trap there. So, we select the regular PC+1 mux
+      -- input for the next PC, and set a stop flag. This flag will do two
+      -- things: it prevents the next opcode fetch and it is delayed by one
+      -- cycle to cause the trap.
+      nextPCsrc(S_BR) <= NEXT_PC_NORMAL;
+      stop(S_BR) <= '1';
       
       -- pragma translate_off
       simReason <= to_rvs("STOP instr.");
@@ -478,7 +502,15 @@ begin -- architecture
       noLimmPrefetch(S_BR) <= '1';
       
       -- pragma translate_off
-      simReason <= to_rvs("halting");
+      if run(S_BR) = '0' then
+        if pl2br_trapPending(S_BR) = '1' then
+          simReason <= to_rvs("halting, trap pending");
+        else
+          simReason <= to_rvs("halting");
+        end if;
+      else
+        simReason <= to_rvs("trap pending");
+      end if;
       -- pragma translate_on
       
     elsif run_r(S_BR) = '0' then
@@ -507,6 +539,13 @@ begin -- architecture
       -- pragma translate_on
     end if;
     
+    -- pragma translate_off
+    if stop_r(S_BR) = '1' then
+      simReason <= to_rvs("causing stop trap");
+    end if;
+    -- pragma translate_on
+    
+    
   end process;
   
   -----------------------------------------------------------------------------
@@ -525,7 +564,6 @@ begin -- architecture
       when NEXT_PC_TRAP_RETURN  => nextPC(S_IF) <= cxplif2br_trapReturn(S_BR);
       when NEXT_PC_BR_RELATIVE  => nextPC(S_IF) <= pl2br_brTgtRel(S_BR);
       when NEXT_PC_BR_LINK      => nextPC(S_IF) <= pl2br_brTgtLink(S_BR);
-      when NEXT_PC_STOP         => nextPC(S_IF) <= pl2br_PC_plusOne_BR(S_BR);
       when others               => nextPC(S_IF) <= pl2br_PC_plusOne_IFP1(S_IF+1);
     end case;
   end process;
@@ -540,16 +578,37 @@ begin -- architecture
   nextPCMisaligned(S_IF) <=
     '0' when
       vect2uint(nextPC(S_IF)(
-        (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B downto 0
+        (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B-1 downto 0
       )) = 0
     else '1';
   
-  -- Drive the trap output for misaligned branches.
-  br2pl_trap(S_BR) <= (
-    active => nextPCMisaligned(S_IF),
-    cause  => rvex_trap(RVEX_TRAP_MISALIGNED_BRANCH),
-    arg    => nextPC(S_IF)
-  );
+  -----------------------------------------------------------------------------
+  -- Drive trap output.
+  -----------------------------------------------------------------------------
+  trap_output: process (
+    nextPCMisaligned, nextPC, stop_r
+  ) is
+    variable ti : trap_info_type;
+  begin
+    
+    -- Cause misaligned branch traps.
+    ti := (
+      active => nextPCMisaligned(S_IF),
+      cause  => rvex_trap(RVEX_TRAP_MISALIGNED_BRANCH),
+      arg    => nextPC(S_IF)
+    );
+    
+    -- Cause stop traps.
+    ti := ti & (
+      active => stop_r(S_BR),
+      cause  => rvex_trap(RVEX_TRAP_STOP),
+      arg    => nextPC(S_IF) -- This is don't care; use the misaligned branch
+    );                       -- trap arg to save a mux.
+    
+    -- Drive the trap output.
+    br2pl_trap(S_BR) <= ti;
+    
+  end process;
   
   -----------------------------------------------------------------------------
   -- Determine which operation to perform next
@@ -620,19 +679,18 @@ begin -- architecture
     end if;
     
     -- Determine if we want to fetch the next instruction.
-    fetch(S_IF) := run(S_BR) and not pl2br_trapPending(S_BR) and not nextPCMisaligned(S_IF);
+    fetch(S_IF)
+      := run(S_BR)
+      and (not pl2br_trapPending(S_BR))
+      and (not nextPCMisaligned(S_IF))
+      and (not stop(S_BR))
+      and (not stop_r(S_BR));
     
     -- Drive PC output signals.
-    br2imem_PC(S_IF)                  <= nextPC_v(S_IF);
     br2cxplif_PC(S_IF)                <= nextPC_v(S_IF);
     
-    -- Make sure that the request output to the instruction memory is properly
-    -- aligned.
-    br2cxplif_PC(S_IF)(numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B-1 downto 0)
-      <= (others => '0');
-    
     -- Drive fetch output signals.
-    br2imem_fetch(S_IF)               <= fetch(S_IF);
+    br2cxplif_imemFetch(S_IF)         <= fetch(S_IF);
     br2cxplif_limmValid(S_IF)         <= fetch(S_IF);
     
     -- Drive valid output signals.
@@ -643,7 +701,7 @@ begin -- architecture
     br2cxplif_brkValid(S_IF)          <= brkptEnable(S_IF);
     
     -- Drive cancel/invalidate signals.
-    br2imem_cancel(S_IF+L_IF)         <= branching(S_BR);
+    br2cxplif_imemCancel(S_IF+L_IF)   <= branching(S_BR);
     br2cxplif_invalUntilBR(S_BR)      <= branching(S_BR);
     
     -- Generate simulation information.

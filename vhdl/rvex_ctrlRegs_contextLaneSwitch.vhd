@@ -168,7 +168,7 @@ begin -- architecture
   
   -- Generate the command muxes.
   command_mux_gen: for ctxt in 2**CFG.numContextsLog2-1 downto 0 generate
-    sw2ctxt_addr(ctxt)        <= plgrp2sw_addr(vect2uint(contextMap(ctxt))) and X"0000008F";
+    sw2ctxt_addr(ctxt)        <= plgrp2sw_addr(vect2uint(contextMap(ctxt))) and X"0000007F";
     sw2ctxt_writeEnable(ctxt) <= plgrp2sw_writeEnable(vect2uint(contextMap(ctxt))) and contextEnable(ctxt);
     sw2ctxt_writeMask(ctxt)   <= plgrp2sw_writeMask(vect2uint(contextMap(ctxt)));
     sw2ctxt_writeData(ctxt)   <= plgrp2sw_writeData(vect2uint(contextMap(ctxt)));

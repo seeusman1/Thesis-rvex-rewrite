@@ -263,7 +263,11 @@ begin -- architecture
         -- valid so we shouldn't do anything.
         if coupled = '1' then
           limmhFromPrev_s(laneB)      := pl2limm_data(laneA);
-          limmhFromPrevValid_s(laneB) := pl2limm_enable(laneA) and not pl2limm_target(laneA);
+          if laneA mod 2 = 0 then
+            limmhFromPrevValid_s(laneB) := pl2limm_enable(laneA) and not pl2limm_target(laneA);
+          else
+            limmhFromPrevValid_s(laneB) := pl2limm_enable(laneA) and pl2limm_target(laneA);
+          end if;
         end if;
         
       end loop;
@@ -307,7 +311,7 @@ begin -- architecture
         -- The data is valid when the other lane is executing a LIMMH
         -- instruction with target set to 1.
         limmhFromNeigh(lane) <= pl2limm_data(otherLane);
-        if lane mod 2 = 0 then
+        if otherLane mod 2 = 0 then
           limmhFromNeighValid(lane) <= pl2limm_enable(otherLane) and pl2limm_target(otherLane);
         else
           limmhFromNeighValid(lane) <= pl2limm_enable(otherLane) and not pl2limm_target(otherLane);
