@@ -122,7 +122,7 @@ load    stop ;;
 
 -- Run the test.
 reset
-wait    40 idle 0
+wait    100 idle 0
 
 -- Verify that all constants were loaded correctly.
 read    dmem word  0 0x5A00005A

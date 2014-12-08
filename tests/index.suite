@@ -2,5 +2,16 @@
 -- file to help it. Just list every file you want to conformance test in this
 -- file.
 
-sanity01.test
+-- Test basic STW and STOP functionality, which pretty much all other tests
+-- rely on.
+sanity.test
+
+-- Test LIMMH instructions.
 limmh/index.suite
+
+-- Test branch unit instructions.
+branch/index.suite
+
+-- Test memory unit instructions.
+-- todo
+

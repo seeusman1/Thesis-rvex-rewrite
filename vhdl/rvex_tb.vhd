@@ -134,8 +134,8 @@ use work.rvex_ctrlRegs_pkg.all;
 --   Resets the entire processor. Takes one cycle to complete.
 -- 
 -- wait <cycles> [
---     write <group> [<ptr> [exclusive] [<value> [exclusive]]] 
---   | read <group> [<ptr> [exclusive]]
+--     write <<group>|*> [<ptr> [exclusive] [<value> [exclusive]]] 
+--   | read <<group>|*> [<ptr> [exclusive]]
 --   | idle <context>
 --   | done <context>
 --   | irqHandled <context>
@@ -1083,8 +1083,8 @@ begin -- architecture
     -- Executes a 'wait' command
     ---------------------------------------------------------------------------
     -- wait <cycles> [
-    --     write <group> [<ptr> [exclusive] [<value> [exclusive]]] 
-    --   | read <group> [<ptr> [exclusive]]
+    --     write <<group>|*> [<ptr> [exclusive] [<value> [exclusive]]] 
+    --   | read <<group>|*> [<ptr> [exclusive]]
     --   | idle <context>
     --   | done <context>
     --   | irqHandled <context>
@@ -1094,26 +1094,27 @@ begin -- architecture
       pos     : inout positive;
       result  : out   testCommandResult_type
     ) is
-      variable token    : line;
-      variable val      : signed(32 downto 0);
-      variable ok       : boolean;
-      variable pos2     : positive;
+      variable token      : line;
+      variable val        : signed(32 downto 0);
+      variable ok         : boolean;
+      variable pos2       : positive;
       
       -- Type of wait instruction.
       type waitType_type is (
         WAIT_NORMAL, WAIT_WRITE, WAIT_READ, WAIT_IDLE, WAIT_DONE, WAIT_IRQ
       );
-      variable waitType : waitType_type;
+      variable waitType   : waitType_type;
       
       -- Wait parameters.
-      variable ctxtGrp  : natural;
-      variable addr     : rvex_address_type;
-      variable addrEx   : boolean;
-      variable value    : rvex_data_type;
-      variable valueEx  : boolean;
+      variable ctxtGrp    : natural;
+      variable ctxtGrpMax : natural;
+      variable addr       : rvex_address_type;
+      variable addrEx     : boolean;
+      variable value      : rvex_data_type;
+      variable valueEx    : boolean;
       
       -- Number of cycles remaining.
-      variable cycleCnt : integer;
+      variable cycleCnt   : integer;
       
     begin
       
@@ -1165,15 +1166,23 @@ begin -- architecture
       
       -- Parse the context/group index for 'wait' commands with parameters.
       if waitType /= WAIT_NORMAL then
-        scanNumeric(l, pos, val, ok);
-        if not ok then
-          report "Error parsing test case 'wait' command: '" & l & "'. "
-               & "Context/group specified expected. Aborting."
-            severity warning;
-          result := TCCR_ABORT;
-          return;
+        if (waitType = WAIT_WRITE or waitType = WAIT_READ) and pos <= l'length and l(pos) = '*' then
+          pos := pos + 1;
+          scanToEndOfWhitespace(l, pos);
+          ctxtGrp := 0;
+          ctxtGrpMax := 2**CFG.numLaneGroupsLog2-1;
+        else
+          scanNumeric(l, pos, val, ok);
+          if not ok then
+            report "Error parsing test case 'wait' command: '" & l & "'. "
+                 & "Context/group specified expected. Aborting."
+              severity warning;
+            result := TCCR_ABORT;
+            return;
+          end if;
+          ctxtGrp := to_integer(val);
+          ctxtGrpMax := ctxtGrp;
         end if;
-        ctxtGrp := to_integer(val);
       end if;
       
       -- Make sure ctxtGrp is within range.
@@ -1291,62 +1300,66 @@ begin -- architecture
         
         -- Test for conditions, if specified.
         if waitType = WAIT_WRITE then
-          if rv2mem_stallOut(ctxtGrp) = '0'
-            and rv2dmem_writeEnable(ctxtGrp) = '1'
-            and rv2dmem_writeMask(ctxtGrp) = "1111"
-          then
-            if std_match(rv2dmem_addr(ctxtGrp), addr) then
-              if std_match(rv2dmem_writeData(ctxtGrp), value) then
+          for laneGroup in ctxtGrp to ctxtGrpMax loop
+            if rv2mem_stallOut(laneGroup) = '0'
+              and rv2dmem_writeEnable(laneGroup) = '1'
+              and rv2dmem_writeMask(laneGroup) = "1111"
+            then
+              if std_match(rv2dmem_addr(laneGroup), addr) then
+                if std_match(rv2dmem_writeData(laneGroup), value) then
+                  
+                  -- Expected write encountered.
+                  result := TCCR_CONTINUE;
+                  return;
+                  
+                elsif valueEx then
+                  
+                  -- Incorrect value written in exclusive mode, fail.
+                  report "Expected processor to write " & rvs_hex(value)
+                       & " to " & rvs_hex(addr) & ", but it wrote "
+                       & rvs_hex(rv2dmem_addr(laneGroup)) & "."
+                    severity warning;
+                  result := TCCR_FAIL;
+                  return;
+                  
+                end if;
+              elsif addrEx or valueEx then
                 
-                -- Expected write encountered.
-                result := TCCR_CONTINUE;
-                return;
-                
-              elsif valueEx then
-                
-                -- Incorrect value written in exclusive mode, fail.
-                report "Expected processor to write " & rvs_hex(value)
-                     & " to " & rvs_hex(addr) & ", but it wrote "
-                     & rvs_hex(rv2dmem_addr(ctxtGrp)) & "."
+                -- Incorrect address written in exclusive mode, fail.
+                report "Expected processor to write to " & rvs_hex(addr)
+                     & " but it wrote to " & rvs_hex(rv2dmem_addr(laneGroup))
+                     & "."
                   severity warning;
                 result := TCCR_FAIL;
                 return;
                 
               end if;
-            elsif addrEx or valueEx then
-              
-              -- Incorrect address written in exclusive mode, fail.
-              report "Expected processor to write to " & rvs_hex(addr)
-                   & " but it wrote to " & rvs_hex(rv2dmem_addr(ctxtGrp))
-                   & "."
-                severity warning;
-              result := TCCR_FAIL;
-              return;
-              
             end if;
-          end if;
+          end loop;
         elsif waitType = WAIT_READ then
-          if rv2mem_stallOut(ctxtGrp) = '0'
-            and rv2dmem_readEnable(ctxtGrp) = '1'
-          then
-            if std_match(rv2dmem_addr(ctxtGrp), addr) then
+          for laneGroup in ctxtGrp to ctxtGrpMax loop
+            if rv2mem_stallOut(laneGroup) = '0'
+              and rv2dmem_readEnable(laneGroup) = '1'
+            then
+              if std_match(rv2dmem_addr(laneGroup), addr) then
+                  
+                -- Expected read encountered.
+                result := TCCR_CONTINUE;
+                return;
+                  
+              elsif addrEx or valueEx then
                 
-              -- Expected read encountered.
-              result := TCCR_CONTINUE;
-              return;
+                -- Incorrect address read in exclusive mode, fail.
+                report "Expected processor to read from " & rvs_hex(addr)
+                     & " but it read from " & rvs_hex(rv2dmem_addr(laneGroup))
+                     & "."
+                  severity warning;
+                result := TCCR_FAIL;
+                return;
                 
-            elsif addrEx or valueEx then
-              
-              -- Incorrect address read in exclusive mode, fail.
-              report "Expected processor to read from " & rvs_hex(addr)
-                   & " but it read from " & rvs_hex(rv2dmem_addr(ctxtGrp))
-                   & "."
-                severity warning;
-              result := TCCR_FAIL;
-              return;
-              
+              end if;
             end if;
-          end if;
+          end loop;
         elsif waitType = WAIT_IDLE then
           if rv2rctrl_idle(ctxtGrp) = '1' then
             result := TCCR_CONTINUE;

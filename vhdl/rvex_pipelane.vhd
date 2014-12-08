@@ -799,6 +799,7 @@ architecture Behavioral of rvex_pipelane is
   -- Pipelane <-> branch unit interconnect. Refer to branch unit entity for
   -- more information about the signals.
   signal pl2br_opcode           : rvex_opcode_array(S_BR to S_BR);
+  signal pl2br_valid            : std_logic_vector(S_BR to S_BR);
   signal pl2br_PC_plusOne_IFP1  : rvex_address_array(S_IF+1 to S_IF+1);
   signal pl2br_PC_plusOne_BR    : rvex_address_array(S_BR to S_BR);
   signal pl2br_brTgtLink        : rvex_address_array(S_BR to S_BR);
@@ -1060,6 +1061,7 @@ begin -- architecture
         
         -- Branch control signals from and to pipelane.
         pl2br_opcode(S_BR)              => pl2br_opcode(S_BR),
+        pl2br_valid(S_BR)               => pl2br_valid(S_BR),
         pl2br_PC_plusOne_IFP1(S_IF+1)   => pl2br_PC_plusOne_IFP1(S_IF+1),
         pl2br_PC_plusOne_BR(S_BR)       => pl2br_PC_plusOne_BR(S_BR),
         pl2br_brTgtLink(S_BR)           => pl2br_brTgtLink(S_BR),
@@ -1678,6 +1680,7 @@ begin -- architecture
       
       -- Drive branch unit data and control signals.
       pl2br_opcode(S_BR)              <= s(S_BR).opcode;
+      pl2br_valid(S_BR)               <= s(S_BR).valid;
       pl2br_PC_plusOne_IFP1(S_IF+1)   <= s(S_IF+1).br.PC_plusOne;
       pl2br_PC_plusOne_BR(S_BR)       <= s(S_BR).br.PC_plusOne;
       pl2br_brTgtLink(S_BR)           <= s(S_BR).br.linkTarget;

@@ -146,6 +146,9 @@ entity rvex_br is
     -- Opcode for the branch unit.
     pl2br_opcode                : in  rvex_opcode_array(S_BR to S_BR);
     
+    -- Whether the opcode is valid.
+    pl2br_valid                 : in  std_logic_vector(S_BR to S_BR);
+    
     -- PC+1 input for normal program flow.
     pl2br_PC_plusOne_IFP1       : in  rvex_address_array(S_IF+1 to S_IF+1);
     
@@ -337,7 +340,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   det_branch: process (
     stall, ctrl, run, run_r, stop_r, cxplif2br_irqID,
-    pl2br_opBr,
+    pl2br_valid, pl2br_opBr,
     pl2br_trapPending, cxplif2br_overridePC,
     pl2br_trapToHandleInfo, pl2br_trapToHandlePoint,
     cxplif2br_extDebug, cxplif2br_handlingDebugTrap
@@ -457,14 +460,16 @@ begin -- architecture
       simReason <= to_rvs("RFI instr.");
       -- pragma translate_on
       
-    elsif ctrl(S_BR).stop = '1' then
+    elsif ctrl(S_BR).stop = '1' and pl2br_valid(S_BR) = '1' then
       
       -- Stop instruction. We want to generate a stop trap with the trap point
       -- set to PC+1; easiest way to do that is to just proceed to the next
       -- instruction and cause a trap there. So, we select the regular PC+1 mux
       -- input for the next PC, and set a stop flag. This flag will do two
       -- things: it prevents the next opcode fetch and it is delayed by one
-      -- cycle to cause the trap.
+      -- cycle to cause the trap. Note that we need to check for validity here,
+      -- because otherwise we'd be committing a trap for a disabled
+      -- instruction.
       nextPCsrc(S_BR) <= NEXT_PC_NORMAL;
       stop(S_BR) <= '1';
       
@@ -673,7 +678,7 @@ begin -- architecture
       nextPC_v(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B)
         := std_logic_vector(
           vect2unsigned(nextPC(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B))
-          - to_unsigned(2**(numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B), CFG.genBundleSizeLog2)
+          - to_unsigned(2**(numCoupledLanesLog2), CFG.genBundleSizeLog2)
         );
       
     end if;

@@ -1,0 +1,3 @@
+-- This test suite contains test cases for branch unit related instructions.
+
+branch.test

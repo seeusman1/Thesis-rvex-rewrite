@@ -260,10 +260,12 @@ begin -- architecture
     -- context should be run on next for maximum cache locality.
     
     -- Generate the affinity fields.
-    for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-      creg_makeHardwiredField(l2c, c2l, CR_AFF, laneGroup*4+CFG.numLaneGroupsLog2-1, laneGroup*4,
-        imem2gbreg_affinity(laneGroup*CFG.numLaneGroupsLog2 + CFG.numLaneGroupsLog2-1 downto laneGroup*CFG.numLaneGroupsLog2));
-    end loop;
+    if CFG.numLaneGroupsLog2 > 0 then
+      for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+        creg_makeHardwiredField(l2c, c2l, CR_AFF, laneGroup*4+CFG.numLaneGroupsLog2-1, laneGroup*4,
+          imem2gbreg_affinity(laneGroup*CFG.numLaneGroupsLog2 + CFG.numLaneGroupsLog2-1 downto laneGroup*CFG.numLaneGroupsLog2));
+      end loop;
+    end if;
     
     ---------------------------------------------------------------------------
     -- Forward control signals

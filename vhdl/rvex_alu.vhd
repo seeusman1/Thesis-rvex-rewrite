@@ -484,9 +484,12 @@ begin -- architecture
     -- Compare unit 1
     -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     -- Based on the compare control signal, compare operand 1 with 2 or
-    -- compare operand 1 with zero.
+    -- compare operand 1 with zero. When comparing 1 and 2 for compare
+    -- operations, bitwise-invert input 2 while we're muxing, because input
+    -- 1 will also be inverted in this case for the subtractor part of the
+    -- comparison.
     if si(P_AR).ctrl.compare = '1' then
-      cmpOp2 := si(P_AR).op2Muxed(31 downto 0);
+      cmpOp2 := not si(P_AR).op2Muxed(31 downto 0);
     else
       cmpOp2 := (others => '0');
     end if;

@@ -18,3 +18,12 @@ from-previous-pair-disabled.test
 -- a bundle, which must be possible using RFI.
 from-previous-pair-rfi.test
 
+-- This tests the trap which is caused when the destined LIMMH lane isn't using
+-- it, which might well point to an invalid forwarding request (or a broken
+-- assembler).
+limmh-unused.test
+
+-- This tests the trap which is caused when two LIMMH syllables try to forward
+-- to the same lane.
+forwarding-conflict.test
+

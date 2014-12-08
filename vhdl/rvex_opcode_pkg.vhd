@@ -479,7 +479,7 @@ package rvex_opcode_pkg is
     -- Operand 1 == operand 2 -> general purpose register.
     2#01000000# => (
       syntax_reg => "cmpeq r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpeq r#.%r1 = r#.%r2, %id (= %ih)                ",
+      syntax_imm => "cmpeq r#.%r1 = r#.%r2, %id                        ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPEQ,
@@ -491,7 +491,7 @@ package rvex_opcode_pkg is
     -- Operand 1 == operand 2 -> branch register.
     2#01000001# => (
       syntax_reg => "cmpeq b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpeq b#.%b2 = r#.%r2, %id (= %ih)                ",
+      syntax_imm => "cmpeq b#.%b2 = r#.%r2, %id                        ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPEQ,
