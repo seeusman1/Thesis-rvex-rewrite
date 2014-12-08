@@ -92,23 +92,23 @@ package rvex_opcodeDatapath_pkg is
   --           |  R1 -->|1/
   --           |         ^
   --           |         |                   <op1LinkReg>
-  --           |     <stackOp>  .----------.      |
-  --           |         |      | Link rd. |--.   v  <op3LinkReg>
-  --           |         v      '----------'  o->|1\    |
-  -- 16..11 ---+------->|0\ src1.----------.  |  |  |---+---------------> op1
-  --           |        |  |--->| GP. read |--+->|0/    v
-  --           |  R1 -->|1/     '----------'  o------->|1\
-  --           |                              |        |  |-------------> op3
-  --           '------->|1\ src2.----------.  |     .->|0/
-  --                    |  |--->| GP. read |--+-----o       <stackOp>
-  --  10..5 ----------->|0/     '----------'  |     |           |
-  --                     ^                    |     '->|0\      v
+  --           |     <stackOp>  .----------.      |  <op3LinkReg>
+  --           |         |      | Link rd. |--.   v     | <op3BranchRegs>
+  --           |         v      '----------'  o->|1\    |       |
+  -- 16..11 ---+------->|0\ src1.----------.  |  |  |---+-------+-------> op1
+  --           |        |  |--->| GP. read |--+->|0/    v       |
+  --           |  R1 -->|1/     '----------'  o------->|1\      v
+  --           |                              |        |  |--->|0\
+  --           '------->|1\ src2.----------.  |   .--->|0/     |  |-----> op3
+  --                    |  |--->| GP. read |--+---o  <brRegs>->|1/
+  --  10..5 ----------->|0/     '----------'  |   |  
+  --                     ^                    |   '--->|0\
   --                     |      imm           |        |  |--->|0\
   --  10..2 ---x---------+--------------------+------->|1/     |  |-----> op2
   --  limmh ---'         |     useImm         |         ^   .->|1/
-  --     23 -------------o--------------------+---------'   |
-  --  23..5 -------------------------------o--+-------------'
-  --                   br.branchOffset     |  |
+  --     23 -------------o--------------------+---------'   |   ^
+  --  23..5 -------------------------------o--+-------------'   |
+  --                   br.branchOffset     |  |              <linkOp>
   --                                       |  |br.linkTarget.----------.
   --                                       v  '------------>|  Branch  |
   --  PC_plusOne ------------------------>(+)-------------->|   unit   |
@@ -117,7 +117,7 @@ package rvex_opcodeDatapath_pkg is
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   -- 
   --                    .-----.                             .----------.
-  --    op1 -------o--->|     |    resMul       <linkWE>--->|WE        |
+  --    op1 -------o--->|     |    resMul        <linkWE>-->|WE        |
   --               |    | MUL |--------------. <funcSel>    | Link wr. |
   --           .---+--->|     |              |    |      .->|Data      |
   --           |   |    '-----'  PC_plusOne  |    v      |  '----------'
@@ -129,10 +129,15 @@ package rvex_opcodeDatapath_pkg is
   --                         |    .------.   |           |  .----------.
   --                   resAdd'--->|Addr  |   |resMem     '->|Data      |
   --                              | MEM  |   |              | GP write |
-  --    op3 --------------------->|DI  DO|---' <gpRegWE>--->|WE        |
-  --                              '------'                  |          |
-  --   dest ----------------------------------------------->|Addr      |
-  --                                                        '----------'
+  --    op3 --------------------->|DI  DO|---o  <gpRegWE>-->|WE        |
+  --                              '------'   |              |          |
+  --   dest ---------------------------------+------------->|Addr      |
+  --                                         v              '----------'
+  --                                   .-----------.
+  --                                   |   Data    |
+  --                                   |Br bulk wr.|
+  --                   <allBrRegsWE>-->|WE         |
+  --                                   '-----------'
   -- 
   -----------------------------------------------------------------------------
   -- Branch/carry operand and result datapath
@@ -142,6 +147,10 @@ package rvex_opcodeDatapath_pkg is
   -- for the branch source and destination registers in the syllable, brWrite
   -- controls whether the branch register file will be written to or not. The
   -- datapath is also depicted schematically below.
+  --
+  -- The entire branch register file can also be written at once for context
+  -- save/restore purposes. The signals for that are indicated in the integer
+  -- datapath.
   -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   -- 
@@ -170,9 +179,11 @@ package rvex_opcodeDatapath_pkg is
     gpRegWE                     : std_logic;
     linkWE                      : std_logic;
     brRegWE                     : std_logic;
+    allBrRegsWE                 : std_logic;
     stackOp                     : std_logic;
     op1LinkReg                  : std_logic;
     op3LinkReg                  : std_logic;
+    op3BranchRegs               : std_logic;
     brFmt                       : std_logic;
     
     -- Special instruction flags. These are set only when the respective
@@ -209,15 +220,7 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_NOP          : datapathCtrlSignals_type := (
     funcSel                     => ALU,
-    gpRegWE                     => '0',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -233,15 +236,8 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_LIMMH        : datapathCtrlSignals_type := (
     funcSel                     => ALU,
-    gpRegWE                     => '0',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
     isLIMMH                     => '1',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -258,15 +254,8 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_TRAP         : datapathCtrlSignals_type := (
     funcSel                     => ALU,
-    gpRegWE                     => '0',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '1'
+    isTrap                      => '1',
+    others                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -285,14 +274,8 @@ package rvex_opcodeDatapath_pkg is
   constant DP_CTRL_ALU_INT      : datapathCtrlSignals_type := (
     funcSel                     => ALU,
     gpRegWE                     => '1',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
     brFmt                       => '1',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -- ALU operation, storing the boolean result. The syllable has the following
@@ -306,15 +289,8 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_ALU_BOOL     : datapathCtrlSignals_type := (
     funcSel                     => ALU,
-    gpRegWE                     => '0',
-    linkWE                      => '0',
     brRegWE                     => '1',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -- ALU operation, storing the both the integer and boolean results.
@@ -326,14 +302,8 @@ package rvex_opcodeDatapath_pkg is
   constant DP_CTRL_ALU_BOTH     : datapathCtrlSignals_type := (
     funcSel                     => ALU,
     gpRegWE                     => '1',
-    linkWE                      => '0',
     brRegWE                     => '1',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '1',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -350,14 +320,7 @@ package rvex_opcodeDatapath_pkg is
   constant DP_CTRL_MUL          : datapathCtrlSignals_type := (
     funcSel                     => MUL,
     gpRegWE                     => '1',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -374,14 +337,7 @@ package rvex_opcodeDatapath_pkg is
   constant DP_CTRL_MEM_LD_GP    : datapathCtrlSignals_type := (
     funcSel                     => MEM,
     gpRegWE                     => '1',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -- Memory load to link register.
@@ -394,15 +350,22 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_MEM_LD_LINK  : datapathCtrlSignals_type := (
     funcSel                     => MEM,
-    gpRegWE                     => '0',
     linkWE                      => '1',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
+  );
+  
+  -- Memory load to branch register file.
+  --
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- |    Opcode     |0|-|-|-|-|-|-|    Rs1    |    Rs2    |-|-|-|S|-|
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- |    Opcode     |1|-|-|-|-|-|-|    Rs1    |    Immediate    |S|-|
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  --
+  constant DP_CTRL_MEM_LD_BR    : datapathCtrlSignals_type := (
+    funcSel                     => MEM,
+    allBrRegsWE                 => '1',
+    others                      => '0'
   );
   
   -- Memory store from general purpose register file. The address is determined
@@ -414,15 +377,7 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_MEM_ST_GP    : datapathCtrlSignals_type := (
     funcSel                     => ALU,
-    gpRegWE                     => '0',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -- Memory store from link register.
@@ -435,15 +390,22 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_MEM_ST_LINK  : datapathCtrlSignals_type := (
     funcSel                     => ALU,
-    gpRegWE                     => '0',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
     op3LinkReg                  => '1',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
+  );
+  
+  -- Memory store from branch register file.
+  --
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- |    Opcode     |0|-|-|-|-|-|-|    Rs1    |    Rs2    |-|-|-|S|-|
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- |    Opcode     |1|-|-|-|-|-|-|    Rs1    |    Immediate    |S|-|
+  -- |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  --
+  constant DP_CTRL_MEM_ST_BR    : datapathCtrlSignals_type := (
+    funcSel                     => ALU,
+    op3BranchRegs               => '1',
+    others                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -457,15 +419,7 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_BR           : datapathCtrlSignals_type := (
     funcSel                     => ALU,
-    gpRegWE                     => '0',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -- Branch operations which link.
@@ -476,15 +430,8 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_BR_LINK      : datapathCtrlSignals_type := (
     funcSel                     => PCP1,
-    gpRegWE                     => '0',
     linkWE                      => '1',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -- Branch operations which update the stack pointer.
@@ -496,14 +443,8 @@ package rvex_opcodeDatapath_pkg is
   constant DP_CTRL_BR_SP        : datapathCtrlSignals_type := (
     funcSel                     => ALU,
     gpRegWE                     => '1',
-    linkWE                      => '0',
-    brRegWE                     => '0',
     stackOp                     => '1',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -----------------------------------------------------------------------------
@@ -518,14 +459,8 @@ package rvex_opcodeDatapath_pkg is
   constant DP_CTRL_MFL          : datapathCtrlSignals_type := (
     funcSel                     => ALU,
     gpRegWE                     => '1',
-    linkWE                      => '0',
-    brRegWE                     => '0',
-    stackOp                     => '0',
     op1LinkReg                  => '1',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
   
   -- Move from general purpose register to link register.
@@ -536,17 +471,9 @@ package rvex_opcodeDatapath_pkg is
   --
   constant DP_CTRL_MTL          : datapathCtrlSignals_type := (
     funcSel                     => ALU,
-    gpRegWE                     => '0',
     linkWE                      => '1',
-    brRegWE                     => '0',
-    stackOp                     => '0',
-    op1LinkReg                  => '0',
-    op3LinkReg                  => '0',
-    brFmt                       => '0',
-    isLIMMH                     => '0',
-    isTrap                      => '0'
+    others                      => '0'
   );
-  
   
 end rvex_opcodeDatapath_pkg;
 

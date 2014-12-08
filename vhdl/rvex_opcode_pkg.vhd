@@ -1296,6 +1296,18 @@ package rvex_opcode_pkg is
       multiplierCtrl => MUL_CTRL_NOP
     ),
     
+    -- Load byte from memory, send to branch register file.
+    2#00101110# => (
+      syntax_reg => "unknown                                           ",
+      syntax_imm => "ldbr b# = %ih[r#.%r2]                             ",
+      valid => "10",
+      datapathCtrl => DP_CTRL_MEM_LD_BR,
+      aluCtrl => ALU_CTRL_ADD,
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_LOAD8U,
+      multiplierCtrl => MUL_CTRL_NOP
+    ),
+    
     -- Store word in memory, from link register.
     2#00001110# => (
       syntax_reg => "unknown                                           ",
@@ -1344,6 +1356,18 @@ package rvex_opcode_pkg is
       multiplierCtrl => MUL_CTRL_NOP
     ),
     
+    -- Store byte in memory, from branch register file.
+    2#00101111# => (
+      syntax_reg => "unknown                                           ",
+      syntax_imm => "stbr %ih[r#.%r2] = b#                             ",
+      valid => "10",
+      datapathCtrl => DP_CTRL_MEM_ST_BR,
+      aluCtrl => ALU_CTRL_ADD,
+      branchCtrl => BRANCH_CTRL_NOP,
+      memoryCtrl => MEMORY_CTRL_STORE8,
+      multiplierCtrl => MUL_CTRL_NOP
+    ),
+    
     ---------------------------------------------------------------------------
     -- Deprecated/not yet implemented instructions
     ---------------------------------------------------------------------------
@@ -1354,10 +1378,14 @@ package rvex_opcode_pkg is
     2#00101011# => opcodeTableEntry_default,
     
     --constant VCR_WRITE  : std_logic_vector(7 downto 0) := "00101110";
-    2#00101110# => opcodeTableEntry_default,
+    --2#00101110# => opcodeTableEntry_default,
+    -- -> changed to LDBR; control registers are accessible through memory
+    --    operations.
     
     --constant VCR_READ   : std_logic_vector(7 downto 0) := "00101111";
-    2#00101111# => opcodeTableEntry_default,
+    --2#00101111# => opcodeTableEntry_default, -> changed to STBR
+    -- -> changed to STBR; control registers are accessible through memory
+    --    operations.
     
     -- All other instructions are invalid.
     others => opcodeTableEntry_default

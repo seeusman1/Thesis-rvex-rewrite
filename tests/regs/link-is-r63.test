@@ -1,0 +1,19 @@
+name    Test r0.63/link register sharing logic
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  reg63isLink           1
+
+-- Initialize memories.
+init
+
+-- Include the file containing the assembly for this test and its counterpart.
+inc     link-r63-test.inc
+
+-- Run the test.
+reset
+wait    40 write * 0 42 exclusive
+wait    40 write * 0 33 exclusive
+wait    40 idle 0
+

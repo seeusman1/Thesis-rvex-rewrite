@@ -14,7 +14,7 @@ vcom -quiet  -93  -work work   ../vhdl/rvex_opcodeBranch_pkg.vhd
 vcom -quiet  -93  -work work   ../vhdl/rvex_opcodeAlu_pkg.vhd
 vcom -quiet  -93  -work work   ../vhdl/rvex_utils_pkg.vhd
 vcom -quiet  -93  -work work   ../vhdl/rvex_trap_pkg.vhd
-vcom -quiet  -93  -work work   ../vhdl/rvex_simUtils_scan_pkg.vhd
+vcom -quiet  -93  -work work   ../vhdl/rvex_simUtils_scanner_pkg.vhd
 vcom -quiet  -93  -work work   ../vhdl/rvex_opcode_pkg.vhd
 vcom -quiet  -93  -work work   ../vhdl/rvex_simUtils_asDisas_pkg.vhd
 vcom -quiet  -93  -work work   ../vhdl/rvex_simUtils_mem_pkg.vhd

@@ -654,7 +654,7 @@ begin -- architecture
         -- Mux between the incoming data signal based on the priority encoder
         -- output.
         brLinkWritePort_v(laneGroup).linkData(stage)
-          := pl2cxplif_brLinkWritePort(currentLane).linkData(stage);
+          := pl2cxplif_brLinkWritePort(selectedLane).linkData(stage);
         
       end loop;
       
@@ -726,12 +726,6 @@ begin -- architecture
           brLinkWritePort_v(groupB).brForwardEnable
             := brLinkWritePort_v(groupA).brForwardEnable;
           
-          brLinkWritePort_v(groupA).linkForwardEnable
-            := brLinkWritePort_v(groupA).linkForwardEnable
-            or brLinkWritePort_v(groupB).linkForwardEnable;
-          brLinkWritePort_v(groupB).linkForwardEnable
-            := brLinkWritePort_v(groupA).linkForwardEnable;
-          
           brLinkWritePort_v(groupA).brData
             := brLinkWritePort_v(groupA).brData
             or brLinkWritePort_v(groupB).brData;
@@ -741,13 +735,19 @@ begin -- architecture
           -- Handle link register write/forward data.
           for stage in S_FIRST to S_SWB loop
             if brLinkWritePort_v(groupB).linkForwardEnable(stage) = '1' then
-              brLinkWritePort_v(groupA).linkData
-                := brLinkWritePort_v(groupB).linkData;
+              brLinkWritePort_v(groupA).linkData(stage)
+                := brLinkWritePort_v(groupB).linkData(stage);
             else
-              brLinkWritePort_v(groupB).linkData
-                := brLinkWritePort_v(groupA).linkData;
+              brLinkWritePort_v(groupB).linkData(stage)
+                := brLinkWritePort_v(groupA).linkData(stage);
             end if;
           end loop;
+          
+          brLinkWritePort_v(groupA).linkForwardEnable
+            := brLinkWritePort_v(groupA).linkForwardEnable
+            or brLinkWritePort_v(groupB).linkForwardEnable;
+          brLinkWritePort_v(groupB).linkForwardEnable
+            := brLinkWritePort_v(groupA).linkForwardEnable;
           
         end if;
         

@@ -6,12 +6,28 @@
 -- rely on.
 sanity.test
 
+-- Test register files and forwarding. This also kind of tests ADD, CMPEQ,
+-- SELECT, MTL and STL.
+regs/index.suite
+
 -- Test LIMMH instructions.
 limmh/index.suite
+
+-- Test ALU instructions.
+-- todo
+
+-- Test MUL instructions.
+-- todo
+
+-- Test memory unit instructions.
+-- todo
 
 -- Test branch unit instructions.
 branch/index.suite
 
--- Test memory unit instructions.
+-- Test dynamic reconfiguration.
+-- todo
+
+-- Test debug support.
 -- todo
 

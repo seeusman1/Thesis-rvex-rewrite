@@ -316,7 +316,8 @@ package body rvex_simUtils_asDisas_pkg is
         syllable(23 downto 5) := std_logic_vector(val(21 downto 3));
         
       elsif matchAt(pattern, patternPos, "r#")
-         or matchAt(pattern, patternPos, "b#") then
+         or matchAt(pattern, patternPos, "b#")
+         or matchAt(pattern, patternPos, "l#") then
         
         -- Match the first character.
         if not charsEqual(source(sourcePos), pattern(patternPos)) then

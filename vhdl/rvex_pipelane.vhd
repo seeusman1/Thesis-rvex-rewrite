@@ -567,9 +567,9 @@ architecture Behavioral of rvex_pipelane is
     read2                       : rvex_data_type;
     read2lo                     : rvex_data_type;
     
-    -- Register selection and read value for branch register.
+    -- Register selection and read value for *all* branch registers.
     srcBr                       : rvex_brRegAddr_type;
-    readBr                      : std_logic;
+    readBr                      : rvex_brRegData_type;
     
     -- Read value for link register.
     readLink                    : rvex_address_type;
@@ -622,7 +622,6 @@ architecture Behavioral of rvex_pipelane is
   -- Default/initialization value for datapath state.
   constant DATAPATH_STATE_DEFAULT : datapathState_type := (
     c                           => DP_CTRL_NOP,
-    readBr                      => RVEX_UNDEF,
     useImm                      => RVEX_UNDEF,
     opBr                        => RVEX_UNDEF,
     resValid                    => '0',
@@ -1555,11 +1554,9 @@ begin -- architecture
     -- forwarded stage.
     for stage in S_SRD to S_SFW loop
       
-      -- Branch register.
+      -- Branch registers.
       s(stage).dp.readBr
-        := cxplif2pl_brLinkReadPort.brData(stage)(
-          vect2uint(s(stage).dp.srcBr)
-        );
+        := cxplif2pl_brLinkReadPort.brData(stage);
       
       -- Link register.
       s(stage).dp.readLink
@@ -1611,6 +1608,8 @@ begin -- architecture
       -- added to get the address).
       if s(stage).dp.c.op3LinkReg = '1' then
         s(stage).dp.op3 := s(stage).dp.readLink;
+      elsif s(stage).dp.c.op3BranchRegs = '1' then
+        s(stage).dp.op3 := X"000000" & s(stage).dp.readBr;
       else
         s(stage).dp.op3 := s(stage).dp.read2lo;
       end if;
@@ -1620,9 +1619,10 @@ begin -- architecture
     -- Select the branch operands to use.
     for stage in S_SRD to S_SFW loop
       
-      -- There is no muxing here, just copy the value read from the branch
-      -- register file.
-      s(stage).dp.opBr := s(stage).dp.readBr;
+      -- Mux between the 8 branch registers.
+      s(stage).dp.opBr := s(stage).dp.readBr(
+        vect2uint(s(stage).dp.srcBr)
+      );
       
     end loop;
     
@@ -1768,8 +1768,10 @@ begin -- architecture
       -- selected.
       if s(S_MEM+L_MEM).dp.c.funcSel = MEM then
         s(S_MEM+L_MEM).dp.res := s(S_MEM+L_MEM).dp.resMem;
+        s(S_MEM+L_MEM).dp.resBr := s(S_MEM+L_MEM).dp.resMem(7 downto 0);
         s(S_MEM+L_MEM).dp.resValid := s(S_MEM+L_MEM).dp.gpRegWE_lo;
         s(S_MEM+L_MEM).dp.resLinkValid := s(S_MEM+L_MEM).dp.linkWE_lo;
+        s(S_MEM+L_MEM).dp.resBrValid := (others => s(S_MEM+L_MEM).dp.c.allBrRegsWE);
       end if;
       
       -- Copy the memory unit trap output into the pipeline.

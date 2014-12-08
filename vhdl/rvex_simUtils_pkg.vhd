@@ -176,6 +176,16 @@ package rvex_simUtils_pkg is
   function rvs_hex_no0x(value: std_logic_vector) return string;
   function rvs_hex_no0x(value: std_logic_vector; digits: natural) return string;
   
+  -- Converts an std_logic_vector to a string in binary notation,
+  -- prefixing 0b.
+  function rvs_bin(value: std_logic_vector) return string;
+  function rvs_bin(value: std_logic_vector; digits: natural) return string;
+  
+  -- Converts an std_logic_vector to a string in binary notation,
+  -- WITHOUT prefixing 0b.
+  function rvs_bin_no0b(value: std_logic_vector) return string;
+  function rvs_bin_no0b(value: std_logic_vector; digits: natural) return string;
+  
   -----------------------------------------------------------------------------
   -- Misc. methods
   -----------------------------------------------------------------------------
@@ -636,6 +646,46 @@ package body rvex_simUtils_pkg is
     end loop;
     return s;
   end rvs_hex_no0x;
+  
+  -- Converts an std_logic_vector to a string in binary notation,
+  -- prefixing 0b.
+  function rvs_bin(value: std_logic_vector) return string is
+  begin
+    return "0b" & rvs_bin_no0b(value);
+  end rvs_bin;
+  function rvs_bin(value: std_logic_vector; digits: natural) return string is
+  begin
+    return "0b" & rvs_bin_no0b(value, digits);
+  end rvs_bin;
+  
+  -- Converts an std_logic_vector to a string in binary notation,
+  -- WITHOUT prefixing 0b.
+  function rvs_bin_no0b(value: std_logic_vector) return string is
+  begin
+    return rvs_bin_no0b(value, value'length);
+  end rvs_bin_no0b;
+  function rvs_bin_no0b(value: std_logic_vector; digits: natural) return string is
+    variable normalized : std_logic_vector(value'length-1 downto 0);
+    variable s : string(1 to digits);
+    variable temp : std_logic_vector(0 downto 0);
+  begin
+    normalized := value;
+    for i in 0 to digits-1 loop
+      temp := rvs_extractStdLogicVectRange(normalized, i, i, '0');
+      case temp is
+        when "0" => s(digits-i) := '0';
+        when "1" => s(digits-i) := '1';
+        when "X" => s(digits-i) := 'X';
+        when "U" => s(digits-i) := 'U';
+        when "L" => s(digits-i) := 'L';
+        when "H" => s(digits-i) := 'H';
+        when "Z" => s(digits-i) := 'Z';
+        when "-" => s(digits-i) := '-';
+        when others => s(digits-i) := '?';
+      end case;
+    end loop;
+    return s;
+  end rvs_bin_no0b;
   
   -----------------------------------------------------------------------------
   -- Misc. methods

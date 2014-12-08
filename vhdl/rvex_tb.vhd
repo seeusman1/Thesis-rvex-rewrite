@@ -87,12 +87,21 @@ use work.rvex_ctrlRegs_pkg.all;
 -- entry methods are listed below that.
 -- 
 -------------------------------------------------------------------------------
--- Valid *.test file commands
+-- *.inc file
+-------------------------------------------------------------------------------
+-- These files may be included by *.test files, so potentially big chunks of
+-- assembly or memory initialization code can be shared.
+-- 
+-------------------------------------------------------------------------------
+-- Valid *.test/*.inc file commands
 -------------------------------------------------------------------------------
 -- name <name>
 --   Sets the name of the test case. This is shown in simulation and in all
 --   related simulation report statements. When name is not set, it defaults to
 --   the filename.
+-- 
+-- inc <filename>
+--   Includes an *.inc file.
 -- 
 -- config <key> <value> [<mask>]
 --   Fail if the specified key in CFG has a different value. <mask> specifies
@@ -730,6 +739,22 @@ begin -- architecture
     -- Current line number in the test case file.
     variable curLineNr    : natural;
     
+    -- Forward declaration for handleFile, which is called recursively.
+    procedure handleFile(
+      fnameIn : in    string;
+      testRes : inout testCommandResult_type
+    );
+    
+    -- Shorthand for handleFile, when the results of the last tests are not
+    -- needed.
+    procedure handleFile(
+      fnameIn : in  string
+    ) is
+      variable dummy  : testCommandResult_type;
+    begin
+      handleFile(fnameIn, dummy);
+    end handleFile;
+    
     ---------------------------------------------------------------------------
     -- Generates a number of clock cycles
     ---------------------------------------------------------------------------
@@ -1317,7 +1342,7 @@ begin -- architecture
                   -- Incorrect value written in exclusive mode, fail.
                   report "Expected processor to write " & rvs_hex(value)
                        & " to " & rvs_hex(addr) & ", but it wrote "
-                       & rvs_hex(rv2dmem_addr(laneGroup)) & "."
+                       & rvs_hex(rv2dmem_writeData(laneGroup)) & "."
                     severity warning;
                   result := TCCR_FAIL;
                   return;
@@ -1426,6 +1451,7 @@ begin -- architecture
       variable addr       : rvex_address_type;
       variable mask       : rvex_mask_type;
       variable value      : rvex_data_type;
+      variable readVal    : rvex_data_type;
       
     begin
       
@@ -1547,11 +1573,10 @@ begin -- architecture
           mask := "0001";
         end if;
       end if;
-      addr(1 downto 0) := "00";
       
       -- Actually handle the command.
       if memType = MEM_DMEM or memType = MEM_IMEM then
-        stim2mem_addr <= addr;
+        stim2mem_addr <= addr(31 downto 2) & "00";
         if memType = MEM_DMEM then
           stim2mem_select <= DMEM_SELECT;
         else
@@ -1574,17 +1599,9 @@ begin -- architecture
         stim2mem_writeMask <= (others => '0');
         stim2mem_writeData <= (others => '0');
         wait for 0 ns;
-        if isRead then
-          if mem2stim_readData /= value then
-            report "Did not read the expected value for 'read' command '" & l
-                 & "'; actual value was " & rvs_hex(mem2stim_readData, 8) & "."
-              severity warning;
-            result := TCCR_FAIL;
-            return;
-          end if;
-        end if;
+        readVal := mem2stim_readData;
       else
-        dbg2rv_addr <= addr;
+        dbg2rv_addr <= addr(31 downto 2) & "00";
         if isRead then
           dbg2rv_readEnable <= '1';
           dbg2rv_writeEnable <= '0';
@@ -1601,14 +1618,34 @@ begin -- architecture
         dbg2rv_writeEnable <= '0';
         dbg2rv_writeMask <= (others => '0');
         dbg2rv_writeData <= (others => '0');
-        if isRead then
-          if rv2dbg_readData /= value then
-            report "Did not read the expected value for 'read' command '" & l
-                 & "'; actual value was " & rvs_hex(rv2dbg_readData, 8) & "."
-              severity warning;
-            result := TCCR_FAIL;
-            return;
+        readVal := rv2dbg_readData;
+      end if;
+      
+      -- Test the read result, respecting non-word accesses.
+      if isRead then
+        if accessSize = MEM_HALF then
+          if addr(1) = '0' then
+            readVal := X"0000" & readVal(31 downto 16);
+          else
+            readVal := X"0000" & readVal(15 downto 0);
           end if;
+        elsif accessSize = MEM_BYTE then
+          if addr(1 downto 0) = "00" then
+            readVal := X"000000" & readVal(31 downto 24);
+          elsif addr(1 downto 0) = "01" then
+            readVal := X"000000" & readVal(23 downto 16);
+          elsif addr(1 downto 0) = "10" then
+            readVal := X"000000" & readVal(15 downto 8);
+          else
+            readVal := X"000000" & readVal(7 downto 0);
+          end if;
+        end if;
+        if readVal /= value then
+          report "Did not read the expected value for 'read' command '" & l
+               & "'; actual value was " & rvs_hex(readVal, 8) & "."
+            severity warning;
+          result := TCCR_FAIL;
+          return;
         end if;
       end if;
       
@@ -1622,10 +1659,12 @@ begin -- architecture
     ---------------------------------------------------------------------------
     procedure executeLine(
       l       : in  string;
+      path    : in  string;
       result  : out testCommandResult_type
     ) is
       variable pos    : positive;
       variable token  : line;
+      variable res    : testCommandResult_type;
     begin
       
       -- Set result to continue by default.
@@ -1681,6 +1720,9 @@ begin -- architecture
         stim2mem_clearEnable <= '0';
         wait for 0 ns;
         loadPtr := (others => '0');
+      elsif matchStr(token.all, "inc") then
+        handleFile(path & l(pos to l'length), res);
+        result := res;
       else
         -- Unknown command, abort.
         report "Unknown command in test case file: '" & l & "'. "
@@ -1695,8 +1737,12 @@ begin -- architecture
     -- Runs a test case/test suite
     ---------------------------------------------------------------------------
     procedure handleFile(
-      fname   : in  string
+      fnameIn : in    string;
+      testRes : inout testCommandResult_type
     ) is
+      
+      -- Input filename, normalized so character 1 is actually at position 1.
+      variable fname  : string(1 to fnameIn'length);
       
       -- File handle for the input file.
       file     f      : text;
@@ -1709,7 +1755,7 @@ begin -- architecture
       variable path   : rvex_string_builder_type;
       
       -- File type specification. Determined based on the filename.
-      type testFileType_type is (TF_SUITE, TF_TEST);
+      type testFileType_type is (TF_SUITE, TF_TEST, TF_TEST_INC);
       variable ftype  : testFileType_type;
       
       -- Line manipulation variables.
@@ -1720,10 +1766,8 @@ begin -- architecture
       -- Current line number.
       variable lNr    : natural;
       
-      -- Test result code.
-      variable testRes: testCommandResult_type;
-      
     begin
+      fname := fnameIn;
       
       -- Determine the file type.
       for i in fname'length downto 1 loop
@@ -1732,9 +1776,11 @@ begin -- architecture
             ftype := TF_SUITE;
           elsif fname(i to fname'length) = ".test" then
             ftype := TF_TEST;
+          elsif fname(i to fname'length) = ".inc" then
+            ftype := TF_TEST_INC;
           else
-            report "Unknown file extension for " & fname & ". Should be .suite or "
-                 & ".test. Skipping file."
+            report "Unknown file extension for " & fname & ". Should be .suite, "
+                 & ".test or .inc. Skipping file."
               severity warning;
             return;
           end if;
@@ -1780,6 +1826,8 @@ begin -- architecture
         report "Entering test suite " & fname & "..." severity note;
       elsif ftype = TF_TEST then
         report "Running test case file " & fname & "..." severity note;
+      elsif ftype = TF_TEST_INC then
+        report "Including file " & fname & "..." severity note;
       end if;
       
       -- Read the file line by line.
@@ -1822,9 +1870,10 @@ begin -- architecture
         
         -- If this is a test case file, defer the line handling to the
         -- appropriate method.
-        if ftype = TF_TEST then
+        if ftype = TF_TEST or ftype = TF_TEST_INC then
           executeLine(
             l       => l.all,
+            path    => rvs2str(path),
             result  => testRes
           );
           case testRes is

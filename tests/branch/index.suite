@@ -1,3 +1,14 @@
 -- This test suite contains test cases for branch unit related instructions.
 
-branch.test
+-- Test unconditional jumps (GOTO and IGOTO) and correct commit behavior when
+-- branching.
+goto.test
+
+-- Test conditional branch instructions (BR and BRF).
+conditional-branch.test
+
+-- Test call and return (CALL, ICALL, RETURN, RFI)
+calls.test
+
+-- Test interrupts and RFI, as well as the context control register.
+interrupt.test
