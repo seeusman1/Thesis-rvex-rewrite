@@ -355,8 +355,10 @@ package body rvex_simUtils_mem_pkg is
   
   -- Parses a byte in an s-record.
   function str2srecByte(s: string; pos: positive) return byte_type is
+    variable b : byte_type;
   begin
-    return charToStdLogic(s(pos)) & charToStdLogic(s(pos+1));
+    b := charToStdLogic(s(pos)) & charToStdLogic(s(pos+1));
+    return b;
   end str2srecByte;
   
   -- Returns the checksum for a parsed s-record.

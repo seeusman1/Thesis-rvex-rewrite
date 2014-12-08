@@ -332,7 +332,7 @@ package rvex_opcode_pkg is
       multiplierCtrl => MUL_CTRL_NOP
     ),
     
-    -- 32 bit addition, operand 2 shifted left by four before adding.
+    -- 32 bit addition, operand 1 shifted left by four before adding.
     2#01101110# => (
       syntax_reg => "sh4add r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "sh4add r#.%r1 = r#.%r2, %id                       ",
@@ -454,9 +454,9 @@ package rvex_opcode_pkg is
     
     -- Copy operand 1, while setting the bit indexed by the immediate.
     2#00101100# => (
-      syntax_reg => "unknown                                           ",
+      syntax_reg => "sbit r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "sbit r#.%r1 = r#.%r2, %iu                         ",
-      valid => "10",
+      valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SBIT,
       branchCtrl => BRANCH_CTRL_NOP,
@@ -466,9 +466,9 @@ package rvex_opcode_pkg is
     
     -- Copy operand 1, while clearing the bit indexed by the immediate.
     2#00101101# => (
-      syntax_reg => "unknown                                           ",
+      syntax_reg => "sbitf r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "sbitf r#.%r1 = r#.%r2, %iu                        ",
-      valid => "10",
+      valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SBITF,
       branchCtrl => BRANCH_CTRL_NOP,
@@ -695,7 +695,7 @@ package rvex_opcode_pkg is
     -- Operand 1 != operand 2 -> general purpose register.
     2#01010010# => (
       syntax_reg => "cmpne r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpne r#.%r1 = r#.%r2, %id (= %ih)                ",
+      syntax_imm => "cmpne r#.%r1 = r#.%r2, %id                        ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_CMPNE,
@@ -707,7 +707,7 @@ package rvex_opcode_pkg is
     -- Operand 1 != operand 2 -> branch register.
     2#01010011# => (
       syntax_reg => "cmpne b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpne b#.%b2 = r#.%r2, %id (= %ih)                ",
+      syntax_imm => "cmpne b#.%b2 = r#.%r2, %id                        ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_CMPNE,
@@ -815,9 +815,9 @@ package rvex_opcode_pkg is
     -- Copies the bit in operand 1 indexed by the immediate to a general
     -- purpose register.
     2#01011100# => (
-      syntax_reg => "unknown                                           ",
+      syntax_reg => "tbit r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "tbit r#.%r1 = r#.%r2, %id                         ",
-      valid => "10",
+      valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_TBIT,
       branchCtrl => BRANCH_CTRL_NOP,
@@ -828,9 +828,9 @@ package rvex_opcode_pkg is
     -- Copies the bit in operand 1 indexed by the immediate to a branch
     -- register.
     2#01011101# => (
-      syntax_reg => "unknown                                           ",
+      syntax_reg => "tbit b#.%b2 = r#.%r2, r#.%r3                      ",
       syntax_imm => "tbit b#.%b2 = r#.%r2, %id                         ",
-      valid => "10",
+      valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_TBIT,
       branchCtrl => BRANCH_CTRL_NOP,
@@ -841,9 +841,9 @@ package rvex_opcode_pkg is
     -- Inverts and copies the bit in operand 1 indexed by the immediate
     -- to a general purpose register.
     2#01011110# => (
-      syntax_reg => "unknown                                           ",
+      syntax_reg => "tbitf r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "tbitf r#.%r1 = r#.%r2, %id                        ",
-      valid => "10",
+      valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_TBITF,
       branchCtrl => BRANCH_CTRL_NOP,
@@ -854,9 +854,9 @@ package rvex_opcode_pkg is
     -- Inverts and copies the bit in operand 1 indexed by the immediate
     -- to a branch register.
     2#01011111# => (
-      syntax_reg => "unknown                                           ",
+      syntax_reg => "tbitf b#.%b2 = r#.%r2, r#.%r3                     ",
       syntax_imm => "tbitf b#.%b2 = r#.%r2, %id                        ",
-      valid => "10",
+      valid => "11",
       datapathCtrl => DP_CTRL_ALU_BOOL,
       aluCtrl => ALU_CTRL_TBITF,
       branchCtrl => BRANCH_CTRL_NOP,

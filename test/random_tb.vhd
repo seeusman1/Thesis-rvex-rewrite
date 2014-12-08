@@ -19,63 +19,63 @@ architecture behavioral of random_tb is
   signal disas      : rvex_string_type;
 begin
   
-  test: process is
-    variable imem_v : rvsp_assembledProgram_type;
-    variable ok_v   : boolean;
-    variable test   : std_logic_vector(31 downto 0);
-  begin
-    
-    assemble(
-      source => (
-        -- 0x00000000
-        "nop                                                                   ",
-        "nop                                                                   ",
-        "addcg r0.3, b0.4 = b0.5, r0.6, r0.63                                  ",
-        "nop                                                                   ",
-        "nop                                                                   ",
-        "nop                                                                   ",
-        "ldb r0.33 = 42[r0.0]                                                  ",
-        "nop ;;                                                                ",
-
-        -- 0x00000020
-        "nop                                                                   ",
-        "nop                                                                   ",
-        "nop                                                                   ",
-        "nop                                                                   ",
-        "nop                                                                   ",
-        "nop                                                                   ",
-        "stb 33[r0.0] = r0.33                                                  ",
-        "goto -0x40 ;;                                                         "
-      ),
-      imem => imem_v,
-      ok => ok_v
-    );
-    imem <= imem_v;
-    
-    for i in 0 to 15 loop
-      report integer'image(i) & ": " & rvs2str(disassemble(imem_v(i))) severity warning;
-    end loop;
-    
-    test := X"76543210";
-    report "So will this give 3 or 0x3000? " & integer'image(to_integer(unsigned(test(15 downto 12)))) severity warning;
-    report "And this will give zero, right? " & integer'image(to_integer(unsigned(test(11 downto 12)))) severity warning;
-    for i in 1 to 5 loop
-      report "Will it keep spamming null range warnings? " & integer'image(to_integer(unsigned(test(11 downto 12)))) severity warning;
-    end loop;
-    for i in 1 to 5 loop
-      if true or to_integer(unsigned(test(11 downto 12))) = 1 then
-        report "Will it at least not spam null range warnings here?" severity warning;
-      end if;
-    end loop;
-    for i in 1 to 5 loop
-      if to_integer(unsigned(test(11 downto 12))) = 1 or true then
-        report "And it will here?" severity warning;
-      end if;
-    end loop;
-    report "So at least lazy evaluation is a thing. Note to self: add checks all over the place to prevent massive spam in static core designs." severity failure;
-    
-    wait;
-  end process;
+--  test: process is
+--    variable imem_v : rvsp_assembledProgram_type;
+--    variable ok_v   : boolean;
+--    variable test   : std_logic_vector(31 downto 0);
+--  begin
+--    
+--    assemble(
+--      source => (
+--        -- 0x00000000
+--        "nop                                                                   ",
+--        "nop                                                                   ",
+--        "addcg r0.3, b0.4 = b0.5, r0.6, r0.63                                  ",
+--        "nop                                                                   ",
+--        "nop                                                                   ",
+--        "nop                                                                   ",
+--        "ldb r0.33 = 42[r0.0]                                                  ",
+--        "nop ;;                                                                ",
+--
+--        -- 0x00000020
+--        "nop                                                                   ",
+--        "nop                                                                   ",
+--        "nop                                                                   ",
+--        "nop                                                                   ",
+--        "nop                                                                   ",
+--        "nop                                                                   ",
+--        "stb 33[r0.0] = r0.33                                                  ",
+--        "goto -0x40 ;;                                                         "
+--      ),
+--      imem => imem_v,
+--      ok => ok_v
+--    );
+--    imem <= imem_v;
+--    
+--    for i in 0 to 15 loop
+--      report integer'image(i) & ": " & rvs2str(disassemble(imem_v(i))) severity warning;
+--    end loop;
+--    
+--    test := X"76543210";
+--    report "So will this give 3 or 0x3000? " & integer'image(to_integer(unsigned(test(15 downto 12)))) severity warning;
+--    report "And this will give zero, right? " & integer'image(to_integer(unsigned(test(11 downto 12)))) severity warning;
+--    for i in 1 to 5 loop
+--      report "Will it keep spamming null range warnings? " & integer'image(to_integer(unsigned(test(11 downto 12)))) severity warning;
+--    end loop;
+--    for i in 1 to 5 loop
+--      if true or to_integer(unsigned(test(11 downto 12))) = 1 then
+--        report "Will it at least not spam null range warnings here?" severity warning;
+--      end if;
+--    end loop;
+--    for i in 1 to 5 loop
+--      if to_integer(unsigned(test(11 downto 12))) = 1 or true then
+--        report "And it will here?" severity warning;
+--      end if;
+--    end loop;
+--    report "So at least lazy evaluation is a thing. Note to self: add checks all over the place to prevent massive spam in static core designs." severity failure;
+--    
+--    wait;
+--  end process;
   
 --  more_tests: process is
 --    file f : text;
@@ -138,6 +138,82 @@ begin
 --    wait;
 --    
 --  end process;
+  
+  do_math: process is
+    procedure dump(s: string) is
+      variable ln : std.textio.line;
+    begin
+      ln := new string(1 to s'length);
+      ln.all := s;
+      writeline(std.textio.output, ln);
+      if ln /= null then
+        deallocate(ln);
+      end if;
+      
+      -- If writing to stdout does not work, you can also use reports:
+      --report s severity note;
+    end procedure;
+    
+    variable op1, op2: unsigned(31 downto 0);
+    variable clz: natural;
+  begin
+    
+--    op1 := X"F0F0F0F0";
+--    op2 := X"FF00FF00";
+--    dump("Operating on " & rvs_hex(std_logic_vector(op1)) & " and " & rvs_hex(std_logic_vector(op2)));
+--    dump("wait    400 write *  0  " & rvs_hex(std_logic_vector(op1 and op2), 8) & " exclusive");
+--    dump("wait    40  write *  4  " & rvs_hex(std_logic_vector(not op1 and op2), 8) & " exclusive");
+--    dump("wait    40  write *  8  " & rvs_hex(std_logic_vector(op1 or op2), 8) & " exclusive");
+--    dump("wait    40  write * 12  " & rvs_hex(std_logic_vector(not op1 or op2), 8) & " exclusive");
+--    dump("wait    40  write * 16  " & rvs_hex(std_logic_vector(op1 xor op2), 8) & " exclusive");
+--    dump("");
+--    
+--    op1 := X"6560d079";
+--    op2 := X"2cff892c";
+--    dump("Operating on " & rvs_hex(std_logic_vector(op1)) & " and " & rvs_hex(std_logic_vector(op2)));
+--    dump("wait    400 write *  0  " & rvs_hex(std_logic_vector(op1 and op2), 8) & " exclusive");
+--    dump("wait    40  write *  4  " & rvs_hex(std_logic_vector(not op1 and op2), 8) & " exclusive");
+--    dump("wait    40  write *  8  " & rvs_hex(std_logic_vector(op1 or op2), 8) & " exclusive");
+--    dump("wait    40  write * 12  " & rvs_hex(std_logic_vector(not op1 or op2), 8) & " exclusive");
+--    dump("wait    40  write * 16  " & rvs_hex(std_logic_vector(op1 xor op2), 8) & " exclusive");
+--    dump("");
+--    
+--    op1 := X"6900957a";
+--    op2 := X"ed8dc2cc";
+--    dump("Operating on " & rvs_hex(std_logic_vector(op1)) & " and " & rvs_hex(std_logic_vector(op2)));
+--    dump("wait    400 write *  0  " & rvs_hex(std_logic_vector(op1 and op2), 8) & " exclusive");
+--    dump("wait    40  write *  4  " & rvs_hex(std_logic_vector(not op1 and op2), 8) & " exclusive");
+--    dump("wait    40  write *  8  " & rvs_hex(std_logic_vector(op1 or op2), 8) & " exclusive");
+--    dump("wait    40  write * 12  " & rvs_hex(std_logic_vector(not op1 or op2), 8) & " exclusive");
+--    dump("wait    40  write * 16  " & rvs_hex(std_logic_vector(op1 xor op2), 8) & " exclusive");
+--    dump("");
+    
+    op1 := X"6560D079";
+    op2 := X"6560D079";
+    for i in 33 downto 0 loop
+      dump("-- After testing and modifying bit " & integer'image(i));
+      clz := 0;
+      for i in 31 downto 0 loop
+        exit when op1(i) = '1';
+        clz := clz + 1;
+      end loop;
+      dump("wait    40 write * 4 " & integer'image(clz) & " exclusive");
+      if i < 32 and op1(i) = '1' then
+        dump("read    dmem byte 0 1");
+      else
+        dump("read    dmem byte 0 2");
+      end if;
+      if i < 32 then
+        op1(i) := '0';
+        op2(i) := '1';
+      end if;
+      dump("wait    40 write * 8  " & rvs_hex(std_logic_vector(op1)) & " exclusive");
+      dump("wait    40 write * 12 " & rvs_hex(std_logic_vector(op2)) & " exclusive");
+      dump("");
+    end loop;
+    
+    wait;
+  end process;
   
 end behavioral;
 

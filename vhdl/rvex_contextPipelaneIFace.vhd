@@ -633,10 +633,17 @@ begin -- architecture
           := brLinkWritePort_v(laneGroup).linkForwardEnable
           or pl2cxplif_brLinkWritePort(currentLane).linkForwardEnable;
         
-        -- Branch register write data is also wired-or.
-        brLinkWritePort_v(laneGroup).brData
-          := brLinkWritePort_v(laneGroup).brData
-          or pl2cxplif_brLinkWritePort(currentLane).brData;
+        -- Branch register write data is also wired-or. Make sure we mask by
+        -- the forward enable signals first though; sometimes the write values
+        -- are nonzero while the registers are not being written.
+        for stage in S_FIRST to S_SWB loop
+          brLinkWritePort_v(laneGroup).brData(stage)
+            := brLinkWritePort_v(laneGroup).brData(stage)
+            or (
+              pl2cxplif_brLinkWritePort(currentLane).brData(stage)
+              and pl2cxplif_brLinkWritePort(currentLane).brForwardEnable(stage)
+            );
+        end loop;
         
       end loop;
       

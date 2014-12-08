@@ -136,6 +136,13 @@ use work.rvex_ctrlRegs_pkg.all;
 --   Same as load, but without the assembly step; just loads the given value
 --   into the instruction memory.
 --   
+-- loadnops <count>
+--   Loads <count> nops, as if "load nop" was run <count> times.
+--
+-- loadsrec <filename>
+--   Loads the given srec file into the instruction memory, offset by the
+--   current load pointer. Note that the load pointer will NOT auto-increment.
+-- 
 -- fillnops <ptr>
 --   Same as at, but inserts NOPs from the current loading pointer up to <ptr>.
 -- 
@@ -354,6 +361,7 @@ architecture Behavioral of rvex_tb is
   signal stim2mem_writeEnable   : std_logic;
   signal stim2mem_readEnable    : std_logic;
   signal stim2mem_faultEnable   : std_logic;
+  signal stim2mem_srecEnable    : std_logic;
   
   -- Selects between accessing the instruction memory (high) and the data
   -- memory (low). Ignored for clear operations.
@@ -363,6 +371,9 @@ architecture Behavioral of rvex_tb is
   
   -- Address to operate on. Ignored for clear operations.
   signal stim2mem_addr          : rvex_address_type;
+  
+  -- Filename for srec file loading.
+  shared variable stim2mem_filename : line;
   
   -- Write mask and data for write operations.
   signal stim2mem_writeMask     : rvex_mask_type;
@@ -475,7 +486,7 @@ begin -- architecture
     
     -- Synchronization with the test case runner program.
     stim2mem_clearEnable, stim2mem_writeEnable, stim2mem_readEnable,
-    stim2mem_faultEnable
+    stim2mem_faultEnable, stim2mem_srecEnable
     
   ) is
     
@@ -662,6 +673,25 @@ begin -- architecture
         addr  => stim2mem_addr,
         value => flags
       );
+      
+    elsif rising_edge(stim2mem_srecEnable) then
+      
+      -- Handle s-record file loads.
+      if stim2mem_filename /= null then
+        if stim2mem_select = IMEM_SELECT then
+          rvmem_loadSRec(
+            mem     => imem,
+            fname   => stim2mem_filename.all,
+            offset  => stim2mem_addr
+          );
+        else
+          rvmem_loadSRec(
+            mem     => dmem,
+            fname   => stim2mem_filename.all,
+            offset  => stim2mem_addr
+          );
+        end if;
+      end if;
       
     end if;
     
@@ -1033,6 +1063,110 @@ begin -- architecture
       result := TCCR_CONTINUE;
       
     end executeLoadHex;
+    
+    ---------------------------------------------------------------------------
+    -- Executes a 'loadsrec' command
+    ---------------------------------------------------------------------------
+    -- loadsrec <filename>
+    procedure executeLoadSrec(
+      l       : in    string;
+      pos     : inout positive;
+      path    : in    string;
+      result  : out   testCommandResult_type
+    ) is
+      variable fname  : std.textio.line;
+    begin
+      
+      -- Determine the filename.
+      if stim2mem_filename /= null then
+        deallocate(stim2mem_filename);
+        stim2mem_filename := null;
+      end if;
+      stim2mem_filename := new string(1 to l'length + path'length + 1 - pos);
+      stim2mem_filename.all := path & l(pos to l'length);
+      
+      -- Command the memory process to load the selected file.
+      stim2mem_srecEnable <= '1';
+      stim2mem_select <= IMEM_SELECT;
+      stim2mem_addr <= loadPtr;
+      wait for 0 ns;
+      stim2mem_srecEnable <= '0';
+      wait for 0 ns;
+      
+      -- Clean up.
+      deallocate(stim2mem_filename);
+      stim2mem_filename := null;
+      
+      -- Everything is OK.
+      result := TCCR_CONTINUE;
+      
+    end executeLoadSrec;
+    
+    ---------------------------------------------------------------------------
+    -- Executes a 'loadnops' command
+    ---------------------------------------------------------------------------
+    -- loadnops <count>
+    procedure executeLoadNops(
+      l       : in    string;
+      pos     : inout positive;
+      result  : out   testCommandResult_type
+    ) is
+      variable syllable : rvex_syllable_type;
+      variable error    : rvex_string_builder_type;
+      variable count    : signed(32 downto 0);
+      variable ok       : boolean;
+    begin
+      
+      -- Scan the count.
+      scanNumeric(l, pos, count, ok);
+      if not ok then
+        report "Error parsing test case 'loadnops' command: '" & l & "'. "
+             & "Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Assemble a NOP instruction.
+      assembleLine(
+        source    => "nop",
+        line      => curLineNr,
+        syllable  => syllable,
+        ok        => ok,
+        error     => error
+      );
+      if not ok then
+        report "Could not assembly nop instruction: " & rvs2sim(error) & ". Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Replicate the NOP instruction.
+      while count > 0 loop
+        
+        -- Load the NOP.
+        stim2mem_writeEnable <= '1';
+        stim2mem_select <= IMEM_SELECT;
+        stim2mem_addr <= loadPtr;
+        stim2mem_writeMask <= (others => '1');
+        stim2mem_writeData <= syllable;
+        wait for 0 ns;
+        stim2mem_writeEnable <= '0';
+        wait for 0 ns;
+        
+        -- Increment the loading pointer.
+        loadPtr := std_logic_vector(vect2unsigned(loadPtr) + 4);
+        
+        -- Decrement the counter.
+        count := count - 1;
+        
+      end loop;
+      
+      -- Everything is OK.
+      result := TCCR_CONTINUE;
+      
+    end executeLoadNops;
     
     ---------------------------------------------------------------------------
     -- Executes a 'fillnops' command
@@ -1692,6 +1826,10 @@ begin -- architecture
         executeLoad(l, pos, result);
       elsif matchStr(token.all, "loadhex") then
         executeLoadHex(l, pos, result);
+      elsif matchStr(token.all, "loadnops") then
+        executeLoadNops(l, pos, result);
+      elsif matchStr(token.all, "loadsrec") then
+        executeLoadSrec(l, pos, path, result);
       elsif matchStr(token.all, "fillnops") then
         executeFillNops(l, pos, result);
       elsif matchStr(token.all, "reset") then
@@ -1821,13 +1959,12 @@ begin -- architecture
         
       end if;
       
-      -- Report that we've loaded a file.
+      -- Report that we've loaded a file. Don't report include files because
+      -- spam.
       if ftype = TF_SUITE then
         report "Entering test suite " & fname & "..." severity note;
       elsif ftype = TF_TEST then
         report "Running test case file " & fname & "..." severity note;
-      elsif ftype = TF_TEST_INC then
-        report "Including file " & fname & "..." severity note;
       end if;
       
       -- Read the file line by line.
@@ -1841,6 +1978,7 @@ begin -- architecture
         curLineNr := lNr;
         
         -- Strip comments and whitespace, and skip empty lines.
+        lstart := 1;
         for i in 1 to l.all'length loop
           lstart := i;
           exit when not isWhitespaceChar(l.all(i));
@@ -1960,6 +2098,7 @@ begin -- architecture
     stim2mem_writeEnable    <= '0';
     stim2mem_readEnable     <= '0';
     stim2mem_faultEnable    <= '0';
+    stim2mem_srecEnable     <= '0';
     stim2mem_select         <= '0';
     stim2mem_addr           <= (others => '0');
     stim2mem_writeMask      <= (others => '0');

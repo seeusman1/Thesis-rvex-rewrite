@@ -303,6 +303,7 @@ package rvex_opcodeDatapath_pkg is
     funcSel                     => ALU,
     gpRegWE                     => '1',
     brRegWE                     => '1',
+    brFmt                       => '1',
     others                      => '0'
   );
   
