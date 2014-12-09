@@ -170,6 +170,10 @@ use work.rvex_ctrlRegs_pkg.all;
 --   <expected>. <ptr> may be specified as a numerical value, or as a CR_*
 --   register index (see also rvex_ctrlRegs_pkg).
 --   
+-- srec  <dmem|imem> <offset> <filename>
+--   Loads the specified srec file into the selected memory at the specified
+--   offset.
+-- 
 -- (TODO FROM HERE ONWARDS)
 -- 
 -- fault <set|clear> <imem|dmem> <ptr>
@@ -1074,7 +1078,6 @@ begin -- architecture
       path    : in    string;
       result  : out   testCommandResult_type
     ) is
-      variable fname  : std.textio.line;
     begin
       
       -- Determine the filename.
@@ -1789,6 +1792,88 @@ begin -- architecture
     end executeReadWrite;
     
     ---------------------------------------------------------------------------
+    -- Executes an 'srec' command
+    ---------------------------------------------------------------------------
+    -- srec <imem|dmem> <offset> <filename>
+    procedure executeSrec(
+      l       : in    string;
+      pos     : inout positive;
+      path    : in    string;
+      result  : out   testCommandResult_type
+    ) is
+      variable token      : line;
+      variable val        : signed(32 downto 0);
+      variable ok         : boolean;
+      variable pos2       : positive;
+      
+      -- Memory to access.
+      type memoryType_type is (MEM_DMEM, MEM_IMEM);
+      variable memType    : memoryType_type;
+      
+      -- Offset for srec addresses.
+      variable offset     : rvex_address_type;
+      
+    begin
+      
+      -- Parse the memory selection token.
+      scanToken(l, pos, token);
+      if token = null then
+        report "Error parsing test case 'srec' command: '" & l
+             & "'. Expecting dmem or imem. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      elsif matchStr(token.all, "dmem") then memType := MEM_DMEM;
+      elsif matchStr(token.all, "imem") then memType := MEM_IMEM;
+      else
+        report "Error parsing test case 'srec' command: '" & l
+             & "'. Expecting dmem or imem. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Parse the offset.
+      scanNumeric(l, pos, val, ok);
+      if not ok then
+        report "Error parsing test case 'srec' command: '" & l
+             & "'. Expecting offset. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      offset := std_logic_vector(val(31 downto 0));
+      
+      -- Determine the filename.
+      if stim2mem_filename /= null then
+        deallocate(stim2mem_filename);
+        stim2mem_filename := null;
+      end if;
+      stim2mem_filename := new string(1 to l'length + path'length + 1 - pos);
+      stim2mem_filename.all := path & l(pos to l'length);
+      
+      -- Command the memory process to load the selected file.
+      stim2mem_srecEnable <= '1';
+      if memType = MEM_DMEM then
+        stim2mem_select <= DMEM_SELECT;
+      else
+        stim2mem_select <= IMEM_SELECT;
+      end if;
+      stim2mem_addr <= offset;
+      wait for 0 ns;
+      stim2mem_srecEnable <= '0';
+      wait for 0 ns;
+      
+      -- Clean up.
+      deallocate(stim2mem_filename);
+      stim2mem_filename := null;
+      
+      -- Everything is OK.
+      result := TCCR_CONTINUE;
+      
+    end executeSrec;
+    
+    ---------------------------------------------------------------------------
     -- Executes a line in a test case file
     ---------------------------------------------------------------------------
     procedure executeLine(
@@ -1847,6 +1932,8 @@ begin -- architecture
         executeReadWrite(l, pos, true, result);
       elsif matchStr(token.all, "write") then
         executeReadWrite(l, pos, false, result);
+      elsif matchStr(token.all, "srec") then
+        executeSrec(l, pos, path, result);
       elsif matchStr(token.all, "init") then
         if pos <= l'length then
           report "Garbage at end of line in test case file. Aborting."

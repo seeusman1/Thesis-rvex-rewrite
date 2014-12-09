@@ -9,10 +9,26 @@ configurable pipelane code works in rvex_pipelane.vhd.
 I will eventually also make a PDF with more general information.
 
 Currently working on the VHDL unit test runner and test cases for it, while
-debugging the core at the same time. After that's done I'll first focus on
-getting a standalone version of the core working on the ML605, followed by the
-cached version with the new cache I wrote earlier.
+debugging the core at the same time. Some of the test cases are compiled using
+the HP compiler. The srec files are in the repo, but if you want to change
+something you should copy the tools directory from the rvex release into this
+directory (or symlink it).
+
+When the test cases are done I'll first focus on getting a standalone version
+of the core working on the ML605, followed by the cached version with the new
+cache I wrote earlier.
 
 Internal interfaces in the core files are still slightly in flux due to
 bugfixing, but the general layout of the files should not change anymore. The
 toplevel interface can be considered frozen at this point.
+
+
+
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+x264 works!
+
+This was a triumph
+I'm making a note here: huge success
+It's hard to overstate my satisfaction
+

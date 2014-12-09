@@ -444,7 +444,7 @@ begin -- architecture
         
       end if;
       
-    elsif ctrl(S_BR).RFI = '1' then
+    elsif ctrl(S_BR).RFI = '1' and pl2br_valid(S_BR) = '1' then
       
       -- RFI instruction. Jump to the trap return address (stored in the trap
       -- point context control register) and set the RFI flag high for the
@@ -480,7 +480,7 @@ begin -- architecture
     elsif (
       (ctrl(S_BR).branchIfTrue  and     pl2br_opBr(S_BR)) or
       (ctrl(S_BR).branchIfFalse and not pl2br_opBr(S_BR))
-    ) = '1' then
+    ) = '1' and pl2br_valid(S_BR) = '1' then
       
       -- Regular branch instruction. Jump to the selected branch target.
       if ctrl(S_BR).branchToLink = '1' then

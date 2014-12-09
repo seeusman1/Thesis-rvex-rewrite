@@ -5,6 +5,8 @@ config  genBundleSize         8
 config  memLaneRevIndex       1
 config  branchLaneRevIndex    0
 config  forwarding            1
+config  limmhFromPreviousPair 1
+config  limmhFromNeighbor     1
 
 -- Initialize memories.
 init
@@ -17,7 +19,8 @@ init
 --
 -- i.e., it will load two words from memory, perform a signed division, and
 -- store the result in memory.
-loadsrec  div.srec
+srec    imem 0 ../srec/div.srec
+srec    dmem 0 ../srec/div.srec
 
 -- Compute 9 / 3.
 reset
