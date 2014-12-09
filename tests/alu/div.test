@@ -28,3 +28,15 @@ write   dmem word 0 9
 write   dmem word 4 3
 wait    1000 write * 8 3 exclusive
 
+-- Compute 9 / 3.
+reset
+write   dmem word 0 0xC761B6A2
+write   dmem word 4 0x000B30E9
+wait    1000 write * 8 0xFFFFFAF1 exclusive
+
+-- Compute 9 / 3.
+reset
+write   dmem word 0 0x4F253D3C
+write   dmem word 4 0x000016B1
+wait    1000 write * 8 0x00037CE7 exclusive
+

@@ -1,0 +1,19 @@
+name    Test interrupts and int/trap control regs
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  forwarding            1
+
+-- Initialize memories.
+init
+
+
+
+-- Reset the processor to start.
+reset
+
+rctrl   0 irq
+wait    20
+rctrl   0 check irq high

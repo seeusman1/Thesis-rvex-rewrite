@@ -174,16 +174,9 @@ use work.rvex_ctrlRegs_pkg.all;
 --   Loads the specified srec file into the selected memory at the specified
 --   offset.
 -- 
--- (TODO FROM HERE ONWARDS)
--- 
--- fault <set|clear> <imem|dmem> <ptr>
---   Marks the given memory location as faulty or clears the marking. When a
---   fauly memory location is accessed, the fault signal to the rvex will be
---   asserted.
--- 
--- rctrl <ctxt> int <id>
---   Assert irq pin for context <ctxt> with irqID set to <id>. The irq pin is
---   released automatically when irqAck goes high.
+-- rctrl <ctxt> irq [<id>]
+--   Assert irq pin for context <ctxt> with irqID set to <id>, or 0 if not
+--   specified. The irq pin is released automatically when irqAck goes high.
 -- 
 -- rctrl <ctxt> reset
 --   Resets the specified context. Takes one cycle to complete.
@@ -196,6 +189,13 @@ use work.rvex_ctrlRegs_pkg.all;
 -- 
 -- rctrl <ctxt> check <idle|done|irq> <low|high>
 --   Ensures that the given context is (not) idle/done, fails otherwise.
+-- 
+-- (TODO FROM HERE ONWARDS)
+-- 
+-- fault <set|clear> <imem|dmem> <ptr>
+--   Marks the given memory location as faulty or clears the marking. When a
+--   fauly memory location is accessed, the fault signal to the rvex will be
+--   asserted.
 -- 
 -------------------------------------------------------------------------------
 -- Numeric data entry
@@ -1874,6 +1874,208 @@ begin -- architecture
     end executeSrec;
     
     ---------------------------------------------------------------------------
+    -- Executes an 'rctrl' command
+    ---------------------------------------------------------------------------
+    -- rctrl <ctxt> irq [<id>]
+    -- rctrl <ctxt> reset
+    -- rctrl <ctxt> halt
+    -- rctrl <ctxt> run
+    -- rctrl <ctxt> check <idle|done|irq> <low|high>
+    procedure executeRctrl(
+      l       : in    string;
+      pos     : inout positive;
+      result  : out   testCommandResult_type
+    ) is
+      variable token      : line;
+      variable val        : signed(32 downto 0);
+      variable ok         : boolean;
+      
+      -- Context to access.
+      variable ctxt       : natural;
+      
+      -- Type of run control command.
+      type rctrlType_type is (
+        RC_IRQ, RC_RESET, RC_HALT, RC_RUN,
+        RC_CHECK_IDLE, RC_CHECK_DONE, RC_CHECK_IRQ
+      );
+      variable rctrlType   : rctrlType_type;
+      
+      -- Parameter. This is the interrupt ID for RC_IRQ and 0 or 1 for the
+      -- check commands.
+      variable param      : signed(32 downto 0);
+      
+    begin
+      
+      -- Parse the context to access.
+      scanNumeric(l, pos, val, ok);
+      if not ok then
+        report "Error parsing test case 'rctrl' command: '" & l
+             & "'. Context ID expected. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      if val < 0 or val >= 2**CFG.numContextsLog2 then
+        report "Error parsing test case 'rctrl' command: '" & l
+             & "'. Context ID is out of range. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      ctxt := to_integer(val);
+      
+      -- Parse the command type token.
+      scanToken(l, pos, token);
+      if token = null then
+        report "Error parsing test case 'rctrl' command: '" & l
+             & "'. Command type expected. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      elsif matchStr(token.all, "irq") then
+        rctrlType := RC_IRQ;
+        
+        -- Scan the interrupt ID.
+        scanNumeric(l, pos, val, ok);
+        if ok then
+          param := val;
+        else
+          param := (others => '0');
+        end if;
+        
+      elsif matchStr(token.all, "reset") then rctrlType := RC_RESET;
+      elsif matchStr(token.all, "halt" ) then rctrlType := RC_HALT;
+      elsif matchStr(token.all, "run" ) then rctrlType := RC_RUN;
+      elsif matchStr(token.all, "check" ) then
+        
+        -- Scan signal name.
+        scanToken(l, pos, token);
+        if token = null then
+          report "Error parsing test case 'rctrl' command: '" & l
+               & "'. Signal name expected. Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+          return;
+        elsif matchStr(token.all, "idle") then rctrlType := RC_CHECK_IDLE;
+        elsif matchStr(token.all, "done") then rctrlType := RC_CHECK_DONE;
+        elsif matchStr(token.all, "irq" ) then rctrlType := RC_CHECK_IRQ;
+        else
+          report "Error parsing test case 'rctrl' command: '" & l
+               & "'. Unknown signal name '" & token.all & "'. Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+          return;
+        end if;
+        
+        -- Scan expected signal state.
+        scanToken(l, pos, token);
+        if token = null then
+          report "Error parsing test case 'rctrl' command: '" & l
+               & "'. Expected low or high. Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+          return;
+        elsif matchStr(token.all, "low") then param := (others => '0');
+        elsif matchStr(token.all, "high") then param := (0 => '1', others => '0');
+        else
+          report "Error parsing test case 'rctrl' command: '" & l
+               & "'. Expected low or high. Aborting."
+            severity warning;
+          result := TCCR_ABORT;
+          return;
+        end if;
+        
+      else
+        report "Error parsing test case 'rctrl' command: '" & l
+             & "'. Unknown command type. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- We should be at the end of the line now.
+      if pos <= l'length then
+        report "Error parsing test case 'rctrl' command: '" & l
+             & "'. Garbage at end of line. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
+      end if;
+      
+      -- Actually handle the command.
+      case rctrlType is
+        
+        when RC_IRQ =>
+          
+          -- Give the interrupt command to the controller process.
+          stim2irq_enable <= '1';
+          stim2irq_ctxt   <= ctxt;
+          stim2irq_id     <= std_logic_vector(param(31 downto 0));
+          wait for 0 ns;
+          stim2irq_enable <= '0';
+          wait for 0 ns;
+          
+        when RC_RESET =>
+          
+          -- Give the context reset command.
+          rctrl2rv_reset(ctxt) <= '1';
+          cycles(1);
+          rctrl2rv_reset(ctxt) <= '0';
+          
+        when RC_HALT =>
+          
+          -- Stop a context.
+          rctrl2rv_run(ctxt) <= '0';
+          
+        when RC_RUN =>
+          
+          -- Resume a context.
+          rctrl2rv_run(ctxt) <= '1';
+          
+        when RC_CHECK_IDLE =>
+          
+          -- Check idle output.
+          if rv2rctrl_idle(ctxt) /= std_logic(param(0)) then
+            report "Processor is not in expected state for 'rctrl' command '"
+                 & l & "'; actual value was "
+                 & rvs_bin_no0b("" & rv2rctrl_idle(ctxt), 1) & "."
+              severity warning;
+            result := TCCR_FAIL;
+            return;
+          end if;
+          
+        when RC_CHECK_DONE =>
+          
+          -- Check done output.
+          if rv2rctrl_done(ctxt) /= std_logic(param(0)) then
+            report "Processor is not in expected state for 'rctrl' command '"
+                 & l & "'; actual value was "
+                 & rvs_bin_no0b("" & rv2rctrl_done(ctxt), 1) & "."
+              severity warning;
+            result := TCCR_FAIL;
+            return;
+          end if;
+          
+        when RC_CHECK_IRQ =>
+          
+          -- Check IRQ signal.
+          if rctrl2rv_irq(ctxt) /= std_logic(param(0)) then
+            report "Processor is not in expected state for 'rctrl' command '"
+                 & l & "'; actual value was "
+                 & rvs_bin_no0b("" & rctrl2rv_irq(ctxt), 1) & "."
+              severity warning;
+            result := TCCR_FAIL;
+            return;
+          end if;
+          
+      end case;
+      
+      -- Command handled.
+      result := TCCR_CONTINUE;
+      
+    end executeRctrl;
+    
+    ---------------------------------------------------------------------------
     -- Executes a line in a test case file
     ---------------------------------------------------------------------------
     procedure executeLine(
@@ -1934,6 +2136,8 @@ begin -- architecture
         executeReadWrite(l, pos, false, result);
       elsif matchStr(token.all, "srec") then
         executeSrec(l, pos, path, result);
+      elsif matchStr(token.all, "rctrl") then
+        executeRctrl(l, pos, result);
       elsif matchStr(token.all, "init") then
         if pos <= l'length then
           report "Garbage at end of line in test case file. Aborting."

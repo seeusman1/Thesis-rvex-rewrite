@@ -5,10 +5,12 @@
 goto.test
 
 -- Test conditional branch instructions (BR and BRF).
-conditional-branch.test
+branch.test
 
 -- Test call and return (CALL, ICALL, RETURN, RFI)
 calls.test
 
--- Test interrupts and RFI, as well as the context control register.
+-- Test interrupts, RFI, and context control bits for interrupt enable and
+-- ready-for-trap.
 interrupt.test
+

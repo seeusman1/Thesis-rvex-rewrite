@@ -4,14 +4,14 @@
 
 -- Test basic STW and STOP functionality, which pretty much all other tests
 -- rely on.
-sanity.test
+--sanity.test
 
 -- Test register files and forwarding. This also kind of tests ADD, CMPEQ,
 -- STBR, MTL and STL.
-regs/index.suite
+--regs/index.suite
 
 -- Test LIMMH instructions.
-limmh/index.suite
+--limmh/index.suite
 
 -- Test ALU instructions.
 alu/index.suite
@@ -23,7 +23,7 @@ alu/index.suite
 -- todo
 
 -- Test branch unit instructions.
-branch/index.suite
+--branch/index.suite
 
 -- Test dynamic reconfiguration.
 -- todo
