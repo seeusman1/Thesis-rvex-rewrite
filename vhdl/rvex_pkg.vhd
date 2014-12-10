@@ -141,6 +141,13 @@ package rvex_pkg is
     -- are used, the higher indexed values are unused.
     resetVectors                : rvex_address_array(7 downto 0);
     
+    -- When true, the stall signals for each group will either be all high or
+    -- all low. This depends on the memory architecture; when this is set, the
+    -- memory architecture can be made simpler, but cannot make use of the
+    -- possible performance gain due to being able to stall only part of the
+    -- core.
+    unifiedStall                : boolean;
+    
   end record;
   
   -- Default rvex core configuration.
@@ -158,7 +165,8 @@ package rvex_pkg is
     limmhFromPreviousPair       => true,
     reg63isLink                 => false,
     cregStartAddress            => X"FFFFFF80",
-    resetVectors                => (others => (others => '0'))
+    resetVectors                => (others => (others => '0')),
+    unifiedStall                => false
   );
   
   -- Minimal rvex core configuration.
@@ -176,7 +184,8 @@ package rvex_pkg is
     limmhFromPreviousPair       => false,
     reg63isLink                 => false,
     cregStartAddress            => X"FFFFFF80",
-    resetVectors                => (others => (others => '0'))
+    resetVectors                => (others => (others => '0')),
+    unifiedStall                => true
   );
   
   -- Component declaration for the rvex processor.

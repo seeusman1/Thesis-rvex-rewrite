@@ -288,7 +288,14 @@ architecture Behavioral of rvex_tb is
     
     -- Configures the reset address for each context. Should all be set to 0
     -- for the test cases to run correctly.
-    resetVectors                => (others => (others => '0'))
+    resetVectors                => (others => (others => '0')),
+    
+    -- When true, the stall signals for each group will either be all high or
+    -- all low. This depends on the memory architecture; when this is set, the
+    -- memory architecture can be made simpler, but cannot make use of the
+    -- possible performance gain due to being able to stall only part of the
+    -- core.
+    unifiedStall                => false
     
   );
   

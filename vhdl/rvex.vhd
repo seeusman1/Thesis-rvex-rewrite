@@ -589,9 +589,20 @@ begin -- architecture
   -- Combine the reset signals.
   reset_s <= reset or gbreg2rv_reset;
   
-  -- The rvex core stalls when either the memory stalls or the debug bus makes
-  -- an access.
-  stall <= mem2rv_stallIn or debugBusStall;
+  -- Generate the stall signals.
+  stall_gen: process (mem2rv_stallIn, debugBusStall) is
+    variable s : std_logic;
+  begin
+    if CFG.unifiedStall then
+      s := '0';
+      for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+        s := s or mem2rv_stallIn(laneGroup) or debugBusStall(laneGroup);
+      end loop;
+      stall <= (others => 's');
+    else
+      stall <= mem2rv_stallIn or debugBusStall;
+    end if;
+  end process;
   
   -- Forward the internal stall signal to the memory.
   rv2mem_stallOut <= stall;
