@@ -77,6 +77,7 @@ package rvex_simUtils_asDisas_pkg is
   procedure assembleLine(
     source    : in string;
     line      : in positive;
+    consts    : inout scan_intConsts_type;
     syllable  : out rvex_syllable_type;
     ok        : out boolean;
     error     : out rvex_string_builder_type
@@ -89,6 +90,7 @@ package rvex_simUtils_asDisas_pkg is
   procedure assemble(
     source      : in  rvsp_assemblyProgram_type;
     imem        : out rvsp_assembledProgram_type;
+    consts      : inout scan_intConsts_type;
     ok          : out boolean;
     errorLevel  : in  severity_level := failure
   );
@@ -124,6 +126,10 @@ package body rvex_simUtils_asDisas_pkg is
     
     -- Pattern to match with.
     pattern   : in string;
+    
+    -- List of integer constants which can be used in place of immediate
+    -- literals.
+    consts    : inout scan_intConsts_type;
     
     -- Syllable input/output. Before calling, the opcode and imm select bits
     -- should be set to the values belonging to the pattern.
@@ -211,7 +217,7 @@ package body rvex_simUtils_asDisas_pkg is
         -- number for the LIMMH and target syllable.
         patternPos := patternPos + 3;
         scanToEndOfWhitespace(pattern, patternPos);
-        scanNumeric(source, sourcePos, val, stepOk);
+        scanNumeric(source, sourcePos, consts, val, stepOk);
         if not stepOk then
           error := to_rvs("failed to parse immediate numeric");
           return;
@@ -224,7 +230,7 @@ package body rvex_simUtils_asDisas_pkg is
         -- syllables.
         patternPos := patternPos + 3;
         scanToEndOfWhitespace(pattern, patternPos);
-        scanNumeric(source, sourcePos, val, stepOk);
+        scanNumeric(source, sourcePos, consts, val, stepOk);
         if not stepOk then
           error := to_rvs("failed to parse long immediate numeric");
           return;
@@ -385,6 +391,9 @@ package body rvex_simUtils_asDisas_pkg is
     -- Line number for the error message.
     line      : in positive;
     
+    -- List of constant literals which can be used in place of immediates.
+    consts    : inout scan_intConsts_type;
+    
     -- Syllable output if OK.
     syllable  : out rvex_syllable_type;
     
@@ -419,7 +428,7 @@ package body rvex_simUtils_asDisas_pkg is
         tempSyllable := (others => '0');
         tempSyllable(31 downto 24) := uint2vect(opcode, 8);
         asAttemptPattern(
-          source, OPCODE_TABLE(opcode).syntax_reg, tempSyllable,
+          source, OPCODE_TABLE(opcode).syntax_reg, consts, tempSyllable,
           tempOK, tempCharsValid, tempError
         );
         if tempOK then
@@ -445,7 +454,7 @@ package body rvex_simUtils_asDisas_pkg is
         tempSyllable(31 downto 24) := uint2vect(opcode, 8);
         tempSyllable(23) := '1';
         asAttemptPattern(
-          source, OPCODE_TABLE(opcode).syntax_imm, tempSyllable,
+          source, OPCODE_TABLE(opcode).syntax_imm, consts, tempSyllable,
           tempOK, tempCharsValid, tempError
         );
         if tempOK then
@@ -485,6 +494,7 @@ package body rvex_simUtils_asDisas_pkg is
   procedure assemble(
     source      : in  rvsp_assemblyProgram_type;
     imem        : out rvsp_assembledProgram_type;
+    consts      : inout scan_intConsts_type;
     ok          : out boolean;
     errorLevel  : in  severity_level := failure
   ) is
@@ -508,6 +518,7 @@ package body rvex_simUtils_asDisas_pkg is
       -- Attempt to assemble.
       assembleLine(
         source    => source(line),
+        consts    => consts,
         line      => line + 1,
         syllable  => imem(line),
         ok        => okTemp,

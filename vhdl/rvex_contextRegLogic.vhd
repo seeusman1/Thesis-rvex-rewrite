@@ -539,11 +539,11 @@ begin -- architecture
     -- Generate breakpoint registers.
     cxreg2cxplif_breakpoints.addr <= (others => (others => RVEX_UNDEF));
     for b in 0 to CFG.numBreakpoints - 1 loop
-      creg_makeNormalRegister(l2c, c2l, CR_BR0 + b, 31, 0, permissions => READ_WRITE);
+      creg_makeNormalRegister(l2c, c2l, CR_BRK0 + b, 31, 0, permissions => READ_WRITE);
       if creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_EXT_DBG) = '1' then
-        creg_setPermissions(l2c, c2l, CR_BR0 + b, 31, 0, DEBUG_CAN_WRITE);
+        creg_setPermissions(l2c, c2l, CR_BRK0 + b, 31, 0, DEBUG_CAN_WRITE);
       end if;
-      cxreg2cxplif_breakpoints.addr(b) <= creg_readRegisterVect(l2c, c2l, CR_BR0 + b, 31, 0);
+      cxreg2cxplif_breakpoints.addr(b) <= creg_readRegisterVect(l2c, c2l, CR_BRK0 + b, 31, 0);
     end loop;
     
     ---------------------------------------------------------------------------

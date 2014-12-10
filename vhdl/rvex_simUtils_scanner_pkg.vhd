@@ -61,6 +61,30 @@ use work.rvex_simUtils_pkg.all;
 package rvex_simUtils_scanner_pkg is
 --=============================================================================
   
+  -- Type declarations for a string -> integer registry.
+  type scan_stringIntPair_type is record
+    s     : std.textio.line;
+    i     : signed(32 downto 0);
+  end record;
+  type scan_stringIntPair_array is array (natural range <>) of scan_stringIntPair_type;
+  type scan_stringIntPair_array_ptr is access scan_stringIntPair_array;
+  type scan_intConsts_type is record
+    pairs : scan_stringIntPair_array_ptr;
+  end record;
+  
+  -- Overload for the internal deallocate method to properly deallocate a
+  -- string to integer registry.
+  procedure deallocate(
+    consts: inout scan_intConsts_type
+  );
+  
+  -- Registers an integer constant into the given registry.
+  procedure registerConstant(
+    consts: inout scan_intConsts_type;
+    str   : in string;
+    val   : in signed(32 downto 0)
+  );
+  
   -- Scans until the start of the next token, ignoring whitespace.
   procedure scanToEndOfWhitespace(
     line  : in string;
@@ -94,6 +118,13 @@ package rvex_simUtils_scanner_pkg is
   procedure scanNumeric(
     line  : in string;
     pos   : inout positive;
+    consts: inout scan_intConsts_type;
+    val   : inout signed(32 downto 0);
+    ok    : out boolean
+  );
+  procedure scanNumeric(
+    line  : in string;
+    pos   : inout positive;
     val   : inout signed(32 downto 0);
     ok    : out boolean
   );
@@ -114,6 +145,61 @@ end rvex_simUtils_scanner_pkg;
 --=============================================================================
 package body rvex_simUtils_scanner_pkg is
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Deallocates an integer constant registry
+  -----------------------------------------------------------------------------
+  procedure deallocate(
+    consts: inout scan_intConsts_type
+  ) is
+  begin
+    if consts.pairs /= null then
+      for i in consts.pairs.all'range loop
+        if consts.pairs.all(i).s /= null then
+          deallocate(consts.pairs.all(i).s);
+        end if;
+      end loop;
+      deallocate(consts.pairs);
+      consts.pairs := null;
+    end if;
+  end deallocate;
+  
+  -----------------------------------------------------------------------------
+  -- Registers an integer constant into the given registry
+  -----------------------------------------------------------------------------
+  procedure registerConstant(
+    consts: inout scan_intConsts_type;
+    str   : in string;
+    val   : in signed(32 downto 0)
+  ) is
+    variable cnt      : natural;
+    variable newPairs : scan_stringIntPair_array_ptr;
+  begin
+    
+    -- Make a new list of pairs which has room for one more pair than the
+    -- registry contains.
+    if consts.pairs = null then
+      cnt := 0;
+    else
+      cnt := consts.pairs.all'length;
+    end if;
+    newPairs := new scan_stringIntPair_array(0 to cnt);
+    
+    -- Copy the existing pairs into the new list.
+    if cnt > 0 then
+      newPairs.all(0 to cnt-1) := consts.pairs.all(0 to cnt-1);
+    end if;
+    
+    -- Add the new pair to the new list.
+    newPairs.all(cnt).s := new string(1 to str'length);
+    newPairs.all(cnt).s.all := str;
+    newPairs.all(cnt).i := val;
+    
+    -- Deallocate the old list and replace it with the new one.
+    deallocate(consts.pairs);
+    consts.pairs := newPairs;
+    
+  end registerConstant;
   
   -----------------------------------------------------------------------------
   -- Increases pos until it points to the first non-whitespace character
@@ -240,12 +326,15 @@ package body rvex_simUtils_scanner_pkg is
   procedure scanNumeric(
     line  : in string;
     pos   : inout positive;
+    consts: inout scan_intConsts_type;
     val   : inout signed(32 downto 0);
     ok    : out boolean
   ) is
     variable radix    : natural;
     variable negative : boolean;
     variable charVal  : integer;
+    variable token    : std.textio.line;
+    variable const    : std.textio.line;
   begin
     val := (others => '0');
     ok := false;
@@ -270,75 +359,124 @@ package body rvex_simUtils_scanner_pkg is
       return;
     end if;
     
-    -- Test for radix specifiers.
-    if matchAt(line, pos, "0x") then
-      
-      -- Hexadecimal entry.
-      radix := 16;
-      pos := pos + 2;
-      
-    elsif matchAt(line, pos, "0b") then
-      
-      -- Binary entry.
-      radix := 2;
-      pos := pos + 2;
-      
-    elsif matchAt(line, pos, "0") then
-      
-      -- Octal entry.
-      radix := 8;
-      pos := pos + 1;
-      
-      -- In this case we've already processed a digit, so the result is valid.
-      ok := true;
-      
-    else
-      
-      -- Decimal entry.
-      radix := 10;
-      
-    end if;
+    -- Test if the next character is a digit. If yes, this is an integer
+    -- literal. If no, we must try to match against the strings in the constant
+    -- registry.
+    if isNumericChar(line(pos)) then
     
-    -- Make sure the previous did not place us at the end of the string.
-    if pos > line'length then
-      return;
-    end if;
-    
-    -- Scan the remainder of the literal.
-    while pos <= line'length loop
+      -- Test for radix specifiers.
+      if matchAt(line, pos, "0x") then
+        
+        -- Hexadecimal entry.
+        radix := 16;
+        pos := pos + 2;
+        
+      elsif matchAt(line, pos, "0b") then
+        
+        -- Binary entry.
+        radix := 2;
+        pos := pos + 2;
+        
+      elsif matchAt(line, pos, "0") then
+        
+        -- Octal entry.
+        radix := 8;
+        pos := pos + 1;
+        
+        -- In this case we've already processed a digit, so the result is valid.
+        ok := true;
+        
+      else
+        
+        -- Decimal entry.
+        radix := 10;
+        
+      end if;
       
-      -- Break if the current character is not alphanumeric.
-      exit when not isAlphaNumericChar(line(pos));
-      
-      -- Get the value of the current digit.
-      charVal := charToDigitVal(line(pos));
-      
-      -- Make sure the character is valid for the current radix.
-      if (charVal = -1) or (charVal >= radix) then
-        ok := false;
+      -- Make sure the previous did not place us at the end of the string.
+      if pos > line'length then
         return;
       end if;
       
-      -- Add the digit to the value.
-      val := resize(val * to_signed(radix, 33), 33) + to_signed(charVal, 33);
+      -- Scan the remainder of the literal.
+      while pos <= line'length loop
+        
+        -- Break if the current character is not alphanumeric.
+        exit when not isAlphaNumericChar(line(pos));
+        
+        -- Get the value of the current digit.
+        charVal := charToDigitVal(line(pos));
+        
+        -- Make sure the character is valid for the current radix.
+        if (charVal = -1) or (charVal >= radix) then
+          ok := false;
+          return;
+        end if;
+        
+        -- Add the digit to the value.
+        val := resize(val * to_signed(radix, 33), 33) + to_signed(charVal, 33);
+        
+        -- We've processed at least one digit, so this is a valid number unless
+        -- there is garbage at the end.
+        ok := true;
+        
+        -- Increase scanner position.
+        pos := pos + 1;
+        
+      end loop;
       
-      -- We've processed at least one digit, so this is a valid number unless
-      -- there is garbage at the end.
-      ok := true;
+      -- Scan past trailing whitespace.
+      scanToEndOfWhitespace(line, pos);
       
-      -- Increase scanner position.
-      pos := pos + 1;
+    else
       
-    end loop;
-    
-    -- Scan past trailing whitespace.
-    scanToEndOfWhitespace(line, pos);
+      -- Scan the next token, to match against the list of constants.
+      scanToken(
+        line  => line,
+        pos   => pos,
+        token => token
+      );
+      
+      -- If there are no constants to match against or if we could not read a
+      -- token from the input stream, return an error.
+      if consts.pairs = null or token = null then
+        return;
+      end if;
+      
+      -- Try to match.
+      for i in consts.pairs.all'range loop
+        const := consts.pairs.all(i).s;
+        if const /= null and matchStr(const.all, token.all) then
+          
+          -- Found a matching constant name; return its value.
+          ok := true;
+          val := consts.pairs.all(i).i;
+          return;
+          
+        end if;
+      end loop;
+      
+      -- Could not find a token to match against.
+      return;
+      
+    end if;
     
     -- Negate result if we started with a dash.
     if negative then
       val := -val;
     end if;
     
+  end scanNumeric;
+  procedure scanNumeric(
+    line  : in string;
+    pos   : inout positive;
+    val   : inout signed(32 downto 0);
+    ok    : out boolean
+  ) is
+    variable consts : scan_intConsts_type;
+  begin
+    consts := (pairs => null);
+    scanNumeric(line, pos, consts, val, ok);
   end scanNumeric;
   
   -----------------------------------------------------------------------------

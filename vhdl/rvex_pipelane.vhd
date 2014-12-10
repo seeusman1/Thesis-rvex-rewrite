@@ -1358,7 +1358,9 @@ begin -- architecture
     
     -- Copy the instruction fetch result into the pipeline.
     s(S_IF+L_IF).syllable := imem2pl_syllable(S_IF+L_IF);
-    s(S_IF+L_IF).tr.trap  := s(S_IF+L_IF).tr.trap & imem2pl_exception(S_IF+L_IF);
+    if s(S_IF+L_IF).valid = '1' then
+      s(S_IF+L_IF).tr.trap  := s(S_IF+L_IF).tr.trap & imem2pl_exception(S_IF+L_IF);
+    end if;
     
     ---------------------------------------------------------------------------
     -- Perform basic instruction decoding
@@ -1507,7 +1509,7 @@ begin -- architecture
     end if;
     
     -- Trigger a LIMMH trap if the error flag is set.
-    if flag = '1' then
+    if flag = '1' and s(S_LIMM).valid = '1' then
       s(S_LIMM).tr.trap := s(S_LIMM).tr.trap & (
         active => '1',
         cause  => rvex_trap(RVEX_TRAP_LIMMH_FAULT),
@@ -1697,7 +1699,9 @@ begin -- architecture
       s(S_BR).br.RFI := br2pl_rfi(S_BR);
       
       -- Copy the trap output from the branch unit into the pipeline.
-      s(S_BR).tr.trap := s(S_BR).tr.trap & br2pl_trap(S_BR);
+      if s(S_BR).valid = '1' then
+        s(S_BR).tr.trap := s(S_BR).tr.trap & br2pl_trap(S_BR);
+      end if;
       
     end if;
     
@@ -1775,12 +1779,16 @@ begin -- architecture
       end if;
       
       -- Copy the memory unit trap output into the pipeline.
-      s(S_MEM).tr.trap
-        := s(S_MEM).tr.trap & memu2pl_trap(S_MEM);
+      if s(S_MEM).valid = '1' then
+        s(S_MEM).tr.trap
+          := s(S_MEM).tr.trap & memu2pl_trap(S_MEM);
+      end if;
       
       -- Copy the data memory/cache trap output into the pipeline.
-      s(S_MEM+L_MEM).tr.trap
-        := s(S_MEM+L_MEM).tr.trap & dmsw2pl_exception(S_MEM+L_MEM);
+      if s(S_MEM+L_MEM).valid = '1' then
+        s(S_MEM+L_MEM).tr.trap
+          := s(S_MEM+L_MEM).tr.trap & dmsw2pl_exception(S_MEM+L_MEM);
+      end if;
       
     end if;
     
@@ -1817,11 +1825,13 @@ begin -- architecture
         
       else
         
-        s(S_BRK).tr.trap := s(S_BRK).tr.trap & (
-          active => '1',
-          cause  => s(S_BRK).dp.op2(rvex_trap_type'range),
-          arg    => s(S_BRK).dp.op1
-        );
+        if s(S_BRK).valid = '1' then
+          s(S_BRK).tr.trap := s(S_BRK).tr.trap & (
+            active => '1',
+            cause  => s(S_BRK).dp.op2(rvex_trap_type'range),
+            arg    => s(S_BRK).dp.op1
+          );
+        end if;
         
       end if;
       
@@ -1834,13 +1844,14 @@ begin -- architecture
     -- debug traps, if debug traps are enabled. This is done in the S_MEM
     -- stage, such that when debugs are disabled by a memory write, they become
     -- disabled from the instruction after the write onwards.
-    if cxplif2pl_debugTrapEnable(S_MEM) = '1' then
+    if cxplif2pl_debugTrapEnable(S_MEM) = '1' and s(S_MEM).valid = '1' then
       s(S_MEM).tr.trap := s(S_MEM).tr.debugTrap & s(S_MEM).tr.trap;
     end if;
     
     -- Append external interrupt trap in S_MEM stage, for the same reason as
-    -- the debug traps.
-    if cxplif2pl_irq(S_MEM) = '1' then
+    -- the debug traps. We only interrupt valid instructions so other traps
+    -- take precedence
+    if cxplif2pl_irq(S_MEM) = '1' and s(S_MEM).valid = '1' then
       s(S_MEM).tr.trap := s(S_MEM).tr.trap & (
         active => '1',
         cause  => rvex_trap(RVEX_TRAP_EXT_INTERRUPT),

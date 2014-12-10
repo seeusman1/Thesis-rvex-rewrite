@@ -61,6 +61,11 @@ package rvex_ctrlRegs_pkg is
   -----------------------------------------------------------------------------
   -- Control register map specification
   -----------------------------------------------------------------------------
+  -- NOTE: these constants can be used in the rvex_tb.vhd test case when
+  -- properly loaded there. If you add or remove a constant here, add them to
+  -- rvex_tb.vhd as well! Registry is done at the end of the file; just search
+  -- for one of the constant names if you can't find it.
+  
   -- Global (shared) register word addresses. Refer to
   -- rvex_globalRegLogic.vhd for documentation about the registers.
   constant CR_GSR     : natural := 0; -- Global status register.
@@ -78,12 +83,19 @@ package rvex_ctrlRegs_pkg is
   constant CR_PH      : natural := CTRL_REG_GLOB_WORDS +  5; -- Panic handler register.
   constant CR_TP      : natural := CTRL_REG_GLOB_WORDS +  6; -- Trap point/return register.
   constant CR_TA      : natural := CTRL_REG_GLOB_WORDS +  7; -- Trap argument register.
-  constant CR_BR0     : natural := CTRL_REG_GLOB_WORDS +  8; -- Breakpoint 0 register.
-  constant CR_BR1     : natural := CR_BR0 + 1;               -- Breakpoint 1 register.
-  constant CR_BR2     : natural := CR_BR0 + 2;               -- Breakpoint 2 register.
-  constant CR_BR3     : natural := CR_BR0 + 3;               -- Breakpoint 3 register.
+  constant CR_BRK0    : natural := CTRL_REG_GLOB_WORDS +  8; -- Breakpoint 0 register.
+  constant CR_BRK1    : natural := CR_BRK0 + 1;              -- Breakpoint 1 register.
+  constant CR_BRK2    : natural := CR_BRK0 + 2;              -- Breakpoint 2 register.
+  constant CR_BRK3    : natural := CR_BRK0 + 3;              -- Breakpoint 3 register.
   constant CR_DCR     : natural := CTRL_REG_GLOB_WORDS + 12; -- Debug control register.
   constant CR_CRR     : natural := CTRL_REG_GLOB_WORDS + 13; -- Configuration request register.
+  
+  -- Byte addresses for byte-aligned fields.
+  constant CR_TC      : natural := 4*CR_CCR   + 0; -- Trap cause.
+  constant CR_BR      : natural := 4*CR_CCR   + 1; -- Branch register file.
+  constant CR_CID     : natural := 4*CR_SCCR  + 0; -- Context ID.
+  constant CR_DCRF    : natural := 4*CR_DCR   + 0; -- Debug control flags.
+  constant CR_DCRC    : natural := 4*CR_DCR   + 1; -- Debug breakpoint cause.
   
   -- Bit indices for CCR.
   constant CR_CCR_IEN     : natural := 0; -- Interrupt enable.
@@ -101,6 +113,16 @@ package rvex_ctrlRegs_pkg is
   constant CR_DCR_INT_DBG : natural := 28; -- Internal debug flag.
   constant CR_DCR_JUMP    : natural := 30; -- Jump flag (after bus write to PC).
   constant CR_DCR_DONE    : natural := 31; -- Done flag and (when writing) reset bit.
+  
+  -- DCR flag command codes (byte-write these to CR_DCRC).
+  constant CR_DCRC_DBG_EXT    : natural := 16#08#; -- Enter external debug mode.
+  constant CR_DCRC_BREAK      : natural := 16#09#; -- Break; stop execution.
+  constant CR_DCRC_STEP       : natural := 16#0A#; -- Step one instruction. Can also be used to stop the core.
+  constant CR_DCRC_RESUME     : natural := 16#0C#; -- Resume/continue execution.
+  constant CR_DCRC_DBG_INT    : natural := 16#10#; -- Transfer debugging control back to the core.
+  constant CR_DCRC_RESET      : natural := 16#80#; -- Restart the context.
+  constant CR_DCRC_RESET_DBG  : natural := 16#88#; -- Restart the context in external debug mode.
+  constant CR_DCRC_RESET_BREAK: natural := 16#89#; -- Restart the context in external debug mode and break.
   
   -----------------------------------------------------------------------------
   -- Control register procedural generation
@@ -361,6 +383,13 @@ package body rvex_ctrlRegs_pkg is
           -- Clear bit written 1, clear flag.
           l2c(wordAddr).writeEnable(setBit) := '1';
           l2c(wordAddr).writeData(setBit) := '0';
+          
+        else
+          
+          -- No operation; but we still need to override the bus in order to
+          -- not clear the flag.
+          l2c(wordAddr).writeEnable(setBit) := '1';
+          l2c(wordAddr).writeData(setBit) := c2l(wordAddr).readData(setBit);
           
         end if;
       end if;

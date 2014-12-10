@@ -4,7 +4,7 @@
 
 -- Test basic STW and STOP functionality, which pretty much all other tests
 -- rely on.
---sanity.test
+sanity.test
 
 -- Test register files and forwarding. This also kind of tests ADD, CMPEQ,
 -- STBR, MTL and STL.
@@ -14,7 +14,7 @@
 --limmh/index.suite
 
 -- Test ALU instructions.
-alu/index.suite
+--alu/index.suite
 
 -- Test MUL instructions.
 -- todo
@@ -23,7 +23,7 @@ alu/index.suite
 -- todo
 
 -- Test branch unit instructions.
---branch/index.suite
+branch/index.suite
 
 -- Test dynamic reconfiguration.
 -- todo
@@ -33,4 +33,4 @@ alu/index.suite
 
 -- This takes quite some time to run, but is a more real-world test; it tests
 -- one of the kernels in the x264 decoder.
-x264.test
+--x264.test

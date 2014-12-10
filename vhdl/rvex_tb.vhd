@@ -773,6 +773,12 @@ begin -- architecture
     -- Current line number in the test case file.
     variable curLineNr    : natural;
     
+    -- List of integer constants for immediates in the assembly code.
+    variable intConstsCore: scan_intConsts_type;
+    
+    -- List of integer constants for immediates in debug bus addresses.
+    variable intConstsDbg : scan_intConsts_type;
+    
     -- Forward declaration for handleFile, which is called recursively.
     procedure handleFile(
       fnameIn : in    string;
@@ -996,6 +1002,7 @@ begin -- architecture
       assembleLine(
         source    => assembly,
         line      => curLineNr,
+        consts    => intConstsCore,
         syllable  => syllable,
         ok        => ok,
         error     => error
@@ -1134,6 +1141,7 @@ begin -- architecture
       assembleLine(
         source    => "nop",
         line      => curLineNr,
+        consts    => intConstsCore,
         syllable  => syllable,
         ok        => ok,
         error     => error
@@ -1207,6 +1215,7 @@ begin -- architecture
       assembleLine(
         source    => "nop",
         line      => curLineNr,
+        consts    => intConstsCore,
         syllable  => syllable,
         ok        => ok,
         error     => error
@@ -1630,48 +1639,19 @@ begin -- architecture
         return;
       end if;
       
-      -- Parse the pointer. First try to match against debug bus register
-      -- names.
-      pos2 := pos;
-      scanToken(l, pos2, token);
-      ok := true;
-      if    token = null                   then ok := false;
-      elsif matchStr(token.all, "CR_GSR" ) then addr := uint2vect(CR_GSR  * 4, 32);
-      elsif matchStr(token.all, "CR_BCRR") then addr := uint2vect(CR_BCRR * 4, 32);
-      elsif matchStr(token.all, "CR_CC"  ) then addr := uint2vect(CR_CC   * 4, 32);
-      elsif matchStr(token.all, "CR_AFF" ) then addr := uint2vect(CR_AFF  * 4, 32);
-      elsif matchStr(token.all, "CR_CCR" ) then addr := uint2vect(CR_CCR  * 4, 32);
-      elsif matchStr(token.all, "CR_SCCR") then addr := uint2vect(CR_SCCR * 4, 32);
-      elsif matchStr(token.all, "CR_LR"  ) then addr := uint2vect(CR_LR   * 4, 32);
-      elsif matchStr(token.all, "CR_PC"  ) then addr := uint2vect(CR_PC   * 4, 32);
-      elsif matchStr(token.all, "CR_TH"  ) then addr := uint2vect(CR_TH   * 4, 32);
-      elsif matchStr(token.all, "CR_PH"  ) then addr := uint2vect(CR_PH   * 4, 32);
-      elsif matchStr(token.all, "CR_TP"  ) then addr := uint2vect(CR_TP   * 4, 32);
-      elsif matchStr(token.all, "CR_TA"  ) then addr := uint2vect(CR_TA   * 4, 32);
-      elsif matchStr(token.all, "CR_BR0" ) then addr := uint2vect(CR_BR0  * 4, 32);
-      elsif matchStr(token.all, "CR_BR1" ) then addr := uint2vect(CR_BR1  * 4, 32);
-      elsif matchStr(token.all, "CR_BR2" ) then addr := uint2vect(CR_BR2  * 4, 32);
-      elsif matchStr(token.all, "CR_BR3" ) then addr := uint2vect(CR_BR3  * 4, 32);
-      elsif matchStr(token.all, "CR_DCR" ) then addr := uint2vect(CR_DCR  * 4, 32);
-      elsif matchStr(token.all, "CR_CRR" ) then addr := uint2vect(CR_CRR  * 4, 32);
-      elsif true                           then ok := false;
+      -- Parse the pointer.
+      scanNumeric(l, pos, intConstsDbg, val, ok);
+      if not ok then
+        report "Error parsing test case 'read' or 'write' command: '" & l
+             & "'. Aborting."
+          severity warning;
+        result := TCCR_ABORT;
+        return;
       end if;
-      if ok then
-        pos := pos2;
-      else
-        scanNumeric(l, pos, val, ok);
-        if not ok then
-          report "Error parsing test case 'read' or 'write' command: '" & l
-               & "'. Aborting."
-            severity warning;
-          result := TCCR_ABORT;
-          return;
-        end if;
-        addr := std_logic_vector(val(31 downto 0));
-      end if;
+      addr := std_logic_vector(val(31 downto 0));
       
       -- Parse the expected value/value to write.
-      scanNumeric(l, pos, val, ok);
+      scanNumeric(l, pos, intConstsDbg, val, ok);
       if not ok then
         report "Error parsing test case 'read' or 'write' command: '" & l
              & "'. Aborting."
@@ -2371,11 +2351,65 @@ begin -- architecture
       
     end handleFile;
     
+    ---------------------------------------------------------------------------
+    -- Registers a control register with the integer constant registry
+    ---------------------------------------------------------------------------
+    procedure registerCtrlReg(
+      name    : string;
+      byteIdx : natural
+    ) is
+    begin
+      
+      -- Register the address of the control register as seen from the core.
+      registerConstant(
+        consts  => intConstsCore,
+        str     => name,
+        val     => 
+          resize(signed(CFG.cregStartAddress), 33)
+          + to_signed(byteIdx, 33)
+      );
+      
+      -- Register the address of the control register as seen from the debug
+      -- bus.
+      registerConstant(
+        consts  => intConstsDbg,
+        str     => name,
+        val     => to_signed(byteIdx, 33)
+      );
+      
+    end registerCtrlReg;
+    
+    ---------------------------------------------------------------------------
+    -- Registers a control register value with the integer constant registry
+    ---------------------------------------------------------------------------
+    procedure registerCtrlRegVal(
+      name    : string;
+      val     : natural
+    ) is
+    begin
+      
+      -- Register the address of the control register as seen from the core.
+      registerConstant(
+        consts  => intConstsCore,
+        str     => name,
+        val     => to_signed(val, 33)
+      );
+      
+      -- Register the address of the control register as seen from the debug
+      -- bus.
+      registerConstant(
+        consts  => intConstsDbg,
+        str     => name,
+        val     => to_signed(val, 33)
+      );
+      
+    end registerCtrlRegVal;
+    
   --===========================================================================
   begin
   --===========================================================================
     
-    -- Set initial values
+    -- Set initial values.
     reset                   <= '1';
     clkEn                   <= '1';
     rctrl2rv_run            <= (others => '1');
@@ -2410,6 +2444,56 @@ begin -- architecture
     
     -- Clear reset state.
     reset <= '0';
+    
+    -- Register control register word addresses.
+    registerCtrlReg("CR_GSR",   4*CR_GSR);
+    registerCtrlReg("CR_BCRR",  4*CR_BCRR);
+    registerCtrlReg("CR_CC",    4*CR_CC);
+    registerCtrlReg("CR_AFF",   4*CR_AFF);
+    registerCtrlReg("CR_CCR",   4*CR_CCR);
+    registerCtrlReg("CR_SCCR",  4*CR_SCCR);
+    registerCtrlReg("CR_LR",    4*CR_LR);
+    registerCtrlReg("CR_PC",    4*CR_PC);
+    registerCtrlReg("CR_TH",    4*CR_TH);
+    registerCtrlReg("CR_PH",    4*CR_PH);
+    registerCtrlReg("CR_TP",    4*CR_TP);
+    registerCtrlReg("CR_TA",    4*CR_TA);
+    registerCtrlReg("CR_BRK0",  4*CR_BRK0);
+    registerCtrlReg("CR_BRK1",  4*CR_BRK1);
+    registerCtrlReg("CR_BRK2",  4*CR_BRK2);
+    registerCtrlReg("CR_BRK3",  4*CR_BRK3);
+    registerCtrlReg("CR_DCR",   4*CR_DCR);
+    registerCtrlReg("CR_CRR",   4*CR_CRR);
+    
+    -- Register control register byte addresses.
+    registerCtrlReg("CR_TC",    CR_TC);
+    registerCtrlReg("CR_BR",    CR_BR);
+    registerCtrlReg("CR_CID",   CR_CID);
+    registerCtrlReg("CR_DCRF",  CR_DCRF);
+    registerCtrlReg("CR_DCRC",  CR_DCRC);
+    
+    -- Register control register values.
+    registerCtrlRegVal("CR_CCR_IEN",          CR_CCR_IEN);
+    registerCtrlRegVal("CR_CCR_IEN_C",        CR_CCR_IEN_C);
+    registerCtrlRegVal("CR_CCR_RFT",          CR_CCR_RFT);
+    registerCtrlRegVal("CR_CCR_RFT_C",        CR_CCR_RFT_C);
+    registerCtrlRegVal("CR_CCR_BPE",          CR_CCR_BPE);
+    registerCtrlRegVal("CR_CCR_BPE_C",        CR_CCR_BPE_C);
+    registerCtrlRegVal("CR_DCR_BREAK",        CR_DCR_BREAK);
+    registerCtrlRegVal("CR_DCR_STEP",         CR_DCR_STEP);
+    registerCtrlRegVal("CR_DCR_RESUME",       CR_DCR_RESUME);
+    registerCtrlRegVal("CR_DCR_EXT_DBG",      CR_DCR_EXT_DBG);
+    registerCtrlRegVal("CR_DCR_INT_DBG",      CR_DCR_INT_DBG);
+    registerCtrlRegVal("CR_DCR_JUMP",         CR_DCR_JUMP);
+    registerCtrlRegVal("CR_DCR_DONE",         CR_DCR_DONE);
+    registerCtrlRegVal("CR_DCRC_DBG_EXT",     CR_DCRC_DBG_EXT);
+    registerCtrlRegVal("CR_DCRC_BREAK",       CR_DCRC_BREAK);
+    registerCtrlRegVal("CR_DCRC_STEP",        CR_DCRC_STEP);
+    registerCtrlRegVal("CR_DCRC_RESUME",      CR_DCRC_RESUME);
+    registerCtrlRegVal("CR_DCRC_DBG_INT",     CR_DCRC_DBG_INT);
+    registerCtrlRegVal("CR_DCRC_RESET",       CR_DCRC_RESET);
+    registerCtrlRegVal("CR_DCRC_RESET_DBG",   CR_DCRC_RESET_DBG);
+    registerCtrlRegVal("CR_DCRC_RESET_BREAK", CR_DCRC_RESET_BREAK);
     
     -- Handle the root file.
     handleFile(ROOT_FILE);
