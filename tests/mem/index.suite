@@ -1,0 +1,10 @@
+-- This tests all available memory operations.
+
+-- Test integer store/loads (LDW, LDH, LDHU, LDB, LDBU, STW, STH, STB)
+integer.test
+
+-- Test branch store/loads (LDBR, STBR)
+branch.test
+
+-- Test link register store/loads (LDL, STL)
+link.test

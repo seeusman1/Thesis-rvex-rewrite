@@ -8,19 +8,19 @@ sanity.test
 
 -- Test register files and forwarding. This also kind of tests ADD, CMPEQ,
 -- STBR, MTL and STL.
---regs/index.suite
+regs/index.suite
 
 -- Test LIMMH instructions.
---limmh/index.suite
+limmh/index.suite
 
 -- Test ALU instructions.
---alu/index.suite
+alu/index.suite
 
 -- Test MUL instructions.
--- todo
+mul/index.suite
 
 -- Test memory unit instructions.
--- todo
+mem/index.suite
 
 -- Test branch unit instructions.
 branch/index.suite
@@ -29,7 +29,7 @@ branch/index.suite
 -- todo
 
 -- Test debug support.
--- todo
+debug/index.suite
 
 -- This takes quite some time to run, but is a more real-world test; it tests
 -- one of the kernels in the x264 decoder.

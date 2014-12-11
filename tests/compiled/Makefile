@@ -27,7 +27,7 @@ CP = cp
 SRC = src
 SREC = ../srec
 
-EXECUTABLES = div x264
+EXECUTABLES = div x264 factorial
 
 .SUFFIXES:
 .PRECIOUS: %.o %.s

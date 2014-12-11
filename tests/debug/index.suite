@@ -1,0 +1,5 @@
+-- Tests debug commands and breakpoints.
+
+-- Test external debug stepping behavior.
+ext-step.test
+

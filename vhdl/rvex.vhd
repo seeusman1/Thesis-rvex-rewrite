@@ -76,9 +76,9 @@ use work.rvex_simUtils_pkg.all;
   --  imem <--+-+->| |br  |alu| |mulu  |memu  |brku  |<-+>||fwd|| |
   --          | |  |  - ' '---'  - - '  - - '  - - ' |  | |'==='| |
   --          | |  '================================='  | '-----' |
-  --          | |    ^             ^      ^       ^     |    ^    |
-  --          | |    |             |      |       |     |    |    |
-  --          | |    v             v      v       v     |    |    |
+  --          | |    ^           ^        ^       ^     |    ^    |
+  --          | |    |           |        |       |     |    |    |
+  --          | |    v           v        v       v     |    |    |
   --          | | .------.     .====.   .----.  .----.  |    |    |
   -- rctrl <--+-+>|cxplif|     |dmsw|   |trap|  |limm|  |    |    |
   --          | | '------'     '===='   '----'  '----'  |    |    |
@@ -598,7 +598,7 @@ begin -- architecture
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
         s := s or mem2rv_stallIn(laneGroup) or debugBusStall(laneGroup);
       end loop;
-      stall <= (others => 's');
+      stall <= (others => s);
     else
       stall <= mem2rv_stallIn or debugBusStall;
     end if;
