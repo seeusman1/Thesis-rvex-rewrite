@@ -57,13 +57,30 @@ use work.rvex_intIface_pkg.all;
 -- or by the core. This is setup in a very generic way to make it easy to add,
 -- remove or change registers or mappings; see rvex_ctrlRegs_pkg.vhd. The only
 -- restrictions to the map are the following.
---  - The total size is 64 words or 256 bytes.
---  - The upper half of the memory is mapped to general purpose register file
---    access for debugging.
---  - The first part of the lower half of the memory is common to all cores.
---    Only the bus may write to these registers, the cores can only read.
---  - While the control registers support halfword/byte accesses, the general
---    purpose register file does not. Sub-word writes are ignored there.
+--  - There is room for 32 control register words, or 128 bytes.
+--  - The first part of the control registers is common to all contexts. Only
+--    the bus may write to these registers, the cores can only read.
+--  - Conversely, the second part is context-specific. Only the debug bus and
+--    the associated context can read/write from these registers.
+--
+-- The memory map as seen from the core is trivial; it's just those 32
+-- registers mapped in a contiguous region. The start of the region is
+-- determined by cregStartAddress in CFG.
+-- 
+-- The memory map as seen from the debug bus is more complicated. There are
+-- two access modes. The first uses an address of the form 0x000000--. The
+-- lower half of the memory space maps to the control registers for the
+-- currently selected context; the upper half maps to either the lower or
+-- upper half of the general purpose register file for that context. Bank
+-- selection registers are used to select the context and which part of the
+-- general purpose register file to access. This is inherently not thread safe,
+-- but only uses 256 bytes of memory space.
+-- 
+-- Alternatively, addresses of the form 0x00001--- can be used to access all
+-- control registers and general purpose registers within a single bus access.
+-- In this case, address bit 8 overrides the general purpose register file
+-- bank selection bit, and address bits 11..9 override the context to access.
+-- 
 -------------------------------------------------------------------------------
 entity rvex_ctrlRegs is
 --=============================================================================
@@ -448,16 +465,32 @@ begin -- architecture
       
     );
   
-  -- Connect the rest of the address bits.
-  dbgBus_glob_addr(6 downto 0) <= dbgBus_glob_addr_raw(6 downto 0);
-  dbgBus_glob_addr(31 downto 7) <= (others => '0');
-  dbgBus_ctxt_addr(6 downto 0) <= dbgBus_ctxt_addr_raw(6 downto 0);
-  dbgBus_ctxt_addr(7+CFG.numContextsLog2-1 downto 7) <= gbreg2creg_context;
-  dbgBus_ctxt_addr(31 downto 7+CFG.numContextsLog2) <= (others => '0');
-  dbgBus_gpreg_addr(6 downto 0) <= dbgBus_gpreg_addr_raw(6 downto 0);
-  dbgBus_gpreg_addr(7) <= gbreg2creg_gpregBank;
-  dbgBus_gpreg_addr(8+CFG.numContextsLog2-1 downto 8) <= gbreg2creg_context;
-  dbgBus_gpreg_addr(31 downto 8+CFG.numContextsLog2) <= (others => '0');
+  -- Compile the address for the global control register file.
+  dbgBus_glob_addr(6 downto 0)
+    <= dbgBus_glob_addr_raw(6 downto 0);
+  dbgBus_glob_addr(31 downto 7)
+    <= (others => '0');
+  
+  -- Compile the address for the context control register file.
+  dbgBus_ctxt_addr(6 downto 0)
+    <= dbgBus_ctxt_addr_raw(6 downto 0);
+  dbgBus_ctxt_addr(7+CFG.numContextsLog2-1 downto 7)
+    <= gbreg2creg_context when dbgBus_ctxt_addr_raw(12) = '0'
+    else dbgBus_ctxt_addr_raw(9+CFG.numContextsLog2-1 downto 9);
+  dbgBus_ctxt_addr(31 downto 7+CFG.numContextsLog2)
+    <= (others => '0');
+  
+  -- Compile the address for the general purpose register file.
+  dbgBus_gpreg_addr(6 downto 0)
+    <= dbgBus_gpreg_addr_raw(6 downto 0);
+  dbgBus_gpreg_addr(7)
+    <= gbreg2creg_gpregBank when dbgBus_ctxt_addr_raw(12) = '0'
+    else dbgBus_gpreg_addr_raw(8);
+  dbgBus_gpreg_addr(8+CFG.numContextsLog2-1 downto 8)
+    <= gbreg2creg_context when dbgBus_ctxt_addr_raw(12) = '0'
+    else dbgBus_ctxt_addr_raw(9+CFG.numContextsLog2-1 downto 9);
+  dbgBus_gpreg_addr(31 downto 8+CFG.numContextsLog2)
+    <= (others => '0');
   
   -----------------------------------------------------------------------------
   -- Instantiate the global control registers
