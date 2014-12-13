@@ -5,18 +5,18 @@ use IEEE.numeric_std.all;
 library std;
 use std.textio.all;
 
-library work;
-use work.rvex_pkg.all;
-use work.rvex_simUtils_pkg.all;
-use work.rvex_simUtils_asDisas_pkg.all;
-use work.rvex_simUtils_mem_pkg.all;
+library rvex;
+--use work.rvex_pkg.all;
+--use work.rvex_simUtils_pkg.all;
+--use work.rvex_simUtils_asDisas_pkg.all;
+--use work.rvex_simUtils_mem_pkg.all;
 
 entity random_tb is
 end random_tb;
 
 architecture behavioral of random_tb is
-  signal imem       : rvsp_assembledProgram_type;
-  signal disas      : rvex_string_type;
+--  signal imem       : rvsp_assembledProgram_type;
+--  signal disas      : rvex_string_type;
 begin
   
 --  test: process is
@@ -139,24 +139,24 @@ begin
 --    
 --  end process;
   
-  do_math: process is
-    procedure dump(s: string) is
-      variable ln : std.textio.line;
-    begin
-      ln := new string(1 to s'length);
-      ln.all := s;
-      writeline(std.textio.output, ln);
-      if ln /= null then
-        deallocate(ln);
-      end if;
-      
-      -- If writing to stdout does not work, you can also use reports:
-      --report s severity note;
-    end procedure;
-    
-    variable op1, op2: unsigned(31 downto 0);
-    variable clz: natural;
-  begin
+--  do_math: process is
+--    procedure dump(s: string) is
+--      variable ln : std.textio.line;
+--    begin
+--      ln := new string(1 to s'length);
+--      ln.all := s;
+--      writeline(std.textio.output, ln);
+--      if ln /= null then
+--        deallocate(ln);
+--      end if;
+--      
+--      -- If writing to stdout does not work, you can also use reports:
+--      --report s severity note;
+--    end procedure;
+--    
+--    variable op1, op2: unsigned(31 downto 0);
+--    variable clz: natural;
+--  begin
     
 --    op1 := X"F0F0F0F0";
 --    op2 := X"FF00FF00";
@@ -188,32 +188,83 @@ begin
 --    dump("wait    40  write * 16  " & rvs_hex(std_logic_vector(op1 xor op2), 8) & " exclusive");
 --    dump("");
     
-    op1 := X"6560D079";
-    op2 := X"6560D079";
-    for i in 33 downto 0 loop
-      dump("-- After testing and modifying bit " & integer'image(i));
-      clz := 0;
-      for i in 31 downto 0 loop
-        exit when op1(i) = '1';
-        clz := clz + 1;
-      end loop;
-      dump("wait    40 write * 4 " & integer'image(clz) & " exclusive");
-      if i < 32 and op1(i) = '1' then
-        dump("read    dmem byte 0 1");
-      else
-        dump("read    dmem byte 0 2");
-      end if;
-      if i < 32 then
-        op1(i) := '0';
-        op2(i) := '1';
-      end if;
-      dump("wait    40 write * 8  " & rvs_hex(std_logic_vector(op1)) & " exclusive");
-      dump("wait    40 write * 12 " & rvs_hex(std_logic_vector(op2)) & " exclusive");
-      dump("");
-    end loop;
+--    op1 := X"6560D079";
+--    op2 := X"6560D079";
+--    for i in 33 downto 0 loop
+--      dump("-- After testing and modifying bit " & integer'image(i));
+--      clz := 0;
+--      for i in 31 downto 0 loop
+--        exit when op1(i) = '1';
+--        clz := clz + 1;
+--      end loop;
+--      dump("wait    40 write * 4 " & integer'image(clz) & " exclusive");
+--      if i < 32 and op1(i) = '1' then
+--        dump("read    dmem byte 0 1");
+--      else
+--        dump("read    dmem byte 0 2");
+--      end if;
+--      if i < 32 then
+--        op1(i) := '0';
+--        op2(i) := '1';
+--      end if;
+--      dump("wait    40 write * 8  " & rvs_hex(std_logic_vector(op1)) & " exclusive");
+--      dump("wait    40 write * 12 " & rvs_hex(std_logic_vector(op2)) & " exclusive");
+--      dump("");
+--    end loop;
+--    
+--    wait;
+--  end process;
+  
+  banana: block is
+    signal clk   : std_logic;
+    signal clkEn : std_logic;
+    signal refA   : std_logic;
+    signal refB   : std_logic;
+  begin
     
-    wait;
-  end process;
+    -- Clock divider.
+    clkDiv: entity rvex.utils_fracDiv
+      generic map (
+        F_CLK     => 10000000.0,
+        F_DESIRED =>  1843200.0,
+        MAX_DEVIATION => 0.0
+      )
+      port map ('0', clk, '1', clkEn);
+    
+    -- 10 MHz.
+    process is
+    begin
+      clk <= '1';
+      wait for 50 ns;
+      clk <= '0';
+      wait for 50 ns;
+    end process;
+    
+    -- 1.8432 MHz ref, rounded down due to sim accuracy.
+    process is
+    begin
+      wait until rising_edge(clkEn);
+      loop
+        refA <= '1';
+        wait for 100 ns;
+        refA <= '0';
+        wait for 442535 ps;
+      end loop;
+    end process;
+    
+    -- 1.8432 MHz ref, rounded up due to sim accuracy.
+    process is
+    begin
+      wait until rising_edge(clkEn);
+      loop
+        refB <= '1';
+        wait for 100 ns;
+        refB <= '0';
+        wait for 442534 ps;
+      end loop;
+    end process;
+    
+  end block;
   
 end behavioral;
 

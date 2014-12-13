@@ -10,6 +10,8 @@ core    - Contains the sources for the rvex processor itself.
 gaisler - Contains interfaces between the rvex processor files and an AMBA bus.
           Requires sources from grlib.
 
+periph  - Basic peripherals to connect to the bus.
+
 system  - Contains system files which wrap the rvex processor core and add
           caches or local on-chip memories to it.
 
