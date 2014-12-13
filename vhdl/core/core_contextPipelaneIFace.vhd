@@ -511,7 +511,8 @@ begin -- architecture
     br2cxplif_irqAck, pl2cxplif_idle, pl2cxplif_blockReconfig, br2cxplif_PC,
     br2cxplif_limmValid, br2cxplif_valid, br2cxplif_brkValid,
     br2cxplif_invalUntilBR, pl2cxplif_brLinkWritePort, br2cxplif_trapInfo,
-    br2cxplif_trapPoint, br2cxplif_exDbgTrapInfo, br2cxplif_stop, pl2cxplif_rfi
+    br2cxplif_trapPoint, br2cxplif_exDbgTrapInfo, br2cxplif_stop, pl2cxplif_rfi,
+    br2cxplif_imemFetch, br2cxplif_imemCancel
     
   ) is
     
@@ -671,8 +672,8 @@ begin -- architecture
     
     -- Use a binary tree to merge the signals coming from the lane groups
     -- together based on the current configuration. Refer to the documentation
-    -- for binTreeIndices in rvex_utils_pkg.vhd for more information on what
-    -- this tree looks like.
+    -- for binTreeIndices in utils_pkg.vhd for more information on what- this
+    -- tree looks like.
     for level in 0 to CFG.numLaneGroupsLog2-1 loop
       for blockIndex in 0 to (2**CFG.numLaneGroupsLog2)/2-1 loop
         binTreeIndices(level, blockIndex, groupA, groupB);

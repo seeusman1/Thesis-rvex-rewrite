@@ -179,15 +179,13 @@ architecture Behavioral of bus_arbiter is
   -- function above.
   constant SCHED_LOOKUP         : schedLookup_type := schedLookup_gen;
   
-  -- Master bus signals using the alternate bus timing which uses request-ack
-  -- handshaking instead of a busy signal, converted from the input bus by
-  -- the bus_busy2ack instances.
-  signal mst2arb_alt            : bus_mst2slv_alt_array(NUM_MASTERS-1 downto 0);
-  signal arb2mst_alt            : bus_slv2mst_alt_array(NUM_MASTERS-1 downto 0);
-  
   -- The requesting signal has a signal for each master bus, which is high
   -- when the master is requesting something.
   signal requesting             : std_logic_vector(NUM_MASTERS-1 downto 0);
+  
+  -- Same as requesting, but delayed by one cycle. We use this to generate the
+  -- busy signals for the masters.
+  signal requesting_r           : std_logic_vector(NUM_MASTERS-1 downto 0);
   
   -- These signals select the currently active master for the request and
   -- result stage respectively (resultSelect is simply requestSelect delayed
@@ -200,36 +198,24 @@ begin -- architecture
 --=============================================================================
   
   -----------------------------------------------------------------------------
-  -- Instantiate bus_busy2ack convertors
-  -----------------------------------------------------------------------------
-  -- These devices will monitor the masters and buffer requests when the master
-  -- makes them. They will also raise the busy signal accordingly. Only when we
-  -- assert the ack signal will the busy signal be released and the result be
-  -- returned.
-  busy2ack_convert_gen: for mst in 0 to NUM_MASTERS-1 generate
-    busy2ack_convert_inst: entity rvex.bus_busy2ack
-      port map (
-        
-        -- System control.
-        reset                   => reset,
-        clk                     => clk,
-        clkEn                   => clkEn,
-        
-        -- Busses.
-        mst2conv                => mst2arb(mst),
-        conv2mst                => arb2mst(mst),
-        conv2slv                => mst2arb_alt(mst),
-        slv2conv                => arb2mst_alt(mst)
-      );
-  end generate;
-  
-  -----------------------------------------------------------------------------
   -- Determine active master
   -----------------------------------------------------------------------------
   -- Generate the requesting signal.
   requesting_gen: for mst in 0 to NUM_MASTERS-1 generate
-    requesting(mst) <= bus_requesting(mst2arb_alt(mst));
+    requesting(mst) <= bus_requesting(mst2arb(mst));
   end generate;
+  
+  -- Delay the requesting signal by one cycle for busy signal generation.
+  requesting_reg_proc: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        requesting_r <= (others => '0');
+      elsif clkEn = '1' then
+        requesting_r <= requesting;
+      end if;
+    end if;
+  end process;
   
   -- Use the lookup table to select the currently active master in the request
   -- stage.
@@ -253,17 +239,29 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Mux between the requests from the masters.
   arb2slv <=
-    mst2arb_alt(vect2uint(requestSelect))
+    mst2arb(vect2uint(requestSelect))
     when vect2uint(requestSelect) < NUM_MASTERS
-    else mst2arb_alt(0);
+    else mst2arb(0);
   
   -- Demux the result.
   result_demux_gen: for mst in 0 to NUM_MASTERS-1 generate
-    arb2mst_alt(mst) <= (
-      readData  => slv2arb.readData,
-      fault     => slv2arb.fault,
-      ack       => not slv2arb.busy
-    );
+    result_proc: process (slv2arb, resultSelect, requesting_r) is
+    begin
+      
+      -- By default, assert busy when a request has been made.
+      arb2mst(mst).readData <= slv2arb.readData;
+      arb2mst(mst).fault    <= slv2arb.fault;
+      arb2mst(mst).busy     <= requesting_r(mst);
+      arb2mst(mst).ack      <= '0';
+      
+      -- Clear busy and set acknowledge when the slave bus has returned data
+      -- and we're the selected master.
+      if vect2uint(resultSelect) = mst and slv2arb.ack = '1' then
+        arb2mst(mst).busy   <= '0';
+        arb2mst(mst).ack    <= '1';
+      end if;
+      
+    end process;
   end generate;
   
 end Behavioral;

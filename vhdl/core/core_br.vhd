@@ -622,7 +622,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   det_next_op: process (
     nextPC, branching, noLimmPrefetch, cfg2br_numGroupsLog2, run, run_r,
-    pl2br_trapPending, brkptEnable, nextPCMisaligned
+    pl2br_trapPending, brkptEnable, nextPCMisaligned, stop, stop_r
   ) is
     variable nextPC_v           : rvex_address_array(S_IF to S_IF);
     variable fetch              : std_logic_vector(S_IF to S_IF);

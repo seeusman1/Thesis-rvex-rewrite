@@ -106,7 +106,6 @@ architecture Behavioral of bus_ramBlock is
   -- to recognize a RAM with two write ports.
   shared variable ram           : rvex_data_array(0 to 2**(DEPTH_LOG2B-2)-1);
   
-  constant prt : natural := 0;
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -159,11 +158,25 @@ begin -- architecture
     end if;
   end process;
   
+  -- Generate ack signals.
+  ack_gen: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        mem2mst_portA.ack <= '0';
+        mem2mst_portB.ack <= '0';
+      elsif clkEn = '1' then
+        mem2mst_portA.ack <= bus_requesting(mst2mem_portA);
+        mem2mst_portB.ack <= bus_requesting(mst2mem_portB);
+      end if;
+    end if;
+  end process;
+  
   -- Tie the fault and busy signals to '0'.
   mem2mst_portA.fault <= '0';
-  mem2mst_portA.busy <= '0';
+  mem2mst_portA.busy  <= '0';
   mem2mst_portB.fault <= '0';
-  mem2mst_portB.busy <= '0';
+  mem2mst_portB.busy  <= '0';
   
 end Behavioral;
 

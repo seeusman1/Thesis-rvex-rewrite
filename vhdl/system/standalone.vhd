@@ -51,7 +51,11 @@ use IEEE.math_real.all;
 
 library rvex;
 use rvex.common_pkg.all;
+use rvex.utils_pkg.all;
+use rvex.bus_pkg.all;
+use rvex.bus_addrConv_pkg.all;
 use rvex.core_pkg.all;
+use rvex.standalone_pkg.all;
 
 --=============================================================================
 -- This is the toplevel for a "standalone" rvex core. A standalone core has
@@ -65,16 +69,8 @@ entity standalone is
 --=============================================================================
   generic (
     
-    -- Depth of the instruction memory, represented as the log2 of the number
-    -- of bytes.
-    IMEM_DEPTH_LOG2B            : positive := 14;
-    
-    -- Depth of the instruction memory, represented as the log2 of the number
-    -- of bytes.
-    DMEM_DEPTH_LOG2B            : positive := 14;
-    
-    -- rvex core configuration.
-    CORE_CFG                    : rvex_generic_config_type := RVEX_DEFAULT_CONFIG
+    -- Configuration.
+    CFG                         : rvex_sa_generic_config_type := rvex_sa_cfg
     
   );
   port (
@@ -95,58 +91,44 @@ entity standalone is
     -- Run control interface
     ---------------------------------------------------------------------------
     -- External interrupt request signal, active high.
-    rctrl2rvsa_irq              : in  std_logic_vector(2**CORE_CFG.numContextsLog2-1 downto 0) := (others => '0');
+    rctrl2rvsa_irq              : in  std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0) := (others => '0');
     
     -- External interrupt identification. Guaranteed to be loaded in the trap
     -- argument register in the same clkEn'd cycle where irqAck is high.
-    rctrl2rvsa_irqID            : in  rvex_address_array(2**CORE_CFG.numContextsLog2-1 downto 0) := (others => (others => '0'));
+    rctrl2rvsa_irqID            : in  rvex_address_array(2**CFG.core.numContextsLog2-1 downto 0) := (others => (others => '0'));
     
     -- External interrupt acknowledge signal, active high. Goes high for one
     -- clkEn'abled cycle.
-    rvsa2rctrl_irqAck           : out std_logic_vector(2**CORE_CFG.numContextsLog2-1 downto 0);
+    rvsa2rctrl_irqAck           : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
     
     -- Active high run signal. When released, the context will stop running as
     -- soon as possible.
-    rctrl2rvsa_run              : in  std_logic_vector(2**CORE_CFG.numContextsLog2-1 downto 0) := (others => '1');
+    rctrl2rvsa_run              : in  std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0) := (others => '1');
     
     -- Active high idle output. This is asserted when the core is no longer
     -- doing anything.
-    rvsa2rctrl_idle             : out std_logic_vector(2**CORE_CFG.numContextsLog2-1 downto 0);
+    rvsa2rctrl_idle             : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
     
     -- Active high context reset input. When high, the context control
     -- registers (including PC, done and break flag) will be reset.
-    rctrl2rvsa_reset            : in  std_logic_vector(2**CORE_CFG.numContextsLog2-1 downto 0) := (others => '0');
+    rctrl2rvsa_reset            : in  std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0) := (others => '0');
     
     -- Active high done output. This is asserted when the context encounters
     -- a stop syllable. Processing a stop signal also sets the BRK control
     -- register, which stops the core. This bit can be reset by issuing a core
     -- reset or by means of the debug interface.
-    rvsa2rctrl_done             : out std_logic_vector(2**CORE_CFG.numContextsLog2-1 downto 0);
+    rvsa2rctrl_done             : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Bus interfaces
     ---------------------------------------------------------------------------
-    -- Slave bus interface. This bus can access the local memories and the
-    -- debug interface of the core. While the busy signal is high, it is
-    -- illegal to change the state of the request signals, and the read data
-    -- is invalid.
-    bus2rvsa_address            : in  std_logic_vector(31 downto 0);
-    bus2rvsa_writeEnable        : in  std_logic;
-    bus2rvsa_writeMask          : in  std_logic_vector(3 downto 0);
-    bus2rvsa_writeData          : in  std_logic_vector(31 downto 0);
-    bus2rvsa_readEnable         : in  std_logic;
-    rvsa2bus_readData           : out std_logic_vector(31 downto 0);
-    rvsa2bus_busy               : out std_logic;
+    -- Master interface to whatever bus the rvex is connected to.
+    rvsa2bus                    : out bus_mst2slv_type;
+    bus2rvsa                    : in  bus_slv2mst_type;
     
-    -- Master bus interface, controlled by the rvex core. May be used for
-    -- peripheral access.
-    rvsa2per_address            : out std_logic_vector(31 downto 0);
-    rvsa2per_writeEnable        : out std_logic;
-    rvsa2per_writeMask          : out std_logic_vector(3 downto 0);
-    rvsa2per_writeData          : out std_logic_vector(31 downto 0);
-    rvsa2per_readEnable         : out std_logic;
-    per2rvsa_readData           : in  std_logic_vector(31 downto 0);
-    per2rvsa_busy               : in  std_logic
+    -- Debug interface.
+    debug2rvsa                  : in  bus_mst2slv_type;
+    rvsa2debug                  : out bus_slv2mst_type
     
   );
 end standalone;
@@ -154,58 +136,94 @@ end standalone;
 --=============================================================================
 architecture Behavioral of standalone is
 --=============================================================================
-  
-  -- Generate the configuration for the core. We override unifiedStall here
-  -- because we require that it is set to 1.
-  constant CFG                  : rvex_generic_config_type := rvex_cfg(
-    base                        => CORE_CFG,
-    unifiedStall                => 1
-  );
-  
-  -- Common memory interface.
-  signal mem2rv_stallIn         : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2mem_stallOut        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  
-  -- Instruction memory interface.
-  signal rv2imem_PCs            : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2imem_fetch          : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal imem2rv_instr          : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
-  
-  -- Data memory interface.
-  signal rv2dmem_addr           : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dmem_writeEnable    : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dmem_writeMask      : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dmem_writeData      : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dmem_readEnable     : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal dmem2rv_readData       : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  
-  -- Control/debug bus interface.
-  signal dbg2rv_addr            : rvex_address_type;
-  signal dbg2rv_readEnable      : std_logic;
-  signal dbg2rv_writeEnable     : std_logic;
-  signal dbg2rv_writeMask       : rvex_mask_type;
-  signal dbg2rv_writeData       : rvex_data_type;
-  signal rv2dbg_readData        : rvex_data_type;
+  -- 
+  -- The diagram below shows the bus network instantiated by this unit.
+  -- 
+  -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+  -- 
+  --                  .-------.         *x        .-----.
+  --              *x  |  *x   |==========D========| arb |---K-- rvsa2bus
+  --    rv2dmem ===A==| demux |  *x  .-----.      '-----'
+  --                  |       |===E==|     |
+  --                  '-------'      | 2x  |  2x  .------.
+  --                  .-------.      | arb |===I==| dmem |
+  --                  |       |---F--|     |      '------'
+  --                  |       |      '-----'
+  -- debug2rvsa ---B--| demux |---G---------------------------- dbg2rv
+  --                  |       |      .-------.      .-----.
+  --                  |       |---H--| demux |===J==| *x  |  *x  .------.
+  --                  '-------'      '-------'      | arb |===L==| imem |
+  --    rv2imem ==========C=========================|     |      '------'
+  --                     *x                         '-----'
+  -- 
+  -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+  -- 
+  -- Bus A:
+  signal rvexData_req           : bus_mst2slv_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal rvexData_res           : bus_slv2mst_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  --
+  -- Bus B:
+  signal debug_req              : bus_mst2slv_type;
+  signal debug_res              : bus_slv2mst_type;
+  --
+  -- Bus C:
+  signal rvexInstr_req          : bus_mst2slv_array(2**CFG.core.numLanesLog2-1 downto 0);
+  signal rvexInstr_res          : bus_slv2mst_array(2**CFG.core.numLanesLog2-1 downto 0);
+  --
+  -- Bus D:
+  signal rvexDataBus_req        : bus_mst2slv_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal rvexDataBus_res        : bus_slv2mst_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  --
+  -- Bus E:
+  signal rvexDataMem_req        : bus_mst2slv_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal rvexDataMem_res        : bus_slv2mst_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  --
+  -- Bus F:
+  signal debugDataMem_req       : bus_mst2slv_type;
+  signal debugDataMem_res       : bus_slv2mst_type;
+  --
+  -- Bus G:
+  signal debugRvex_req          : bus_mst2slv_type;
+  signal debugRvex_res          : bus_slv2mst_type;
+  --
+  -- Bus H:
+  signal debugInstr_req         : bus_mst2slv_type;
+  signal debugInstr_res         : bus_slv2mst_type;
+  --
+  -- Bus I:
+  signal dataMem_req            : bus_mst2slv_array(1 downto 0);
+  signal dataMem_res            : bus_slv2mst_array(1 downto 0);
+  --
+  -- Bus J: this bus is defined locally in the instruction memory instantiation
+  -- block.
+  --
+  -- Bus K:
+  signal dataBus_req            : bus_mst2slv_type;
+  signal dataBus_res            : bus_slv2mst_type;
+  --
+  -- Bus L:
+  signal instrMem_req           : bus_mst2slv_array(2**CFG.core.numLanesLog2-1 downto 0);
+  signal instrMem_res           : bus_slv2mst_array(2**CFG.core.numLanesLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
   
   -----------------------------------------------------------------------------
-  -- Check configuration
+  -- Connect the external busses to internal signals
   -----------------------------------------------------------------------------
-  assert CORE_CFG.unifiedStall
-    report "The standalone memory system requires that the unifiedStall "
-         & "configuration signal is set to true. The value from the requested "
-         & "configuration vector has been overridden."
-    severity warning;
+  -- (This is just to get the bus naming consistent.)
+  rvsa2bus    <= dataBus_req;
+  dataBus_res <= bus2rvsa;
+  debug_req   <= debug2rvsa;
+  rvsa2debug  <= debug_res;
   
   -----------------------------------------------------------------------------
   -- Instantiate the rvex core
   -----------------------------------------------------------------------------
-  core: entity rvex.core
+  core: entity rvex.standalone_core
     generic map (
-      CFG                       => CFG
+      CFG                       => CFG.core
     )
     port map (
       
@@ -215,40 +233,302 @@ begin -- architecture
       clkEn                     => clkEn,
       
       -- Run control interface.
-      rctrl2rv_irq              => rctrl2rvsa_irq,
-      rctrl2rv_irqID            => rctrl2rvsa_irqID,
-      rv2rctrl_irqAck           => rvsa2rctrl_irqAck,
-      rctrl2rv_run              => rctrl2rvsa_run,
-      rv2rctrl_idle             => rvsa2rctrl_idle,
-      rctrl2rv_reset            => rctrl2rvsa_reset,
-      rv2rctrl_done             => rvsa2rctrl_done,
+      rctrl2rvsa_irq            => rctrl2rvsa_irq,
+      rctrl2rvsa_irqID          => rctrl2rvsa_irqID,
+      rvsa2rctrl_irqAck         => rvsa2rctrl_irqAck,
+      rctrl2rvsa_run            => rctrl2rvsa_run,
+      rvsa2rctrl_idle           => rvsa2rctrl_idle,
+      rctrl2rvsa_reset          => rctrl2rvsa_reset,
+      rvsa2rctrl_done           => rvsa2rctrl_done,
       
-      -- Common memory interface.
-      mem2rv_stallIn            => mem2rv_stallIn,
-      rv2mem_stallOut           => rv2mem_stallOut,
+      -- Instruction memory busses.
+      rv2imem                   => rvexInstr_req,
+      imem2rv                   => rvexInstr_res,
       
-      -- Instruction memory interface.
-      rv2imem_PCs               => rv2imem_PCs,
-      rv2imem_fetch             => rv2imem_fetch,
-      imem2rv_instr             => imem2rv_instr,
+      -- Data memory busses.
+      rv2dmem                   => rvexData_req,
+      dmem2rv                   => rvexData_res,
       
-      -- Data memory interface.
-      rv2dmem_addr              => rv2dmem_addr,
-      rv2dmem_writeEnable       => rv2dmem_writeEnable,
-      rv2dmem_writeMask         => rv2dmem_writeMask,
-      rv2dmem_writeData         => rv2dmem_writeData,
-      rv2dmem_readEnable        => rv2dmem_readEnable,
-      dmem2rv_readData          => dmem2rv_readData,
-      
-      -- Control/debug bus interface.
-      dbg2rv_addr               => dbg2rv_addr,
-      dbg2rv_readEnable         => dbg2rv_readEnable,
-      dbg2rv_writeEnable        => dbg2rv_writeEnable,
-      dbg2rv_writeMask          => dbg2rv_writeMask,
-      dbg2rv_writeData          => dbg2rv_writeData,
-      rv2dbg_readData           => rv2dbg_readData
+      -- Debug bus.
+      dbg2rv                    => debugRvex_req,
+      rv2dbg                    => debugRvex_res
       
     );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the debug bus demux unit
+  -----------------------------------------------------------------------------
+  debug_bus_demux_inst: entity rvex.bus_demux
+    generic map (
+      ADDRESS_MAP(0)            => CFG.debugBusMap_dmem,
+      ADDRESS_MAP(1)            => CFG.debugBusMap_imem,
+      ADDRESS_MAP(2)            => CFG.debugBusMap_rvex
+    )
+    port map (
+      reset                     => reset,
+      clk                       => clk,
+      clkEn                     => clkEn,
+      mst2demux                 => debug_req,
+      demux2mst                 => debug_res,
+      demux2slv(0)              => debugDataMem_req,
+      demux2slv(1)              => debugInstr_req,
+      demux2slv(2)              => debugRvex_req,
+      slv2demux(0)              => debugDataMem_res,
+      slv2demux(1)              => debugInstr_res,
+      slv2demux(2)              => debugRvex_res
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate connections between the rvex data memory ports and the
+  -- external bus
+  -----------------------------------------------------------------------------
+  ext_bus_block: block is
+  begin
+    
+    -- Instantiate the demuxing blocks.
+    data_bus_demux_gen: for laneGroup in 0 to 2**CFG.core.numLaneGroupsLog2-1 generate
+      data_bus_demux_inst: entity rvex.bus_demux
+        generic map (
+          ADDRESS_MAP(0)        => CFG.rvexDataMap_bus,
+          ADDRESS_MAP(1)        => CFG.rvexDataMap_dmem
+        )
+        port map (
+          reset                 => reset,
+          clk                   => clk,
+          clkEn                 => clkEn,
+          mst2demux             => rvexData_req(laneGroup),
+          demux2mst             => rvexData_res(laneGroup),
+          demux2slv(0)          => rvexDataBus_req(laneGroup),
+          demux2slv(1)          => rvexDataMem_req(laneGroup),
+          slv2demux(0)          => rvexDataBus_res(laneGroup),
+          slv2demux(1)          => rvexDataMem_res(laneGroup)
+        );
+    end generate;
+    
+    -- Instantiate the arbiter to merge the requests from each lane group into
+    -- a single bus.
+    data_bus_arbiter: entity rvex.bus_arbiter
+      generic map (
+        NUM_MASTERS             => 2**CFG.core.numLaneGroupsLog2
+      )
+      port map (
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        mst2arb                 => rvexDataBus_req,
+        arb2mst                 => rvexDataBus_res,
+        arb2slv                 => dataBus_req,
+        slv2arb                 => dataBus_res
+      );
+    
+  end block;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate data memory
+  -----------------------------------------------------------------------------
+  dmem_block: block is
+    
+    -- First and last data memory bus connected to port A.
+    constant SA : natural := 0;
+    constant EA : natural := (2**CFG.core.numLaneGroupsLog2 / 2) - 1;
+    
+    -- First and last data memory bus connected to port B.
+    constant SB : natural := EA + 1;
+    constant EB : natural := 2**CFG.core.numLaneGroupsLog2-1;
+    
+  begin
+    
+    -- Arbiter for port A.
+    dmem_arbiter_a: entity rvex.bus_arbiter
+      generic map (
+        NUM_MASTERS             => (EA - SA) + 2
+      )
+      port map (
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        mst2arb(EA-SA+1 downto 1)=>rvexDataMem_req(EA downto SA),
+        mst2arb(0)              => debugDataMem_req,
+        arb2mst(EA-SA+1 downto 1)=>rvexDataMem_res(EA downto SA),
+        arb2mst(0)              => debugDataMem_res,
+        arb2slv                 => dataMem_req(0),
+        slv2arb                 => dataMem_res(0)
+      );
+    
+    -- Arbiter for port B.
+    dmem_arbiter_b: entity rvex.bus_arbiter
+      generic map (
+        NUM_MASTERS             => (EB - SB) + 1
+      )
+      port map (
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        mst2arb                 => rvexDataMem_req(EB downto SB),
+        arb2mst                 => rvexDataMem_res(EB downto SB),
+        arb2slv                 => dataMem_req(1),
+        slv2arb                 => dataMem_res(1)
+      );
+    
+    -- Instantiate the memory itself.
+    dmem_ram: entity rvex.bus_ramBlock
+      generic map (
+        DEPTH_LOG2B             => CFG.dmemDepthLog2B
+      )
+      port map (
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        mst2mem_portA           => dataMem_req(0),
+        mem2mst_portA           => dataMem_res(0),
+        mst2mem_portB           => dataMem_req(1),
+        mem2mst_portB           => dataMem_res(1)
+      );
+    
+  end block;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate instruction memory
+  -----------------------------------------------------------------------------
+  imem_block: block is
+    
+    -- Because each memory block has two ports, we always need to instantiate
+    -- one block for two lanes.
+    constant NUM_BLOCKS         : natural := 2**CFG.core.numLanesLog2 / 2;
+    
+    -- The rvex will always make accesses aligned to the size of a bundle for
+    -- a single lane group. Because of this, not all memory blocks need to hold
+    -- the entire instruction memory. INTERLEAVE_LOG2 specifies the log2 of the
+    -- factor which the size of each block is divided by. That probably makes
+    -- no sense to you, but I don't know how to say it better, so have some
+    -- examples. When INTERLEAVE_LOG2 is 1 for example, this means that each
+    -- memory block only stores half of the instruction memory; each block
+    -- stores one of the halves (duplication may still be necessary). This
+    -- value is trivially set to the number of lanes in a group, which would be
+    -- correct if there would be one block per lane. However, because a block
+    -- is shared between two lanes because of each block having two ports, we
+    -- can't set INTERLEAVE_LOG2 higher than or equal to log2(NUM_BLOCKS),
+    -- which equals CFG.core.numLanesLog2-1.
+    constant INTERLEAVE_LOG2    : natural := min_nat(
+      CFG.core.numLanesLog2 - CFG.core.numLaneGroupsLog2,
+      CFG.core.numLanesLog2 - 1
+    );
+    
+    -- We need to shift the incoming addresses right by INTERLEAVE_LOG2 for
+    -- things to make sense.
+    constant BLK_ADDRESS_MAP    : addrMapping_type
+      := mapConstant(INTERLEAVE_LOG2, '0')
+       & mapRange(31, 2 + INTERLEAVE_LOG2)
+       & mapConstant(2, '0');
+    
+    -- This function generates the memory map table for the debug bus demux
+    -- unit.
+    function dbg_address_map_f return addrRangeAndMapping_array is
+      variable res  : addrRangeAndMapping_array(NUM_BLOCKS-1 downto 0);
+    begin
+      for blk in 0 to NUM_BLOCKS-1 loop
+        res(blk) := addrRangeAndMap;
+        
+        -- Require that the LSBs of the address map to those memory locations
+        -- which are actually stored in this block.
+        if INTERLEAVE_LOG2 > 0 then
+          res(blk).addrRange.match(2+INTERLEAVE_LOG2-1 downto 2)
+            := uint2vect(blk mod 2**INTERLEAVE_LOG2, INTERLEAVE_LOG2);
+        end if;
+        
+      end loop;
+      return res;
+    end dbg_address_map_f;
+    
+    constant DBG_ADDRESS_MAP    : addrRangeAndMapping_array(NUM_BLOCKS-1 downto 0)
+      := dbg_address_map_f;
+    
+    -- Debug access bus for each instruction memory block.
+    signal debugInstrDmx_req    : bus_mst2slv_array(NUM_BLOCKS-1 downto 0);
+    signal debugInstrDmx_res    : bus_slv2mst_array(NUM_BLOCKS-1 downto 0);
+    
+  begin
+    
+    -- Instantiate the bus demux which routes debug bus accesses to the
+    -- instruction memory to all blocks involved.
+    imem_debug_demux_inst: entity rvex.bus_demux
+      generic map (
+        ADDRESS_MAP             => DBG_ADDRESS_MAP,
+        MUTUALLY_EXCLUSIVE      => false
+      )
+      port map (
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        mst2demux               => debugInstr_req,
+        demux2mst               => debugInstr_res,
+        demux2slv               => debugInstrDmx_req,
+        slv2demux               => debugInstrDmx_res
+      );
+    
+    -- Generate arbitration logic between the instruction busses of the rvex
+    -- and the debug bus.
+    imem_arbiter_gen: for blk in 0 to NUM_BLOCKS-1 generate
+      signal portAreq           : bus_mst2slv_type;
+    begin
+      
+      -- Arbiter for port A to switch between debug bus and rvex.
+      imem_arbiter_a: entity rvex.bus_arbiter
+        generic map (
+          NUM_MASTERS           => 2
+        )
+        port map (
+          reset                 => reset,
+          clk                   => clk,
+          clkEn                 => clkEn,
+          mst2arb(0)            => rvexInstr_req(blk),
+          mst2arb(1)            => debugInstrDmx_req(blk),
+          arb2mst(0)            => rvexInstr_res(blk),
+          arb2mst(1)            => debugInstrDmx_res(blk),
+          arb2slv               => portAreq,
+          slv2arb               => instrMem_res(blk)
+        );
+      
+      -- Perform address translation on the request for port A. This address
+      -- translation shifts the address right by one or more bits, when not all
+      -- memory blocks need to hold all the addresses. This is possible because
+      -- an instruction memory port of the rvex will always make accesses
+      -- aligned to something larger than a word plus some offset.
+      instrMem_req(blk) <= applyAddrMap(
+        portAreq,
+        BLK_ADDRESS_MAP
+      );
+      
+      -- Connect port B without an arbiter, because we only need to be able to
+      -- access one of the ports with the debug bus. Still perform the address
+      -- transformation though.
+      instrMem_req(blk + NUM_BLOCKS) <= applyAddrMap(
+        rvexInstr_req(blk + NUM_BLOCKS),
+        BLK_ADDRESS_MAP
+      );
+      
+      rvexInstr_res(blk + NUM_BLOCKS) <= instrMem_res(blk + NUM_BLOCKS);
+      
+    end generate;
+      
+    -- Instantiate the memory itself.
+    imem_ram_gen: for blk in 0 to NUM_BLOCKS-1 generate
+      imem_ram_inst: entity rvex.bus_ramBlock
+        generic map (
+          DEPTH_LOG2B           => CFG.dmemDepthLog2B - INTERLEAVE_LOG2
+        )
+        port map (
+          reset                 => reset,
+          clk                   => clk,
+          clkEn                 => clkEn,
+          mst2mem_portA         => instrMem_req(blk),
+          mem2mst_portA         => instrMem_res(blk),
+          mst2mem_portB         => instrMem_req(blk + NUM_BLOCKS),
+          mem2mst_portB         => instrMem_res(blk + NUM_BLOCKS)
+        );
+    end generate;
+    
+  end block;
   
 end Behavioral;
 

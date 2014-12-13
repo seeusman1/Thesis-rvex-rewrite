@@ -50,6 +50,7 @@ use IEEE.numeric_std.all;
 
 library rvex;
 use rvex.common_pkg.all;
+use rvex.utils_pkg.all;
 
 --=============================================================================
 -- This package contains definitions to do with the bus system used within the
@@ -63,17 +64,21 @@ package bus_pkg is
   -----------------------------------------------------------------------------
   -- The diagram below shows the timing for the bus. The signal drawn for
   -- request specifies the timing for address, readEnable, writeEnable,
-  -- writeMask and writeData; result represents readData and fault. The result
-  -- is valid the first cycle after the request is given where busy is low.
+  -- writeMask, writeData and flags; result represents readData and fault. The
+  -- result is valid when ack is high, which is the first cycle after the
+  -- request is given where busy is low. The bus request signals must remain
+  -- valid while busy is high.
   --
   --         |___     ___     ___     ___     ___     ___     ___     ___     |
   --     clk |   \___/   \___/   \___/   \___/   \___/   \___/   \___/   \___/|
   --         |                                                                |
-  -- request |--------<valid1>----------------<valid2>--------<valid3>--------|
+  -- request |--------<valid1================><valid2><valid3>----------------|
   --         |                                                                |
-  --  result |--------------------------------<valid1>--------<valid2><valid3>|
-  --         |                 _______________         _______                |
-  --    busy |________________/               \_______/       \_______________|
+  --  result |--------------------------------<valid1><valid2><valid3>--------|
+  --         |                 _______________                                |
+  --    busy |________________/               \_______________________________|
+  --         |                                 _______________________        |
+  --     ack |________________________________/                       \_______|
   --         |                                                                |
   --
   -- The clock and potential enable signal for the bus are not enclosed in the
@@ -82,6 +87,22 @@ package bus_pkg is
   -----------------------------------------------------------------------------
   -- Bus signal types and methods (standard format)
   -----------------------------------------------------------------------------
+  -- Bus request flags.
+  type bus_flags_type is record
+    
+    -- Burst flag. When high, the bus is expected to make several requests
+    -- without delaying which map to a contiguous region of memory. This flag
+    -- exists for compatibility with the AMBA bus and follows the same
+    -- alignment requirements.
+    burst                       : std_logic;
+    
+  end record;
+  
+  -- Default values for the bus flags.
+  constant BUS_FLAGS_DEFAULT    : bus_flags_type := (
+    burst                       => '0'
+  );
+  
   -- Bus signals running from master to slave.
   type bus_mst2slv_type is record
     
@@ -106,6 +127,9 @@ package bus_pkg is
     -- Data for writes. Ignored for reads.
     writeData                   : rvex_data_type;
     
+    -- Flags for the command.
+    flags                       : bus_flags_type;
+    
   end record;
   
   -- Bus signals running from slave to master.
@@ -120,8 +144,12 @@ package bus_pkg is
     -- code encoding depends on the bus.
     fault                       : std_logic;
     
-    -- Busy flag. While high, readData and fault are invalid.
+    -- Busy flag. While high, the bus is busy servicing the request.
     busy                        : std_logic;
+    
+    -- Busy flag. When high, the request has been serviced and readData and
+    -- fault are valid.
+    ack                         : std_logic;
     
   end record;
   
@@ -129,20 +157,30 @@ package bus_pkg is
   type bus_mst2slv_array is array (natural range <>) of bus_mst2slv_type;
   type bus_slv2mst_array is array (natural range <>) of bus_slv2mst_type;
   
+  -- This function generates or modifies bus flags. Always use this function
+  -- instead of assigning the bus flags directly to make code forward
+  -- compatible with additions to the bus flags.
+  function bus_flags_gen(
+    base                        : bus_flags_type := BUS_FLAGS_DEFAULT;
+    burst                       : std_logic := '-'
+  ) return bus_flags_type;
+  
   -- Idle state for the bus signals from master to slave.
   constant BUS_MST2SLV_IDLE     : bus_mst2slv_type := (
     address     => (others => '0'),
     readEnable  => '0',
     writeEnable => '0',
     writeMask   => (others => '0'),
-    writeData   => (others => '0')
+    writeData   => (others => '0'),
+    flags       => bus_flags_gen
   );
   
   -- Idle state for the bus signals from master to slave.
   constant BUS_SLV2MST_IDLE     : bus_slv2mst_type := (
     readData    => (others => '0'),
     fault       => '0',
-    busy        => '0'
+    busy        => '0',
+    ack         => '0'
   );
   
   -- Forces the bus request to no-operation when gate is low.
@@ -161,62 +199,23 @@ package bus_pkg is
     b     : bus_mst2slv_type
   ) return std_logic;
   
-  -----------------------------------------------------------------------------
-  -- Bus timing (alternate format)
-  -----------------------------------------------------------------------------
-  -- For bus slaves which may not always be listening to the bus, a request/ack
-  -- pattern may be more useful. An alternate bus (timing) format is supplied
-  -- for such devices, with the following timing. The bus_busy2ack entity
-  -- converts a standard-format bus on the master side to an alternate-format
-  -- bus on the slave side.
-  --
-  --         |___     ___     ___     ___     ___     ___     ___     ___     |
-  --     clk |   \___/   \___/   \___/   \___/   \___/   \___/   \___/   \___/|
-  --         |                                                                |
-  -- request |--------<valid1================><valid2========><valid3>--------|
-  --         |                                                                |
-  --  result |--------------------------------<valid1>--------<valid2><valid3>|
-  --         |                                 _______         _______________|
-  --     ack |________________________________/       \_______/               |
-  --         |                                                                |
-  --
-  -- The clock and potential enable signal for the bus are not enclosed in the
-  -- bus signal records and should be routed elsewhere.
-  --
-  -----------------------------------------------------------------------------
-  -- Bus signal types and methods (alternate format)
-  -----------------------------------------------------------------------------
-  -- Bus signals running from master to slave. These signals are the same as
-  -- in the default format.
-  subtype bus_mst2slv_alt_type is bus_mst2slv_type;
-  
-  -- Bus signals running from slave to master.
-  type bus_slv2mst_alt_type is record
-    
-    -- Read data result for a read request, or fault code when fault is high.
-    readData                    : rvex_data_type;
-    
-    -- Fault flag. This is valid in the same cycle as readData. When low,
-    -- readData contains the data as requested, or is undefined when no data
-    -- was requested. When high, readData specifies a fault code. The fault
-    -- code encoding depends on the bus.
-    fault                       : std_logic;
-    
-    -- Ack flag. When high, the readData and fault signals are assumed to be
-    -- valid and are forwarded to the master.
-    ack                         : std_logic;
-    
-  end record;
-  
-  -- Array types for the busses above.
-  type bus_mst2slv_alt_array is array (natural range <>) of bus_mst2slv_alt_type;
-  type bus_slv2mst_alt_array is array (natural range <>) of bus_slv2mst_alt_type;
-  
 end bus_pkg;
 
 --=============================================================================
 package body bus_pkg is
 --=============================================================================
+  
+  -- This function generates or modifies bus flags.
+  function bus_flags_gen(
+    base                        : bus_flags_type := BUS_FLAGS_DEFAULT;
+    burst                       : std_logic := '-'
+  ) return bus_flags_type is
+    variable f  : bus_flags_type;
+  begin
+    f := base;
+    f.burst := overrideStdLogic(f.burst, burst);
+    return f;
+  end bus_flags_gen;
   
   -- Forces the bus request to no-operation when gate is low.
   function bus_gate(
