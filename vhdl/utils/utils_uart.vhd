@@ -93,7 +93,7 @@ entity utils_uart is
     tx                          : out std_logic;
     
     ---------------------------------------------------------------------------
-    -- RX logic internal interface.
+    -- RX logic internal interface
     ---------------------------------------------------------------------------
     -- When data is received, rx_strobe is pulled high for one cycle while
     -- rx_data contains the received data and rx_frameError is valid. rx_data
@@ -104,7 +104,7 @@ entity utils_uart is
     rx_strobe                   : out std_logic;
     
     ---------------------------------------------------------------------------
-    -- TX logic internal interface.
+    -- TX logic internal interface
     ---------------------------------------------------------------------------
     -- Data to transmit and strobe flag. When strobe is high and busy is low,
     -- the data in tx_data will be buffered and transmitted.
