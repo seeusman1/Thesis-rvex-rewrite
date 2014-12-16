@@ -110,12 +110,7 @@ entity core_gpRegs is
     -- Debug interface
     ---------------------------------------------------------------------------
     -- When claim is high (and stall is high, which will always be the case)
-    -- one of the processor ports should be connected to the port below. stall
-    -- will always stay high one cycle longer than claim, so any read command
-    -- which the processor was requesting will be requested again so the output
-    -- is valid when stall is released again.
-    
-    -- When high, connect the bus to the general purpose register file.
+    -- one of the processor ports should be connected to the port below.
     creg2gpreg_claim            : in  std_logic;
     
     -- Register address and context.
@@ -159,9 +154,54 @@ architecture Behavioral of core_gpRegs is
   signal readAddr                 : rvex_address_array(NUM_READ_PORTS-1 downto 0);
   signal readData                 : rvex_data_array(NUM_READ_PORTS-1 downto 0);
   
+  -- Stall signal, delayed by one cycle.
+  signal stall_r                  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  
+  -- Combinatorial and registered read port outputs. When the core is stalled,
+  -- we switch to the registered data, because the data from the register file
+  -- is only valid in the cycle after an unstalled cycle.
+  signal readPorts_comb           : gpreg2pl_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
+  signal readPorts_reg            : gpreg2pl_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate read port stalling logic
+  -----------------------------------------------------------------------------
+  -- The register file and forwarding system does not on its own respect
+  -- stalls; it just always performs the request its given. For writes this is
+  -- easily fixed by gating the write enable signal with the stall signal. For
+  -- reads though, because they cross a pipeline stage, need to be
+  -- synchronized; when the core performs a read and is stalled the cycle
+  -- after, the read result needs to be stored temporarily for when the core
+  -- is unstalled.
+  read_port_stall_regs: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        stall_r <= (others => '0');
+        readPorts_reg <= (others => (
+          data => (others => (others => '0')),
+          valid => (others => '0')
+        ));
+      elsif clkEn = '1' then
+        stall_r <= stall;
+        for prt in 0 to 2*2**CFG.numLanesLog2-1 loop
+          if stall_r(lane2group(prt / 2, CFG)) = '0' then
+            readPorts_reg(prt) <= readPorts_comb(prt);
+          end if;
+        end loop;
+      end if;
+    end if;
+  end process;
+  
+  read_port_stall_mux_gen: for prt in 0 to 2*2**CFG.numLanesLog2-1 generate
+    gpreg2pl_readPorts(prt)
+      <= readPorts_comb(prt) when stall_r(lane2group(prt / 2, CFG)) = '0'
+      else readPorts_reg(prt);
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Connect internal command signals to interface
@@ -255,7 +295,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate forwarding logic
   -----------------------------------------------------------------------------
-  br_fwd_gen_stage: for stage in S_RD+L_RD to S_FW generate
+  fwd_gen_stage: for stage in S_RD+L_RD to S_FW generate
     constant stagesToForward    : natural := S_WB+L_WB-stage;
     signal writeAddresses       : std_logic_vector(NUM_WRITE_PORTS * stagesToForward * NUM_REGS_PER_CTXT_LOG2 - 1 downto 0);
     signal writeDatas           : std_logic_vector(NUM_WRITE_PORTS * stagesToForward * 32 - 1 downto 0);
@@ -313,7 +353,7 @@ begin -- architecture
           -- Register read connections.
           readAddress           => pl2gpreg_readPorts(readPort).addr(stage),
           readDataIn            => readData(readPort),
-          readDataOut           => gpreg2pl_readPorts(readPort).data(stage),
+          readDataOut           => readPorts_comb(readPort).data(stage),
           readDataForwarded     => forwarded,
           
           -- Queued write signals.
@@ -327,7 +367,7 @@ begin -- architecture
       -- Data is always valid in the stage where the data from the register
       -- file is valid, but is only valid in other stages when it comes from
       -- the forwarding logic.
-      gpreg2pl_readPorts(readPort).valid(stage)
+      readPorts_comb(readPort).valid(stage)
         <= '1' when stage = S_RD+L_RD else forwarded;
       
     end generate;

@@ -100,10 +100,9 @@ entity core_ctrlRegs_busSwitch is
     mstr2sw_readEnable          : in  std_logic;
     sw2mstr_readData            : out rvex_data_type;
     
-    -- When high, writing is disabled. Reads requests are still serviced
-    -- though, in order to support the claiming logic, which will assume that
-    -- the read result can be restored by appending an additional stall cycle
-    -- after having claimed the bus.
+    -- When high, writing is disabled. Also, read data is properly buffered to
+    -- ensure that it is still valid when a core when the core unstalls after
+    -- having been stalled in the middle of a read.
     mstr2sw_stall               : in  std_logic;
     
     ---------------------------------------------------------------------------
@@ -185,16 +184,49 @@ begin -- architecture
       <= (mstr2sw_writeEnable and not mstr2sw_stall) when vect2uint(sel) = slave else '0';
     
     sw2slave_readEnable(slave)
-      <= mstr2sw_readEnable when vect2uint(sel) = slave else '0';
+      <= (mstr2sw_readEnable and not mstr2sw_stall) when vect2uint(sel) = slave else '0';
     
   end generate;
   
   -----------------------------------------------------------------------------
   -- Drive master bus read data signal
   -----------------------------------------------------------------------------
-  sw2mstr_readData
-    <= (others => RVEX_UNDEF) when vect2uint(sel_r) >= NUM_SLAVES
-    else slave2sw_readData(vect2uint(sel_r));
+  read_data_block: block is
+    
+    -- Stall signal, delayed by one cycle to match up with the read result.
+    signal stall_reg            : std_logic;
+    
+    -- Combinatorial and registered read data signals.
+    signal readData_comb        : rvex_data_type;
+    signal readData_reg         : rvex_data_type;
+  begin
+    
+    -- Mux between the slave busses.
+    readData_comb
+      <= (others => RVEX_UNDEF) when vect2uint(sel_r) >= NUM_SLAVES
+      else slave2sw_readData(vect2uint(sel_r));
+    
+    -- Generate the stall and readData registers.
+    read_data_regs: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          stall_reg <= '0';
+          readData_reg <= (others => '0');
+        elsif clkEn = '1' then
+          stall_reg <= mstr2sw_stall;
+          if stall_reg = '0' then
+            readData_reg <= readData_comb;
+          end if;
+        end if;
+      end if;
+    end process;
+    
+    -- Select the combinatorial or registered read data signal depending on
+    -- which is valid.
+    sw2mstr_readData <= readData_comb when stall_reg = '0' else readData_reg;
+    
+  end block;
   
 end Behavioral;
 

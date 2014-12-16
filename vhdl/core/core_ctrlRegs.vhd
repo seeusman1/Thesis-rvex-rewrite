@@ -156,10 +156,7 @@ entity core_ctrlRegs is
     ---------------------------------------------------------------------------
     -- This should be connected to one of the general purpose register file
     -- read and write ports when creg2gpreg_claim is high. This unit will
-    -- ensure that everything is stalled when this signal is asserted. It will
-    -- keep stall high one cycle longer than claim, so any interrupted read
-    -- commands will be issued again, so claiming the bus does not affect the
-    -- core.
+    -- ensure that everything is stalled while this signal is asserted.
     
     -- When high, connect the bus to the general purpose register file.
     creg2gpreg_claim            : out std_logic;
@@ -313,11 +310,6 @@ architecture Behavioral of core_ctrlRegs is
   -- busses for lane group 0 in order to make use of the existing bus logic
   -- there. While this is going on, the processor is stalled.
   signal dbg_claim                  : std_logic;
-  
-  -- Claim signal, delayed by one cycle. This also stalls the processor when
-  -- high, so any interrupted read requests are re-issued before core
-  -- operation is resumed.
-  signal dbg_claim_r                : std_logic;
   
   -- Busses between the context bus switching logic and the lane groups, with
   -- potential override from the debug bus (only for group 0, the rest is just
@@ -581,19 +573,6 @@ begin -- architecture
     
   end process;
   
-  -- Generate the register for the claim signal with which we delay the stall
-  -- signal by one cycle.
-  claim_reg: process (clk) is
-  begin
-    if rising_edge(clk) then
-      if reset = '1' then
-        dbg_claim_r <= '0';
-      else
-        dbg_claim_r <= dbg_claim;
-      end if;
-    end if;
-  end process;
-  
   -- Generate stall output. It might seem as though we only need to stall lane
   -- group 0, but things are not that simple. For example, if lane group 1 is
   -- accessing the same context as the debug bus is simultaneously, bad things
@@ -601,7 +580,7 @@ begin -- architecture
   -- group based on the current configuration. Since debug bus accesses are
   -- (supposed to be) spurious events, it shouldn't degrade performance too
   -- much if we just stall all lanes two cycles for every debug bus event.
-  stallOut <= (others => dbg_claim or dbg_claim_r);
+  stallOut <= (others => dbg_claim);
   
   -----------------------------------------------------------------------------
   -- Generate bus claiming logic

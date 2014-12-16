@@ -300,6 +300,10 @@ architecture Behavioral of core_tb is
     
   );
   
+  -- The probability that the mem2rv_stallIn signal will be asserted high to
+  -- stall the core.
+  constant MEM_STALL_PROBABILITY: real := 0.2;
+  
   -- This signal strobes every 100 us, marking the start of a new test case,
   -- keeping the simulation nice and clean.
   signal sync                   : std_logic;
@@ -491,223 +495,280 @@ begin -- architecture
   --===========================================================================
   -- Memory modelling
   --===========================================================================
-  mem_model: process (
+  mem_block: block is
     
-    -- Synchronization with the read/write ports of the rvex instance.
-    clk,
-    
-    -- Synchronization with the test case runner program.
-    stim2mem_clearEnable, stim2mem_writeEnable, stim2mem_readEnable,
-    stim2mem_faultEnable, stim2mem_srecEnable
-    
-  ) is
-    
-    -- Memories. imem and dmem are the instruction and data memories. fmem
-    -- contains flags for either. Flag bit 0 determines whether accessing an
-    -- instruction at that location should return a fault, bit 1 does the
-    -- same thing for the data memory.
-    variable imem               : rvmem_memoryState_type;
-    variable dmem               : rvmem_memoryState_type;
-    variable fmem               : rvmem_memoryState_type;
-    constant FLAG_IM_FAULT_BIT  : natural := 0;
-    constant FLAG_DM_FAULT_BIT  : natural := 1;
-    
-    -- Locals/shorthands.
-    variable lanePCs            : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-    variable fetch              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
-    variable fault              : std_logic;
-    variable flags              : rvex_data_type;
-    variable result             : rvex_data_type;
-    
+    -- Signals from memory to rvex, before the stall signal is applied: when
+    -- stall is high, the signals to the core are overwritten with 'U'.
+    signal imem2rv_instr_comb     : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+    signal imem2rv_fault_comb     : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    signal dmem2rv_readData_comb  : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    signal dmem2rv_fault_comb     : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  
   begin
     
-    -- Handle bus commands from the rvex.
-    if rising_edge(clk) then
-      if reset = '1' then
-        mem2rv_blockReconfig <= (others => '0'); -- TODO, signal is not handled yet.
-        mem2rv_stallIn <= (others => '0'); -- TODO, signal is not handled yet.
-        imem2rv_instr <= (others => (others => RVEX_UNDEF));
-        imem2rv_affinity <= (others => '0');
-        imem2rv_fault <= (others => '0');
-        dmem2rv_readData <= (others => (others => RVEX_UNDEF));
-        dmem2rv_fault <= (others => '0');
-      elsif clkEn = '1' then
-        
-        -- Determine the active bundle program counter and fetch for each lane
-        -- group.
-        for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 loop
-          lanePCs(group2firstLane(laneGroup, CFG)) := rv2imem_PCs(laneGroup);
-          fetch(group2firstLane(laneGroup, CFG)) := rv2imem_fetch(laneGroup);
-        end loop;
-        
-        -- Go through the lanes within the lane groups in increasing order and
-        -- increment by 4 for each coupled lane.
-        for lane in 1 to 2**CFG.numLanesLog2-1 loop
-          if lane2group(lane, CFG) = lane2group(lane-1, CFG) then
-            lanePCs(lane) := std_logic_vector(vect2unsigned(lanePCs(lane-1)) + 4);
-            fetch(lane) := fetch(lane-1);
-          end if;
-        end loop;
-        
-        -- Handle instruction memory access for each lane.
-        fault := '0';
-        for lane in 0 to 2**CFG.numLanesLog2-1 loop
-          
-          -- If fetch is high and the group is not stalled, return the syllable
-          -- at the decoded PC and load the fault signal from the flag memory.
-          if (fetch(lane) = '1') and (rv2mem_stallOut(lane2group(lane, CFG)) = '0') then
-            rvmem_read(imem, lanePCs(lane), result);
-            imem2rv_instr(lane) <= result;
-            rvmem_read(fmem, lanePCs(lane), result);
-            fault := fault or result(FLAG_IM_FAULT_BIT);
-          else
-            imem2rv_instr(lane) <= (others => RVEX_UNDEF);
-          end if;
-          
-          -- Forward fault signal if this is the last lane in a coupled group.
-          if lane = lane2lastLane(lane, CFG) then
-            if rv2mem_decouple(lane2group(lane, CFG)) = '1' then
-              imem2rv_fault(lane2group(lane, CFG)) <= fault;
-              fault := '0';
-            else
-              imem2rv_fault(lane2group(lane, CFG)) <= '0';
-            end if;
-          end if;
-          
-        end loop;
-        
-        -- Handle data memory access for each lane group.
-        for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-          
-          -- Default to no fault and invalid returned data.
-          dmem2rv_fault(laneGroup) <= '0';
-          dmem2rv_readData(laneGroup) <= (others => RVEX_UNDEF);
-          
-          -- Only handle commands from the last memory unit in a coupled group,
-          -- and only when the group is not stalled.
-          if (rv2mem_decouple(laneGroup) = '1') and (rv2mem_stallOut(laneGroup) = '0') then
-            if rv2dmem_writeEnable(laneGroup) = '1' then
-              
-              -- Handle writes. Only perform the write if we do not return a
-              -- fault.
-              rvmem_read(fmem, rv2dmem_addr(laneGroup), result);
-              fault := result(FLAG_DM_FAULT_BIT);
-              if fault = '0' then
-                rvmem_write(
-                  mem   => dmem,
-                  addr  => rv2dmem_addr(laneGroup),
-                  value => rv2dmem_writeData(laneGroup),
-                  mask  => rv2dmem_writeMask(laneGroup)
-                );
-              end if;
-              dmem2rv_fault(laneGroup) <= fault;
-              
-            elsif rv2dmem_readEnable(laneGroup) = '1' then
-              
-              -- Handle reads.
-              rvmem_read(fmem, rv2dmem_addr(laneGroup), result);
-              dmem2rv_fault(laneGroup)    <= result(FLAG_DM_FAULT_BIT);
-              rvmem_read(dmem, rv2dmem_addr(laneGroup), result);
-              dmem2rv_readData(laneGroup) <= result;
-              
-            end if;
-          end if;
-          
-        end loop;
-        
-      end if;
-    end if;
-    
-    -- Handle test case runner commands.
-    if rising_edge(stim2mem_clearEnable) then
-      
-      -- Clear instruction and data memory.
-      rvmem_clear(imem, '0');
-      rvmem_clear(dmem, '0');
-      rvmem_clear(fmem, '0');
-      
-    elsif rising_edge(stim2mem_writeEnable) then
-      
-      -- Handle writes.
-      if stim2mem_select = IMEM_SELECT then
-        rvmem_write(
-          mem   => imem, -- Instruction memory.
-          addr  => stim2mem_addr,
-          value => stim2mem_writeData,
-          mask  => stim2mem_writeMask
-        );
-      else
-        rvmem_write(
-          mem   => dmem, -- Data memory.
-          addr  => stim2mem_addr,
-          value => stim2mem_writeData,
-          mask  => stim2mem_writeMask
-        );
-      end if;
-      
-    elsif rising_edge(stim2mem_readEnable) then
-      
-      -- Handle reads.
-      if stim2mem_select = IMEM_SELECT then
-        rvmem_read(
-          mem   => imem, -- Instruction memory.
-          addr  => stim2mem_addr,
-          value => result
-        );
-      else
-        rvmem_read(
-          mem   => dmem, -- Data memory.
-          addr  => stim2mem_addr,
-          value => result
-        );
-      end if;
-      mem2stim_readData <= result;
-      
-    elsif rising_edge(stim2mem_faultEnable) then
-      
-      -- Read the current value of the flags.
-      rvmem_read(
-        mem   => fmem,
-        addr  => stim2mem_addr,
-        value => flags
-      );
-      
-      -- Set or clear the requested bit.
-      if stim2mem_select = IMEM_SELECT then
-        flags(FLAG_IM_FAULT_BIT) := stim2mem_writeData(0);
-      else
-        flags(FLAG_DM_FAULT_BIT) := stim2mem_writeData(0);
-      end if;
-      
-      -- Write the new value to the flag memory.
-      rvmem_write(
-        mem   => fmem,
-        addr  => stim2mem_addr,
-        value => flags
-      );
-      
-    elsif rising_edge(stim2mem_srecEnable) then
-      
-      -- Handle s-record file loads.
-      if stim2mem_filename /= null then
-        if stim2mem_select = IMEM_SELECT then
-          rvmem_loadSRec(
-            mem     => imem,
-            fname   => stim2mem_filename.all,
-            offset  => stim2mem_addr
-          );
+    -- Generate some random stall signal. This does not have much to do with
+    -- the memory requests, but this does not really matter for testing; the
+    -- core should behave sanely regardless of the stalling source.
+    mem_stall_proc: process is
+      variable seed1, seed2       : positive;
+      variable r                  : real;
+    begin
+      loop
+        uniform(seed1, seed2, r);
+        if r < MEM_STALL_PROBABILITY then
+          mem2rv_stallIn <= (others => '1');
         else
-          rvmem_loadSRec(
-            mem     => dmem,
-            fname   => stim2mem_filename.all,
-            offset  => stim2mem_addr
-          );
+          mem2rv_stallIn <= (others => '0');
+        end if;
+        wait until rising_edge(clk);
+      end loop;
+    end process;
+    
+    -- Connect the outputs from the memory model to the core. When stall is
+    -- high, the outputs may not be valid in a real situation (because the
+    -- memory might be what's causing the stall), so in that case we override
+    -- the outputs with undefined.
+    mem_undef_when_stall_proc: process (
+      imem2rv_instr_comb, imem2rv_fault_comb,
+      dmem2rv_readData_comb, dmem2rv_fault_comb,
+      mem2rv_stallIn
+    ) is
+    begin
+      for lane in 0 to 2**CFG.numLanesLog2-1 loop
+        if mem2rv_stallIn(lane2group(lane, cfg)) = '0' then
+          imem2rv_instr(lane) <= imem2rv_instr_comb(lane);
+        else
+          imem2rv_instr(lane) <= (others => RVEX_UNDEF);
+        end if;
+      end loop;
+      for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+        if mem2rv_stallIn(laneGroup) = '0' then
+          imem2rv_fault(laneGroup)    <= imem2rv_fault_comb(laneGroup);
+          dmem2rv_readData(laneGroup) <= dmem2rv_readData_comb(laneGroup);
+          dmem2rv_fault(laneGroup)    <= dmem2rv_fault_comb(laneGroup);
+        else
+          imem2rv_fault(laneGroup)    <= RVEX_UNDEF;
+          dmem2rv_readData(laneGroup) <= (others => RVEX_UNDEF);
+          dmem2rv_fault(laneGroup)    <= RVEX_UNDEF;
+        end if;
+      end loop;
+    end process;
+    
+    -- Model the memory as a simple single-cycle-access memory.
+    mem_model: process (
+      
+      -- Synchronization with the read/write ports of the rvex instance.
+      clk,
+      
+      -- Synchronization with the test case runner program.
+      stim2mem_clearEnable, stim2mem_writeEnable, stim2mem_readEnable,
+      stim2mem_faultEnable, stim2mem_srecEnable
+      
+    ) is
+      
+      -- Memories. imem and dmem are the instruction and data memories. fmem
+      -- contains flags for either. Flag bit 0 determines whether accessing an
+      -- instruction at that location should return a fault, bit 1 does the
+      -- same thing for the data memory.
+      variable imem               : rvmem_memoryState_type;
+      variable dmem               : rvmem_memoryState_type;
+      variable fmem               : rvmem_memoryState_type;
+      constant FLAG_IM_FAULT_BIT  : natural := 0;
+      constant FLAG_DM_FAULT_BIT  : natural := 1;
+      
+      -- Locals/shorthands.
+      variable lanePCs            : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+      variable fetch              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+      variable fault              : std_logic;
+      variable flags              : rvex_data_type;
+      variable result             : rvex_data_type;
+      
+    begin
+      
+      -- Handle bus commands from the rvex.
+      if rising_edge(clk) then
+        if reset = '1' then
+          mem2rv_blockReconfig <= (others => '0'); -- TODO, signal is not handled yet.
+          imem2rv_instr_comb <= (others => (others => RVEX_UNDEF));
+          imem2rv_affinity <= (others => '0');
+          imem2rv_fault_comb <= (others => '0');
+          dmem2rv_readData_comb <= (others => (others => RVEX_UNDEF));
+          dmem2rv_fault_comb <= (others => '0');
+        elsif clkEn = '1' then
+          
+          -- Determine the active bundle program counter and fetch for each
+          -- lane group.
+          for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 loop
+            lanePCs(group2firstLane(laneGroup, CFG)) := rv2imem_PCs(laneGroup);
+            fetch(group2firstLane(laneGroup, CFG)) := rv2imem_fetch(laneGroup);
+          end loop;
+          
+          -- Go through the lanes within the lane groups in increasing order
+          -- and increment by 4 for each coupled lane.
+          for lane in 1 to 2**CFG.numLanesLog2-1 loop
+            if lane2group(lane, CFG) = lane2group(lane-1, CFG) then
+              lanePCs(lane) := std_logic_vector(vect2unsigned(lanePCs(lane-1)) + 4);
+              fetch(lane) := fetch(lane-1);
+            end if;
+          end loop;
+          
+          -- Handle instruction memory access for each lane.
+          fault := '0';
+          for lane in 0 to 2**CFG.numLanesLog2-1 loop
+            
+            -- If fetch is high and the group is not stalled, return the
+            -- syllable at the decoded PC and load the fault signal from the
+            -- flag memory.
+            if (fetch(lane) = '1') and (rv2mem_stallOut(lane2group(lane, CFG)) = '0') then
+              rvmem_read(imem, lanePCs(lane), result);
+              imem2rv_instr_comb(lane) <= result;
+              rvmem_read(fmem, lanePCs(lane), result);
+              fault := fault or result(FLAG_IM_FAULT_BIT);
+            end if;
+            
+            -- Forward fault signal if this is the last lane in a coupled
+            -- group.
+            if lane = lane2lastLane(lane, CFG) then
+              if rv2mem_decouple(lane2group(lane, CFG)) = '1' then
+                imem2rv_fault_comb(lane2group(lane, CFG)) <= fault;
+                fault := '0';
+              else
+                imem2rv_fault_comb(lane2group(lane, CFG)) <= '0';
+              end if;
+            end if;
+            
+          end loop;
+          
+          -- Handle data memory access for each lane group.
+          for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+            
+            -- Only handle commands from the last memory unit in a coupled
+            -- group, and only when the group is not stalled.
+            if (rv2mem_decouple(laneGroup) = '1') and (rv2mem_stallOut(laneGroup) = '0') then
+              if rv2dmem_writeEnable(laneGroup) = '1' then
+                
+                -- Handle writes. Only perform the write if we do not return a
+                -- fault.
+                rvmem_read(fmem, rv2dmem_addr(laneGroup), result);
+                fault := result(FLAG_DM_FAULT_BIT);
+                if fault = '0' then
+                  rvmem_write(
+                    mem   => dmem,
+                    addr  => rv2dmem_addr(laneGroup),
+                    value => rv2dmem_writeData(laneGroup),
+                    mask  => rv2dmem_writeMask(laneGroup)
+                  );
+                end if;
+                dmem2rv_fault_comb(laneGroup) <= fault;
+                
+              elsif rv2dmem_readEnable(laneGroup) = '1' then
+                
+                -- Handle reads.
+                rvmem_read(fmem, rv2dmem_addr(laneGroup), result);
+                dmem2rv_fault_comb(laneGroup)    <= result(FLAG_DM_FAULT_BIT);
+                rvmem_read(dmem, rv2dmem_addr(laneGroup), result);
+                dmem2rv_readData_comb(laneGroup) <= result;
+                
+              end if;
+            end if;
+            
+          end loop;
+          
         end if;
       end if;
       
-    end if;
+      -- Handle test case runner commands.
+      if rising_edge(stim2mem_clearEnable) then
+        
+        -- Clear instruction and data memory.
+        rvmem_clear(imem, '0');
+        rvmem_clear(dmem, '0');
+        rvmem_clear(fmem, '0');
+        
+      elsif rising_edge(stim2mem_writeEnable) then
+        
+        -- Handle writes.
+        if stim2mem_select = IMEM_SELECT then
+          rvmem_write(
+            mem   => imem, -- Instruction memory.
+            addr  => stim2mem_addr,
+            value => stim2mem_writeData,
+            mask  => stim2mem_writeMask
+          );
+        else
+          rvmem_write(
+            mem   => dmem, -- Data memory.
+            addr  => stim2mem_addr,
+            value => stim2mem_writeData,
+            mask  => stim2mem_writeMask
+          );
+        end if;
+        
+      elsif rising_edge(stim2mem_readEnable) then
+        
+        -- Handle reads.
+        if stim2mem_select = IMEM_SELECT then
+          rvmem_read(
+            mem   => imem, -- Instruction memory.
+            addr  => stim2mem_addr,
+            value => result
+          );
+        else
+          rvmem_read(
+            mem   => dmem, -- Data memory.
+            addr  => stim2mem_addr,
+            value => result
+          );
+        end if;
+        mem2stim_readData <= result;
+        
+      elsif rising_edge(stim2mem_faultEnable) then
+        
+        -- Read the current value of the flags.
+        rvmem_read(
+          mem   => fmem,
+          addr  => stim2mem_addr,
+          value => flags
+        );
+        
+        -- Set or clear the requested bit.
+        if stim2mem_select = IMEM_SELECT then
+          flags(FLAG_IM_FAULT_BIT) := stim2mem_writeData(0);
+        else
+          flags(FLAG_DM_FAULT_BIT) := stim2mem_writeData(0);
+        end if;
+        
+        -- Write the new value to the flag memory.
+        rvmem_write(
+          mem   => fmem,
+          addr  => stim2mem_addr,
+          value => flags
+        );
+        
+      elsif rising_edge(stim2mem_srecEnable) then
+        
+        -- Handle s-record file loads.
+        if stim2mem_filename /= null then
+          if stim2mem_select = IMEM_SELECT then
+            rvmem_loadSRec(
+              mem     => imem,
+              fname   => stim2mem_filename.all,
+              offset  => stim2mem_addr
+            );
+          else
+            rvmem_loadSRec(
+              mem     => dmem,
+              fname   => stim2mem_filename.all,
+              offset  => stim2mem_addr
+            );
+          end if;
+        end if;
+        
+      end if;
+      
+    end process;
     
-  end process;
+  end block;
   
   --===========================================================================
   -- Interrupt controller model
