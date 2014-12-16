@@ -83,7 +83,7 @@ entity utils_crc is
     clkEn                       : in  std_logic;
     
     ---------------------------------------------------------------------------
-    -- Buffer write interface
+    -- CRC interface
     ---------------------------------------------------------------------------
     -- Data to update the CRC with when update is high.
     data                        : in  std_logic_vector(CRC_ORDER-1 downto 0);

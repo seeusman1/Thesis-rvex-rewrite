@@ -87,6 +87,9 @@ entity periph_UART_packetBuffer is
     -- When high for one cycle, the last byte on the buffer is discarded.
     src2buf_pop                 : in  std_logic;
     
+    -- When high, the source buffer will be cleared.
+    src2buf_reset               : in  std_logic;
+    
     -- Buffer swap signal. When this is high for at least one cycle and the
     -- read interface is also ready for a swap, the buffers are swapped. When
     -- the read side is not ready yet, swapping will be asserted high until
@@ -149,7 +152,7 @@ begin -- architecture
       if rising_edge(clk) then
         if reset = '1' then
           srcReady <= '0';
-          sinkReady <= '0';
+          sinkReady <= '1';
           bufSel <= '0';
         elsif clkEn = '1' then
           
@@ -267,6 +270,8 @@ begin -- architecture
             count(srcIndex) <= count(srcIndex) + 1;
           elsif src2buf_pop = '1' and sourceEmpty = '0' then
             count(srcIndex) <= count(srcIndex) - 1;
+          elsif src2buf_reset = '1' then
+            count(srcIndex) <= (others => '0');
           end if;
           
           -- Update the source pointer register.
@@ -276,6 +281,8 @@ begin -- architecture
             ptr(srcIndex) <= ptr(srcIndex) + 1;
           elsif src2buf_pop = '1' and sourceEmpty = '0' then
             ptr(srcIndex) <= ptr(srcIndex) - 1;
+          elsif src2buf_reset = '1' then
+            ptr(srcIndex) <= (others => '0');
           end if;
           
           -- Update the sink count register.
