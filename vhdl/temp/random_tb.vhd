@@ -215,56 +215,260 @@ begin
 --    wait;
 --  end process;
   
-  banana: block is
-    signal clk   : std_logic;
-    signal clkEn : std_logic;
-    signal refA   : std_logic;
-    signal refB   : std_logic;
+--  banana: block is
+--    signal clk   : std_logic;
+--    signal clkEn : std_logic;
+--    signal refA   : std_logic;
+--    signal refB   : std_logic;
+--  begin
+--    
+--    -- Clock divider.
+--    clkDiv: entity rvex.utils_fracDiv
+--      generic map (
+--        F_CLK     => 10000000.0,
+--        F_DESIRED =>  1843200.0,
+--        MAX_DEVIATION => 0.0
+--      )
+--      port map ('0', clk, '1', clkEn);
+--    
+--    -- 10 MHz.
+--    process is
+--    begin
+--      clk <= '1';
+--      wait for 50 ns;
+--      clk <= '0';
+--      wait for 50 ns;
+--    end process;
+--    
+--    -- 1.8432 MHz ref, rounded down due to sim accuracy.
+--    process is
+--    begin
+--      wait until rising_edge(clkEn);
+--      loop
+--        refA <= '1';
+--        wait for 100 ns;
+--        refA <= '0';
+--        wait for 442535 ps;
+--      end loop;
+--    end process;
+--    
+--    -- 1.8432 MHz ref, rounded up due to sim accuracy.
+--    process is
+--    begin
+--      wait until rising_edge(clkEn);
+--      loop
+--        refB <= '1';
+--        wait for 100 ns;
+--        refB <= '0';
+--        wait for 442534 ps;
+--      end loop;
+--    end process;
+--    
+--  end block;
+  
+--  packetBuf_test: block is
+--    signal reset                       : std_logic;
+--    signal clk                         : std_logic;
+--    signal clkEn                       : std_logic;
+--    
+--    -- Buffer write interface.
+--    signal src2buf_data                : std_logic_vector(7 downto 0);
+--    signal src2buf_push                : std_logic;
+--    signal bus2src_full                : std_logic;
+--    signal src2buf_pop                 : std_logic;
+--    signal src2buf_swap                : std_logic;
+--    signal bus2src_swapping            : std_logic;
+--    
+--    -- Buffer read interface.
+--    signal buf2sink_data               : std_logic_vector(7 downto 0);
+--    signal sink2buf_pop                : std_logic;
+--    signal buf2sink_empty              : std_logic;
+--    signal sink2buf_swap               : std_logic;
+--    signal bus2sink_swapping           : std_logic;
+--    
+--  begin
+--  
+--    uut: entity rvex.periph_UART_packetBuffer
+--      port map (
+--        reset,
+--        clk,
+--        clkEn,
+--        
+--        -- Buffer write interface.
+--        src2buf_data,
+--        src2buf_push,
+--        bus2src_full,
+--        src2buf_pop,
+--        src2buf_swap,
+--        bus2src_swapping,
+--        
+--        -- Buffer read interface.
+--        buf2sink_data,
+--        sink2buf_pop,
+--        buf2sink_empty,
+--        sink2buf_swap,
+--        bus2sink_swapping
+--      );
+--    
+--    clkEn <= '1';
+--    
+--    clk_proc: process is
+--    begin
+--      clk <= '1';
+--      wait for 5 ns;
+--      clk <= '0';
+--      wait for 5 ns;
+--    end process;
+--    
+--    write_proc: process is
+--    begin
+--      src2buf_data <= "UUUUUUUU";
+--      src2buf_push <= '0';
+--      src2buf_pop <= '0';
+--      src2buf_swap <= '0';
+--      
+--      reset <= '1';
+--      wait until rising_edge(clk);
+--      wait until rising_edge(clk);
+--      reset <= '0';
+--      
+--      for i in 0 to 255 loop
+--        if i mod 10 = 9 then --bus2src_full = '1' then
+--          src2buf_swap <= '1';
+--          wait until rising_edge(clk);
+--          src2buf_swap <= '0';
+--          wait until rising_edge(clk);
+--          while bus2src_swapping = '1' loop
+--            wait until rising_edge(clk);
+--          end loop;
+--          wait until rising_edge(clk);
+--        end if;
+--        
+--        src2buf_data <= std_logic_vector(to_unsigned(i, 8));
+--        src2buf_push <= '1';
+--        wait until rising_edge(clk);
+--        src2buf_data <= "UUUUUUUU";
+--        src2buf_push <= '0';
+--        
+--        wait until rising_edge(clk);
+--        
+--      end loop;
+--      
+--    end process;
+--    
+--    read_proc: process is
+--    begin
+--      sink2buf_pop <= '0';
+--      sink2buf_swap <= '0';
+--      
+--      --reset <= '1';
+--      wait until rising_edge(clk);
+--      wait until rising_edge(clk);
+--      --reset <= '0';
+--      
+--      loop
+--        
+--        if buf2sink_empty = '1' then
+--          sink2buf_swap <= '1';
+--          wait until rising_edge(clk);
+--          sink2buf_swap <= '0';
+--          wait until rising_edge(clk);
+--          while bus2sink_swapping = '1' loop
+--            wait until rising_edge(clk);
+--          end loop;
+--        else
+--          report "Received " & integer'image(to_integer(unsigned(buf2sink_data))) severity note;
+--          sink2buf_pop <= '1';
+--          wait until rising_edge(clk);
+--          sink2buf_pop <= '0';
+--        end if;
+--        
+--        wait until rising_edge(clk);
+--        wait until rising_edge(clk);
+--        
+--      end loop;
+--      
+--    end process;
+--    
+--  end block;
+  
+  crc_test: block is
+    constant CRC_ORDER                 : natural := 8;
+    constant POLYNOMIAL                : natural := 16#07#;
+    signal reset                       : std_logic;
+    signal clk                         : std_logic;
+    signal clkEn                       : std_logic;
+    signal data                        : std_logic_vector(CRC_ORDER-1 downto 0);
+    signal update                      : std_logic;
+    signal clear                       : std_logic;
+    signal crc                         : std_logic_vector(CRC_ORDER-1 downto 0);
+    signal correct                     : std_logic;
+    
   begin
-    
-    -- Clock divider.
-    clkDiv: entity rvex.utils_fracDiv
+  
+    uut: entity rvex.utils_crc
       generic map (
-        F_CLK     => 10000000.0,
-        F_DESIRED =>  1843200.0,
-        MAX_DEVIATION => 0.0
+        CRC_ORDER,
+        POLYNOMIAL
       )
-      port map ('0', clk, '1', clkEn);
+      port map (
+        reset,
+        clk,
+        clkEn,
+        data,
+        update,
+        clear,
+        crc,
+        correct
+      );
     
-    -- 10 MHz.
-    process is
+    clkEn <= '1';
+    
+    clk_proc: process is
     begin
       clk <= '1';
-      wait for 50 ns;
+      wait for 5 ns;
       clk <= '0';
-      wait for 50 ns;
+      wait for 5 ns;
     end process;
     
-    -- 1.8432 MHz ref, rounded down due to sim accuracy.
-    process is
+    crc_proc: process is
     begin
-      wait until rising_edge(clkEn);
-      loop
-        refA <= '1';
-        wait for 100 ns;
-        refA <= '0';
-        wait for 442535 ps;
-      end loop;
-    end process;
-    
-    -- 1.8432 MHz ref, rounded up due to sim accuracy.
-    process is
-    begin
-      wait until rising_edge(clkEn);
-      loop
-        refB <= '1';
-        wait for 100 ns;
-        refB <= '0';
-        wait for 442534 ps;
-      end loop;
+      data <= (others => '0');
+      update <= '0';
+      clear <= '0';
+      
+      reset <= '1';
+      wait until rising_edge(clk);
+      wait until rising_edge(clk);
+      reset <= '0';
+      
+      update <= '1';
+      data <= X"30"; -- ASCII 0
+      wait until rising_edge(clk);
+      data <= X"31"; -- ASCII 1
+      wait until rising_edge(clk);
+      data <= X"32"; -- ASCII 2
+      wait until rising_edge(clk);
+      data <= X"33"; -- ASCII 3
+      wait until rising_edge(clk);
+      data <= X"34"; -- ASCII 4
+      wait until rising_edge(clk);
+      data <= X"35"; -- ASCII 5
+      wait until rising_edge(clk);
+      data <= X"36"; -- ASCII 6
+      wait until rising_edge(clk);
+      data <= X"37"; -- ASCII 7
+      wait until rising_edge(clk);
+      data <= X"21"; -- Correct CRC
+      wait until rising_edge(clk);
+      update <= '0';
+      
+      wait;
+      
     end process;
     
   end block;
-  
+
 end behavioral;
 

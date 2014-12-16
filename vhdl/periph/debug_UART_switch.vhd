@@ -121,10 +121,10 @@ entity periph_UART_switch is
     sw2user_txBusy              : out std_logic;
     
     -- When request is high, the UART will transmit txData. When the transfer
-    -- completes, txAck will be high for one cycle. When break is high, the
-    -- switch logic ensures that a 0xFD character is sent first. The end of
-    -- packet markers are inserted automatically when request goes low while
-    -- ack is high.
+    -- completes, txAck will be high for one cycle. When txStartPacket is high,
+    -- the switch logic ensures that an end-of-packet control character is sent
+    -- before sending the character. In addition, end-of-packet control
+    -- characters are inserted when there is a delay in the debug bytestream.
     dbg2sw_txData               : in  std_logic_vector(7 downto 0);
     dbg2sw_txStartPacket        : in  std_logic;
     dbg2sw_txRequest            : in  std_logic;
@@ -254,14 +254,60 @@ begin -- architecture
   -----------------------------------------------------------------------------
   tx_logic: block is
     
-    -- Current FSM state.
-    type state_type is (STATE_USER, STATE_DEBUG, STATE_WAIT);
-    signal state                : state_type;
-    
     -- User data request holding register.
     signal userData             : std_logic_vector(7 downto 0);
     signal userRequest          : std_logic;
     signal userAck              : std_logic;
+    
+    -- Current FSM state, along with the escaping signal. In STATE_USER, the
+    -- user stream is selected and user transfer requests can be made.
+    -- STATE_DEBUG works in the same way for debug stream transfer requests
+    -- without the startPacket flag set, STATE_DEBUG_FIRST services any debug
+    -- transfer request.
+    -- 
+    -- When a transfer is requested while the state machine is not in a state
+    -- which can service the request, the state machine will send control
+    -- characters in order to change the state. These control characters are
+    -- shown in the diagram below.
+    -- 
+    --  .------------.  0xFD  .-------------------.anything.-------------.
+    --  |            |------->|                   |------->|             |
+    --  | STATE_USER |        | STATE_DEBUG_FIRST |        | STATE_DEBUG |
+    --  |            |<-------|                   |<-------|             |
+    --  '------------'  0xFE  '-------------------'  0xFD  '-------------'
+    --        ^                                                   |
+    --        '---------------------------------------------------'
+    --                                 0xFE
+    -- 
+    -- Any data character sent in STATE_DEBUG_FIRST will cause the state to
+    -- move to STATE_DEBUG.
+    -- 
+    -- Debug transfer requests take priority over user transfer requests, so
+    -- debug transfers cannot be interrupted mid-transfer and to ensure that
+    -- the debugging system will still work even if user code is flooding the
+    -- UART.
+    -- 
+    -- When a data character is requested which needs to be escaped, the FSM
+    -- will first move to the correct stream as specified above if necessary,
+    -- and will then send the 0xFC character and set the escaping flag. While
+    -- the FSM is in escaping mode, the incoming character is one's
+    -- complemented in order to allow it to be transmitted without the control
+    -- character appearing in the raw data stream. The receiver performs the
+    -- inverse operation in order to recover the sent data.
+    type state_type is (STATE_USER, STATE_DEBUG, STATE_DEBUG_FIRST);
+    signal state                : state_type;
+    signal state_next           : state_type;
+    signal escaping             : std_logic;
+    signal escaping_next        : std_logic;
+    
+    -- When state is STATE_USER, this is connected to user2sw_txData, otherwise
+    -- it is connected to dbg2sw_txData. In addition, when escaping is set, the
+    -- requested data is one's complemented.
+    signal dataMux              : std_logic_vector(7 downto 0);
+    
+    -- This is set when the current value in dataMux matches a control
+    -- character.
+    signal escapeNeeded         : std_logic;
     
   begin
     
@@ -286,7 +332,163 @@ begin -- architecture
     -- The busy signal should be high while the holding register is nonempty.
     sw2user_txBusy <= userRequest and not userAck;
     
+    -- Connect the dataMux and escapeNeeded signals as described in the signal
+    -- documentation.
+    tx_data_mux_proc: process (
+      user2sw_txData, dbg2sw_txData, state, escaping
+    ) is
+      variable dataMux_v  : std_logic_vector(7 downto 0);
+    begin
+      
+      -- Connect dataMux to either request.
+      if state = STATE_USER then
+        dataMux_v := user2sw_txData;
+      else
+        dataMux_v := dbg2sw_txData;
+      end if;
+      
+      -- Determine if the request matches a control character.
+      if (dataMux_v = CHAR_USER) or (dataMux_v = CHAR_DEBUG) or (dataMux_v = CHAR_ESCAPE) then
+        escapeNeeded <= '1';
+      else
+        escapeNeeded <= '0';
+      end if;
+      
+      -- One's complement the request if we've just sent the escape character.
+      if escaping = '1' then
+        dataMux_v := not dataMux_v;
+      end if;
+      
+      -- Drive the dataMux signal.
+      dataMux <= dataMux_v;
+      
+    end process;
     
+    -- Generate the state registers for the transmitter FSM.
+    tx_state_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          state <= STATE_USER;
+          escaping <= '0';
+        elsif clkEn = '1' and uart2sw_txBusy = '0' then
+          state <= state_next;
+          escaping <= escaping_next;
+        end if;
+      end if;
+    end process;
+    
+    -- Generate the combinatorial logic for the transmitter FSM.
+    tx_state_comb: process (
+      state, escaping, uart2sw_txBusy, dataMux, escapeNeeded,
+      dbg2sw_txRequest, dbg2sw_txStartPacket, userRequest
+    ) is
+    begin
+      state_next <= state;
+      escaping_next <= '0';
+      sw2uart_txData <= dataMux;
+      sw2uart_txStrobe <= '0';
+      userAck <= '0';
+      sw2dbg_txAck <= '0';
+      
+      case state is
+        
+        when STATE_USER =>
+          
+          if dbg2sw_txRequest = '1' then
+            
+            -- The debug stream wants to send something: send 0xFD and go to
+            -- STATE_DEBUG_FIRST.
+            state_next <= STATE_DEBUG_FIRST;
+            sw2uart_txData <= CHAR_DEBUG;
+            sw2uart_txStrobe <= not uart2sw_txBusy;
+            
+          elsif userRequest = '1' then
+            
+            -- The user stream wants to send something. Send escape character
+            -- first if needed.
+            if escapeNeeded = '1' and escaping = '0' then
+              escaping_next <= '1';
+              sw2uart_txData <= CHAR_ESCAPE;
+              sw2uart_txStrobe <= not uart2sw_txBusy;
+            else
+              sw2uart_txData <= dataMux;
+              sw2uart_txStrobe <= not uart2sw_txBusy;
+              userAck <= not uart2sw_txBusy;
+            end if;
+            
+          end if;
+          
+        when STATE_DEBUG_FIRST =>
+          
+          if dbg2sw_txRequest = '1' then
+            
+            -- The debug stream wants to send something. Send escape character
+            -- first if needed. Make sure to move to the STATE_DEBUG state when
+            -- sending data.
+            if escapeNeeded = '1' and escaping = '0' then
+              escaping_next <= '1';
+              sw2uart_txData <= CHAR_ESCAPE;
+              sw2uart_txStrobe <= not uart2sw_txBusy;
+            else
+              state_next <= STATE_DEBUG;
+              sw2uart_txData <= dataMux;
+              sw2uart_txStrobe <= not uart2sw_txBusy;
+              sw2dbg_txAck <= not uart2sw_txBusy;
+            end if;
+            
+          else
+            
+            -- The debug stream is done sending things. Switch back to the user
+            -- stream by sending the 0xFE character, doubling as an
+            -- end-of-packet marker.
+            state_next <= STATE_USER;
+            sw2uart_txData <= CHAR_USER;
+            sw2uart_txStrobe <= not uart2sw_txBusy;
+            
+          end if;
+          
+        when STATE_DEBUG =>
+          
+          if dbg2sw_txRequest = '1' then
+            
+            if dbg2sw_txStartPacket = '1' then
+              
+              -- The debug stream wants to send the first character in a
+              -- packet. This means we need to end the current packet first,
+              -- by sending the 0xFD control character.
+              state_next <= STATE_DEBUG_FIRST;
+              sw2uart_txData <= CHAR_DEBUG;
+              sw2uart_txStrobe <= not uart2sw_txBusy;
+              
+            else
+            
+              -- The debug stream wants to send a mid-packet character.
+              if escapeNeeded = '1' and escaping = '0' then
+                escaping_next <= '1';
+                sw2uart_txData <= CHAR_ESCAPE;
+                sw2uart_txStrobe <= not uart2sw_txBusy;
+              else
+                sw2uart_txData <= dataMux;
+                sw2uart_txStrobe <= not uart2sw_txBusy;
+                sw2dbg_txAck <= not uart2sw_txBusy;
+              end if;
+              
+            end if;
+            
+          else
+            
+            -- The debug stream is done sending things. Switch back to the user
+            -- stream by sending the 0xFE character, doubling as an
+            -- end-of-packet marker.
+            state_next <= STATE_USER;
+            sw2uart_txData <= CHAR_USER;
+            sw2uart_txStrobe <= not uart2sw_txBusy;
+            
+          end if;
+          
+      end case;
+    end process;
     
   end block;
   
