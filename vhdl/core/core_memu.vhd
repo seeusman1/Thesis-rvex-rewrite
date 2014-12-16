@@ -227,9 +227,12 @@ begin -- architecture
   memu2dmsw_writeEnable(S_MEM)
     <= ctrl(S_MEM).writeEnable and pl2memu_valid(S_MEM) and not misalignedAccess(S_MEM);
   
-  -- Setup the trap output to the pipeline.
+  -- Setup the trap output to the pipeline. We shouldn't care about the valid
+  -- signal here, because the valid signal is pulled low when the trap is
+  -- activated, causing a race condition. Instead, the validity check is done
+  -- in the pipeline process, before the valid signal is updated.
   memu2pl_trap(S_MEM) <= (
-    active => misalignedAccess(S_MEM) and (ctrl(S_MEM).readEnable or ctrl(S_MEM).writeEnable) and pl2memu_valid(S_MEM),
+    active => misalignedAccess(S_MEM) and (ctrl(S_MEM).readEnable or ctrl(S_MEM).writeEnable),
     cause  => rvex_trap(RVEX_TRAP_MISALIGNED_ACCESS),
     arg    => pl2memu_opAddr(S_MEM)
   );
