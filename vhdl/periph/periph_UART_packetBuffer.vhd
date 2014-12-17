@@ -90,6 +90,14 @@ entity periph_UART_packetBuffer is
     -- When high, the source buffer will be cleared.
     src2buf_reset               : in  std_logic;
     
+    -- When more than one of reset, pop or push are high, the order of
+    -- precedence is (from highest priority to lowest):
+    --  - reset
+    --  - pop
+    --  - push
+    -- Any of those three commands can be serviced concurrently with a swap
+    -- request.
+    
     -- Buffer swap signal. When this is high for at least one cycle and the
     -- read interface is also ready for a swap, the buffers are swapped. When
     -- the read side is not ready yet, swapping will be asserted high until
@@ -266,23 +274,23 @@ begin -- architecture
           end if;
           
           -- Update the source count register.
-          if src2buf_push = '1' and sourceFull = '0' then
-            count(srcIndex) <= count(srcIndex) + 1;
+          if src2buf_reset = '1' then
+            count(srcIndex) <= (others => '0');
           elsif src2buf_pop = '1' and sourceEmpty = '0' then
             count(srcIndex) <= count(srcIndex) - 1;
-          elsif src2buf_reset = '1' then
-            count(srcIndex) <= (others => '0');
+          elsif src2buf_push = '1' and sourceFull = '0' then
+            count(srcIndex) <= count(srcIndex) + 1;
           end if;
           
           -- Update the source pointer register.
           if swap = '1' then
             ptr(srcIndex) <= (others => '0');
-          elsif src2buf_push = '1' and sourceFull = '0' then
-            ptr(srcIndex) <= ptr(srcIndex) + 1;
-          elsif src2buf_pop = '1' and sourceEmpty = '0' then
-            ptr(srcIndex) <= ptr(srcIndex) - 1;
           elsif src2buf_reset = '1' then
             ptr(srcIndex) <= (others => '0');
+          elsif src2buf_pop = '1' and sourceEmpty = '0' then
+            ptr(srcIndex) <= ptr(srcIndex) - 1;
+          elsif src2buf_push = '1' and sourceFull = '0' then
+            ptr(srcIndex) <= ptr(srcIndex) + 1;
           end if;
           
           -- Update the sink count register.

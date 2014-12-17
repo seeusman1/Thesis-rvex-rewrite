@@ -49,6 +49,9 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
+library std;
+use std.textio.all;
+
 --=============================================================================
 -- This package contains basic simulation/elaboration-only utilities, primarily
 -- focussed on string manipulation.
@@ -198,6 +201,10 @@ package simUtils_pkg is
   
   -- Randomizes the contents of the supplied std_logic_vector.
   procedure rvs_randomVect(seed1: inout positive; seed2: inout positive; value: inout std_logic_vector);
+  
+  -- Dumps the given string to stdout. Works like a report statement, but
+  -- doesn't have all the simulator fluff around it.
+  procedure dumpStdOut(s: string);
   
 end simUtils_pkg;
 
@@ -726,5 +733,18 @@ package body simUtils_pkg is
       value(value'high downto value'high - 7) := std_logic_vector(to_unsigned(iv, 8));
     end if;
   end rvs_randomVect;
+  
+  -- Dumps the given string to stdout. Works like a report statement, but
+  -- doesn't have all the simulator fluff around it.
+  procedure dumpStdOut(s: string) is
+    variable ln : std.textio.line;
+  begin
+    ln := new string(1 to s'length);
+    ln.all := s;
+    writeline(std.textio.output, ln);
+    if ln /= null then
+      deallocate(ln);
+    end if;
+  end procedure;
   
 end simUtils_pkg;

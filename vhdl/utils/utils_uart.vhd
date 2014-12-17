@@ -60,7 +60,7 @@ entity utils_uart is
   generic (
     
     -- Input clock frequency.
-    F_CLK                       : real := 8000000.0;
+    F_CLK                       : real;
     
     -- Desired baud rate.
     F_BAUD                      : real := 115200.0;

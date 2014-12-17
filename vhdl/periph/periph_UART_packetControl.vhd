@@ -54,7 +54,10 @@ library rvex;
 --=============================================================================
 -- This is is part of the debug section of the UART peripheral. It buffers and
 -- error-checks incoming debug packets and buffers and transmits outgoing
--- debug packets.
+-- debug packets. In order to be able to error-check packets, this unit appends
+-- an 8-bit CRC to every transmitted packet and checks and removes the CRC from
+-- received packets. When a packet with an incorrect CRC is received, it is
+-- discarded.
 -------------------------------------------------------------------------------
 entity periph_UART_packetControl is
 --=============================================================================
@@ -96,7 +99,7 @@ entity periph_UART_packetControl is
     pkctrl2pkhan_txFull         : out std_logic;
     
     -- When high, the transmit buffer is reset/cleared.
-    pkctrl2pkhan_txReset        : out std_logic;
+    pkctrl2pkhan_txReset        : in  std_logic;
     
     -- When high, the packet currently in the transmit buffer will be
     -- transmitted.
@@ -144,7 +147,114 @@ begin -- architecture
   -- Receiver logic
   -----------------------------------------------------------------------------
   rx_block: block is
+    
+    -- TX buffer busy signal, inverted txReady signal.
+    signal pkhan2pkctrl_rxBusy  : std_logic;
+    
+    -- This flag is cleared when a new packet is going to be received, and is
+    -- set whenever a byte is received while the buffer was not ready.
+    signal bufferError          : std_logic;
+    
+    -- Buffer error signals.
+    signal bufferFull           : std_logic;
+    signal bufferSwapping       : std_logic;
+    
+    -- This is set when the crc over the entire packet received so far equals
+    -- zero.
+    signal crcCorrect           : std_logic;
+    
+    -- This is set while bufferError is cleared and crcCorrect is set.
+    signal packetValid          : std_logic;
+    
+    -- When completePacket is high for one cycle, the packet currently in the
+    -- buffer is either forwarded to the packet handler or discarded, based on
+    -- the packetValid signal. forwardPacket and discardPacket are simply the
+    -- same signal, but appropriately gated by the packetValid signal.
+    signal completePacket       : std_logic;
+    signal forwardPacket        : std_logic;
+    signal discardPacket        : std_logic;
+    
   begin
+    
+    -- Instantiate the transmit packet buffer.
+    rx_packet_buffer_inst: entity rvex.periph_UART_packetBuffer
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- Buffer write interface.
+        src2buf_data            => sw2pkctrl_rxData,
+        src2buf_push            => sw2pkctrl_rxStrobe,
+        bus2src_full            => bufferFull,
+        src2buf_pop             => forwardPacket, -- The last byte is the CRC, which the packet handler doesn't need.
+        src2buf_reset           => discardPacket,
+        src2buf_swap            => forwardPacket,
+        bus2src_swapping        => bufferSwapping,
+        
+        -- Buffer read interface.
+        buf2sink_data           => pkctrl2pkhan_rxData,
+        sink2buf_pop            => pkhan2pkctrl_rxPop,
+        buf2sink_empty          => pkctrl2pkhan_rxEmpty,
+        sink2buf_swap           => pkctrl2pkhan_rxSwap,
+        bus2sink_swapping       => pkhan2pkctrl_rxBusy
+        
+      );
+    
+    -- Invert the busy signal to get the ready signal.
+    pkhan2pkctrl_rxReady <= not pkhan2pkctrl_rxBusy;
+    
+    -- CRC generator for the transmitted packets.
+    rx_crc_inst: entity rvex.utils_crc
+      generic map (
+        CRC_ORDER               => 8,
+        POLYNOMIAL              => CRC_POLYNOMIAL
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- CRC interface.
+        data                    => sw2pkctrl_rxData,
+        update                  => sw2pkctrl_rxStrobe,
+        clear                   => completePacket,
+        crc                     => open,
+        correct                 => crcCorrect
+        
+      );
+    
+    -- Instantiate the buffer error register.
+    rx_buf_error_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          bufferError <= '0';
+        elsif clkEn = '1' then
+          if completePacket = '1' then
+            bufferError <= '0';
+          elsif (sw2pkctrl_rxStrobe = '1') and (bufferFull = '1' or bufferSwapping = '1') then
+            bufferError <= '1';
+          end if;
+        end if;
+      end if;
+    end process;
+    
+    -- Determine whether the packet as we have received it so far is valid.
+    packetValid <= crcCorrect and not bufferError;
+    
+    -- Whenever we get a received byte strobe while endPacket is high, we must
+    -- either forward or discard the current packet.
+    completePacket <= sw2pkctrl_rxStrobe and sw2pkctrl_rxEndPacket;
+    
+    -- Determine whether we should forward or discard.
+    forwardPacket <= completePacket and packetValid; 
+    discardPacket <= completePacket and not packetValid;
+    
   end block;
   
   -----------------------------------------------------------------------------
@@ -155,11 +265,29 @@ begin -- architecture
     -- TX buffer busy signal, inverted txReady signal.
     signal pkhan2pkctrl_txBusy  : std_logic;
     
-    -- Signals are todo:
+    -- FSM state. In COMMAND, the first byte from the packet buffer is sent.
+    -- The remainder of the data bytes is sent in PAYLOAD. In CRC, the CRC of
+    -- the packet is sent. Finally, in WAIT, the transmit buffer is swapped.
+    type state_type is (STATE_WAIT, STATE_COMMAND, STATE_PAYLOAD);
+    signal state                : state_type;
+    signal state_next           : state_type;
+    
+    -- Data from the transmit buffer.
     signal bufData              : std_logic_vector(7 downto 0);
+    
+    -- When high, the transmit buffer pops a byte and the next byte is
+    -- presented on bufData.
     signal bufPop               : std_logic;
+    
+    -- After popping, this signals that the buffer is empty.
     signal bufEmpty             : std_logic;
+    
+    -- CRC from the CRC generator.
     signal crc                  : std_logic_vector(7 downto 0);
+    
+    -- Pulling swap high requests a transmit buffer swap. swapping will be high
+    -- while the swap is in progress (i.e., the buffer is waiting for new
+    -- data).
     signal swap                 : std_logic;
     signal swapping             : std_logic;
     
@@ -195,6 +323,7 @@ begin -- architecture
     -- Invert the busy signal to get the ready signal.
     pkhan2pkctrl_txReady <= not pkhan2pkctrl_txBusy;
     
+    -- CRC generator for the transmitted packets.
     tx_crc_inst: entity rvex.utils_crc
       generic map (
         CRC_ORDER               => 8,
@@ -215,6 +344,89 @@ begin -- architecture
         correct                 => open
         
       );
+    
+    -- Select the data to transmit.
+    pkctrl2sw_txData <= bufData when bufEmpty = '0' else crc;
+    
+    -- Instantiate the state register.
+    tx_fsm_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          state <= STATE_WAIT;
+        elsif clkEn = '1' then
+          state <= state_next;
+        end if;
+      end if;
+    end process;
+    
+    -- Instantiate the combinatorial state logic.
+    tx_fsm_comb: process (
+      state, swapping, sw2pkctrl_txAck, bufEmpty
+    ) is
+    begin
+      
+      -- Set default values.
+      state_next <= state;
+      pkctrl2sw_txStartPacket <= '0';
+      pkctrl2sw_txRequest <= '0';
+      bufPop <= '0';
+      swap <= '0';
+      
+      -- Handle the state.
+      case state is
+        
+        when STATE_WAIT =>
+          if swapping = '0' then
+            state_next <= STATE_COMMAND;
+          end if;
+          
+        when STATE_COMMAND =>
+          
+          -- Request transfer of the first byte in the packet.
+          pkctrl2sw_txStartPacket <= '1';
+          pkctrl2sw_txRequest <= '1';
+          
+          if sw2pkctrl_txAck = '1' then
+            if bufEmpty = '0' then
+              
+              -- Go to the next byte.
+              bufPop <= '1';
+              state_next <= STATE_PAYLOAD;
+              
+            else
+              
+              -- Swap the buffer.
+              swap <= '1';
+              state_next <= STATE_WAIT;
+              
+            end if;
+          end if;
+          
+        when STATE_PAYLOAD =>
+          
+          -- Request transfer of the next byte in the packet.
+          pkctrl2sw_txRequest <= '1';
+        
+          if sw2pkctrl_txAck = '1' then
+            if bufEmpty = '0' then
+              
+              -- Go to the next byte.
+              bufPop <= '1';
+              
+            else
+              
+              -- Swap the buffer.
+              swap <= '1';
+              state_next <= STATE_WAIT;
+              
+            end if;
+          end if;
+          
+      end case;
+      
+    end process;
+    
   end block;
   
 end Behavioral;

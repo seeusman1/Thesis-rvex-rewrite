@@ -64,7 +64,7 @@ entity standalone_core is
   generic (
     
     -- rvex core configuration.
-    CFG                         : rvex_generic_config_type
+    CFG                         : rvex_generic_config_type := rvex_cfg
     
   );
   port (

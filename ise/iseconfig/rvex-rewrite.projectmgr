@@ -10,12 +10,22 @@
          <ClosedNode>/Unassigned User Library Modules/bus_arbiter - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/cache - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/cache_tb_mockAtom - Behavioral</ClosedNode>
-         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/periph_UART_packetControl - Behavioral/tx_packet_buffer_inst - periph_UART_packetBuffer - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - core - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - core - Behavioral/cfg_inst - core_cfgCtrl - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - core - Behavioral/cxreg_inst - core_contextRegLogic - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - core - Behavioral/gpreg_inst - core_gpRegs - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - core - Behavioral/pls_inst - core_pipelanes - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral/core - core - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral/core - core - Behavioral/cfg_inst - core_cfgCtrl - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral/core - core - Behavioral/core_asDisas_pkg</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral/core - core - Behavioral/creg_inst - core_ctrlRegs - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral/core - core - Behavioral/cxreg_inst - core_contextRegLogic - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral/core - core - Behavioral/gpreg_inst - core_gpRegs - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral/core - core - Behavioral/simUtils_mem_pkg</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral/core_asDisas_pkg</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - standalone_core - Behavioral/simUtils_mem_pkg</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/utils_uart - Behavioral/baud_gen_inst - utils_fracDiv - Behavioral</ClosedNode>
          <ClosedNode>/bus_arbiter - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|bus|bus_arbiter.vhd</ClosedNode>
          <ClosedNode>/bus_busy2ack - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|bus|bus_busy2ack.vhd</ClosedNode>
@@ -25,6 +35,10 @@
          <ClosedNode>/bus_ramBlock - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|bus|bus_ramBlock.vhd/simUtils_mem_pkg</ClosedNode>
          <ClosedNode>/cache - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|cache|cache.vhd</ClosedNode>
          <ClosedNode>/cache_tb_mockAtom - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|cache|cache_tb_mockAtom.vhd</ClosedNode>
+         <ClosedNode>/periph_UART - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|periph|periph_UART.vhd/core_asDisas_pkg</ClosedNode>
+         <ClosedNode>/periph_UART - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|periph|periph_UART.vhd/debug_packet_control_inst - periph_UART_packetControl - Behavioral</ClosedNode>
+         <ClosedNode>/periph_UART - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|periph|periph_UART.vhd/simUtils_mem_pkg</ClosedNode>
+         <ClosedNode>/periph_UART - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|periph|periph_UART.vhd/uart_inst - utils_uart - Behavioral</ClosedNode>
          <ClosedNode>/rvex - Behavioral E:|GIT|rvex-rewrite|vhdl|rvex.vhd/rvex_simUtils_asDisas_pkg</ClosedNode>
          <ClosedNode>/rvex - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|rvex.vhd/rvex_simUtils_asDisas_pkg</ClosedNode>
          <ClosedNode>/rvex - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|rvex.vhd/rvex_simUtils_mem_pkg</ClosedNode>
@@ -40,13 +54,13 @@
          <ClosedNode>/utils_uart - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|utils|utils_uart.vhd</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>utils_uart - Behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/utils/utils_uart.vhd)</SelectedItem>
+         <SelectedItem>uut - periph_UART - Behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/periph/periph_UART.vhd)</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000020200000001000000010000006400000191000000020000000000000000000000000200000064ffffffff000000810000000300000002000001910000000100000003000000000000000100000003</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002aa000000020000000000000000000000000200000064ffffffff000000810000000300000002000002aa0000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
-      <CurrentItem>utils_uart - Behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/utils/utils_uart.vhd)</CurrentItem>
+      <CurrentItem>uut - periph_UART - Behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/periph/periph_UART.vhd)</CurrentItem>
    </ItemView>
    <ItemView engineview="SynthesisOnly" sourcetype="" guiview="Process" >
       <ClosedNodes>
@@ -58,7 +72,7 @@
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000000000000000001b3000000010000000100000000000000000000000064ffffffff000000810000000000000001000001b30000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000254000000010000000100000000000000000000000064ffffffff000000810000000000000001000002540000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
       <CurrentItem/>
    </ItemView>
@@ -67,13 +81,13 @@
          <ClosedNodesVersion>1</ClosedNodesVersion>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>utils_uart.vhd</SelectedItem>
+         <SelectedItem>simUtils_pkg.vhd</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >60</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >53</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff0000000000000001000000000000000001000000000000000000000000000000000000038c000000040101000100000000000000000000000064ffffffff000000810000000000000004000000f600000001000000000000002400000001000000000000006600000001000000000000020c0000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem>utils_uart.vhd</CurrentItem>
+      <CurrentItem>simUtils_pkg.vhd</CurrentItem>
    </ItemView>
    <ItemView guiview="Library" >
       <ClosedNodes>
@@ -83,7 +97,7 @@
       <SelectedItems>
          <SelectedItem>work</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >73</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >79</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000000000000010000000000000000000000000000000000000101000000010001000100000000000000000000000064ffffffff000000810000000000000001000001010000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
@@ -106,7 +120,7 @@
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000227000000010000000100000000000000000000000064ffffffff000000810000000000000001000002270000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000254000000010000000100000000000000000000000064ffffffff000000810000000000000001000002540000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
       <CurrentItem></CurrentItem>
    </ItemView>
@@ -131,9 +145,13 @@
          <ClosedNode>/Unassigned User Library Modules/core_pipelane - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/core_pipelanes - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/core_tb - Behavioral</ClosedNode>
-         <ClosedNode>/Unassigned User Library Modules/core_tb - Behavioral/uut - core - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/core_tb - Behavioral/uut - core - Behavioral/cfg_inst - core_cfgCtrl - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/core_tb - Behavioral/uut - core - Behavioral/cxreg_inst - core_contextRegLogic - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/core_tb - Behavioral/uut - core - Behavioral/gpreg_inst - core_gpRegs - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/core_tb - Behavioral/uut - core - Behavioral/pls_inst - core_pipelanes - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/standalone - Behavioral/core - core - Behavioral</ClosedNode>
+         <ClosedNode>/Unassigned User Library Modules/utils_uart_tb - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/utils_uart_tb - Behavioral/uut2 - utils_uart - Behavioral</ClosedNode>
          <ClosedNode>/Unassigned User Library Modules/utils_uart_tb - Behavioral/uut3 - utils_uart - Behavioral</ClosedNode>
          <ClosedNode>/mul_cmp_tb - behavioural |home|jeroen|rvex|rvex-rewrite|test|mul_cmp_tb.vhd</ClosedNode>
@@ -157,15 +175,18 @@
          <ClosedNode>/rvex_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|rvex_tb.vhd/uut - rvex - Behavioral/cxreg_inst - rvex_contextRegLogic - Behavioral</ClosedNode>
          <ClosedNode>/rvex_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|rvex_tb.vhd/uut - rvex - Behavioral/gpreg_inst - rvex_gpRegs - Behavioral</ClosedNode>
          <ClosedNode>/rvex_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|rvex_tb.vhd/uut - rvex - Behavioral/pls_inst - rvex_pipelanes - Behavioral</ClosedNode>
+         <ClosedNode>/uart_tb - behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|temp|uart_tb.vhd/uart_inst - utils_uart - Behavioral</ClosedNode>
+         <ClosedNode>/uart_tb - behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|temp|uart_tb.vhd/uut - periph_UART - Behavioral/debug_packet_control_inst - periph_UART_packetControl - Behavioral</ClosedNode>
+         <ClosedNode>/uart_tb - behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|temp|uart_tb.vhd/uut - periph_UART - Behavioral/uart_inst - utils_uart - Behavioral</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>periph_UART_switch - Behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/periph/debug_UART_switch.vhd)</SelectedItem>
+         <SelectedItem>uart_tb - behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/temp/uart_tb.vhd)</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000001e4000000020000000000000000000000000200000064ffffffff000000810000000300000002000001e40000000100000003000000000000000100000003</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002aa000000020000000000000000000000000200000064ffffffff000000810000000300000002000002aa0000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
-      <CurrentItem>periph_UART_switch - Behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/periph/debug_UART_switch.vhd)</CurrentItem>
+      <CurrentItem>uart_tb - behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/temp/uart_tb.vhd)</CurrentItem>
    </ItemView>
    <ItemView engineview="BehavioralSim" sourcetype="" guiview="Process" >
       <ClosedNodes>
@@ -177,7 +198,7 @@
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000227000000010000000100000000000000000000000064ffffffff000000810000000000000001000002270000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000254000000010000000100000000000000000000000064ffffffff000000810000000000000001000002540000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
       <CurrentItem/>
    </ItemView>
@@ -190,7 +211,7 @@
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000227000000010000000100000000000000000000000064ffffffff000000810000000000000001000002270000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000254000000010000000100000000000000000000000064ffffffff000000810000000000000001000002540000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
       <CurrentItem></CurrentItem>
    </ItemView>
