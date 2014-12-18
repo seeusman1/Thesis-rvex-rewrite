@@ -1,0 +1,11 @@
+
+#Created by Constraints Editor (xc3s200-ft256-4) - 2014/12/18
+NET "clk" TNM_NET = "clk";
+TIMESPEC TS_clk = PERIOD "clk" 50 MHz HIGH 50 %;
+
+# PlanAhead Generated physical constraints 
+
+NET "clk" LOC = T9;
+NET "reset" LOC = L14;
+NET "rx" LOC = T13;
+NET "tx" LOC = R13;

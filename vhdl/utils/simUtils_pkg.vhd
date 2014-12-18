@@ -739,12 +739,14 @@ package body simUtils_pkg is
   procedure dumpStdOut(s: string) is
     variable ln : std.textio.line;
   begin
+    -- pragma translate_off
     ln := new string(1 to s'length);
     ln.all := s;
     writeline(std.textio.output, ln);
     if ln /= null then
       deallocate(ln);
     end if;
+    -- pragma translate_on
   end procedure;
   
 end simUtils_pkg;

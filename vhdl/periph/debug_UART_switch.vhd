@@ -335,14 +335,14 @@ begin -- architecture
     -- Connect the dataMux and escapeNeeded signals as described in the signal
     -- documentation.
     tx_data_mux_proc: process (
-      user2sw_txData, dbg2sw_txData, state, escaping
+      userData, dbg2sw_txData, state, escaping
     ) is
       variable dataMux_v  : std_logic_vector(7 downto 0);
     begin
       
       -- Connect dataMux to either request.
       if state = STATE_USER then
-        dataMux_v := user2sw_txData;
+        dataMux_v := userData;
       else
         dataMux_v := dbg2sw_txData;
       end if;

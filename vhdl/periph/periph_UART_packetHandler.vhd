@@ -379,7 +379,7 @@ begin -- architecture
     fsm_comb: process (
       state, counter, accessSize, incomingData, transferComplete,
       pkctrl2pkhan_rxData, pkctrl2pkhan_rxEmpty, pkhan2pkctrl_rxReady,
-      pkctrl2pkhan_txFull, pkhan2pkctrl_txReady
+      pkctrl2pkhan_txFull, pkhan2pkctrl_txReady, pkhan2dbg_busRegs
     ) is
     begin
       

@@ -23,6 +23,10 @@
 *_beh.prj
 *.ncd
 *.html
+*.bit
+*.BIT
+*.tcl
+*.xwbt
 isim
 db
 incremental_db

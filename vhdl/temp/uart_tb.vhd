@@ -58,7 +58,7 @@ begin
     );
   
   -- Instantiate a memory for the unit under test to access.
-  memory_inst: entity rvex.bus_ramBlock
+  memory_inst: entity work.bus_ramBlock_singlePort_spartan3
     generic map (
       DEPTH_LOG2B               => 10
     )
@@ -70,10 +70,8 @@ begin
       clkEn                     => '1',
       
       -- Memory ports.
-      mst2mem_portA             => uart2dbg_bus,
-      mem2mst_portA             => dbg2uart_bus,
-      mst2mem_portB             => BUS_MST2SLV_IDLE,
-      mem2mst_portB             => open
+      mst2mem_port              => uart2dbg_bus,
+      mem2mst_port              => dbg2uart_bus
       
     );
 

@@ -56,9 +56,9 @@ use rvex.bus_pkg.all;
 
 --=============================================================================
 -- This entity infers block RAMs, which are accessible using the standard bus
--- interface specified in bus_pkg.vhd. Both memory ports are exposed.
+-- interface specified in bus_pkg.vhd. Only one of the ports is exposed.
 -------------------------------------------------------------------------------
-entity bus_ramBlock is
+entity bus_ramBlock_singlePort is
 --=============================================================================
   generic (
     
@@ -87,96 +87,63 @@ entity bus_ramBlock is
     -- are generated for out-of-range accesses; the memory is mirrored in
     -- stead.
     
-    -- Memory port A.
-    mst2mem_portA               : in  bus_mst2slv_type;
-    mem2mst_portA               : out bus_slv2mst_type;
-    
-    -- Memory port B.
-    mst2mem_portB               : in  bus_mst2slv_type;
-    mem2mst_portB               : out bus_slv2mst_type
+    -- Memory port.
+    mst2mem_port                : in  bus_mst2slv_type;
+    mem2mst_port                : out bus_slv2mst_type
     
   );
-end bus_ramBlock;
+end bus_ramBlock_singlePort;
 
 --=============================================================================
-architecture Behavioral of bus_ramBlock is
+architecture Behavioral of bus_ramBlock_singlePort is
 --=============================================================================
   
-  -- Current contents of the RAM. We need to use a shared variable to allow XST
-  -- to recognize a RAM with two write ports.
-  shared variable ram           : rvex_data_array(0 to 2**(DEPTH_LOG2B-2)-1);
+  -- Current contents of the RAM.
+  signal ram                    : rvex_data_array(0 to 2**(DEPTH_LOG2B-2)-1);
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
   
-  -- Generate memory port A.
-  port_A_proc: process (clk) is
+  -- Generate the memory port.
+  port_proc: process (clk) is
     variable addr : natural range 0 to 2**(DEPTH_LOG2B-2)-1;
   begin
     if rising_edge(clk) then
       if clkEn = '1' then
         
         -- Decode address.
-        addr := vect2uint(mst2mem_portA.address(DEPTH_LOG2B-1 downto 2));
+        addr := vect2uint(mst2mem_port.address(DEPTH_LOG2B-1 downto 2));
         
         -- Handle writes.
         for b in 0 to 3 loop
-          if mst2mem_portA.writeEnable = '1' and mst2mem_portA.writeMask(b) = '1' then
-            ram(addr)(b*8+7 downto b*8) := mst2mem_portA.writeData(b*8+7 downto b*8);
+          if mst2mem_port.writeEnable = '1' and mst2mem_port.writeMask(b) = '1' then
+            ram(addr)(b*8+7 downto b*8) <= mst2mem_port.writeData(b*8+7 downto b*8);
           end if;
         end loop;
         
         -- Handle reads.
-        mem2mst_portA.readData <= ram(addr);
+        mem2mst_port.readData <= ram(addr);
         
       end if;
     end if;
   end process;
   
-  -- Generate memory port B.
-  port_B_proc: process (clk) is
-    variable addr : natural range 0 to 2**(DEPTH_LOG2B-2)-1;
-  begin
-    if rising_edge(clk) then
-      if clkEn = '1' then
-        
-        -- Decode address.
-        addr := vect2uint(mst2mem_portB.address(DEPTH_LOG2B-1 downto 2));
-        
-        -- Handle writes.
-        for b in 0 to 3 loop
-          if mst2mem_portB.writeEnable = '1' and mst2mem_portB.writeMask(b) = '1' then
-            ram(addr)(b*8+7 downto b*8) := mst2mem_portB.writeData(b*8+7 downto b*8);
-          end if;
-        end loop;
-        
-        -- Handle reads.
-        mem2mst_portB.readData <= ram(addr);
-        
-      end if;
-    end if;
-  end process;
-  
-  -- Generate ack signals.
+  -- Generate ack signal.
   ack_gen: process (clk) is
   begin
     if rising_edge(clk) then
       if reset = '1' then
-        mem2mst_portA.ack <= '0';
-        mem2mst_portB.ack <= '0';
+        mem2mst_port.ack <= '0';
       elsif clkEn = '1' then
-        mem2mst_portA.ack <= bus_requesting(mst2mem_portA);
-        mem2mst_portB.ack <= bus_requesting(mst2mem_portB);
+        mem2mst_port.ack <= bus_requesting(mst2mem_port);
       end if;
     end if;
   end process;
   
   -- Tie the fault and busy signals to '0'.
-  mem2mst_portA.fault <= '0';
-  mem2mst_portA.busy  <= '0';
-  mem2mst_portB.fault <= '0';
-  mem2mst_portB.busy  <= '0';
+  mem2mst_port.fault <= '0';
+  mem2mst_port.busy  <= '0';
   
 end Behavioral;
 
