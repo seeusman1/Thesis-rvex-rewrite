@@ -80,12 +80,6 @@ typedef struct {
    */
   int debugPort;
   
-  /**
-   * Flag which determines whether non-localhost connection attempts should be
-   * blocked.
-   */
-  int localOnly;
-  
 } commandLineArgs_t;
 
 #endif

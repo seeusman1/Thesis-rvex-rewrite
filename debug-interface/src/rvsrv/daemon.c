@@ -67,7 +67,6 @@ static const char *LOG_FILE = "/var/tmp/rvsrv.log";
 int daemonize(void) {
   pid_t pid;
   int logfile;
-  char err[256];
   
   // Fork, allowing the parent process to terminate.
   pid = fork();
@@ -122,6 +121,7 @@ int daemonize(void) {
     perror("Failed to open log file");
     return -1;
   }
+  printf("Daemon process running now, moving log output to %s.\n", LOG_FILE);
   dup2(logfile, STDOUT_FILENO);
   dup2(logfile, STDERR_FILENO);
   close(logfile);

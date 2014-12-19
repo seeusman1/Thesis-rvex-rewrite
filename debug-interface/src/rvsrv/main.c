@@ -56,11 +56,23 @@
 #include "serial.h"
 #include "daemon.h"
 #include "select.h"
+#include "tcpserv.h"
 
 /**
  * File descriptor for the serial port.
  */
 static int tty = 0;
+
+/**
+ * TCP server for sending data to and receiving data from the application code
+ * running on the rvex platform.
+ */
+static tcpServer_t *appServer;
+
+/**
+ * TCP server for debug requests.
+ */
+static tcpServer_t *debugServer;
 
 /**
  * Closes all file descriptors and connections.
@@ -77,6 +89,15 @@ static void cleanup(void);
   }
 
 /**
+ * Fails gracefully if the parameter is null.
+ */
+#define CHECKNULL(f) \
+  if (!(f)) { \
+    cleanup(); \
+    return -1; \
+  }
+
+/**
  * This contains the file descriptors for a pipe which will be used to handle
  * SIGTERM. The handler for SIGTERM will write a dummy byte to the pipe, which
  * will wake up select(), so we can break out of the main loop cleanly.
@@ -87,6 +108,7 @@ static int terminatePipe[] = {0, 0};
  * SIGTERM handler.
  */
 static void terminate(int sig) {
+  printf("SIGTERM received, stopping.\n");
   if (!terminatePipe[1] || (write(terminatePipe[1], "", 1) != 1)) {
     perror("Failed to stop gracefully, exiting without cleaning up");
     exit(EXIT_FAILURE);
@@ -98,9 +120,7 @@ static void terminate(int sig) {
  * listening on the requested TCP ports and starts handling commands.
  */
 int run(const commandLineArgs_t *args) {
-  
-  char buf[256];
-  int count;
+  int busy;
   
   // Initialize select wrapper state.
   CHECK(select_init());
@@ -110,7 +130,8 @@ int run(const commandLineArgs_t *args) {
   CHECK(select_register(tty));
   
   // Try to open the TCP servers.
-  // TODO
+  CHECKNULL(appServer = tcpServer_open(args->appPort, "application"));
+  CHECKNULL(debugServer = tcpServer_open(args->debugPort, "debug"));
   
   // Fork into daemon mode.
   CHECK(daemonize());
@@ -125,22 +146,27 @@ int run(const commandLineArgs_t *args) {
   
   // Run the main loop for the program, where we poll for incoming data and
   // and handle it if we find some.
+  busy = 0;
   while (1) {
     
     // Wait for things to become ready.
-    CHECK(select_wait(0));
+    CHECK(select_wait(busy));
+    busy = 0;
     
-    // Nothing here yet... TODO
+    // Update the serial port (perform reads into our buffer).
+    // TODO
+    
+    // Update the TCP servers (accept incoming connections, perform reads into
+    // our buffer).
+    tcpServer_update(appServer);
+    tcpServer_update(debugServer);
     
     // Check for the terminate signal. Most of the time the call to select
     // just fails with errno=EINTR so we don't even get here, but it's
     // possible for the signal to occur just before the call to select, in
     // which case it would be possible for us to miss the signal and block
-    // until the next read, if it weren't for the magic with the pipe. It
-    // does mean that, most of the time, you'll see "Call to select failed:
-    // Interrupted system call" in the log instead of the message below.
+    // until the next read, if it weren't for the magic with the pipe.
     if (select_isReady(terminatePipe[0])) {
-      printf("SIGTERM received, stopping.\n");
       return -1;
     }
     
@@ -161,6 +187,8 @@ static void cleanup(void) {
   
   // Close the serial port connection.
   closeSerial(&tty);
+  tcpServer_close(&appServer);
+  tcpServer_close(&debugServer);
   
   // Close the handles to the pipe used for the terminate signal.
   if (terminatePipe[0]) {

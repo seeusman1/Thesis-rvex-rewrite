@@ -71,7 +71,7 @@ int openSerial(const char *name, const int baud) {
   // If the result was negative, we couldn't open it.
   if (f < 0) {
     perror("Failed to open serial port");
-    printf("Maybe the server is already running?");
+    printf("Maybe the server is already running?\n");
     return -1;
   }
   

@@ -49,13 +49,96 @@
 #ifndef _TCPSERV_H_
 #define _TCPSERV_H_
 
-/**
- * Tries to open a TCP server socket at the given port. Returns -1 if something
- * goes wrong. Otherwise, returns the file descriptor listening for incoming
- * connections.
- */
-int openServer(int port);
+#define TCP_BUFFER_SIZE 1024
 
-//int closeServer(
+typedef struct {
+  
+  /**
+   * File descriptor for communicating with the client.
+   */
+  int clientDesc;
+  
+  /**
+   * Read buffer. When data is available and the buffer is empty, a socket
+   * read is performed to fill this as far as possible.
+   */
+  char buffer[TCP_BUFFER_SIZE];
+  
+  /**
+   * Number of bytes currently in the buffer.
+   */
+  int bufSize;
+  
+  /**
+   * Number of bytes in the buffer which have already been handled.
+   */
+  int bufPtr;
+  
+} tcpClient_t;
+
+/**
+ * TCP server state.
+ */
+typedef struct {
+  
+  /**
+   * File descriptor for listening for incoming connections.
+   */
+  int listenDesc;
+  
+  /**
+   * List of clients currently connected to the server.
+   */
+  tcpClient_t **clients;
+  
+  /**
+   * Number of elements in clients. Not all of these may be in use.
+   */
+  int capacity;
+  
+  /**
+   * Name for the server, should be either "debug" or "application". Used in
+   * log messages.
+   */
+  const char *access;
+  
+} tcpServer_t;
+
+//typedef int (*tcpRead_cb)(int, void**, int);
+//typedef int (*tcpRead_cb)(int, int);
+
+/**
+ * Tries to open a TCP server socket at the given port. Returns null if
+ * something goes wrong. Otherwise, returns a pointer to the newly allocated
+ * server state structure. access should be "debug" or "application".
+ */
+tcpServer_t *tcpServer_open(int port, const char *access);
+
+/**
+ * Tries to close the server specified by server, deallocates all memory, and
+ * sets the pointer to the server structure to null.
+ */
+void tcpServer_close(tcpServer_t **server);
+
+/**
+ * Updates the server after a call to select_wait(). Accepts new incoming
+ * connections and reads data from clients into our buffer where applicable.
+ */
+int tcpServer_update(tcpServer_t *server);
+
+/**
+ * Write all buffered data to the clients.
+ */
+//int tcpServer_flush(tcpServer_t *server);
+
+/**
+ * Sends byte b to the connection at index id.
+ */
+//int tcpServer_send(int id, int b);
+
+/**
+ * Broadcasts byte b to all connected clients.
+ */
+//int tcpServer_broadcast(int b);
 
 #endif

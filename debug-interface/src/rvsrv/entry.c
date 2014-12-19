@@ -81,7 +81,6 @@ int main(int argc, char **argv) {
   args.baudrate  = 115200;
   args.appPort   = 21078;
   args.debugPort = 21079;
-  args.localOnly = 0;
   
   // Parse command line arguments.
   while (1) {
@@ -91,7 +90,6 @@ int main(int argc, char **argv) {
       {"baud",     required_argument, 0, 'b'},
       {"app",      required_argument, 0, 'a'},
       {"debug",    required_argument, 0, 'd'},
-      {"restrict", no_argument,       0, 'r'},
       {"help",     no_argument,       0, 'h'},
       {"license",  no_argument,       0, 'l'},
       {0, 0, 0, 0}
@@ -99,7 +97,7 @@ int main(int argc, char **argv) {
     
     int option_index = 0;
 
-    int c = getopt_long(argc, argv, "p:b:a:d:rh", long_options, &option_index);
+    int c = getopt_long(argc, argv, "p:b:a:d:h", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -135,10 +133,6 @@ int main(int argc, char **argv) {
           usage(argv[0], 0);
           exit(EXIT_FAILURE);
         }
-        break;
-        
-      case 'r':
-        args.localOnly = 1;
         break;
         
       case 'l':
@@ -204,8 +198,6 @@ static void usage(char *progName, int verbose) {
     "                     with application code. Defaults to port 21078.\n"
     "-d  --debug <port>   Listen on the specified TCP port for debugging commands.\n"
     "                     Defaults to port 21079.\n"
-    "-r  --restrict       Block TCP connections which do not originate from\n"
-    "                     127.0.0.1.\n"
     "-h  --help           Shows this usage screen.\n"
     "    --license        Prints licensing information.\n"
     "\n",
