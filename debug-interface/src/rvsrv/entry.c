@@ -50,15 +50,152 @@
 #include <stdlib.h>
 #include <getopt.h>
 
+#include "entry.h"
+#include "main.h"
+
 /**
- * Prints usage information and exits.
+ * Prints usage information.
  */
-void usage(char *progName) {
-  printf(
-    "Interfacing program for rvex.periph_UART.vhd. This will drop you into a\n"
-    "debugging environment
+static void usage(char *progName, int verbose);
+
+/**
+ * Prints the welcome message.
+ */
+static void welcome(void);
+
+/**
+ * Prints license information.
+ */
+static void license(void);
+
+/**
+ * Application entry point.
+ */
+int main(int argc, char **argv) {
+  
+  commandLineArgs_t args;
+  int retval;
+  
+  // Set command line option defaults.
+  args.port = "/dev/ttyS0";
+  args.baudrate  = 115200;
+  args.appPort   = 21078;
+  args.debugPort = 21079;
+  args.localOnly = 0;
+  
+  // Parse command line arguments.
+  while (1) {
+
+    static struct option long_options[] = {
+      {"port",     required_argument, 0, 'p'},
+      {"baud",     required_argument, 0, 'b'},
+      {"app",      required_argument, 0, 'a'},
+      {"debug",    required_argument, 0, 'd'},
+      {"restrict", no_argument,       0, 'r'},
+      {"help",     no_argument,       0, 'h'},
+      {"license",  no_argument,       0, 'l'},
+      {0, 0, 0, 0}
+    };
+    
+    int option_index = 0;
+
+    int c = getopt_long(argc, argv, "p:b:a:d:rh", long_options, &option_index);
+
+    if (c == -1) {
+      break;
+    }
+
+    switch (c) {
+      case 'p':
+        args.port = optarg;
+        break;
+        
+      case 'b':
+        args.baudrate = atoi(optarg);
+        if (args.baudrate < 1) {
+          printf("%s: invalid baud rate specified\n\n", argv[0]);
+          usage(argv[0], 0);
+          exit(EXIT_FAILURE);
+        }
+        break;
+        
+      case 'a':
+        args.appPort = atoi(optarg);
+        if ((args.appPort < 1) || (args.appPort > 65535)) {
+          printf("%s: invalid TCP port specified for application access\n\n", argv[0]);
+          usage(argv[0], 0);
+          exit(EXIT_FAILURE);
+        }
+        break;
+        
+      case 'd':
+        args.debugPort = atoi(optarg);
+        if ((args.debugPort < 1) || (args.debugPort > 65535)) {
+          printf("%s: invalid TCP port specified for debug access\n\n", argv[0]);
+          usage(argv[0], 0);
+          exit(EXIT_FAILURE);
+        }
+        break;
+        
+      case 'r':
+        args.localOnly = 1;
+        break;
+        
+      case 'l':
+        welcome();
+        license();
+        exit(EXIT_SUCCESS);
+        
+      case 'h':
+        welcome();
+        usage(argv[0], 1);
+        exit(EXIT_SUCCESS);
+        
+      default:
+        usage(argv[0], 0);
+        exit(EXIT_FAILURE);
+      
+    }
+  }
+  
+  // Make sure the application and debug ports are not set to the same port.
+  if (args.appPort == args.debugPort) {
+    printf("%s: cannot use one port for both application and debug interface\n\n", argv[0]);
+    usage(argv[0], 0);
+    exit(EXIT_FAILURE);
+  }
+  
+  // Print welcome text/license header.
+  welcome();
+  printf("Run %s --license for the full license.\n\n", argv[0]);
+  
+  // Command line parsing and eye candy complete: now run the actual program.
+  if (run(&args)) {
+    exit(EXIT_FAILURE);
+  }
+  
+  // Exit gracefully.
+  printf("Shut down gracefully.\n", argv[0]);
+  exit(EXIT_SUCCESS);
+  
+}
+
+/**
+ * Prints usage information.
+ */
+static void usage(char *progName, int verbose) {
+  if (verbose) printf(
+    "Interfacing program for rvex.periph_UART.vhd. This program will listen on\n"
+    "two TCP ports for incoming connections. One port (21078 by default) is for\n"
+    "communication with the running application: any incoming data is forwarded\n"
+    "to the FIFO accessible through the slave bus interface, and any data sent\n"
+    "by that interface (through puts(), printf() etc.) is broadcast to all\n"
+    "connected clients. The other port (21078 by default) listens to debug\n"
+    "commands.\n"
     "\n"
-    "Usage: %s [options]\n"
+  );
+  printf(
+    "Command line: %s [options]\n"
     "\n"
     "-p  --port <port>    Specify serial port file to connect to. Defaults to\n"
     "                     /dev/ttyS0.\n"
@@ -78,15 +215,24 @@ void usage(char *progName) {
 }
 
 /**
- * Prints license information and exits.
+ * Prints the welcome message.
  */
-void license(void) {
+static void welcome(void) {
   printf(
+    "\n"
     "Debug interface for standalone r-VEX processor\n"
     "\n"
     "Copyright (C) 2008-2014 by TU Delft.\n"
     "All Rights Reserved.\n"
     "\n"
+  );
+}
+
+/**
+ * Prints license information.
+ */
+static void license(void) {
+  printf(
     "THIS IS A LEGAL DOCUMENT, BY USING r-VEX,\n"
     "YOU ARE AGREEING TO THESE TERMS AND CONDITIONS.\n"
     "\n"
@@ -128,77 +274,7 @@ void license(void) {
     "maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).\n"
     "\n"
     "Copyright (C) 2008-2014 by TU Delft.\n"
+    "\n"
   );
-  exit(0);
 }
 
-/**
- * Application entry point.
- */
-int main (int argc, char **argv) {
-  
-  // Set command line option defaults.
-  int baudrate = 115200;
-  char *port = "/dev/ttyS0";
-  
-  // Parse command line arguments.
-  while (1) {
-
-    static struct option long_options[] = {
-      {"port",    required_argument, 0, 'p'},
-      {"baud",    required_argument, 0, 'b'},
-      {"help",    no_argument,       0, 'h'},
-      {"license", no_argument,       0, 'l'},
-      {0, 0, 0, 0}
-    };
-    
-    int option_index = 0;
-
-    int c = getopt_long(argc, argv, "p:b:h", long_options, &option_index);
-
-    if (c == -1) {
-      break;
-    }
-
-    switch (c) {
-      case 0:
-        break;
-
-      case 'p':
-        port = optarg;
-        break;
-
-      case 'b':
-        baudrate = atoi(optarg);
-        if (!baudrate) {
-          printf("%s: invalid baud rate specified\n", argv[0]);
-          usage(argv[0]);
-        }
-        break;
-
-      case 'l':
-        license();
-
-      default:
-        usage(argv[0]);
-      
-    }
-  }
-  
-  // Print welcome text/license header.
-  printf(
-    "\n"
-    "Debug interface for standalone r-VEX processor\n"
-    "\n"
-    "Copyright (C) 2008-2014 by TU Delft.\n"
-    "All Rights Reserved.\n"
-    "\n"
-    "Run %s --license for the full license.\n"
-    "\n",
-    argv[0]
-  );
-  
-  // TODO
-  printf("Going to open serial port %s with baud rate %d at some point here.\n", port, baudrate);
-  exit(0);
-}

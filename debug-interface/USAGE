@@ -1,0 +1,32 @@
+
+Debug interface for standalone r-VEX processor
+
+Copyright (C) 2008-2014 by TU Delft.
+All Rights Reserved.
+
+
+The easiest way to start debugging the rvex platform is to use the following
+commands.
+
+make server
+  Starts the rvsrv daemon if it is not yet running. This needs to be running
+  for the other tools to be able to connect.
+
+make stop
+  Stops the rvsrv daemon if it is running.
+
+make monitor
+  Starts rvcat. rvcat will echo anything sent by the rvex application through
+  the UART peripheral (for example using puts or printf) to stdout. Also,
+  anything received on stdin will be piped to the UART peripheral.
+
+make debug; source debug
+  This will make an alias for rvdbg with the right configuration called rvd,
+  so you can quickly and easily send debug commands. Run "rvd help" for a
+  command listing.
+
+
+By default, /dev/ttyS0 is used at 115200 baud. If you need to change this, you
+can do so at the top of the makefile. You can also change the TCP ports used
+for interprocess communication here.
+
