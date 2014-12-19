@@ -66,7 +66,7 @@ static char readBuffer[TCP_BUFFER_SIZE];
  * something goes wrong. Otherwise, returns a pointer to the newly allocated
  * server state structure.
  */
-tcpServer_t *tcpServer_open(int port, const char *access, tcpClient_extraData onAlloc, tcpClient_extraData onFree) {
+tcpServer_t *tcpServer_open(int port, const char *access, tcpServer_extraData onAlloc, tcpServer_extraData onFree) {
   tcpServer_t *server;
   struct sockaddr_in addr;
   printf("Trying to open TCP server socket at port %d for %s access...\n", port, access);
@@ -341,7 +341,6 @@ int tcpServer_nextClient(tcpServer_t *server, int clientID) {
  * there are no bytes available, or the received byte otherwise.
  */
 int tcpServer_receive(tcpServer_t *server, int clientID) {
-  int b;
   
   // Make sure this client exists and is connected.
   if ((clientID >= server->capacity) || (clientID < 0)) {
@@ -364,7 +363,7 @@ int tcpServer_receive(tcpServer_t *server, int clientID) {
   }
   
   // Pop the byte.
-  return server->clients[clientID]->rxBuffer[server->clients[clientID]->rxBufPtr++];
+  return (int)(server->clients[clientID]->rxBuffer[server->clients[clientID]->rxBufPtr++]) & 0xFF;
   
 }
 
@@ -420,6 +419,51 @@ int tcpServer_broadcast(tcpServer_t *server, int b) {
   
   for (clientID = tcpServer_nextClient(server, -1); clientID >= 0; clientID = tcpServer_nextClient(server, clientID)) {
     if (tcpServer_send(server, clientID, b) < 0) {
+      return -1;
+    }
+  }
+  
+  return 0;
+}
+
+/**
+ * Sends null-terminated string s to the connection at index clientID.
+ */
+int tcpServer_sendStr(tcpServer_t *server, int clientID, char *s) {
+  
+  // Make sure this client exists and is connected.
+  if ((clientID >= server->capacity) || (clientID < 0)) {
+    return -1;
+  }
+  if ((!server->clients[clientID]) || (server->clients[clientID]->clientDesc < 0)) {
+    return -1;
+  }
+  
+  while (*s) {
+    
+    // If the tx buffer is full, flush.
+    if (server->clients[clientID]->txBufSize >= TCP_BUFFER_SIZE) {
+      if (tcpServer_flushClient(server, clientID) < 0) {
+        return -1;
+      }
+    }
+    
+    // Append the next byte to the buffer.
+    server->clients[clientID]->txBuffer[server->clients[clientID]->txBufSize++] = *s++;
+    
+  }
+  
+  return 0;
+}
+
+/**
+ * Broadcasts null-terminated string s to all connected clients.
+ */
+int tcpServer_broadcastStr(tcpServer_t *server, char *s) {
+  int clientID;
+  
+  for (clientID = tcpServer_nextClient(server, -1); clientID >= 0; clientID = tcpServer_nextClient(server, clientID)) {
+    if (tcpServer_sendStr(server, clientID, s) < 0) {
       return -1;
     }
   }

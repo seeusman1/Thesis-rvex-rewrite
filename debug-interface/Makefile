@@ -29,8 +29,8 @@ help:
 server: $(BINDIR)/rvsrv
 	$(BINDIR)/rvsrv -p$(SERIAL_PORT) -b$(SERIAL_BAUD) -a$(TCP_PORT_APP) -d$(TCP_PORT_DEBUG)
 
-stop: $(BINDIR)/rvdbg
-	$(BINDIR)/rvdbg -d$(TCP_PORT_DEBUG) stop
+stop:
+	echo "Stop;" | nc localhost $(TCP_PORT_DEBUG)
 
 catlog:
 	cat /var/tmp/rvsrv.log

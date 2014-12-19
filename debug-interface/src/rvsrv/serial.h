@@ -54,11 +54,47 @@
  * by the documentation for open(), positive return values are a file
  * descriptor for the open port. The port is opened in blocking mode.
  */
-int openSerial(const char *name, const int baud);
+int serial_open(const char *name, const int baud);
 
 /**
  * Closes a previously opened serial port.
  */
-void closeSerial(int *port);
+void serial_close(int *port);
+
+/**
+ * Updates the serial port after a call to select_wait(). Reads data from the
+ * port into our buffer.
+ */
+int serial_update(int f);
+
+/**
+ * Writes all pending data in the transmit buffers to the serial port.
+ */
+int serial_flush(int f);
+
+/**
+ * Returns a byte from the application receive FIFO, or -1 if the FIFO is empty.
+ */
+int serial_appReceive(int f);
+
+/**
+ * Pushes a byte onto the application transmit buffer.
+ */
+int serial_appSend(int f, int data);
+
+/**
+ * Returns a byte from the debug receive FIFO, or -1 if the FIFO is empty. 256
+ * is returned as a packet delimiter.
+ */
+int serial_debugReceive(int f);
+
+/**
+ * Pushes a byte onto the debug transmit buffer when data lies between 0 and
+ * 255, or pushes a packet delimiter when data is greater than or equal to
+ * 256. In the latter case, the serial unit will ensure that at least
+ * data-256 bytes are sent before the next packet completes, to give the
+ * hardware time to send the reply.
+ */
+int serial_debugSend(int f, int data);
 
 #endif

@@ -55,7 +55,7 @@
  * Called when a client state structure is allocated or deallocated, to allow
  * server-specific data to be created per client connection.
  */
-typedef int (*tcpClient_extraData)(void **extra);
+typedef int (*tcpServer_extraData)(void **extra);
 
 /**
  * Represents the state of a client connection to a server.
@@ -129,12 +129,12 @@ typedef struct {
   /**
    * When not null, this is called when a client state structure is allocated.
    */
-  tcpClient_extraData onAlloc;
+  tcpServer_extraData onAlloc;
   
   /**
    * When not null, this is called when a client state structure is freed.
    */
-  tcpClient_extraData onFree;
+  tcpServer_extraData onFree;
   
 } tcpServer_t;
 
@@ -144,7 +144,7 @@ typedef struct {
  * server state structure. access should be "debug" or "application". onAlloc
  * and onFree are called when a client state structure is allocated or freed.
  */
-tcpServer_t *tcpServer_open(int port, const char *access, tcpClient_extraData onAlloc, tcpClient_extraData onFree);
+tcpServer_t *tcpServer_open(int port, const char *access, tcpServer_extraData onAlloc, tcpServer_extraData onFree);
 
 /**
  * Tries to close the server specified by server, deallocates all memory, and
@@ -186,6 +186,16 @@ int tcpServer_send(tcpServer_t *server, int clientID, int b);
  * Broadcasts byte b to all connected clients.
  */
 int tcpServer_broadcast(tcpServer_t *server, int b);
+
+/**
+ * Sends null-terminated string s to the connection at index clientID.
+ */
+int tcpServer_sendStr(tcpServer_t *server, int clientID, char *s);
+
+/**
+ * Broadcasts null-terminated string s to all connected clients.
+ */
+int tcpServer_broadcastStr(tcpServer_t *server, char *s);
 
 /**
  * Flushes the write buffer for the specified client.

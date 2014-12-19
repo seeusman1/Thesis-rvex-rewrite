@@ -74,10 +74,314 @@ static tcpServer_t *appServer;
  */
 static tcpServer_t *debugServer;
 
+
+//-----------------------------------------------------------------------------
+// Signal handling
+//-----------------------------------------------------------------------------
+
+/**
+ * This contains the file descriptors for a pipe which will be used to handle
+ * SIGTERM. The handler for SIGTERM will write a dummy byte to the pipe, which
+ * will wake up select(), so we can break out of the main loop cleanly.
+ */
+static int terminatePipe[] = {0, 0};
+
+/**
+ * SIGTERM handler.
+ */
+static void terminate(int sig) {
+  printf("SIGTERM received, stopping.\n");
+  if (!terminatePipe[1] || (write(terminatePipe[1], "", 1) != 1)) {
+    perror("Failed to stop gracefully, exiting without cleaning up");
+    exit(EXIT_FAILURE);
+  }
+}
+
+
+//-----------------------------------------------------------------------------
+// Debug server command handling
+//-----------------------------------------------------------------------------
+
+/**
+ * Maximum size of a debug command. Set to 2k plus a little extra so a write
+ * command can write about 1kbytes at once.
+ */
+#define MAX_DEBUG_COMMAND_SIZE 2304
+
+/**
+ * Extra data structure for receiving debug commands.
+ */
+typedef struct {
+  
+  /**
+   * Command buffer.
+   */
+  char commandBuf[MAX_DEBUG_COMMAND_SIZE];
+  
+  /**
+   * Number of bytes currently in the buffer.
+   */
+  int numBytes;
+  
+} debugServerClientData_t;
+
+/**
+ * Allocates extra data for debug server command handling.
+ */
+static int debugServerExtraDataAlloc(void **extra) {
+  if (extra) {
+    *extra = malloc(sizeof(debugServerClientData_t));
+    if (!*extra) {
+      return -1;
+    }
+    ((debugServerClientData_t*)(*extra))->numBytes = 0;
+  }
+  return 0;
+}
+
+/**
+ * Deallocates extra data for debug server command handling.
+ */
+static int debugServerExtraDataFree(void **extra) {
+  if (extra && *extra) {
+    free(*extra);
+    *extra = 0;
+  }
+  return 0;
+}
+
+/**
+ * Returns 1 if command starts with the specified text and is either followed
+ * by a comma or null, or 0 otherwise.
+ */
+static int checkCommand(const char *command, const char *text) {
+  
+  while (*text) {
+    if (*command++ != *text++) {
+      return 0;
+    }
+  }
+  
+  return (*command == 0) || (*command == ',');
+}
+
+/**
+ * Handles a server command. firstTime should be set to 1 the first time
+ * handleCommand is called for a specific command, and 0 thereafter. Return
+ * values:
+ *  -1 = An error occured.
+ *   0 = Command is being processed, not done yet.
+ *   1 = Command processing complete, stop the server.
+ *   2 = Command processing complete, fetch the next command.
+ */
+static int handleCommand(char *command, int clientID, int firstTime) {
+  
+  if (checkCommand(command, "Stop")) {
+    
+    // Stop server command.
+    tcpServer_sendStr(debugServer, clientID, "OK, Stop;\n");
+    printf("Client ID %d (debug access) requested the server to stop.\n", clientID);
+    return 1;
+    
+  }
+  
+  // Unknown command.
+  tcpServer_sendStr(debugServer, clientID, "Error, UnknownCommand;\n");
+  return 2;
+  
+}
+
+/**
+ * Retrieves and handles debug commands. Returns values:
+ *  -1 = An error occured.
+ *   0 = Everything is OK.
+ *   1 = Stop command received, stop the server.
+ */
+static int handleDebugServer(void) {
+  static char *currentCommand = 0;
+  static int currentClient = 0;
+  
+  // If we were handling a command, continue doing so.
+  if (currentCommand) {
+    int retval;
+    
+    retval = handleCommand(currentCommand, currentClient, 0);
+    if (retval < 0) {
+      
+      // Error while processing the command.
+      return -1;
+      
+    } else if (retval == 0) {
+      
+      // Command did not complete yet.
+      return 0;
+      
+    } else if (retval == 1) {
+      
+      // Received stop server command.
+      return 1;
+      
+    }
+    
+    // Command handling complete.
+    currentCommand = 0;
+    
+  }
+  
+  // If we're not handling a command right now, try to get one.
+  if (!currentCommand) {
+    int clientID;
+    
+    // Loop over all connected clients.
+    for (clientID = tcpServer_nextClient(debugServer, -1); clientID >= 0; clientID = tcpServer_nextClient(debugServer, clientID)) {
+      debugServerClientData_t *extra;
+      int d;
+      
+      // Found a client to retrieve stuff from. Get the pointer to the
+      // packet buffer.
+      extra = tcpServer_getExtraData(debugServer, clientID);
+      if (!extra) {
+        continue;
+      }
+      
+      // Receive bytes from the client, process them, and stick them in
+      // the command buffer.
+      while ((d = tcpServer_receive(debugServer, clientID)) >= 0) {
+        
+        // Check if the buffer is full.
+        if (extra->numBytes >= MAX_DEBUG_COMMAND_SIZE) {
+          
+          // Buffer is full; ignore everything except for the semicolon
+          // delimiter character.
+          if (d == ';') {
+            
+            // Send an error message.
+            tcpServer_sendStr(debugServer, clientID, "Error, PacketBufferOverrun;\n");
+            
+            // Reset the buffer.
+            extra->numBytes = 0;
+            
+          }
+          
+        } else {
+          
+          // There is space left in the buffer, handle the byte.
+          if (d == ';') {
+            int retval;
+            
+            // Delimiter character: we've received a full command.
+            // Null-terminate the command.
+            extra->commandBuf[extra->numBytes] = 0;
+            
+            // Reset the buffer.
+            extra->numBytes = 0;
+            
+            // Call handleCommand for the first time.
+            retval = handleCommand(extra->commandBuf, clientID, 1);
+            if (retval < 0) {
+              
+              // Error while processing the command.
+              return -1;
+              
+            } else if (retval == 0) {
+              
+              // Command did not complete yet. Remember that we're working on
+              // a command and return.
+              currentCommand = extra->commandBuf;
+              currentClient = clientID;
+              return 0;
+              
+            } else if (retval == 1) {
+              
+              // Received stop server command.
+              return 1;
+              
+            }
+            
+          } else if ((d == ',') || ((d >= 'a') && (d <= 'z')) || ((d >= 'A') && (d <= 'Z')) || ((d >= '0') && (d <= '-'))) {
+            
+            // Normal character, add it to the buffer.
+            extra->commandBuf[extra->numBytes++] = d;
+            
+          } else {
+            
+            // Ignore everything else.
+            
+          }
+          
+        }
+        
+      }
+      
+    }
+    
+  }
+  
+  return 0;
+  
+}
+
+
+//-----------------------------------------------------------------------------
+// Application server command handling
+//-----------------------------------------------------------------------------
+
+/**
+ * Forwards data received from the application TCP server to the rvex
+ * application, and broadcasts data from the rvex application to all clients
+ * connected to the application TCP server.
+ */
+static int handleApplicationData(void) {
+  int clientID;
+  int d;
+  
+  // Loop over all connected clients.
+  for (clientID = tcpServer_nextClient(appServer, -1); clientID >= 0; clientID = tcpServer_nextClient(appServer, clientID)) {
+    
+    // Receive bytes from the client and stick them in the application serial
+    // TX buffer.
+    while ((d = tcpServer_receive(appServer, clientID)) >= 0) {
+      if (serial_appSend(tty, d) < 0) {
+        return -1;
+      }
+    }
+  }
+  
+  // Broadcast bytes from the application serial RX buffer.
+  while ((d = serial_appReceive(tty)) >= 0) {
+    if (tcpServer_broadcast(appServer, d) < 0) {
+      return -1;
+    }
+  }
+  
+  return 0;
+}
+
+//-----------------------------------------------------------------------------
+// Main program loop
+//-----------------------------------------------------------------------------
+
 /**
  * Closes all file descriptors and connections.
  */
-static void cleanup(void);
+static void cleanup(void) {
+  
+  // Close the serial port connection.
+  serial_close(&tty);
+  tcpServer_close(&appServer);
+  tcpServer_close(&debugServer);
+  
+  // Close the handles to the pipe used for the terminate signal.
+  if (terminatePipe[0]) {
+    close(terminatePipe[0]);
+    terminatePipe[0] = 0;
+  }
+  if (terminatePipe[1]) {
+    close(terminatePipe[1]);
+    terminatePipe[1] = 0;
+  }
+  
+}
 
 /**
  * Fails gracefully if the parameter is negative.
@@ -98,40 +402,32 @@ static void cleanup(void);
   }
 
 /**
- * This contains the file descriptors for a pipe which will be used to handle
- * SIGTERM. The handler for SIGTERM will write a dummy byte to the pipe, which
- * will wake up select(), so we can break out of the main loop cleanly.
- */
-static int terminatePipe[] = {0, 0};
-
-/**
- * SIGTERM handler.
- */
-static void terminate(int sig) {
-  printf("SIGTERM received, stopping.\n");
-  if (!terminatePipe[1] || (write(terminatePipe[1], "", 1) != 1)) {
-    perror("Failed to stop gracefully, exiting without cleaning up");
-    exit(EXIT_FAILURE);
-  }
-}
-
-/**
  * Runs the program. First opens the handle to the serial port, then starts
  * listening on the requested TCP ports and starts handling commands.
  */
 int run(const commandLineArgs_t *args) {
   int busy;
+  int terminated;
   
   // Initialize select wrapper state.
   CHECK(select_init());
   
   // Try to open the serial port.
-  CHECK(tty = openSerial(args->port, args->baudrate));
-  CHECK(select_register(tty));
+  CHECK(tty = serial_open(args->port, args->baudrate));
   
   // Try to open the TCP servers.
-  CHECKNULL(appServer = tcpServer_open(args->appPort, "application", 0, 0));
-  CHECKNULL(debugServer = tcpServer_open(args->debugPort, "debug", 0, 0));
+  CHECKNULL(appServer = tcpServer_open(
+    args->appPort,
+    "application",
+    0,
+    0
+  ));
+  CHECKNULL(debugServer = tcpServer_open(
+    args->debugPort,
+    "debug",
+    &debugServerExtraDataAlloc,
+    &debugServerExtraDataFree
+  ));
   
   // Fork into daemon mode.
   CHECK(daemonize());
@@ -147,36 +443,33 @@ int run(const commandLineArgs_t *args) {
   // Run the main loop for the program, where we poll for incoming data and
   // and handle it if we find some.
   busy = 0;
-  while (1) {
+  terminated = 0;
+  while (!terminated) {
+    int retval;
     
     // Wait for things to become ready.
     CHECK(select_wait(busy));
     busy = 0;
     
     // Update the serial port (perform reads into our buffer).
-    // TODO
+    serial_update(tty);
     
     // Update the TCP servers (accept incoming connections, perform reads into
     // our buffer).
     tcpServer_update(appServer);
     tcpServer_update(debugServer);
     
-    // Test TCP things...
-    {
-      int clientID;
-      for (clientID = tcpServer_nextClient(appServer, -1); clientID >= 0; clientID = tcpServer_nextClient(appServer, clientID)) {
-        int d;
-        while ((d = tcpServer_receive(appServer, clientID)) >= 0) {
-          CHECK(tcpServer_broadcast(debugServer, d));
-        }
-      }
-      for (clientID = tcpServer_nextClient(debugServer, -1); clientID >= 0; clientID = tcpServer_nextClient(debugServer, clientID)) {
-        int d;
-        while ((d = tcpServer_receive(debugServer, clientID)) >= 0) {
-          CHECK(tcpServer_broadcast(appServer, d));
-        }
-      }
+    // Handle debug server incoming data.
+    CHECK(retval = handleDebugServer());
+    if (retval == 1) {
+      terminated = 1;
     }
+    
+    // Handle application data.
+    CHECK(handleApplicationData());
+    
+    // Flush the serial port (write pending data to the serial port).
+    serial_flush(tty);
     
     // Flush the TCP servers (write pending data to the sockets).
     tcpServer_flush(appServer);
@@ -188,7 +481,7 @@ int run(const commandLineArgs_t *args) {
     // which case it would be possible for us to miss the signal and block
     // until the next read, if it weren't for the magic with the pipe.
     if (select_isReady(terminatePipe[0])) {
-      break;
+      terminated = 1;
     }
     
   }
@@ -198,28 +491,6 @@ int run(const commandLineArgs_t *args) {
   
   // Success.
   return 0;
-  
-}
-
-/**
- * Closes all file descriptors and connections.
- */
-static void cleanup(void) {
-  
-  // Close the serial port connection.
-  closeSerial(&tty);
-  tcpServer_close(&appServer);
-  tcpServer_close(&debugServer);
-  
-  // Close the handles to the pipe used for the terminate signal.
-  if (terminatePipe[0]) {
-    close(terminatePipe[0]);
-    terminatePipe[0] = 0;
-  }
-  if (terminatePipe[1]) {
-    close(terminatePipe[1]);
-    terminatePipe[1] = 0;
-  }
   
 }
 
