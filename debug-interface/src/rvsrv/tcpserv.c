@@ -57,11 +57,16 @@
 #include "tcpserv.h"
 
 /**
+ * Temporary buffer used by update.
+ */
+static char readBuffer[TCP_BUFFER_SIZE];
+
+/**
  * Tries to open a TCP server socket at the given port. Returns null if
  * something goes wrong. Otherwise, returns a pointer to the newly allocated
  * server state structure.
  */
-tcpServer_t *tcpServer_open(int port, const char *access) {
+tcpServer_t *tcpServer_open(int port, const char *access, tcpClient_extraData onAlloc, tcpClient_extraData onFree) {
   tcpServer_t *server;
   struct sockaddr_in addr;
   printf("Trying to open TCP server socket at port %d for %s access...\n", port, access);
@@ -81,6 +86,8 @@ tcpServer_t *tcpServer_open(int port, const char *access) {
   }
   server->capacity = 4;
   server->access = access;
+  server->onAlloc = onAlloc;
+  server->onFree = onFree;
   
   // Create the socket.
   server->listenDesc = socket(AF_INET, SOCK_STREAM, 0);
@@ -143,6 +150,9 @@ void tcpServer_close(tcpServer_t **server) {
         select_unregister(client->clientDesc);
         close(client->clientDesc);
         printf("Client ID %d forcefully closed (%s access).\n", i, (*server)->access);
+      }
+      if ((*server)->onFree) {
+        (*server)->onFree(&(client->extraData));
       }
       free(client);
     }
@@ -212,11 +222,20 @@ int tcpServer_update(tcpServer_t *server) {
       close(clientDesc);
       return -1;
     }
+    server->clients[f]->extraData = 0;
+    if (server->onAlloc) {
+      if (server->onAlloc(&(server->clients[f]->extraData)) < 0) {
+        free(server->clients[f]);
+        close(clientDesc);
+        return -1;
+      }
+    }
     
     // Initialize the client state.
     server->clients[f]->clientDesc = clientDesc;
-    server->clients[f]->bufSize = 0;
-    server->clients[f]->bufPtr = 0;
+    server->clients[f]->rxBufSize = 0;
+    server->clients[f]->rxBufPtr = 0;
+    server->clients[f]->txBufSize = 0;
     
     // Register the new client with select_wait().
     if (select_register(clientDesc) < 0) {
@@ -243,28 +262,31 @@ int tcpServer_update(tcpServer_t *server) {
     }
     
     // Skip clients which are not ready or still have data in their buffer.
-    if ((!select_isReady(client->clientDesc)) || (client->bufPtr < client->bufSize)) {
+    if ((!select_isReady(client->clientDesc)) || (client->rxBufPtr < client->rxBufSize)) {
       continue;
     }
     
     // Reset the (fully drained) buffer.
-    client->bufPtr = 0;
+    client->rxBufPtr = 0;
     
     // Read into the buffer.
-    client->bufSize = read(client->clientDesc, TCP_BUFFER_SIZE);
-    if (client->bufSize < 0) {
+    client->rxBufSize = read(client->clientDesc, (void*)client->rxBuffer, TCP_BUFFER_SIZE);
+    if (client->rxBufSize < 0) {
       perror("Failed to read from client");
       return -1;
     }
     
     // Check if the client closed the connection.
-    if (client->bufSize == 0) {
+    if (client->rxBufSize == 0) {
       
       // Close our end of the port and unregister it.
       close(client->clientDesc);
       select_unregister(client->clientDesc);
       
       // Free the client state memory structure.
+      if (server->onFree) {
+        server->onFree(&(client->extraData));
+      }
       free(client);
       client = 0;
       server->clients[i] = 0;
@@ -272,10 +294,190 @@ int tcpServer_update(tcpServer_t *server) {
       // Report that the client closed the connection.
       printf("Client ID %d closed connection (%s access).\n", i, server->access);
       
+    } else {
+      
+      // We have a filled buffer, so we should unregister from the select call
+      // because we can't handle any further reads until the buffer is
+      // depleted.
+      select_unregister(client->clientDesc);
+      
     }
     
   }
   
+  return 0;
+  
+}
+
+/**
+ * Used for iterating over client IDs which resolve to established connections.
+ * Initialize by calling with clientID -1. This will return -1 when there are
+ * no further clients.
+ */
+int tcpServer_nextClient(tcpServer_t *server, int clientID) {
+  
+  while (1) {
+    
+    // Try the next client ID.
+    clientID++;
+    
+    // Return -1 to stop iterating if we have reached end of existing client
+    // IDs.
+    if (clientID >= server->capacity) {
+      return -1;
+    }
+    
+    // Return this client ID if it resolves to a connected client.
+    if ((server->clients[clientID]) && (server->clients[clientID]->clientDesc >= 0)) {
+      return clientID;
+    }
+    
+  }
+  
+}
+
+/**
+ * Pulls a byte from the receive buffer for the specified client. Returns -1 if
+ * there are no bytes available, or the received byte otherwise.
+ */
+int tcpServer_receive(tcpServer_t *server, int clientID) {
+  int b;
+  
+  // Make sure this client exists and is connected.
+  if ((clientID >= server->capacity) || (clientID < 0)) {
+    return -1;
+  }
+  if ((!server->clients[clientID]) || (server->clients[clientID]->clientDesc < 0)) {
+    return -1;
+  }
+  
+  // Make sure there is data available.
+  if (server->clients[clientID]->rxBufPtr >= server->clients[clientID]->rxBufSize) {
+    return -1;
+  }
+  
+  // If the buffer contains exactly one byte, re-register with select_wait().
+  if (server->clients[clientID]->rxBufPtr == server->clients[clientID]->rxBufSize - 1) {
+    if (select_register(server->clients[clientID]->clientDesc) < 0) {
+      return -1;
+    }
+  }
+  
+  // Pop the byte.
+  return server->clients[clientID]->rxBuffer[server->clients[clientID]->rxBufPtr++];
+  
+}
+
+/**
+ * Returns the extra data structure for the given client, or null if there is
+ * none.
+ */
+void *tcpServer_getExtraData(tcpServer_t *server, int clientID) {
+  
+  // Make sure this client exists and is connected.
+  if ((clientID >= server->capacity) || (clientID < 0)) {
+    return 0;
+  }
+  if ((!server->clients[clientID]) || (server->clients[clientID]->clientDesc < 0)) {
+    return 0;
+  }
+  
+  return server->clients[clientID]->extraData;
+  
+}
+
+/**
+ * Sends byte b to the connection at index id.
+ */
+int tcpServer_send(tcpServer_t *server, int clientID, int b) {
+  
+  // Make sure this client exists and is connected.
+  if ((clientID >= server->capacity) || (clientID < 0)) {
+    return -1;
+  }
+  if ((!server->clients[clientID]) || (server->clients[clientID]->clientDesc < 0)) {
+    return -1;
+  }
+  
+  // If the tx buffer is full, flush first.
+  if (server->clients[clientID]->txBufSize >= TCP_BUFFER_SIZE) {
+    if (tcpServer_flushClient(server, clientID) < 0) {
+      return -1;
+    }
+  }
+  
+  // Append the byte to the buffer.
+  server->clients[clientID]->txBuffer[server->clients[clientID]->txBufSize++] = b;
+  
+  return 0;
+}
+
+/**
+ * Broadcasts byte b to all connected clients.
+ */
+int tcpServer_broadcast(tcpServer_t *server, int b) {
+  int clientID;
+  
+  for (clientID = tcpServer_nextClient(server, -1); clientID >= 0; clientID = tcpServer_nextClient(server, clientID)) {
+    if (tcpServer_send(server, clientID, b) < 0) {
+      return -1;
+    }
+  }
+  
+  return 0;
+}
+
+/**
+ * Flushes the write buffer for the specified client.
+ */
+int tcpServer_flushClient(tcpServer_t *server, int clientID) {
+  tcpClient_t *client;
+  int idx;
+  
+  // Make sure this client exists and is connected. If it isn't, that's fine;
+  // it just means there's nothing to flush.
+  if ((clientID >= server->capacity) || (clientID < 0)) {
+    return 0;
+  }
+  client = server->clients[clientID];
+  if ((!client) || (client->clientDesc < 0)) {
+    return 0;
+  }
+  
+  idx = 0;
+  while (idx < client->txBufSize) {
+    int num;
+    
+    // Write as much as possible to the socket.
+    num = write(client->clientDesc, client->txBuffer + idx, client->txBufSize - idx);
+    if (num < 0) {
+      return -1;
+    }
+    
+    // Keep track of how much we've sent already.
+    idx += num;
+    
+  }
+  
+  // Reset the buffer.
+  client->txBufSize = 0;
+  
+  return 0;
+}
+
+/**
+ * Write all buffered data to the clients.
+ */
+int tcpServer_flush(tcpServer_t *server) {
+  int clientID;
+  
+  for (clientID = 0; clientID < server->capacity; clientID++) {
+    if (tcpServer_flushClient(server, clientID) < 0) {
+      return -1;
+    }
+  }
+  
+  return 0;
 }
 
 

@@ -130,8 +130,8 @@ int run(const commandLineArgs_t *args) {
   CHECK(select_register(tty));
   
   // Try to open the TCP servers.
-  CHECKNULL(appServer = tcpServer_open(args->appPort, "application"));
-  CHECKNULL(debugServer = tcpServer_open(args->debugPort, "debug"));
+  CHECKNULL(appServer = tcpServer_open(args->appPort, "application", 0, 0));
+  CHECKNULL(debugServer = tcpServer_open(args->debugPort, "debug", 0, 0));
   
   // Fork into daemon mode.
   CHECK(daemonize());
@@ -161,13 +161,34 @@ int run(const commandLineArgs_t *args) {
     tcpServer_update(appServer);
     tcpServer_update(debugServer);
     
+    // Test TCP things...
+    {
+      int clientID;
+      for (clientID = tcpServer_nextClient(appServer, -1); clientID >= 0; clientID = tcpServer_nextClient(appServer, clientID)) {
+        int d;
+        while ((d = tcpServer_receive(appServer, clientID)) >= 0) {
+          CHECK(tcpServer_broadcast(debugServer, d));
+        }
+      }
+      for (clientID = tcpServer_nextClient(debugServer, -1); clientID >= 0; clientID = tcpServer_nextClient(debugServer, clientID)) {
+        int d;
+        while ((d = tcpServer_receive(debugServer, clientID)) >= 0) {
+          CHECK(tcpServer_broadcast(appServer, d));
+        }
+      }
+    }
+    
+    // Flush the TCP servers (write pending data to the sockets).
+    tcpServer_flush(appServer);
+    tcpServer_flush(debugServer);
+    
     // Check for the terminate signal. Most of the time the call to select
     // just fails with errno=EINTR so we don't even get here, but it's
     // possible for the signal to occur just before the call to select, in
     // which case it would be possible for us to miss the signal and block
     // until the next read, if it weren't for the magic with the pipe.
     if (select_isReady(terminatePipe[0])) {
-      return -1;
+      break;
     }
     
   }

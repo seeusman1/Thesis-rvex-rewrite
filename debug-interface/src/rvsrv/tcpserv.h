@@ -51,6 +51,15 @@
 
 #define TCP_BUFFER_SIZE 1024
 
+/**
+ * Called when a client state structure is allocated or deallocated, to allow
+ * server-specific data to be created per client connection.
+ */
+typedef int (*tcpClient_extraData)(void **extra);
+
+/**
+ * Represents the state of a client connection to a server.
+ */
 typedef struct {
   
   /**
@@ -62,17 +71,32 @@ typedef struct {
    * Read buffer. When data is available and the buffer is empty, a socket
    * read is performed to fill this as far as possible.
    */
-  char buffer[TCP_BUFFER_SIZE];
+  char rxBuffer[TCP_BUFFER_SIZE];
   
   /**
-   * Number of bytes currently in the buffer.
+   * Number of bytes currently in the read buffer.
    */
-  int bufSize;
+  int rxBufSize;
   
   /**
-   * Number of bytes in the buffer which have already been handled.
+   * Number of bytes in the read buffer which have already been handled.
    */
-  int bufPtr;
+  int rxBufPtr;
+  
+  /**
+   * Write buffer.
+   */
+  char txBuffer[TCP_BUFFER_SIZE];
+  
+  /**
+   * Number of bytes currently in the write buffer.
+   */
+  int txBufSize;
+  
+  /**
+   * Contains extra data necessary to represent the state for a client.
+   */
+  void *extraData;
   
 } tcpClient_t;
 
@@ -102,17 +126,25 @@ typedef struct {
    */
   const char *access;
   
+  /**
+   * When not null, this is called when a client state structure is allocated.
+   */
+  tcpClient_extraData onAlloc;
+  
+  /**
+   * When not null, this is called when a client state structure is freed.
+   */
+  tcpClient_extraData onFree;
+  
 } tcpServer_t;
-
-//typedef int (*tcpRead_cb)(int, void**, int);
-//typedef int (*tcpRead_cb)(int, int);
 
 /**
  * Tries to open a TCP server socket at the given port. Returns null if
  * something goes wrong. Otherwise, returns a pointer to the newly allocated
- * server state structure. access should be "debug" or "application".
+ * server state structure. access should be "debug" or "application". onAlloc
+ * and onFree are called when a client state structure is allocated or freed.
  */
-tcpServer_t *tcpServer_open(int port, const char *access);
+tcpServer_t *tcpServer_open(int port, const char *access, tcpClient_extraData onAlloc, tcpClient_extraData onFree);
 
 /**
  * Tries to close the server specified by server, deallocates all memory, and
@@ -127,18 +159,42 @@ void tcpServer_close(tcpServer_t **server);
 int tcpServer_update(tcpServer_t *server);
 
 /**
- * Write all buffered data to the clients.
+ * Used for iterating over client IDs which resolve to established connections.
+ * Initialize by calling with clientID -1. This will return -1 when there are
+ * no further clients.
  */
-//int tcpServer_flush(tcpServer_t *server);
+int tcpServer_nextClient(tcpServer_t *server, int clientID);
 
 /**
- * Sends byte b to the connection at index id.
+ * Pulls a byte from the receive buffer for the specified client. Returns -1 if
+ * there are no bytes available, or the received byte otherwise.
  */
-//int tcpServer_send(int id, int b);
+int tcpServer_receive(tcpServer_t *server, int clientID);
+
+/**
+ * Returns the extra data structure for the given client, or null if there is
+ * none.
+ */
+void *tcpServer_getExtraData(tcpServer_t *server, int clientID);
+
+/**
+ * Sends byte b to the connection at index clientID.
+ */
+int tcpServer_send(tcpServer_t *server, int clientID, int b);
 
 /**
  * Broadcasts byte b to all connected clients.
  */
-//int tcpServer_broadcast(int b);
+int tcpServer_broadcast(tcpServer_t *server, int b);
+
+/**
+ * Flushes the write buffer for the specified client.
+ */
+int tcpServer_flushClient(tcpServer_t *server, int clientID);
+
+/**
+ * Write all buffered data to the clients.
+ */
+int tcpServer_flush(tcpServer_t *server);
 
 #endif
