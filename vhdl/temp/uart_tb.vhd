@@ -114,7 +114,7 @@ begin
     loop
       wait until rising_edge(clk) and raw_rx_strobe = '1';
       wait for 1 ns;
-      dumpStdOut("Receive " & rvs_hex(raw_rx_data));
+      dumpStdOut("                                 Receive " & rvs_hex(raw_rx_data));
     end loop;
   end process;
   
@@ -153,9 +153,19 @@ begin
     transmit(X"AA");
     transmit(X"FF");
     
-    -- Transmit a write command.
+    -- Set the bulk write page to 1 (0x00001000..0x00001FFF).
     transmit(X"FD");
-    transmit(X"2F");
+    transmit(X"A2");
+    transmit(X"00");
+    transmit(X"00");
+    transmit(X"10");
+    transmit(X"A3"); -- %A2%00%00%10
+    --transmit(X"FE");
+    
+    -- Send bulk write command to index 100 (0x-----AF0)
+    transmit(X"FD");
+    transmit(X"B3");
+    transmit(X"64");
     transmit(X"DE");
     transmit(X"AD");
     transmit(X"BE");
@@ -168,23 +178,32 @@ begin
     transmit(X"02");
     transmit(X"03");
     transmit(X"04");
-    transmit(X"F1");
+    transmit(X"72"); -- %B3%64%DE%AD%BE%EF%DE%AD%C0%DE%01%02%03%04
     --transmit(X"FE");
     
-    -- Transmit a set address command.
+    -- Send bulk read command for address 0x00001AF0..0x00001AFC
     transmit(X"FD");
-    transmit(X"5B");
+    transmit(X"C4");
     transmit(X"00");
     transmit(X"00");
-    transmit(X"00");
-    transmit(X"00");
-    transmit(X"45");
+    transmit(X"1A");
+    transmit(X"F0");
+    transmit(X"FC"); -- Escape
+    transmit(X"03"); -- 0xFC
+    transmit(X"F5"); -- %C4%00%00%1A%F0%FC
+    transmit(X"FE");
     
-    -- Transmit a read command.
-    transmit(X"FD");
-    transmit(X"3C");
-    transmit(X"03");
-    transmit(X"0C");
+    -- Send bulk read commands for address 0x00001AF0..0x00001B0C to get packet loss
+    for i in 0 to 5 loop
+      transmit(X"FD");
+      transmit(X"C5");
+      transmit(X"00");
+      transmit(X"00");
+      transmit(X"1A");
+      transmit(X"F0");
+      transmit(X"0C"); -- 0xFC
+      transmit(X"02"); -- %C5%00%00%1A%F0%0C
+    end loop;
     transmit(X"FE");
     
     wait;

@@ -13,13 +13,15 @@ entity toplevel_uartTest_spartan3 is
     reset   : in  std_logic;
     clk     : in  std_logic;
     rx      : in  std_logic;
-    tx      : out std_logic
+    tx      : out std_logic;
+    leds    : out std_logic_vector(7 downto 0)
   );
 end toplevel_uartTest_spartan3;
 
 architecture behavioral of toplevel_uartTest_spartan3 is
   signal uart2dbg_bus           : bus_mst2slv_type;
   signal dbg2uart_bus           : bus_slv2mst_type;
+  signal tx_s                   : std_logic;
 begin
   
   -- Instantiate unit under test.
@@ -37,7 +39,7 @@ begin
       
       -- UART pins.
       rx                        => rx,
-      tx                        => tx,
+      tx                        => tx_s,
       
       -- Slave bus.
       bus2uart                  => BUS_MST2SLV_IDLE,
@@ -67,6 +69,13 @@ begin
       mem2mst_port              => dbg2uart_bus
       
     );
+  
+  leds <= (
+    7 => not rx,
+    6 => not tx_s,
+    others => '0'
+  );
+  tx <= tx_s;
   
 end behavioral;
 

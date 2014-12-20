@@ -50,6 +50,9 @@ use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
 library rvex;
+-- pragma translate_off
+--use rvex.simUtils_pkg.all;
+-- pragma translate_on
 
 --=============================================================================
 -- This is is part of the debug section of the UART peripheral. It buffers and
@@ -174,6 +177,10 @@ begin -- architecture
     signal forwardPacket        : std_logic;
     signal discardPacket        : std_logic;
     
+    -- Strobe signal, only going high when the incoming strobe signal is high
+    -- and endPacket is low.
+    signal rxStrobeData         : std_logic;
+    
   begin
     
     -- Instantiate the transmit packet buffer.
@@ -187,7 +194,7 @@ begin -- architecture
         
         -- Buffer write interface.
         src2buf_data            => sw2pkctrl_rxData,
-        src2buf_push            => sw2pkctrl_rxStrobe,
+        src2buf_push            => rxStrobeData,
         bus2src_full            => bufferFull,
         src2buf_pop             => forwardPacket, -- The last byte is the CRC, which the packet handler doesn't need.
         src2buf_reset           => discardPacket,
@@ -221,12 +228,38 @@ begin -- architecture
         
         -- CRC interface.
         data                    => sw2pkctrl_rxData,
-        update                  => sw2pkctrl_rxStrobe,
+        update                  => rxStrobeData,
         clear                   => completePacket,
         crc                     => open,
         correct                 => crcCorrect
         
       );
+    
+--    -- pragma translate_off
+--    process (clk) is
+--    begin
+--      if rising_edge(clk) then
+--        if rxStrobeData = '1' then
+--          dumpStdOut(
+--            "                                                                  "
+--            & "Debug command " & rvs_hex(sw2pkctrl_rxData)
+--          );
+--        end if;
+--        if forwardPacket = '1' then
+--          dumpStdOut(
+--            "                                                                  "
+--            & "Handling command."
+--          );
+--        end if;
+--        if discardPacket = '1' then
+--          dumpStdOut(
+--            "                                                                  "
+--            & "Discarding command."
+--          );
+--        end if;
+--      end if;
+--    end process;
+--    -- pragma translate_on
     
     -- Instantiate the buffer error register.
     rx_buf_error_reg: process (clk) is
@@ -250,6 +283,10 @@ begin -- architecture
     -- Whenever we get a received byte strobe while endPacket is high, we must
     -- either forward or discard the current packet.
     completePacket <= sw2pkctrl_rxStrobe and sw2pkctrl_rxEndPacket;
+    
+    -- Whenever we get a received byte strobe while endPacket is low, put it
+    -- in the receive buffer.
+    rxStrobeData <= sw2pkctrl_rxStrobe and not sw2pkctrl_rxEndPacket;
     
     -- Determine whether we should forward or discard.
     forwardPacket <= completePacket and packetValid; 

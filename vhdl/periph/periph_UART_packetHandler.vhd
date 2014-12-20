@@ -65,7 +65,7 @@ use rvex.bus_pkg.all;
 -- following format.
 -- 
 -- |-7-|-6-|-5-|-4-|-3-|-2-|-1-|-0-|
--- |   Sequence    |    Command    |
+-- |    Command    |   Sequence    |
 -- |---|---|---|---|---|---|---|---|
 -- 
 -- The sequence number is not used by the packet handler, and is simply copied
@@ -87,52 +87,71 @@ use rvex.bus_pkg.all;
 --   0111 => reserved
 --   1000 => reserved
 --   1001 => reserved
---   1010 => query current address
---   1011 => set current address
---   1100 => read word(s)
---   1101 => write byte(s)
---   1110 => write halfword(s)
---   1111 => write word(s)
+--   1010 => set bulk write page
+--   1011 => bulk write
+--   1100 => bulk read
+--   1101 => prepare volatile bus op
+--   1110 => perform volatile bus op
+--   1111 => reserved (might require transmission of escape character for
+--           command byte)
 -- 
 -- The function of the remainder of the bytes depends on the command code, as
 -- follows.
 -- 
--- Packet 0000..1001:
+-- Packet 0000..1001 and 1111:
 --   Payload from computer is ignored, no payload is sent in the reply.
 -- 
--- Packet 1010 - query current address:
---   Payload from computer is ignored. The reply payload consists of 4 bytes,
---   containing the current address in big-endian notation.
+-- Packet 1010 - set bulk write page:
+--   Payload from computer should be 3 bytes, containing bits 31 downto 8 of
+--   the address in big endian notation. The Bits 11 downto 8 are essentially
+--   ignored, because they are overridden by bulk write commands.
 -- 
--- Packet 1011 - set current address:
---   Payload from computer should be 4 bytes, containing the new address in
---   big-endian notation. The reply payload consists of 4 bytes, echoing the
---   new address.
+-- Packet 1011 - bulk write:
+--   Payload from the computer should be 5-29 bytes. The first byte sets the
+--   address: bits 31 downto 12 are unchanged, whereas bits 11 downto 0 are set
+--   to the byte value * 28. The remainder of the payload is interpreted as 
+--   words which are to be written to the memory, starting at the initial
+--   address. This means that with 146 packets with payload size 29 and 1
+--   packet with payload size 9, a 4kb page can be written, with potentially
+--   out-of-order packets due to packet loss. The fault flag from the bus is
+--   ignored though, and due to retransmission, it is possible that data is
+--   written to the bus multiple times. A bulk write cannot cross a 4kb
+--   boundary.
 -- 
--- Packet 1100 - read word(s):
---   Payload from the computer should be 1 byte, specifying the number of words
---   to read. The maximum is 7 due to the size of the packet buffer. The reply
---   payload consists of the bytes as read from the bus. The address is
---   incremented by 4 for every word read.
+-- Packet 1100 - bulk read:
+--   Payload from the computer should be 5 bytes. The first four bytes should
+--   specify the initial address in big-endian order. The fifth byte should 
+--   be set to what the LSB of the address will be when the bulk read should
+--   stop. This must be at most the LSB of the initial address + 28 and at
+--   least LSB + 4. Note that both start and non-inclusive end address should
+--   be aligned to four bytes.
 -- 
--- Packet 1101 - write byte(s):
---   Payload from the computer should be 1 to 30 bytes, specifying the bytes
---   which should be written. The reply consists of 1 byte, specifying the
---   number of bytes written. The address is incremented by 1 for every byte
---   written.
+-- Packet 1101 - prepare volatile bus operation:
+--   Payload from the computer should be 9 bytes. The first four bytes should
+--   specify the address to operate on, the next four bytes should specify the
+--   write data as it will be written to the bus, and the final byte specifies
+--   (from MSB to LSB) the four write mask flags, the read/write (0 for read,
+--   1 for write) and three pad bits which are reserved and should be zero.
+--   All this command does is store these values in a register and set a valid
+--   flag.
 -- 
--- Packet 1110 - write halfwords(s):
---   Payload from the computer should be 2 to 30 bytes, specifying the
---   halfwords which should be written. The reply consists of 1 byte,
---   specifying the number of halfwords written. The address is incremented by
---   2 for every halfword written.
--- 
--- Packet 1111 - write word(s):
---   Payload from the computer should be 4 to 28 bytes, specifying the words
---   which should be written. The reply consists of 1 byte, specifying the
---   number of words written. The address is incremented by 4 for every word
---   written; when not in auto-increment mode, the same word is written
---   multiple times and the address is left unchanged.
+-- Packet 1110 - execute volatile bus operation:
+--   No payload is required. When this command is executed while the valid flag
+--   set by packet 1101 is still set, the valid flag is cleared, the bus
+--   operation is performed, and the holding registers are overwritten with the
+--   bus result (read data and fault flag). Regardless of the initial state of
+--   the valid flag, this command will return the contents of the holding
+--   registers containing the read data (first 4 bytes) and the fault flag
+--   (sent in 1 byte as 0 or 1, the remainder of the bits are reserved).
+--
+-- To perform a volatile bus operation, one would first send packet 1101 until
+-- the packet is successfully acknowledged, after which packet 1110 is sent
+-- until that packet is successfully acknowledged. When this completes, it is
+-- guaranteed that the bus operation is performed exactly once. If the retry
+-- count is exceeded for the ack for packet 1101 it is guaranteed that no
+-- operation has been performed yet. Only if the connection is interrrupted
+-- after packet 1110 has already been sent will the state of the system be
+-- unknown to the computer.
 -- 
 -------------------------------------------------------------------------------
 entity periph_UART_packetHandler is
@@ -198,100 +217,359 @@ end periph_UART_packetHandler;
 architecture Behavioral of periph_UART_packetHandler is
 --=============================================================================
   
-  -- Bus registers, among which the current address.
-  signal pkhan2dbg_busRegs      : bus_mst2slv_type;
+  -----------------------------------------------------------------------------
+  -- Command code constants
+  -----------------------------------------------------------------------------
+  constant COMCODE_SET_PAGE         : std_logic_vector(3 downto 0) := "1010";
+  constant COMCODE_BULK_WRITE       : std_logic_vector(3 downto 0) := "1011";
+  constant COMCODE_BULK_READ        : std_logic_vector(3 downto 0) := "1100";
+  constant COMCODE_VOLATILE_PREPARE : std_logic_vector(3 downto 0) := "1101";
+  constant COMCODE_VOLATILE_EXECUTE : std_logic_vector(3 downto 0) := "1110";
   
-  -- The address is incremented by this value every cycle.
-  signal address_inc            : std_logic_vector(2 downto 0);
+  -----------------------------------------------------------------------------
+  -- Datapath control signals
+  -----------------------------------------------------------------------------
+  -- These control signals are driven by the FSM based on the state.
   
-  -- When a bit in this signal is high, the associated byte in the address is
-  -- overridden with the currently exposed receive buffer byte.
-  signal address_WE             : rvex_mask_type;
+  -- Address register operations.
+  type addressOp_type is (
+    ADDR_OP_NOP,                -- No operation
+    ADDR_OP_WRITE_0,            -- addr(31..24) = rxbuf
+    ADDR_OP_WRITE_1,            -- addr(23..16) = rxbuf
+    ADDR_OP_WRITE_2,            -- addr(15..8) = rxbuf
+    ADDR_OP_WRITE_3,            -- addr(7..0) = rxbuf
+    ADDR_OP_STOP_3,             -- stopAddr(7..0) = rxbuf
+    ADDR_OP_AUTO_INC,           -- addr(11..0) = align4(addr(11..0) + 4)
+    ADDR_OP_LOAD_MULT_7         -- addr(11..0) = rxbuf * 28
+  );
+  signal addressOp              : addressOp_type;
   
-  -- When a bit in this signal is high, the associated byte in the write data
-  -- register is overridden with the currently exposed receive buffer byte, and
-  -- the associated write mask bit is set.
-  signal writeData_WE           : rvex_mask_type;
+  -- Write data and mask register operations.
+  type writeDataOp_type is (
+    WDAT_OP_NOP,                -- No operation
+    WDAT_OP_WRITE_0,            -- writeData(31..24) = rxbuf; writeMask(3) = 0
+    WDAT_OP_WRITE_1,            -- writeData(23..16) = rxbuf; writeMask(2) = 0
+    WDAT_OP_WRITE_2,            -- writeData(15..8) = rxbuf; writeMask(1) = 0
+    WDAT_OP_WRITE_3,            -- writeData(7..0) = rxbuf; writeMask(0) = 0
+    WDAT_OP_LOAD_MASK           -- writeMask(3..0) = rxbuf(7..0)
+  );
+  signal writeDataOp            : writeDataOp_type;
   
-  -- When high, a write will be issued on the bus.
-  signal writeEnable            : std_logic;
+  -- Write/read enable and busRequestValid register operations. When
+  -- transferComplete is set, all these operations are overridden to clearing
+  -- all the flags.
+  type enableOp_type is (
+    ENABLE_OP_NOP,              -- No operation
+    ENABLE_OP_WRITE,            -- Set write enable register
+    ENABLE_OP_READ,             -- Set read enable register
+    ENABLE_OP_QUEUE             -- writeEnable = rxBuf(3); readEnable = not rxBuf(3); busRequestValid = '1'
+  );
+  signal enableOp               : enableOp_type;
   
-  -- When high, a read will be issued on the bus.
-  signal readEnable             : std_logic;
+  -- Combinatorial bus operation. When transferComplete is set, this is
+  -- overridden to BUS_OP_NOP.
+  type busOp_type is (
+    BUS_OP_NOP,                 -- No operation
+    BUS_OP_EXECUTE              -- Execute the queued bus operation
+  );
+  signal busOp                  : busOp_type;
   
-  -- Bus transfer complete signal.
-  signal transferComplete       : std_logic;
+  -- Transmit packet buffer push operation.
+  type txBufOp_type is (
+    TXBUF_OP_NOP,               -- No operation
+    TXBUF_OP_ECHO,              -- Push rxbuf into txbuf
+    TXBUF_OP_PUSH_READ_0,       -- Push readData(31..24) into txbuf
+    TXBUF_OP_PUSH_READ_1,       -- Push readData(23..16) into txbuf
+    TXBUF_OP_PUSH_READ_2,       -- Push readData(15..8) into txbuf
+    TXBUF_OP_PUSH_READ_3,       -- Push readData(7..0) into txbuf
+    TXBUF_OP_PUSH_FLAGS         -- Push "0000000" & fault into txbuf
+  );
+  signal txBufOp                : txBufOp_type;
   
-  -- Read data register, valid the cycle after transferComplete is high.
-  signal readData               : rvex_data_type;
+  -- Receive packet buffer pop operation.
+  type rxBufOp_type is (
+    RXBUF_OP_NOP,               -- No operation
+    RXBUF_OP_POP                -- Pop byte from receive buffer
+  );
+  signal rxBufOp                : rxBufOp_type;
+  
+  -- Packet operation.
+  type packetOp_type is (
+    PACKET_OP_NOP,              -- No operation
+    PACKET_OP_NEXT              -- Send the packet currently in the transmit buffer and request a new packet
+  );
+  signal packetOp               : packetOp_type;
+  
+  -- Command code operation.
+  type commandCodeOp_type is (
+    COMCODE_OP_NOP,             -- No operation; forward registered code
+    COMCODE_OP_STORE            -- comCode = rxBuf(7..4)
+  );
+  signal commandCodeOp          : commandCodeOp_type;
+  
+  -----------------------------------------------------------------------------
+  -- Datapath status signals
+  -----------------------------------------------------------------------------
+  -- These signals are generated by the datapath block for the FSM.
+  
+  -- Command code, valid only when the first byte is presented by the packet
+  -- receive buffer.
+  signal commandCode            : std_logic_vector(3 downto 0);
+  
+  -- Set when the packet receive buffer is empty.
+  signal rxEmpty                : std_logic;
+  
+  -- Set when a bulk read should stop (i.e. when the stop address has been
+  -- reached).
+  signal bulkReadStop           : std_logic;
+  
+  -- Set when both the packet receive and transmit buffers are ready (this is
+  -- only cleared while either buffer is swapping).
+  signal packetReady            : std_logic;
+  
+  -- Set when a bus operation is queued by a "prepare volatile" command,
+  -- cleared when the prepared operation has already been performed.
+  signal busOpQueued            : std_logic;
+  
+  -- Set when the bus operation requested through 
+  signal busOpComplete          : std_logic;
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
   
   -----------------------------------------------------------------------------
-  -- Bus interface
+  -- Datapath
   -----------------------------------------------------------------------------
-  bus_inferface_block: block is
+  datapath_block: block is
+    
+    -- Command code register.
+    signal commandCode_r        : std_logic_vector(3 downto 0);
+    
+    -- Bus request and reply registers.
+    signal busRequest_r         : bus_mst2slv_type;
+    signal busResult_r          : bus_slv2mst_type;
+    
+    -- Relevant part of the address which is used to detect when a bulk read
+    -- should stop.
+    signal stopAddress_r        : std_logic_vector(4 downto 2);
+    
+    -- Volatile bus request flag. Set by the prepare command, cleared when a
+    -- bus transfer completes.
+    signal busRequestValid_r    : std_logic;
+    
   begin
     
-    -- Instantiate the bus registers.
-    bus_regs: process (clk) is
+    -- Instantiate the registers.
+    datapath_regs: process (clk) is
+      
+      -- Address adder inputs and output.
+      variable addressAddOp1    : std_logic_vector(10 downto 0);
+      variable addressAddOp2    : std_logic_vector(10 downto 0);
+      variable addressAddResult : std_logic_vector(10 downto 0);
+      
     begin
       if rising_edge(clk) then
         if reset = '1' then
-          pkhan2dbg_busRegs <= BUS_MST2SLV_IDLE;
-          readData <= (others => '0');
+          commandCode_r <= (others => '0');
+          busRequest_r <= BUS_MST2SLV_IDLE;
+          busResult_r <= BUS_SLV2MST_IDLE;
+          stopAddress_r <= (others => '0');
+          busRequestValid_r <= '0';
         elsif clkEn = '1' then
           
-          -- Handle bus address.
-          pkhan2dbg_busRegs.address <= std_logic_vector(
-            vect2unsigned(pkhan2dbg_busRegs.address) + vect2unsigned(address_inc)
+          -- Handle command code register
+          -- ----------------------------
+          
+          -- Store the command code when requested.
+          case commandCodeOp is
+            when COMCODE_OP_NOP   => null;
+            when COMCODE_OP_STORE => commandCode_r <= pkctrl2pkhan_rxData(7 downto 4);
+          end case;
+          
+          
+          -- Handle bus address register
+          -- ---------------------------
+          
+          -- Prepare the operands for the addition.
+          if addressOp = ADDR_OP_LOAD_MULT_7 then
+            addressAddOp1 := pkctrl2pkhan_rxData & "001";     -- rxbuf*8 + 1
+            addressAddOp2 := "111" & not pkctrl2pkhan_rxData; -- ~rxbuf = -1 - rxbuf
+            -- Result
+            --  = op1 + op2
+            --  = (rxbuf*8 + 1) + (-1 - rxbuf)
+            --  = rxbuf*8 - rxbuf
+            --  = rxbuf*7
+          else
+            addressAddOp1 := "0" & busRequest_r.address(11 downto 2);
+            addressAddOp2 := "00000000001";
+            -- Result = addr(11..2) + 1
+          end if;
+          
+          -- Perform the addition.
+          addressAddResult := std_logic_vector(
+            vect2unsigned(addressAddOp1) + vect2unsigned(addressAddOp2)
           );
-          for i in 0 to 3 loop
-            if address_WE(i) = '1' then
-              pkhan2dbg_busRegs.address(i*8+7 downto i*8) <= pkctrl2pkhan_rxData;
-            end if;
-          end loop;
           
-          -- Handle write requests.
-          if transferComplete = '1' then
-            pkhan2dbg_busRegs.writeEnable <= '0';
-            pkhan2dbg_busRegs.writeMask <= (others => '0');
-          elsif writeEnable = '1' then
-            pkhan2dbg_busRegs.writeEnable <= '1';
+          -- Determine the next value for the address register.
+          case addressOp is
+            when ADDR_OP_NOP      => null;
+            when ADDR_OP_WRITE_0  => busRequest_r.address(31 downto 24) <= pkctrl2pkhan_rxData;
+            when ADDR_OP_WRITE_1  => busRequest_r.address(23 downto 16) <= pkctrl2pkhan_rxData;
+            when ADDR_OP_WRITE_2  => busRequest_r.address(15 downto 8) <= pkctrl2pkhan_rxData;
+            when ADDR_OP_WRITE_3  => busRequest_r.address(7 downto 0) <= pkctrl2pkhan_rxData;
+            when ADDR_OP_STOP_3   => stopAddress_r(4 downto 2) <= pkctrl2pkhan_rxData(4 downto 2);
+            when others           => busRequest_r.address(11 downto 0) <= addressAddResult(9 downto 0) & "00";
+          end case;
+          
+          
+          -- Handle write data operation
+          -- ---------------------------
+          
+          -- Determine the next value for the write data register.
+          case writeDataOp is
+            when WDAT_OP_WRITE_0  => busRequest_r.writeData(31 downto 24) <= pkctrl2pkhan_rxData;
+            when WDAT_OP_WRITE_1  => busRequest_r.writeData(23 downto 16) <= pkctrl2pkhan_rxData; 
+            when WDAT_OP_WRITE_2  => busRequest_r.writeData(15 downto 8) <= pkctrl2pkhan_rxData;
+            when WDAT_OP_WRITE_3  => busRequest_r.writeData(7 downto 0) <= pkctrl2pkhan_rxData;
+            when others           => null;
+          end case;
+          
+          -- Determine the next value for the write mask register.
+          case writeDataOp is
+            when WDAT_OP_WRITE_0  => busRequest_r.writeMask(3) <= '1';
+            when WDAT_OP_WRITE_1  => busRequest_r.writeMask(2) <= '1';
+            when WDAT_OP_WRITE_2  => busRequest_r.writeMask(1) <= '1';
+            when WDAT_OP_WRITE_3  => busRequest_r.writeMask(0) <= '1';
+            when WDAT_OP_LOAD_MASK=> busRequest_r.writeMask <= pkctrl2pkhan_rxData(7 downto 4);
+            when others           => null;
+          end case;
+          
+          -- Override the write mask to zero when the bus transfer is complete.
+          if busOpComplete = '1' then
+            busRequest_r.writeMask <= "0000";
           end if;
-          for i in 0 to 3 loop
-            if writeData_WE(i) = '1' then
-              pkhan2dbg_busRegs.writeMask(i) <= '1';
-              pkhan2dbg_busRegs.writeData(i*8+7 downto i*8) <= pkctrl2pkhan_rxData;
-            end if;
-          end loop;
           
-          -- Handle read requests.
-          if transferComplete = '1' then
-            pkhan2dbg_busRegs.readEnable <= '0';
-          elsif readEnable = '1' then
-            pkhan2dbg_busRegs.readEnable <= '1';
+          
+          -- Handle enable operation
+          -- -----------------------
+          
+          -- Determine the next value for the flags.
+          case enableOp is
+            when ENABLE_OP_NOP =>
+              null;
+              
+            when ENABLE_OP_WRITE =>
+              busRequest_r.writeEnable <= '1';
+              busRequest_r.readEnable <= '0';
+              
+            when ENABLE_OP_READ =>
+              busRequest_r.writeEnable <= '0';
+              busRequest_r.readEnable <= '1';
+              
+            when ENABLE_OP_QUEUE  => 
+              busRequest_r.writeEnable <= pkctrl2pkhan_rxData(3);
+              busRequest_r.readEnable <= not pkctrl2pkhan_rxData(3);
+              busRequestValid_r <= '1';
+              
+          end case;
+          
+          -- Override the flags to zero when the bus transfer is complete.
+          if busOpComplete = '1' then
+            busRequest_r.writeEnable <= '0';
+            busRequest_r.readEnable <= '0';
+            busRequestValid_r <= '0';
           end if;
           
-          -- Handle read results.
-          if transferComplete = '1' then
-            readData <= dbg2pkhan_bus.readData;
+          
+          -- Handle read results
+          -- -------------------
+          
+          -- Copy the bus result into the registers when the bus transfer
+          -- completes.
+          if busOpComplete = '1' then
+            busResult_r <= dbg2pkhan_bus;
           end if;
           
         end if;
       end if;
     end process;
     
-    -- The transferComplete signal is simply the ack signal from the bus.
-    transferComplete <= dbg2pkhan_bus.ack;
     
-    -- The readEnable and writeEnable signals will still be active in the cycle
-    -- where ack is high; they are cleared only in the cycle after. Thus, we
-    -- need to gate the signals from the registers in order to not start the same
-    -- transfer again.
-    pkhan2dbg_bus <= bus_gate(pkhan2dbg_busRegs, not transferComplete);
+    -- Drive external output signals
+    -- -----------------------------
+    
+    -- Determine the bus request output.
+    bus_request_proc: process (busOp, busOpComplete, busRequest_r) is
+      variable gate               : std_logic;
+    begin
+      
+      -- Determine whether we should execute the bus request.
+      case busOp is
+        when BUS_OP_NOP     => gate := '0';
+        when BUS_OP_EXECUTE => gate := not busOpComplete;
+      end case;
+      
+      -- Gate the bus registers.
+      pkhan2dbg_bus <= bus_gate(busRequest_r, gate);
+      
+    end process;
+    
+    -- Determine the next operation for the transmit buffer.
+    tx_buf_push_proc: process (txBufOp, pkctrl2pkhan_rxData, busResult_r) is
+    begin
+      
+      -- Set defaults for the output signals.
+      pkhan2pkctrl_txData   <= pkctrl2pkhan_rxData;
+      pkhan2pkctrl_txPush   <= '1';
+      pkctrl2pkhan_txReset  <= '0';
+      
+      -- Override with the correct requests where necessary.
+      case txBufOp is
+        when TXBUF_OP_NOP         => pkhan2pkctrl_txPush <= '0';
+        when TXBUF_OP_ECHO        => pkhan2pkctrl_txData <= pkctrl2pkhan_rxData;
+        when TXBUF_OP_PUSH_READ_0 => pkhan2pkctrl_txData <= busResult_r.readData(31 downto 24);
+        when TXBUF_OP_PUSH_READ_1 => pkhan2pkctrl_txData <= busResult_r.readData(23 downto 16);
+        when TXBUF_OP_PUSH_READ_2 => pkhan2pkctrl_txData <= busResult_r.readData(15 downto 8);
+        when TXBUF_OP_PUSH_READ_3 => pkhan2pkctrl_txData <= busResult_r.readData(7 downto 0);
+        when TXBUF_OP_PUSH_FLAGS  => pkhan2pkctrl_txData <= "0000000" & busResult_r.fault;
+      end case;
+      
+    end process;
+    
+    -- Determine the next operation for the receive buffer.
+    pkhan2pkctrl_rxPop <= '1' when rxBufOp = RXBUF_OP_POP else '0';
+    
+    -- Swap the packet buffers when requested.
+    pkctrl2pkhan_txSwap <= '1' when packetOp = PACKET_OP_NEXT else '0';
+    pkctrl2pkhan_rxSwap <= '1' when packetOp = PACKET_OP_NEXT else '0';
+    
+    
+    -- Drive status signals
+    -- --------------------
+    
+    -- Drive the commandCode signal.
+    commandCode
+      <= pkctrl2pkhan_rxData(7 downto 4) when commandCodeOp = COMCODE_OP_STORE
+      else commandCode_r;
+    
+    -- Drive local packet receive buffer empty signal.
+    rxEmpty <= pkctrl2pkhan_rxEmpty;
+    
+    -- Drive bulk read stop signal high when the significant part of the
+    -- current address matches the stop address.
+    bulkReadStop
+      <= '1' when stopAddress_r = busRequest_r.address(stopAddress_r'range)
+      else '0';
+    
+    -- Drive the packetReady signal.
+    packetReady <= pkhan2pkctrl_rxReady and pkhan2pkctrl_txReady;
+    
+    -- Drive the bus op queued signal.
+    busOpQueued <= busRequestValid_r;
+    
+    -- The busOpComplete signal is simply the ack signal from the bus.
+    busOpComplete <= dbg2pkhan_bus.ack;
     
   end block;
   
@@ -303,361 +581,306 @@ begin -- architecture
     -- FSM state.
     type state_type is (
       
-      -- Waits for the packet buffers to vecome ready.
+      -- Waits for the packet buffers to become ready.
       STATE_WAIT,
       
       -- Decodes the command byte and pushes it into the transmit buffer.
       STATE_DECODE,
       
-      -- Sets the current address.
+      -- Sets the address register.
       STATE_SET_ADDRESS_0, STATE_SET_ADDRESS_1,
       STATE_SET_ADDRESS_2, STATE_SET_ADDRESS_3,
       
-      -- Reads the count byte from the receive buffer, then moves to the read
-      -- states.
-      STATE_READ_COUNT,
+      -- Sets the stop address for reads.
+      STATE_SET_STOP_ADDRESS,
       
-      -- Executes a bus read and waits for completion.
-      STATE_READ_EXECUTE,
+      -- Sets the address based on page index for bulk writes.
+      STATE_SET_PAGE_INDEX,
       
-      -- Pushes the read data or address into the transmit buffer.
-      STATE_READ_BUFFER_0, STATE_READ_BUFFER_1,
-      STATE_READ_BUFFER_2, STATE_READ_BUFFER_3,
+      -- Sets the write data register.
+      STATE_SET_WRITE_DATA_0, STATE_SET_WRITE_DATA_1,
+      STATE_SET_WRITE_DATA_2, STATE_SET_WRITE_DATA_3,
       
-      -- Pushes the data from the received packet into the writeData register.
-      STATE_WRITE_BUFFER_0, STATE_WRITE_BUFFER_1,
-      STATE_WRITE_BUFFER_2, STATE_WRITE_BUFFER_3,
+      -- Sets the bus request flags for a volatile bus operation.
+      STATE_SET_VOLATILE_FLAGS,
       
-      -- Executes a bus write and waits for completion.
-      STATE_WRITE_EXECUTE,
+      -- Performs the prepared bus operation.
+      STATE_BUS_OP,
       
-      -- Pushes the number of bytes/halfwords/words written into the packet to
-      -- transmit and swaps the buffer.
-      STATE_WRITE_COUNT
+      -- Determines what to do after a bus operation.
+      STATE_BUS_OP_COMPLETE,
+      
+      -- These states push the read data into the TX buffer.
+      STATE_PUSH_READ_DATA_0, STATE_PUSH_READ_DATA_1,
+      STATE_PUSH_READ_DATA_2, STATE_PUSH_READ_DATA_3,
+      
+      -- This state pushes the bus result flags into the TX buffer.
+      STATE_PUSH_RESULT_FLAGS
       
     );
     signal state                : state_type;
     signal state_next           : state_type;
     
-    -- Counter, used to store how much accesses we still need to do or have
-    -- done.
-    signal counter              : std_logic_vector(7 downto 0);
-    signal counter_next         : std_logic_vector(7 downto 0);
-    
-    -- Stores the type of operation (address or data) and the access size.
-    type accessSize_type is (AS_WORD, AS_HALF, AS_BYTE, AS_ADDR);
-    signal accessSize           : accessSize_type;
-    signal accessSize_next      : accessSize_type;
-    
-    -- Data which should be pushed into the receive buffer. This is either the
-    -- current address or the read data register
-    signal incomingData         : rvex_data_type;
-    
   begin
     
-    -- Select what data should be put in the transmit buffer for reads/queries.
-    incomingData
-      <= pkhan2dbg_busRegs.address when accessSize = AS_ADDR else readData;
-    
-    -- Instantiate the state registers for the FSM.
-    fsm_regs: process (clk) is
+    -- Instantiate the state register for the FSM.
+    fsm_reg: process (clk) is
     begin
       if rising_edge(clk) then
         if reset = '1' then
           state <= STATE_WAIT;
-          counter <= (others => '0');
-          accessSize <= AS_WORD;
         elsif clkEn = '1' then
           state <= state_next;
-          counter <= counter_next;
-          accessSize <= accessSize_next;
         end if;
       end if;
     end process;
     
     -- Combinatorial logic for the FSM.
     fsm_comb: process (
-      state, counter, accessSize, incomingData, transferComplete,
-      pkctrl2pkhan_rxData, pkctrl2pkhan_rxEmpty, pkhan2pkctrl_rxReady,
-      pkctrl2pkhan_txFull, pkhan2pkctrl_txReady, pkhan2dbg_busRegs
+      commandCode, rxEmpty, bulkReadStop, packetReady, busOpQueued,
+      busOpComplete, state
     ) is
     begin
       
       -- Load default values.
-      state_next            <= state;
-      counter_next          <= counter;
-      accessSize_next       <= accessSize;
-      pkhan2pkctrl_rxPop    <= '0';
-      pkctrl2pkhan_rxSwap   <= '0';
-      pkhan2pkctrl_txData   <= pkctrl2pkhan_rxData;
-      pkhan2pkctrl_txPush   <= '0';
-      pkctrl2pkhan_txReset  <= '0';
-      pkctrl2pkhan_txSwap   <= '0';
-      address_inc           <= (others => '0');
-      address_WE            <= (others => '0');
-      writeData_WE          <= (others => '0');
-      writeEnable           <= '0';
-      readEnable            <= '0';
-  
+      addressOp     <= ADDR_OP_NOP;
+      writeDataOp   <= WDAT_OP_NOP;
+      enableOp      <= ENABLE_OP_NOP;
+      busOp         <= BUS_OP_NOP;
+      txBufOp       <= TXBUF_OP_NOP;
+      rxBufOp       <= RXBUF_OP_NOP;
+      packetOp      <= PACKET_OP_NOP;
+      commandCodeOp <= COMCODE_OP_NOP;
+      state_next    <= state;
+      
+      -- Act based upon the state.
       case state is
         
-        -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        -- Command-agnostic states
-        -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        -----------------------------------------------------------------------
         when STATE_WAIT => 
           
-          -- Wait for both receive and transmit buffer to be ready.
-          if pkhan2pkctrl_rxReady = '1' and pkhan2pkctrl_txReady = '1' then
+          -- Wait for the packet buffers to be ready.
+          if packetReady = '1' then
             state_next <= STATE_DECODE;
           end if;
           
+        -----------------------------------------------------------------------
         when STATE_DECODE =>
           
-          -- Decode the command byte.
-          case pkctrl2pkhan_rxData(3 downto 0) is
+          -- Copy the command/sequence byte into the transmit buffer.
+          txBufOp <= TXBUF_OP_ECHO;
+          rxBufOp <= RXBUF_OP_POP;
+          
+          -- Store the command code.
+          commandCodeOp <= COMCODE_OP_STORE;
+          
+          -- Determine the next state.
+          case commandCode is
             
-            when "1010" => -- Query current address.
-              accessSize_next <= AS_ADDR;
-              counter_next <= (others => '0');
-              state_next <= STATE_READ_BUFFER_0;
-              
-            when "1011" => -- Set current address.
-              accessSize_next <= AS_ADDR;
-              counter_next <= (others => '0');
+            when COMCODE_SET_PAGE =>
               state_next <= STATE_SET_ADDRESS_0;
               
-            when "1100" => -- Read word(s).
-              accessSize_next <= AS_WORD;
-              state_next <= STATE_READ_COUNT;
+            when COMCODE_BULK_WRITE =>
+              state_next <= STATE_SET_PAGE_INDEX;
               
-            when "1101" => -- Write byte(s).
-              accessSize_next <= AS_BYTE;
-              counter_next <= (others => '0');
-              state_next <= STATE_WRITE_BUFFER_0;
+            when COMCODE_BULK_READ =>
+              state_next <= STATE_SET_ADDRESS_0;
               
-            when "1110" => -- Write halfword(s).
-              accessSize_next <= AS_HALF;
-              counter_next <= (others => '0');
-              state_next <= STATE_WRITE_BUFFER_0;
+            when COMCODE_VOLATILE_PREPARE =>
+              state_next <= STATE_SET_ADDRESS_0;
               
-            when "1111" => -- Write word(s).
-              accessSize_next <= AS_WORD;
-              counter_next <= (others => '0');
-              state_next <= STATE_WRITE_BUFFER_0;
-            
-            when others => -- Reserved.
+            when COMCODE_VOLATILE_EXECUTE =>
+              if busOpQueued = '1' then
+                state_next <= STATE_BUS_OP;
+              else
+                state_next <= STATE_PUSH_READ_DATA_0;
+              end if;
+              
+            when others =>
               
               -- Handle reserved commands by sending an empty reply packet.
-              pkctrl2pkhan_rxSwap <= '1';
-              pkctrl2pkhan_txSwap <= '1';
+              packetOp <= PACKET_OP_NEXT;
               state_next <= STATE_WAIT;
               
           end case;
           
-          -- Copy the command byte into the transmit buffer and pop it.
-          pkhan2pkctrl_txData <= pkctrl2pkhan_rxData;
-          pkhan2pkctrl_txPush <= '1';
-          pkhan2pkctrl_rxPop <= '1';
-          
-        -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        -- Set-address command states
-        -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        -----------------------------------------------------------------------
         when STATE_SET_ADDRESS_0 =>
-          
-          -- Write address byte 0 and go to the next state.
-          address_WE <= "1000";
-          pkhan2pkctrl_rxPop <= '1';
+          addressOp <= ADDR_OP_WRITE_0;
+          rxBufOp <= RXBUF_OP_POP;
           state_next <= STATE_SET_ADDRESS_1;
           
+        -----------------------------------------------------------------------
         when STATE_SET_ADDRESS_1 =>
-          
-          -- Write address byte 1 and go to the next state.
-          address_WE <= "0100";
-          pkhan2pkctrl_rxPop <= '1';
+          addressOp <= ADDR_OP_WRITE_1;
+          rxBufOp <= RXBUF_OP_POP;
           state_next <= STATE_SET_ADDRESS_2;
           
+        -----------------------------------------------------------------------
         when STATE_SET_ADDRESS_2 =>
+          addressOp <= ADDR_OP_WRITE_2;
+          rxBufOp <= RXBUF_OP_POP;
           
-          -- Write address byte 2 and go to the next state.
-          address_WE <= "0010";
-          pkhan2pkctrl_rxPop <= '1';
-          state_next <= STATE_SET_ADDRESS_3;
-          
-        when STATE_SET_ADDRESS_3 =>
-          
-          -- Write address byte 3 and finish the transfer.
-          address_WE <= "0001";
-          pkhan2pkctrl_rxPop <= '1';
-          pkctrl2pkhan_rxSwap <= '1';
-          pkctrl2pkhan_txSwap <= '1';
-          state_next <= STATE_WAIT;
-          
-        -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        -- Read word and query address command states
-        -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        when STATE_READ_COUNT =>
-          
-          -- Read the access count from the received packet and pop it.
-          counter_next <= pkctrl2pkhan_rxData;
-          pkhan2pkctrl_rxPop <= '1';
-          
-          -- Start the read operation.
-          state_next <= STATE_READ_EXECUTE;
-          
-        when STATE_READ_EXECUTE =>
-          
-          -- Initiate the read.
-          readEnable <= '1';
-          
-          -- Continue when the read is complete.
-          if transferComplete = '1' then
-            
-            -- Decrement the access count register.
-            counter_next <= std_logic_vector(vect2unsigned(counter) - 1);
-            
-            -- Increment the address by 4 if we did a word read access.
-            if accessSize /= AS_ADDR then
-              address_inc <= "100";
-            end if;
-            
-            -- Go to the next state.
-            state_next <= STATE_READ_BUFFER_0;
-            
-          end if;
-          
-        when STATE_READ_BUFFER_0 =>
-          
-          -- Push byte 0 into the buffer and go to the next state.
-          pkhan2pkctrl_txData <= incomingData(31 downto 24);
-          pkhan2pkctrl_txPush <= '1';
-          state_next <= STATE_READ_BUFFER_1;
-          
-        when STATE_READ_BUFFER_1 =>
-          
-          -- Push byte 1 into the buffer and go to the next state.
-          pkhan2pkctrl_txData <= incomingData(23 downto 16);
-          pkhan2pkctrl_txPush <= '1';
-          state_next <= STATE_READ_BUFFER_2;
-          
-        when STATE_READ_BUFFER_2 =>
-          
-          -- Push byte 2 into the buffer and go to the next state.
-          pkhan2pkctrl_txData <= incomingData(15 downto 8);
-          pkhan2pkctrl_txPush <= '1';
-          state_next <= STATE_READ_BUFFER_3;
-          
-        when STATE_READ_BUFFER_3 =>
-          
-          -- Push byte 3 into the buffer.
-          pkhan2pkctrl_txData <= incomingData(7 downto 0);
-          pkhan2pkctrl_txPush <= '1';
-          
-          -- Go to the next state. When the counter is zero, we've done all the
-          -- accesses which were requested, so we can transmit the reply and
-          -- request a new packet. Otherwise, perform the next access.
-          if vect2unsigned(counter) = 0 then
-            pkctrl2pkhan_rxSwap <= '1';
-            pkctrl2pkhan_txSwap <= '1';
+          -- We're done if this was a set page command, otherwise continue.
+          if commandCode = COMCODE_SET_PAGE then
+            packetOp <= PACKET_OP_NEXT;
             state_next <= STATE_WAIT;
           else
-            state_next <= STATE_READ_EXECUTE;
+            state_next <= STATE_SET_ADDRESS_3;
           end if;
           
-        -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        -- Write command states
-        -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        when STATE_WRITE_BUFFER_0 =>
+        -----------------------------------------------------------------------
+        when STATE_SET_ADDRESS_3 =>
+          addressOp <= ADDR_OP_WRITE_3;
+          rxBufOp <= RXBUF_OP_POP;
           
-          -- Pop byte 0 from the buffer and place it into the writeData
-          -- register.
-          case pkhan2dbg_busRegs.address(1 downto 0) is
-            when "00" => writeData_WE <= "1000";
-            when "01" => writeData_WE <= "0100";
-            when "10" => writeData_WE <= "0010";
-            when others => writeData_WE <= "0001";
-          end case;
-          pkhan2pkctrl_rxPop <= '1';
-          
-          -- If this is a byte access, execute the write now. Otherwise, buffer
-          -- the next byte.
-          if accessSize = AS_BYTE then
-            state_next <= STATE_WRITE_EXECUTE;
+          -- If we're preparing a volatile bus operation, continue by storing
+          -- the write data. Otherwise we're doing a bulk read, so continue by
+          -- storing the stop address byte.
+          if commandCode = COMCODE_VOLATILE_PREPARE then
+            state_next <= STATE_SET_WRITE_DATA_0;
           else
-            state_next <= STATE_WRITE_BUFFER_1;
+            state_next <= STATE_SET_STOP_ADDRESS;
           end if;
           
-        when STATE_WRITE_BUFFER_1 =>
+        -----------------------------------------------------------------------
+        when STATE_SET_STOP_ADDRESS =>
+          addressOp <= ADDR_OP_STOP_3;
+          rxBufOp <= RXBUF_OP_POP;
           
-          -- Pop byte 1 from the buffer and place it into the writeData
-          -- register.
-          case pkhan2dbg_busRegs.address(1 downto 1) is
-            when "0" => writeData_WE <= "0100";
-            when others => writeData_WE <= "0001";
-          end case;
-          pkhan2pkctrl_rxPop <= '1';
+          -- We only ever get to this state in the bulk read command, so
+          -- it's time to execute the first read now.
+          enableOp <= ENABLE_OP_READ;
+          state_next <= STATE_BUS_OP;
           
-          -- If this is a halword access, execute the write now. Otherwise,
-          -- buffer the next byte.
-          if accessSize = AS_HALF then
-            state_next <= STATE_WRITE_EXECUTE;
+        -----------------------------------------------------------------------
+        when STATE_SET_PAGE_INDEX =>
+          addressOp <= ADDR_OP_LOAD_MULT_7;
+          rxBufOp <= RXBUF_OP_POP;
+          
+          -- We only ever get to this state in the bulk write command, in which
+          -- case we continue by setting up the write data.
+          state_next <= STATE_SET_WRITE_DATA_0;
+          
+        -----------------------------------------------------------------------
+        when STATE_SET_WRITE_DATA_0 =>
+          writeDataOp <= WDAT_OP_WRITE_0;
+          rxBufOp <= RXBUF_OP_POP;
+          state_next <= STATE_SET_WRITE_DATA_1;
+          
+        -----------------------------------------------------------------------
+        when STATE_SET_WRITE_DATA_1 =>
+          writeDataOp <= WDAT_OP_WRITE_1;
+          rxBufOp <= RXBUF_OP_POP;
+          state_next <= STATE_SET_WRITE_DATA_2;
+          
+        -----------------------------------------------------------------------
+        when STATE_SET_WRITE_DATA_2 =>
+          writeDataOp <= WDAT_OP_WRITE_2;
+          rxBufOp <= RXBUF_OP_POP;
+          state_next <= STATE_SET_WRITE_DATA_3;
+          
+        -----------------------------------------------------------------------
+        when STATE_SET_WRITE_DATA_3 =>
+          writeDataOp <= WDAT_OP_WRITE_3;
+          rxBufOp <= RXBUF_OP_POP;
+          
+          -- We can only get here while executing bulk write or prepare
+          -- volatile commands. In the first case, perform the write now.
+          -- Otherwise, set the flags for the volatile operation.
+          if commandCode = COMCODE_BULK_WRITE then
+            enableOp <= ENABLE_OP_WRITE;
+            state_next <= STATE_BUS_OP;
           else
-            state_next <= STATE_WRITE_BUFFER_2;
+            state_next <= STATE_SET_VOLATILE_FLAGS;
           end if;
           
-        when STATE_WRITE_BUFFER_2 =>
+        -----------------------------------------------------------------------
+        when STATE_SET_VOLATILE_FLAGS =>
+          writeDataOp <= WDAT_OP_LOAD_MASK;
+          enableOp <= ENABLE_OP_QUEUE;
+          rxBufOp <= RXBUF_OP_POP;
           
-          -- Pop byte 2 from the buffer, place it into the writeData buffer,
-          -- and go to the next state.
-          writeData_WE <= "0010";
-          pkhan2pkctrl_rxPop <= '1';
-          state_next <= STATE_WRITE_BUFFER_3;
+          -- We can only get here while preparing a volatile bus operation, in
+          -- which case we're done.
+          enableOp <= ENABLE_OP_WRITE;
+          state_next <= STATE_BUS_OP;
           
-        when STATE_WRITE_BUFFER_3 =>
+        -----------------------------------------------------------------------
+        when STATE_BUS_OP =>
+          busOp <= BUS_OP_EXECUTE;
+          if busOpComplete = '1' then
+            state_next <= STATE_BUS_OP_COMPLETE;
+          end if;
           
-          -- Pop byte 3 from the buffer, place it into the writeData buffer,
-          -- and go to the next state.
-          writeData_WE <= "0001";
-          pkhan2pkctrl_rxPop <= '1';
-          state_next <= STATE_WRITE_EXECUTE;
+        -----------------------------------------------------------------------
+        when STATE_BUS_OP_COMPLETE =>
           
-        when STATE_WRITE_EXECUTE =>
+          -- We should auto-increment the address after any bus operation. The
+          -- only case where we don't need to do this is after completing a
+          -- volatile bus operation, in which case it doesn't matter if we do
+          -- it or not.
+          addressOp <= ADDR_OP_AUTO_INC;
           
-          -- Initiate the write.
-          writeEnable <= '1';
-          
-          -- Continue when the write is complete.
-          if transferComplete = '1' then
-            
-            -- Increment the access count register.
-            counter_next <= std_logic_vector(vect2unsigned(counter) + 1);
-            
-            -- Increment the address.
-            case accessSize is
-              when AS_WORD => address_inc <= "100";
-              when AS_HALF => address_inc <= "010";
-              when AS_BYTE => address_inc <= "001";
-              when others  => address_inc <= "000";
-            end case;
-            
-            -- If the receive buffer is empty, finish the command. Otherwise,
-            -- buffer the bytes for the next write.
-            if pkctrl2pkhan_rxEmpty = '1' then
-              state_next <= STATE_WRITE_COUNT;
+          -- If this was a bulk write, finish the command if there is no more
+          -- data in the packet, or auto increment and return to write data
+          -- setup. Otherwise, we're executing a bulk read or volatile bus
+          -- operation command, in which case we should push the read result
+          -- into the transmit buffer next.
+          if commandCode = COMCODE_BULK_WRITE then
+            if rxEmpty = '1' then
+              packetOp <= PACKET_OP_NEXT;
+              state_next <= STATE_WAIT;
             else
-              state_next <= STATE_WRITE_BUFFER_0;
+              state_next <= STATE_SET_WRITE_DATA_0;
             end if;
-            
+          else
+            state_next <= STATE_PUSH_READ_DATA_0;
           end if;
           
-        when STATE_WRITE_COUNT =>
+        -----------------------------------------------------------------------
+        when STATE_PUSH_READ_DATA_0 =>
+          txBufOp <= TXBUF_OP_PUSH_READ_0;
+          state_next <= STATE_PUSH_READ_DATA_1;
           
-          -- Write the count to the transmit buffer and swap.
-          pkhan2pkctrl_txData <= counter(7 downto 0);
-          pkhan2pkctrl_txPush <= '1';
-          pkctrl2pkhan_txSwap <= '1';
-          pkctrl2pkhan_rxSwap <= '1';
+        -----------------------------------------------------------------------
+        when STATE_PUSH_READ_DATA_1 =>
+          txBufOp <= TXBUF_OP_PUSH_READ_1;
+          state_next <= STATE_PUSH_READ_DATA_2;
+          
+        -----------------------------------------------------------------------
+        when STATE_PUSH_READ_DATA_2 =>
+          txBufOp <= TXBUF_OP_PUSH_READ_2;
+          state_next <= STATE_PUSH_READ_DATA_3;
+          
+        -----------------------------------------------------------------------
+        when STATE_PUSH_READ_DATA_3 =>
+          txBufOp <= TXBUF_OP_PUSH_READ_3;
+          
+          -- If this was a bulk read, finish the packet when we're done or
+          -- perform the next read. Otherwise, this was a volatile bus
+          -- operation and we should push the flags as well.
+          if commandCode = COMCODE_BULK_READ then
+            if bulkReadStop = '1' then
+              packetOp <= PACKET_OP_NEXT;
+              state_next <= STATE_WAIT;
+            else
+              enableOp <= ENABLE_OP_READ;
+              state_next <= STATE_BUS_OP;
+            end if;
+          else
+            state_next <= STATE_PUSH_RESULT_FLAGS;
+          end if;
+          
+        -----------------------------------------------------------------------
+        when STATE_PUSH_RESULT_FLAGS =>
+          txBufOp <= TXBUF_OP_PUSH_FLAGS;
+          
+          -- We only get here when we're performing an execute volatile bus 
+          -- command operation, in which case we're done.
+          packetOp <= PACKET_OP_NEXT;
           state_next <= STATE_WAIT;
-        
+          
       end case;
       
     end process;
