@@ -198,8 +198,8 @@ begin -- architecture
         
         -- Setup write mask.
         case pl2memu_opAddr(S_MEM)(1 downto 1) is
-          when "0"    => memu2dmsw_writeMask(S_MEM) <= "0011";
-          when others => memu2dmsw_writeMask(S_MEM) <= "1100";
+          when "0"    => memu2dmsw_writeMask(S_MEM) <= "1100";
+          when others => memu2dmsw_writeMask(S_MEM) <= "0011";
         end case;
         
         -- Halfword accesses need to be aligned to 16-bit boundaries.
