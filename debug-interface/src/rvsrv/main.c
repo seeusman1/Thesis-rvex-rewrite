@@ -61,7 +61,7 @@
 /**
  * File descriptor for the serial port.
  */
-static int tty = 0;
+int tty = 0;
 
 /**
  * TCP server for sending data to and receiving data from the application code

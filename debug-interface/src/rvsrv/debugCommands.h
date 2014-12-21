@@ -46,20 +46,8 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
-
-#include "entry.h"
-
-/**
- * File descriptor for the serial port.
- */
-extern int tty;
-
-/**
- * Runs the application.
- */
-int run(const commandLineArgs_t *args);
+#ifndef _DEBUG_COMMANDS_H_
+#define _DEBUG_COMMANDS_H_
 
 
 #endif
