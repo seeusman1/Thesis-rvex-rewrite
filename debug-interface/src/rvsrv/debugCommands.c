@@ -55,37 +55,13 @@
 #include "serial.h"
 #include "main.h"
 
+// Define this to have this unit dump received and transmitted packets to
+// stdout/the log file.
+#define PRINT_PACKETS
 
 //-----------------------------------------------------------------------------
 // Lowlevel packet handling
 //-----------------------------------------------------------------------------
-
-/**
- * Defines a packet.
- */
-typedef struct {
-  
-  /**
-   * Command code and sequence number for the packet.
-   */
-  char commandCode;
-  
-  /**
-   * Payload of the packet. Length is specified by len.
-   */
-  char data[30];
-  
-  /**
-   * Checksum over the payload and the command byte.
-   */
-  char crc;
-  
-  /**
-   * Number of used payload bytes.
-   */
-  int len;
-  
-} packet_t;
 
 /**
  * CRC polynomial used for the debug packets.
@@ -112,19 +88,19 @@ static void updateCrc(unsigned char *crc, const unsigned char data) {
 /**
  * Computes the CRC over a packet and returns it.
  */
-static char crcPacket(const packet_t *packet) {
+static unsigned char crcPacket(const packet_t *packet) {
   unsigned char crc = 0;
   int i;
   
   // CRC the command code.
-  updateCrc(&crc, (unsigned char)packet->commandCode);
+  updateCrc(&crc, packet->commandCode);
   
   // CRC the rest of the packet.
   for (i = 0; i < packet->len; i++) {
-    updateCrc(&crc, (unsigned char)packet->data[i]);
+    updateCrc(&crc, packet->data[i]);
   }
   
-  return (char)crc;
+  return crc;
   
 }
 
@@ -144,6 +120,20 @@ static void setPacketSequence(packet_t *packet, int sequence) {
 }
 
 /**
+ * Dumps a packet to stdout/the log file.
+ */
+#ifdef PRINT_PACKETS
+void printPacket(const packet_t *p) {
+  int i;
+  printf("%02hhX ", p->commandCode);
+  for (i = 0; i < p->len; i++) {
+    printf("%02hhX ", p->data[i]);
+  }
+  printf("(%02hhX)\n", p->crc);
+}
+#endif
+
+/**
  * Tries to pull a packet from the serial buffer. Packets with incorrect
  * checksum are ignored. Return value is 1 if a packet was received and was
  * placed in packet, 0 if no packet is available, or -1 if an error occured.
@@ -152,7 +142,7 @@ static int receivePacket(packet_t *packet) {
   int d, i;
   
   // Receive buffer.
-  static char buffer[32];
+  static unsigned char buffer[32];
   
   // Number of characters received already.
   static int bufPtr = 0;
@@ -183,7 +173,16 @@ static int receivePacket(packet_t *packet) {
       
       // Return the packet if the CRC is correct.
       if (crcPacket(packet) == packet->crc) {
+#ifdef PRINT_PACKETS
+        printf("rxp ");
+        printPacket(packet);
+#endif
         return 1;
+      } else {
+#ifdef PRINT_PACKETS
+        printf("rxp discard ");
+        printPacket(packet);
+#endif
       }
       
     } else {
@@ -213,16 +212,21 @@ static int transmitPacket(packet_t *packet) {
   // Compute the CRC of the packet.
   packet->crc = crcPacket(packet);
   
+#ifdef PRINT_PACKETS
+  printf("txp ");
+  printPacket(packet);
+#endif
+  
   // Transmit the packet.
-  if (serial_debugSend(tty, (int)(packet->commandCode) & 0xFF) < 0) {
+  if (serial_debugSend(tty, packet->commandCode) < 0) {
     return -1;
   }
   for (i = 0; i < packet->len; i++) {
-    if (serial_debugSend(tty, (int)(packet->data[i]) & 0xFF) < 0) {
+    if (serial_debugSend(tty, packet->data[i]) < 0) {
       return -1;
     }
   }
-  if (serial_debugSend(tty, (int)(packet->crc) & 0xFF) < 0) {
+  if (serial_debugSend(tty, packet->crc) < 0) {
     return -1;
   }
   
@@ -240,46 +244,6 @@ static int transmitPacket(packet_t *packet) {
 //-----------------------------------------------------------------------------
 // Operation queue
 //-----------------------------------------------------------------------------
-
-/**
- * Operation type enumeration.
- */
-typedef enum {
-  
-  /**
-   * Defines a normal debug command, which is sent to the rvex as is.
-   */
-  OT_COMMAND,
-  
-  /**
-   * Defines a barrier. This operation does not do anything except wait until
-   * all previous commands have been executed.
-   */
-  OT_BARRIER
-  
-} operationType_t;
-
-/**
- * Defines an item in an operation queue.
- */
-typedef struct operation_t_ {
-  
-  /**
-   * Operation type.
-   */
-  operationType_t t;
-  
-  /**
-   * Packet to be sent for command operations.
-   */
-  packet_t p;
-  
-  /**
-   * Next operation in the queue.
-   */
-  struct operation_t_ *next;
-  
-} operation_t;
 
 /**
  * Defines an operation queue.
@@ -401,13 +365,13 @@ static operationQueue_t reissueQueue = {0, 0};
  * Contains the packet which was scheduled using the indexed sequence number.
  * Valid only when slotsValid is set.
  */
-static packet_t slots[16];
+static operation_t slots[16];
 
 /**
  * Set to 1 when a slot is valid (has been sent, but with no reply yet) or
  * 0 otherwise.
  */
-static char slotsValid[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+static unsigned char slotsValid[16] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
 /**
  * Transmit sequence counter. This is set to the next sequence number which
@@ -423,10 +387,55 @@ static int txSeqCounter = 0;
 static int rxSeqCounter = 0;
 
 /**
+ * Current number of issued packets (sent, but no reply yet).
+ */
+static int numIssuedPackets = 0;
+
+/**
+ * Maximum number of packets to be issued at the same time.
+ */
+#define MAX_NUM_ISSUED_PACKETS 4
+
+/**
+ * Value returned by startTimeout() when we last received a valid packet from
+ * the hardware.
+ */
+static int timeoutTime = 0;
+
+/**
+ * Timeout in microseconds.
+ */
+#define TIMEOUT_USEC 50000
+
+/**
  * Number of times where we had a timeout occur without receiving *anything*
  * from the hardware.
  */
 static int timeoutCount = 0;
+
+/**
+ * Number of times to retry after not receiving a reply before returning an
+ * error to the next layer of abstraction.
+ */
+#define TIMEOUT_RETRIES 3
+
+/**
+ * Puts the packets from the current expected sequence number to the given
+ * sequence number (exclusive) in the reissue queue, so they get resent.
+ */
+static void requeueUntil(int sequence) {
+  operation_t operation;
+  
+  while (rxSeqCounter != sequence) {
+    if (slotsValid[rxSeqCounter]) {
+      slotsValid[rxSeqCounter] = 0;
+      opQueuePush(&reissueQueue, &(slots[rxSeqCounter]));
+    }
+    rxSeqCounter++;
+    rxSeqCounter &= 0xF;
+    numIssuedPackets--;
+  }
+}
 
 /**
  * Receives and handles all packets available on the input stream. Returns -1
@@ -436,9 +445,8 @@ static int timeoutCount = 0;
 static int receivePackets(void) {
   int retval;
   packet_t receivedPacket;
-  operation_t operation;
   int sequence;
-  int handledAnything = 0;
+  int receivedAnything = 0;
   
   // Handle received packets.
   while (retval = receivePacket(&receivedPacket)) {
@@ -451,32 +459,28 @@ static int receivePackets(void) {
     
     // If this is not the packet we were expecting, put all the packets which
     // were skipped in the re-issue queue.
-    while (rxSeqCounter != sequence) {
-      if (slotsValid[rxSeqCounter]) {
-        slotsValid[rxSeqCounter] = 0;
-        operation.p = slots[rxSeqCounter];
-        opQueuePush(&reissueQueue, &operation);
+    requeueUntil(sequence);
+    
+    // Call the appropriate callback function.
+    if (slotsValid[sequence] && slots[sequence].cb) {
+      if (slots[sequence].cb(1, &slots[sequence].p, &receivedPacket, slots[sequence].cbData) < 0) {
+        return -1;
       }
-      rxSeqCounter++;
-      rxSeqCounter &= 0xF;
     }
     
     // Mark the packet which was sent with the same sequence number as valid.
-    slotsValid[rxSeqCounter] = 0;
+    slotsValid[sequence] = 0;
     rxSeqCounter++;
     rxSeqCounter &= 0xF;
+    numIssuedPackets--;
     
     // Remember that we've handled a packet.
-    handledAnything = 1;
-    
-    // Figure out if we actually need to do something with the packet or if it
-    // was just an ack.
-    // TODO
+    receivedAnything = 1;
     
   }
   
   // Return whether we've handled any packets.
-  return handledAnything;
+  return receivedAnything;
 }
 
 /**
@@ -484,14 +488,19 @@ static int receivePackets(void) {
  * ack packets.
  */
 static int isIdle(void) {
-  return (txSeqCounter == rxSeqCounter) && (!opQueuePeek(&reissueQueue));
+  return (!numIssuedPackets) && (!opQueuePeek(&reissueQueue));
 }
 
 /**
  * Tries to send a packet using the next available sequence number. Returns 1
  * if the packet was issued, 0 if not, or -1 if an error occured.
  */
-static int issuePacket(packet_t *packet) {
+static int issueCommandOperation(operation_t *operation) {
+  
+  // Make sure we're not issuing too much.
+  if (numIssuedPackets >= MAX_NUM_ISSUED_PACKETS) {
+    return 0;
+  }
   
   // Make sure the slot is clear.
   if (slotsValid[txSeqCounter]) {
@@ -499,18 +508,21 @@ static int issuePacket(packet_t *packet) {
   }
   
   // Set the sequence number.
-  setPacketSequence(packet, txSeqCounter);
+  setPacketSequence(&(operation->p), txSeqCounter);
   
   // Transmit the packet.
-  if (transmitPacket(packet) < -1) {
+  if (transmitPacket(&(operation->p)) < -1) {
     return -1;
   }
   
   // Update sequencing logic.
-  slots[txSeqCounter] = *packet;
+  slots[txSeqCounter] = *operation;
   slotsValid[txSeqCounter] = 1;
   txSeqCounter++;
   txSeqCounter &= 0xF;
+  
+  // Increment the number of issued packets.
+  numIssuedPackets++;
   
   // Packet has been issued.
   return 1;
@@ -527,7 +539,7 @@ static int transmitPackets(void) {
   while (op = opQueuePeek(&reissueQueue)) {
     
     // Try to issue the packet.
-    retval = issuePacket(&(op->p));
+    retval = issueCommandOperation(op);
     if (retval < 0) {
       return -1;
     } else if (retval == 0) {
@@ -542,20 +554,18 @@ static int transmitPackets(void) {
   // Try to issue new commands.
   while (op = opQueuePeek(&opQueue)) {
     
+    // Try to execute the operation.
     switch (op->t) {
       
       case OT_COMMAND:
         
         // Try to issue the packet.
-        retval = issuePacket(&(op->p));
+        retval = issueCommandOperation(op);
         if (retval < 0) {
           return -1;
         } else if (retval == 0) {
           return 0;
         }
-        
-        // Packet issued, pop it from the queue.
-        opQueuePop(&opQueue);
         break;
       
       case OT_BARRIER:
@@ -564,10 +574,57 @@ static int transmitPackets(void) {
         if (!isIdle()) {
           return 0;
         }
-        opQueuePop(&opQueue);
+        
+        // Call the callback function.
+        if (op->cb) {
+          if (op->cb(1, 0, 0, op->cbData) < 0) {
+            return -1;
+          }
+        }
         break;
         
     }
+    
+    // Operation executed, pop it from the queue.
+    opQueuePop(&opQueue);
+    
+  }
+  
+  return 0;
+}
+
+/**
+ * Resets and frees the queues and issue slots. Should be called when the
+ * application terminates and when the maximum retry count has been reached
+ * for a command.
+ */
+static int resetQueue(void) {
+  int i;
+  operation_t *op;
+  
+  // Clear the list of currently issued commands.
+  for (i = 0; i < 16; i++) {
+    slotsValid[i] = 0;
+  }
+  rxSeqCounter = txSeqCounter;
+  numIssuedPackets = 0;
+  
+  // Clear the retransmission queue.
+  opQueueFree(&reissueQueue);
+  
+  // Clear the operation queue, while calling the callback functions with
+  // failure specified.
+  while (op = opQueuePeek(&opQueue)) {
+    
+    // Call the callback function.
+    if (op->cb) {
+      if (op->cb(0, ((op->t == OT_COMMAND) ? &op->p : 0), 0, op->cbData) < 0) {
+        return -1;
+      }
+    }
+    
+    // Pop the operation.
+    opQueuePop(&opQueue);
     
   }
   
@@ -581,24 +638,73 @@ static int isDone(void) {
   return (!opQueuePeek(&opQueue) && isIdle());
 }
 
-
-//-----------------------------------------------------------------------------
-// API for the next abstraction layer
-//-----------------------------------------------------------------------------
-
 /**
  * Updates the debug command system. Returns -1 if an error occured, 0 if the
  * system is idle, or 1 if we want update to be called quickly again to handle
  * potential timeouts.
  */
 int debugCommands_update(void) {
+  int receivedAnything;
   
+  // Receive and handle incoming packets.
+  receivedAnything = receivePackets();
+  if (receivedAnything < 0) {
+    return -1;
+  }
   
+  // Reset the timeout and retry count if we've received a packet or if there
+  // are no packets in the queue.
+  if (receivedAnything || isIdle()) {
+    timeoutTime = startTimeout();
+    timeoutCount = 0;
+  } else {
+    
+    // Handle timeouts.
+    if (isTimedOut(timeoutTime, TIMEOUT_USEC)) {
+      
+      // Increment the number of times we've tried.
+      timeoutCount++;
+      
+      // Either retry or fail depending on the amount of times we've failed
+      // already.
+      if (timeoutCount >= TIMEOUT_RETRIES) {
+        
+        // Fail completely.
+        if (resetQueue() < 0) {
+          return -1;
+        }
+        
+      } else {
+        
+        // Try to resend the commands currently in the pipeline.
+        requeueUntil(txSeqCounter);
+        
+      }
+      
+    }
+    
+  }
+  
+  // Try to issue new commands.
+  if (transmitPackets() < 0) {
+    return -1;
+  }
   
   // Return 1 if we're not done yet, so update will be called again soon
   // whether new data is available or not.
   return !isDone();
 }
 
+/**
+ * Queues an operation. Returns -1 if an error occurs, or 0 on success.
+ */
+int debugCommands_queue(const operation_t *op) {
+  return opQueuePush(&opQueue, op);
+}
 
-
+/**
+ * Frees all dynamically allocated memory by the debugCommands unit.
+ */
+void debugCommands_free(void) {
+  resetQueue();
+}

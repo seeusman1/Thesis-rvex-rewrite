@@ -49,5 +49,118 @@
 #ifndef _DEBUG_COMMANDS_H_
 #define _DEBUG_COMMANDS_H_
 
+/**
+ * Command codes (with sequence number zero) for all known debug commands
+ * supported by the hardware.
+ */
+#define COMCODE_SET_PAGE         0xA0
+#define COMCODE_BULK_WRITE       0xB0
+#define COMCODE_BULK_READ        0xC0
+#define COMCODE_VOLATILE_PREPARE 0xD0
+#define COMCODE_VOLATILE_EXECUTE 0xE0
+
+/**
+ * Defines a packet.
+ */
+typedef struct {
+  
+  /**
+   * Command code and sequence number for the packet.
+   */
+  unsigned char commandCode;
+  
+  /**
+   * Payload of the packet. Length is specified by len.
+   */
+  unsigned char data[30];
+  
+  /**
+   * Checksum over the payload and the command byte.
+   */
+  unsigned char crc;
+  
+  /**
+   * Number of used payload bytes.
+   */
+  int len;
+  
+} packet_t;
+
+/**
+ * Operation type enumeration.
+ */
+typedef enum {
+  
+  /**
+   * Defines a normal debug command, which is sent to the rvex as is.
+   */
+  OT_COMMAND,
+  
+  /**
+   * Defines a barrier. This operation does not do anything except wait until
+   * all previous commands have been executed.
+   */
+  OT_BARRIER,
+  
+} operationType_t;
+
+/**
+ * Operation callback function type. success is set to 1 when the operation has
+ * been executed successfully, or to 0 if a transmission error occured for this
+ * operation or an earlier operation. tx and rx are set to point to the
+ * transmitted and received packets, if applicable, and finally, data is set to
+ * the user data pointer specified when queueing the command.
+ */
+typedef int (*operationCallbackFn_t)(int success, packet_t *tx, packet_t *rx, void *data);
+
+/**
+ * Defines an item in an operation queue.
+ */
+typedef struct operation_t_ {
+  
+  /**
+   * Operation type.
+   */
+  operationType_t t;
+  
+  /**
+   * Packet to be sent for command operations.
+   */
+  packet_t p;
+    
+  /**
+   * The function to call.
+   */
+  operationCallbackFn_t cb;
+  
+  /**
+   * Data pointer to pass to the function.
+   */
+  void *cbData;
+  
+  /**
+   * Next operation in the queue.
+   */
+  struct operation_t_ *next;
+  
+} operation_t;
+
+/**
+ * Updates the debug command system. Returns -1 if an error occured, 0 if the
+ * system is idle, or 1 if we want update to be called quickly again to handle
+ * potential timeouts.
+ */
+int debugCommands_update(void);
+
+/**
+ * Queues an operation. Returns -1 if an error occurs, or 0 on success.
+ */
+int debugCommands_queue(const operation_t *op);
+
+/**
+ * Frees all dynamically allocated memory by the debugCommands unit.
+ */
+void debugCommands_free(void);
+
 
 #endif

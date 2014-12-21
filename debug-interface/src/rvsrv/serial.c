@@ -58,6 +58,10 @@
 
 #define SERIAL_BUFFER_SIZE 256
 
+// When this is defined, any characters sent or received on the raw,
+// application or debug stream are logged to stdout/the log file.
+//#define DEBUG_UART
+
 /**
  * Control characters.
  */
@@ -166,7 +170,7 @@ static ringBuffer_t debugTxBuf;
  * to identify the last error. Positive return values are a file descriptor for
  * the open port. The port is opened in blocking mode.
  */
-int serial_open(const char *name, const int baud) {
+int serial_open(const unsigned char *name, const int baud) {
   int f;
   struct termios cfg;
   speed_t speed;
@@ -279,7 +283,7 @@ int serial_update(int f) {
   // data is pushed into the app and debug receive buffers. It may take more
   // than one call to update to clear this buffer if appRxBuf or debugRxBuf
   // are full.
-  static char buf[SERIAL_BUFFER_SIZE];
+  static unsigned char buf[SERIAL_BUFFER_SIZE];
   static int bufSize = 0;
   static int bufPtr = 0;
   
@@ -319,7 +323,11 @@ int serial_update(int f) {
   
   // Route raw data into the application and debug bytestreams if possible.
   for (; bufPtr < bufSize; bufPtr++) {
-    short b = buf[bufPtr] & 0xFF;
+    short b = buf[bufPtr];
+    
+#ifdef DEBUG_UART
+    printf("rx %02hhX\n", b);
+#endif
     
     // Stop if either destination buffer is full.
     if (ringBufFull(&appRxBuf) || ringBufFull(&debugRxBuf)) {
@@ -369,7 +377,7 @@ int serial_update(int f) {
       
       // Push into the debug stream.
       ringBufPush(&debugRxBuf, b);
-      debugPacketTerminated = 1;
+      debugPacketTerminated = 0;
       
     }
     
@@ -390,7 +398,7 @@ int serial_update(int f) {
 static int bufferedWriteRaw(int f, int data) {
   
   // Raw transmit buffer.
-  static char buf[SERIAL_BUFFER_SIZE];
+  static unsigned char buf[SERIAL_BUFFER_SIZE];
   static int bufSize = 0;
   
   // See if we need to flush before we can append the byte or if a flush has
@@ -414,6 +422,9 @@ static int bufferedWriteRaw(int f, int data) {
   
   // Append the byte to the buffer.
   if (data >= 0) {
+#ifdef DEBUG_UART
+    printf("tx %02hhX\n", data);
+#endif
     buf[bufSize++] = data;
   }
   
@@ -450,7 +461,7 @@ int serial_flush(int f) {
   
   // We can hardcode the packet buffer size to 32 because the hardware has the
   // same constraint.
-  static char packetBuf[32];
+  static unsigned char packetBuf[32];
   static int packetBufSize = 0;
   static int packetBufDelay = 0;
   static int packetReady = 0;
@@ -568,6 +579,7 @@ int serial_flush(int f) {
       // Set the delay and clear the packet queued marker.
       delay = packetBufDelay;
       packetReady = 0;
+      packetBufSize = 0;
       
       // If there are more bytes in the debug buffer, assume that we're going
       // to be sending another debug packet soon. Otherwise, switch to the
@@ -602,6 +614,7 @@ int serial_flush(int f) {
  * Returns a byte from the application receive FIFO, or -1 if the FIFO is empty.
  */
 int serial_appReceive(int f) {
+  int data;
   
   // Return -1 if the buffer is empty.
   if (ringBufEmpty(&appRxBuf)) {
@@ -609,7 +622,12 @@ int serial_appReceive(int f) {
   }
   
   // Return the popped byte.
-  return (int)(ringBufPop(&appRxBuf)) & 0xFF;
+  data = ringBufPop(&appRxBuf);
+  data &= 0xFF;
+#ifdef DEBUG_UART
+  printf("rxa %02hhX\n", data);
+#endif
+  return data;
   
 }
 
@@ -617,6 +635,10 @@ int serial_appReceive(int f) {
  * Pushes a byte onto the application transmit buffer.
  */
 int serial_appSend(int f, int data) {
+  
+#ifdef DEBUG_UART
+  printf("txa %02hhX\n", data);
+#endif
   
   // Flush if the buffer is full.
   if (ringBufFull(&appTxBuf)) {
@@ -636,6 +658,7 @@ int serial_appSend(int f, int data) {
  * is returned as a packet delimiter.
  */
 int serial_debugReceive(int f) {
+  int data;
   
   // Return -1 if the buffer is empty.
   if (ringBufEmpty(&debugRxBuf)) {
@@ -643,7 +666,11 @@ int serial_debugReceive(int f) {
   }
   
   // Return the popped byte.
-  return ringBufPop(&debugRxBuf);
+  data = ringBufPop(&debugRxBuf);
+#ifdef DEBUG_UART
+  printf("rxd %02hhX\n", data);
+#endif
+  return data;
   
 }
 
@@ -656,6 +683,10 @@ int serial_debugReceive(int f) {
  */
 int serial_debugSend(int f, int data) {
   
+#ifdef DEBUG_UART
+  printf("txd %02hhX\n", data);
+#endif
+  
   // Flush if the buffer is full.
   if (ringBufFull(&debugTxBuf)) {
     if (serial_flush(f) < 0) {
@@ -664,7 +695,6 @@ int serial_debugSend(int f, int data) {
   }
   
   // Push the byte into the buffer.
-  if (data < 0) data &= 0xFF;
   ringBufPush(&debugTxBuf, data);
   
   return 0;

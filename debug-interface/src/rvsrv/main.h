@@ -50,6 +50,7 @@
 #define _MAIN_H_
 
 #include "entry.h"
+#include "tcpserv.h"
 
 /**
  * File descriptor for the serial port.
@@ -57,9 +58,21 @@
 extern int tty;
 
 /**
+ * TCP server for sending data to and receiving data from the application code
+ * running on the rvex platform.
+ */
+extern tcpServer_t *appServer;
+
+/**
+ * TCP server for debug requests.
+ */
+extern tcpServer_t *debugServer;
+
+/**
  * Runs the application.
  */
 int run(const commandLineArgs_t *args);
+
 
 
 #endif

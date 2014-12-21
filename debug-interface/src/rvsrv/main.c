@@ -57,6 +57,7 @@
 #include "daemon.h"
 #include "select.h"
 #include "tcpserv.h"
+#include "debugCommands.h"
 
 /**
  * File descriptor for the serial port.
@@ -67,12 +68,12 @@ int tty = 0;
  * TCP server for sending data to and receiving data from the application code
  * running on the rvex platform.
  */
-static tcpServer_t *appServer;
+tcpServer_t *appServer;
 
 /**
  * TCP server for debug requests.
  */
-static tcpServer_t *debugServer;
+tcpServer_t *debugServer;
 
 
 //-----------------------------------------------------------------------------
@@ -103,10 +104,10 @@ static void terminate(int sig) {
 //-----------------------------------------------------------------------------
 
 /**
- * Maximum size of a debug command. Set to 2k plus a little extra so a write
- * command can write about 1kbytes at once.
+ * Maximum size of a debug command. Set to 8k plus a little extra so a write
+ * command can write a full 4kbyte page at once.
  */
-#define MAX_DEBUG_COMMAND_SIZE 2304
+#define MAX_DEBUG_COMMAND_SIZE 8448
 
 /**
  * Extra data structure for receiving debug commands.
@@ -116,7 +117,7 @@ typedef struct {
   /**
    * Command buffer.
    */
-  char commandBuf[MAX_DEBUG_COMMAND_SIZE];
+  unsigned char commandBuf[MAX_DEBUG_COMMAND_SIZE];
   
   /**
    * Number of bytes currently in the buffer.
@@ -154,7 +155,7 @@ static int debugServerExtraDataFree(void **extra) {
  * Returns 1 if command starts with the specified text and is either followed
  * by a comma or null, or 0 otherwise.
  */
-static int checkCommand(const char *command, const char *text) {
+static int checkCommand(const unsigned char *command, const unsigned char *text) {
   
   while (*text) {
     if (*command++ != *text++) {
@@ -174,19 +175,32 @@ static int checkCommand(const char *command, const char *text) {
  *   1 = Command processing complete, stop the server.
  *   2 = Command processing complete, fetch the next command.
  */
-static int handleCommand(char *command, int clientID, int firstTime) {
+static int handleCommand(unsigned char *command, int clientID, int firstTime) {
   
   if (checkCommand(command, "Stop")) {
     
     // Stop server command.
-    tcpServer_sendStr(debugServer, clientID, "OK, Stop;\n");
+    if (tcpServer_sendStr(debugServer, clientID, "OK, Stop;\n") < 0) {
+      return -1;
+    }
     printf("Client ID %d (debug access) requested the server to stop.\n", clientID);
     return 1;
+    
+  } else if (checkCommand(command, "Read") || checkCommand(command, "Write")) {
+    
+    // Handle read/write command.
+    if (handleReadWrite(command, clientID) < 0) {
+      return -1;
+    }
+    
+    return 2;
     
   }
   
   // Unknown command.
-  tcpServer_sendStr(debugServer, clientID, "Error, UnknownCommand;\n");
+  if (tcpServer_sendStr(debugServer, clientID, "Error, UnknownCommand;\n") < 0) {
+    return -1;
+  }
   return 2;
   
 }
@@ -198,7 +212,7 @@ static int handleCommand(char *command, int clientID, int firstTime) {
  *   1 = Stop command received, stop the server.
  */
 static int handleDebugServer(void) {
-  static char *currentCommand = 0;
+  static unsigned char *currentCommand = 0;
   static int currentClient = 0;
   
   // If we were handling a command, continue doing so.
@@ -298,7 +312,7 @@ static int handleDebugServer(void) {
               
             }
             
-          } else if ((d == ',') || ((d >= 'a') && (d <= 'z')) || ((d >= 'A') && (d <= 'Z')) || ((d >= '0') && (d <= '-'))) {
+          } else if ((d == ',') || ((d >= 'a') && (d <= 'z')) || ((d >= 'A') && (d <= 'Z')) || ((d >= '0') && (d <= '9'))) {
             
             // Normal character, add it to the buffer.
             extra->commandBuf[extra->numBytes++] = d;
@@ -366,8 +380,13 @@ static int handleApplicationData(void) {
  */
 static void cleanup(void) {
   
+  // Free memory used by the debug command queues.
+  debugCommands_free();
+  
   // Close the serial port connection.
   serial_close(&tty);
+  
+  // Close TCP servers.
   tcpServer_close(&appServer);
   tcpServer_close(&debugServer);
   
@@ -464,6 +483,9 @@ int run(const commandLineArgs_t *args) {
     if (retval == 1) {
       terminated = 1;
     }
+    
+    // Handle debug command issue and replies.
+    CHECK(busy = debugCommands_update());
     
     // Handle application data.
     CHECK(handleApplicationData());
