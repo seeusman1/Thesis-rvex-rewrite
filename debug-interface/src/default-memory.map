@@ -27,13 +27,17 @@
 # Value
 # -----------------------------------------------------------------------------
 # This behaves like any other integer specifcation in rvd. You can use integer
-# literals and definitions, and you can add them together using the + operator.
+# literals and definitions, and you can make expressions out of them with the
+# +, -, <<, >>, ~, &, | and ^ operators. Brackets are also available. ALL
+# OPERATORS ARE RIGHT ASSOCIATIVE AND THERE IS NO OPERATOR PRECEDENCE. So spam
+# those brackets all over the place.
 #
 # Integer literals are specified like they are in C, so <decimal number> for
 # decimal input, 0x<hex> for hexadecimal input and 0b<binary> for binary input.
-# In addition, an extra letter may be added to the literal to indicate the
-# access size when it specifies a write value;
-#   b = byte
+# Octal representation is also supported using 0<octal> if you're feeling
+# adventurous. In addition, a suffix may be added to the literal to indicate
+# the access size when it specifies a write value;
+#   hh = half halfword (1 byte)
 #   h = halfword (2 bytes)
 #   w = word (4 bytes)
 # 
@@ -45,6 +49,9 @@
 # the whole expression has been evaluated, word accesses are assumed (but
 # 0x00b + 0x01 would still result in a byte access).
 #
+
+# Number of contexts. Must be specified with an asterisk for the context mask.
+*     _NUM_CONTEXTS           4
 
 # Instruction and data memory start addresses, used for the load command.
 *     _IMEM                   0x00000000
