@@ -51,17 +51,12 @@
 #include <getopt.h>
 
 #include "entry.h"
-#include "main.h"
+//#include "main.h"
 
 /**
  * Prints usage information.
  */
 static void usage(char *progName, int verbose);
-
-/**
- * Prints the welcome message.
- */
-static void welcome(void);
 
 /**
  * Prints license information.
@@ -74,30 +69,24 @@ static void license(void);
 int main(int argc, char **argv) {
   
   commandLineArgs_t args;
-  int retval;
+  int i;
   
   // Set command line option defaults.
-  args.port = "/dev/ttyS0";
-  args.baudrate  = 115200;
-  args.appPort   = 21078;
-  args.debugPort = 21079;
+  args.port = 21079;
+  args.mapFile = 0;
   
   // Parse command line arguments.
   while (1) {
 
     static struct option long_options[] = {
       {"port",     required_argument, 0, 'p'},
-      {"baud",     required_argument, 0, 'b'},
-      {"app",      required_argument, 0, 'a'},
-      {"debug",    required_argument, 0, 'd'},
-      {"help",     no_argument,       0, 'h'},
-      {"license",  no_argument,       0, 'l'},
+      {"map",      required_argument, 0, 'm'},
       {0, 0, 0, 0}
     };
     
     int option_index = 0;
 
-    int c = getopt_long(argc, argv, "p:b:a:d:h", long_options, &option_index);
+    int c = getopt_long(argc, argv, "p:m:", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -105,45 +94,17 @@ int main(int argc, char **argv) {
 
     switch (c) {
       case 'p':
-        args.port = optarg;
-        break;
-        
-      case 'b':
-        args.baudrate = atoi(optarg);
-        if (args.baudrate < 1) {
-          printf("%s: invalid baud rate specified\n\n", argv[0]);
+        args.port = atoi(optarg);
+        if ((args.port < 1) || (args.port > 65535)) {
+          printf("%s: invalid TCP port specified\n\n", argv[0]);
           usage(argv[0], 0);
           exit(EXIT_FAILURE);
         }
         break;
         
-      case 'a':
-        args.appPort = atoi(optarg);
-        if ((args.appPort < 1) || (args.appPort > 65535)) {
-          printf("%s: invalid TCP port specified for application access\n\n", argv[0]);
-          usage(argv[0], 0);
-          exit(EXIT_FAILURE);
-        }
+      case 'm':
+        args.mapFile = optarg;
         break;
-        
-      case 'd':
-        args.debugPort = atoi(optarg);
-        if ((args.debugPort < 1) || (args.debugPort > 65535)) {
-          printf("%s: invalid TCP port specified for debug access\n\n", argv[0]);
-          usage(argv[0], 0);
-          exit(EXIT_FAILURE);
-        }
-        break;
-        
-      case 'l':
-        welcome();
-        license();
-        exit(EXIT_SUCCESS);
-        
-      case 'h':
-        welcome();
-        usage(argv[0], 1);
-        exit(EXIT_SUCCESS);
         
       default:
         usage(argv[0], 0);
@@ -152,24 +113,45 @@ int main(int argc, char **argv) {
     }
   }
   
-  // Make sure the application and debug ports are not set to the same port.
-  if (args.appPort == args.debugPort) {
-    printf("%s: cannot use one port for both application and debug interface\n\n", argv[0]);
+  // Don't crash if no command is specified.
+  if (optind >= argc) {
     usage(argv[0], 0);
     exit(EXIT_FAILURE);
   }
   
-  // Print welcome text/license header.
-  welcome();
-  printf("Run %s --license for the full license.\n\n", argv[0]);
+  // Load the command and parameters count.
+  args.command = argv[optind];
+  args.params = (const char **)(argv + optind + 1);
+  args.paramCount = argc - optind - 1;
   
-  // Command line parsing and eye candy complete: now run the actual program.
-  if (run(&args)) {
-    exit(EXIT_FAILURE);
+  // Handle license and help commands.
+  if (!strcmp(args.command, "help")) {
+    if (args.paramCount > 0) {
+      
+      // Swap help and the command parameter around, so we can just handle
+      // <command> help in run().
+      args.command = args.params[0];
+      args.params = (const char **)&"help";
+      args.paramCount = 1;
+      
+    } else {
+      
+      // help without parameters; print usage and list commands.
+      usage(argv[0], 1);
+      exit(EXIT_SUCCESS);
+      
+    }
+  } else if (!strcmp(args.command, "license")) {
+    
+    // Print license.
+    license();
+    exit(EXIT_SUCCESS);
+    
   }
   
-  // Exit gracefully.
-  printf("Shut down gracefully.\n", argv[0]);
+  // TODO
+  
+  // Exit.
   exit(EXIT_SUCCESS);
   
 }
@@ -179,43 +161,42 @@ int main(int argc, char **argv) {
  */
 static void usage(char *progName, int verbose) {
   if (verbose) printf(
-    "Interfacing program for rvex.periph_UART.vhd. This program will listen on\n"
-    "two TCP ports for incoming connections. One port (21078 by default) is for\n"
-    "communication with the running application: any incoming data is forwarded\n"
-    "to the FIFO accessible through the slave bus interface, and any data sent\n"
-    "by that interface (through puts(), printf() etc.) is broadcast to all\n"
-    "connected clients. The other port (21078 by default) listens to debug\n"
-    "commands.\n"
-    "\n"
-  );
-  printf(
-    "Command line: %s [options]\n"
-    "\n"
-    "  -p  --port <port>  Specify serial port file to connect to. Defaults to\n"
-    "                     /dev/ttyS0.\n"
-    "  -b  --baud <rate>  Specify baud rate to use. Defaults to 115200.\n"
-    "  -a  --app <port>   Listen on the specified TCP port for UART communication\n"
-    "                     with application code. Defaults to port 21078.\n"
-    "  -d  --debug <port> Listen on the specified TCP port for debugging commands.\n"
-    "                     Defaults to port 21079.\n"
-    "  -h  --help         Shows this usage screen.\n"
-    "      --license      Prints licensing information.\n"
-    "\n",
-    progName
-  );
-}
-
-/**
- * Prints the welcome message.
- */
-static void welcome(void) {
-  printf(
     "\n"
     "Debug interface for standalone r-VEX processor\n"
     "\n"
     "Copyright (C) 2008-2014 by TU Delft.\n"
     "All Rights Reserved.\n"
     "\n"
+    "Run \"%s license\" for the full license.\n"
+    "\n"
+    "This program is used to send commands to the rvsrv daemon painlessly.\n",
+    progName
+  );
+  printf(
+    "\n"
+    "Command line: %s [options] <command> [<params> ...]\n"
+    "\n"
+    "  -p  --port <port>  Specifies which TCP port to connect to. This should be the\n"
+    "                     same as what was specified when starting rvsrv with the -d\n"
+    "                     option. Defaults to port 21079.\n"
+    "  -m  --map <file>   Specifies the memory map file to use. If not specified,\n"
+    "                     only raw read/write commands are acceptable.\n"
+    "\n",
+    progName
+  );
+  if (!verbose) printf(
+    "Run \"%s help\" for a command listing.\n"
+    "\n",
+    progName
+  );
+  if (verbose) printf(
+    "Available commands:\n"
+    "  help               Prints this listing.\n"
+    "  license            Prints licensing information.\n"
+    "\n"
+    "Run \"%s help <command>\" for more information about a command, if available.\n"
+    "\n",
+    progName
   );
 }
 
@@ -224,6 +205,12 @@ static void welcome(void) {
  */
 static void license(void) {
   printf(
+    "\n"
+    "Debug interface for standalone r-VEX processor\n"
+    "\n"
+    "Copyright (C) 2008-2014 by TU Delft.\n"
+    "All Rights Reserved.\n"
+    "\n"
     "THIS IS A LEGAL DOCUMENT, BY USING r-VEX,\n"
     "YOU ARE AGREEING TO THESE TERMS AND CONDITIONS.\n"
     "\n"

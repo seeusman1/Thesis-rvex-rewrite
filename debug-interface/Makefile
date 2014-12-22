@@ -20,12 +20,12 @@ NETCAT = nc
 # git).
 BINDIR = bin
 
-.PHONY: help server stop catlog monitor debug
+.PHONY: help server stop catlog monitor debug copyconf
 
-help: configuration.cfg
+help: copyconf
 	@cat USAGE
 
-server: configuration.cfg $(BINDIR)/rvsrv
+server: copyconf $(BINDIR)/rvsrv
 	$(BINDIR)/rvsrv -p$(SERIAL_PORT) -b$(SERIAL_BAUD) -a$(TCP_PORT_APP) -d$(TCP_PORT_DEBUG)
 
 stop:
@@ -34,35 +34,41 @@ stop:
 catlog:
 	@cat /var/tmp/rvsrv.log
 
-monitor: configuration.cfg
+monitor: copyconf
 	@echo "Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running."; $(NETCAT) localhost $(TCP_PORT_APP)
 
-debug: configuration.cfg
-	@echo "alias rvd=\"$(shell pwd)/$(BINDIR)/rvdbg -d$(TCP_PORT_DEBUG)\"" > debug 
-	@echo "echo You should now be able to use call rvd \<command\>. Run rvd help for a command listing." > debug 
+debug: copyconf $(BINDIR)/rvd
+	@echo "export PATH=\$$PATH:$(shell pwd)/$(BINDIR)" > debug
+	@echo "alias rvd=\"rvd -p$(TCP_PORT_DEBUG) -m$(shell pwd)/memory.map\"" >> debug
+	@echo "echo You should now be able to use call rvd \<command\>. Run rvd help for a command listing." >> debug
 	@echo Run source debug now...
 
-# This copies over the default configuration file to the system-specific,
+# This copies over the default configuration files to the system-specific,
 # git-ignored config file.
+copyconf: configuration.cfg memory.map
+
 configuration.cfg:
 	cp -i $(SRCDIR)/default-configuration.cfg configuration.cfg
+
+memory.map:
+	cp -i $(SRCDIR)/default-memory.map memory.map
 
 #------------------------------------------------------------------------------
 # Tool compilation targets
 #------------------------------------------------------------------------------
 CC = gcc
 CFLAGS = -g
-TOOLS = rvsrv
+TOOLS = rvsrv rvd
 
 .PHONY: all clean
 
-all: $(BINDIR)/rvsrv $(BINDIR)/rvdbg
+all: $(BINDIR)/rvsrv $(BINDIR)/rvd
 
 $(BINDIR)/rvsrv: $(BINDIR) $(SRCDIR)/rvsrv/*.c
 	$(CC) $(CFLAGS) -o $@ $(SRCDIR)/rvsrv/*.c
 
-$(BINDIR)/rvdbg: $(BINDIR) $(SRCDIR)/rvdbg/*.c
-	$(CC) $(CFLAGS) -o $@ $(SRCDIR)/rvdbg/*.c
+$(BINDIR)/rvd: $(BINDIR) $(SRCDIR)/rvd/*.c
+	$(CC) $(CFLAGS) -o $@ $(SRCDIR)/rvd/*.c
 
 clean:
 	rm -rf $(BINDIR)

@@ -57,7 +57,7 @@
 
 // Define this to have this unit dump received and transmitted packets to
 // stdout/the log file.
-#define PRINT_PACKETS
+//#define PRINT_PACKETS
 
 //-----------------------------------------------------------------------------
 // Lowlevel packet handling

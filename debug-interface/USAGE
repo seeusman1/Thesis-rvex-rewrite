@@ -34,3 +34,7 @@ are used for the debugging server interface. You can change these settings in
 configuration.cfg (in this directory). If it's not there, you can run
 make configuration.cfg to get it.
 
+rvd also uses the memory.map configuration file. You'll need to make sure this
+is set accordingly for the platform which you want to debug. There's comments
+in there which tell you how to do that.
+

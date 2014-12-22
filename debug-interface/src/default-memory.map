@@ -1,0 +1,119 @@
+#
+# This file specifies the memory map for accessing the core through the debug
+# interface. Each line consists of three parts: the context mask, the
+# definition name and the value.
+#
+# -----------------------------------------------------------------------------
+# Context mask
+# -----------------------------------------------------------------------------
+# rvd allows you to switch between multiple rvex contexts easily using the
+# select command. Only the definitions in this file which contain the selected
+# context in the mask will be evaluated. This allows you to specify different
+# definitions for different contexts.
+# 
+# The context mask must be one of the following:
+#  - An asterisk (*): matches any context.
+#  - <from>..<to>: range, matching any context within from and to inclusive.
+#  - <context>: matches only the specified context.
+#
+# -----------------------------------------------------------------------------
+# Definition name
+# -----------------------------------------------------------------------------
+# Specifies the name for a definition. These definitions can be used instead
+# of an integer literal for any integer input in rvd. Also, rvd uses some
+# special definitions internally. These are all prefixed with an underscore.
+#
+# -----------------------------------------------------------------------------
+# Value
+# -----------------------------------------------------------------------------
+# This behaves like any other integer specifcation in rvd. You can use integer
+# literals and definitions, and you can add them together using the + operator.
+#
+# Integer literals are specified like they are in C, so <decimal number> for
+# decimal input, 0x<hex> for hexadecimal input and 0b<binary> for binary input.
+# In addition, an extra letter may be added to the literal to indicate the
+# access size when it specifies a write value;
+#   b = byte
+#   h = halfword (2 bytes)
+#   w = word (4 bytes)
+# 
+# Definitions are resolved after all definitions have been loaded, so
+# the order in which things are defined does not matter.
+# 
+# When two values are added, the largest specified access size is used. So
+# 0x00b + 0x01w results in word access size. When nothing is specified after
+# the whole expression has been evaluated, word accesses are assumed (but
+# 0x00b + 0x01 would still result in a byte access).
+#
+
+# Instruction and data memory start addresses, used for the load command.
+*     _IMEM                   0x00000000
+*     _DMEM                   0x10000000
+
+# Control register base address.
+*     CREG                    0xF0000000
+
+# Bank address and write values. When rvd wants to access general purpose
+# registers r32..63, it will first write _BANK_WRITE_HIGH to _BANK_ADDR, if
+# both are specified. If it wants to access any other control register, it
+# will write _BANK_WRITE_LOW to _BANK_ADDR first, if both are specified. If
+# _BANK_WRITE_LOW is specified while _BANK_WRITE_HIGH is not, _BANK_WRITE_LOW
+# will be written before accessing the high section of the general purpose
+# register file as well.
+*     _BANK_ADDR              CREG+3
+0     _BANK_WRITE_LOW         0x00b
+0     _BANK_WRITE_HIGH        0x01b
+1     _BANK_WRITE_LOW         0x02b
+1     _BANK_WRITE_HIGH        0x03b
+2     _BANK_WRITE_LOW         0x04b
+2     _BANK_WRITE_HIGH        0x05b
+3     _BANK_WRITE_LOW         0x06b
+3     _BANK_WRITE_HIGH        0x07b
+
+# General purpose register base addresses. LOW specifies the where r0..31 can
+# be found, HIGH specifies where r32..63 can be found. These may or may not
+# point to the same address depending on banking configuration.
+*     _GPREG_LOW              0xF0000080
+*     _GPREG_HIGH             0xF0000080
+
+# Branch and link register addresses.
+*     _BR                     CREG+0x21
+*     _LR                     CREG+0x28
+
+# PC register.
+*     _PC                     CREG+0x2C
+
+# Trap-related registers (trap cause, trap argument, trap point).
+*     _TC                     CREG+0x21
+*     _TA                     CREG+0x3C
+*     _TP                     CREG+0x38
+
+# Debug control register address and values. These are used for the break,
+# step, resume, release and reset [break] commands.
+*     _DCR_ADDR               CREG+0x50
+*     _DCR_WRITE_BREAK        0x09b
+*     _DCR_WRITE_STEP         0x0Ab
+*     _DCR_WRITE_RESUME       0x0Cb
+*     _DCR_WRITE_RELEASE      0x10b
+*     _DCR_WRITE_RESET        0x80b
+*     _DCR_WRITE_RESET_BREAK  0x89b
+
+# Control register mnemonics.
+*     GSR                     CREG+0x00
+*     BCRR                    CREG+0x04
+*     CC                      CREG+0x08
+*     AFF                     CREG+0x0C
+*     CCR                     CREG+0x20
+*     SCCR                    CREG+0x24
+*     LR                      CREG+0x28
+*     PC                      CREG+0x2C
+*     TH                      CREG+0x30
+*     PH                      CREG+0x34
+*     TP                      CREG+0x38
+*     TA                      CREG+0x3C
+*     BRK0                    CREG+0x40
+*     BRK1                    CREG+0x44
+*     BRK2                    CREG+0x48
+*     BRK3                    CREG+0x4C
+*     DCR                     CREG+0x50
+*     CRR                     CREG+0x54
