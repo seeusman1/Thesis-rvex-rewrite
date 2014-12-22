@@ -894,7 +894,7 @@ package core_opcode_pkg is
     -- Select: opBr ? op1 : op2.
     2#00111000# to 2#00111111# => (
       syntax_reg => "slct r#.%r1 = b#.%b1, r#.%r2, r#.%r3              ",
-      syntax_imm => "slct r#.%r1 = b#.%b1, r#.%r2, %id (= %ih)         ",
+      syntax_imm => "slct r#.%r1 = b#.%b1, r#.%r2, %id                 ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SLCT,
@@ -906,7 +906,7 @@ package core_opcode_pkg is
     -- Select: opBr ? op2 : op1.
     2#00110000# to 2#00110111# => (
       syntax_reg => "slctf r#.%r1 = b#.%b1, r#.%r2, r#.%r3             ",
-      syntax_imm => "slctf r#.%r1 = b#.%b1, r#.%r2, %id (= %ih)        ",
+      syntax_imm => "slctf r#.%r1 = b#.%b1, r#.%r2, %id                ",
       valid => "11",
       datapathCtrl => DP_CTRL_ALU_INT,
       aluCtrl => ALU_CTRL_SLCTF,
@@ -927,13 +927,13 @@ package core_opcode_pkg is
       multiplierCtrl => MUL_CTRL_NOP
     ),
     
-    -- Copy general purpose register to link register.
+    -- Copy general purpose register/immediate to link register.
     2#00001011# => (
-      syntax_reg => "mtl l#.0 = r#.%r2                                 ",
-      syntax_imm => "unknown                                           ",
-      valid => "01",
+      syntax_reg => "mtl l#.0 = r#.%r3                                 ",
+      syntax_imm => "mtl l#.0 = %id                                    ",
+      valid => "11",
       datapathCtrl => DP_CTRL_MTL,
-      aluCtrl => ALU_CTRL_FWD_OP1,
+      aluCtrl => ALU_CTRL_FWD_OP2,
       branchCtrl => BRANCH_CTRL_NOP,
       memoryCtrl => MEMORY_CTRL_NOP,
       multiplierCtrl => MUL_CTRL_NOP

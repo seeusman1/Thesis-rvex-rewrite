@@ -248,6 +248,22 @@ package core_opcodeAlu_pkg is
     brResultValid               => true
   );
   
+  -- Simply forward operand 2.
+  constant ALU_CTRL_FWD_OP2     : aluCtrlSignals_type := (
+    op1Mux                      => EXTEND32,
+    op2Mux                      => EXTEND32,
+    opBrMux                     => FALSE,
+    divs                        => '0',
+    unsignedOp                  => '0',
+    bitwiseOp                   => BITW_OR,
+    shiftLeft                   => '0',
+    compare                     => '0',
+    intResultMux                => OP_SEL,
+    brResultMux                 => PASS,
+    intResultValid              => true,
+    brResultValid               => false
+  );
+  
   -- Default values for the branch unit control signals.
   constant ALU_CTRL_NOP         : aluCtrlSignals_type := ALU_CTRL_FWD_OP1;
   
