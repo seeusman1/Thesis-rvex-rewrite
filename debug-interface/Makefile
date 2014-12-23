@@ -47,10 +47,10 @@ debug: copyconf $(BINDIR)/rvd
 # git-ignored config file.
 copyconf: configuration.cfg memory.map
 
-configuration.cfg:
+configuration.cfg: $(SRCDIR)/default-configuration.cfg
 	cp -i $(SRCDIR)/default-configuration.cfg configuration.cfg
 
-memory.map:
+memory.map: $(SRCDIR)/default-memory.map
 	cp -i $(SRCDIR)/default-memory.map memory.map
 
 #------------------------------------------------------------------------------

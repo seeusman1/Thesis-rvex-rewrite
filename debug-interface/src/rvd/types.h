@@ -46,47 +46,40 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _ENTRY_H_
-#define _ENTRY_H_
-
-#include "types.h"
+#ifndef _TYPES_H_
+#define _TYPES_H_
 
 /**
- * Application entry point.
+ * Defines an access size.
  */
-int main(int argc, char **argv);
+typedef enum {
+  AS_UNDEFINED,
+  AS_WORD,
+  AS_HALF,
+  AS_BYTE
+} accessSize_t;
 
 /**
- * Structure containing the command line parameters. This is filled in main and
- * then passed to run().
+ * Defines a value and associated access size.
  */
 typedef struct {
   
   /**
-   * TCP port to connect to.
+   * Value.
    */
-  int port;
+  unsigned long value;
   
   /**
-   * Context to use.
+   * Access size.
    */
-  contextMask_t contextMask;
+  accessSize_t size;
   
-  /**
-   * Command, taken from the command line, after the switches.
-   */ 
-  const char *command;
-  
-  /**
-   * List of extra parameters for the command.
-   */ 
-  const char **params;
-  
-  /**
-   * Number of extra parameters for the command.
-   */
-  int paramCount;
-  
-} commandLineArgs_t;
+} value_t;
+
+/**
+ * Type used for context masks. Since only 32 contexts are supported, we can
+ * use the bits in a 32-bit integer.
+ */
+typedef unsigned long contextMask_t;
 
 #endif

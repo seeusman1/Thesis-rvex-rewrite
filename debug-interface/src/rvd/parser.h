@@ -46,47 +46,64 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _ENTRY_H_
-#define _ENTRY_H_
+#ifndef _PARSER_H_
+#define _PARSER_H_
 
 #include "types.h"
 
 /**
- * Application entry point.
+ * Evaluates an expression. Returns 1 if successful, 0 on failure, or -1 when
+ * a fatal error occurs. An error message is printed upon failure.
+ * 
+ * EBNF:
+ *   start       = expression
+ *   expression  = operand 
+ *               | (operand, operator, expression)
+ *   operator    = "+" | "-" | "<<" | ">>" | "&" | "|" | "^" | ";"
+ *   operand     = ( ( "-" | "~" ), operand )
+ *               | ( "(", expression, ")" )
+ *               | ( "readByte", "(", expression, ")" )
+ *               | ( "readHalf", "(", expression, ")" )
+ *               | ( "readWord", "(", expression, ")" )
+ *               | ( "write", "(", expression, ",", expression, ")" )
+ *               | definition
+ *               | literal
+ *   literal     = C integer literal, [ "w" | "h" | "hh" ]
+ *   definition  = [ "_" | alpha ], { "_" | alpha | digit }
+ * 
+ * The operators behave the same as in C, but note that there is no operator
+ * precedence and all operators are right associative, so spam brackets. The
+ * semicolon operator is an exception; it allows two expressions to be executed
+ * sequentially. The result of the semicolon operator is the result from the
+ * second operand.
+ * 
+ * The optional "w", "h" and "hh" after an integer literal specify word,
+ * halfword or byte access size for writes respectively. For all operators
+ * except shifts and the semicolon, the widest access size is used in the
+ * result. For shift operators, the resulting access size is that of the
+ * first operator.
  */
-int main(int argc, char **argv);
+int evaluate(const char *str, value_t *value, const char *errorPrefix);
 
 /**
- * Structure containing the command line parameters. This is filled in main and
- * then passed to run().
+ * Parses a context mask.
+ * 
+ * EBNF:
+ *   start       = ( C integer literal, [ "..", C integer literal ] )
+ *               | "all"
  */
-typedef struct {
-  
-  /**
-   * TCP port to connect to.
-   */
-  int port;
-  
-  /**
-   * Context to use.
-   */
-  contextMask_t contextMask;
-  
-  /**
-   * Command, taken from the command line, after the switches.
-   */ 
-  const char *command;
-  
-  /**
-   * List of extra parameters for the command.
-   */ 
-  const char **params;
-  
-  /**
-   * Number of extra parameters for the command.
-   */
-  int paramCount;
-  
-} commandLineArgs_t;
+int parseMask(const char *str, contextMask_t *mask, const char *errorPrefix);
+
+/**
+ * Parses and registers the given definition list. Anything between # and \n is
+ * interpreted as comment.
+ * 
+ * EBNF:
+ *   start       = { def }
+ *   def         = mask, ":", definition, ":", expansion, "."
+ *   mask        = ( C integer literal, [ "..", C integer literal ] )
+ *               | "all"
+ */
+int parseDefs(char *str, const char *errorPrefix);
 
 #endif

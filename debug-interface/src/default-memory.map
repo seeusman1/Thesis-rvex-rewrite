@@ -1,7 +1,8 @@
 #
 # This file specifies the memory map for accessing the core through the debug
 # interface. Each line consists of three parts: the context mask, the
-# definition name and the value.
+# definition name and the value. They are seperated by colons, lines are
+# terminated by a full stop. Anything after a hash is ignored.
 #
 # -----------------------------------------------------------------------------
 # Context mask
@@ -12,115 +13,127 @@
 # definitions for different contexts.
 # 
 # The context mask must be one of the following:
-#  - An asterisk (*): matches any context.
+#  - "all": matches any context.
 #  - <from>..<to>: range, matching any context within from and to inclusive.
 #  - <context>: matches only the specified context.
 #
-# -----------------------------------------------------------------------------
-# Definition name
-# -----------------------------------------------------------------------------
-# Specifies the name for a definition. These definitions can be used instead
-# of an integer literal for any integer input in rvd. Also, rvd uses some
-# special definitions internally. These are all prefixed with an underscore.
+# rvd supports up to 32 contexts, numbered from 0 to 31.
 #
 # -----------------------------------------------------------------------------
-# Value
+# Definition name and value
 # -----------------------------------------------------------------------------
-# This behaves like any other integer specifcation in rvd. You can use integer
-# literals and definitions, and you can make expressions out of them with the
-# +, -, <<, >>, ~, &, | and ^ operators. Brackets are also available. ALL
-# OPERATORS ARE RIGHT ASSOCIATIVE AND THERE IS NO OPERATOR PRECEDENCE. So spam
-# those brackets all over the place.
+# Definitions in rvd can be used anywhere in place of an integer literal. They
+# work kind of like #define in the C preprocessor, in that they are expanded
+# when they are used, so definition order in this file does not matter. When
+# used in expressions though, they behave as if there were parenthesis around
+# the expansion compared to the C preprocessor.
 #
-# Integer literals are specified like they are in C, so <decimal number> for
-# decimal input, 0x<hex> for hexadecimal input and 0b<binary> for binary input.
-# Octal representation is also supported using 0<octal> if you're feeling
-# adventurous. In addition, a suffix may be added to the literal to indicate
-# the access size when it specifies a write value;
-#   hh = half halfword (1 byte)
-#   h = halfword (2 bytes)
-#   w = word (4 bytes)
-# 
-# Definitions are resolved after all definitions have been loaded, so
-# the order in which things are defined does not matter.
-# 
-# When two values are added, the largest specified access size is used. So
-# 0x00b + 0x01w results in word access size. When nothing is specified after
-# the whole expression has been evaluated, word accesses are assumed (but
-# 0x00b + 0x01 would still result in a byte access).
+# The value for a definition should be a valid expression. To get more
+# information on how expressions work in rvd, run "rvd help expressions".
 #
 
-# Number of contexts. Must be specified with an asterisk for the context mask.
-*     _NUM_CONTEXTS           4
+# Specifies the number of contexts. This defines what rvd will do when you run
+# a command for all contexts. Should be defined for all contexts, there's no
+# point in defining a different number for different contexts (obviously).
+all:  _NUM_CONTEXTS:          4.
+
+
 
 # Instruction and data memory start addresses, used for the load command.
-*     _IMEM                   0x00000000
-*     _DMEM                   0x10000000
+all:  _IMEM:                  0x00000000.
+all:  _DMEM:                  0x10000000.
 
 # Control register base address.
-*     CREG                    0xF0000000
+all:  CREG:                   0xF0000000.
 
-# Bank address and write values. When rvd wants to access general purpose
-# registers r32..63, it will first write _BANK_WRITE_HIGH to _BANK_ADDR, if
-# both are specified. If it wants to access any other control register, it
-# will write _BANK_WRITE_LOW to _BANK_ADDR first, if both are specified. If
-# _BANK_WRITE_LOW is specified while _BANK_WRITE_HIGH is not, _BANK_WRITE_LOW
-# will be written before accessing the high section of the general purpose
-# register file as well.
-*     _BANK_ADDR              CREG+3
-0     _BANK_WRITE_LOW         0x00b
-0     _BANK_WRITE_HIGH        0x01b
-1     _BANK_WRITE_LOW         0x02b
-1     _BANK_WRITE_HIGH        0x03b
-2     _BANK_WRITE_LOW         0x04b
-2     _BANK_WRITE_HIGH        0x05b
-3     _BANK_WRITE_LOW         0x06b
-3     _BANK_WRITE_HIGH        0x07b
+# Control register mnemonics. These should match the values in
+# core_ctrlRegs_pkg.vhd.
+all:  GSR:                    CREG + 0x00. # Global status register.
+all:  BUS_BANK:               CREG + 0x03. # Debug bus bank selection.
+all:  BCRR:                   CREG + 0x04. # Debug bus reconfiguration request.
+all:  CC:                     CREG + 0x08. # Current configuration.
+all:  AFF:                    CREG + 0x0C. # Cache affinity.
+all:  CCR:                    CREG + 0x20. # Context control register.
+all:  TC:                     CREG + 0x20. # Trap cause (byte).
+all:  BR:                     CREG + 0x21. # Branch registers (byte).
+all:  SCCR:                   CREG + 0x24. # Saved context control register.
+all:  LR:                     CREG + 0x28. # Link register.
+all:  PC:                     CREG + 0x2C. # PC register.
+all:  TH:                     CREG + 0x30. # Trap handler.
+all:  PH:                     CREG + 0x34. # Panic handler.
+all:  TP:                     CREG + 0x38. # Trap point.
+all:  TA:                     CREG + 0x3C. # Trap argument.
+all:  BRK0:                   CREG + 0x40. # Breakpoint 0.
+all:  BRK1:                   CREG + 0x44. # Breakpoint 1.
+all:  BRK2:                   CREG + 0x48. # Breakpoint 2.
+all:  BRK3:                   CREG + 0x4C. # Breakpoint 3.
+all:  DCR:                    CREG + 0x50. # Debug control register.
+all:  DCRF:                   CREG + 0x50. # Debug control flags (byte).
+all:  DCRC:                   CREG + 0x51. # Break cause (byte).
+all:  DCRB:                   CREG + 0x52. # Breakpoint configuration (half).
+all:  CRR:                    CREG + 0x54. # Context reconfiguration request.
 
-# General purpose register base addresses. LOW specifies the where r0..31 can
-# be found, HIGH specifies where r32..63 can be found. These may or may not
-# point to the same address depending on banking configuration.
-*     _GPREG_LOW              0xF0000080
-*     _GPREG_HIGH             0xF0000080
 
-# Branch and link register addresses.
-*     _BR                     CREG+0x21
-*     _LR                     CREG+0x28
 
-# PC register.
-*     _PC                     CREG+0x2C
+# General purpose register bank addresses. LOW defines the base address
+# for r0.0 through r0.31, HIGH defines it for r0.32 through r0.63. These are
+# guaranteed to always be evaluated once before accessing registers in the
+# low or high bank, in order to make bank selection write commands work
+# properly.
+all:  _GPREG_LOW:              SET_BANK;      CREG + 0x80.
+all:  _GPREG_HIGH:             SET_BANK_HIGH; CREG + 0x80.
 
-# Trap-related registers (trap cause, trap argument, trap point).
-*     _TC                     CREG+0x21
-*     _TA                     CREG+0x3C
-*     _TP                     CREG+0x38
+# Same as for the general purpose registers above, these define where the
+# debugging interface can find some special registers.
+all:  _BRREG:                  SET_BANK;      BR.   # Branch register file.
+all:  _LINKREG:                SET_BANK;      LR.   # Link register.
+all:  _PC:                     SET_BANK;      PC.   # PC register.
+all:  _BRKPT:                  SET_BANK;      BRK0. # Breakpoint registers.
 
-# Debug control register address and values. These are used for the break,
-# step, resume, release and reset [break] commands.
-*     _DCR_ADDR               CREG+0x50
-*     _DCR_WRITE_BREAK        0x09b
-*     _DCR_WRITE_STEP         0x0Ab
-*     _DCR_WRITE_RESUME       0x0Cb
-*     _DCR_WRITE_RELEASE      0x10b
-*     _DCR_WRITE_RESET        0x80b
-*     _DCR_WRITE_RESET_BREAK  0x89b
+# These define how to set the bank bits in the control registers in order to
+# access the selected context.
+all:  SET_BANK:                write(BUS_BANK, _CUR_CONTEXT<<1).
+all:  SET_BANK_HIGH:           write(BUS_BANK, (_CUR_CONTEXT<<1)+1).
 
-# Control register mnemonics.
-*     GSR                     CREG+0x00
-*     BCRR                    CREG+0x04
-*     CC                      CREG+0x08
-*     AFF                     CREG+0x0C
-*     CCR                     CREG+0x20
-*     SCCR                    CREG+0x24
-*     LR                      CREG+0x28
-*     PC                      CREG+0x2C
-*     TH                      CREG+0x30
-*     PH                      CREG+0x34
-*     TP                      CREG+0x38
-*     TA                      CREG+0x3C
-*     BRK0                    CREG+0x40
-*     BRK1                    CREG+0x44
-*     BRK2                    CREG+0x48
-*     BRK3                    CREG+0x4C
-*     DCR                     CREG+0x50
-*     CRR                     CREG+0x54
+
+all:  PRINT_SHORT_STATE:
+  0 #printf("PC:    %X\n", readWord(PC))
+  .
+
+# This is evaluated when "rvd break" is called.
+all:  _BREAK:
+  SET_BANK;
+  write(DCRF, 0x09hh);
+  PRINT_SHORT_STATE.
+
+# This is evaluated when "rvd step" is called.
+all:  _STEP:
+  SET_BANK;
+  write(DCRF, 0x0Ahh);
+  PRINT_SHORT_STATE.
+  
+# This is evaluated when "rvd resume" is called.
+all:  _RESUME:
+  SET_BANK;
+  write(DCRF, 0x0Chh).
+
+# This is evaluated when "rvd release" is called.
+all:  _RELEASE:
+  SET_BANK;
+  write(DCRF, 0x10hh).
+  
+# This is evaluated when "rvd reset" is called.
+all:  _RESET:
+  SET_BANK;
+  write(DCRF, 0x80hh).
+  
+# This is evaluated when "rvd reset break" is called.
+all:  _RESET_BREAK:
+  SET_BANK;
+  write(DCRF, 0x89hh).
+  
+# This is evaluated when "rvd state" is called.
+all:  _STATE:
+  SET_BANK;
+  PRINT_SHORT_STATE.
+

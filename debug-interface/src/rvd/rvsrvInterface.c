@@ -46,47 +46,40 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _ENTRY_H_
-#define _ENTRY_H_
-
-#include "types.h"
-
-/**
- * Application entry point.
- */
-int main(int argc, char **argv);
+#define _GNU_SOURCE
+#include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 
 /**
- * Structure containing the command line parameters. This is filled in main and
- * then passed to run().
+ * Reads a single byte, halfword or word from the hardware (size set to 1, 2 or
+ * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
+ * -1 when a fatal error occured. In the latter case, an error will be printed
+ * to stdout. When a bus error occurs, value is set to the bus fault.
  */
-typedef struct {
-  
-  /**
-   * TCP port to connect to.
-   */
-  int port;
-  
-  /**
-   * Context to use.
-   */
-  contextMask_t contextMask;
-  
-  /**
-   * Command, taken from the command line, after the switches.
-   */ 
-  const char *command;
-  
-  /**
-   * List of extra parameters for the command.
-   */ 
-  const char **params;
-  
-  /**
-   * Number of extra parameters for the command.
-   */
-  int paramCount;
-  
-} commandLineArgs_t;
+int rvsrv_readSingle(
+  unsigned long address,
+  unsigned long *value,
+  int size
+) {
+  printf("rvsrv_readSingle was called, but is not yet implemented.\n");
+  return -1;
+}
 
-#endif
+/**
+ * Writes a single byte, halfword or word to the hardware (size set to 1, 2 or
+ * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
+ * -1 when a fatal error occured. In the latter case, an error will be printed
+ * to stdout. If a bus error occured and fault is not null, *fault will be set
+ * to the bus fault.
+ */
+int rvsrv_writeSingle(
+  unsigned long address,
+  unsigned long value,
+  int size,
+  unsigned long *fault
+) {
+  printf("rvsrv_writeSingle was called, but is not yet implemented.\n");
+  return -1;
+}

@@ -46,47 +46,35 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _ENTRY_H_
-#define _ENTRY_H_
+#ifndef _RVSRV_IFACE_H_
+#define _RVSRV_IFACE_H_
 
 #include "types.h"
 
 /**
- * Application entry point.
+ * Reads a single byte, halfword or word from the hardware (size set to 1, 2 or
+ * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
+ * -1 when a fatal error occured. In the latter case, an error will be printed
+ * to stdout. When a bus error occurs, value is set to the bus fault.
  */
-int main(int argc, char **argv);
+int rvsrv_readSingle(
+  unsigned long address,
+  unsigned long *value,
+  int size
+);
 
 /**
- * Structure containing the command line parameters. This is filled in main and
- * then passed to run().
+ * Writes a single byte, halfword or word to the hardware (size set to 1, 2 or
+ * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
+ * -1 when a fatal error occured. In the latter case, an error will be printed
+ * to stdout. If a bus error occured and fault is not null, *fault will be set
+ * to the bus fault.
  */
-typedef struct {
-  
-  /**
-   * TCP port to connect to.
-   */
-  int port;
-  
-  /**
-   * Context to use.
-   */
-  contextMask_t contextMask;
-  
-  /**
-   * Command, taken from the command line, after the switches.
-   */ 
-  const char *command;
-  
-  /**
-   * List of extra parameters for the command.
-   */ 
-  const char **params;
-  
-  /**
-   * Number of extra parameters for the command.
-   */
-  int paramCount;
-  
-} commandLineArgs_t;
+int rvsrv_writeSingle(
+  unsigned long address,
+  unsigned long value,
+  int size,
+  unsigned long *fault
+);
 
 #endif

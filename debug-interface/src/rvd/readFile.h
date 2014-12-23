@@ -46,47 +46,16 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _ENTRY_H_
-#define _ENTRY_H_
-
-#include "types.h"
+#ifndef _READ_FILE_H_
+#define _READ_FILE_H_
 
 /**
- * Application entry point.
+ * Reads a whole file into memory. If size is set to null, the resuling buffer
+ * will be a null terminated string; otherwise, *size will be set to the number
+ * of bytes in the buffer. Returns null if some error occurs. If silent is
+ * zero, an error message will be printed in this case. The resulting buffer
+ * should be freed by the caller.
  */
-int main(int argc, char **argv);
-
-/**
- * Structure containing the command line parameters. This is filled in main and
- * then passed to run().
- */
-typedef struct {
-  
-  /**
-   * TCP port to connect to.
-   */
-  int port;
-  
-  /**
-   * Context to use.
-   */
-  contextMask_t contextMask;
-  
-  /**
-   * Command, taken from the command line, after the switches.
-   */ 
-  const char *command;
-  
-  /**
-   * List of extra parameters for the command.
-   */ 
-  const char **params;
-  
-  /**
-   * Number of extra parameters for the command.
-   */
-  int paramCount;
-  
-} commandLineArgs_t;
+char *readFile(const char *filename, int *size, int silent);
 
 #endif

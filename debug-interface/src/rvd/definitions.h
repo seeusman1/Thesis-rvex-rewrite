@@ -46,47 +46,25 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _ENTRY_H_
-#define _ENTRY_H_
+#ifndef _DEFINITIONS_H_
+#define _DEFINITIONS_H_
 
 #include "types.h"
 
 /**
- * Application entry point.
+ * Registers an expansion.
  */
-int main(int argc, char **argv);
+int defs_register(contextMask_t mask, const char *def, const char *expansion);
 
 /**
- * Structure containing the command line parameters. This is filled in main and
- * then passed to run().
+ * Expands the given definition, or returns null if the definition is not
+ * known.
  */
-typedef struct {
-  
-  /**
-   * TCP port to connect to.
-   */
-  int port;
-  
-  /**
-   * Context to use.
-   */
-  contextMask_t contextMask;
-  
-  /**
-   * Command, taken from the command line, after the switches.
-   */ 
-  const char *command;
-  
-  /**
-   * List of extra parameters for the command.
-   */ 
-  const char **params;
-  
-  /**
-   * Number of extra parameters for the command.
-   */
-  int paramCount;
-  
-} commandLineArgs_t;
+const char *defs_expand(const char *def);
+
+/**
+ * Frees all dynamically allocated memory for the definition hashmap.
+ */
+void defs_free(void);
 
 #endif

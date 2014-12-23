@@ -46,8 +46,15 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _EVALUATE_H_
-#define _EVALUATE_H_
+#ifndef _MAIN_H_
+#define _MAIN_H_
 
+#include "types.h"
+#include "entry.h"
+
+/**
+ * Performs the command specified by args.
+ */
+int run(commandLineArgs_t *args);
 
 #endif

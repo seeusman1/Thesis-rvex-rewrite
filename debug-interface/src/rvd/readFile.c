@@ -46,47 +46,97 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _ENTRY_H_
-#define _ENTRY_H_
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
 
-#include "types.h"
+#include "readFile.h"
 
 /**
- * Application entry point.
+ * Reads a whole file into memory. If size is set to null, the resuling buffer
+ * will be a null terminated string; otherwise, *size will be set to the number
+ * of bytes in the buffer. Returns null if some error occurs. If silent is
+ * zero, an error message will be printed in this case. The resulting buffer
+ * should be freed by the caller.
  */
-int main(int argc, char **argv);
+char *readFile(const char *filename, int *size, int silent) {
+  int f;
+  off_t fileSize;
+  char *buffer;
+  char *ptr;
+  int remain;
+  
+  // Open the file.
+  f = open(filename, O_RDONLY);
+  if (f < 0) {
+    if (!silent) {
+      perror("Failed to open file for reading");
+      printf("The filename was %s\n", filename);
+    }
+    return 0;
+  }
+  
+  // Determine the filesize by seeking.
+  fileSize = lseek(f, 0, SEEK_END);
+  if (fileSize == (off_t)-1) {
+    if (!silent) {
+      perror("Could not seek to end of file to determine size");
+      printf("The filename was %s\n", filename);
+    }
+    close(f);
+    return 0;
+  }
+  if (lseek(f, 0, SEEK_SET) == (off_t)-1) {
+    if (!silent) {
+      perror("Could not seek to start of file");
+      printf("The filename was %s\n", filename);
+    }
+    close(f);
+    return 0;
+  }
+  
+  // Allocate a buffer the size of the file, or the size of the file plus one
+  // if a null-terminated string was requested.
+  buffer = (char*)malloc(fileSize + (size ? 0 : 1));
+  if (!buffer) {
+    if (!silent) {
+      perror("Failed to allocate memory to read file");
+      printf("The filename was %s\n", filename);
+    }
+    close(f);
+    return 0;
+  }
+  
+  // Read the file into the buffer.
+  ptr = buffer;
+  remain = fileSize;
+  while (remain) {
+    int count = read(f, ptr, remain);
+    if (count < 1) {
+      if (!silent) {
+        perror("Failed to read from file");
+        printf("The filename was %s\n", filename);
+      }
+      close(f);
+      free(buffer);
+      return 0;
+    }
+    remain -= count;
+    ptr += count;
+  }
+  
+  // Close the file.
+  close(f);
+  
+  // Null terminate/return size and return the buffer.
+  if (!size) {
+    buffer[fileSize] = 0;
+  } else {
+    *size = fileSize;
+  }
+  return buffer;
+}
 
-/**
- * Structure containing the command line parameters. This is filled in main and
- * then passed to run().
- */
-typedef struct {
-  
-  /**
-   * TCP port to connect to.
-   */
-  int port;
-  
-  /**
-   * Context to use.
-   */
-  contextMask_t contextMask;
-  
-  /**
-   * Command, taken from the command line, after the switches.
-   */ 
-  const char *command;
-  
-  /**
-   * List of extra parameters for the command.
-   */ 
-  const char **params;
-  
-  /**
-   * Number of extra parameters for the command.
-   */
-  int paramCount;
-  
-} commandLineArgs_t;
-
-#endif

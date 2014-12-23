@@ -49,9 +49,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <signal.h>
 
 #include "entry.h"
-//#include "main.h"
+#include "main.h"
+#include "parser.h"
+#include "definitions.h"
+#include "readFile.h"
 
 /**
  * Prints usage information.
@@ -64,16 +68,43 @@ static void usage(char *progName, int verbose);
 static void license(void);
 
 /**
+ * Calls cleanup methods and exits with the specified code.
+ */
+static void cleanupAndExit(int code) {
+  
+  // Close the connection to rvsrv if it is open.
+  // TODO
+  
+  // Clean up the definition hash map.
+  defs_free();
+  
+  exit(code);
+}
+
+/**
+ * Called by the SIGTERM signal.
+ */
+static void sigTermHandler(int signum) {
+  cleanupAndExit(EXIT_FAILURE);
+}
+
+/**
  * Application entry point.
  */
 int main(int argc, char **argv) {
   
   commandLineArgs_t args;
   int i;
+  int contextSpecified = 0;
+  char errorPrefix[1024];
+  char *buf;
   
   // Set command line option defaults.
   args.port = 21079;
-  args.mapFile = 0;
+  args.contextMask = 1 << 0;
+  
+  // Set terminate signal handlers such that they will call the free methods.
+  signal(SIGTERM, &sigTermHandler);
   
   // Parse command line arguments.
   while (1) {
@@ -81,12 +112,14 @@ int main(int argc, char **argv) {
     static struct option long_options[] = {
       {"port",     required_argument, 0, 'p'},
       {"map",      required_argument, 0, 'm'},
+      {"define",   required_argument, 0, 'd'},
+      {"context",  required_argument, 0, 'c'},
       {0, 0, 0, 0}
     };
     
     int option_index = 0;
 
-    int c = getopt_long(argc, argv, "p:m:", long_options, &option_index);
+    int c = getopt_long(argc, argv, "p:m:d:c:", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -98,25 +131,65 @@ int main(int argc, char **argv) {
         if ((args.port < 1) || (args.port > 65535)) {
           printf("%s: invalid TCP port specified\n\n", argv[0]);
           usage(argv[0], 0);
-          exit(EXIT_FAILURE);
+          cleanupAndExit(EXIT_FAILURE);
         }
         break;
         
       case 'm':
-        args.mapFile = optarg;
+        sprintf(errorPrefix, " in file %s", optarg);
+        if (parseDefs(buf = readFile(optarg, 0, 0), errorPrefix) != 1) {
+          free(buf);
+          cleanupAndExit(EXIT_FAILURE);
+        }
+        free(buf);
+        break;
+        
+      case 'd':
+        if (parseDefs(optarg, " on the command line") != 1) {
+          cleanupAndExit(EXIT_FAILURE);
+        }
+        break;
+        
+      case 'c':
+        contextSpecified = 1;
+        if (parseMask(optarg, &(args.contextMask), " in command line") != 1) {
+          cleanupAndExit(EXIT_FAILURE);
+        }
         break;
         
       default:
         usage(argv[0], 0);
-        exit(EXIT_FAILURE);
+        cleanupAndExit(EXIT_FAILURE);
       
+    }
+  }
+  
+  // Try to read the current context mask from ".rvd-context".
+  if (!contextSpecified) {
+    char *buf = readFile(".rvd-context", 0, 1);
+    if (buf) {
+      char *ptr = buf;
+      while (*ptr) {
+        if (*ptr == '\n') {
+          *ptr = 0;
+          break;
+        }
+        *ptr++;
+      }
+      if (parseMask(buf, &(args.contextMask), " in .rvd-context") != 1) {
+        printf(
+          "Defaulting to context 0. You might want to run \"rvd select 0\" to get rid\n"
+          "of this error message.\n"
+        );
+      }
+      free(buf);
     }
   }
   
   // Don't crash if no command is specified.
   if (optind >= argc) {
     usage(argv[0], 0);
-    exit(EXIT_FAILURE);
+    cleanupAndExit(EXIT_FAILURE);
   }
   
   // Load the command and parameters count.
@@ -127,32 +200,39 @@ int main(int argc, char **argv) {
   // Handle license and help commands.
   if (!strcmp(args.command, "help")) {
     if (args.paramCount > 0) {
+      static const char *helpParams[] = { "help" };
       
       // Swap help and the command parameter around, so we can just handle
       // <command> help in run().
       args.command = args.params[0];
-      args.params = (const char **)&"help";
+      args.params = helpParams;
       args.paramCount = 1;
       
     } else {
       
       // help without parameters; print usage and list commands.
       usage(argv[0], 1);
-      exit(EXIT_SUCCESS);
+      cleanupAndExit(EXIT_SUCCESS);
       
     }
   } else if (!strcmp(args.command, "license")) {
     
     // Print license.
     license();
-    exit(EXIT_SUCCESS);
+    cleanupAndExit(EXIT_SUCCESS);
     
   }
   
+  // Try to open the connection to rvsrv.
   // TODO
   
-  // Exit.
-  exit(EXIT_SUCCESS);
+  // Try to execute the given command.
+  if (run(&args) < 0) {
+    cleanupAndExit(EXIT_FAILURE);
+  }
+  
+  // Done.
+  cleanupAndExit(EXIT_SUCCESS);
   
 }
 
@@ -179,8 +259,15 @@ static void usage(char *progName, int verbose) {
     "  -p  --port <port>  Specifies which TCP port to connect to. This should be the\n"
     "                     same as what was specified when starting rvsrv with the -d\n"
     "                     option. Defaults to port 21079.\n"
-    "  -m  --map <file>   Specifies the memory map file to use. If not specified,\n"
-    "                     only raw read/write commands are acceptable.\n"
+    "  -m  --map <file>   Loads a memory map file. refer to the comments in the\n"
+    "                     default memory.map file for more information.\n"
+    "  -d  --define <def> (Re)defines a definition. <def> must have the same format\n"
+    "                     as a line in a memory map file.\n"
+    "  -c  --context <c>  Specifies the context(s) to use. May be a single context\n"
+    "                     between 0 and 31, a range specified using the <from>..<to>\n"
+    "                     format, or \"all\" to select all contexts. If not\n"
+    "                     specified, rvd will use the last set of contexts selected\n"
+    "                     with the select command.\n"
     "\n",
     progName
   );
@@ -190,11 +277,29 @@ static void usage(char *progName, int verbose) {
     progName
   );
   if (verbose) printf(
-    "Available commands:\n"
+    "Basic commands:\n"
     "  help               Prints this listing.\n"
     "  license            Prints licensing information.\n"
+    "  select             Selects the rvex context to access.\n"
+    "  evaluate, eval     Evaluates the given expression.\n"
+    //"\n"
+    //"Memory access:\n"
+    //"  upload, up         Uploads an S-record or binary file.\n"   TODO
+    //"  download, dl       Downloads an S-record or binary file.\n" TODO
+    //"  write, w           Writes a word, halfword or byte.\n"      TODO
+    //"  read, r            Reads one or more words.\n"              TODO
+    //"\n"
+    //"Debugging:\n"
+    //"  break              Stops execution on the selected contexts.\n"   TODO
+    //"  step               Executes the next bundle and stops again.\n"   TODO
+    //"  resume, continue   Resumes execution on the selected contexts.\n" TODO
+    //"  release            Releases debugging control.\n"                 TODO
+    //"  reset              Soft-resets the selected contexts.\n"          TODO
+    //"  state              Dumps context state.\n"                        TODO
     "\n"
     "Run \"%s help <command>\" for more information about a command, if available.\n"
+    "Also, \"%s help expressions\" prints information on how you can express things\n"
+    "in rvd.\n"
     "\n",
     progName
   );
