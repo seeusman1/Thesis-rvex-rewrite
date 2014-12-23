@@ -68,6 +68,91 @@ static int isHelp(const commandLineArgs_t *args) {
 }
 
 /**
+ * Evaluates the given expression for each selected context, and optionally
+ * prints the result of the operation to stdout.
+ */
+static int evalForEachContext(const char *expression, contextMask_t mask, int printResult) {
+  value_t value;
+  int ctxt, numContexts;
+  int didAnything = 0;
+  
+  // Evaluate how many contexts there are.
+  defs_setContext(0);
+  if (evaluate("_NUM_CONTEXTS", &value, "") < 1) {
+    fprintf(stderr,
+      "Error: failed to expand or evaluate _NUM_CONTEXTS. Please define this value\n"
+      "on the command line or by using \"-dall:_NUM_CONTEXTS:<count>\", or specify the\n"
+      "value in a memory map file.\n",
+      numContexts
+    );
+    return -1;
+  }
+  numContexts = value.value;
+  if ((numContexts < 1) || (numContexts > 32)) {
+    fprintf(stderr,
+      "Error: _NUM_CONTEXTS evaluates to %d, which is out of range. rvd supports up\n"
+      "to 32 contexts.\n",
+      numContexts
+    );
+    return -1;
+  }
+  
+  // Loop over all contexts.
+  for (ctxt = 0; ctxt < numContexts; ctxt++) {
+    
+    // See if this context is in the selection mask.
+    if (mask & (1 << ctxt)) {
+      
+      // Set the current context.
+      defs_setContext(ctxt);
+      
+      // Evaluate the given command.
+      if (evaluate(expression, &value, "") < 1) {
+        return -1;
+      }
+      
+      // Display the result if printResult is set.
+      if (printResult) {
+        printf("Context %d: ", ctxt);
+        switch (value.size) {
+          case AS_BYTE:
+            printf("0x%02lX = %lu\n", value.value & 0xFF, value.value & 0xFF);
+            break;
+            
+          case AS_HALF:
+            printf("0x%04lX = %lu\n", value.value & 0xFF, value.value & 0xFF);
+            break;
+            
+          default:
+            printf("0x%08lX = %lu\n", value.value, value.value);
+            break;
+            
+        }
+        
+      }
+      
+      // We've done something.
+      didAnything = 1;
+      
+    }
+    
+  }
+  
+  // If we haven't done something after completing the loop, display an error
+  // message.
+  if (!didAnything) {
+    fprintf(stderr,
+      "Error: none of the contexts which you have selected are within 0.._NUM_CONTEXTS.\n"
+      "Use \"rvd select\" or the command line to select a different range of contexts.\n",
+      numContexts
+    );
+    return -1;
+  }
+
+  return 0;
+}
+
+/**
  * Performs the command specified by args.
  */
 int run(commandLineArgs_t *args) {
@@ -82,7 +167,8 @@ int run(commandLineArgs_t *args) {
     if (isHelp(args) || (args->paramCount != 1)) {
       printf(
         "\n"
-        "Command usage: rvd select \"<contexts>\"\n"
+        "Command usage:\n"
+        "  rvd select \"<contexts>\"\n"
         "\n"
         "This command will set which rvex contexts will be addressed by future commands,\n"
         "which do not have a context explicitely specified through either the specific\n"
@@ -107,19 +193,19 @@ int run(commandLineArgs_t *args) {
         "the same time.\n"
         "\n"
       );
-      return 1;
+      return 0;
     }
     
     // Syntax-check the context selection.
     if (parseMask(args->params[0], &dummyMask, "") < 1) {
-      return 0;
+      return -1;
     }
     
     // Write to the .rvd-context file.
-    f = open(".rvd-context", O_WRONLY | O_CREAT);
+    f = open(".rvd-context", O_WRONLY | O_CREAT | O_TRUNC);
     if (f < 0) {
       perror("Could not open .rvd-context for writing");
-      return 0;
+      return -1;
     }
     ptr = args->params[0];
     remain = strlen(ptr);
@@ -128,56 +214,73 @@ int run(commandLineArgs_t *args) {
       if (count < 1) {
         perror("Could not write to .rvd-context");
         close(f);
-        return 0;
+        return -1;
       }
       ptr += count;
       remain -= count;
     }
     close(f);
-    return 1;
+    
+    // Give some feedback on success.
+    printf("Updated context selection.\n");
+    
+    return 0;
     
   // --------------------------------------------------------------------------
-  } else if ((!strcmp(args->command, "eval")) || (!strcmp(args->command, "evaluate"))) {
-    value_t value;
-    
+  } else if (
+    (!strcmp(args->command, "eval")) ||
+    (!strcmp(args->command, "evaluate")) ||
+    (!strcmp(args->command, "exec")) ||
+    (!strcmp(args->command, "execute"))
+  ) {
     if (isHelp(args) || (args->paramCount != 1)) {
       printf(
         "\n"
-        "Command usage: rvd evaluate \"<expression>\"\n"
+        "Command usage:\n"
+        "  rvd evaluate \"<expression>\"\n"
+        "  rvd eval \"<expression>\"\n"
+        "  rvd execute \"<expression>\"\n"
+        "  rvd exec \"<expression>\"\n"
         "\n"
         "This command will evaluate the given expression for the context(s) selected\n"
-        "using \"rvd context\" or the -c or --context command line parameters.\n"
+        "using \"rvd context\" or the -c or --context command line parameters. The\n"
+        "difference between evaluate and execute is that evaluate prints the resulting\n"
+        "value to stdout, whereas execute runs silently and relies solely on printf()\n"
+        "calls in the evaluated expression for output.\n"
         "\n"
-        "Call \"rvd help expressions\" for more information.\n"
+        "Call \"rvd help expressions\" for more information on how expressions work.\n"
         "\n"
       );
-      return 1;
-    }
-    
-    // TODO: do this for every context!
-    
-    // Evaluate the given command.
-    if (evaluate(args->params[0], &value, "") < 1) {
       return 0;
     }
     
-    // Display the result.
-    switch (value.size) {
-      case AS_BYTE:
-        printf("0x%02lX = %lu\n", value.value & 0xFF, value.value & 0xFF);
-        break;
-        
-      case AS_HALF:
-        printf("0x%04lX = %lu\n", value.value & 0xFF, value.value & 0xFF);
-        break;
-        
-      default:
-        printf("0x%08lX = %lu\n", value.value, value.value);
-        break;
-        
+    // Evaluate the command for each context.
+    if (
+      (!strcmp(args->command, "eval")) ||
+      (!strcmp(args->command, "evaluate"))
+    ) {
+      return evalForEachContext(args->params[0], args->contextMask, 1);
+    } else {
+      return evalForEachContext(args->params[0], args->contextMask, 0);
     }
     
-    return 1;
+  // --------------------------------------------------------------------------
+  } else if (!strcmp(args->command, "stop")) {
+    value_t value;
+    
+    if (isHelp(args) || (args->paramCount != 0)) {
+      printf(
+        "\n"
+        "Command usage: rvd stop\n"
+        "\n"
+        "This command will simply send the stop command to rvsrv, to shut rvsrv down\n"
+        "gracefully.\n"
+        "\n"
+      );
+      return 0;
+    }
+    
+    return rvsrv_stopServer();
     
   // --------------------------------------------------------------------------
   } else if (!strcmp(args->command, "expressions")) {
@@ -304,13 +407,13 @@ int run(commandLineArgs_t *args) {
         "TODO\n"// TODO
         "\n"
       );
-      return 1;
+      return 0;
     }
   }
   
   // Unknown command.
-  printf("Unknown command %s.\n", args->command);
-  return 0;
+  fprintf(stderr, "Unknown command %s.\n", args->command);
+  return -1;
   
 }
 

@@ -200,11 +200,11 @@ begin -- architecture
         INITP_07 => X"0000000000000000000000000000000000000000000000000000000000000000"
       )
       port map (
-        DO    => mem2mst_port.readData((3-b)*8+7 downto (3-b)*8),
+        DO    => mem2mst_port.readData(b*8+7 downto b*8),
         DOP   => open,
         ADDR  => mst2mem_port.address(12 downto 2),
         CLK   => clk,
-        DI    => mst2mem_port.writeData((3-b)*8+7 downto (3-b)*8),
+        DI    => mst2mem_port.writeData(b*8+7 downto b*8),
         DIP   => "0",
         EN    => clkEn,
         SSR   => '0',

@@ -73,7 +73,7 @@ static void license(void);
 static void cleanupAndExit(int code) {
   
   // Close the connection to rvsrv if it is open.
-  // TODO
+  rvsrv_close();
   
   // Clean up the definition hash map.
   defs_free();
@@ -98,9 +98,12 @@ int main(int argc, char **argv) {
   int contextSpecified = 0;
   char errorPrefix[1024];
   char *buf;
+  int port;
+  char *host;
   
   // Set command line option defaults.
-  args.port = 21079;
+  port = 21079;
+  host = "127.0.0.1";
   args.contextMask = 1 << 0;
   
   // Set terminate signal handlers such that they will call the free methods.
@@ -111,6 +114,7 @@ int main(int argc, char **argv) {
 
     static struct option long_options[] = {
       {"port",     required_argument, 0, 'p'},
+      {"host",     required_argument, 0, 'h'},
       {"map",      required_argument, 0, 'm'},
       {"define",   required_argument, 0, 'd'},
       {"context",  required_argument, 0, 'c'},
@@ -119,7 +123,7 @@ int main(int argc, char **argv) {
     
     int option_index = 0;
 
-    int c = getopt_long(argc, argv, "p:m:d:c:", long_options, &option_index);
+    int c = getopt_long(argc, argv, "p:h:m:d:c:", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -127,12 +131,16 @@ int main(int argc, char **argv) {
 
     switch (c) {
       case 'p':
-        args.port = atoi(optarg);
-        if ((args.port < 1) || (args.port > 65535)) {
-          printf("%s: invalid TCP port specified\n\n", argv[0]);
+        port = atoi(optarg);
+        if ((port < 1) || (port > 65535)) {
+          fprintf(stderr, "%s: invalid TCP port specified\n\n", argv[0]);
           usage(argv[0], 0);
           cleanupAndExit(EXIT_FAILURE);
         }
+        break;
+        
+      case 'h':
+        host = optarg;
         break;
         
       case 'm':
@@ -164,8 +172,21 @@ int main(int argc, char **argv) {
     }
   }
   
-  // Try to read the current context mask from ".rvd-context".
-  if (!contextSpecified) {
+  // Don't crash if no command is specified.
+  if (optind >= argc) {
+    usage(argv[0], 0);
+    cleanupAndExit(EXIT_FAILURE);
+  }
+  
+  // Load the command and parameters count.
+  args.command = argv[optind];
+  args.params = (const char **)(argv + optind + 1);
+  args.paramCount = argc - optind - 1;
+  
+  // Try to read the current context mask from ".rvd-context", except when this
+  // is coindidentally a select command (in which case we don't want to show
+  // the error message if .rvd-context was broken).
+  if (!contextSpecified && strcmp(args.command, "select")) {
     char *buf = readFile(".rvd-context", 0, 1);
     if (buf) {
       char *ptr = buf;
@@ -177,7 +198,7 @@ int main(int argc, char **argv) {
         *ptr++;
       }
       if (parseMask(buf, &(args.contextMask), " in .rvd-context") != 1) {
-        printf(
+        fprintf(stderr,
           "Defaulting to context 0. You might want to run \"rvd select 0\" to get rid\n"
           "of this error message.\n"
         );
@@ -185,17 +206,6 @@ int main(int argc, char **argv) {
       free(buf);
     }
   }
-  
-  // Don't crash if no command is specified.
-  if (optind >= argc) {
-    usage(argv[0], 0);
-    cleanupAndExit(EXIT_FAILURE);
-  }
-  
-  // Load the command and parameters count.
-  args.command = argv[optind];
-  args.params = (const char **)(argv + optind + 1);
-  args.paramCount = argc - optind - 1;
   
   // Handle license and help commands.
   if (!strcmp(args.command, "help")) {
@@ -223,8 +233,11 @@ int main(int argc, char **argv) {
     
   }
   
-  // Try to open the connection to rvsrv.
-  // TODO
+  // Hand the host name and port number to the rvsrv unit. It will connect when
+  // the first request is made.
+  if (rvsrv_setup(host, port) < 0) {
+    cleanupAndExit(EXIT_FAILURE);
+  }
   
   // Try to execute the given command.
   if (run(&args) < 0) {
@@ -282,6 +295,8 @@ static void usage(char *progName, int verbose) {
     "  license            Prints licensing information.\n"
     "  select             Selects the rvex context to access.\n"
     "  evaluate, eval     Evaluates the given expression.\n"
+    "  execute, exec      Executes the given expression.\n"
+    "  stop               Sends the stop command to rvsrv.\n"
     //"\n"
     //"Memory access:\n"
     //"  upload, up         Uploads an S-record or binary file.\n"   TODO

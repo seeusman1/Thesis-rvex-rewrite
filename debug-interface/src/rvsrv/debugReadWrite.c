@@ -127,14 +127,17 @@ static int charVal(unsigned char c) {
 /**
  * Formats and returns a syntax error message.
  */
-static int syntaxError(int clientID, int scanPos) {
-  unsigned char str[16];
+static int syntaxError(unsigned char *command, int clientID, int scanPos) {
   
-  if (tcpServer_sendStr(debugServer, clientID, "Error, Syntax, ") < 0) {
+  if (tcpServer_sendStr(debugServer, clientID, "Error, ") < 0) {
     return -1;
   }
-  sprintf(str, "%d;\n", scanPos);
-  if (tcpServer_sendStr(debugServer, clientID, str) < 0) {
+  while ((*command) && (*command != ',')) {
+    if (tcpServer_send(debugServer, clientID, *command++) < 0) {
+      return -1;
+    }
+  }
+  if (tcpServer_sendStr(debugServer, clientID, ", Syntax;\n") < 0) {
     return -1;
   }
   
@@ -261,7 +264,7 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
   
   // Return a communication error if success is 0.
   if (!success) {
-    if (tcpServer_sendStr(debugServer, cbData->clientID, "Error, CommunicationError;\n") < 0) {
+    if (tcpServer_sendStr(debugServer, cbData->clientID, cbData->buffer ? "Error, Read, CommunicationError;\n" : "Error, Write, CommunicationError;\n") < 0) {
       if (cbData->buffer) free(cbData->buffer);
       free(cbData);
       return -1;
@@ -442,6 +445,12 @@ int handleReadWrite(unsigned char *command, int clientID) {
   cbData->lastFault = 0;
   cbData->lastFaultCode = 0;
   
+  // Make sure there's a comma in here somewhere. If not, we should return a
+  // syntax error instead of dying in the next test.
+  if (!strchr(command, ',')) {
+    return syntaxError(command, clientID, scanPos);
+  }
+  
   // Scan the "Read," or "Write,".
   if (matchAt(command, "Read,", &scanPos)) {
     isWrite = 0;
@@ -449,7 +458,8 @@ int handleReadWrite(unsigned char *command, int clientID) {
     isWrite = 1;
   } else {
     free(cbData);
-    return tcpServer_sendStr(debugServer, clientID, "Error, UnknownCommand;\n");
+    printf("handleReadWrite() was called with a command other than Read or Write.\nThis should never happen.\n");
+    return -1;
   }
   
   // Scan the address.
@@ -464,7 +474,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
     j = charVal(command[scanPos]);
     if (j < 0) {
       free(cbData);
-      return syntaxError(clientID, scanPos);
+      return syntaxError(command, clientID, scanPos);
     }
     scanPos++;
     
@@ -477,7 +487,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
   // We must see a comma here.
   if (command[scanPos] != ',') {
     free(cbData);
-    return syntaxError(clientID, scanPos);
+    return syntaxError(command, clientID, scanPos);
   }
   scanPos++;
   
@@ -493,7 +503,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
     j = charVal(command[scanPos]);
     if ((j < 0) || (j > 9)) {
       free(cbData);
-      return syntaxError(clientID, scanPos);
+      return syntaxError(command, clientID, scanPos);
     }
     scanPos++;
     
@@ -506,13 +516,13 @@ int handleReadWrite(unsigned char *command, int clientID) {
   // Make sure the count is within range.
   if ((cbData->bufSize < 1) || (cbData->bufSize > 4096)) {
     free(cbData);
-    return tcpServer_sendStr(debugServer, clientID, "Error, InvalidBufSize;\n");
+    return tcpServer_sendStr(debugServer, clientID, isWrite ? "Error, Write, InvalidBufSize;\n" : "Error, Read, InvalidBufSize;\n");
   }
   
   // We should be at the end of the string for read commands, or we should have
   // another comma for write commands.
   if (command[scanPos] != (isWrite ? ',' : 0)) {
-    return syntaxError(clientID, scanPos);
+    return syntaxError(command, clientID, scanPos);
   }
   scanPos++;
   
@@ -536,7 +546,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
       if (j < 0) {
         free(cbData->buffer);
         free(cbData);
-        return syntaxError(clientID, scanPos);
+        return syntaxError(command, clientID, scanPos);
       }
       scanPos++;
       
@@ -547,7 +557,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
       if (j < 0) {
         free(cbData->buffer);
         free(cbData);
-        return syntaxError(clientID, scanPos);
+        return syntaxError(command, clientID, scanPos);
       }
       scanPos++;
       
@@ -559,7 +569,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
     if (command[scanPos] != 0) {
       free(cbData->buffer);
       free(cbData);
-      return syntaxError(clientID, scanPos);
+      return syntaxError(command, clientID, scanPos);
     }
     scanPos++;
     
@@ -704,11 +714,11 @@ int handleReadWrite(unsigned char *command, int clientID) {
         int mask;
         
         // We need to do a volatile byte write.
-        switch (curAddress) {
-          case 0: mask = 0x8;
-          case 1: mask = 0x4;
-          case 2: mask = 0x2;
-          case 3: mask = 0x1;
+        switch (curAddress & 0x3) {
+          case 0: mask = 0x8; break;
+          case 1: mask = 0x4; break;
+          case 2: mask = 0x2; break;
+          case 3: mask = 0x1; break;
         }
         writeData = *bufPtr;
         writeData <<= 8;

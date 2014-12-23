@@ -63,11 +63,6 @@ int main(int argc, char **argv);
 typedef struct {
   
   /**
-   * TCP port to connect to.
-   */
-  int port;
-  
-  /**
    * Context to use.
    */
   contextMask_t contextMask;

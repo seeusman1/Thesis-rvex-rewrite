@@ -74,7 +74,7 @@ char *readFile(const char *filename, int *size, int silent) {
   if (f < 0) {
     if (!silent) {
       perror("Failed to open file for reading");
-      printf("The filename was %s\n", filename);
+      fprintf(stderr, "The filename was %s\n", filename);
     }
     return 0;
   }
@@ -84,7 +84,7 @@ char *readFile(const char *filename, int *size, int silent) {
   if (fileSize == (off_t)-1) {
     if (!silent) {
       perror("Could not seek to end of file to determine size");
-      printf("The filename was %s\n", filename);
+      fprintf(stderr, "The filename was %s\n", filename);
     }
     close(f);
     return 0;
@@ -92,7 +92,7 @@ char *readFile(const char *filename, int *size, int silent) {
   if (lseek(f, 0, SEEK_SET) == (off_t)-1) {
     if (!silent) {
       perror("Could not seek to start of file");
-      printf("The filename was %s\n", filename);
+      fprintf(stderr, "The filename was %s\n", filename);
     }
     close(f);
     return 0;
@@ -104,7 +104,7 @@ char *readFile(const char *filename, int *size, int silent) {
   if (!buffer) {
     if (!silent) {
       perror("Failed to allocate memory to read file");
-      printf("The filename was %s\n", filename);
+      fprintf(stderr, "The filename was %s\n", filename);
     }
     close(f);
     return 0;
@@ -118,7 +118,7 @@ char *readFile(const char *filename, int *size, int silent) {
     if (count < 1) {
       if (!silent) {
         perror("Failed to read from file");
-        printf("The filename was %s\n", filename);
+        fprintf(stderr, "The filename was %s\n", filename);
       }
       close(f);
       free(buffer);

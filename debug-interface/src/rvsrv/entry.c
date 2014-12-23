@@ -81,6 +81,7 @@ int main(int argc, char **argv) {
   args.baudrate  = 115200;
   args.appPort   = 21078;
   args.debugPort = 21079;
+  args.foreground = 0;
   
   // Parse command line arguments.
   while (1) {
@@ -90,6 +91,7 @@ int main(int argc, char **argv) {
       {"baud",     required_argument, 0, 'b'},
       {"app",      required_argument, 0, 'a'},
       {"debug",    required_argument, 0, 'd'},
+      {"foreground",no_argument,      0, 'f'},
       {"help",     no_argument,       0, 'h'},
       {"license",  no_argument,       0, 'l'},
       {0, 0, 0, 0}
@@ -133,6 +135,10 @@ int main(int argc, char **argv) {
           usage(argv[0], 0);
           exit(EXIT_FAILURE);
         }
+        break;
+        
+      case 'f':
+        args.foreground = 1;
         break;
         
       case 'l':
@@ -198,10 +204,12 @@ static void usage(char *progName, int verbose) {
     "                     with application code. Defaults to port 21078.\n"
     "  -d  --debug <port> Listen on the specified TCP port for debugging commands.\n"
     "                     Defaults to port 21079.\n"
-    "  -h  --help         Shows this usage screen.\n"
+    "      --foreground   Run in the calling terminal instead of starting the daemon\n"
+    "                     process.\n"
+    "  -h  --help         Shows this usage screen%s.\n"
     "      --license      Prints licensing information.\n"
     "\n",
-    progName
+    progName, verbose ? "" : "with some extra info"
   );
 }
 

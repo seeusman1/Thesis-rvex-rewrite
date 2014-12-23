@@ -7,6 +7,7 @@ use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
 use rvex.simUtils_pkg.all;
 use rvex.bus_pkg.all;
+use rvex.bus_addrConv_pkg.all;
 
 entity toplevel_uartTest_spartan3 is
   port (
@@ -19,8 +20,17 @@ entity toplevel_uartTest_spartan3 is
 end toplevel_uartTest_spartan3;
 
 architecture behavioral of toplevel_uartTest_spartan3 is
-  signal uart2dbg_bus           : bus_mst2slv_type;
-  signal dbg2uart_bus           : bus_slv2mst_type;
+  constant addrMap              : addrRangeAndMapping_array(0 to 1) := (
+    0 => addrRangeAndMap(match => "----0000------------------------"),
+    1 => addrRangeAndMap(match => "----1111------------------------")
+  );
+  
+  signal uart2dbg_busA          : bus_mst2slv_type;
+  signal dbg2uart_busA          : bus_slv2mst_type;
+  signal uart2dbg_busB          : bus_mst2slv_type;
+  signal dbg2uart_busB          : bus_slv2mst_type;
+  signal uart2dbg_busC          : bus_mst2slv_type;
+  signal dbg2uart_busC          : bus_slv2mst_type;
   signal tx_s                   : std_logic;
 begin
   
@@ -42,13 +52,36 @@ begin
       tx                        => tx_s,
       
       -- Slave bus.
-      bus2uart                  => BUS_MST2SLV_IDLE,
-      uart2bus                  => open,
+      bus2uart                  => uart2dbg_busC,
+      uart2bus                  => dbg2uart_busC,
       irq                       => open,
       
       -- Debug interface.
-      uart2dbg_bus              => uart2dbg_bus,
-      dbg2uart_bus              => dbg2uart_bus
+      uart2dbg_bus              => uart2dbg_busA,
+      dbg2uart_bus              => dbg2uart_busA
+      
+    );
+  
+  -- Instantiate the bus demuxer.
+  demux_inst: entity rvex.bus_demux
+    generic map (
+      ADDRESS_MAP               => addrMap,
+      OOR_FAULT_CODE            => X"12345678"
+    )
+    port map (
+      
+      -- System control.
+      reset                     => reset,
+      clk                       => clk,
+      clkEn                     => '1',
+      
+      -- Busses.
+      mst2demux                 => uart2dbg_busA,
+      demux2mst                 => dbg2uart_busA,
+      demux2slv(0)              => uart2dbg_busB,
+      demux2slv(1)              => uart2dbg_busC,
+      slv2demux(0)              => dbg2uart_busB,
+      slv2demux(1)              => dbg2uart_busC
       
     );
   
@@ -65,8 +98,8 @@ begin
       clkEn                     => '1',
       
       -- Memory port.
-      mst2mem_port              => uart2dbg_bus,
-      mem2mst_port              => dbg2uart_bus
+      mst2mem_port              => uart2dbg_busB,
+      mem2mst_port              => dbg2uart_busB
       
     );
   

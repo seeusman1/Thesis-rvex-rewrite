@@ -53,7 +53,8 @@
 
 /**
  * Evaluates an expression. Returns 1 if successful, 0 on failure, or -1 when
- * a fatal error occurs. An error message is printed upon failure.
+ * a fatal error occurs. An error message is printed upon failure if
+ * errorPrefix is non-null.
  * 
  * EBNF:
  *   start       = expression

@@ -80,6 +80,12 @@ typedef struct {
    */
   int debugPort;
   
+  /**
+   * When set, rvsrv should keep running in the current shell, instead of
+   * turning into a daemon.
+   */
+  int foreground;
+  
 } commandLineArgs_t;
 
 #endif

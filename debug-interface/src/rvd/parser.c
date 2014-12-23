@@ -412,6 +412,9 @@ static int scanOperand(const char **str, value_t *value, int depth) {
               
           }
           
+          // Return the read value.
+          v.value = readVal;
+          
         }
         
       } else if (!strcmp(name, "write")) {
@@ -500,7 +503,7 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         expanded = defs_expand(name);
         if (!expanded) {
           sprintf(scanError, "\"%s\" is not defined", name);
-          scanErrorPos = ptr;
+          scanErrorPos = defStart;
           free(name);
           return 0;
         }
@@ -508,7 +511,7 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         // Break if we've expanded too often (which probably indicates a loop).
         if (!depth) {
           sprintf(scanError, "too many recursive expansions, was about to expand \"%s\"", name);
-          scanErrorPos = ptr;
+          scanErrorPos = defStart;
           free(name);
           return 0;
         }
@@ -577,7 +580,8 @@ static int scanExpression(const char **str, value_t *value, int depth) {
     return retval;
   }
   
-  // Scan the operator.
+  // Scan the operator. This is allowed to fail, because the operator is
+  // optional.
   if ((retval = scanOperator(&ptr, &op)) < 0) {
     return retval;
   }
@@ -837,31 +841,78 @@ static int scanDefinition(char **str) {
   return 1;
 }
 
+/**
+ * Dumps the parse error specified by scanError and scanErrorPos for the given
+ * command to stderr.
+ */
+static void printParseError(const char *str) {
+  char *beforeScanPos;
+  int scanPos;
+  
+  scanPos = scanErrorPos - str;
+  
+  // Make a copy of the correct part of the failing expression, so we can null
+  // terminate it and print it easily.
+  beforeScanPos = (char *)malloc(scanPos + 1);
+  if (!beforeScanPos) {
+    
+    // Fallback if malloc fails...
+    fprintf(stderr, scanError);
+    return;
+    
+  }
+  memcpy(beforeScanPos, str, scanPos);
+  beforeScanPos[scanPos] = 0;
+  fprintf(stderr, "%s at \033[1m|\033[0m in: \"%s\033[1m|\033[31m%s\033[0m\".\n", scanError, beforeScanPos, scanErrorPos);
+  free(beforeScanPos);
+  
+}
+
 //-----------------------------------------------------------------------------
 
 /**
  * Evaluates an expression. Returns 1 if successful, 0 on failure, or -1 when
- * a fatal error occurs. An error message is printed upon failure.
+ * a fatal error occurs. An error message is printed upon failure if
+ * errorPrefix is non-null.
  */
 int evaluate(const char *str, value_t *value, const char *errorPrefix) {
   
   const char *ptr = str;
   
-  if (!str || !value | !errorPrefix) {
+  if (!str || !value) {
     return -1;
   }
+  
+  // Set a default error so we at least don't segfault due to scanErrorPos
+  // not being in str or scanError not being defined.
+  scanErrorPos = str;
+  sprintf(scanError, "unknown error");
   
   scanWhitespace(&ptr);
   switch (scanExpression(&ptr, value, 256)) {
     case 0:
-      // FIXME: %*s doesn't work :(
-      printf("Evaluation error%s: %s in \"%*s<here>%s\".\n", errorPrefix, scanError, (int)(scanErrorPos - str), str, scanErrorPos);
+      
+      // Don't print errors when errorPrefix is null.
+      if (errorPrefix) {
+        
+        fprintf(stderr, "Evaluation error%s: ", errorPrefix);
+        printParseError(str);
+        
+      }
       return 0;
       
     case 1:
       if (*ptr) {
-        // FIXME: %*s doesn't work :(
-        printf("Evaluation error%s: unexpected token in \"%*s<here>%s\".\n", errorPrefix, (int)(ptr - str), str, ptr);
+        scanErrorPos = ptr;
+        sprintf(scanError, "unexpected token");
+        
+        // Don't print errors when errorPrefix is null.
+        if (errorPrefix) {
+          
+          fprintf(stderr, "Evaluation error%s: ", errorPrefix);
+          printParseError(str);
+          
+        }
         return 0;
       } else {
         return 1;
@@ -881,21 +932,40 @@ int parseMask(const char *str, contextMask_t *mask, const char *errorPrefix) {
   
   const char *ptr = str;
   
-  if (!str || !mask || !errorPrefix) {
+  if (!str || !mask) {
     return -1;
   }
+  
+  // Set a default error so we at least don't segfault due to scanErrorPos
+  // not being in str or scanError not being defined.
+  scanErrorPos = str;
+  sprintf(scanError, "unknown error");
   
   scanWhitespace(&ptr);
   switch (scanContextMask(&ptr, mask)) {
     case 0:
-      // FIXME: %*s doesn't work :(
-      printf("Parse error%s: %s in \"%*s<here>%s\".\n", errorPrefix, scanError, (int)(scanErrorPos - str), str, scanErrorPos);
+      
+      // Don't print errors when errorPrefix is null.
+      if (errorPrefix) {
+        
+        fprintf(stderr, "Parse error%s: ", errorPrefix);
+        printParseError(str);
+        
+      }
       return 0;
       
     case 1:
       if (*ptr) {
-        // FIXME: %*s doesn't work :(
-        printf("Parse error%s: unexpected token in \"%*s<here>%s\".\n", errorPrefix, (int)(ptr - str), str, ptr);
+        scanErrorPos = ptr;
+        sprintf(scanError, "unexpected token");
+        
+        // Don't print errors when errorPrefix is null.
+        if (errorPrefix) {
+          
+          fprintf(stderr, "Parse error%s: ", errorPrefix);
+          printParseError(str);
+          
+        }
         return 0;
       } else {
         return 1;
@@ -956,18 +1026,23 @@ int parseDefs(char *str, const char *errorPrefix) {
     if (retval < 0) return -1;
     if (retval != 1) {
       
-      // Figure out what line we're on.
-      while (lptr != scanErrorPos) {
-        if (*lptr == '\n') {
-          lineNumber++;
-          column = 1;
-        } else {
-          column++;
+      // Don't print errors when errorPrefix is null.
+      if (errorPrefix) {
+        
+        // Figure out what line and column we're at for the error message.
+        while (lptr != scanErrorPos) {
+          if (*lptr == '\n') {
+            lineNumber++;
+            column = 1;
+          } else {
+            column++;
+          }
+          lptr++;
         }
-        lptr++;
+        fprintf(stderr, "Parse error%s on line %d, col %d: %s.\n", errorPrefix, lineNumber, column, scanError);
+        
       }
       
-      printf("Parse error%s on line %d, col %d: %s.\n", errorPrefix, lineNumber, column, scanError);
       ok = 0;
       
       if (retval == 0) {

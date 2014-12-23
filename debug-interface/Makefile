@@ -28,8 +28,11 @@ help: copyconf
 server: copyconf $(BINDIR)/rvsrv
 	$(BINDIR)/rvsrv -p$(SERIAL_PORT) -b$(SERIAL_BAUD) -a$(TCP_PORT_APP) -d$(TCP_PORT_DEBUG)
 
-stop:
-	echo "Stop;" | $(NETCAT) localhost $(TCP_PORT_DEBUG)
+server-debug: copyconf $(BINDIR)/rvsrv
+	$(BINDIR)/rvsrv -p$(SERIAL_PORT) -b$(SERIAL_BAUD) -a$(TCP_PORT_APP) -d$(TCP_PORT_DEBUG) --foreground
+
+stop: copyconf $(BINDIR)/rvd
+	@$(BINDIR)/rvd -p$(TCP_PORT_DEBUG) stop
 
 catlog:
 	@cat /var/tmp/rvsrv.log
@@ -64,15 +67,14 @@ TOOLS = rvsrv rvd
 
 all: $(BINDIR)/rvsrv $(BINDIR)/rvd
 
-$(BINDIR)/rvsrv: $(BINDIR) $(SRCDIR)/rvsrv/*.c
+$(BINDIR)/rvsrv: $(SRCDIR)/rvsrv/*.c
+	mkdir -p $(BINDIR)
 	$(CC) $(CFLAGS) -o $@ $(SRCDIR)/rvsrv/*.c
 
-$(BINDIR)/rvd: $(BINDIR) $(SRCDIR)/rvd/*.c
+$(BINDIR)/rvd: $(SRCDIR)/rvd/*.c
+	mkdir -p $(BINDIR)
 	$(CC) $(CFLAGS) -o $@ $(SRCDIR)/rvd/*.c
 
 clean:
 	rm -rf $(BINDIR)
 	rm -f debug
-
-bin:
-	mkdir bin

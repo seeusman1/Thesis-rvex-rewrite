@@ -208,6 +208,10 @@ const char *defs_expand(const char *def) {
  * Sets the context used to expand definitions.
  */
 void defs_setContext(int context) {
+  static char curContextDef[8];
+  sprintf(curContextDef, "%d", context);
+  defs_register((1 << context), "_CUR_CONTEXT", curContextDef);
+  
   currentContext = context;
 }
 

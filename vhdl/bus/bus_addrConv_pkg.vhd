@@ -292,15 +292,15 @@ package body bus_addrConv_pkg is
     match     : rvex_address_type := (others => '-');
     mapping   : addrMapping_type := mapRange(31, 0)
   ) return addrRangeAndMapping_type is
+    variable retval   : addrRangeAndMapping_type;
   begin
-    return (
-      addrRange => (
-        low   => low,
-        high  => high,
-        match => match
-      ),
-      addrMapping => mapping
+    retval.addrRange := (
+      low   => low,
+      high  => high,
+      match => match
     );
+    retval.addrMapping := mapping;
+    return retval;
   end addrRangeAndMap;
   
 end bus_addrConv_pkg;

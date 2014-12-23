@@ -37,8 +37,6 @@
 # point in defining a different number for different contexts (obviously).
 all:  _NUM_CONTEXTS:          4.
 
-
-
 # Instruction and data memory start addresses, used for the load command.
 all:  _IMEM:                  0x00000000.
 all:  _DMEM:                  0x10000000.
@@ -92,8 +90,8 @@ all:  _BRKPT:                  SET_BANK;      BRK0. # Breakpoint registers.
 
 # These define how to set the bank bits in the control registers in order to
 # access the selected context.
-all:  SET_BANK:                write(BUS_BANK, _CUR_CONTEXT<<1).
-all:  SET_BANK_HIGH:           write(BUS_BANK, (_CUR_CONTEXT<<1)+1).
+all:  SET_BANK:                write(BUS_BANK, 0hh+_CUR_CONTEXT<<1).
+all:  SET_BANK_HIGH:           write(BUS_BANK, 0hh+(_CUR_CONTEXT<<1)+1).
 
 
 all:  PRINT_SHORT_STATE:

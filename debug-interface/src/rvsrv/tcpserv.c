@@ -69,6 +69,7 @@ static unsigned char readBuffer[TCP_BUFFER_SIZE];
 tcpServer_t *tcpServer_open(int port, const unsigned char *access, tcpServer_extraData onAlloc, tcpServer_extraData onFree) {
   tcpServer_t *server;
   struct sockaddr_in addr;
+  int i;
   printf("Trying to open TCP server socket at port %d for %s access...\n", port, access);
   
   // Try to allocate memory for the server structure.
@@ -96,6 +97,11 @@ tcpServer_t *tcpServer_open(int port, const unsigned char *access, tcpServer_ext
     tcpServer_close(&server);
     return 0;
   }
+  
+  // Try to use SO_REUSEADDR to force binding to a port even if it's still in
+  // TIME_WAIT.
+  i = 1;
+  setsockopt(server->listenDesc, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(int));
   
   // Setup the socket address structure which we want to bind the socket to.
   memset((void*)&addr, 0, sizeof(addr));

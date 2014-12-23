@@ -176,6 +176,7 @@ static int checkCommand(const unsigned char *command, const unsigned char *text)
  *   2 = Command processing complete, fetch the next command.
  */
 static int handleCommand(unsigned char *command, int clientID, int firstTime) {
+  unsigned char *ptr;
   
   if (checkCommand(command, "Stop")) {
     
@@ -198,7 +199,16 @@ static int handleCommand(unsigned char *command, int clientID, int firstTime) {
   }
   
   // Unknown command.
-  if (tcpServer_sendStr(debugServer, clientID, "Error, UnknownCommand;\n") < 0) {
+  if (tcpServer_sendStr(debugServer, clientID, "Error, ") < 0) {
+    return -1;
+  }
+  ptr = command;
+  while ((*ptr) && (*ptr != ',')) {
+    if (tcpServer_send(debugServer, clientID, *ptr++) < 0) {
+      return -1;
+    }
+  }
+  if (tcpServer_sendStr(debugServer, clientID, ", UnknownCommand;\n") < 0) {
     return -1;
   }
   return 2;
@@ -448,8 +458,10 @@ int run(const commandLineArgs_t *args) {
     &debugServerExtraDataFree
   ));
   
-  // Fork into daemon mode.
-  CHECK(daemonize());
+  // Fork into daemon mode if foreground is not set.
+  if (!args->foreground) {
+    CHECK(daemonize());
+  }
   
   // Set up the terminate handler.
   if (pipe(terminatePipe) < 0) {

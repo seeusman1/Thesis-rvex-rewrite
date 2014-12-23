@@ -63,6 +63,11 @@ int defs_register(contextMask_t mask, const char *def, const char *expansion);
 const char *defs_expand(const char *def);
 
 /**
+ * Sets the context used to expand definitions.
+ */
+void defs_setContext(int context);
+
+/**
  * Frees all dynamically allocated memory for the definition hashmap.
  */
 void defs_free(void);

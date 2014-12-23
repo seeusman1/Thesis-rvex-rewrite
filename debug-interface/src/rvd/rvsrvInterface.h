@@ -52,6 +52,22 @@
 #include "types.h"
 
 /**
+ * Stores the hostname and port to connect to internally. The connection is not
+ * made until the first call to one of the read or write methods.
+ */
+int rvsrv_setup(const char *host, int port);
+
+/**
+ * Closes the connection to rvsrv if a connection is open.
+ */
+void rvsrv_close(void);
+
+/**
+ * Sends the stop command to the server.
+ */
+int rvsrv_stopServer(void);
+
+/**
  * Reads a single byte, halfword or word from the hardware (size set to 1, 2 or
  * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
  * -1 when a fatal error occured. In the latter case, an error will be printed
@@ -67,14 +83,14 @@ int rvsrv_readSingle(
  * Writes a single byte, halfword or word to the hardware (size set to 1, 2 or
  * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
  * -1 when a fatal error occured. In the latter case, an error will be printed
- * to stdout. If a bus error occured and fault is not null, *fault will be set
- * to the bus fault.
+ * to stdout. If a bus error occured and fault is not null, *faultCode will be
+ * set to the bus fault.
  */
 int rvsrv_writeSingle(
   unsigned long address,
   unsigned long value,
   int size,
-  unsigned long *fault
+  unsigned long *faultCode
 );
 
 #endif

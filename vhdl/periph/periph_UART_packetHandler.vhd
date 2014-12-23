@@ -803,8 +803,8 @@ begin -- architecture
           
           -- We can only get here while preparing a volatile bus operation, in
           -- which case we're done.
-          enableOp <= ENABLE_OP_WRITE;
-          state_next <= STATE_BUS_OP;
+          packetOp <= PACKET_OP_NEXT;
+          state_next <= STATE_WAIT;
           
         -----------------------------------------------------------------------
         when STATE_BUS_OP =>
