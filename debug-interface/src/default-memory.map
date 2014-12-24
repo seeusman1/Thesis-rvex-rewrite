@@ -94,6 +94,18 @@ all:  SET_BANK:                write(BUS_BANK, 0hh+_CUR_CONTEXT<<1).
 all:  SET_BANK_HIGH:           write(BUS_BANK, 0hh+(_CUR_CONTEXT<<1)+1).
 
 
+all:  hello:
+  
+  def(printBanana, (
+    printf("Banana = 0x%08X\n", banana)
+  ));
+  
+  set(banana, 3);
+  printBanana;
+  set(banana, 5);
+  printBanana.
+  
+
 all:  PRINT_SHORT_STATE:
   0 #printf("PC:    %X\n", readWord(PC))
   .

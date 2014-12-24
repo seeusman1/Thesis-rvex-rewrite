@@ -67,17 +67,25 @@ static const char *scanErrorPos = 0;
  * Defines an operator.
  */
 typedef enum {
-  OP_ADD, // +
-  OP_SUB, // -
-  OP_MUL, // *
-  OP_DIV, // /
-  OP_MOD, // %
-  OP_SHL, // <<
-  OP_SHR, // >>
-  OP_AND, // &
-  OP_OR,  // |
-  OP_XOR, // ^
-  OP_SEP  // ;
+  OP_ADD,  // +
+  OP_SUB,  // -
+  OP_MUL,  // *
+  OP_DIV,  // /
+  OP_MOD,  // %
+  OP_EQ,   // ==
+  OP_NEQ,  // !=
+  OP_GT,   // >
+  OP_GTE,  // >=
+  OP_LT,   // <
+  OP_LTE,  // <=
+  OP_SHL,  // <<
+  OP_SHR,  // >>
+  OP_LAND, // &&
+  OP_BAND, // &
+  OP_LOR,  // ||
+  OP_BOR,  // |
+  OP_XOR,  // ^
+  OP_SEP   // ;
 } operator_t;
 
 /**
@@ -221,31 +229,26 @@ static int scanOperator(const char **str, operator_t *op) {
   operator_t o;
   int retval;
   
-  // Determine which operator to scan.
-  switch (*ptr++) {
-    case '+': o = OP_ADD; break;
-    case '-': o = OP_SUB; break;
-    case '*': o = OP_MUL; break;
-    case '/': o = OP_DIV; break;
-    case '%': o = OP_MOD; break;
-    case '<': o = OP_SHL; break;
-    case '>': o = OP_SHR; break;
-    case '&': o = OP_AND; break;
-    case '|': o = OP_OR;  break;
-    case '^': o = OP_XOR; break;
-    case ';': o = OP_SEP; break;
-    default : return 0;
-  }
-  
-  // In the case of SHL and SHR, scan the second character.
-  if (o == OP_SHL) {
-    if ((*ptr++) != '<') {
-      return 0;
-    }
-  } else if (o == OP_SHR) {
-    if ((*ptr++) != '>') {
-      return 0;
-    }
+  if (!strncmp(ptr, "+",  1)) { o = OP_ADD;  ptr += 1; } else
+  if (!strncmp(ptr, "-",  1)) { o = OP_SUB;  ptr += 1; } else
+  if (!strncmp(ptr, "*",  1)) { o = OP_MUL;  ptr += 1; } else
+  if (!strncmp(ptr, "/",  1)) { o = OP_DIV;  ptr += 1; } else
+  if (!strncmp(ptr, "%",  1)) { o = OP_MOD;  ptr += 1; } else
+  if (!strncmp(ptr, "==", 2)) { o = OP_EQ;   ptr += 2; } else
+  if (!strncmp(ptr, "!=", 2)) { o = OP_NEQ;  ptr += 2; } else
+  if (!strncmp(ptr, ">=", 2)) { o = OP_GTE;  ptr += 2; } else
+  if (!strncmp(ptr, ">>", 2)) { o = OP_SHR;  ptr += 2; } else
+  if (!strncmp(ptr, ">",  1)) { o = OP_GT;   ptr += 1; } else
+  if (!strncmp(ptr, "<=", 2)) { o = OP_LTE;  ptr += 2; } else
+  if (!strncmp(ptr, "<<", 2)) { o = OP_SHL;  ptr += 2; } else
+  if (!strncmp(ptr, "<",  1)) { o = OP_LT;   ptr += 1; } else
+  if (!strncmp(ptr, "&&", 2)) { o = OP_LAND; ptr += 2; } else
+  if (!strncmp(ptr, "&",  1)) { o = OP_BAND; ptr += 1; } else
+  if (!strncmp(ptr, "||", 2)) { o = OP_LOR;  ptr += 2; } else
+  if (!strncmp(ptr, "|",  1)) { o = OP_BOR;  ptr += 1; } else
+  if (!strncmp(ptr, "^",  1)) { o = OP_XOR;  ptr += 1; } else
+  if (!strncmp(ptr, ";",  1)) { o = OP_SEP;  ptr += 1; } else {
+    return 0;
   }
   
   // Successfully scanned the operator.
@@ -253,6 +256,189 @@ static int scanOperator(const char **str, operator_t *op) {
   *op = o;
   scanWhitespace(str);
   return 1;
+  
+}
+
+/**
+ * Appends character c to string *s with current length *len and allocation
+ * size *size. If *s is null or *size is too small, the buffer is reallocated.
+ * Returns -1 if *alloc fails.
+ */
+static int strAppendChar(char c, char **s, int *len, int *size) {
+  
+  // Perform the first allocation if we don't have a buffer yet.
+  if (!*s) {
+    *size = 16;
+    *len = 0;
+    *s = (char*)malloc(*size);
+  }
+  
+  // If the size is too small, reallocate.
+  if (*len >= *size) {
+    *size *= 2;
+    *s = realloc(*s, *size);
+  }
+  
+  // Make sure we have a buffer now. If not, malloc or realloc failed.
+  if (!*s) {
+    perror("Failed to (re)allocate string");
+    return -1;
+  }
+  
+  // Append the character.
+  (*s)[(*len)++] = c;
+  
+  return 0;
+}
+
+/**
+ * Scans a C-like string. Returns 1 if successful, in which case *s will be set
+ * to the scanned string and *str will be moved to the next token. If the next
+ * token could not be parsed as a atring, 0 is returned, and *str is
+ * unaffected. If *s is non-null after returning, the caller must free it.
+ */
+static int scanString(const char **str, char **s) {
+  
+  const char *ptr = *str;
+  int len = 0;
+  int size = 0;
+  *s = 0;
+  
+  // Scan opening double quote.
+  if (*ptr != '"') {
+    sprintf(scanError, "expected a string");
+    scanErrorPos = ptr;
+    return 0;
+  }
+  ptr++;
+  
+  // Scan the string.
+  while (1) {
+    
+    char c, cc;
+    
+    // Set the error position to the character (possibly an escape sequence)
+    // which we're handling now, and load the character.
+    scanErrorPos = ptr;
+    c = *ptr++;
+    
+    // Handle special characters.
+    cc = c;
+    switch (cc) {
+      
+      // Handle escape sequences.
+      case '\\':
+        c = *ptr++;
+        switch (c) {
+          
+          // Handle single-character escape sequences.
+          case 'a' : c = '\a'; break;
+          case 'b' : c = '\b'; break;
+          case 'f' : c = '\f'; break;
+          case 'n' : c = '\n'; break;
+          case 'r' : c = '\r'; break;
+          case 't' : c = '\t'; break;
+          case 'v' : c = '\v'; break;
+          case '\\': c = '\\'; break;
+          case '\'': c = '\''; break;
+          case '"' : c = '\"'; break;
+          case '?' : c = '\?'; break;
+          
+          // Handle hex direct-entry.
+          case 'x':
+            if ((*ptr >= '0') && (*ptr <= '9')) {
+              c = *ptr - '0';
+            } else if ((*ptr >= 'a') && (*ptr <= 'f')) {
+              c = *ptr - 'a' + 10;
+            } else if ((*ptr >= 'A') && (*ptr <= 'F')) {
+              c = *ptr - 'A' + 10;
+            } else {
+              // First digit is mandatory.
+              sprintf(scanError, "invalid hex escape sequence");
+              return 0;
+            }
+            ptr++;
+            if ((*ptr >= '0') && (*ptr <= '9')) {
+              c <<= 4;
+              c += *ptr - '0';
+            } else if ((*ptr >= 'a') && (*ptr <= 'f')) {
+              c <<= 4;
+              c += *ptr - 'a' + 10;
+            } else if ((*ptr >= 'A') && (*ptr <= 'F')) {
+              c <<= 4;
+              c += *ptr - 'A' + 10;
+            } else {
+              // Second digit is optional.
+              break;
+            }
+            ptr++;
+            break;
+            
+          // Handle octal direct-entry.
+          case '0':
+          case '1':
+          case '2':
+          case '3':
+          case '4':
+          case '5':
+          case '6':
+          case '7':
+            c = c - '0';
+            if ((*ptr >= '0') && (*ptr <= '7')) {
+              c <<= 3;
+              c += (*ptr - '0');
+              ptr++;
+              if ((*ptr >= '0') && (*ptr <= '7')) {
+                if (c >= 32) {
+                  sprintf(scanError, "octal escape sequence is out of range");
+                  return 0;
+                }
+                c <<= 3;
+                c += (*ptr - '0');
+                ptr++;
+              }
+            }
+            break;
+            
+          // Unknown escape sequence.
+          default:
+            sprintf(scanError, "encountered unknown escape sequence in string");
+            return 0;
+            
+        }
+        break;
+      
+      // Handle end of string.
+      case '"':
+        
+        // Null terminate the scanned string.
+        if (strAppendChar(0, s, &len, &size) < 0) {
+          return -1;
+        }
+        
+        // Update the scan pointer and scan beyond whitespace.
+        *str = ptr;
+        scanWhitespace(str);
+        
+        // Done.
+        return 1;
+        
+      // Handle unterminated strings.
+      case 0:
+        sprintf(scanError, "unterminated string literal");
+        return 0;
+      
+    }
+    
+    // Append the character to the string.
+    if (strAppendChar(c, s, &len, &size) < 0) {
+      return -1;
+    }
+    
+  }
+  
+  fprintf(stderr, "Should never get here...\n");
+  return -1;
   
 }
 
@@ -364,13 +550,25 @@ static int scanOperand(const char **str, value_t *value, int depth) {
       ptr++;
       scanWhitespace(&ptr);
       
-      if ((!strcmp(name, "read")) | (!strcmp(name, "readByte")) | (!strcmp(name, "readHalf")) | (!strcmp(name, "readWord"))) {
+      // ----------------------------------------------------------------------
+      if (
+        (!strcmp(name, "read")) ||
+        (!strcmp(name, "readByte")) ||
+        (!strcmp(name, "readHalf")) ||
+        (!strcmp(name, "readWord"))
+      ) {
         int size;
         unsigned long readVal;
+        char id;
+        
+        // Store an identifying character of the command name, then free the
+        // command.
+        id = name[4];
+        free(name);
+        name = 0;
         
         // Scan the address.
         if ((retval = scanExpression(&ptr, &v, depth)) < 1) {
-          free(name);
           return retval;
         }
         
@@ -378,7 +576,6 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         if (*ptr != ')') {
           sprintf(scanError, "expected ')'");
           scanErrorPos = ptr;
-          free(name);
           return 0;
         }
         ptr++;
@@ -389,13 +586,11 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         if (depth != -1) {
           
           // Determine the access size.
-          switch (name[4]) {
+          switch (id) {
             case 'B': size = 1; v.size = AS_BYTE; break;
             case 'H': size = 2; v.size = AS_HALF; break;
             default : size = 4; v.size = AS_WORD; break;
           }
-          free(name);
-          name = 0;
           
           // Perform the access.
           switch (rvsrv_readSingle(v.value, &readVal, size)) {
@@ -417,11 +612,21 @@ static int scanOperand(const char **str, value_t *value, int depth) {
           
         }
         
-      } else if ((!strcmp(name, "write")) || (!strcmp(name, "writeByte")) || (!strcmp(name, "writeHalf")) || (!strcmp(name, "writeWord"))) {
+      // ----------------------------------------------------------------------
+      } else if (
+        (!strcmp(name, "write")) || 
+        (!strcmp(name, "writeByte")) || 
+        (!strcmp(name, "writeHalf")) || 
+        (!strcmp(name, "writeWord"))
+      ) {
         int size;
         unsigned long fault;
         value_t address;
+        char id;
         
+        // Store an identifying character of the command name, then free the
+        // command.
+        id = name[5];
         free(name);
         name = 0;
         
@@ -458,7 +663,7 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         if (depth != -1) {
           
           // Determine the access size.
-          switch (name[5]) {
+          switch (id) {
             case 'B': v.size = AS_BYTE; break;
             case 'H': v.size = AS_HALF; break;
             case 'W': v.size = AS_WORD; break;
@@ -486,6 +691,298 @@ static int scanOperand(const char **str, value_t *value, int depth) {
           
         }
         
+      // ----------------------------------------------------------------------
+      } else if (
+        (!strcmp(name, "printf"))
+      ) {
+        char *fmt, *fmtPtr, *fmtStart;
+        
+        // We don't need the name anymore.
+        free(name);
+        name = 0;
+        
+        // Scan the format string.
+        if ((retval = scanString(&ptr, &fmt)) < 1) {
+          return retval;
+        }
+        
+        // We can't pass a list of arguments to printf of which the size is
+        // unknown at compile time, so we need to scan for printf format
+        // specifiers ourselves. We still invoke printf to convert them though.
+        fmtPtr = fmt;
+        fmtStart = fmtPtr;
+        while (*fmtPtr) {
+          
+          // Handle format specifiers.
+          if (*fmtPtr++ == '%') {
+            int brk = 0;
+            char c;
+            
+            // Scan characters until we reach a known format specifier or
+            // something illegal.
+            while (!brk) {
+              
+              switch (*fmtPtr++) {
+                
+                // Pass by characters which are perfectly fine.
+                case '-':
+                case '+':
+                case ' ':
+                case '#':
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
+                case '8':
+                case '9':
+                case '.':
+                  break;
+                  
+                // Handle supported format specifiers.
+                case 'd':
+                case 'i':
+                case 'u':
+                case 'o':
+                case 'x':
+                case 'X':
+                  
+                  // Scan the comma before the operand which we're printing.free(name);
+                  if (*ptr != ',') {
+                    sprintf(scanError, "expected ','");
+                    scanErrorPos = ptr;
+                    free(fmt);
+                    return 0;
+                  }
+                  ptr++;
+                  scanWhitespace(&ptr);
+                  
+                  // Scan the value to print.
+                  if ((retval = scanExpression(&ptr, &v, depth)) < 1) {
+                    free(fmt);
+                    return retval;
+                  }
+                  
+                  // Trim the value by the size of its apparent type.
+                  if (v.size == AS_BYTE) {
+                    v.value &= 0xFF;
+                  } else if (v.size == AS_HALF) {
+                    v.value &= 0xFFFF;
+                  }
+                  
+                  // Don't print if we're just syntax-checking.
+                  if (depth != -1) {
+                    
+                    // We're ready to call printf now. However, we must make sure
+                    // that we null terminate the format string where we're
+                    // currently scanning (otherwise it would just try to print
+                    // the entire format string, which is what we're trying to
+                    // avoid). To do so, we temporarily insert a nul.
+                    c = *fmtPtr;
+                    *fmtPtr = 0;
+                    printf(fmtStart, v.value);
+                    *fmtPtr = c;
+                    
+                  }
+                  
+                  // The next time we call printf, start here.
+                  fmtStart = fmtPtr;
+                  
+                  // Break out of format specifier loop.
+                  brk = 1;
+                  break;
+                  
+                // Handle unsupported format specifiers.
+                case 'f':
+                case 'F':
+                case 'e':
+                case 'E':
+                case 'g':
+                case 'G':
+                case 'a':
+                case 'A':
+                case 'c':
+                case 's':
+                case 'p':
+                case 'n':
+                  sprintf(scanError, "unsupported format specifier %c", *(fmtPtr-1));
+                  scanErrorPos = ptr;
+                  free(fmt);
+                  return 0;
+                  
+                // Handle unexpected nul character.
+                case 0:
+                  sprintf(scanError, "improperly terminated format specifier");
+                  scanErrorPos = ptr;
+                  free(fmt);
+                  return 0;
+                  
+                // Handle unexpected nul character.
+                default:
+                  sprintf(scanError, "illegal or unsupported character %c in format specifier", *(fmtPtr-1));
+                  scanErrorPos = ptr;
+                  free(fmt);
+                  return 0;
+                  
+                  
+              }
+              
+            }
+            
+          }
+          
+        }
+        
+        // Scan the the close parenthesis now that we've reached the end of the
+        // format string.
+        if (*ptr != ')') {
+          sprintf(scanError, "expected ')'");
+          scanErrorPos = ptr;
+          free(fmt);
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+        // Call printf for the remainder of the format string, but don't print
+        // if we're just syntax-checking.
+        if (depth != -1) {
+          printf(fmtStart);
+        }
+        free(fmt);
+        
+        // Return 0.
+        v.value = 0;
+        v.size = AS_UNDEFINED;
+        
+      // ----------------------------------------------------------------------
+      } else if (
+        (!strcmp(name, "def")) ||
+        (!strcmp(name, "set"))
+      ) {
+        const char *expStart;
+        char *expansion;
+        char id;
+        
+        // Store an identifying character of the command name, then free the
+        // command.
+        id = name[0];
+        free(name);
+        name = 0;
+        
+        // Scan the name of the definition.
+        switch (scanIdentifier(&ptr, &name)) {
+          case 0:
+            sprintf(scanError, "definition name expected");
+            scanErrorPos = ptr;
+            return 0;
+            
+          case 1:
+            break;
+            
+          default:
+            return -1;
+          
+        }
+        
+        // Make sure the definition name was properly allocated.
+        if (!name) {
+          perror("Failed to allocate memory while parsing");
+          return -1;
+        }
+        
+        // Scan the comma.
+        if (*ptr != ',') {
+          sprintf(scanError, "expected ','");
+          scanErrorPos = ptr;
+          free(name);
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+        // Scan the value/expression. Only perform scanning/syntax checking for
+        // def; actually evaluate the expression for set.
+        expStart = ptr;
+        if ((retval = scanExpression(&ptr, &v, (id == 'd') ? -1 : depth)) < 1) {
+          free(name);
+          return retval;
+        }
+        
+        // Perform def/set specific tasks, including determining the expansion.
+        if (id == 'd') {
+          int len;
+          
+          // Handle def(). Copy what we've just scanned into a new string so we
+          // can null terminate it.
+          len = ptr - expStart;
+          expansion = (char*)malloc(len + 1);
+          if (!expansion) {
+            perror("Failed to allocated memory while parsing");
+            free(name);
+            return -1;
+          }
+          memcpy(expansion, expStart, len);
+          expansion[len] = 0;
+          
+          // Always return 0.
+          v.value = 0;
+          v.size = AS_UNDEFINED;
+          
+        } else {
+          
+          // Handle set(). Make a new string, large enough to contain an 8
+          // digit hex value with 0x, two extra characters for the hh size
+          // specifier and the nul termination character.
+          expansion = (char*)malloc(16);
+          if (!expansion) {
+            perror("Failed to allocated memory while parsing");
+            free(name);
+            return -1;
+          }
+          
+          // Write an integer literal which will evaluate to exactly the same
+          // value was what's currently in v.
+          switch (v.size) {
+            case AS_BYTE: sprintf(expansion, "0x%08Xhh", v.value);
+            case AS_HALF: sprintf(expansion, "0x%08Xh", v.value);
+            case AS_WORD: sprintf(expansion, "0x%08Xw", v.value);
+            case AS_UNDEFINED: sprintf(expansion, "0x%08X", v.value);
+          }
+          
+        }
+        
+        // Don't register if we're only syntax-checking/scanning.
+        if (depth != -1) {
+          
+          // Register the definition.
+          if (defs_registerLocal(name, expansion) < 0) {
+            free(name);
+            free(expansion);
+            return -1;
+          }
+          
+        }
+        
+        // Free the strings used for the definition.
+        free(name);
+        name = 0;
+        free(expansion);
+        expansion = 0;
+        
+        // Scan the close parenthesis.
+        if (*ptr != ')') {
+          sprintf(scanError, "expected ')'");
+          scanErrorPos = ptr;
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+      // ----------------------------------------------------------------------
       } else {
         
         // Unknown function.
@@ -592,27 +1089,44 @@ static int scanExpression(const char **str, value_t *value, int depth) {
   }
   
   // If scanning the operator was successful, scan the second operand, which
-  // may be an expression.
+  // may be an expression. The second operand is optional for the semicolon
+  // operator, so semicolons can be placed at the end of the last line.
   if (retval) {
     value_t v2 = {0, AS_UNDEFINED};
     
     if ((retval = scanExpression(&ptr, &v2, depth)) < 1) {
+      if ((op == OP_SEP) && (retval == 0)) {
+        
+        // It's okay if there's no operand here for the semicolon op.
+        *str = ptr;
+        *value = v;
+        return 1;
+        
+      }
       return retval;
     }
     
     // Execute the operator.
     switch (op) {
-      case OP_ADD: v.value +=  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_SUB: v.value -=  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_MUL: v.value *=  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_DIV: v.value /=  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_MOD: v.value %=  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_SHL: v.value <<= v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_SHR: v.value >>= v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_AND: v.value &=  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_OR:  v.value |=  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_XOR: v.value ^=  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_SEP: v.value =   v2.value; v.size =                   v2.size ; break;
+      case OP_ADD:  v.value = v.value +  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_SUB:  v.value = v.value -  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_MUL:  v.value = v.value *  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_DIV:  v.value = v.value /  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_MOD:  v.value = v.value %  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_EQ:   v.value = v.value == v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_NEQ:  v.value = v.value != v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_GT:   v.value = v.value >  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_GTE:  v.value = v.value >= v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_LT:   v.value = v.value <  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_LTE:  v.value = v.value <= v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_SHL:  v.value = v.value << v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_SHR:  v.value = v.value >> v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_LAND: v.value = v.value && v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_BAND: v.value = v.value &  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_LOR:  v.value = v.value || v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_BOR:  v.value = v.value |  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_XOR:  v.value = v.value ^  v2.value; v.size = mergeSize(v.size, v2.size); break;
+      case OP_SEP:  v.value =            v2.value; v.size =                   v2.size ; break;
     }
     
   }

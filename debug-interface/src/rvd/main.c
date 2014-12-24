@@ -560,8 +560,6 @@ int run(commandLineArgs_t *args) {
   } else if (
     (!strcmp(args->command, "fill"))
   ) {
-    value_t value;
-    
     if (isHelp(args) || (args->paramCount < 2) || (args->paramCount > 3)) {
       printf(
         "\n"
@@ -671,6 +669,109 @@ int run(commandLineArgs_t *args) {
     
   // --------------------------------------------------------------------------
   } else if (
+    (!strcmp(args->command, "upload")) ||
+    (!strcmp(args->command, "up"))
+  ) {
+    
+    printf("Sorry, not yet implemented :(\n");
+    return -1;
+    
+  // --------------------------------------------------------------------------
+  } else if (
+    (!strcmp(args->command, "upload")) ||
+    (!strcmp(args->command, "up"))
+  ) {
+    
+    printf("Sorry, not yet implemented :(\n");
+    return -1;
+    
+  // --------------------------------------------------------------------------
+  } else if (
+    (!strcmp(args->command, "break")) ||
+    (!strcmp(args->command, "b")) ||
+    (!strcmp(args->command, "step")) ||
+    (!strcmp(args->command, "s")) ||
+    (!strcmp(args->command, "resume")) ||
+    (!strcmp(args->command, "continue")) ||
+    (!strcmp(args->command, "c")) ||
+    (!strcmp(args->command, "release")) ||
+    (!strcmp(args->command, "reset")) ||
+    (!strcmp(args->command, "rst")) ||
+    (!strcmp(args->command, "state")) ||
+    (!strcmp(args->command, "?"))
+  ) {
+    const char *expr;
+    
+    if (isHelp(args) || (args->paramCount != 0)) {
+      printf(
+        "\n"
+        "Command usage:\n"
+        "  rvd break      rvd b        rvd execute \"_BREAK\"\n"
+        "  rvd step       rvd s        rvd execute \"_STEP\"\n"
+        "  rvd resume     rvd c        rvd execute \"_RESUME\"\n"
+        "  rvd release                 rvd execute \"_RELEASE\"\n"
+        "  rvd reset      rvd rst      rvd execute \"_RESET\"\n"
+        "  rvd state      rvs ?        rvd execute \"_STATE\"\n"
+        "\n"
+        "This commands listed above can be used for debugging. They're just shorthand\n"
+        "notations for calling certain execute commands, as shown in the list above: all\n"
+        "the commands in each line are synonyms. To make use of these debugging commands,\n"
+        "the definitions used must be defined in a loaded memory map file.\n"
+        "\n"
+      );
+      return 0;
+    }
+    
+    // Decode the expression to execute.
+    if (
+      (!strcmp(args->command, "break")) ||
+      (!strcmp(args->command, "b"))
+    ) {
+      expr = "_BREAK";
+    } else if (
+      (!strcmp(args->command, "step")) ||
+      (!strcmp(args->command, "s"))
+    ) {
+      expr = "_STEP";
+    } else if (
+      (!strcmp(args->command, "resume")) ||
+      (!strcmp(args->command, "continue")) ||
+      (!strcmp(args->command, "c"))
+    ) {
+      expr = "_RESUME";
+    } else if (
+      (!strcmp(args->command, "release"))
+    ) {
+      expr = "_RELEASE";
+    } else if (
+      (!strcmp(args->command, "reset")) ||
+      (!strcmp(args->command, "rst"))
+    ) {
+      expr = "_RESET";
+    } else if (
+      (!strcmp(args->command, "state")) ||
+      (!strcmp(args->command, "?"))
+    ) {
+      expr = "_STATE";
+    } else {
+      fprintf(stderr, "An unknown error occured.\n");
+      return -1;
+    }
+    
+    // Execute the expression.
+    FOR_EACH_CONTEXT(
+      value_t dummyValue;
+      
+      if (evaluate(expr, &dummyValue, "") < 1) {
+        return -1;
+      }
+      
+    );
+    
+    return 0;
+    
+  // --------------------------------------------------------------------------
+  } else if (
     (!strcmp(args->command, "expressions"))
   ) {
     // (This is intentionally a help-only "command".)
@@ -732,7 +833,7 @@ int run(commandLineArgs_t *args) {
         "  ;   Sequential\n"
         "\n"
         "With the exception of the sequential operator, all operators behave the same as\n"
-        "their C counterparts (applied to unsigned longs) on their own. However, THERE IS\n"
+        "their C counterparts (applied to uint32_ts) on their own. However, THERE IS\n"
         "NO OPERATOR PRECEDENCE, and ALL OPERATORS ARE RIGHT ASSOCIATIVE. This means\n"
         "that, for example, 2 * 3 + 4 will be interpreted as 2 * (3 + 4) = 14, not\n"
         "(2 * 3) + 4 = 10. You should always use parenthesis when combining operators to\n"

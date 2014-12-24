@@ -291,27 +291,27 @@ static void usage(char *progName, int verbose) {
   );
   if (verbose) printf(
     "Basic commands:\n"
-    "  help               Prints this listing.\n"
-    "  license            Prints licensing information.\n"
-    "  select             Selects the rvex context to access.\n"
-    "  evaluate, eval     Evaluates the given expression.\n"
-    "  execute, exec      Executes the given expression.\n"
-    "  stop               Sends the stop command to rvsrv.\n"
+    "  help                 Prints this listing.\n"
+    "  license              Prints licensing information.\n"
+    "  select               Selects the rvex context to access.\n"
+    "  evaluate, eval       Evaluates the given expression.\n"
+    "  execute, exec        Executes the given expression.\n"
+    "  stop                 Sends the stop command to rvsrv.\n"
     "\n"
     "Memory access:\n"
-    //"  upload, up         Uploads an S-record or binary file.\n"   TODO
-    //"  download, dl       Downloads an S-record or binary file.\n" TODO
-    "  write, w           Writes a word, halfword or byte.\n"
-    "  read, r            Reads one or more words, halfwords or bytes.\n"
-    "  fill               Fills an address range with the specified byte.\n"
-    //"\n"
-    //"Debugging:\n"
-    //"  break              Stops execution on the selected contexts.\n"   TODO
-    //"  step               Executes the next bundle and stops again.\n"   TODO
-    //"  resume, continue   Resumes execution on the selected contexts.\n" TODO
-    //"  release            Releases debugging control.\n"                 TODO
-    //"  reset              Soft-resets the selected contexts.\n"          TODO
-    //"  state              Dumps context state.\n"                        TODO
+    "  write, w             Writes a word, halfword or byte.\n"
+    "  read, r              Reads one or more words, halfwords or bytes.\n"
+    "  fill                 Fills an address range with the specified byte.\n"
+    "  upload, up           Uploads an S-record or binary file.\n"
+    "  download, dl         Downloads an S-record or binary file.\n"
+    "\n"
+    "Debugging:\n"
+    "  break, b             Stops execution on the selected contexts.\n"
+    "  step, s              Executes the next bundle and stops again.\n"
+    "  resume, continue, c  Resumes execution on the selected contexts.\n"
+    "  release              Releases debugging control.\n"
+    "  reset, rst           Soft-resets the selected contexts.\n"
+    "  state, ?             Dumps context state.\n"
     "\n"
     "Run \"%s help <command>\" for more information about a command, if available.\n"
     "Also, \"%s help expressions\" prints information on how you can express things\n"

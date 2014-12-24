@@ -57,6 +57,11 @@
 int defs_register(contextMask_t mask, const char *def, const char *expansion);
 
 /**
+ * Registers an expansion locally, i.e., using the current context.
+ */
+int defs_registerLocal(const char *def, const char *expansion);
+
+/**
  * Expands the given definition, or returns null if the definition is not
  * known.
  */
