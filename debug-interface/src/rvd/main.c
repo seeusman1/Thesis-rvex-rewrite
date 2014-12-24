@@ -333,7 +333,7 @@ int run(commandLineArgs_t *args) {
       value_t address;
       value_t value;
       int size;
-      unsigned long fault;
+      uint32_t fault;
       
       // Evaluate the address.
       if (evaluate(args->params[0], &address, "") < 1) {
@@ -484,7 +484,7 @@ int run(commandLineArgs_t *args) {
           first = 1;
           while (iterPage(&i)) {
             
-            unsigned long fault;
+            uint32_t fault;
             int retval;
             
             // We store the contents of the previous line to match against the
@@ -522,7 +522,7 @@ int run(commandLineArgs_t *args) {
         }
         
       } else {
-        unsigned long value;
+        uint32_t value;
         
         // Perform the access.
         switch (rvsrv_readSingle(address.value, &value, size)) {
@@ -628,7 +628,7 @@ int run(commandLineArgs_t *args) {
         i = iterPageInit(address.value, count.value, RVSRV_PAGE_SIZE);
         while (iterPage(&i)) {
           
-          unsigned long fault;
+          uint32_t fault;
           int retval;
           
           // We store the contents of the previous line to match against the
@@ -783,8 +783,7 @@ int run(commandLineArgs_t *args) {
         "\n"
         "Almost any integer specification in rvd - addresses, values, contexts, etc. -\n"
         "can be specified using expressions. An expression can be as simple as a number\n"
-        "or as complex as a small script - it's a very basic functional scripting\n"
-        "language.\n"
+        "or as complex as a small script - it's a basic functional scripting language.\n"
         "\n"
         "Integer literals\n"
         "----------------\n"
@@ -824,12 +823,21 @@ int run(commandLineArgs_t *args) {
         "  *   Multiplication\n"
         "  /   Division\n"
         "  %   Modulo\n"
-        "  <<  Left shift\n"
-        "  >>  Right shift (logical)\n"
+        "  ==  Equality\n"
+        "  !=  Non-equality\n"
+        "  <   Less than\n"
+        "  <=  Less than or equal\n"
+        "  >   Greater than\n"
+        "  >=  Greater than or equal\n"
+        "  !   Logical not\n"
+        "  &&  Logical and\n"
+        "  ||  Logical or\n"
         "  ~   Unary one's complement\n"
         "  &   Bitwise and\n"
         "  |   Bitwise or\n"
         "  ^   Bitwise xor\n"
+        "  <<  Left shift\n"
+        "  >>  Right shift (unsigned)\n"
         "  ;   Sequential\n"
         "\n"
         "With the exception of the sequential operator, all operators behave the same as\n"
@@ -840,7 +848,10 @@ int run(commandLineArgs_t *args) {
         "make sure it will do what you want it to.\n"
         "\n"
         "The sequential operator will simply evaluate both sides sequentially, and pick\n"
-        "the result of the rightmost operator.\n"
+        "the result of the rightmost operator. The second operand of this operator is\n"
+        "optional when the operator is followed by a close parenthesis or the end of the\n"
+        "parsed string, in which case the first operand result is returned, as if the\n"
+        "semicolon was not there.\n"
         "\n"
         "Definitions\n"
         "-----------\n"
@@ -860,7 +871,7 @@ int run(commandLineArgs_t *args) {
         "The syntax for a definition in a map file or on the command line looks like\n"
         "this:\n"
         "\n"
-        "  <contexts> : <name> : <expression> .\n"
+        "  <contexts>: <name> { <expression> }\n"
         "\n"
         "The <contexts> part specifies for which contexts the definition should be valid.\n"
         "Call \"rvd help select\" for more information; the syntax for <contexts> in the\n"
@@ -871,10 +882,7 @@ int run(commandLineArgs_t *args) {
         "alphanumerical and underscores for the rest of the characters. Names are case\n"
         "sensitive. <expression> may specify any syntactically correct expression.\n"
         "\n"
-        "The . (full stop) at the end of the definition is used as a seperator between\n"
-        "multiple definitions, in particular within .map files. It is optional for the\n"
-        "last (or only) definition in a list, though. Within .map files, anything between\n"
-        "a # (hash) and a newline is a comment.\n"
+        "Within .map files, anything between a # (hash) and a newline is a comment.\n"
         "\n"
         "The order in which definitions are defined does not matter, as long as\n"
         "everything is defined when the definition is used in an evaluated expression.\n"
@@ -910,6 +918,34 @@ int run(commandLineArgs_t *args) {
         "    written. If any kind of error or a bus fault occurs, evaluation is\n"
         "    terminated. write() will choose its access size based upon the type attached\n"
         "    to value.\n"
+        "\n"
+        "  printf(format, ...)\n"
+        "    This method wraps part of the C printf method. Refer to C documentation on\n"
+        "    how it works. The following specifiers are NOT allowed:\n"
+        "      f F e E g G a A c s p n\n"
+        "    Also, size modifiers should not be used. printf will always return 0.\n"
+        "\n"
+        "  def(name, expansion)\n"
+        "  set(name, expression)\n"
+        "    Defines a definition dynamically. def() will set the expansion to the given\n"
+        "    expression without evaluating it, deferring evaluation until the definition\n"
+        "    is used. This allows basic procedures to be defined. set() evaluated the\n"
+        "    given expression and sets the expansion of the definition to that value.\n"
+        "    def() will always return zero, set() will return the value which was set.\n"
+        "\n"
+        "  if(condition, command-if-true)\n"
+        "  if(condition, command-if-true, command-if-false)\n"
+        "    Allows conditional evaluation. condition is always evaluated. If it\n"
+        "    evaluates to nonzero, command-if-true is evaluated, but command-if-false\n"
+        "    (if specified) is not. When condition is evaluates to zero, the opposite\n"
+        "    operation is performed. if() will return the result of the executed command,\n"
+        "    or 0 if condition evaluated to zero and command-if-false was not specified.\n"
+        "\n"
+        "  while(condition, command)\n"
+        "    Allows looping. While condition evaluates to nonzero, command is evaluated.\n"
+        "    Obviously, condition will also be evaluated for every iteration. while()\n"
+        "    returns the last evaluated value for command, or 0 if it has not been\n"
+        "    evaluated.\n"
         "\n"
       );
       return 0;

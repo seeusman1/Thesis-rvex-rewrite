@@ -474,13 +474,23 @@ static int scanOperand(const char **str, value_t *value, int depth) {
     
   } else if (*ptr == '~') {
     
-    // Scan and execute not operator.
+    // Scan and execute inverse operator.
     ptr++;
     scanWhitespace(&ptr);
     if ((retval = scanOperand(&ptr, &v, depth)) < 1) {
       return retval;
     }
     v.value = ~v.value;
+    
+  } else if (*ptr == '!') {
+    
+    // Scan and execute not operator.
+    ptr++;
+    scanWhitespace(&ptr);
+    if ((retval = scanOperand(&ptr, &v, depth)) < 1) {
+      return retval;
+    }
+    v.value = !v.value;
     
   } else if (*ptr == '(') {
     
@@ -558,7 +568,7 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         (!strcmp(name, "readWord"))
       ) {
         int size;
-        unsigned long readVal;
+        uint32_t readVal;
         char id;
         
         // Store an identifying character of the command name, then free the
@@ -620,7 +630,7 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         (!strcmp(name, "writeWord"))
       ) {
         int size;
-        unsigned long fault;
+        uint32_t fault;
         value_t address;
         char id;
         
@@ -983,6 +993,134 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         scanWhitespace(&ptr);
         
       // ----------------------------------------------------------------------
+      } else if (
+        (!strcmp(name, "if"))
+      ) {
+        value_t dummyVal;
+        value_t condition;
+        
+        // We don't need the command name anymore.
+        free(name);
+        name = 0;
+        
+        // Scan and evaluate the condition.
+        if ((retval = scanExpression(&ptr, &condition, depth)) < 1) {
+          return retval;
+        }
+        
+        // Scan the comma.
+        if (*ptr != ',') {
+          sprintf(scanError, "expected ','");
+          scanErrorPos = ptr;
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+        // Scan the if operation.
+        if ((retval = scanExpression(&ptr, condition.value ? (&v) : (&dummyVal), condition.value ? depth : -1)) < 1) {
+          return retval;
+        }
+        
+        // Scan the optional else operation.
+        if (*ptr == ',') {
+          ptr++;
+          scanWhitespace(&ptr);
+          if ((retval = scanExpression(&ptr, condition.value ? (&dummyVal) : (&v), condition.value ? -1 : depth)) < 1) {
+            return retval;
+          }
+        } else if (!condition.value) {
+          v.value = 0;
+          v.size = AS_UNDEFINED;
+        }
+        
+        // Scan the close parenthesis.
+        if (*ptr != ')') {
+          sprintf(scanError, "expected ')'");
+          scanErrorPos = ptr;
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+      // ----------------------------------------------------------------------
+      } else if (
+        (!strcmp(name, "while"))
+      ) {
+        const char *conditionPtr;
+        const char *commandPtr;
+        const char *endPtr;
+        
+        // We don't need the command name anymore.
+        free(name);
+        name = 0;
+        
+        // Scan the condition without evaluating it.
+        conditionPtr = ptr;
+        if ((retval = scanExpression(&ptr, &v, -1)) < 1) {
+          return retval;
+        }
+        
+        // Scan the comma.
+        if (*ptr != ',') {
+          sprintf(scanError, "expected ','");
+          scanErrorPos = ptr;
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+        // Scan the command without evaluating it.
+        commandPtr = ptr;
+        if ((retval = scanExpression(&ptr, &v, -1)) < 1) {
+          return retval;
+        }
+        
+        // Scan the close parenthesis.
+        if (*ptr != ')') {
+          sprintf(scanError, "expected ')'");
+          scanErrorPos = ptr;
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        endPtr = ptr;
+        
+        // Return 0 by default.
+        v.value = 0;
+        v.size = AS_UNDEFINED;
+        
+        // Run the loop if we're not just scanning/checking syntax.
+        if (depth != -1) {
+          
+          while (1) {
+            value_t condition;
+            
+            // Execute the condition.
+            ptr = conditionPtr;
+            if ((retval = scanExpression(&ptr, &condition, depth)) < 1) {
+              return retval;
+            }
+            
+            // Break if the condition is 0.
+            if (!condition.value) {
+              break;
+            }
+            
+            // Execute the command.
+            ptr = commandPtr;
+            if ((retval = scanExpression(&ptr, &v, depth)) < 1) {
+              return retval;
+            }
+            
+          }
+          
+          // Move the scan position back to the end of the while function.
+          ptr = endPtr;
+          
+        }
+        
+      // ----------------------------------------------------------------------
       } else {
         
         // Unknown function.
@@ -1088,45 +1226,43 @@ static int scanExpression(const char **str, value_t *value, int depth) {
     return retval;
   }
   
-  // If scanning the operator was successful, scan the second operand, which
-  // may be an expression. The second operand is optional for the semicolon
-  // operator, so semicolons can be placed at the end of the last line.
+  // If scanning the operator was successful, scan the second operand.
   if (retval) {
     value_t v2 = {0, AS_UNDEFINED};
     
-    if ((retval = scanExpression(&ptr, &v2, depth)) < 1) {
-      if ((op == OP_SEP) && (retval == 0)) {
-        
-        // It's okay if there's no operand here for the semicolon op.
-        *str = ptr;
-        *value = v;
-        return 1;
-        
+    // If the next character is the end of the string or a close parenthesis
+    // and we scanned a semicolon operator, that's fine, because the second
+    // operand is optional for that operator. For all other cases, fail if
+    // the second operand is not a valid expression.
+    if (!((op == OP_SEP) && ((*ptr == 0) || (*ptr == ')')))) {
+      
+      if ((retval = scanExpression(&ptr, &v2, depth)) < 1) {
+        return retval;
       }
-      return retval;
-    }
-    
-    // Execute the operator.
-    switch (op) {
-      case OP_ADD:  v.value = v.value +  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_SUB:  v.value = v.value -  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_MUL:  v.value = v.value *  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_DIV:  v.value = v.value /  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_MOD:  v.value = v.value %  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_EQ:   v.value = v.value == v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_NEQ:  v.value = v.value != v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_GT:   v.value = v.value >  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_GTE:  v.value = v.value >= v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_LT:   v.value = v.value <  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_LTE:  v.value = v.value <= v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_SHL:  v.value = v.value << v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_SHR:  v.value = v.value >> v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_LAND: v.value = v.value && v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_BAND: v.value = v.value &  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_LOR:  v.value = v.value || v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_BOR:  v.value = v.value |  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_XOR:  v.value = v.value ^  v2.value; v.size = mergeSize(v.size, v2.size); break;
-      case OP_SEP:  v.value =            v2.value; v.size =                   v2.size ; break;
+      
+      // Execute the operator.
+      switch (op) {
+        case OP_ADD:  v.value = v.value +  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_SUB:  v.value = v.value -  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_MUL:  v.value = v.value *  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_DIV:  v.value = v.value /  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_MOD:  v.value = v.value %  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_EQ:   v.value = v.value == v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_NEQ:  v.value = v.value != v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_GT:   v.value = v.value >  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_GTE:  v.value = v.value >= v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_LT:   v.value = v.value <  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_LTE:  v.value = v.value <= v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_SHL:  v.value = v.value << v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_SHR:  v.value = v.value >> v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_LAND: v.value = v.value && v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_BAND: v.value = v.value &  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_LOR:  v.value = v.value || v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_BOR:  v.value = v.value |  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_XOR:  v.value = v.value ^  v2.value; v.size = mergeSize(v.size, v2.size); break;
+        case OP_SEP:  v.value =            v2.value; v.size =                   v2.size ; break;
+      }
+      
     }
     
   }
@@ -1220,7 +1356,7 @@ static int scanContextMask(const char **str, contextMask_t *mask) {
     
     // Choose v1 and v2 such that v2 is greater than v1.
     if (v2.value < v1.value) {
-      unsigned long s = v1.value;
+      uint32_t s = v1.value;
       v1.value = v2.value;
       v2.value = s;
     }
@@ -1261,6 +1397,12 @@ static int registerDefinition(contextMask_t mask, const char *def, char *expansi
     expansion[expLen] = c;
     return retval;
   }
+  if (*ptr != 0) {
+    sprintf(scanError, "expected '}'");
+    scanErrorPos = ptr;
+    expansion[expLen] = c;
+    return 0;
+  }
   
   // Register the expansion.
   if (defs_register(mask, def, expansion) < 0) {
@@ -1287,6 +1429,7 @@ static int scanDefinition(char **str) {
   char *expansion = 0;
   int expLen;
   int retval;
+  int strState;
   contextMask_t mask;
   
   scanWhitespace((const char **)&ptr);
@@ -1327,9 +1470,9 @@ static int scanDefinition(char **str) {
     return -1;
   }
   
-  // Expect and scan colon.
-  if (*ptr != ':') {
-    sprintf(scanError, "expected ':'");
+  // Expect and scan open brace.
+  if (*ptr != '{') {
+    sprintf(scanError, "expected '{'");
     scanErrorPos = ptr;
     free(definition);
     return 0;
@@ -1337,10 +1480,34 @@ static int scanDefinition(char **str) {
   ptr++;
   scanWhitespace((const char **)&ptr);
   
-  // Scan until we encounter a '.' or null.
+  // Scan until we encounter a '}' or null, respecting string literals.
   expansion = ptr;
   expLen = 0;
-  while ((*ptr) && (*ptr != '.')) {
+  strState = 0;
+  while ((*ptr) && ((*ptr != '}') || strState)) {
+    
+    switch (strState) {
+      
+      case 0:
+        if (*ptr == '"') {
+          strState = 1;
+        }
+        break;
+        
+      case 1:
+        if (*ptr == '"') {
+          strState = 0;
+        } else if (*ptr == '\\') {
+          strState = 2;
+        }
+        break;
+        
+      case 2:
+        strState = 1;
+        break;
+        
+    }
+    
     expLen++;
     ptr++;
   }
@@ -1569,7 +1736,7 @@ int parseDefs(char *str, const char *errorPrefix) {
       }
     }
     
-    if (*ptr == '.') {
+    if (*ptr == '}') {
       ptr++;
       scanWhitespace((const char **)&ptr);
     } else {

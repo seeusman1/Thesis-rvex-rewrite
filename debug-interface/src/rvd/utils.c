@@ -56,7 +56,7 @@
  * Initializes page iteration. iterPage() should be called before anything else
  * after this initialization.
  */
-iterPage_t iterPageInit(unsigned long start, int count, unsigned long pageSize) {
+iterPage_t iterPageInit(uint32_t start, int count, uint32_t pageSize) {
   iterPage_t i;
   i.pageSize = pageSize;
   i.remain = count;
@@ -84,7 +84,7 @@ int iterPage(iterPage_t *i) {
 /**
  * Prints a single line for hexdump.
  */
-static void hexdumpLine(unsigned long address, unsigned char *buffer, int startOffs, int stopOffs, int fault, int ellipsis) {
+static void hexdumpLine(uint32_t address, unsigned char *buffer, int startOffs, int stopOffs, int fault, int ellipsis) {
   
   if (ellipsis) {
     
@@ -151,7 +151,7 @@ static void hexdumpLine(unsigned long address, unsigned char *buffer, int startO
 /**
  * Hex-dumps the given buffer to stdout.
  */
-void hexdump(unsigned long address, unsigned char *buffer, int byteCount, int fault, int position) {
+void hexdump(uint32_t address, unsigned char *buffer, int byteCount, int fault, int position) {
   
   iterPage_t j;
   
@@ -161,7 +161,7 @@ void hexdump(unsigned long address, unsigned char *buffer, int byteCount, int fa
   // dumps. The last byte in this holds the value of fault, and is set to 0xFF
   // initially to indicate that it is unknown.
   static unsigned char prevLine[17];
-  static unsigned long prevAddr;
+  static uint32_t prevAddr;
 
   // Number of identical lines encountered.
   static int identicalLines = 0;

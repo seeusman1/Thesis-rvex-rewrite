@@ -538,8 +538,8 @@ static int executeReadWrite(int isWrite, int *fault, unsigned char **readBuf, in
  * to stderr. When a bus error occurs, value is set to the bus fault.
  */
 int rvsrv_readSingle(
-  unsigned long address,
-  unsigned long *value,
+  uint32_t address,
+  uint32_t *value,
   int size
 ) {
   int fault;
@@ -610,10 +610,10 @@ int rvsrv_readSingle(
  * access is checked for fault conditions.
  */
 int rvsrv_readBulk(
-  unsigned long address,
-  unsigned long *buffer,
+  uint32_t address,
+  uint32_t *buffer,
   int size,
-  unsigned long *faultCode
+  uint32_t *faultCode
 ) {
   int fault;
   unsigned char *readBuf;
@@ -678,10 +678,10 @@ int rvsrv_readBulk(
  * set to the bus fault.
  */
 int rvsrv_writeSingle(
-  unsigned long address,
-  unsigned long value,
+  uint32_t address,
+  uint32_t value,
   int size,
-  unsigned long *faultCode
+  uint32_t *faultCode
 ) {
   
   int fault;
@@ -748,10 +748,10 @@ int rvsrv_writeSingle(
  * access is checked for fault conditions.
  */
 int rvsrv_writeBulk(
-  unsigned long address,
+  uint32_t address,
   unsigned char *buffer,
   int size,
-  unsigned long *faultCode
+  uint32_t *faultCode
 ) {
   
   char *ptr;

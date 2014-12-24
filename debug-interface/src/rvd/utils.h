@@ -49,6 +49,8 @@
 #ifndef _UTILS_H_
 #define _UTILS_H_
 
+#include <stdint.h>
+
 /**
  * Type used to record the iteration state for iterating over pages within an
  * address range.
@@ -58,7 +60,7 @@ typedef struct {
   /**
    * Size of a page. MUST be a power of 2.
    */
-  unsigned long pageSize;
+  uint32_t pageSize;
   
   /**
    * Number of bytes remaining.
@@ -68,27 +70,27 @@ typedef struct {
   /**
    * Next address.
    */
-  unsigned long address;
+  uint32_t address;
   
   /**
    * Base address for the current page.
    */
-  unsigned long base;
+  uint32_t base;
   
   /**
    * Start offset within the current page.
    */
-  unsigned long startOffs;
+  uint32_t startOffs;
   
   /**
    * Stop offset within the current page + 1.
    */
-  unsigned long stopOffs;
+  uint32_t stopOffs;
   
   /**
    * Number of bytes valid in the current page.
    */
-  unsigned long numBytes;
+  uint32_t numBytes;
   
 } iterPage_t;
 
@@ -96,7 +98,7 @@ typedef struct {
  * Initializes page iteration. iterPage() should be called before anything else
  * after this initialization.
  */
-iterPage_t iterPageInit(unsigned long start, int count, unsigned long pageSize);
+iterPage_t iterPageInit(uint32_t start, int count, uint32_t pageSize);
 
 /**
  * Iterates to the next page, or returns 0 when done.
@@ -117,7 +119,7 @@ int iterPage(iterPage_t *i);
 /**
  * Hex-dumps the given buffer to stdout.
  */
-void hexdump(unsigned long address, unsigned char *buffer, int byteCount, int fault, int position);
+void hexdump(uint32_t address, unsigned char *buffer, int byteCount, int fault, int position);
 
 /**
  * Draws a progress bar.

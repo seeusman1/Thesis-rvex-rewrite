@@ -56,17 +56,29 @@
  * a fatal error occurs. An error message is printed upon failure if
  * errorPrefix is non-null.
  * 
- * EBNF:
+ * EBNF (approximate*):
  *   start       = expression
  *   expression  = operand 
  *               | (operand, operator, expression)
- *   operator    = "+" | "-" | "<<" | ">>" | "&" | "|" | "^" | ";"
- *   operand     = ( ( "-" | "~" ), operand )
+ *   operator    = "+" | "-" | "*" | "/" | "%"
+ *               | "==" | "!=" | ">" | ">=" | "<" | "<=" 
+ *               | "<<" | ">>", "&", "|", "^",
+ *               | "&&", "||"
+ *   operand     = ( ( "-" | "~" | "!" ), operand )
  *               | ( "(", expression, ")" )
+ *               | ( "read", "(", expression, ")" )
  *               | ( "readByte", "(", expression, ")" )
  *               | ( "readHalf", "(", expression, ")" )
  *               | ( "readWord", "(", expression, ")" )
  *               | ( "write", "(", expression, ",", expression, ")" )
+ *               | ( "writeByte", "(", expression, ",", expression, ")" )
+ *               | ( "writeHalf", "(", expression, ",", expression, ")" )
+ *               | ( "writeWord", "(", expression, ",", expression, ")" )
+ *               | ( "printf", "(", C string literal, { ",", expression } , ")" )
+ *               | ( "set", "(", definition, ",", expression, ")" )
+ *               | ( "def", "(", definition, ",", expression, ")" )
+ *               | ( "if", "(", definition, ",", expression, [ ",", expression, ] ")" )
+ *               | ( "while", "(", definition, ",", expression, ")" )
  *               | definition
  *               | literal
  *   literal     = C integer literal, [ "w" | "h" | "hh" ]
@@ -83,6 +95,13 @@
  * except shifts and the semicolon, the widest access size is used in the
  * result. For shift operators, the resulting access size is that of the
  * first operator.
+ * 
+ * * Differences between EBNF and actual grammar:
+ *   - The second expression in the operand-operator-expression rule is
+ *     optional if the next character is a close parenthesis or the end of the
+ *     string.
+ *   - The length of the arg list in printf depends on the number of format
+ *     specifiers in the format string.
  */
 int evaluate(const char *str, value_t *value, const char *errorPrefix);
 

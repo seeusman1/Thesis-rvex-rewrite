@@ -50,6 +50,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <stdint.h>
 
 #include "debugReadWrite.h"
 #include "debugCommands.h"
@@ -69,7 +70,7 @@ typedef struct {
   /**
    * Hardware address where readBuffer starts.
    */
-  unsigned long address;
+  uint32_t address;
   
   /**
    * Read buffer pointer. Also used to store whether this was a read or write;
@@ -92,7 +93,7 @@ typedef struct {
    * The fault code for the last volatile bus operation performed if lastFault
    * is set.
    */
-  unsigned long lastFaultCode;
+  uint32_t lastFaultCode;
   
 } callbackData_t;
 
@@ -152,7 +153,7 @@ static int syntaxError(unsigned char *command, int clientID, int scanPos) {
  * hardware.
  */
 static void writeToReadBuffer(callbackData_t *cbData, unsigned char *addressBuf, unsigned char *data, int count) {
-  unsigned long address;
+  uint32_t address;
   int offset, i;
   
   // Determine the address.
@@ -343,7 +344,7 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
 /**
  * Queues the operations needed to perform a volatile bus command.
  */
-static int queueVolatile(unsigned long address, unsigned long writeData, int flags, callbackData_t *cbData) {
+static int queueVolatile(uint32_t address, uint32_t writeData, int flags, callbackData_t *cbData) {
   operation_t op;
   op.cbData = (void*)cbData;
   
@@ -580,7 +581,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
   op.cbData = (void*)cbData;
   
   // Queue the necessary debug operations for handling this command.
-  unsigned long curAddress = cbData->address;
+  uint32_t curAddress = cbData->address;
   int remain = cbData->bufSize;
   unsigned char *bufPtr = cbData->buffer;
   if (isWrite) {
@@ -668,7 +669,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
         
       } else if (!(curAddress & 0x3) && (remain >= 4)) {
         
-        unsigned long writeData;
+        uint32_t writeData;
         
         // We can do a volatile word write.
         writeData = *(bufPtr+0);
@@ -689,7 +690,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
         
       } else if (!(curAddress & 0x1) && (remain >= 2)) {
         
-        unsigned long writeData;
+        uint32_t writeData;
         
         // We can do a volatile halfword write.
         writeData = *(bufPtr+0);
@@ -710,7 +711,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
         
       } else {
         
-        unsigned long writeData;
+        uint32_t writeData;
         int mask;
         
         // We need to do a volatile byte write.
@@ -797,7 +798,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
       } else {
         
         int numUsedBytes;
-        unsigned long alignedAddress;
+        uint32_t alignedAddress;
         
         // We need to do a volatile word read.
         
@@ -812,7 +813,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
         // Determine how many bytes we're actually going to use from the read
         // word.
         numUsedBytes = 4;
-        numUsedBytes -= (unsigned long)(curAddress - alignedAddress);
+        numUsedBytes -= (uint32_t)(curAddress - alignedAddress);
         if (remain < numUsedBytes) {
           numUsedBytes = remain;
         }

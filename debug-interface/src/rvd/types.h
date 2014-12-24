@@ -49,6 +49,8 @@
 #ifndef _TYPES_H_
 #define _TYPES_H_
 
+#include <stdint.h>
+
 /**
  * Defines an access size.
  */
@@ -67,7 +69,7 @@ typedef struct {
   /**
    * Value.
    */
-  unsigned long value;
+  uint32_t value;
   
   /**
    * Access size.
@@ -80,6 +82,6 @@ typedef struct {
  * Type used for context masks. Since only 32 contexts are supported, we can
  * use the bits in a 32-bit integer.
  */
-typedef unsigned long contextMask_t;
+typedef uint32_t contextMask_t;
 
 #endif

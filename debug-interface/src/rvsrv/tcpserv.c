@@ -85,6 +85,7 @@ tcpServer_t *tcpServer_open(int port, const unsigned char *access, tcpServer_ext
     tcpServer_close(&server);
     return 0;
   }
+  memset((void*)server->clients, 0, sizeof(tcpClient_t*) * 4);
   server->capacity = 4;
   server->access = access;
   server->onAlloc = onAlloc;
@@ -172,6 +173,7 @@ void tcpServer_close(tcpServer_t **server) {
   }
   
   // Free the server state structure and set the pointer to it to null.
+  if (server) free((*server)->clients);
   free(*server);
   *server = 0;
   

@@ -1,8 +1,9 @@
 #
 # This file specifies the memory map for accessing the core through the debug
 # interface. Each line consists of three parts: the context mask, the
-# definition name and the value. They are seperated by colons, lines are
-# terminated by a full stop. Anything after a hash is ignored.
+# definition name and the value. The mask and definition name are separated by
+# a colon, the value is enclosed by curly braces. Anything after a hash is
+# ignored.
 #
 # -----------------------------------------------------------------------------
 # Context mask
@@ -35,41 +36,41 @@
 # Specifies the number of contexts. This defines what rvd will do when you run
 # a command for all contexts. Should be defined for all contexts, there's no
 # point in defining a different number for different contexts (obviously).
-all:  _NUM_CONTEXTS:          4.
+all:_NUM_CONTEXTS           { 4 }
 
 # Instruction and data memory start addresses, used for the load command.
-all:  _IMEM:                  0x00000000.
-all:  _DMEM:                  0x10000000.
+all:_IMEM                   { 0x00000000 }
+all:_DMEM                   { 0x10000000 }
 
 # Control register base address.
-all:  CREG:                   0xF0000000.
+all:CREG                    { 0xF0000000 }
 
 # Control register mnemonics. These should match the values in
 # core_ctrlRegs_pkg.vhd.
-all:  GSR:                    CREG + 0x00. # Global status register.
-all:  BUS_BANK:               CREG + 0x03. # Debug bus bank selection.
-all:  BCRR:                   CREG + 0x04. # Debug bus reconfiguration request.
-all:  CC:                     CREG + 0x08. # Current configuration.
-all:  AFF:                    CREG + 0x0C. # Cache affinity.
-all:  CCR:                    CREG + 0x20. # Context control register.
-all:  TC:                     CREG + 0x20. # Trap cause (byte).
-all:  BR:                     CREG + 0x21. # Branch registers (byte).
-all:  SCCR:                   CREG + 0x24. # Saved context control register.
-all:  LR:                     CREG + 0x28. # Link register.
-all:  PC:                     CREG + 0x2C. # PC register.
-all:  TH:                     CREG + 0x30. # Trap handler.
-all:  PH:                     CREG + 0x34. # Panic handler.
-all:  TP:                     CREG + 0x38. # Trap point.
-all:  TA:                     CREG + 0x3C. # Trap argument.
-all:  BRK0:                   CREG + 0x40. # Breakpoint 0.
-all:  BRK1:                   CREG + 0x44. # Breakpoint 1.
-all:  BRK2:                   CREG + 0x48. # Breakpoint 2.
-all:  BRK3:                   CREG + 0x4C. # Breakpoint 3.
-all:  DCR:                    CREG + 0x50. # Debug control register.
-all:  DCRF:                   CREG + 0x50. # Debug control flags (byte).
-all:  DCRC:                   CREG + 0x51. # Break cause (byte).
-all:  DCRB:                   CREG + 0x52. # Breakpoint configuration (half).
-all:  CRR:                    CREG + 0x54. # Context reconfiguration request.
+all:GSR                     { CREG + 0x00 } # Global status register.
+all:BUS_BANK                { CREG + 0x03 } # Debug bus bank selection.
+all:BCRR                    { CREG + 0x04 } # Debug bus reconfiguration request.
+all:CC                      { CREG + 0x08 } # Current configuration.
+all:AFF                     { CREG + 0x0C } # Cache affinity.
+all:CCR                     { CREG + 0x20 } # Context control register.
+all:TC                      { CREG + 0x20 } # Trap cause (byte).
+all:BR                      { CREG + 0x21 } # Branch registers (byte).
+all:SCCR                    { CREG + 0x24 } # Saved context control register.
+all:LR                      { CREG + 0x28 } # Link register.
+all:PC                      { CREG + 0x2C } # PC register.
+all:TH                      { CREG + 0x30 } # Trap handler.
+all:PH                      { CREG + 0x34 } # Panic handler.
+all:TP                      { CREG + 0x38 } # Trap point.
+all:TA                      { CREG + 0x3C } # Trap argument.
+all:BRK0                    { CREG + 0x40 } # Breakpoint 0.
+all:BRK1                    { CREG + 0x44 } # Breakpoint 1.
+all:BRK2                    { CREG + 0x48 } # Breakpoint 2.
+all:BRK3                    { CREG + 0x4C } # Breakpoint 3.
+all:DCR                     { CREG + 0x50 } # Debug control register.
+all:DCRF                    { CREG + 0x50 } # Debug control flags (byte).
+all:DCRC                    { CREG + 0x51 } # Break cause (byte).
+all:DCRB                    { CREG + 0x52 } # Breakpoint configuration (half).
+all:CRR                     { CREG + 0x54 } # Context reconfiguration request.
 
 
 
@@ -78,72 +79,101 @@ all:  CRR:                    CREG + 0x54. # Context reconfiguration request.
 # guaranteed to always be evaluated once before accessing registers in the
 # low or high bank, in order to make bank selection write commands work
 # properly.
-all:  _GPREG_LOW:              SET_BANK;      CREG + 0x80.
-all:  _GPREG_HIGH:             SET_BANK_HIGH; CREG + 0x80.
+all:_GPREG_LOW             { SET_BANK;      CREG + 0x80 }
+all:_GPREG_HIGH            { SET_BANK_HIGH; CREG + 0x80 }
 
 # Same as for the general purpose registers above, these define where the
 # debugging interface can find some special registers.
-all:  _BRREG:                  SET_BANK;      BR.   # Branch register file.
-all:  _LINKREG:                SET_BANK;      LR.   # Link register.
-all:  _PC:                     SET_BANK;      PC.   # PC register.
-all:  _BRKPT:                  SET_BANK;      BRK0. # Breakpoint registers.
+all:_BRREG                 { SET_BANK;      BR }   # Branch register file
+all:_LINKREG               { SET_BANK;      LR }   # Link register.
+all:_PC                    { SET_BANK;      PC }   # PC register.
+all:_BRKPT                 { SET_BANK;      BRK0 } # Breakpoint registers.
 
 # These define how to set the bank bits in the control registers in order to
 # access the selected context.
-all:  SET_BANK:                write(BUS_BANK, 0hh+_CUR_CONTEXT<<1).
-all:  SET_BANK_HIGH:           write(BUS_BANK, 0hh+(_CUR_CONTEXT<<1)+1).
+all:SET_BANK               { write(BUS_BANK, 0hh+_CUR_CONTEXT<<1) }
+all:SET_BANK_HIGH          { write(BUS_BANK, 0hh+(_CUR_CONTEXT<<1)+1) }
+
+# SET_BANK could also be defined like this, as an example of using the masks.
+# 0:SET_BANK               { write(BUS_BANK, 0hh) }
+# 1:SET_BANK               { write(BUS_BANK, 2hh) }
+# 2:SET_BANK               { write(BUS_BANK, 4hh) }
+# 3:SET_BANK               { write(BUS_BANK, 8hh) }
 
 
-all:  hello:
+
+all:hello {
   
-  def(printBanana, (
-    printf("Banana = 0x%08X\n", banana)
+  set(i, 10);
+  while (i, (
+    if(i == 1, (
+      printf("Iteratin' 1 more time.\n");
+    ), (
+      printf("Iteratin' %d more times.\n", i);
+    ));
+    
+    set(i, i - 1);
   ));
+  printf("Done!\n");
   
-  set(banana, 3);
-  printBanana;
-  set(banana, 5);
-  printBanana.
-  
+}
 
-all:  PRINT_SHORT_STATE:
-  0 #printf("PC:    %X\n", readWord(PC))
-  .
+all:PRINT_REG_FILE {
+  set(reg, 0);
+  while (reg < 32, (
+    printf("r0.% .2d = 0x%08X  ", reg, readWord(_GPREG_LOW + (reg*4)));
+    set(reg, reg + 1);
+    if (!(reg & 3), (
+      printf("\n");
+    ));
+  ));
+}
+
+all:PRINT_SHORT_STATE {
+  printf("PC:  0x%08X\n", readWord(PC));
+}
 
 # This is evaluated when "rvd break" is called.
-all:  _BREAK:
+all:_BREAK {
   SET_BANK;
   write(DCRF, 0x09hh);
-  PRINT_SHORT_STATE.
+  PRINT_SHORT_STATE;
+}
 
 # This is evaluated when "rvd step" is called.
-all:  _STEP:
+all:_STEP {
   SET_BANK;
   write(DCRF, 0x0Ahh);
-  PRINT_SHORT_STATE.
+  PRINT_SHORT_STATE;
+}
   
 # This is evaluated when "rvd resume" is called.
-all:  _RESUME:
+all:_RESUME {
   SET_BANK;
-  write(DCRF, 0x0Chh).
+  write(DCRF, 0x0Chh);
+}
 
 # This is evaluated when "rvd release" is called.
-all:  _RELEASE:
+all:_RELEASE {
   SET_BANK;
-  write(DCRF, 0x10hh).
+  write(DCRF, 0x10hh);
+}
   
 # This is evaluated when "rvd reset" is called.
-all:  _RESET:
+all:_RESET {
   SET_BANK;
-  write(DCRF, 0x80hh).
+  write(DCRF, 0x80hh);
+}
   
 # This is evaluated when "rvd reset break" is called.
-all:  _RESET_BREAK:
+all:_RESET_BREAK {
   SET_BANK;
-  write(DCRF, 0x89hh).
+  write(DCRF, 0x89hh);
+}
   
 # This is evaluated when "rvd state" is called.
-all:  _STATE:
+all:_STATE {
   SET_BANK;
-  PRINT_SHORT_STATE.
+  PRINT_SHORT_STATE;
+}
 

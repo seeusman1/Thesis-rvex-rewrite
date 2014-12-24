@@ -64,7 +64,7 @@
  * function.
  */
 static int getBin(const unsigned char *str) {
-  unsigned long hash = 0;
+  uint32_t hash = 0;
   int c;
   
   while (c = *str++) {
