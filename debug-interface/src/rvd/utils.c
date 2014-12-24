@@ -298,7 +298,7 @@ void progressBar(char *prefix, int progress, int max, int isFirstCall, int isByt
     printf("  %02d:%02d", min, sec);
   }
   
-  // Print end of line.
-  printf("\n");
+  // Clear until end of line and print newline.
+  printf("\033[K\n");
   
 }

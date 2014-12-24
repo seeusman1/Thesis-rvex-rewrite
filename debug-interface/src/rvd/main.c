@@ -562,7 +562,7 @@ int run(commandLineArgs_t *args) {
   ) {
     value_t value;
     
-    if (isHelp(args) || (args->paramCount != 2)) {
+    if (isHelp(args) || (args->paramCount < 2) || (args->paramCount > 3)) {
       printf(
         "\n"
         "Command usage:\n"
@@ -578,9 +578,96 @@ int run(commandLineArgs_t *args) {
       return 0;
     }
     
-    // TODO
-    printf("Not yet implemented, sorry!\n");
-    return -1;
+    FOR_EACH_CONTEXT(
+      
+      value_t address;
+      value_t count;
+      value_t value;
+      
+      // Evaluate the address.
+      if (evaluate(args->params[0], &address, "") < 1) {
+        return -1;
+      }
+      
+      // Evaluate the number of bytes to write.
+      if (evaluate(args->params[1], &count, "") < 1) {
+        return -1;
+      }
+      
+      // Evaluate the value to write.
+      if (args->paramCount > 2) {
+        if (evaluate(args->params[2], &value, "") < 1) {
+          return -1;
+        }
+      } else {
+        value.value = 0;
+      }
+      
+      // Fill the buffer with the given value.
+      memset(pageBuffer, value.value, RVSRV_PAGE_SIZE);
+      
+      // Don't do anything if count is zero.
+      if (count.value == 0) {
+        printf("Context %d: requested 0 bytes to be written.\n", ctxt);
+      } else {
+        
+        iterPage_t i;
+        
+        printf(
+          "Context %d: writing %02hhX to 0x%08X..0x%08X...\n",
+          ctxt,
+          pageBuffer[0],
+          address.value,
+          address.value + count.value
+        );
+        
+        // Start printing the progress bar.
+        progressBar("", 0, count.value, 1, 1);
+        
+        // Iterate over the rvsrv pages which need to be updated to perform
+        // this request. iterPage and iterPageInit will ensure that all pages
+        // except for the first and last are aligned.
+        i = iterPageInit(address.value, count.value, RVSRV_PAGE_SIZE);
+        while (iterPage(&i)) {
+          
+          unsigned long fault;
+          int retval;
+          
+          // We store the contents of the previous line to match against the
+          // current. If they're identical, we don't print it to compress the
+          // output. The last byte is 1 for OK, 0 for bus fault or 0xFF for
+          // unknown.
+          unsigned char prevLineContents[17];
+          
+          // Perform the bulk read operation.
+          retval = rvsrv_writeBulk(i.address, pageBuffer, i.numBytes, &fault);
+          if (retval < 0) {
+            return -1;
+          } else if (retval == 0) {
+            
+            // Override the previous line in the terminal, which is the
+            // progress bar.
+            printf(
+              "\r\033[AWarning: bus fault 0x%08X occured while writing page 0x%08X..0x%08X.\033[K\n\n",
+              fault,
+              i.address,
+              i.address + i.numBytes - 1
+            );
+          }
+          
+          // Update the progress bar.
+          progressBar("", (count.value - i.remain) + i.numBytes, count.value, 0, 1);
+          
+        }
+        
+        // Print a newline to separate the contexts.
+        printf("\n");
+        
+      }
+      
+    );
+    
+    return 0;
     
   // --------------------------------------------------------------------------
   } else if (
