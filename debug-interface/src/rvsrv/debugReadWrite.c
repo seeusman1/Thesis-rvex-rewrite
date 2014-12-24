@@ -591,10 +591,10 @@ int handleReadWrite(unsigned char *command, int clientID) {
     
     while (remain) {
       
-      if (!((curAddress & 0xFFF) % 28) && (remain > 4)) {
-        // ^ the > in the remain > 4 condition is not off-by-one but on
-        // purpose: we want the last operation to always be a volatile bus
-        // operation. That way, the fault signal is always valid.
+      if (!((curAddress & 0xFFF) % 28) && (remain >= 8)) {
+        // The remain >= 8 condition is used to ensure that the last word is
+        // accessed using a volatile bus write, so the fault signal is always
+        // somewhat valid.
         
         int numWords;
         int page;
@@ -602,10 +602,10 @@ int handleReadWrite(unsigned char *command, int clientID) {
         // We can do a bulk write.
         
         // Determine how many words we can write.
-        if (remain > 28) {
+        if (remain > 32) {
           numWords = 7;
         } else {
-          numWords = remain / 4;
+          numWords = (remain - 4) / 4;
         }
         
         // Make sure we don't cross a 4kb boundary mid write (auto-increment
@@ -752,10 +752,10 @@ int handleReadWrite(unsigned char *command, int clientID) {
     
     while (remain) {
       
-      if (!(curAddress & 0x3) && (remain > 4)) {
-        // ^ the > in the remain > 4 condition is not off-by-one but on
-        // purpose: we want the last operation to always be a volatile bus
-        // operation. That way, the fault signal is always valid.
+      if (!(curAddress & 0x3) && (remain >= 8)) {
+        // The remain >= 8 condition is used to ensure that the last word is
+        // accessed using a volatile bus write, so the fault signal is always
+        // somewhat valid.
         
         int numWords;
         int page;
@@ -763,10 +763,10 @@ int handleReadWrite(unsigned char *command, int clientID) {
         // We can do a bulk read.
         
         // Determine how many words we can write.
-        if (remain > 28) {
+        if (remain > 32) {
           numWords = 7;
         } else {
-          numWords = remain / 4;
+          numWords = (remain - 4) / 4;
         }
         
         // Make sure we don't cross a 4kb boundary mid write (auto-increment

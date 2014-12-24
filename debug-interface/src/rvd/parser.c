@@ -364,7 +364,7 @@ static int scanOperand(const char **str, value_t *value, int depth) {
       ptr++;
       scanWhitespace(&ptr);
       
-      if ((!strcmp(name, "readByte")) | (!strcmp(name, "readHalf")) | (!strcmp(name, "readWord"))) {
+      if ((!strcmp(name, "read")) | (!strcmp(name, "readByte")) | (!strcmp(name, "readHalf")) | (!strcmp(name, "readWord"))) {
         int size;
         unsigned long readVal;
         
@@ -400,7 +400,7 @@ static int scanOperand(const char **str, value_t *value, int depth) {
           // Perform the access.
           switch (rvsrv_readSingle(v.value, &readVal, size)) {
             case 0:
-              sprintf(scanError, "failed to read from address %08X; bus fault %08X", v.value, readVal);
+              sprintf(scanError, "failed to read from address 0x%08X; bus fault 0x%08X", v.value, readVal);
               scanErrorPos = ptr;
               return 0;
               
@@ -417,7 +417,7 @@ static int scanOperand(const char **str, value_t *value, int depth) {
           
         }
         
-      } else if (!strcmp(name, "write")) {
+      } else if ((!strcmp(name, "write")) || (!strcmp(name, "writeByte")) || (!strcmp(name, "writeHalf")) || (!strcmp(name, "writeWord"))) {
         int size;
         unsigned long fault;
         value_t address;
@@ -458,6 +458,11 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         if (depth != -1) {
           
           // Determine the access size.
+          switch (name[5]) {
+            case 'B': v.size = AS_BYTE; break;
+            case 'H': v.size = AS_HALF; break;
+            case 'W': v.size = AS_WORD; break;
+          }
           switch (v.size) {
             case AS_BYTE: size = 1; break;
             case AS_HALF: size = 2; break;
@@ -467,7 +472,7 @@ static int scanOperand(const char **str, value_t *value, int depth) {
           // Perform the access.
           switch (rvsrv_writeSingle(address.value, v.value, size, &fault)) {
             case 0:
-              sprintf(scanError, "failed to write to address %08X; bus fault %08X", address.value, fault);
+              sprintf(scanError, "failed to write to address 0x%08X; bus fault 0x%08X", address.value, fault);
               scanErrorPos = ptr;
               return 0;
               

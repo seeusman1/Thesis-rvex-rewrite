@@ -56,6 +56,7 @@
 #include "main.h"
 #include "parser.h"
 #include "types.h"
+#include "utils.h"
 
 /**
  * Returns nonzero if the args specify a help command.
@@ -68,97 +69,79 @@ static int isHelp(const commandLineArgs_t *args) {
 }
 
 /**
- * Evaluates the given expression for each selected context, and optionally
- * prints the result of the operation to stdout.
+ * This macro runs the code specified by contents for each selected context.
+ * Magic.
  */
-static int evalForEachContext(const char *expression, contextMask_t mask, int printResult) {
-  value_t value;
-  int ctxt, numContexts;
-  int didAnything = 0;
-  
-  // Evaluate how many contexts there are.
-  defs_setContext(0);
-  if (evaluate("_NUM_CONTEXTS", &value, "") < 1) {
-    fprintf(stderr,
-      "Error: failed to expand or evaluate _NUM_CONTEXTS. Please define this value\n"
-      "on the command line or by using \"-dall:_NUM_CONTEXTS:<count>\", or specify the\n"
-      "value in a memory map file.\n",
-      numContexts
-    );
-    return -1;
-  }
-  numContexts = value.value;
-  if ((numContexts < 1) || (numContexts > 32)) {
-    fprintf(stderr,
-      "Error: _NUM_CONTEXTS evaluates to %d, which is out of range. rvd supports up\n"
-      "to 32 contexts.\n",
-      numContexts
-    );
-    return -1;
-  }
-  
-  // Loop over all contexts.
-  for (ctxt = 0; ctxt < numContexts; ctxt++) {
-    
-    // See if this context is in the selection mask.
-    if (mask & (1 << ctxt)) {
-      
-      // Set the current context.
-      defs_setContext(ctxt);
-      
-      // Evaluate the given command.
-      if (evaluate(expression, &value, "") < 1) {
-        return -1;
-      }
-      
-      // Display the result if printResult is set.
-      if (printResult) {
-        printf("Context %d: ", ctxt);
-        switch (value.size) {
-          case AS_BYTE:
-            printf("0x%02lX = %lu\n", value.value & 0xFF, value.value & 0xFF);
-            break;
-            
-          case AS_HALF:
-            printf("0x%04lX = %lu\n", value.value & 0xFF, value.value & 0xFF);
-            break;
-            
-          default:
-            printf("0x%08lX = %lu\n", value.value, value.value);
-            break;
-            
-        }
-        
-      }
-      
-      // We've done something.
-      didAnything = 1;
-      
-    }
-    
-  }
-  
-  // If we haven't done something after completing the loop, display an error
-  // message.
-  if (!didAnything) {
-    fprintf(stderr,
-      "Error: none of the contexts which you have selected are within 0.._NUM_CONTEXTS.\n"
-      "Use \"rvd select\" or the command line to select a different range of contexts.\n",
-      numContexts
-    );
-    return -1;
-  }
-
-  return 0;
+#define FOR_EACH_CONTEXT(contents) \
+{ \
+  value_t value; \
+  int ctxt, numContexts; \
+  int didAnything = 0; \
+  \
+  defs_setContext(0); \
+  if (evaluate("_NUM_CONTEXTS", &value, "") < 1) { \
+    fprintf(stderr, \
+      "Error: failed to expand or evaluate _NUM_CONTEXTS. Please define this value\n" \
+      "on the command line or by using \"-dall:_NUM_CONTEXTS:<count>\", or specify the\n" \
+      "value in a memory map file.\n", \
+      numContexts \
+    ); \
+    return -1; \
+  } \
+  numContexts = value.value; \
+  if ((numContexts < 1) || (numContexts > 32)) { \
+    fprintf(stderr, \
+      "Error: _NUM_CONTEXTS evaluates to %d, which is out of range. rvd supports up\n" \
+      "to 32 contexts.\n", \
+      numContexts \
+    ); \
+    return -1; \
+  } \
+  \
+  for (ctxt = 0; ctxt < numContexts; ctxt++) { \
+    \
+    if (args->contextMask & (1 << ctxt)) { \
+      \
+      defs_setContext(ctxt); \
+      \
+      { \
+        contents \
+      } \
+      \
+      didAnything = 1; \
+      \
+    } \
+    \
+  } \
+  \
+  if (!didAnything) { \
+    fprintf(stderr, \
+      "Error: none of the contexts which you have selected are within 0.._NUM_CONTEXTS.\n" \
+      "Use \"rvd select\" or the command line to select a different range of contexts.\n", \
+      numContexts \
+    ); \
+    return -1; \
+  } \
 }
+
+/**
+ * Size of an rvsrv page: the maximum amount of bytes which can be transferred
+ * in a single operation.
+ */
+#define RVSRV_PAGE_SIZE 4096
 
 /**
  * Performs the command specified by args.
  */
 int run(commandLineArgs_t *args) {
   
+  // General purpose buffer capable of holding a memory single rvsrv page.
+  static unsigned char pageBuffer[RVSRV_PAGE_SIZE];
+  
   // --------------------------------------------------------------------------
-  if (!strcmp(args->command, "select")) {
+  if (
+    (!strcmp(args->command, "select"))
+  ) {
     int f;
     contextMask_t dummyMask;
     const char *ptr;
@@ -168,7 +151,7 @@ int run(commandLineArgs_t *args) {
       printf(
         "\n"
         "Command usage:\n"
-        "  rvd select \"<contexts>\"\n"
+        "  rvd select <contexts>\n"
         "\n"
         "This command will set which rvex contexts will be addressed by future commands,\n"
         "which do not have a context explicitely specified through either the specific\n"
@@ -202,7 +185,8 @@ int run(commandLineArgs_t *args) {
     }
     
     // Write to the .rvd-context file.
-    f = open(".rvd-context", O_WRONLY | O_CREAT | O_TRUNC);
+    unlink(".rvd-context");
+    f = open(".rvd-context", O_WRONLY | O_CREAT);
     if (f < 0) {
       perror("Could not open .rvd-context for writing");
       return -1;
@@ -237,10 +221,10 @@ int run(commandLineArgs_t *args) {
       printf(
         "\n"
         "Command usage:\n"
-        "  rvd evaluate \"<expression>\"\n"
-        "  rvd eval \"<expression>\"\n"
-        "  rvd execute \"<expression>\"\n"
-        "  rvd exec \"<expression>\"\n"
+        "  rvd evaluate <expression>\n"
+        "  rvd eval <expression>\n"
+        "  rvd execute <expression>\n"
+        "  rvd exec <expression>\n"
         "\n"
         "This command will evaluate the given expression for the context(s) selected\n"
         "using \"rvd context\" or the -c or --context command line parameters. The\n"
@@ -254,24 +238,51 @@ int run(commandLineArgs_t *args) {
       return 0;
     }
     
-    // Evaluate the command for each context.
-    if (
-      (!strcmp(args->command, "eval")) ||
-      (!strcmp(args->command, "evaluate"))
-    ) {
-      return evalForEachContext(args->params[0], args->contextMask, 1);
-    } else {
-      return evalForEachContext(args->params[0], args->contextMask, 0);
-    }
+    FOR_EACH_CONTEXT(
+      
+      value_t value;
+      
+      // Evaluate the given command.
+      if (evaluate(args->params[0], &value, "") < 1) {
+        return -1;
+      }
+      
+      // Display the result for the evaluate command only.
+      if (
+        (!strcmp(args->command, "eval")) ||
+        (!strcmp(args->command, "evaluate"))
+      ) {
+        printf("Context %d: ", ctxt);
+        switch (value.size) {
+          case AS_BYTE:
+            printf("0x%02lX = %lu\n", value.value & 0xFF, value.value & 0xFF);
+            break;
+            
+          case AS_HALF:
+            printf("0x%04lX = %lu\n", value.value & 0xFF, value.value & 0xFF);
+            break;
+            
+          default:
+            printf("0x%08lX = %lu\n", value.value, value.value);
+            break;
+            
+        }
+        
+      }
+      
+    );
+    
+    return 0;
     
   // --------------------------------------------------------------------------
-  } else if (!strcmp(args->command, "stop")) {
-    value_t value;
-    
+  } else if (
+    (!strcmp(args->command, "stop"))
+  ) {
     if (isHelp(args) || (args->paramCount != 0)) {
       printf(
         "\n"
-        "Command usage: rvd stop\n"
+        "Command usage:\n"
+        "  rvd stop\n"
         "\n"
         "This command will simply send the stop command to rvsrv, to shut rvsrv down\n"
         "gracefully.\n"
@@ -283,7 +294,298 @@ int run(commandLineArgs_t *args) {
     return rvsrv_stopServer();
     
   // --------------------------------------------------------------------------
-  } else if (!strcmp(args->command, "expressions")) {
+  } else if (
+    (!strcmp(args->command, "write")) ||
+    (!strcmp(args->command, "w"))
+  ) {
+    if (isHelp(args) || (args->paramCount != 2)) {
+      printf(
+        "\n"
+        "Command usage:\n"
+        "  rvd write <address> <value>\n"
+        "  rvd w <address> <value>\n"
+        "\n"
+        "This command will execute a volatile write to the given address, setting the\n"
+        "memory to the given value. Both <address> and <value> may be expressions. The\n"
+        "write will be performed for all currently selected contexts (see also\n"
+        "\"rvd help select\"). The access size for the write depends on the type\n"
+        "information carried by <value>.\n"
+        "\n"
+        "Examples:\n"
+        "  rvd write 0x1234 5   - Writes 0x00000005 to 0x00001234.\n"
+        "  rvd write 42 3h      - Writes 0x0003 to 0x0000002A.\n"
+        "  rvd write 0x3 3hh    - Writes 0x03 to 0x00000003.\n"
+        "\n"
+        "Note: writing to misaligned addresses will NOT generate an error. Instead, rvsrv\n"
+        "will ensure that such writes are broken up into the up to three bus accesses\n"
+        "necessary to perform the requested operation. This might be fine depending on\n"
+        "the situation, as the resulting memory will typically hold the intended contents\n"
+        "afterwards. However, bus faults are ignored for all bus accesses but the last.\n"
+        "\n"
+        "This command is synonymous to the write() function, but is a bit more verbose.\n"
+        "\n"
+      );
+      return 0;
+    }
+    
+    FOR_EACH_CONTEXT(
+      
+      value_t address;
+      value_t value;
+      int size;
+      unsigned long fault;
+      
+      // Evaluate the address.
+      if (evaluate(args->params[0], &address, "") < 1) {
+        return -1;
+      }
+      
+      // Evaluate the data to write.
+      if (evaluate(args->params[1], &value, "") < 1) {
+        return -1;
+      }
+      
+      // Determine the access size.
+      switch (value.size) {
+        case AS_BYTE: size = 1; value.value &= 0xFF;   break;
+        case AS_HALF: size = 2; value.value &= 0xFFFF; break;
+        default:      size = 4;                        break;
+      }
+      
+      // Perform the access.
+      switch (rvsrv_writeSingle(address.value, value.value, size, &fault)) {
+        case 0:
+          fprintf(stderr,
+            "Context %d: failed to write 0x%0*X to address 0x%08X; bus fault 0x%08X.\n",
+            ctxt,
+            size * 2,
+            value.value,
+            address.value,
+            fault
+          );
+          break;
+          
+        case 1:
+          fprintf(stderr,
+            "Context %d: wrote 0x%0*X to address 0x%08X.\n",
+            ctxt,
+            size * 2,
+            value.value,
+            address.value
+          );
+          break;
+          
+        default:
+          return -1;
+          
+      }
+      
+    );
+    
+    return 0;
+    
+  // --------------------------------------------------------------------------
+  } else if (
+    (!strcmp(args->command, "read")) ||
+    (!strcmp(args->command, "r"))
+  ) {
+    int size;
+    
+    if (isHelp(args) || (args->paramCount < 1) || (args->paramCount > 3)) {
+      printf(
+        "\n"
+        "Command usage:\n"
+        "  rvd read [size] <address> [count]\n"
+        "  rvd r [size] <address> [count]\n"
+        "\n"
+        "This command will execute a volatile read from the given address, or perform\n"
+        "a non-volatile read from the specified address range. Like all commands, it will\n"
+        "execute once for every selected context.\n"
+        "\n"
+        "[size] may be set to one of the following.\n"
+        "  \"byte\", \"b\" or \"hh\" - Byte access.\n"
+        "  \"half\" or \"h\"       - Halfword access.\n"
+        "  \"word\" or \"w\"       - Word access.\n"
+        "\n"
+        "If [size] is not specified, a word access is assumed. However, it must be\n"
+        "specified if [count] is specified as well.\n"
+        "\n"
+        "[count] may optionally be set to an expression which defines the number of\n"
+        "consequitive accesses which are made. When set, the output format will be a\n"
+        "hex dump. Also, when more than one word is requested, rvsrv may use faster,\n"
+        "non-volatile read commands to perform the requested operation. These may be\n"
+        "executed in an arbitrary order and/or more than once if there are transmission\n"
+        "errors in the serial port stream, and bus errors will only be detected for the\n"
+        "last read.\n"
+        "\n"
+        "Note: reads from misaligned addresses will NOT generate an error. Instead, rvsrv\n"
+        "will ensure that such reads are broken up into the up to two bus accesses\n"
+        "necessary to perform the requested operation. This might is usually fine.\n"
+        "However, be aware that bus faults are ignored for all bus accesses but the last.\n"
+        "\n"
+        "This command is synonymous to the read<size>() functions, but is a bit more\n"
+        "verbose.\n"
+        "\n"
+      );
+      return 0;
+    }
+    
+    // Evaluate the size, if specified.
+    if (args->paramCount > 1) {
+      if (!strcmp(args->params[0], "byte")) size = 1; else
+      if (!strcmp(args->params[0], "b"))    size = 1; else
+      if (!strcmp(args->params[0], "hh"))   size = 1; else
+      if (!strcmp(args->params[0], "half")) size = 2; else
+      if (!strcmp(args->params[0], "h"))    size = 2; else
+      if (!strcmp(args->params[0], "word")) size = 4; else
+      if (!strcmp(args->params[0], "w"))    size = 4; else {
+        fprintf(stderr,
+          "Invalid size specified.\n"
+        );
+        return -1;
+      }
+    } else {
+      size = 4;
+    }
+    
+    FOR_EACH_CONTEXT(
+      
+      value_t address;
+      
+      // Evaluate the address.
+      if (evaluate(args->params[(args->paramCount > 1) ? 1 : 0], &address, "") < 1) {
+        return -1;
+      }
+      
+      // Determine if this is a single or bulk read command.
+      if (args->paramCount > 2) {
+        
+        value_t count;
+        
+        // Bulk read. Evaluate the number of accesses to perform.
+        if (evaluate(args->params[2], &count, "") < 1) {
+          return -1;
+        }
+        
+        // Don't do anything if count is zero.
+        if (count.value == 0) {
+          printf("Context %d: requested 0 accesses.\n", ctxt);
+        } else {
+          
+          iterPage_t i;
+          int first;
+          
+          printf("Context %d: dumping 0x%08X..0x%08X...\n\n", ctxt, address.value, address.value + count.value * size);
+          
+          // Iterate over the rvsrv pages which need to be updated to perform
+          // this request. iterPage and iterPageInit will ensure that all pages
+          // except for the first and last are aligned.
+          i = iterPageInit(address.value, count.value * size, RVSRV_PAGE_SIZE);
+          first = 1;
+          while (iterPage(&i)) {
+            
+            unsigned long fault;
+            int retval;
+            
+            // We store the contents of the previous line to match against the
+            // current. If they're identical, we don't print it to compress the
+            // output. The last byte is 1 for OK, 0 for bus fault or 0xFF for
+            // unknown.
+            unsigned char prevLineContents[17];
+            
+            // Perform the bulk read operation.
+            retval = rvsrv_readBulk(i.address, pageBuffer, i.numBytes, &fault);
+            if (retval < 0) {
+              return -1;
+            } else if (retval == 0) {
+              int k;
+              for (k = 0; k < RVSRV_PAGE_SIZE / 4; k++) {
+                pageBuffer[k*4+0] = fault >> 24;
+                pageBuffer[k*4+1] = fault >> 16;
+                pageBuffer[k*4+2] = fault >> 8;
+                pageBuffer[k*4+3] = fault;
+              }
+            }
+            
+            // Dump the data to stdout.
+            hexdump(i.address, pageBuffer, i.numBytes, !retval, first ? HEXDUMP_PROLOGUE : HEXDUMP_CONTENT);
+            first = 0;
+            
+          }
+          
+          // Dump the last line.
+          hexdump(0, 0, 0, 0, HEXDUMP_EPILOGUE);
+          
+          // Print an extra newline at the end of the hex dump.
+          printf("\n");
+          
+        }
+        
+      } else {
+        unsigned long value;
+        
+        // Perform the access.
+        switch (rvsrv_readSingle(address.value, &value, size)) {
+          case 0:
+            fprintf(stderr,
+              "Context %d: failed to read from address 0x%08X; bus fault 0x%08X.\n",
+              ctxt,
+              address.value,
+              value
+            );
+            break;
+            
+          case 1:
+            fprintf(stderr,
+              "Context %d: read 0x%0*X from address 0x%08X.\n",
+              ctxt,
+              size * 2,
+              value,
+              address.value
+            );
+            break;
+            
+          default:
+            return -1;
+            
+        }
+        
+      }
+      
+    );
+    
+    return 0;
+    
+  // --------------------------------------------------------------------------
+  } else if (
+    (!strcmp(args->command, "fill"))
+  ) {
+    value_t value;
+    
+    if (isHelp(args) || (args->paramCount != 2)) {
+      printf(
+        "\n"
+        "Command usage:\n"
+        "  rvd fill <startAddress> <byteCount> [value]\n"
+        "\n"
+        "This command will execute non-volatile writes to the given address range to set\n"
+        "all bytes in the range to the specified value. The writes are performed in an\n"
+        "arbitrary order and may be performed more than once, if there are transmission\n"
+        "errors in the serial stream. Like all commands, it will execute once for every\n"
+        "selected context. If value is not specified, 0 is assumed.\n"
+        "\n"
+      );
+      return 0;
+    }
+    
+    // TODO
+    printf("Not yet implemented, sorry!\n");
+    return -1;
+    
+  // --------------------------------------------------------------------------
+  } else if (
+    (!strcmp(args->command, "expressions"))
+  ) {
     // (This is intentionally a help-only "command".)
     if (isHelp(args)) {
       printf(
@@ -404,7 +706,22 @@ int run(commandLineArgs_t *args) {
         "In order for expression evaluation to actually do something, a number of\n"
         "built-in functions are made available. These are listed below.\n"
         "\n"
-        "TODO\n"// TODO
+        "  read(address)\n"
+        "  readByte(address)\n"
+        "  readHalf(address)\n"
+        "  readWord(address)\n"
+        "    These functions initiate a volatile hardware read, returning the value read.\n"
+        "    If any kind of error or a bus fault occurs, evaluation is terminated. read\n"
+        "    is simply a synonym for readWord().\n"
+        "\n"
+        "  write(address, value)\n"
+        "  writeByte(address, value)\n"
+        "  writeHalf(address, value)\n"
+        "  writeWord(address, value)\n"
+        "    These functions initiate a volatile hardware write. They return the value\n"
+        "    written. If any kind of error or a bus fault occurs, evaluation is\n"
+        "    terminated. write() will choose its access size based upon the type attached\n"
+        "    to value.\n"
         "\n"
       );
       return 0;

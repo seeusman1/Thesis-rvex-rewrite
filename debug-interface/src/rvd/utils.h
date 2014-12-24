@@ -46,81 +46,82 @@
  * Copyright (C) 2008-2014 by TU Delft.
  */
 
-#ifndef _RVSRV_IFACE_H_
-#define _RVSRV_IFACE_H_
-
-#include "types.h"
+#ifndef _UTILS_H_
+#define _UTILS_H_
 
 /**
- * Stores the hostname and port to connect to internally. The connection is not
- * made until the first call to one of the read or write methods.
+ * Type used to record the iteration state for iterating over pages within an
+ * address range.
  */
-int rvsrv_setup(const char *host, int port);
+typedef struct {
+  
+  /**
+   * Size of a page. MUST be a power of 2.
+   */
+  unsigned long pageSize;
+  
+  /**
+   * Number of bytes remaining.
+   */
+  int remain;
+  
+  /**
+   * Next address.
+   */
+  unsigned long address;
+  
+  /**
+   * Base address for the current page.
+   */
+  unsigned long base;
+  
+  /**
+   * Start offset within the current page.
+   */
+  unsigned long startOffs;
+  
+  /**
+   * Stop offset within the current page + 1.
+   */
+  unsigned long stopOffs;
+  
+  /**
+   * Number of bytes valid in the current page.
+   */
+  unsigned long numBytes;
+  
+} iterPage_t;
 
 /**
- * Closes the connection to rvsrv if a connection is open.
+ * Initializes page iteration. iterPage() should be called before anything else
+ * after this initialization.
  */
-void rvsrv_close(void);
+iterPage_t iterPageInit(unsigned long start, int count, unsigned long pageSize);
 
 /**
- * Sends the stop command to the server.
+ * Iterates to the next page, or returns 0 when done.
  */
-int rvsrv_stopServer(void);
+int iterPage(iterPage_t *i);
 
 /**
- * Reads a single byte, halfword or word from the hardware (size set to 1, 2 or
- * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
- * -1 when a fatal error occured. In the latter case, an error will be printed
- * to stderr. When a bus error occurs, value is set to the bus fault.
+ * Hexdump printing modes. The first three are used to properly print a hexdump
+ * with multiple identical lines skipped, which makes reading dumps of sparse
+ * data a bit less tedious. HEXDUMP_NO_SKIPPING can be used to force all lines
+ * to be dumped.
  */
-int rvsrv_readSingle(
-  unsigned long address,
-  unsigned long *value,
-  int size
-);
+#define HEXDUMP_PROLOGUE     0
+#define HEXDUMP_CONTENT      1
+#define HEXDUMP_EPILOGUE     2
+#define HEXDUMP_NO_SKIPPING  3
 
 /**
- * Reads at most 4096 bytes in a single command. The address does not need to
- * be aligned, but it's slightly faster if it is. Returns 1 when successful,
- * 0 when a bus error occured, or -1 when a fatal error occured. In the latter
- * case, an error will be printed to stderr. If a bus error occured and fault
- * is not null, *faultCode will be set to the bus fault. Only the last bus
- * access is checked for fault conditions.
+ * Hex-dumps the given buffer to stdout.
  */
-int rvsrv_readBulk(
-  unsigned long address,
-  unsigned long *buffer,
-  int size,
-  unsigned long *faultCode
-);
+void hexdump(unsigned long address, unsigned char *buffer, int byteCount, int fault, int position);
 
 /**
- * Writes a single byte, halfword or word to the hardware (size set to 1, 2 or
- * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
- * -1 when a fatal error occured. In the latter case, an error will be printed
- * to stderr. If a bus error occured and fault is not null, *faultCode will be
- * set to the bus fault.
+ * Draws a progress bar.
  */
-int rvsrv_writeSingle(
-  unsigned long address,
-  unsigned long value,
-  int size,
-  unsigned long *faultCode
-);
-
-/**
- * Writes at most 4096 bytes in a single command. The address does not need to
- * be aligned, but it's slightly faster if it is. Returns 1 when successful,
- * 0 when a bus error occured, or -1 when a fatal error occured. In the latter
- * case, an error will be printed to stderr. If a bus error occured and fault
- * is not null, *faultCode will be set to the bus fault. Only the last bus
- * access is checked for fault conditions.
- */
-int rvsrv_writeBulk(
-  unsigned long address,
-  unsigned char *buffer,
-  int size,
-  unsigned long *faultCode
-);
+void progressBar(char *prefix, int progress, int max, int isFirstCall, int isByteCount);
 
 #endif

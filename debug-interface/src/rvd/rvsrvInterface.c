@@ -124,6 +124,7 @@ static int rvsrv_connect(void) {
       if (connect(rvsrvSocket, (struct sockaddr *)addr, curAddrInfo->ai_addrlen) >= 0) {
         
         // Opened a connection.
+        freeaddrinfo(addrInfo);
         return 0;
         
       }
@@ -534,7 +535,7 @@ static int executeReadWrite(int isWrite, int *fault, unsigned char **readBuf, in
  * Reads a single byte, halfword or word from the hardware (size set to 1, 2 or
  * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
  * -1 when a fatal error occured. In the latter case, an error will be printed
- * to stdout. When a bus error occurs, value is set to the bus fault.
+ * to stderr. When a bus error occurs, value is set to the bus fault.
  */
 int rvsrv_readSingle(
   unsigned long address,
@@ -601,10 +602,79 @@ int rvsrv_readSingle(
 }
 
 /**
+ * Reads at most 4096 bytes in a single command. The address does not need to
+ * be aligned, but it's slightly faster if it is. Returns 1 when successful,
+ * 0 when a bus error occured, or -1 when a fatal error occured. In the latter
+ * case, an error will be printed to stderr. If a bus error occured and fault
+ * is not null, *faultCode will be set to the bus fault. Only the last bus
+ * access is checked for fault conditions.
+ */
+int rvsrv_readBulk(
+  unsigned long address,
+  unsigned long *buffer,
+  int size,
+  unsigned long *faultCode
+) {
+  int fault;
+  unsigned char *readBuf;
+  int readBufSize;
+  
+  // Check the size.
+  if (size > 4096) {
+    fprintf(stderr,
+      "Error: rvsrv_readBulk() called with more than 4096 bytes.\n"
+    );
+    return -1;
+  }
+  
+  // Send the command to rvsrv.
+  sprintf(packetBuffer, "Read,%08X,%d;", address, size);
+  if (executeReadWrite(0, &fault, &readBuf, &readBufSize) < 0) {
+    free(readBuf);
+    return -1;
+  }
+  
+  // Make sure we got the expected amount of bytes.
+  if (readBufSize != (fault ? 4 : size)) {
+    fprintf(stderr, 
+      "Error: received a malformed reply to command \"Write\" from rvsrv:\n"
+      "unexpected amount of bytes returned.\n"
+    );
+    free(readBuf);
+    return -1;
+  }
+  
+  if (fault) {
+    
+    // Set the faultCode output.
+    *faultCode = readBuf[0];
+    *faultCode <<= 8;
+    *faultCode |= readBuf[1];
+    *faultCode <<= 8;
+    *faultCode |= readBuf[2];
+    *faultCode <<= 8;
+    *faultCode |= readBuf[3];
+    
+  } else {
+    
+    // Copy the read buffer into the specified buffer.
+    memcpy(buffer, readBuf, size);
+    
+  }
+  
+  // Free the read buffer.
+  free(readBuf);
+  
+  // Return 1 when the read was successful or 0 when a bus fault occured.
+  return !fault;
+  
+}
+
+/**
  * Writes a single byte, halfword or word to the hardware (size set to 1, 2 or
  * 4 respectively). Returns 1 when successful, 0 when a bus error occured, or
  * -1 when a fatal error occured. In the latter case, an error will be printed
- * to stdout. If a bus error occured and fault is not null, *faultCode will be
+ * to stderr. If a bus error occured and fault is not null, *faultCode will be
  * set to the bus fault.
  */
 int rvsrv_writeSingle(
@@ -633,6 +703,80 @@ int rvsrv_writeSingle(
       fprintf(stderr, "rvsrv_writeSingle() was called with incorrect size %d.\n", size);
       return -1;
   }
+  
+  // Send the command to rvsrv.
+  if (executeReadWrite(1, &fault, &readBuf, &readBufSize) < 0) {
+    free(readBuf);
+    return -1;
+  }
+  
+  // Make sure we got the expected amount of bytes.
+  if (readBufSize != (fault ? 4 : 0)) {
+    fprintf(stderr, 
+      "Error: received a malformed reply to command \"Write\" from rvsrv:\n"
+      "unexpected amount of bytes returned.\n"
+    );
+    free(readBuf);
+    return -1;
+  }
+  
+  // Set the faultCode output.
+  if (fault) {
+    *faultCode = readBuf[0];
+    *faultCode <<= 8;
+    *faultCode |= readBuf[1];
+    *faultCode <<= 8;
+    *faultCode |= readBuf[2];
+    *faultCode <<= 8;
+    *faultCode |= readBuf[3];
+  }
+  
+  // Free the read buffer.
+  free(readBuf);
+  
+  // Return 1 when the read was successful or 0 when a bus fault occured.
+  return !fault;
+  
+}
+
+/**
+ * Writes at most 4096 bytes in a single command. The address does not need to
+ * be aligned, but it's slightly faster if it is. Returns 1 when successful,
+ * 0 when a bus error occured, or -1 when a fatal error occured. In the latter
+ * case, an error will be printed to stderr. If a bus error occured and fault
+ * is not null, *faultCode will be set to the bus fault. Only the last bus
+ * access is checked for fault conditions.
+ */
+int rvsrv_writeBulk(
+  unsigned long address,
+  unsigned char *buffer,
+  int size,
+  unsigned long *faultCode
+) {
+  
+  char *ptr;
+  int fault;
+  int readBufSize;
+  unsigned char *readBuf;
+  
+  // Check the size.
+  if (size > 4096) {
+    fprintf(stderr,
+      "Error: rvsrv_writeBulk() called with more than 4096 bytes.\n"
+    );
+    return -1;
+  }
+  
+  // Generate the command.
+  sprintf(packetBuffer, "Write,%08X,%d,", address, size);
+  ptr = packetBuffer + strlen(packetBuffer);
+  while (size) {
+    sprintf(ptr, "%02hhX", *buffer);
+    buffer++;
+    ptr += 2;
+    size--;
+  }
+  sprintf(ptr, ";");
   
   // Send the command to rvsrv.
   if (executeReadWrite(1, &fault, &readBuf, &readBufSize) < 0) {

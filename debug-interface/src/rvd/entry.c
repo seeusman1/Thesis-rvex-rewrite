@@ -297,12 +297,13 @@ static void usage(char *progName, int verbose) {
     "  evaluate, eval     Evaluates the given expression.\n"
     "  execute, exec      Executes the given expression.\n"
     "  stop               Sends the stop command to rvsrv.\n"
-    //"\n"
-    //"Memory access:\n"
+    "\n"
+    "Memory access:\n"
     //"  upload, up         Uploads an S-record or binary file.\n"   TODO
     //"  download, dl       Downloads an S-record or binary file.\n" TODO
-    //"  write, w           Writes a word, halfword or byte.\n"      TODO
-    //"  read, r            Reads one or more words.\n"              TODO
+    "  write, w           Writes a word, halfword or byte.\n"
+    "  read, r            Reads one or more words, halfwords or bytes.\n"
+    "  fill               Fills an address range with the specified byte.\n"
     //"\n"
     //"Debugging:\n"
     //"  break              Stops execution on the selected contexts.\n"   TODO
