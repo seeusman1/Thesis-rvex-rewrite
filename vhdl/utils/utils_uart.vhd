@@ -103,6 +103,10 @@ entity utils_uart is
     rx_frameError               : out std_logic;
     rx_strobe                   : out std_logic;
     
+    -- When the line has been idle for a certain amount of time, this signal
+    -- will go high. It may be used to signal a buffer flush.
+    rx_charTimeout              : out std_logic;
+    
     ---------------------------------------------------------------------------
     -- TX logic internal interface
     ---------------------------------------------------------------------------
@@ -161,7 +165,8 @@ begin -- architecture
         rx                      => rx,
         data                    => rx_data,
         frameError              => rx_frameError,
-        strobe                  => rx_strobe_s
+        strobe                  => rx_strobe_s,
+        charTimeout             => rx_charTimeout
       );
     
     -- Gate the strobe signal with the clkEnBaud8 signal.

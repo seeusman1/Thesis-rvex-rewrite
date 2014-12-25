@@ -59,7 +59,7 @@ library rvex;
 -- buffer, which is swapped when both sides indicate that they are done with
 -- their buffer.
 -------------------------------------------------------------------------------
-entity periph_UART_packetBuffer is
+entity periph_uart_packetBuffer is
 --=============================================================================
   port (
     
@@ -124,10 +124,10 @@ entity periph_UART_packetBuffer is
     bus2sink_swapping           : out std_logic
     
   );
-end periph_UART_packetBuffer;
+end periph_uart_packetBuffer;
 
 --=============================================================================
-architecture Behavioral of periph_UART_packetBuffer is
+architecture Behavioral of periph_uart_packetBuffer is
 --=============================================================================
   
   -- Swap signal. This is asserted for one cycle when the buffers are swapped

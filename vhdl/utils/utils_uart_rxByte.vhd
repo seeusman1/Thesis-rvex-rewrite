@@ -78,7 +78,11 @@ entity utils_uart_rxByte is
     -- stop bit is not high as expected.
     data                        : out std_logic_vector(7 downto 0);
     frameError                  : out std_logic;
-    strobe                      : out std_logic
+    strobe                      : out std_logic;
+    
+    -- When the line has been idle for a certain amount of time, this signal
+    -- will go high. It may be used to signal a buffer flush.
+    charTimeout                 : out std_logic
     
   );
 end utils_uart_rxByte;
@@ -95,6 +99,12 @@ architecture Behavioral of utils_uart_rxByte is
   -- Bit counter. 0 is idle or the start bit, 1 is data bit 0, 8 is data bit 7,
   -- 9 is the stop bit.
   signal bitCount               : unsigned(3 downto 0);
+  
+  -- Character timeout timer. This will be incremented by bitStrobe while
+  -- bitCount is zero and be reset when bitCount is nonzero (note that
+  -- bitStrobe will keep running at the local baud rate generator speed even
+  -- when the line is idle).
+  signal timeoutCounter         : unsigned(2 downto 0);
   
   -- Shift register containing the 9 last received bits, such that it contains
   -- the received data in 7..0 and the stop bit in 8 when bitCount rolls over.
@@ -139,6 +149,8 @@ begin -- architecture
       if reset = '1' then
         bitCount <= (others => '0');
         shiftReg <= (others => '1');
+        timeoutCounter <= (others => '1');
+        charTimeout <= '1';
       elsif clkEnBaud8 = '1' then
         
         -- Only update the counter and shift register when we get a new bit.
@@ -153,6 +165,17 @@ begin -- architecture
           
           -- Generate the shift register.
           shiftReg <= bitData & shiftReg(8 downto 1);
+          
+          -- Generate the character timeout signal.
+          if bitCount /= "0000" then
+            timeoutCounter <= "000";
+            charTimeout <= '0';
+          elsif timeoutCounter = "111" then
+            charTimeout <= '1';
+          else
+            timeoutCounter <= timeoutCounter + 1;
+            charTimeout <= '0';
+          end if;
           
         end if;
         

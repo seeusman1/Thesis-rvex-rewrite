@@ -64,7 +64,7 @@ use rvex.bus_pkg.all;
 -- the application desires to send one of these characters, they are
 -- appropriately escaped in hardware.
 -------------------------------------------------------------------------------
-entity periph_UART is
+entity periph_uart is
 --=============================================================================
   generic (
     
@@ -102,78 +102,9 @@ entity periph_UART is
     ---------------------------------------------------------------------------
     -- Slave bus
     ---------------------------------------------------------------------------
-    -- The UART has three available registers, mapped at the following
-    -- addresses.
-    --
-    -- Address                                 Name
-    -- =====================================   ====
-    -- 0b--------_--------_--------_----0000   data
-    -- 0b--------_--------_--------_----0100   stat
-    -- 0b--------_--------_--------_----1000   ctrl
-    --
-    -- All registers are 8 bit. They have the following fields.
-    --
-    --            |--7--|--6--|--5--|--4--|--3--|--2--|--1--|--0--|
-    --   data (r) |                      RXD                      |
-    --            |-----|-----|-----|-----|-----|-----|-----|-----|
-    --   data (w) |                      TXD                      |
-    --            |-----|-----|-----|-----|-----|-----|-----|-----|
-    --   stat (r) |  -  |  -  | ROV | CTI |RXDR | TOV |TXDR |TXDE |
-    --            |-----|-----|-----|-----|-----|-----|-----|-----|
-    --   stat (w) |  -  |  -  |ROVC |  -  |  -  |TOVC |  -  |  -  |
-    --            |-----|-----|-----|-----|-----|-----|-----|-----|
-    -- ctrl (r/w) |   RXTL    |ROVE |CTIE |RXDRE|TOVE |TXDRE|TXDEE|
-    --            |-----|-----|-----|-----|-----|-----|-----|-----|
-    --
-    --   RXD - RX data. When read, the topmost byte is popped off of the
-    --         receive buffer and is returned. When the buffer is empty, the
-    --         returned value is undefined.
-    -- 
-    --   TXD - TX data. When written, the written byte is pushed onto the
-    --         transmit buffer if room is available. If the buffer is full, the
-    --         byte is discarded.
-    --
-    --  TXDE - TX data register empty. When this flag is set, the transmit FIFO
-    -- TXDEE   is empty. When TXDEE is set, an interrupt is requested when this
-    --         is the case.
-    -- 
-    --  TXDR - TX data register ready. When this flag is set, the transmit FIFO
-    -- TXDRE   is not full and thus ready for new data. When TXDRE is set, an
-    --         interrupt is requested when this is the case.
-    -- 
-    --   TOV - This flag is set when the application wrote to TXD while the
-    --  TOVC   buffer was full. Writing a 1 to TOVC clears this flag. When TOVE
-    --  TOVE   is set, an interrupt is requested when TOV is high.
-    -- 
-    --  RXDR - RX data ready. This flag is set when there are at least as much
-    -- RXDRE   characters in the receive buffer as specified by RXTL. When
-    --         RXDRE is set, an interrupt is requested when this is the case.
-    -- 
-    --   CTI - Character timeout interrupt. This flag is set when the receive
-    --  CTIE   FIFO is nonempty while the UART RX line has been idle for at
-    --         least one character time. When CTIE is set, an interrupt is
-    --         requested when this is the case. It may be used in conjunction
-    --         with RXDR and RXTL to correctly finish reading incoming data
-    --         packets which are not a multiple of the value specified by RXTL.
-    -- 
-    --   ROV - This flag is set when an incoming byte is discarded because the
-    --  ROVC   receive buffer is full. Writing a 1 to ROVC clears this flag.
-    --  ROVE   When TOVE is set, an interrupt is requested when ROV is high.
-    --
-    --  RXTL - RX trigger level. This controls when RXDR is set. The following
-    --         encoding is used.
-    --           00 => At least 1 character is present in the RX FIFO.
-    --           01 => At least 4 characters are present in the RX FIFO.
-    --           10 => At least 8 characters are present in the RX FIFO.
-    --           11 => At least 14 characters are present in the RX FIFO.
-    -- 
-    -- NOTE: all of the above registers operate on the UART bytestream as made
-    -- visible to the application, which is NOT the actual raw UART stream.
-    -- Characters sent by the application may be escaped to allow unique
-    -- control characters to be sent over the UART, and debug packets are
-    -- injected into the stream as well. All this is done transparently
-    -- however; the receiver performs the inverse operation.
-    
+    -- The UART can be accessed from this bus for transmitting user data over
+    -- the same physical line as the debug data. Refer to the entity
+    -- description in periph_uart_busIface.vhd for more information.
     -- Slave bus port.
     bus2uart                    : in  bus_mst2slv_type;
     uart2bus                    : out bus_slv2mst_type;
@@ -191,10 +122,10 @@ entity periph_UART is
     dbg2uart_bus                : in  bus_slv2mst_type
     
   );
-end periph_UART;
+end periph_uart;
 
 --=============================================================================
-architecture Behavioral of periph_UART is
+architecture Behavioral of periph_uart is
 --=============================================================================
   
   -- UART <-> switch signals.
@@ -205,12 +136,13 @@ architecture Behavioral of periph_UART is
   signal sw2uart_txStrobe       : std_logic;
   signal uart2sw_txBusy         : std_logic;
   
-  -- Switch <-> bus interface signals.
+  -- Switch/UART <-> bus interface signals.
   signal sw2user_rxData         : std_logic_vector(7 downto 0);
   signal sw2user_rxStrobe       : std_logic;
   signal user2sw_txData         : std_logic_vector(7 downto 0);
   signal user2sw_txStrobe       : std_logic;
   signal sw2user_txBusy         : std_logic;
+  signal uart2user_rxCharTimeout: std_logic;
   
   -- Switch <-> debug packet controller signals.
   signal sw2pkctrl_rxData       : std_logic_vector(7 downto 0);
@@ -238,10 +170,6 @@ architecture Behavioral of periph_UART is
 begin -- architecture
 --=============================================================================
   
-  -- TEMPORARY: (unreliable) loopback of user data.
-  user2sw_txData <= sw2user_rxData;
-  user2sw_txStrobe <= sw2user_rxStrobe;
-  
   -----------------------------------------------------------------------------
   -- Instantiate the UART
   -----------------------------------------------------------------------------
@@ -267,6 +195,7 @@ begin -- architecture
       rx_data                   => uart2sw_rxData,
       rx_frameError             => uart2sw_rxFrameError,
       rx_strobe                 => uart2sw_rxStrobe,
+      rx_charTimeout            => uart2user_rxCharTimeout,
       
       -- TX logic internal interface.
       tx_data                   => sw2uart_txData,
@@ -281,7 +210,7 @@ begin -- architecture
   -- This inserts and handles special control characters and escape sequences
   -- for them to switch between transmitting/receicing application data and
   -- debug packets.
-  uart_switch_inst: entity rvex.periph_UART_switch
+  uart_switch_inst: entity rvex.periph_uart_switch
     port map (
       
       -- System control.
@@ -321,7 +250,7 @@ begin -- architecture
   -- Instantiate the debug packet controller
   -----------------------------------------------------------------------------
   -- This handles CRC generation/verification and buffering of debug packets.
-  debug_packet_control_inst: entity rvex.periph_UART_packetControl
+  debug_packet_control_inst: entity rvex.periph_uart_packetControl
     port map (
       
       -- System control.
@@ -357,7 +286,7 @@ begin -- architecture
   -- Instantiate the debug packet handler
   -----------------------------------------------------------------------------
   -- This converts the incoming debug packets into bus accesses.
-  debug_packet_handler: entity rvex.periph_UART_packetHandler
+  debug_packet_handler: entity rvex.periph_uart_packetHandler
     port map (
       
       -- System control.
@@ -381,6 +310,34 @@ begin -- architecture
       -- Bus interface.
       pkhan2dbg_bus             => uart2dbg_bus,
       dbg2pkhan_bus             => dbg2uart_bus
+      
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the bus interface
+  -----------------------------------------------------------------------------
+  -- This will interface between the slave bus interface which the application
+  -- can access to transmit and receive bytes, and the UART stream switch.
+  bus_interface: entity rvex.periph_uart_busIface
+    port map (
+      
+      -- System control.
+      reset                     => reset,
+      clk                       => clk,
+      clkEn                     => clkEn,
+      
+      -- Slave bus.
+      bus2uart                  => bus2uart,
+      uart2bus                  => uart2bus,
+      irq                       => irq,
+      
+      -- UART data inferface.
+      rxData                    => sw2user_rxData,
+      rxStrobe                  => sw2user_rxStrobe,
+      rxTimeout                 => uart2user_rxCharTimeout,
+      txData                    => user2sw_txData,
+      txStrobe                  => user2sw_txStrobe,
+      txBusy                    => sw2user_txBusy
       
     );
   

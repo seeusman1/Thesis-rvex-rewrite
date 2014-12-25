@@ -154,7 +154,7 @@ use rvex.bus_pkg.all;
 -- unknown to the computer.
 -- 
 -------------------------------------------------------------------------------
-entity periph_UART_packetHandler is
+entity periph_uart_packetHandler is
 --=============================================================================
   port (
     
@@ -211,10 +211,10 @@ entity periph_UART_packetHandler is
     dbg2pkhan_bus               : in  bus_slv2mst_type
     
   );
-end periph_UART_packetHandler;
+end periph_uart_packetHandler;
 
 --=============================================================================
-architecture Behavioral of periph_UART_packetHandler is
+architecture Behavioral of periph_uart_packetHandler is
 --=============================================================================
   
   -----------------------------------------------------------------------------

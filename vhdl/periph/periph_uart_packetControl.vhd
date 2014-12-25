@@ -62,7 +62,7 @@ library rvex;
 -- received packets. When a packet with an incorrect CRC is received, it is
 -- discarded.
 -------------------------------------------------------------------------------
-entity periph_UART_packetControl is
+entity periph_uart_packetControl is
 --=============================================================================
   port (
     
@@ -133,10 +133,10 @@ entity periph_UART_packetControl is
     sw2pkctrl_txAck             : in  std_logic
     
   );
-end periph_UART_packetControl;
+end periph_uart_packetControl;
 
 --=============================================================================
-architecture Behavioral of periph_UART_packetControl is
+architecture Behavioral of periph_uart_packetControl is
 --=============================================================================
   
   -- CRC polynomial to use for the packets, in MSB-first representation.
@@ -184,7 +184,7 @@ begin -- architecture
   begin
     
     -- Instantiate the transmit packet buffer.
-    rx_packet_buffer_inst: entity rvex.periph_UART_packetBuffer
+    rx_packet_buffer_inst: entity rvex.periph_uart_packetBuffer
       port map (
         
         -- System control.
@@ -331,7 +331,7 @@ begin -- architecture
   begin
     
     -- Instantiate the transmit packet buffer.
-    tx_packet_buffer_inst: entity rvex.periph_UART_packetBuffer
+    tx_packet_buffer_inst: entity rvex.periph_uart_packetBuffer
       port map (
         
         -- System control.

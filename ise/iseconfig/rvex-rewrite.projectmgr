@@ -52,7 +52,6 @@
          <ClosedNode>/todo - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|temp|todo.vhd</ClosedNode>
          <ClosedNode>/toplevel_uartTest_spartan3 - behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|temp|toplevel_uartTest_spartan3.vhd/core_asDisas_pkg</ClosedNode>
          <ClosedNode>/toplevel_uartTest_spartan3 - behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|temp|toplevel_uartTest_spartan3.vhd/simUtils_mem_pkg</ClosedNode>
-         <ClosedNode>/toplevel_uartTest_spartan3 - behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|temp|toplevel_uartTest_spartan3.vhd/uut - periph_UART - Behavioral/uart_inst - utils_uart - Behavioral</ClosedNode>
          <ClosedNode>/uart_tb - behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|temp|uart_tb.vhd</ClosedNode>
          <ClosedNode>/utils_fracDiv - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|utils|utils_fracDiv.vhd/core_asDisas_pkg</ClosedNode>
          <ClosedNode>/utils_fracDiv - Behavioral |home|jeroen|rvex|rvex-rewrite|vhdl|utils|utils_fracDiv.vhd/simUtils_mem_pkg</ClosedNode>
@@ -63,7 +62,7 @@
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002aa000000020000000000000000000000000200000064ffffffff000000810000000300000002000002aa0000000100000003000000000000000100000003</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff0000000000000001000000010000000000000000000000000000000002020000000100000001000000640000029d000000020000000000000000000000000200000064ffffffff0000008100000003000000020000029d0000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
       <CurrentItem>toplevel_uartTest_spartan3 - behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/temp/toplevel_uartTest_spartan3.vhd)</CurrentItem>
    </ItemView>
@@ -86,13 +85,13 @@
          <ClosedNodesVersion>1</ClosedNodesVersion>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>toplevel_uartTest_spartan3.ucf</SelectedItem>
+         <SelectedItem>core_pkg.vhd</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >61</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >44</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff0000000000000001000000000000000001000000000000000000000000000000000000038c000000040101000100000000000000000000000064ffffffff000000810000000000000004000000f600000001000000000000002400000001000000000000006600000001000000000000020c0000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem>toplevel_uartTest_spartan3.ucf</CurrentItem>
+      <CurrentItem>core_pkg.vhd</CurrentItem>
    </ItemView>
    <ItemView guiview="Library" >
       <ClosedNodes>
@@ -102,7 +101,7 @@
       <SelectedItems>
          <SelectedItem>work</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >80</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >83</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000000000000010000000000000000000000000000000000000101000000010001000100000000000000000000000064ffffffff000000810000000000000001000001010000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
@@ -121,16 +120,16 @@
          <ClosedNode>User Constraints</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>Generate Programming File</SelectedItem>
+         <SelectedItem></SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000244000000010000000100000000000000000000000064ffffffff000000810000000000000001000002440000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000254000000010000000100000000000000000000000064ffffffff000000810000000000000001000002540000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem>Generate Programming File</CurrentItem>
+      <CurrentItem></CurrentItem>
    </ItemView>
    <SourceProcessView>000000ff0000000000000002000001a2000000fd01000000040100000002</SourceProcessView>
-   <CurrentView>Implementation</CurrentView>
+   <CurrentView>Behavioral Simulation</CurrentView>
    <ItemView engineview="BehavioralSim" guiview="Source" compilemode="AutoCompile" >
       <ClosedNodes>
          <ClosedNodesVersion>2</ClosedNodesVersion>
@@ -190,9 +189,9 @@
       <SelectedItems>
          <SelectedItem>toplevel_uartTest_spartan3 - behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/temp/toplevel_uartTest_spartan3.vhd)</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >9</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >25</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002aa000000020000000000000000000000000200000064ffffffff000000810000000300000002000002aa0000000100000003000000000000000100000003</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff0000000000000001000000010000000000000000000000000000000002020000000100000001000000640000029d000000020000000000000000000000000200000064ffffffff0000008100000003000000020000029d0000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
       <CurrentItem>toplevel_uartTest_spartan3 - behavioral (/home/jeroen/rvex/rvex-rewrite/vhdl/temp/toplevel_uartTest_spartan3.vhd)</CurrentItem>
    </ItemView>
@@ -215,13 +214,13 @@
          <ClosedNodesVersion>1</ClosedNodesVersion>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>Simulate Behavioral Model</SelectedItem>
+         <SelectedItem>Behavioral Check Syntax</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000254000000010000000100000000000000000000000064ffffffff000000810000000000000001000002540000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem>Simulate Behavioral Model</CurrentItem>
+      <CurrentItem>Behavioral Check Syntax</CurrentItem>
    </ItemView>
    <ItemView engineview="SynthesisOnly" sourcetype="DESUT_VHDL_PACKAGE_DECL" guiview="Process" >
       <ClosedNodes>

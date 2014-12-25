@@ -289,7 +289,7 @@ begin
     
   begin
   
-    uut: entity rvex.periph_UART_packetBuffer
+    uut: entity rvex.periph_uart_packetBuffer
       port map (
         reset,
         clk,

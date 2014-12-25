@@ -35,7 +35,7 @@ architecture behavioral of toplevel_uartTest_spartan3 is
 begin
   
   -- Instantiate unit under test.
-  uut: entity rvex.periph_UART
+  uut: entity rvex.periph_uart
     generic map (
       F_CLK                     => 50000000.0,
       F_BAUD                    => 115200.0

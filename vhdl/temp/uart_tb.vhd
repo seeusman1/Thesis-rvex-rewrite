@@ -30,7 +30,7 @@ architecture behavioral of uart_tb is
 begin
   
   -- Instantiate unit under test.
-  uut: entity rvex.periph_UART
+  uut: entity rvex.periph_uart
     generic map (
       F_CLK                     => 10000000.0,
       F_BAUD                    => 115200.0

@@ -66,7 +66,7 @@ library rvex;
 --   0xFC    0xFC 0x03    Escape character.
 -- 
 -------------------------------------------------------------------------------
-entity periph_UART_switch is
+entity periph_uart_switch is
 --=============================================================================
   port (
     
@@ -131,10 +131,10 @@ entity periph_UART_switch is
     sw2dbg_txAck                : out std_logic
     
   );
-end periph_UART_switch;
+end periph_uart_switch;
 
 --=============================================================================
-architecture Behavioral of periph_UART_switch is
+architecture Behavioral of periph_uart_switch is
 --=============================================================================
   
   -- Special control character definitions. These can be changed to whatever,
