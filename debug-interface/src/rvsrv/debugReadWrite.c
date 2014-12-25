@@ -268,7 +268,7 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
     if (tcpServer_sendStr(debugServer, cbData->clientID, cbData->buffer ? "Error, Read, CommunicationError;\n" : "Error, Write, CommunicationError;\n") < 0) {
       if (cbData->buffer) free(cbData->buffer);
       free(cbData);
-      return -1;
+      return 0;
     }
     if (cbData->buffer) free(cbData->buffer);
     free(cbData);
@@ -279,18 +279,18 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
   if (tcpServer_sendStr(debugServer, cbData->clientID, cbData->buffer ? "OK, Read, " : "OK, Write, ") < 0) {
     if (cbData->buffer) free(cbData->buffer);
     free(cbData);
-    return -1;
+    return 0;
   }
   if (tcpServer_sendStr(debugServer, cbData->clientID, cbData->lastFault ? "Fault, " : "OK, ") < 0) {
     if (cbData->buffer) free(cbData->buffer);
     free(cbData);
-    return -1;
+    return 0;
   }
   sprintf(str, "%08X, %d", cbData->address, cbData->bufSize);
   if (tcpServer_sendStr(debugServer, cbData->clientID, str) < 0) {
     if (cbData->buffer) free(cbData->buffer);
     free(cbData);
-    return -1;
+    return 0;
   }
   
   // Write the result-specific tokens.
@@ -301,7 +301,7 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
     if (tcpServer_sendStr(debugServer, cbData->clientID, str) < 0) {
       if (cbData->buffer) free(cbData->buffer);
       free(cbData);
-      return -1;
+      return 0;
     }
     
   } else if (cbData->buffer) {
@@ -310,20 +310,20 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
     if (tcpServer_sendStr(debugServer, cbData->clientID, ", ") < 0) {
       free(cbData->buffer);
       free(cbData);
-      return -1;
+      return 0;
     }
     for (i = 0; i < cbData->bufSize; i++) {
       sprintf(str, "%02hhX", cbData->buffer[i]);
       if (tcpServer_sendStr(debugServer, cbData->clientID, str) < 0) {
         free(cbData->buffer);
         free(cbData);
-        return -1;
+        return 0;
       }
     }
     if (tcpServer_sendStr(debugServer, cbData->clientID, ";\n") < 0) {
       free(cbData->buffer);
       free(cbData);
-      return -1;
+      return 0;
     }
     
   } else {
@@ -331,7 +331,7 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
     // No special token for writes.
     if (tcpServer_sendStr(debugServer, cbData->clientID, ";\n") < 0) {
       free(cbData);
-      return -1;
+      return 0;
     }
     
   }

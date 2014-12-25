@@ -57,6 +57,25 @@
 #include "parser.h"
 #include "types.h"
 #include "utils.h"
+#include "srec.h"
+
+/**
+ * Enumeration for the supported file types.
+ */
+typedef enum {
+  FT_UNKNOWN, FT_STRAIGHT, FT_SREC
+} filetype_t;
+
+/**
+ * Converts a filetype mnemonic into a filetype_t.
+ */
+static filetype_t interpretFiletype(const char *filetype) {
+  if (!strcmp(filetype, "srec")) return FT_SREC;
+  if (!strcmp(filetype, "s"))    return FT_SREC;
+  if (!strcmp(filetype, "bin"))  return FT_STRAIGHT;
+  if (!strcmp(filetype, "b"))    return FT_STRAIGHT;
+  return FT_UNKNOWN;
+}
 
 /**
  * Returns nonzero if the args specify a help command.
@@ -186,7 +205,7 @@ int run(commandLineArgs_t *args) {
     
     // Write to the .rvd-context file.
     unlink(".rvd-context");
-    f = open(".rvd-context", O_WRONLY | O_CREAT);
+    f = open(".rvd-context", O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
     if (f < 0) {
       perror("Could not open .rvd-context for writing");
       return -1;
@@ -475,7 +494,7 @@ int run(commandLineArgs_t *args) {
           iterPage_t i;
           int first;
           
-          printf("Context %d: dumping 0x%08X..0x%08X...\n\n", ctxt, address.value, address.value + count.value * size);
+          printf("Context %d: dumping 0x%08X..0x%08X...\n\n", ctxt, address.value, address.value + count.value * size - 1);
           
           // Iterate over the rvsrv pages which need to be updated to perform
           // this request. iterPage and iterPageInit will ensure that all pages
@@ -486,12 +505,6 @@ int run(commandLineArgs_t *args) {
             
             uint32_t fault;
             int retval;
-            
-            // We store the contents of the previous line to match against the
-            // current. If they're identical, we don't print it to compress the
-            // output. The last byte is 1 for OK, 0 for bus fault or 0xFF for
-            // unknown.
-            unsigned char prevLineContents[17];
             
             // Perform the bulk read operation.
             retval = rvsrv_readBulk(i.address, pageBuffer, i.numBytes, &fault);
@@ -610,17 +623,19 @@ int run(commandLineArgs_t *args) {
       } else {
         
         iterPage_t i;
+        char prefix[16];
         
         printf(
           "Context %d: writing %02hhX to 0x%08X..0x%08X...\n",
           ctxt,
           pageBuffer[0],
           address.value,
-          address.value + count.value
+          address.value + count.value - 1
         );
         
         // Start printing the progress bar.
-        progressBar("", 0, count.value, 1, 1);
+        sprintf(prefix, "0x%08X ", address.value);
+        progressBar(prefix, 0, count.value, 1, 1);
         
         // Iterate over the rvsrv pages which need to be updated to perform
         // this request. iterPage and iterPageInit will ensure that all pages
@@ -631,13 +646,7 @@ int run(commandLineArgs_t *args) {
           uint32_t fault;
           int retval;
           
-          // We store the contents of the previous line to match against the
-          // current. If they're identical, we don't print it to compress the
-          // output. The last byte is 1 for OK, 0 for bus fault or 0xFF for
-          // unknown.
-          unsigned char prevLineContents[17];
-          
-          // Perform the bulk read operation.
+          // Perform the bulk write operation.
           retval = rvsrv_writeBulk(i.address, pageBuffer, i.numBytes, &fault);
           if (retval < 0) {
             return -1;
@@ -654,7 +663,8 @@ int run(commandLineArgs_t *args) {
           }
           
           // Update the progress bar.
-          progressBar("", (count.value - i.remain) + i.numBytes, count.value, 0, 1);
+          sprintf(prefix, "0x%08X ", i.address + i.numBytes - 1);
+          progressBar(prefix, (count.value - i.remain) + i.numBytes, count.value, 0, 1);
           
         }
         
@@ -672,18 +682,439 @@ int run(commandLineArgs_t *args) {
     (!strcmp(args->command, "upload")) ||
     (!strcmp(args->command, "up"))
   ) {
+    filetype_t ft;
     
-    printf("Sorry, not yet implemented :(\n");
-    return -1;
+    if (isHelp(args) || (args->paramCount < 2) || (args->paramCount > 3)) {
+      printf(
+        "\n"
+        "Command usage:\n"
+        "  rvd upload <filetype> <filename> [address]\n"
+        "  rvd up <filetype> <filename> [address]\n"
+        "\n"
+        "This command uploads <filename> to the hardware, parsing the file with the\n"
+        "format specified by <filetype>, which must be one of the following.\n"
+        "\n"
+        " - \"srec\" or \"s\": Motorola S-record file.\n"
+        " - \"bin\" or \"b\": straight binary, no format.\n"
+        "\n"
+        "The optional address parameter specifies where the contents of the file should\n"
+        "be written to. For straight binary files, this markes the start address; for\n"
+        "S-record files (which have embedded addresses), this address is added to all\n"
+        "addresses in the S-record.\n"
+        "\n"
+        "Like all commands, upload is run for every selected context. The specified\n"
+        "is guaranteed to be evaluated exactly once before the file is loaded, allowing\n"
+        "it to perform bank selection operations as required.\n"
+        "\n"
+      );
+      return 0;
+    }
+    
+    // Interpret the file type.
+    ft = interpretFiletype(args->params[0]);
+    if (ft == FT_UNKNOWN) {
+      printf("Error: unsupported file type %s.\n", args->params[0]);
+    }
+    
+    FOR_EACH_CONTEXT(
+      
+      iterPage_t i;
+      void *fileReaderState;
+      int f;
+      int fileSize;
+      uint32_t address;
+      int totalFileBytes;
+      int totalDataBytes;
+      char prefix[16];
+      
+      // Evaluate the address if it is specified, otherwise set it to 0.
+      if (args->paramCount > 2) {
+        value_t addressVal;
+        if (evaluate(args->params[2], &addressVal, "") < 1) {
+          return -1;
+        }
+        address = addressVal.value;
+      } else {
+        address = 0;
+      }
+      
+      // Give a little feedback.
+      printf("Uploading file to 0x%08X for context %d...\n", address, ctxt);
+      
+      // Try to open the file.
+      f = open(args->params[1], O_RDONLY);
+      if (f < 0) {
+        perror("Failed to open input file");
+      }
+      
+      // Try to determine the size of the file.
+      fileSize = lseek(f, 0, SEEK_END);
+      if (fileSize == (off_t)-1) {
+        
+        // Can't seek, so we don't know the filesize. Maybe it's a stream of
+        // some sort - we can still read from the file probably, which is all
+        // we need, we just can't draw a normal progress bar now.
+        fileSize = 0;
+        
+      } else if (lseek(f, 0, SEEK_SET) == (off_t)-1) {
+        perror("Could not seek back to start of file");
+        close(f);
+        return -1;
+      }
+      
+      // Initialize counters.
+      totalFileBytes = 0;
+      totalDataBytes = 0;
+      
+      // Initialize the file type reader.
+      if (ft == FT_SREC) {
+        if (!(fileReaderState = srecReadInit())) {
+          return -1;
+        }
+      }
+      
+      // Start printing the progress bar.
+      sprintf(prefix, "0x%08X ", address);
+      progressBar(prefix, 0, fileSize, 1, 1);
+      
+      // Iterate over rvsrv pages starting at the current address. We don't
+      // know exactly how much we're going to write, so we just set that to a
+      // bogus value and make sure it doesn't run out.
+      i = iterPageInit(address, RVSRV_PAGE_SIZE * 2, RVSRV_PAGE_SIZE);
+      while (iterPage(&i)) {
+        int remain = i.numBytes;
+        unsigned char *ptr = pageBuffer;
+        int count;
+        int retval;
+        uint32_t fault;
+        i.numBytes = 0;
+        i.stopOffs = i.startOffs;
+        
+        // Make sure the page iterator doesn't run out.
+        i.remain = RVSRV_PAGE_SIZE * 2;
+        
+        // Read into the buffer.
+        while (remain) {
+          int count;
+          
+          if (ft == FT_STRAIGHT) {
+            
+            // Just read straight from the file.
+            count = read(f, ptr, remain);
+            if (count < 0) {
+              perror("Failed to read from input file");
+              close(f);
+              return -1;
+            } else if (count == 0) {
+              
+              // End of file reached: set remain to the number of bytes which
+              // we're about to upload so the page iterator will stop.
+              i.remain = i.numBytes;
+              break;
+              
+            }
+            
+            // Update the bytes read counter.
+            totalFileBytes += count;
+            
+          } else if (ft == FT_SREC) {
+            
+            // Call the srec read method. 
+            count = srecRead(fileReaderState, f, ptr, remain, i.address - address);
+            if (count < 0) {
+              close(f);
+              srecReadFree(fileReaderState);
+              return -1;
+            } else if (count == 0) {
+              
+              // If count is zero, it's either because we've reached the end of
+              // the file or because a noncontiguous address was encountered.
+              // We'll check for the address jump later - either way, we need
+              // to stop filling the buffer now.
+              break;
+              
+            }
+            
+            // Update the bytes read counter.
+            totalFileBytes += srecReadProgressDelta(fileReaderState);
+            
+          }
+          
+          // Update counters.
+          totalDataBytes += count;
+          i.numBytes += count;
+          i.stopOffs += count;
+          remain -= count;
+          ptr += count;
+          
+        }
+        
+        // If we have bytes available, perform the write.
+        if (i.numBytes) {
+          
+          // Perform the bulk write operation.
+          retval = rvsrv_writeBulk(i.address, pageBuffer, i.numBytes, &fault);
+          if (retval < 0) {
+            close(f);
+            if (ft == FT_SREC) {
+              srecReadFree(fileReaderState);
+            }
+            return -1;
+          } else if (retval == 0) {
+            
+            // Override the previous line in the terminal, which is the
+            // progress bar.
+            printf(
+              "\r\033[AWarning: bus fault 0x%08X occured while writing page 0x%08X..0x%08X.\033[K\n\n",
+              fault,
+              i.address,
+              i.address + i.numBytes - 1
+            );
+          }
+          
+        }
+        
+        // Update the progress bar.
+        sprintf(prefix, "0x%08X ", i.address + i.numBytes - 1);
+        progressBar(prefix, totalFileBytes, fileSize, 0, 1);
+          
+        // See if we need to change the address or if we're at the end of
+        // whatever file type we're reading.
+        if (ft == FT_SREC) {
+          
+          // Stop iterating if we're at the end of the file.
+          if (srecReadEof(fileReaderState)) {
+            i.remain = i.numBytes;
+          }
+          
+          // Change address to whatever the srec wants it to be. Note that the
+          // iterate method will add i.numBytes to the address to update it,
+          // which we don't want, so we do the reverse operation here.
+          i.address = (srecReadExpectedAddress(fileReaderState) + address) - i.numBytes;
+          
+        }
+        
+      }
+      
+      // Free the file type reader state.
+      if (ft == FT_SREC) {
+        srecReadFree(fileReaderState);
+      }
+      fileReaderState = 0;
+      
+      // Finish the progress indicator.
+      progressBar(prefix, fileSize, fileSize, 0, 0);
+      
+      // Show how many bytes we've uploaded and 
+      printf("Uploaded %d bytes.\n", totalDataBytes);
+      
+      // Print a newline to separate the contexts.
+      printf("\n");
+      
+      // Close the file.
+      close(f);
+      
+    );
+    
+    return 0;
     
   // --------------------------------------------------------------------------
   } else if (
-    (!strcmp(args->command, "upload")) ||
-    (!strcmp(args->command, "up"))
+    (!strcmp(args->command, "download")) ||
+    (!strcmp(args->command, "dl"))
   ) {
+    filetype_t ft;
+    int selectedContext = 0;
+    int multipleContexts = 0;
+    value_t address;
+    value_t count;
+    int f;
+    iterPage_t i;
+    char prefix[16];
     
-    printf("Sorry, not yet implemented :(\n");
-    return -1;
+    if (isHelp(args) || (args->paramCount != 4)) {
+      printf(
+        "\n"
+        "Command usage:\n"
+        "  rvd download <filetype> <filename> <address> <bytecount>\n"
+        "  rvd dl <filetype> <filename> <address> <bytecount>\n"
+        "\n"
+        "WARNING: if the specified file already exists, it will be overwritten.\n"
+        "\n"
+        "This command downloads the address range specified by <address> and <bytecount>\n"
+        "to the file specified by <filename>, using the specified file format. <filetype>\n"
+        "can be one of the following values.\n"
+        "\n"
+        " - \"srec\" or \"s\": Motorola S-record file.\n"
+        " - \"bin\" or \"b\": straight binary, no format.\n"
+        "\n"
+        "Unlike most commands, download cannot be run with multiple contexts selected,\n"
+        "as this would just write to the same file multiple times. rvd will display an\n"
+        "error if you try to do this.\n"
+        "\n"
+      );
+      return 0;
+    }
+    
+    // Interpret the file type.
+    ft = interpretFiletype(args->params[0]);
+    if (ft == FT_UNKNOWN) {
+      printf("Error: unsupported file type %s.\n", args->params[0]);
+    }
+    
+    // Determine which contexts we should use and crash if multiple contexts are
+    // selected.
+    FOR_EACH_CONTEXT(
+      if (multipleContexts) {
+        fprintf(stderr,
+          "You have multiple contexts selected; download does not support this. Please use\n"
+          "\"rvd select\" or the -c or --context command line parameter to select a single\n"
+          "context and try again.\n"
+        );
+        return -1;
+      }
+      selectedContext = ctxt;
+      multipleContexts = 1;
+    );
+    
+    // Evaluate the start address.
+    if (evaluate(args->params[2], &address, "") < 1) {
+      return -1;
+    }
+    
+    // Evaluate the number of bytes to download.
+    if (evaluate(args->params[3], &count, "") < 1) {
+      return -1;
+    }
+    
+    // We don't have to do anything if 0 bytes were requested.
+    if (!count.value) {
+      printf("0 bytes requested, nothing to do.\n");
+      return 0;
+    }
+    
+    // Open the file.
+    unlink(args->params[1]);
+    f = open(args->params[1], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    if (f < 0) {
+      perror("Failed to open file for writing");
+      return -1;
+    }
+    
+    // Give some feedback.
+    printf(
+      "Context %d: downloading 0x%08X..0x%08X to %s...\n",
+      selectedContext,
+      address.value,
+      address.value + count.value - 1,
+      args->params[1]
+    );
+    
+    // Start printing the progress bar.
+    sprintf(prefix, "0x%08X ", address.value);
+    progressBar(prefix, 0, count.value, 1, 1);
+    
+    // Write header.
+    if (ft == FT_SREC) {
+      if (srecWriteHeader(f) < 0) {
+        close(f);
+        return -1;
+      }
+    }
+    
+    // Iterate over the rvsrv pages which need to be updated to perform
+    // this request. iterPage and iterPageInit will ensure that all pages
+    // except for the first and last are aligned.
+    i = iterPageInit(address.value, count.value, RVSRV_PAGE_SIZE);
+    while (iterPage(&i)) {
+      
+      uint32_t fault;
+      uint32_t curAddress;
+      int retval;
+      int remain;
+      unsigned char *ptr;
+      
+      // Perform the bulk read operation.
+      retval = rvsrv_readBulk(i.address, pageBuffer, i.numBytes, &fault);
+      if (retval < 0) {
+        close(f);
+        return -1;
+      } else if (retval == 0) {
+        int k;
+        printf(
+          "\r\033[AWarning: bus fault 0x%08X occured while writing page 0x%08X..0x%08X.\n"
+          "Bus fault code will be written to file instead of actual data.\033[K\n\n",
+          fault,
+          i.address,
+          i.address + i.numBytes - 1
+        );
+        for (k = 0; k < RVSRV_PAGE_SIZE / 4; k++) {
+          pageBuffer[k*4+0] = fault >> 24;
+          pageBuffer[k*4+1] = fault >> 16;
+          pageBuffer[k*4+2] = fault >> 8;
+          pageBuffer[k*4+3] = fault;
+        }
+      }
+      
+      //hexdump(i.address, pageBuffer, i.numBytes, !retval, first ? HEXDUMP_PROLOGUE : HEXDUMP_CONTENT);
+      
+      // Call the write method for the selected filetype until all data has
+      // been written.
+      remain = i.numBytes;
+      ptr = pageBuffer;
+      curAddress = i.address;
+      while (remain) {
+        int count;
+        
+        // Write to the file.
+        if (ft == FT_STRAIGHT) {
+          count = write(f, ptr, remain);
+        } else if (ft == FT_SREC) {
+          count = srecWrite(f, ptr, remain, curAddress);
+        }
+        
+        // Check for errors.
+        if (count < 0) {
+          if (ft == FT_STRAIGHT) {
+            perror("Could not write to output file");
+          }
+          close(f);
+          return -1;
+        } else if (count == 0) {
+          if (ft == FT_STRAIGHT) {
+            fprintf(stderr, "Could not write to output file.\n");
+          }
+          close(f);
+          return -1;
+        }
+        
+        // Update counters.
+        ptr += count;
+        remain -= count;
+        curAddress += count;
+        
+      }
+        
+      // Update the progress bar.
+      sprintf(prefix, "0x%08X ", i.address + i.numBytes - 1);
+      progressBar(prefix, (count.value - i.remain) + i.numBytes, count.value, 0, 1);
+      
+    }
+    
+    // Write footer.
+    if (ft == FT_SREC) {
+      if (srecWriteFooter(f) < 0) {
+        close(f);
+        return -1;
+      }
+    }
+    
+    // Print an extra newline after the operation to keep things clean.
+    printf("\n");
+    
+    // Close the file.
+    close(f);
+    return 0;
     
   // --------------------------------------------------------------------------
   } else if (
@@ -708,12 +1139,13 @@ int run(commandLineArgs_t *args) {
         "Command usage:\n"
         "  rvd break      rvd b        rvd execute \"_BREAK\"\n"
         "  rvd step       rvd s        rvd execute \"_STEP\"\n"
-        "  rvd resume     rvd c        rvd execute \"_RESUME\"\n"
+        "  rvd resume                  rvd execute \"_RESUME\"\n"
+        "  rvd continue   rvd c        rvd execute \"_RESUME\"\n"
         "  rvd release                 rvd execute \"_RELEASE\"\n"
         "  rvd reset      rvd rst      rvd execute \"_RESET\"\n"
         "  rvd state      rvs ?        rvd execute \"_STATE\"\n"
         "\n"
-        "This commands listed above can be used for debugging. They're just shorthand\n"
+        "The commands listed above can be used for debugging. They're just shorthand\n"
         "notations for calling certain execute commands, as shown in the list above: all\n"
         "the commands in each line are synonyms. To make use of these debugging commands,\n"
         "the definitions used must be defined in a loaded memory map file.\n"

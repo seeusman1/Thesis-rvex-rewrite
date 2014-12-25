@@ -578,6 +578,9 @@ static int transmitPackets(void) {
         // Call the callback function.
         if (op->cb) {
           if (op->cb(1, 0, 0, op->cbData) < 0) {
+            
+            // We can't call the callback twice, so we need to pop here.
+            opQueuePop(&opQueue);
             return -1;
           }
         }

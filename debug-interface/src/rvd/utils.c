@@ -272,30 +272,41 @@ void progressBar(char *prefix, int progress, int max, int isFirstCall, int isByt
     printf("%s", prefix);
   }
   
-  // Draw the progress bar.
-  printf("[");
-  for (i = 0; i < 30; i++) {
-    if ((i * max) / 30 < progress) {
-      printf("#");
-    } else {
-      printf("-");
-    }
-  }
-  printf("]");
-  
-  // Compute elapsed time and completion.
+  // Compute elapsed time.
   elapsed = difftime(time(0), start);
-  complete = ((double)progress) / ((double)max);
   
-  // Draw percentage.
-  printf(" %.1f%%", complete * 100.0);
-  
-  // Draw speed and time remaining.
-  if ((elapsed > 3.0) && (complete > 0.05)) {
-    int sec = (int)(elapsed / complete - elapsed + 0.5);
-    int min = sec / 60;
-    sec %= 60;
-    printf("  %02d:%02d", min, sec);
+  if (max) {
+    
+    // Draw the progress bar.
+    printf("[");
+    for (i = 0; i < 30; i++) {
+      if ((i * max) / 30 < progress) {
+        printf("#");
+      } else {
+        printf("-");
+      }
+    }
+    printf("]");
+    
+    // Compute fraction completed.
+    complete = ((double)progress) / ((double)max);
+    
+    // Draw percentage.
+    printf(" %.1f%%", complete * 100.0);
+    
+    // Draw time remaining.
+    if ((elapsed > 3.0) && (complete > 0.05)) {
+      int sec = (int)(elapsed / complete - elapsed + 0.5);
+      int min = sec / 60;
+      sec %= 60;
+      printf("  %02d:%02d", min, sec);
+    }
+    
+  } else {
+    
+    // Maximum value unknown, so just draw a rotaty thingy.
+    printf("%c", "-\\|/"[((int)elapsed) % 4]);
+    
   }
   
   // Clear until end of line and print newline.
