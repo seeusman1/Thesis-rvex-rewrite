@@ -181,8 +181,86 @@ end periph_uart_busIface;
 architecture Behavioral of periph_uart_busIface is
 --=============================================================================
   
+  -- Bus-side FIFO access port signals.
+  signal txPushData             : std_logic_vector(7 downto 0);
+  signal txPushStrobe           : std_logic;
+  signal rxPopData              : std_logic_vector(7 downto 0);
+  signal rxPopStrobe            : std_logic;
+  
+  -- FIFO states.
+  signal txCount                : std_logic_vector(4 downto 0);
+  signal rxCount                : std_logic_vector(4 downto 0);
+  
+  -- TX buffer overflow flag signals.
+  signal txOverflowSet          : std_logic;
+  signal txOverflowClr          : std_logic;
+  
+  -- RX buffer overflow flag signals.
+  signal rxOverflowSet          : std_logic;
+  signal rxOverflowClr          : std_logic;
+  
+  -- TX strobe signal.
+  signal txStrobe_s             : std_logic;
+  
+  -- Decoded RX trigger level register.
+  signal rxTriggerLevel         : std_logic_vector(3 downto 0);
+  
+  -- Interrupt bit IDs, flags and enable registers.
+  constant TXDE_BIT             : natural := 0;
+  constant TXDR_BIT             : natural := 1;
+  constant TOV_BIT              : natural := 2;
+  constant RXDR_BIT             : natural := 3;
+  constant CTI_BIT              : natural := 4;
+  constant ROV_BIT              : natural := 5;
+  signal interruptFlags         : std_logic_vector(5 downto 0);
+  signal interruptEnable        : std_logic_vector(5 downto 0);
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -- Instantiate the RX FIFO.
+  rx_fifo: entity rvex.periph_uart_fifo
+    port map (
+      
+      -- System control.
+      reset                     => reset,
+      clk                       => clk,
+      clkEn                     => clkEn,
+      
+      -- FIFO interface.
+      pushData                  => rxData,
+      pushStrobe                => rxStrobe,
+      popData                   => rxPopData,
+      popStrobe                 => rxPopStrobe,
+      count                     => rxCount,
+      overflow                  => rxOverflowSet,
+      underflow                 => open
+      
+    );
+  
+  -- Instantiate the TX FIFO.
+  tx_fifo: entity rvex.periph_uart_fifo
+    port map (
+      
+      -- System control.
+      reset                     => reset,
+      clk                       => clk,
+      clkEn                     => clkEn,
+      
+      -- FIFO interface.
+      pushData                  => txPushData,
+      pushStrobe                => txPushStrobe,
+      popData                   => txData,
+      popStrobe                 => txStrobe_s,
+      count                     => txCount,
+      overflow                  => txOverflowSet,
+      underflow                 => open
+      
+    );
+  
+  -- Generate the TX strobe signal.
+  txStrobe_s <= not txBusy when txCount /= "0000" else '0';
+  txStrobe <= txStrobe_s;
   
 end Behavioral;

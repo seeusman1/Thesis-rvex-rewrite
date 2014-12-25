@@ -81,12 +81,10 @@ entity periph_uart_fifo is
     pushData                    : in  std_logic_vector(7 downto 0);
     pushStrobe                  : in  std_logic;
     
-    -- When popStrobe is high, peekData will be updated to contain the next
-    -- byte in the FIFO from the next cycle onwards. peekData is always valid,
-    -- unless the buffer is empty, in which case it will be set to 0. If
-    -- popStrobe is asserted while the buffer is empty, underflow will go high
-    -- for one cycle.
-    peekData                    : out std_logic_vector(7 downto 0);
+    -- When popStrobe is high, popData will be updated to contain the next
+    -- byte in the FIFO from the next cycle onwards. If popStrobe is asserted
+    -- while the buffer is empty, underflow will be asserted for one cycle.
+    popData                     : out std_logic_vector(7 downto 0);
     popStrobe                   : in  std_logic;
     
     -- The number of bytes currently in the buffer.
@@ -105,8 +103,75 @@ end periph_uart_fifo;
 architecture Behavioral of periph_uart_fifo is
 --=============================================================================
   
+  -- RAM backing the FIFO. This is intended to be instantiated as distributed
+  -- memory on Xilinx FPGAs.
+  subtype ram_entry_type is std_logic_vector(7 downto 0);
+  type ram_type is array (natural range <>) of ram_entry_type;
+  signal ram                    : ram_type(0 to 15);
+  
+  -- Read and write pointers.
+  signal writePtr               : unsigned(3 downto 0);
+  signal readPtr                : unsigned(3 downto 0);
+  
+  -- Maintains a count of the number of bytes in the FIFO.
+  signal count_s                : unsigned(4 downto 0);
+  
+  -- Empty and full signals for the FIFO.
+  signal empty                  : std_logic;
+  signal full                   : std_logic;
+  
+  -- Actual push and pop signals, blocked when the buffer is full and empty
+  -- respectively.
+  signal push                   : std_logic;
+  signal pop                    : std_logic;
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -- Generate combinatorial state signals.
+  count     <= std_logic_vector(count_s);
+  full      <= count_s(3);
+  push      <= pushStrobe and not full;
+  overflow  <= pushStrobe and full;
+  empty     <= '1' when count_s = "0000" else '0';
+  pop       <= popStrobe and not empty;
+  underflow <= popStrobe and empty;
+  
+  -- Read/write pointer and byte count logic.
+  pointer_proc: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        writePtr <= (others => '0');
+        readPtr <= (others => '0');
+        count_s <= (others => '0');
+      elsif clkEn = '1' then
+        if push = '1' and pop = '1' then
+          writePtr <= writePtr + 1;
+          readPtr <= readPtr + 1;
+        elsif push = '1' then
+          writePtr <= writePtr + 1;
+          count_s <= count_s + 1;
+        elsif pop = '1' then
+          readPtr <= readPtr + 1;
+          count_s <= count_s - 1;
+        end if;
+      end if;
+    end if;
+  end process;
+  
+  -- Instantiate memory.
+  memory_proc: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if (clkEn and push) = '1' then
+        ram(to_integer(writePtr)) <= pushData;
+      end if;
+      if (clkEn and pop) = '1' then
+        popData <= ram(to_integer(readPtr));
+      end if;
+    end if;
+  end process;
   
 end Behavioral;
