@@ -131,10 +131,10 @@ begin -- architecture
   
   -- Generate combinatorial state signals.
   count     <= std_logic_vector(count_s);
-  full      <= count_s(3);
+  full      <= count_s(4);
   push      <= pushStrobe and not full;
   overflow  <= pushStrobe and full;
-  empty     <= '1' when count_s = "0000" else '0';
+  empty     <= '1' when count_s = "00000" else '0';
   pop       <= popStrobe and not empty;
   underflow <= popStrobe and empty;
   

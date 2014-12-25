@@ -32,6 +32,7 @@ architecture behavioral of toplevel_uartTest_spartan3 is
   signal uart2dbg_busC          : bus_mst2slv_type;
   signal dbg2uart_busC          : bus_slv2mst_type;
   signal tx_s                   : std_logic;
+  signal irq                    : std_logic;
 begin
   
   -- Instantiate unit under test.
@@ -54,7 +55,7 @@ begin
       -- Slave bus.
       bus2uart                  => uart2dbg_busC,
       uart2bus                  => dbg2uart_busC,
-      irq                       => open,
+      irq                       => irq,
       
       -- Debug interface.
       uart2dbg_bus              => uart2dbg_busA,
@@ -106,6 +107,7 @@ begin
   leds <= (
     7 => not rx,
     6 => not tx_s,
+    0 => irq,
     others => '0'
   );
   tx <= tx_s;

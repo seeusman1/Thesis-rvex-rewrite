@@ -94,7 +94,7 @@ entity periph_uart_busIface is
     --            |-----|-----|-----|-----|-----|-----|-----|-----|
     --   stat (r) |  -  |  -  | ROV | CTI |RXDR | TOV |TXDR |TXDE |
     --            |-----|-----|-----|-----|-----|-----|-----|-----|
-    --   stat (w) |  -  |  -  |ROVC |  -  |  -  |TOVC |  -  |  -  |
+    --   stat (w) |  -  |  -  |ROVC |CTIC |  -  |TOVC |  -  |  -  |
     --            |-----|-----|-----|-----|-----|-----|-----|-----|
     -- ctrl (r/w) |   RXTL    |ROVE |CTIE |RXDRE|TOVE |TXDRE|TXDEE|
     --            |-----|-----|-----|-----|-----|-----|-----|-----|
@@ -124,11 +124,12 @@ entity periph_uart_busIface is
     --         RXDRE is set, an interrupt is requested when this is the case.
     -- 
     --   CTI - Character timeout interrupt. This flag is set when the receive
-    --  CTIE   FIFO is nonempty while the UART RX line has been idle for at
-    --         least one character time. When CTIE is set, an interrupt is
-    --         requested when this is the case. It may be used in conjunction
-    --         with RXDR and RXTL to correctly finish reading incoming data
-    --         packets which are not a multiple of the value specified by RXTL.
+    --  CTIC   FIFO is nonempty while the UART RX line has been idle for at
+    --  CTIE   least one character time.  The flag is cleared by writing a 1 to
+    --         CTIC. When CTIE is set, an interrupt is requested when CTI is
+    --         high. It may be used in conjunction with RXDR and RXTL to
+    --         correctly finish reading incoming data packets which are not a
+    --         multiple of the value specified by RXTL.
     -- 
     --   ROV - This flag is set when an incoming byte is discarded because the
     --  ROVC   receive buffer is full. Writing a 1 to ROVC clears this flag.
@@ -165,7 +166,7 @@ entity periph_uart_busIface is
     
     -- When the line has been idle for a certain amount of time, this signal
     -- will go high. It may be used to signal a buffer flush.
-    rxTimeout                   : out std_logic;
+    rxTimeout                   : in  std_logic;
     
     -- Transmit data and strobe output. When txBusy is low, txSrobe may be
     -- brought high for one cycle, in which txData must be valid, in order to
@@ -191,19 +192,12 @@ architecture Behavioral of periph_uart_busIface is
   signal txCount                : std_logic_vector(4 downto 0);
   signal rxCount                : std_logic_vector(4 downto 0);
   
-  -- TX buffer overflow flag signals.
-  signal txOverflowSet          : std_logic;
-  signal txOverflowClr          : std_logic;
-  
-  -- RX buffer overflow flag signals.
-  signal rxOverflowSet          : std_logic;
-  signal rxOverflowClr          : std_logic;
-  
   -- TX strobe signal.
   signal txStrobe_s             : std_logic;
+  signal txStrobe_r             : std_logic;
   
-  -- Decoded RX trigger level register.
-  signal rxTriggerLevel         : std_logic_vector(3 downto 0);
+  -- RX trigger level register.
+  signal rxTriggerLevel         : std_logic_vector(1 downto 0);
   
   -- Interrupt bit IDs, flags and enable registers.
   constant TXDE_BIT             : natural := 0;
@@ -214,6 +208,25 @@ architecture Behavioral of periph_uart_busIface is
   constant ROV_BIT              : natural := 5;
   signal interruptFlags         : std_logic_vector(5 downto 0);
   signal interruptEnable        : std_logic_vector(5 downto 0);
+  
+  -- TX buffer overflow flag register signals.
+  signal txOverflowSet          : std_logic;
+  signal txOverflowClr          : std_logic;
+  
+  -- RX buffer overflow flag register signals.
+  signal rxOverflowSet          : std_logic;
+  signal rxOverflowClr          : std_logic;
+  
+  -- CTI flag register signals.
+  signal ctiClr                 : std_logic;
+  
+  -- Part of the bus address which is used to select between registers, delayed
+  -- by one cycle to match up with the read data.
+  signal busReadMux             : std_logic_vector(3 downto 2);
+  
+  -- Bus acknowledge signal, which is simply (readEnable or writeEnable)
+  -- delayed by one cycle.
+  signal busAck                 : std_logic;
   
 --=============================================================================
 begin -- architecture
@@ -259,8 +272,147 @@ begin -- architecture
       
     );
   
-  -- Generate the TX strobe signal.
-  txStrobe_s <= not txBusy when txCount /= "0000" else '0';
-  txStrobe <= txStrobe_s;
+  -- Generate the TX strobe signal. When the UART becomes ready and there is
+  -- data in the buffer, we first send the pop request, and then send the
+  -- strobe to the UART the next cycle.
+  txStrobe_s <= (not txBusy) and (not txStrobe_r) when txCount /= "00000" else '0';
+  process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        txStrobe_r <= '0';
+      elsif clkEn = '1' then
+        txStrobe_r <= txStrobe_s;
+      end if;
+    end if;
+  end process;
+  txStrobe <= txStrobe_r;
+  
+  -- Generate the interrupt flag set-reset registers, for the interrupts flags
+  -- which are not generated combinatorially.
+  int_flag_proc: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        interruptFlags(TOV_BIT) <= '0';
+        interruptFlags(ROV_BIT) <= '0';
+        interruptFlags(CTI_BIT) <= '0';
+      elsif clkEn = '1' then
+        if txOverflowSet = '1' then
+          interruptFlags(TOV_BIT) <= '1';
+        elsif txOverflowClr = '1' then
+          interruptFlags(TOV_BIT) <= '0';
+        end if;
+        if rxOverflowSet = '1' then
+          interruptFlags(ROV_BIT) <= '1';
+        elsif rxOverflowClr = '1' then
+          interruptFlags(ROV_BIT) <= '0';
+        end if;
+        if (rxTimeout = '1') and (rxCount /= "00000") then
+          interruptFlags(CTI_BIT) <= '1';
+        elsif ctiClr = '1' then
+          interruptFlags(CTI_BIT) <= '0';
+        end if;
+      end if;
+    end if;
+  end process;
+  
+  -- Generate the combinatorial interrupt flags for the transmit FIFO.
+  interruptFlags(TXDE_BIT) <= '1' when txCount /= "00000" else '0';
+  interruptFlags(TXDR_BIT) <= txCount(4);
+  
+  -- Generate the combinatorial interrupt flag for the receive FIFO.
+  rxdr_flag_proc: process (rxCount, rxTriggerLevel) is
+    variable decodedLevel : unsigned(4 downto 0);
+  begin
+    case rxTriggerLevel is
+      when "00"   => decodedLevel := "00001";
+      when "01"   => decodedLevel := "00100";
+      when "10"   => decodedLevel := "01000";
+      when others => decodedLevel := "01110";
+    end case;
+    if unsigned(rxCount) >= decodedLevel then
+      interruptFlags(RXDR_BIT) <= '1';
+    else
+      interruptFlags(RXDR_BIT) <= '0';
+    end if;
+  end process;
+  
+  -- Generate the IRQ signal.
+  irq_gen: process (interruptFlags, interruptEnable) is
+    variable irq_v  : std_logic;
+  begin
+    irq_v := '0';
+    for i in interruptFlags'range loop
+      irq_v := irq_v or (interruptFlags(i) and interruptEnable(i));
+    end loop;
+    irq <= irq_v;
+  end process;
+  
+  -- Generate combinatorial signals based upon the bus request.
+  txPushData
+    <= bus2uart.writeData(31 downto 24);
+  
+  txPushStrobe
+    <= bus2uart.writeEnable and bus2uart.writeMask(3)
+    when bus2uart.address(3 downto 2) = "00" else '0';
+  
+  rxPopStrobe
+    <= bus2uart.readEnable
+    when bus2uart.address(3 downto 2) = "00" else '0';
+  
+  txOverflowClr
+    <= bus2uart.writeEnable and bus2uart.writeMask(3)
+    and bus2uart.writeData(24 + TOV_BIT)
+    when bus2uart.address(3 downto 2) = "01" else '0';
+  
+  rxOverflowClr
+    <= bus2uart.writeEnable and bus2uart.writeMask(3)
+    and bus2uart.writeData(24 + ROV_BIT)
+    when bus2uart.address(3 downto 2) = "01" else '0';
+  
+  ctiClr
+    <= bus2uart.writeEnable and bus2uart.writeMask(3)
+    and bus2uart.writeData(24 + CTI_BIT)
+    when bus2uart.address(3 downto 2) = "01" else '0';
+  
+  -- Generate registers based upon the bus request.
+  bus_req_regs: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        busAck <= '0';
+        busReadMux <= (others => '0');
+        rxTriggerLevel <= (others => '0');
+        interruptEnable <= (others => '0');
+      elsif clkEn = '1' then
+        busAck <= bus_requesting(bus2uart);
+        busReadMux <= bus2uart.address(3 downto 2);
+        if bus2uart.address(3 downto 2) = "10" then
+          if bus2uart.writeEnable = '1' and bus2uart.writeMask(3) = '1' then
+            rxTriggerLevel <= bus2uart.writeData(31 downto 30);
+            interruptEnable <= bus2uart.writeData(29 downto 24);
+          end if;
+        end if;
+      end if;
+    end if;
+  end process;
+  
+  -- Generate the bus reply signal.
+  bus_reply_proc: process (
+    busAck, busReadMux, rxPopData,
+    rxTriggerLevel, interruptFlags, interruptEnable
+  ) is
+  begin
+    uart2bus <= BUS_SLV2MST_IDLE;
+    case busReadMux is
+      when "00"   => uart2bus.readData <= rxPopData & X"000000";
+      when "01"   => uart2bus.readData <= "00" & interruptFlags & X"000000";
+      when "10"   => uart2bus.readData <= rxTriggerLevel & interruptEnable & X"000000";
+      when others => uart2bus.readData <= X"00000000";
+    end case;
+    uart2bus.ack <= busAck;
+  end process;
+  
   
 end Behavioral;

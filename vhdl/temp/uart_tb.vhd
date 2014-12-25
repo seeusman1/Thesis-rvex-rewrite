@@ -118,6 +118,8 @@ begin
     end loop;
   end process;
   
+  bus2uart <= BUS_MST2SLV_IDLE;
+  
   -- Generate stimuli.
   process is
     procedure transmit(data: std_logic_vector) is
