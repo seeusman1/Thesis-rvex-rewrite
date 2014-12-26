@@ -1,0 +1,20 @@
+
+# Pin mapping constraints for ML605 board.
+NET "sysclk_p" LOC = J9;
+NET "resetButton" LOC = H10;
+NET "rx" LOC = J24;
+NET "tx" LOC = J25;
+NET "leds[0]" LOC = AC22;
+NET "leds[1]" LOC = AC24;
+NET "leds[2]" LOC = AE22;
+NET "leds[3]" LOC = AE23;
+NET "leds[4]" LOC = AB23;
+NET "leds[5]" LOC = AG23;
+NET "leds[6]" LOC = AE24;
+NET "leds[7]" LOC = AD24;
+
+# Timing constraints for system clock.
+NET "sysclk_p" TNM_NET = sysclk_p;
+TIMESPEC TS_sysclk_p = PERIOD "sysclk_p" 200 MHz HIGH 50%;
+NET "sysclk_n" TNM_NET = sysclk_n;
+TIMESPEC TS_sysclk_n = PERIOD "sysclk_n" TS_sysclk_p PHASE 2.5 ns HIGH 50%;
