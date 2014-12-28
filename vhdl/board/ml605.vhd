@@ -145,7 +145,10 @@ begin -- architecture
       generic map (
         
         -- Configuration.
-        CFG                       => rvex_sa_cfg
+        CFG                       => rvex_sa_cfg(
+          imemDepthLog2B          => 16,
+          dmemDepthLog2B          => 16
+        )
         
       )
       port map (

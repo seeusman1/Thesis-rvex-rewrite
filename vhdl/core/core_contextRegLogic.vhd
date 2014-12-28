@@ -663,9 +663,9 @@ begin -- architecture
       resetState  => '0',
       set         => (cxplif2cxreg_exDbgTrapInfo.active and not cxplif2cxreg_stall)
                   or (cxplif2cxreg_stop and not cxplif2cxreg_stall)
-                  or creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_BREAK),
-      clear       => creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_STEP)
-                  or creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME),
+                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_BREAK),
+      clear       => creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_STEP)
+                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME),
       permissions => DEBUG_CAN_WRITE
     );
     cxreg2cxplif_brk <= creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_BREAK);
@@ -673,11 +673,11 @@ begin -- architecture
     -- Generate the step flag.
     creg_makeHardwareFlag(l2c, c2l, CR_DCR, CR_DCR_STEP,
       resetState  => '0',
-      set         => creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_STEP),
+      set         => creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_STEP),
       clear       => enteringDebugTrap
                   or (cxplif2cxreg_exDbgTrapInfo.active and not cxplif2cxreg_stall)
                   or (cxplif2cxreg_stop and not cxplif2cxreg_stall)
-                  or creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_BREAK),
+                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_BREAK),
       permissions => DEBUG_CAN_WRITE
     );
     if creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_EXT_DBG) = '0' then
@@ -688,8 +688,8 @@ begin -- architecture
     -- Generate the resume flag.
     creg_makeHardwareFlag(l2c, c2l, CR_DCR, CR_DCR_RESUME,
       resetState  => '0',
-      set         => creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_STEP)
-                  or creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME),
+      set         => creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_STEP)
+                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME),
       clear       => (cxplif2cxreg_resuming_ack and not cxplif2cxreg_stall),
       permissions => DEBUG_CAN_WRITE
     );
@@ -715,14 +715,14 @@ begin -- architecture
     creg_makeHardwareFlag(l2c, c2l, CR_DCR, CR_DCR_DONE,
       resetState  => '0',
       set         => (cxplif2cxreg_stop and not cxplif2cxreg_stall),
-      clear       => creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_STEP)
-                  or creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME),
+      clear       => creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_STEP)
+                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME),
       permissions => DEBUG_CAN_WRITE
     );
     cxreg2rctrl_done <= creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_DONE);
     
     -- Drive the context reset signal.
-    cxreg2creg_reset <= creg_isBusWritingToBit(l2c, c2l, CR_DCR, CR_DCR_DONE)
+    cxreg2creg_reset <= creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_DONE)
                      or rctrl2cxreg_reset;
     
     ---------------------------------------------------------------------------

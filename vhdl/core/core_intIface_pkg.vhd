@@ -94,7 +94,7 @@ package core_intIface_pkg is
   -- is used to speed up simulation and make it easier to see what the actual
   -- state of the memory is. When true, the synthesized general purpose
   -- register file is used for simulation.
-  constant SIM_FULL_GPREG_FILE  : boolean := false;
+  constant SIM_FULL_GPREG_FILE  : boolean := true;
   
   -- Throughout the rvex core, std_logic 'U' values are used to indicate values
   -- which are not valid yet. As these kinds of signals should never be used,

@@ -1,3 +1,0 @@
-export PATH=$PATH:/home/jeroen/rvex/rvex-rewrite/debug-interface/bin
-alias rvd="rvd -p21079 -m/home/jeroen/rvex/rvex-rewrite/debug-interface/memory.map"
-echo You should now be able to use call rvd \<command\>. Run rvd help for a command listing.

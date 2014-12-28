@@ -82,18 +82,18 @@ begin -- architecture
 --=============================================================================
   
   -- Instantiate the unit-under-test.
-  uut: entity rvex.ml605
-    generic map (
-      -- Baud rate to use for the UART.
-      F_BAUD                    => 125000.0,
-      
-      -- When set, sysclk_p and resetButton are directly fed into the rvex and
-      -- UART block as clk and reset. This may be used to speed up simulation
-      -- when full syscon accuracy is not needed. When set, F_SYSCLK is used to
-      -- configure the baud rate of the UART; it is ignored otherwise.
-      DIRECT_RESET_AND_CLOCK    => true,
-      F_SYSCLK                  => 1000000.0
-    )
+  uut: entity rvex.ml605_syn
+--    generic map (
+--      -- Baud rate to use for the UART.
+--      F_BAUD                    => 125000.0,
+--      
+--      -- When set, sysclk_p and resetButton are directly fed into the rvex and
+--      -- UART block as clk and reset. This may be used to speed up simulation
+--      -- when full syscon accuracy is not needed. When set, F_SYSCLK is used to
+--      -- configure the baud rate of the UART; it is ignored otherwise.
+--      DIRECT_RESET_AND_CLOCK    => true,
+--      F_SYSCLK                  => 1000000.0
+--    )
     port map (
       
       -- 200 MHz system clock source.
@@ -113,24 +113,24 @@ begin -- architecture
     );
   
   -- Generate the 200 MHz differential system clock.
---  sys_clk_proc: process is
---  begin
---    sysclk_p <= '1';
---    sysclk_n <= '0';
---    wait for 2.5 ns;
---    sysclk_p <= '0';
---    sysclk_n <= '1';
---    wait for 2.5 ns;
---  end process;
-  
-  -- Generate a 1 MHz direct clock for simulation.
   sys_clk_proc: process is
   begin
     sysclk_p <= '1';
-    wait for 500 ns;
+    sysclk_n <= '0';
+    wait for 2.5 ns;
     sysclk_p <= '0';
-    wait for 500 ns;
+    sysclk_n <= '1';
+    wait for 2.5 ns;
   end process;
+  
+  -- Generate a 1 MHz direct clock for simulation.
+--  sys_clk_proc: process is
+--  begin
+--    sysclk_p <= '1';
+--    wait for 500 ns;
+--    sysclk_p <= '0';
+--    wait for 500 ns;
+--  end process;
   
   -- Reset for a bit when starting.
   reset_button_proc: process is
@@ -183,7 +183,7 @@ begin -- architecture
     uart_inst: entity rvex.utils_uart
       generic map (
         F_CLK                     => 1000000.0,
-        F_BAUD                    => 125000.0,
+        F_BAUD                    => 115200.0,--115200.0,--125000.0,
         ENABLE_TX                 => true,
         ENABLE_RX                 => true
       )
@@ -223,7 +223,7 @@ begin -- architecture
       wait until rising_edge(clk);
       reset <= '0';
       wait until rising_edge(clk);
-      wait for 1 ms;
+      wait for 10 us;
       wait until rising_edge(clk);
       
       -- CRC computation: http://www.zorc.breitbandkatze.de/crc.html
@@ -233,64 +233,75 @@ begin -- architecture
       -- final xor = 00
       -- no reverse options
       
-      -- Transmit some random user stuff.
-      transmit(X"03");
-      transmit(X"55");
-      transmit(X"AA");
-      transmit(X"FF");
-      
-      -- Set the bulk write page to 1 (0x00001000..0x00001FFF).
       transmit(X"FD");
-      transmit(X"A2");
-      transmit(X"00");
-      transmit(X"00");
-      transmit(X"10");
-      transmit(X"A3"); -- %A2%00%00%10
-      --transmit(X"FE");
-      
-      -- Send bulk write command to index 100 (0x-----AF0)
-      transmit(X"FD");
-      transmit(X"B3");
-      transmit(X"64");
-      transmit(X"DE");
-      transmit(X"AD");
-      transmit(X"BE");
-      transmit(X"EF");
-      transmit(X"DE");
-      transmit(X"AD");
       transmit(X"C0");
-      transmit(X"DE");
-      transmit(X"01");
-      transmit(X"02");
-      transmit(X"03");
-      transmit(X"04");
-      transmit(X"72"); -- %B3%64%DE%AD%BE%EF%DE%AD%C0%DE%01%02%03%04
-      --transmit(X"FE");
-      
-      -- Send bulk read command for address 0x00001AF0..0x00001AFC
-      transmit(X"FD");
-      transmit(X"C4");
-      transmit(X"00");
-      transmit(X"00");
-      transmit(X"1A");
       transmit(X"F0");
-      transmit(X"FC"); -- Escape
-      transmit(X"03"); -- 0xFC
-      transmit(X"F5"); -- %C4%00%00%1A%F0%FC
+      transmit(X"00");
+      transmit(X"00");
+      transmit(X"00");
+      transmit(X"08");
+      transmit(X"AB"); -- %C0%F0%00%00%00%08
       transmit(X"FE");
       
-      -- Send bulk read commands for address 0x00001AF0..0x00001B0C to get packet loss
-      for i in 0 to 5 loop
-        transmit(X"FD");
-        transmit(X"C5");
-        transmit(X"00");
-        transmit(X"00");
-        transmit(X"1A");
-        transmit(X"F0");
-        transmit(X"0C"); -- 0xFC
-        transmit(X"02"); -- %C5%00%00%1A%F0%0C
-      end loop;
-      transmit(X"FE");
+      
+--      -- Transmit some random user stuff.
+--      transmit(X"03");
+--      transmit(X"55");
+--      transmit(X"AA");
+--      transmit(X"FF");
+--      
+--      -- Set the bulk write page to 1 (0x00001000..0x00001FFF).
+--      transmit(X"FD");
+--      transmit(X"A2");
+--      transmit(X"00");
+--      transmit(X"00");
+--      transmit(X"10");
+--      transmit(X"A3"); -- %A2%00%00%10
+--      --transmit(X"FE");
+--      
+--      -- Send bulk write command to index 100 (0x-----AF0)
+--      transmit(X"FD");
+--      transmit(X"B3");
+--      transmit(X"64");
+--      transmit(X"DE");
+--      transmit(X"AD");
+--      transmit(X"BE");
+--      transmit(X"EF");
+--      transmit(X"DE");
+--      transmit(X"AD");
+--      transmit(X"C0");
+--      transmit(X"DE");
+--      transmit(X"01");
+--      transmit(X"02");
+--      transmit(X"03");
+--      transmit(X"04");
+--      transmit(X"72"); -- %B3%64%DE%AD%BE%EF%DE%AD%C0%DE%01%02%03%04
+--      --transmit(X"FE");
+--      
+--      -- Send bulk read command for address 0x00001AF0..0x00001AFC
+--      transmit(X"FD");
+--      transmit(X"C4");
+--      transmit(X"00");
+--      transmit(X"00");
+--      transmit(X"1A");
+--      transmit(X"F0");
+--      transmit(X"FC"); -- Escape
+--      transmit(X"03"); -- 0xFC
+--      transmit(X"F5"); -- %C4%00%00%1A%F0%FC
+--      transmit(X"FE");
+--      
+--      -- Send bulk read commands for address 0x00001AF0..0x00001B0C to get packet loss
+--      for i in 0 to 5 loop
+--        transmit(X"FD");
+--        transmit(X"C5");
+--        transmit(X"00");
+--        transmit(X"00");
+--        transmit(X"1A");
+--        transmit(X"F0");
+--        transmit(X"0C"); -- 0xFC
+--        transmit(X"02"); -- %C5%00%00%1A%F0%0C
+--      end loop;
+--      transmit(X"FE");
       
       wait;
     end process;

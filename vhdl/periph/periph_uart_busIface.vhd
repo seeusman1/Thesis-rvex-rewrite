@@ -318,8 +318,8 @@ begin -- architecture
   end process;
   
   -- Generate the combinatorial interrupt flags for the transmit FIFO.
-  interruptFlags(TXDE_BIT) <= '1' when txCount /= "00000" else '0';
-  interruptFlags(TXDR_BIT) <= txCount(4);
+  interruptFlags(TXDE_BIT) <= '1' when txCount = "00000" else '0';
+  interruptFlags(TXDR_BIT) <= not txCount(4);
   
   -- Generate the combinatorial interrupt flag for the receive FIFO.
   rxdr_flag_proc: process (rxCount, rxTriggerLevel) is

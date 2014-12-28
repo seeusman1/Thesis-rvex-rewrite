@@ -41,8 +41,11 @@ monitor: copyconf
 	@echo "Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running."; $(NETCAT) localhost $(TCP_PORT_APP)
 
 debug: copyconf $(BINDIR)/rvd
+	@echo "#!/bin/bash" > $(BINDIR)/rvd.sh
+	@echo "rvd -p$(TCP_PORT_DEBUG) -m$(shell pwd)/memory.map \"\$$@\"" >> $(BINDIR)/rvd.sh
+	@chmod +x $(BINDIR)/rvd.sh
 	@echo "export PATH=\$$PATH:$(shell pwd)/$(BINDIR)" > debug
-	@echo "alias rvd=\"rvd -p$(TCP_PORT_DEBUG) -m$(shell pwd)/memory.map\"" >> debug
+	@echo "alias rvd=\"rvd.sh\"" >> debug
 	@echo "echo You should now be able to use call rvd \<command\>. Run rvd help for a command listing." >> debug
 	@echo Run source debug now...
 

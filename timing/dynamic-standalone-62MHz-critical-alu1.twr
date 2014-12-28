@@ -1,0 +1,723 @@
+INFO:Timing:3386 - Intersecting Constraints found and resolved.  For more 
+   information, see the TSI report.  Please consult the Xilinx Command Line 
+   Tools User Guide for information on generating a TSI report.
+
+================================================================================
+Timing constraint: TS_sysclk_p = PERIOD TIMEGRP "sysclk_p" 200 MHz HIGH 50%;
+For more information, see Period Analysis in the Timing Closure User Guide (UG612).
+
+ 0 paths analyzed, 0 endpoints analyzed, 0 failing endpoints
+ 0 timing errors detected. (0 component switching limit errors)
+ Minimum period is   2.800ns.
+--------------------------------------------------------------------------------
+
+================================================================================
+Timing constraint: TS_sysclk_n = PERIOD TIMEGRP "sysclk_n" TS_sysclk_p PHASE 
+2.5 ns HIGH 50%;
+For more information, see Period Analysis in the Timing Closure User Guide (UG612).
+
+ 0 paths analyzed, 0 endpoints analyzed, 0 failing endpoints
+ 0 timing errors detected. (0 component switching limit errors)
+ Minimum period is   2.800ns.
+--------------------------------------------------------------------------------
+
+================================================================================
+Timing constraint: TS_sys_ctrl_block_clk_local = PERIOD TIMEGRP 
+"sys_ctrl_block_clk_local"         TS_sysclk_p * 0.3125 HIGH 50%;
+For more information, see Period Analysis in the Timing Closure User Guide (UG612).
+
+ 0 paths analyzed, 0 endpoints analyzed, 0 failing endpoints
+ 0 timing errors detected. (0 component switching limit errors)
+ Minimum period is   3.593ns.
+--------------------------------------------------------------------------------
+
+================================================================================
+Timing constraint: TS_sys_ctrl_block_clk_local_0 = PERIOD TIMEGRP 
+"sys_ctrl_block_clk_local_0"         TS_sysclk_n * 0.3125 HIGH 50%;
+For more information, see Period Analysis in the Timing Closure User Guide (UG612).
+
+ 6424846435 paths analyzed, 57081 endpoints analyzed, 1570 failing endpoints
+ 1570 timing errors detected. (1570 setup errors, 0 hold errors, 0 component switching limit errors)
+ Minimum period is  18.467ns.
+--------------------------------------------------------------------------------
+Slack:                  -2.467 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31 (FF)
+  Requirement:          16.000
+  Data Path Delay:      18.319 (Levels of Logic = 13)
+  Clock Path Skew:      -0.042ns (1.726 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO31 Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X95Y120.A6     net (fanout=3)        1.607   rvex_standalone.rvex_inst/dataMem_res[0]_readData<31>
+    SLICE_X95Y120.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>251
+    SLICE_X95Y120.D3     net (fanout=3)        0.457   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><31>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X81Y178.D4     net (fanout=25)       6.013   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X81Y178.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_op1<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/Mmux_comb.s[3]_dp_op151
+    SLICE_X76Y179.D4     net (fanout=15)       0.572   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op1<13>
+    SLICE_X76Y179.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[5].pl_inst/mux24611
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT27123_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT27123
+    SLICE_X73Y181.C4     net (fanout=3)        0.561   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out19
+    SLICE_X73Y181.C      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1442
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT12273
+    SLICE_X68Y179.B6     net (fanout=3)        0.536   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<1>_mmx_out23
+    SLICE_X68Y179.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<2>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o4
+    SLICE_X71Y188.C6     net (fanout=2)        0.699   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o_mmx_out
+    SLICE_X71Y188.CLK    Tas                   0.073   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1341
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+Slack:                  -2.373 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31 (FF)
+  Requirement:          16.000
+  Data Path Delay:      18.225 (Levels of Logic = 13)
+  Clock Path Skew:      -0.042ns (1.726 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO15 Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X100Y120.C6    net (fanout=3)        1.346   rvex_standalone.rvex_inst/dataMem_res[0]_readData<15>
+    SLICE_X100Y120.C     Tilo                  0.068   rvex_standalone.rvex_inst/core/dmem_bus_connect_gen[1].readData_r<15>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>71
+    SLICE_X95Y120.D5     net (fanout=3)        0.624   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><15>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X81Y178.D4     net (fanout=25)       6.013   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X81Y178.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_op1<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/Mmux_comb.s[3]_dp_op151
+    SLICE_X76Y179.D4     net (fanout=15)       0.572   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op1<13>
+    SLICE_X76Y179.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[5].pl_inst/mux24611
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT27123_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT27123
+    SLICE_X73Y181.C4     net (fanout=3)        0.561   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out19
+    SLICE_X73Y181.C      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1442
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT12273
+    SLICE_X68Y179.B6     net (fanout=3)        0.536   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<1>_mmx_out23
+    SLICE_X68Y179.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<2>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o4
+    SLICE_X71Y188.C6     net (fanout=2)        0.699   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o_mmx_out
+    SLICE_X71Y188.CLK    Tas                   0.073   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1341
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+Slack:                  -2.358 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31 (FF)
+  Requirement:          16.000
+  Data Path Delay:      18.210 (Levels of Logic = 13)
+  Clock Path Skew:      -0.042ns (1.726 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO7  Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X104Y124.A6    net (fanout=3)        1.158   rvex_standalone.rvex_inst/dataMem_res[0]_readData<7>
+    SLICE_X104Y124.A     Tilo                  0.068   rvex_standalone.rvex_inst/core/dmem_bus_connect_gen[1].readData_r<9>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>301
+    SLICE_X95Y120.D4     net (fanout=2)        0.797   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><7>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X81Y178.D4     net (fanout=25)       6.013   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X81Y178.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_op1<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/Mmux_comb.s[3]_dp_op151
+    SLICE_X76Y179.D4     net (fanout=15)       0.572   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op1<13>
+    SLICE_X76Y179.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[5].pl_inst/mux24611
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT27123_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT27123
+    SLICE_X73Y181.C4     net (fanout=3)        0.561   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out19
+    SLICE_X73Y181.C      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1442
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT12273
+    SLICE_X68Y179.B6     net (fanout=3)        0.536   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<1>_mmx_out23
+    SLICE_X68Y179.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<2>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o4
+    SLICE_X71Y188.C6     net (fanout=2)        0.699   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o_mmx_out
+    SLICE_X71Y188.CLK    Tas                   0.073   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1341
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+Slack:                  -2.223 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31 (FF)
+  Requirement:          16.000
+  Data Path Delay:      18.075 (Levels of Logic = 13)
+  Clock Path Skew:      -0.042ns (1.726 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO23 Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X106Y126.B6    net (fanout=3)        1.016   rvex_standalone.rvex_inst/dataMem_res[0]_readData<23>
+    SLICE_X106Y126.B     Tilo                  0.068   rvex_standalone.rvex_inst/core/dmem_bus_connect_gen[1].readData_r<23>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>161
+    SLICE_X95Y120.D6     net (fanout=7)        0.804   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><23>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X81Y178.D4     net (fanout=25)       6.013   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X81Y178.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_op1<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/Mmux_comb.s[3]_dp_op151
+    SLICE_X76Y179.D4     net (fanout=15)       0.572   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op1<13>
+    SLICE_X76Y179.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[5].pl_inst/mux24611
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT27123_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT27123
+    SLICE_X73Y181.C4     net (fanout=3)        0.561   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out19
+    SLICE_X73Y181.C      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1442
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT12273
+    SLICE_X68Y179.B6     net (fanout=3)        0.536   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<1>_mmx_out23
+    SLICE_X68Y179.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<2>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o4
+    SLICE_X71Y188.C6     net (fanout=2)        0.699   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o_mmx_out
+    SLICE_X71Y188.CLK    Tas                   0.073   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1341
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+Slack:                  -2.167 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_4 (FF)
+  Requirement:          16.000
+  Data Path Delay:      18.019 (Levels of Logic = 13)
+  Clock Path Skew:      -0.042ns (1.726 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_4
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO31 Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X95Y120.A6     net (fanout=3)        1.607   rvex_standalone.rvex_inst/dataMem_res[0]_readData<31>
+    SLICE_X95Y120.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>251
+    SLICE_X95Y120.D3     net (fanout=3)        0.457   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><31>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X66Y154.D6     net (fanout=25)       4.931   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X66Y154.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1737
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT101_SW1
+    SLICE_X67Y179.A4     net (fanout=1)        1.350   rvex_standalone.rvex_inst/core/core/pls_inst/N1737
+    SLICE_X67Y179.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out4
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT101
+    SLICE_X69Y186.B3     net (fanout=2)        0.890   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT<18>
+    SLICE_X69Y186.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out16
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT27171
+    SLICE_X69Y186.A2     net (fanout=4)        0.471   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out23
+    SLICE_X69Y186.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out16
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT12301
+    SLICE_X66Y190.D5     net (fanout=4)        0.578   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<1>_mmx_out26
+    SLICE_X66Y190.CLK    Tas                   0.214   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<4>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1361_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1361
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_4
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+Slack:                  -2.109 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31 (FF)
+  Requirement:          16.000
+  Data Path Delay:      17.961 (Levels of Logic = 14)
+  Clock Path Skew:      -0.042ns (1.726 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO31 Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X95Y120.A6     net (fanout=3)        1.607   rvex_standalone.rvex_inst/dataMem_res[0]_readData<31>
+    SLICE_X95Y120.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>251
+    SLICE_X95Y120.D3     net (fanout=3)        0.457   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><31>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X81Y178.D4     net (fanout=25)       6.013   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X81Y178.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_op1<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/Mmux_comb.s[3]_dp_op151
+    SLICE_X81Y178.C5     net (fanout=15)       0.353   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op1<13>
+    SLICE_X81Y178.C      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_op1<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT238_SW0
+    SLICE_X77Y179.B3     net (fanout=1)        0.586   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/N64
+    SLICE_X77Y179.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1440
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o3_SW0
+    SLICE_X77Y179.A6     net (fanout=1)        0.110   rvex_standalone.rvex_inst/core/core/pls_inst/N1440
+    SLICE_X77Y179.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1440
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o3
+    SLICE_X68Y179.B5     net (fanout=1)        0.474   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o3
+    SLICE_X68Y179.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<2>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o4
+    SLICE_X71Y188.C6     net (fanout=2)        0.699   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/GND_30_o_si[2]_op2[7]_equal_176_o_mmx_out
+    SLICE_X71Y188.CLK    Tas                   0.073   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1341
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_31
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+Slack:                  -2.093 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_bitTestResult (FF)
+  Requirement:          16.000
+  Data Path Delay:      17.938 (Levels of Logic = 13)
+  Clock Path Skew:      -0.049ns (1.719 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_bitTestResult
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO31 Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X95Y120.A6     net (fanout=3)        1.607   rvex_standalone.rvex_inst/dataMem_res[0]_readData<31>
+    SLICE_X95Y120.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>251
+    SLICE_X95Y120.D3     net (fanout=3)        0.457   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><31>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X81Y178.D4     net (fanout=25)       6.013   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X81Y178.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_op1<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/Mmux_comb.s[3]_dp_op151
+    SLICE_X86Y181.B1     net (fanout=15)       1.022   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op1<13>
+    SLICE_X86Y181.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/so[1]_op1Muxed<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_so[1]_op1Muxed52
+    SLICE_X87Y183.C5     net (fanout=4)        0.450   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/so[1]_op1Muxed<13>
+    SLICE_X87Y183.C      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/so[1]_op1Muxed<12>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op2Muxed[4]_si[2]_op1Muxed[31]_Mux_173_o_10
+    SLICE_X76Y181.B5     net (fanout=1)        0.670   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op2Muxed[4]_si[2]_op1Muxed[31]_Mux_173_o_10
+    SLICE_X76Y181.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_bitTestResult
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op2Muxed[4]_si[2]_op1Muxed[31]_Mux_173_o_4
+    SLICE_X76Y181.A6     net (fanout=1)        0.125   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op2Muxed[4]_si[2]_op1Muxed[31]_Mux_173_o_4
+    SLICE_X76Y181.CLK    Tas                   0.073   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_bitTestResult
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_so[2]_bitTestResult11
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_bitTestResult
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+Slack:                  -2.089 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_19 (FF)
+  Requirement:          16.000
+  Data Path Delay:      17.934 (Levels of Logic = 13)
+  Clock Path Skew:      -0.049ns (1.719 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_19
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO31 Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X95Y120.A6     net (fanout=3)        1.607   rvex_standalone.rvex_inst/dataMem_res[0]_readData<31>
+    SLICE_X95Y120.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>251
+    SLICE_X95Y120.D3     net (fanout=3)        0.457   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><31>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X66Y154.D6     net (fanout=25)       4.931   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X66Y154.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1737
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT101_SW1
+    SLICE_X67Y179.A4     net (fanout=1)        1.350   rvex_standalone.rvex_inst/core/core/pls_inst/N1737
+    SLICE_X67Y179.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out4
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT101
+    SLICE_X67Y179.B5     net (fanout=2)        0.430   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT<18>
+    SLICE_X67Y179.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out4
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT2723
+    SLICE_X65Y185.B4     net (fanout=4)        0.717   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<3>_mmx_out4
+    SLICE_X65Y185.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<20>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT12341
+    SLICE_X69Y183.D3     net (fanout=4)        0.707   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<1>_mmx_out3
+    SLICE_X69Y183.CLK    Tas                   0.214   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<19>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1201_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1201
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_19
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+Slack:                  -2.089 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_30 (FF)
+  Requirement:          16.000
+  Data Path Delay:      17.941 (Levels of Logic = 12)
+  Clock Path Skew:      -0.042ns (1.726 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_30
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO31 Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X95Y120.A6     net (fanout=3)        1.607   rvex_standalone.rvex_inst/dataMem_res[0]_readData<31>
+    SLICE_X95Y120.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>251
+    SLICE_X95Y120.D3     net (fanout=3)        0.457   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><31>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X81Y178.D4     net (fanout=25)       6.013   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X81Y178.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_op1<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/Mmux_comb.s[3]_dp_op151
+    SLICE_X78Y179.C3     net (fanout=15)       0.520   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op1<13>
+    SLICE_X78Y179.CMUX   Tilo                  0.352   rvex_standalone.rvex_inst/core/core/pls_inst/N1490
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT238_SW1_G
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT238_SW1
+    SLICE_X70Y179.D5     net (fanout=1)        0.470   rvex_standalone.rvex_inst/core/core/pls_inst/N1490
+    SLICE_X70Y179.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT271
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT12281_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_PWR_32_o_GND_30_o_mux_135_OUT12281
+    SLICE_X71Y188.B6     net (fanout=4)        0.787   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op2<1>_mmx_out24
+    SLICE_X71Y188.CLK    Tas                   0.070   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op1[31]_si[2]_op1[0]_mux_174_OUT1331
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_shiftResult_30
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+Slack:                  -2.086 (requirement - (data path - clock path skew + uncertainty))
+  Source:               rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram (RAM)
+  Destination:          rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_bitTestResult (FF)
+  Requirement:          16.000
+  Data Path Delay:      17.931 (Levels of Logic = 13)
+  Clock Path Skew:      -0.049ns (1.719 - 1.768)
+  Source Clock:         clk rising at 2.500ns
+  Destination Clock:    clk rising at 18.500ns
+  Clock Uncertainty:    0.106
+
+  Clock Uncertainty:          0.106  ((TSJ^2 + DJ^2)^1/2) / 2 + PE
+    Total System Jitter (TSJ):  0.070ns
+    Discrete Jitter (DJ):       0.200ns
+    Phase Error (PE):           0.000ns
+
+  Maximum Data Path at Slow Process Corner: rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram to rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_bitTestResult
+    Location             Delay type         Delay(ns)  Physical Resource
+                                                       Logical Resource(s)
+    -------------------------------------------------  -------------------
+    RAMB36_X5Y26.DOADO31 Trcko_DO              2.073   rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+                                                       rvex_standalone.rvex_inst/dmem_block.dmem_ram/Mram_ram
+    SLICE_X95Y120.A6     net (fanout=3)        1.607   rvex_standalone.rvex_inst/dataMem_res[0]_readData<31>
+    SLICE_X95Y120.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/Mmux_dmem2rv_readData<1>251
+    SLICE_X95Y120.D3     net (fanout=3)        0.457   rvex_standalone.rvex_inst/core/dmem2rv_readData<1><31>
+    SLICE_X95Y120.CMUX   Topdc                 0.348   rvex_standalone.rvex_inst/core/core/creg_inst/glob_ctxt_bus_switch_gen[1].glob_ctxt_bus_switch_inst/read_data_block.readData_reg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11_F
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/Mmux_readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT11
+    SLICE_X71Y105.A5     net (fanout=20)       1.541   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/memu_gen.memu_inst/readCtrl[5]_addrLSB[1]_dmsw2memu_readData[5][7]_wide_mux_158_OUT<7>
+    SLICE_X71Y105.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<4>_addr<4><5>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux13621221
+    SLICE_X62Y100.D5     net (fanout=7)        0.791   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362122
+    SLICE_X62Y100.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<6><13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[2].pl_inst/mux1362124
+    SLICE_X60Y110.A6     net (fanout=33)       0.733   rvex_standalone.rvex_inst/core/core/pl2gpreg_writePorts<2>_data<5><13>
+    SLICE_X60Y110.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>210
+    SLICE_X60Y110.B5     net (fanout=1)        0.307   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/pl2cxplif_brLinkWritePort[3]_linkForwardEnable<5>_mmx_out10
+    SLICE_X60Y110.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>1541
+    SLICE_X67Y117.B6     net (fanout=1)        0.864   rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/cfg2any_coupled<4>_mmx_out224
+    SLICE_X67Y117.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/cxplif_inst/Mmux_cxplif2cxreg_brLinkWritePort<0>_linkData<5>5
+    SLICE_X67Y117.A6     net (fanout=2)        0.116   rvex_standalone.rvex_inst/core/core/cxplif2cxreg_brLinkWritePort<0>_linkData<5><13>
+    SLICE_X67Y117.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[7].pl_inst/si[5]_tr_trap_arg<31>
+                                                       rvex_standalone.rvex_inst/core/core/cxreg_gen[0].cxreg_inst/link_fwd_gen_stage[3].link_fwd/Mmux_readDataOut51
+    SLICE_X81Y178.D4     net (fanout=25)       6.013   rvex_standalone.rvex_inst/core/core/cxreg2cxplif_brLinkReadPort<0>_linkData<3><13>
+    SLICE_X81Y178.D      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_op1<13>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/Mmux_comb.s[3]_dp_op151
+    SLICE_X87Y180.C6     net (fanout=15)       0.542   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/comb.s[3]_dp_op1<13>
+    SLICE_X87Y180.CMUX   Tilo                  0.352   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/so[1]_op1Muxed<15>
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_so[1]_op1Muxed82_G
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_so[1]_op1Muxed82
+    SLICE_X82Y184.B5     net (fanout=5)        0.829   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/so[1]_op1Muxed<16>
+    SLICE_X82Y184.B      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1644
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op2Muxed[4]_si[2]_op1Muxed[31]_Mux_173_o_7
+    SLICE_X82Y184.A6     net (fanout=1)        0.125   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op2Muxed[4]_si[2]_op1Muxed[31]_Mux_173_o_7
+    SLICE_X82Y184.A      Tilo                  0.068   rvex_standalone.rvex_inst/core/core/pls_inst/N1644
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op2Muxed[4]_si[2]_op1Muxed[31]_Mux_173_o_3
+    SLICE_X76Y181.A5     net (fanout=1)        0.480   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_si[2]_op2Muxed[4]_si[2]_op1Muxed[31]_Mux_173_o_3
+    SLICE_X76Y181.CLK    Tas                   0.073   rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_bitTestResult
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/Mmux_so[2]_bitTestResult11
+                                                       rvex_standalone.rvex_inst/core/core/pls_inst/pl_gen[0].pl_inst/alu_inst/si[3]_bitTestResult
+    -------------------------------------------------  ---------------------------
+
+--------------------------------------------------------------------------------
+
+
+Derived Constraint Report
+Review Timing Report for more details on the following derived constraints.
+To create a Timing Report, run "trce -v 12 -fastpaths -o design_timing_report design.ncd design.pcf"
+or "Run Timing Analysis" from Timing Analyzer (timingan).
+Derived Constraints for TS_sysclk_p
++-------------------------------+-------------+-------------+-------------+-------------+-------------+-------------+-------------+
+|                               |   Period    |       Actual Period       |      Timing Errors        |      Paths Analyzed       |
+|           Constraint          | Requirement |-------------+-------------|-------------+-------------|-------------+-------------|
+|                               |             |   Direct    | Derivative  |   Direct    | Derivative  |   Direct    | Derivative  |
++-------------------------------+-------------+-------------+-------------+-------------+-------------+-------------+-------------+
+|TS_sysclk_p                    |      5.000ns|      2.800ns|      5.771ns|            0|         1570|            0|   6424846435|
+| TS_sysclk_n                   |      5.000ns|      2.800ns|      5.771ns|            0|         1570|            0|   6424846435|
+|  TS_sys_ctrl_block_clk_local_0|     16.000ns|     18.467ns|          N/A|         1570|            0|   6424846435|            0|
+| TS_sys_ctrl_block_clk_local   |     16.000ns|      3.593ns|          N/A|            0|            0|            0|            0|
++-------------------------------+-------------+-------------+-------------+-------------+-------------+-------------+-------------+
+
+1 constraint not met.
+
+
+

@@ -5,7 +5,7 @@ MODEL = pipe_1_8_fw.mm
 ASFLAGS = --issue $(ISSUE_WIDTH) --borrow 1.0.3,0.2,1.5,2.4,3.7,4.6,5 --config 3333337B -u
 
 # Toolchain setup.
-TOOLS = ../../tools
+TOOLS = ../tools
 BUILD = $(TOOLS)/build/bin
 AS = $(BUILD)/rvex-elf32-as
 LD = $(BUILD)/rvex-elf32-ld
@@ -18,9 +18,8 @@ CP = cp
 # Make magic.
 
 SRC = src
-SREC = ../srec
 
-EXECUTABLES = div x264 factorial
+EXECUTABLES = uart banana
 
 .SUFFIXES:
 .PRECIOUS: %.o %.s
@@ -40,12 +39,23 @@ all: $(EXECUTABLES)
 %.o: %.s
 	$(AS) $(ASFLAGS) $< -o $@
 
-# How to link and generate srec;
-%: %.o _start.o
+# How to link;
+%: %.o _start.o _basic_io.o
 	$(LD) $^ -o $@
-	$(OBJCOPY) -O srec $@ $(SREC)/$@.srec
+
+# How to generate an srec;
+%.srec: %
+	$(OBJCOPY) -O srec $< $@
+
+# How to upload; (this requires make debug; source debug in debug-interface)
+.PHONY: %-upload
+%-upload: %.srec
+	rvd.sh -call break
+	rvd.sh -c0 upload srec $< _IMEM
+	rvd.sh -c0 upload srec $< _DMEM
+	rvd.sh -call reset
 
 .PHONY: clean
 clean:
-	$(RM) $(EXECUTABLES) *.o *.s
+	$(RM) $(EXECUTABLES) *.srec *.o *.s
 

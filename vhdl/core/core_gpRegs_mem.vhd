@@ -124,6 +124,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   read_ports_gen: for readPort in 0 to NUM_READ_PORTS-1 generate
     signal readData_int : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+    signal readAddr_r   : rvex_address_type;
   begin
     
     -- Generate a RAM block for each write port/read port pair.
@@ -146,9 +147,22 @@ begin -- architecture
     
     end generate;
     
+    -- Register the read address to align it with the read data signal, which
+    -- we need for the last-write port indexing.
+    read_addr_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          readAddr_r <= (others => '0');
+        elsif clkEn = '1' then
+          readAddr_r <= readAddr(readPort);
+        end if;
+      end if;
+    end process;
+    
     -- Mux between the read values based on the bank which was last written to.
     readData(readPort) <= readData_int(vect2uint(lastWrite(
-      vect2uint(readAddr(readPort)(NUM_REGS_LOG2-1 downto 0))
+      vect2uint(readAddr_r(NUM_REGS_LOG2-1 downto 0))
     )));
     
   end generate;

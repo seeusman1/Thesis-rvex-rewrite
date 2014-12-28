@@ -147,55 +147,67 @@ package body utils_pkg is
   
   function vect2int(v: std_logic_vector) return integer is
   begin
+    -- pragma translate_off
     if v'length = 0 then
       return 0;
     end if;
     if is_X(v) then
       return 0;
     end if;
+    -- pragma translate_on
     return to_integer(signed(v));
   end vect2int;
   
   function vect2uint(v: std_logic_vector) return natural is
   begin
+    -- pragma translate_off
     if v'length = 0 then
       return 0;
     end if;
     if is_X(v) then
       return 0;
     end if;
+    -- pragma translate_on
     return to_integer(unsigned(v));
   end vect2uint;
   
   function int2vect(i: integer; bits: natural) return std_logic_vector is
   begin
+    -- pragma translate_off
     if bits = 0 then
       return NULL_STD_LOGIC_VECTOR;
     end if;
+    -- pragma translate_on
     return std_logic_vector(to_signed(i, bits));
   end int2vect;
   
   function uint2vect(n: natural; bits: natural) return std_logic_vector is
   begin
+    -- pragma translate_off
     if bits = 0 then
       return NULL_STD_LOGIC_VECTOR;
     end if;
+    -- pragma translate_on
     return std_logic_vector(to_unsigned(n, bits));
   end uint2vect;
   
   function vect2unsigned(v: std_logic_vector) return unsigned is
   begin
+    -- pragma translate_off
     if is_X(v) then
       return to_unsigned(0, v'length);
     end if;
+    -- pragma translate_on
     return unsigned(v);
   end vect2unsigned;
   
   function vect2signed(v: std_logic_vector) return signed is
   begin
+    -- pragma translate_off
     if is_X(v) then
       return to_signed(0, v'length);
     end if;
+    -- pragma translate_on
     return signed(v);
   end vect2signed;
   
