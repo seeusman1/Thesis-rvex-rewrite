@@ -186,8 +186,8 @@ package core_pipeline_pkg is
   --  - 0 <= L_ALU1 <= 1
   --  - 0 <= L_ALU2 <= 1
   constant S_ALU    : natural := 3;
-  constant L_ALU1   : natural := 0;
-  constant L_ALU2   : natural := 1;
+  constant L_ALU1   : natural := 1;
+  constant L_ALU2   : natural := 0;
   constant L_ALU    : natural := L_ALU1 + L_ALU2;
   
   -- Multiplier stage and latency. Pragmas are used to get XST to balance the

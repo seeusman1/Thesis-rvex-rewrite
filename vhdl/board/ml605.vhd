@@ -58,6 +58,8 @@ use rvex.utils_pkg.all;
 use rvex.simUtils_pkg.all;
 use rvex.bus_pkg.all;
 use rvex.bus_addrConv_pkg.all;
+use rvex.standalone_pkg.all;
+use rvex.core_pkg.all;
 
 --=============================================================================
 -- This is the toplevel file for synthesizing a basic rvex platform on a Xilinx
@@ -65,6 +67,23 @@ use rvex.bus_addrConv_pkg.all;
 -------------------------------------------------------------------------------
 entity ml605 is
 --=============================================================================
+  generic (
+    
+    -- Clock division value. The internal clock will be 750 MHz divided by this
+    -- number. Ignored when DIRECT_RESET_AND_CLOCK is set.
+    DIV_VAL                     : natural := 15;
+    
+    -- Baud rate to use for the UART.
+    F_BAUD                      : real := 115200.0;
+    
+    -- When set, sysclk_p and resetButton are directly fed into the rvex and
+    -- UART block as clk and reset. This may be used to speed up simulation
+    -- when full syscon accuracy is not needed. When set, F_SYSCLK is used to
+    -- configure the baud rate of the UART; it is ignored otherwise.
+    DIRECT_RESET_AND_CLOCK      : boolean := false;
+    F_SYSCLK                    : real := 200000000.0 -- 200 MHz
+    
+  );
   port (
     
     -- 200 MHz system clock source.
@@ -88,10 +107,18 @@ end ml605;
 architecture Behavioral of ml605 is
 --=============================================================================
   
-  -- Clock division value. The internal clock will be 750 MHz divided by this
-  -- number.
-  constant DIV_VAL              : natural := 15;
-  constant F_CLK                : real := 750000000.0 / real(DIV_VAL);
+  -- This determines the internal clock frequency.
+  function f_clk_fn return real is
+  begin
+    if DIRECT_RESET_AND_CLOCK then
+      return F_SYSCLK;
+    else
+      return 750000000.0 / real(DIV_VAL);
+    end if;
+  end f_clk_fn;
+  
+  -- Determine the internal clock frequency.
+  constant F_CLK                : real := f_clk_fn;
   
   -- System control block outputs.
   signal reset                  : std_logic;
@@ -103,30 +130,43 @@ begin -- architecture
 --=============================================================================
   
   -----------------------------------------------------------------------------
-  -- Debug UART/syscon test
+  -- Basic rvex standalone system
   -----------------------------------------------------------------------------
-  debugUart: block is
+  rvex_standalone: block is
     
-    constant addrMap              : addrRangeAndMapping_array(0 to 1) := (
-      0 => addrRangeAndMap(match => "----0000------------------------"),
-      1 => addrRangeAndMap(match => "----1111------------------------")
-    );
-    signal uart2dbg_busA          : bus_mst2slv_type;
-    signal dbg2uart_busA          : bus_slv2mst_type;
-    signal uart2dbg_busB          : bus_mst2slv_type;
-    signal dbg2uart_busB          : bus_slv2mst_type;
-    signal uart2dbg_busC          : bus_mst2slv_type;
-    signal dbg2uart_busC          : bus_slv2mst_type;
-    signal tx_s                   : std_logic;
-    signal irq                    : std_logic;
+    signal rvsa2bus               : bus_mst2slv_type;
+    signal bus2rvsa               : bus_slv2mst_type;
+    signal debug2rvsa             : bus_mst2slv_type;
+    signal rvsa2debug             : bus_slv2mst_type;
     
   begin
     
-    -- Instantiate unit under test.
-    uut: entity rvex.periph_uart
+    rvex_inst: entity rvex.standalone
+      generic map (
+        
+        -- Configuration.
+        CFG                       => rvex_sa_cfg
+        
+      )
+      port map (
+        
+        -- System control.
+        reset                     => reset,
+        clk                       => clk,
+        clkEn                     => clkEn,
+        
+        -- Bus interfaces.
+        rvsa2bus                  => rvsa2bus,
+        bus2rvsa                  => bus2rvsa,
+        debug2rvsa                => debug2rvsa,
+        rvsa2debug                => rvsa2debug
+        
+      );
+    
+    uart: entity rvex.periph_uart
       generic map (
         F_CLK                     => F_CLK,
-        F_BAUD                    => 115200.0
+        F_BAUD                    => F_BAUD
       )
       port map (
         
@@ -137,74 +177,27 @@ begin -- architecture
         
         -- UART pins.
         rx                        => rx,
-        tx                        => tx_s,
+        tx                        => tx,
         
         -- Slave bus.
-        bus2uart                  => uart2dbg_busC,
-        uart2bus                  => dbg2uart_busC,
-        irq                       => irq,
+        bus2uart                  => rvsa2bus,
+        uart2bus                  => bus2rvsa,
+        irq                       => open,
         
         -- Debug interface.
-        uart2dbg_bus              => uart2dbg_busA,
-        dbg2uart_bus              => dbg2uart_busA
+        uart2dbg_bus              => debug2rvsa,
+        dbg2uart_bus              => rvsa2debug
         
       );
     
-    -- Instantiate the bus demuxer.
-    demux_inst: entity rvex.bus_demux
-      generic map (
-        ADDRESS_MAP               => addrMap,
-        OOR_FAULT_CODE            => X"12345678"
-      )
-      port map (
-        
-        -- System control.
-        reset                     => reset,
-        clk                       => clk,
-        clkEn                     => clkEn,
-        
-        -- Busses.
-        mst2demux                 => uart2dbg_busA,
-        demux2mst                 => dbg2uart_busA,
-        demux2slv(0)              => uart2dbg_busB,
-        demux2slv(1)              => uart2dbg_busC,
-        slv2demux(0)              => dbg2uart_busB,
-        slv2demux(1)              => dbg2uart_busC
-        
-      );
+    leds <= (others => '0');
     
-    -- Instantiate a memory for the unit under test to access.
-    memory_inst: entity rvex.bus_ramBlock_singlePort
-      generic map (
-        DEPTH_LOG2B               => 10
-      )
-      port map (
-        
-        -- System control.
-        reset                     => reset,
-        clk                       => clk,
-        clkEn                     => clkEn,
-        
-        -- Memory port.
-        mst2mem_port              => uart2dbg_busB,
-        mem2mst_port              => dbg2uart_busB
-        
-      );
-    
-    leds <= (
-      7 => not rx,
-      6 => not tx_s,
-      0 => irq,
-      others => '0'
-    );
-    tx <= tx_s;
-  
   end block;
   
   -----------------------------------------------------------------------------
   -- System control
   -----------------------------------------------------------------------------
-  sys_ctrl_block: block is
+  sys_ctrl_block: if not DIRECT_RESET_AND_CLOCK generate
     
     -- Buffered system clock (200 MHz).
     signal sysclk               : std_logic;
@@ -300,7 +293,15 @@ begin -- architecture
     -- Clock enable generation.
     clkEn <= '1';
     
-  end block;
+  end generate;
+  
+  -- Dummy syscon block for simulation.
+  sys_ctrl_block_dummy: if DIRECT_RESET_AND_CLOCK generate
+  begin
+    clk <= sysclk_p;
+    reset <= resetButton;
+    clkEn <= '1';
+  end generate;
   
 end Behavioral;
 

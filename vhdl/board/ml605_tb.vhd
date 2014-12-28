@@ -83,6 +83,17 @@ begin -- architecture
   
   -- Instantiate the unit-under-test.
   uut: entity rvex.ml605
+    generic map (
+      -- Baud rate to use for the UART.
+      F_BAUD                    => 125000.0,
+      
+      -- When set, sysclk_p and resetButton are directly fed into the rvex and
+      -- UART block as clk and reset. This may be used to speed up simulation
+      -- when full syscon accuracy is not needed. When set, F_SYSCLK is used to
+      -- configure the baud rate of the UART; it is ignored otherwise.
+      DIRECT_RESET_AND_CLOCK    => true,
+      F_SYSCLK                  => 1000000.0
+    )
     port map (
       
       -- 200 MHz system clock source.
@@ -102,18 +113,36 @@ begin -- architecture
     );
   
   -- Generate the 200 MHz differential system clock.
+--  sys_clk_proc: process is
+--  begin
+--    sysclk_p <= '1';
+--    sysclk_n <= '0';
+--    wait for 2.5 ns;
+--    sysclk_p <= '0';
+--    sysclk_n <= '1';
+--    wait for 2.5 ns;
+--  end process;
+  
+  -- Generate a 1 MHz direct clock for simulation.
   sys_clk_proc: process is
   begin
     sysclk_p <= '1';
-    sysclk_n <= '0';
-    wait for 2.5 ns;
+    wait for 500 ns;
     sysclk_p <= '0';
-    sysclk_n <= '1';
-    wait for 2.5 ns;
+    wait for 500 ns;
   end process;
   
-  -- Don't do anything with the reset button.
-  resetButton <= '0';
+  -- Reset for a bit when starting.
+  reset_button_proc: process is
+  begin
+    resetButton <= '1';
+    wait until rising_edge(sysclk_p);
+    wait until rising_edge(sysclk_p);
+    wait until rising_edge(sysclk_p);
+    wait until rising_edge(sysclk_p);
+    resetButton <= '0';
+    wait;
+  end process;
   
   -----------------------------------------------------------------------------
   -- Stimulus-generating UART.
@@ -135,9 +164,9 @@ begin -- architecture
     process is
     begin
       clk <= '1';
-      wait for 50 ns;
+      wait for 500 ns;
       clk <= '0';
-      wait for 50 ns;
+      wait for 500 ns;
     end process;
     
     -- Report bytes sent by the unit-under-test.
@@ -153,8 +182,8 @@ begin -- architecture
     -- Generate raw UART to communicate with the unit under test.
     uart_inst: entity rvex.utils_uart
       generic map (
-        F_CLK                     => 10000000.0,
-        F_BAUD                    => 115200.0,
+        F_CLK                     => 1000000.0,
+        F_BAUD                    => 125000.0,
         ENABLE_TX                 => true,
         ENABLE_RX                 => true
       )

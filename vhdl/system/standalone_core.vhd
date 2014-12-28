@@ -169,6 +169,7 @@ architecture Behavioral of standalone_core is
   signal dbg2rv_writeMask       : rvex_mask_type;
   signal dbg2rv_writeData       : rvex_data_type;
   signal rv2dbg_readData        : rvex_data_type;
+  signal rv2dgb_ack             : std_logic;
   
 --=============================================================================
 begin -- architecture
@@ -475,6 +476,18 @@ begin -- architecture
   rv2dbg.readData     <= rv2dbg_readData;
   rv2dbg.fault        <= '0';
   rv2dbg.busy         <= '0';
+  rv2dbg.ack          <= rv2dgb_ack;
+  
+  debug_bus_ack: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        rv2dgb_ack <= '0';
+      elsif clkEn = '1' then
+        rv2dgb_ack <= bus_requesting(dbg2rv);
+      end if;
+    end if;
+  end process;
   
 end Behavioral;
 

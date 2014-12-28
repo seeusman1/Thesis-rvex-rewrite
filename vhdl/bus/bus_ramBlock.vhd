@@ -63,7 +63,10 @@ entity bus_ramBlock is
   generic (
     
     -- Size of the memory, specified as log2(size_in_bytes).
-    DEPTH_LOG2B                 : natural
+    DEPTH_LOG2B                 : natural;
+    
+    -- Initial value for the memory. Should probably be '0' or 'U'.
+    INIT_STATE                  : std_logic := '0'
     
   );
   port (
@@ -104,7 +107,8 @@ architecture Behavioral of bus_ramBlock is
   
   -- Current contents of the RAM. We need to use a shared variable to allow XST
   -- to recognize a RAM with two write ports.
-  shared variable ram           : rvex_data_array(0 to 2**(DEPTH_LOG2B-2)-1);
+  shared variable ram           : rvex_data_array(0 to 2**(DEPTH_LOG2B-2)-1)
+    := (others => (others => INIT_STATE));
   
 --=============================================================================
 begin -- architecture
