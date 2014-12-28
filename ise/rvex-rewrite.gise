@@ -22,9 +22,121 @@
   <sourceproject xmlns="http://www.xilinx.com/XMLSchema" xil_pn:fileType="FILE_XISE" xil_pn:name="rvex-rewrite.xise"/>
 
   <files xmlns="http://www.xilinx.com/XMLSchema">
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="core_tb_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="isim"/>
     <file xil_pn:fileType="FILE_NCD" xil_pn:name="ml605_guide.ncd" xil_pn:origination="imported"/>
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="ml605_tb_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_INI" xil_pn:name="xilinxsim.ini"/>
   </files>
 
-  <transforms xmlns="http://www.xilinx.com/XMLSchema"/>
+  <transforms xmlns="http://www.xilinx.com/XMLSchema">
+    <transform xil_pn:end_ts="1419804965" xil_pn:in_ck="-5645023068180869392" xil_pn:name="TRAN_copyAbstractToPostAbstractSimulation" xil_pn:start_ts="1419804965">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
+      <status xil_pn:value="OutOfDateForOutputs"/>
+      <status xil_pn:value="InputChanged"/>
+      <status xil_pn:value="OutputChanged"/>
+      <outfile xil_pn:name="../vhdl/board/ml605.vhd"/>
+      <outfile xil_pn:name="../vhdl/board/ml605_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/bus/bus_addrConv_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/bus/bus_arbiter.vhd"/>
+      <outfile xil_pn:name="../vhdl/bus/bus_demux.vhd"/>
+      <outfile xil_pn:name="../vhdl/bus/bus_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/bus/bus_ramBlock.vhd"/>
+      <outfile xil_pn:name="../vhdl/bus/bus_ramBlock_singlePort.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache_arbiter.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache_intIface_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache_invalCtrl.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache_tb_arbiter.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache_tb_mockAtom.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache_tb_mockMemBus.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/cache_tb_rng.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/data/cache_data.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/data/cache_data_block.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/data/cache_data_blockData.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/data/cache_data_blockTag.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/data/cache_data_blockValid.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/data/cache_data_mainCtrl.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/data/cache_data_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/instr/cache_instr.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/instr/cache_instr_block.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/instr/cache_instr_blockData.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/instr/cache_instr_blockTag.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/instr/cache_instr_blockValid.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/instr/cache_instr_missCtrl.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/instr/cache_instr_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/instr/cache_instr_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/cache/instr/cache_instr_tb_mockAtom.vhd"/>
+      <outfile xil_pn:name="../vhdl/common_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_alu.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_asDisas_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_br.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_brku.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_cfgCtrl.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_cfgCtrl_decode.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_cfgCtrl_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_contextPipelaneIFace.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_contextRegLogic.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_ctrlRegs.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_ctrlRegs_bank.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_ctrlRegs_busSwitch.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_ctrlRegs_contextLaneSwitch.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_ctrlRegs_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_ctrlRegs_readPort.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_dmemSwitch.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_forward.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_globalRegLogic.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_gpRegs.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_gpRegs_mem.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_gpRegs_sim.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_intIface_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_limmRouting.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_listOpcodes_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_memu.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_mulu.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_opcodeAlu_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_opcodeBranch_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_opcodeDatapath_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_opcodeMemory_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_opcodeMultiplier_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_opcode_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_pipelane.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_pipelanes.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_pipeline_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_trapRouting.vhd"/>
+      <outfile xil_pn:name="../vhdl/core/core_trap_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/periph/debug_uart_switch.vhd"/>
+      <outfile xil_pn:name="../vhdl/periph/periph_uart.vhd"/>
+      <outfile xil_pn:name="../vhdl/periph/periph_uart_busIface.vhd"/>
+      <outfile xil_pn:name="../vhdl/periph/periph_uart_fifo.vhd"/>
+      <outfile xil_pn:name="../vhdl/periph/periph_uart_packetBuffer.vhd"/>
+      <outfile xil_pn:name="../vhdl/periph/periph_uart_packetControl.vhd"/>
+      <outfile xil_pn:name="../vhdl/periph/periph_uart_packetHandler.vhd"/>
+      <outfile xil_pn:name="../vhdl/system/standalone.vhd"/>
+      <outfile xil_pn:name="../vhdl/system/standalone_core.vhd"/>
+      <outfile xil_pn:name="../vhdl/system/standalone_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/temp/random_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/temp/todo.vhd"/>
+      <outfile xil_pn:name="../vhdl/temp/uart_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/simUtils_mem_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/simUtils_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/simUtils_scanner_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/utils_crc.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/utils_fracDiv.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/utils_pkg.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/utils_uart.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/utils_uart_rxBit.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/utils_uart_rxByte.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/utils_uart_tb.vhd"/>
+      <outfile xil_pn:name="../vhdl/utils/utils_uart_tx.vhd"/>
+    </transform>
+  </transforms>
 
 </generated_project>

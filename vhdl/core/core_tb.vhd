@@ -302,7 +302,7 @@ architecture Behavioral of core_tb is
   
   -- The probability that the mem2rv_stallIn signal will be asserted high to
   -- stall the core.
-  constant MEM_STALL_PROBABILITY: real := 0.2;
+  constant MEM_STALL_PROBABILITY: real := 0.5;
   
   -- This signal strobes every 100 us, marking the start of a new test case,
   -- keeping the simulation nice and clean.
@@ -520,7 +520,7 @@ begin -- architecture
         else
           mem2rv_stallIn <= (others => '0');
         end if;
-        wait until rising_edge(clk);
+        wait until rising_edge(clk) and clkEn = '1';
       end loop;
     end process;
     
@@ -869,7 +869,7 @@ begin -- architecture
     ---------------------------------------------------------------------------
     procedure cycles(
       count     : in natural;
-      clkEnProb : in real := 1.0
+      clkEnProb : in real := 0.5
     ) is
       variable counter  : natural;
       variable r        : real;
