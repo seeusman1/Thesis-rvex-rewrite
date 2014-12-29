@@ -4,7 +4,7 @@
 
 -- Test basic STW and STOP functionality, which pretty much all other tests
 -- rely on.
---sanity.test
+sanity.test
 
 -- Test register files and forwarding. This also kind of tests ADD, CMPEQ,
 -- STBR, MTL and STL.
@@ -14,7 +14,7 @@
 --limmh/index.suite
 
 -- Test ALU instructions.
-alu/index.suite
+--alu/index.suite
 
 -- Test MUL instructions.
 --mul/index.suite
@@ -26,7 +26,7 @@ alu/index.suite
 --branch/index.suite
 
 -- Test dynamic reconfiguration.
--- todo
+reconf/index.suite
 
 -- Test debug support.
 --debug/index.suite

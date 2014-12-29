@@ -936,7 +936,7 @@ begin -- architecture
       
       -- Load the value of the key.
       if matchStr(token.all, "numLanes") then
-        actVal := to_signed(2**CFG.numLaneGroupsLog2, 33);
+        actVal := to_signed(2**CFG.numLanesLog2, 33);
       elsif matchStr(token.all, "numLaneGroups") then
         actVal := to_signed(2**CFG.numLaneGroupsLog2, 33);
       elsif matchStr(token.all, "numContexts") then

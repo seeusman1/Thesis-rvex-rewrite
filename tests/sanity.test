@@ -59,8 +59,8 @@ write   dmem word 8 0x12345678
 reset
 
 -- Make sure that the processor asserts the done output and becomes idle.
-wait    20 done 0
-wait    20 idle 0
+wait    400 done 0
+wait    400 idle 0
 
 -- Make sure that the continuation address is correct.
 read    dbg word CR_PC 0x60

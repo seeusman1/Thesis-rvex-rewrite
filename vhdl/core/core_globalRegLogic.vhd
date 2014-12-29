@@ -224,7 +224,7 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- 
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- CRR   |  CT7  |  CT6  |  CT5  |  CT4  |  CT3  |  CT2  |  CT1  |  CT0  |
+    -- BCRR  |  CT7  |  CT6  |  CT5  |  CT4  |  CT3  |  CT2  |  CT1  |  CT0  |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- CC    |  CT7  |  CT6  |  CT5  |  CT4  |  CT3  |  CT2  |  CT1  |  CT0  |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
@@ -240,6 +240,11 @@ begin -- architecture
     -- there should be some more documentation on this subject elsewhere... If
     -- there isn't, look through the rvex_cfgCtrl.vhd and rvex_cfgCtrl_tb.vhd
     -- files.
+    
+    -- Set the write permissions on the BCCR register.
+    creg_makeNormalRegister(l2c, c2l, CR_BCRR, 31, 0,
+      permissions   => DEBUG_CAN_WRITE
+    );
     
     -- Drive data.
     gbreg2cfg_requestData_r <= creg_readRegisterVect(l2c, c2l, CR_BCRR, 31, 0);
