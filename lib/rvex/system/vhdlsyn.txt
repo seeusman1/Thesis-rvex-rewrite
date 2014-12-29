@@ -1,0 +1,3 @@
+standalone_pkg.vhd
+standalone_core.vhd
+standalone.vhd
