@@ -54,7 +54,6 @@ use rvex.utils_pkg.all;
 use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
-use rvex.core_pipeline_pkg.all;
 use rvex.core_trap_pkg.all;
 
 --=============================================================================
@@ -124,11 +123,19 @@ entity core_contextRegLogic is
     ---------------------------------------------------------------------------
     -- Pipelane interface: branch/link registers
     ---------------------------------------------------------------------------
-    -- Branch/link register read port for each context.
-    cxreg2cxplif_brLinkReadPort : out cxreg2pl_readPort_type;
+    -- Write data and enable signal for each branch register.
+    cxplif2cxreg_brWriteData    : in  rvex_brRegData_type;
+    cxplif2cxreg_brWriteEnable  : in  rvex_brRegData_type;
     
-    -- Branch/link register write port for each context.
-    cxplif2cxreg_brLinkWritePort: in  pl2cxreg_writePort_type;
+    -- Current state of the branch registers.
+    cxreg2cxplif_brReadData     : out rvex_brRegData_type;
+    
+    -- Write data and enable signal for the link register.
+    cxplif2cxreg_linkWriteData  : in  rvex_data_type;
+    cxplif2cxreg_linkWriteEnable: in  std_logic;
+    
+    -- Current state of the link register.
+    cxreg2cxplif_linkReadData   : out rvex_data_type;
     
     ---------------------------------------------------------------------------
     -- Pipelane interface: program counter
@@ -238,12 +245,6 @@ end core_contextRegLogic;
 architecture Behavioral of core_contextRegLogic is
 --=============================================================================
   
-  -- Current non-forwarded contents of the branch registers.
-  signal brReadData             : rvex_brRegData_type;
-  
-  -- Current non-forwarded contents of the link register.
-  signal linkReadData           : rvex_data_type;
-  
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -252,7 +253,8 @@ begin -- architecture
   -- control registers.
   logic: process (
     creg2cxreg, rctrl2cxreg_reset, cxplif2cxreg_stall, cxplif2cxreg_stop,
-    cxplif2cxreg_brLinkWritePort, cxplif2cxreg_nextPC,
+    cxplif2cxreg_brWriteData, cxplif2cxreg_brWriteEnable, cxplif2cxreg_nextPC,
+    cxplif2cxreg_linkWriteData, cxplif2cxreg_linkWriteEnable,
     cxplif2cxreg_overridePC_ack, cxplif2cxreg_trapInfo, cxplif2cxreg_trapPoint,
     cxplif2cxreg_rfi, cxplif2cxreg_exDbgTrapInfo, cxplif2cxreg_resuming_ack
   ) is
@@ -370,12 +372,12 @@ begin -- architecture
     -- Make the branch registers.
     for b in 7 downto 0 loop
       creg_makeNormalRegister(l2c, c2l, CR_CCR, b+16, b+16,
-        writeEnable   => (cxplif2cxreg_brLinkWritePort.brWriteEnable(S_SWB)(b) and not cxplif2cxreg_stall),
-        writeData     => cxplif2cxreg_brLinkWritePort.brData(S_SWB)(b downto b),
+        writeEnable   => (cxplif2cxreg_brWriteEnable(b) and not cxplif2cxreg_stall),
+        writeData     => cxplif2cxreg_brWriteData(b downto b),
         permissions   => DEBUG_CAN_WRITE
       );
     end loop;
-    brReadData <= creg_readRegisterVect(l2c, c2l, CR_CCR, 23, 16);
+    cxreg2cxplif_brReadData <= creg_readRegisterVect(l2c, c2l, CR_CCR, 23, 16);
     
     -- Make the cause register.
     creg_makeNormalRegister(l2c, c2l, CR_TA, 31, 24,
@@ -407,11 +409,11 @@ begin -- architecture
     
     -- Make the register.
     creg_makeNormalRegister(l2c, c2l, CR_LR, 31, 0,
-      writeEnable   => (cxplif2cxreg_brLinkWritePort.linkWriteEnable(S_SWB) and not cxplif2cxreg_stall),
-      writeData     => cxplif2cxreg_brLinkWritePort.linkData(S_SWB),
+      writeEnable   => (cxplif2cxreg_linkWriteEnable and not cxplif2cxreg_stall),
+      writeData     => cxplif2cxreg_linkWriteData,
       permissions   => DEBUG_CAN_WRITE
     );
-    linkReadData <= creg_readRegisterVect(l2c, c2l, CR_LR, 31, 0);
+    cxreg2cxplif_linkReadData <= creg_readRegisterVect(l2c, c2l, CR_LR, 31, 0);
     
     ---------------------------------------------------------------------------
     -- Program counter register (PC)
@@ -746,6 +748,11 @@ begin -- architecture
     -- more documentation on this subject elsewhere... If there isn't, look
     -- through the rvex_cfgCtrl.vhd and rvex_cfgCtrl_tb.vhd files.
     
+    -- Set the write permissions on the CCR register.
+    creg_makeNormalRegister(l2c, c2l, CR_CRR, 31, 0,
+      permissions   => CORE_CAN_WRITE
+    );
+    
     -- Drive data.
     cxreg2cfg_requestData_r <= creg_readRegisterVect(l2c, c2l, CR_CRR, 31, 0);
     
@@ -758,86 +765,6 @@ begin -- architecture
     cxreg2creg <= l2c;
     
   end process;
-  
-  -----------------------------------------------------------------------------
-  -- Generate branch forwarding logic
-  -----------------------------------------------------------------------------
-  br_fwd_gen_stage: for stage in S_SRD to S_SFW generate
-    constant stagesToForward    : natural := S_SWB-stage;
-  begin
-    br_fwd_gen_reg: for b in 0 to 7 generate
-      signal writeDatas         : std_logic_vector(stagesToForward-1 downto 0);
-      signal writeEnables       : std_logic_vector(stagesToForward-1 downto 0);
-    begin
-      br_fwd_gen_stageIndices: for index in 0 to stagesToForward-1 generate
-        writeDatas(index)   <= cxplif2cxreg_brLinkWritePort.brData(stage + index + 1)(b);
-        writeEnables(index) <= cxplif2cxreg_brLinkWritePort.brForwardEnable(stage + index + 1)(b);
-      end generate;
-      
-      br_fwd: entity rvex.core_forward
-        generic map (
-          ENABLE_FORWARDING     => CFG.forwarding,
-          DATA_WIDTH            => 1,
-          ADDRESS_WIDTH         => 0,
-          NUM_LANES             => 1,
-          NUM_STAGES_TO_FORWARD => stagesToForward
-        )
-        port map (
-          
-          -- Register read connections.
-          readAddress           => (others => '0'),
-          readDataIn(0)         => brReadData(b),
-          readDataOut(0)        => cxreg2cxplif_brLinkReadPort.brData(stage)(b),
-          readDataForwarded     => open,
-          
-          -- Queued write signals.
-          writeAddresses        => (others => '0'),
-          writeDatas            => writeDatas,
-          writeEnables          => writeEnables,
-          coupled               => "1"
-          
-        );
-    
-    end generate;
-  end generate;
-  
-  -----------------------------------------------------------------------------
-  -- Generate link forwarding logic
-  -----------------------------------------------------------------------------
-  link_fwd_gen_stage: for stage in S_SRD to S_SFW generate
-    constant stagesToForward    : natural := S_SWB-stage;
-    signal writeDatas           : std_logic_vector(32*stagesToForward-1 downto 0);
-    signal writeEnables         : std_logic_vector(stagesToForward-1 downto 0);
-  begin
-    link_fwd_gen_stageIndices: for index in 0 to stagesToForward-1 generate
-      writeDatas(32*index+31 downto 32*index) <= cxplif2cxreg_brLinkWritePort.linkData(stage + index + 1);
-      writeEnables(index) <= cxplif2cxreg_brLinkWritePort.linkForwardEnable(stage + index + 1);
-    end generate;
-    
-    link_fwd: entity rvex.core_forward
-      generic map (
-        ENABLE_FORWARDING       => CFG.forwarding,
-        DATA_WIDTH              => 32,
-        ADDRESS_WIDTH           => 0,
-        NUM_LANES               => 1,
-        NUM_STAGES_TO_FORWARD   => stagesToForward
-      )
-      port map (
-        
-        -- Register read connections.
-        readAddress             => (others => '0'),
-        readDataIn              => linkReadData,
-        readDataOut             => cxreg2cxplif_brLinkReadPort.linkData(stage),
-        readDataForwarded       => open,
-        
-        -- Queued write signals.
-        writeAddresses          => (others => '0'),
-        writeDatas              => writeDatas,
-        writeEnables            => writeEnables,
-        coupled                 => "1"
-        
-      );
-  end generate;
   
 end Behavioral;
 

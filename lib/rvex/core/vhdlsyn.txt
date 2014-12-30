@@ -15,8 +15,8 @@ core_brku.vhd
 core_br.vhd
 core_cfgCtrl_decode.vhd
 core_cfgCtrl.vhd
-core_contextPipelaneIFace.vhd
 core_forward.vhd
+core_contextPipelaneIFace.vhd
 core_contextRegLogic.vhd
 core_ctrlRegs_bank.vhd
 core_ctrlRegs_busSwitch.vhd

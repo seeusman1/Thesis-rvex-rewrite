@@ -79,24 +79,24 @@ use rvex.simUtils_pkg.all;
   --          | |  |  - ' '---'  - - '  - - '  - - ' |  | |'==='| |
   --          | |  '================================='  | '-----' |
   --          | |    ^           ^        ^       ^     |    ^    |
-  --          | |    |           |        |       |     |    |    |
-  --          | |    v           v        v       v     |    |    |
-  --          | | .------.     .====.   .----.  .----.  |    |    |
-  -- rctrl <--+-+>|cxplif|     |dmsw|   |trap|  |limm|  |    |    |
-  --          | | '------'     '===='   '----'  '----'  |    |    |
-  --          | |    ^          ^  ^                    |    |    |
-  --          | |    |          |  '--------------------+----+----+--> dmem
-  --          | |    |          |                       |    |    |
+  --          | |    v           |        |       |     |    |    |
+  --          | | .------.       v        v       v     |    |    |
+  --          | | |cxplif|     .====.   .----.  .----.  |    |    |
+  -- rctrl <--+-+>|.===. |     |dmsw|   |trap|  |limm|  |    |    |
+  --          | | ||fwd| |     '===='   '----'  '----'  |    |    |
+  --          | | |'===' |      ^  ^                    |    |    |
+  --          | | '------'      |  '--------------------+----+----+--> dmem
+  --          | |    ^          |                       |    |    |
   --          | '----+----------+-----------------------'    |    |
   --          |      |          |                            |    |
   --          |      |          |  .-------------------------'    |
   --          |      v          v  v                              |
-  --          |   .=====.      .----.      .-----.      .-----.   |
-  -- rctrl    |   |cxreg|<---->|creg|<---->|gbreg|<---->|     |<--+--> mem
-  -- reset <--+-->|.===.|      '----'      '-----'      | cfg |   |
-  -- and done |   ||fwd||         ^           ^   ...<--|     |   |
-  --          |   |'==='|---------+-----------+-------->|     |   |
-  --          |   '====='         |           |         '-----'   |--> sim
+  -- rctrl    |   .=====.      .----.      .-----.      .-----.   |
+  -- reset <--+-->|cxreg|<---->|creg|<---->|gbreg|<---->|     |<--+--> mem
+  -- and done |   '====='      '----'      '-----'      | cfg |   |
+  --          |      |            ^           ^   ...<--|     |   |
+  --          |      '------------+-----------+-------->|     |   |
+  --          |                   |           |         '-----'   |--> sim
   --          '-------------------+-----------+-------------------'
   --                              |           |
   --                              v           |
@@ -536,8 +536,12 @@ architecture Behavioral of core is
   signal cxreg2creg_reset             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
   -- Context register <-> context-pipelane interface signals.
-  signal cxreg2cxplif_brLinkReadPort  : cxreg2pl_readPort_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cxplif2cxreg_brLinkWritePort : pl2cxreg_writePort_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_brWriteData     : rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_brWriteEnable   : rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_brReadData      : rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_linkWriteData   : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_linkWriteEnable : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_linkReadData    : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_stall           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_stop            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_nextPC          : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
@@ -703,8 +707,12 @@ begin -- architecture
       pl2gpreg_readPorts            => pl2gpreg_readPorts,
       gpreg2pl_readPorts            => gpreg2pl_readPorts,
       pl2gpreg_writePorts           => pl2gpreg_writePorts,
-      cxreg2cxplif_brLinkReadPort   => cxreg2cxplif_brLinkReadPort,
-      cxplif2cxreg_brLinkWritePort  => cxplif2cxreg_brLinkWritePort,
+      cxplif2cxreg_brWriteData      => cxplif2cxreg_brWriteData,
+      cxplif2cxreg_brWriteEnable    => cxplif2cxreg_brWriteEnable,
+      cxreg2cxplif_brReadData       => cxreg2cxplif_brReadData,
+      cxplif2cxreg_linkWriteData    => cxplif2cxreg_linkWriteData,
+      cxplif2cxreg_linkWriteEnable  => cxplif2cxreg_linkWriteEnable,
+      cxreg2cxplif_linkReadData     => cxreg2cxplif_linkReadData,
       
       -- Special context register interface.
       cxplif2cxreg_stall            => cxplif2cxreg_stall,
@@ -849,8 +857,12 @@ begin -- architecture
         -- Pipelane interface.
         cxplif2cxreg_stall          => cxplif2cxreg_stall(ctxt),
         cxplif2cxreg_stop           => cxplif2cxreg_stop(ctxt),
-        cxreg2cxplif_brLinkReadPort => cxreg2cxplif_brLinkReadPort(ctxt),
-        cxplif2cxreg_brLinkWritePort=> cxplif2cxreg_brLinkWritePort(ctxt),
+        cxplif2cxreg_brWriteData    => cxplif2cxreg_brWriteData(ctxt),
+        cxplif2cxreg_brWriteEnable  => cxplif2cxreg_brWriteEnable(ctxt),
+        cxreg2cxplif_brReadData     => cxreg2cxplif_brReadData(ctxt),
+        cxplif2cxreg_linkWriteData  => cxplif2cxreg_linkWriteData(ctxt),
+        cxplif2cxreg_linkWriteEnable=> cxplif2cxreg_linkWriteEnable(ctxt),
+        cxreg2cxplif_linkReadData   => cxreg2cxplif_linkReadData(ctxt),
         cxplif2cxreg_nextPC         => cxplif2cxreg_nextPC(ctxt),
         cxreg2cxplif_currentPC      => cxreg2cxplif_currentPC(ctxt),
         cxreg2cxplif_overridePC     => cxreg2cxplif_overridePC(ctxt),

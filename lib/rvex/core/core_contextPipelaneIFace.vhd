@@ -305,11 +305,15 @@ entity core_contextPipelaneIFace is
     ---------------------------------------------------------------------------
     -- Context register interface: branch/link registers
     ---------------------------------------------------------------------------
-    -- Branch/link register read port for each context.
-    cxreg2cxplif_brLinkReadPort : in  cxreg2pl_readPort_array(2**CFG.numContextsLog2-1 downto 0);
+    -- Branch register interface (without forwarding) for each context.
+    cxplif2cxreg_brWriteData    : out rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_brWriteEnable  : out rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_brReadData     : in  rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
     
-    -- Branch/link register write port for each context.
-    cxplif2cxreg_brLinkWritePort: out pl2cxreg_writePort_array(2**CFG.numContextsLog2-1 downto 0);
+    -- Link register interface (without forwarding) for each context.
+    cxplif2cxreg_linkWriteData  : out rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_linkWriteEnable: out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_linkReadData   : in  rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Context register interface: program counter
@@ -441,8 +445,9 @@ architecture Behavioral of core_contextPipelaneIFace is
   -- mux and the broadcast block. The *_mux named signals route from the
   -- context-to-group mux to the broadcast block.
   --
-  -- Not depicted is the interconnect from the *_arb signals to the instruciton
-  -- memory.
+  -- Not depicted is the interconnect from the *_arb signals to the instruction
+  -- memory. Also not depicted is the forwarding logic for the branch and link
+  -- registers, which is instantiated per pipelane group.
   --
   -----------------------------------------------------------------------------
   -- Arbitrator outputs
@@ -474,6 +479,8 @@ architecture Behavioral of core_contextPipelaneIFace is
   signal irqID_mux              : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal run_mux                : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal brLinkReadPort_mux     : cxreg2pl_readPort_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal brReadData_mux         : rvex_brRegData_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal linkReadData_mux       : rvex_data_array   (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal contextPC_mux          : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal overridePC_mux         : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal trapHandler_mux        : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -877,7 +884,10 @@ begin -- architecture
     cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_run(ctxt);
     cxplif2cxreg_stall(ctxt)            <= stall(laneGroup) or not cfg2cxplif_run(ctxt);
     cxplif2cxreg_stop(ctxt)             <= stop_arb(laneGroup);
-    cxplif2cxreg_brLinkWritePort(ctxt)  <= brLinkWritePort_arb(laneGroup);
+    cxplif2cxreg_brWriteData(ctxt)      <= brLinkWritePort_arb(laneGroup).brData(S_SWB);
+    cxplif2cxreg_brWriteEnable(ctxt)    <= brLinkWritePort_arb(laneGroup).brWriteEnable(S_SWB);
+    cxplif2cxreg_linkWriteData(ctxt)    <= brLinkWritePort_arb(laneGroup).linkData(S_SWB);
+    cxplif2cxreg_linkWriteEnable(ctxt)  <= brLinkWritePort_arb(laneGroup).linkWriteEnable(S_SWB);
     cxplif2cxreg_nextPC(ctxt)           <= PC_arb(laneGroup);
     cxplif2cxreg_overridePC_ack(ctxt)   <= valid_arb(laneGroup);
     cxplif2cxreg_trapInfo(ctxt)         <= trapInfo_arb(laneGroup);
@@ -907,7 +917,8 @@ begin -- architecture
     irq_mux(laneGroup)                <= irq_ctxt(ctxt);
     irqID_mux(laneGroup)              <= rctrl2cxplif_irqID(ctxt);
     run_mux(laneGroup)                <= run_ctxt(ctxt);
-    brLinkReadPort_mux(laneGroup)     <= cxreg2cxplif_brLinkReadPort(ctxt);
+    brReadData_mux(laneGroup)         <= cxreg2cxplif_brReadData(ctxt);
+    linkReadData_mux(laneGroup)       <= cxreg2cxplif_linkReadData(ctxt);
     contextPC_mux(laneGroup)          <= cxreg2cxplif_currentPC(ctxt);
     overridePC_mux(laneGroup)         <= cxreg2cxplif_overridePC(ctxt);
     trapHandler_mux(laneGroup)        <= cxreg2cxplif_trapHandler(ctxt);
@@ -919,6 +930,90 @@ begin -- architecture
     stepping_mux(laneGroup)           <= cxreg2cxplif_stepping(ctxt);
     resuming_mux(laneGroup)           <= cxreg2cxplif_resuming(ctxt);
     
+  end generate;
+  
+  -----------------------------------------------------------------------------
+  -- Branch register forwarding logic
+  -----------------------------------------------------------------------------
+  branch_fwd_gen_group: for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 generate
+    br_fwd_gen_stage: for stage in S_SRD to S_SFW generate
+      constant stagesToForward    : natural := S_SWB-stage;
+    begin
+      br_fwd_gen_reg: for b in 0 to 7 generate
+        signal writeDatas         : std_logic_vector(stagesToForward-1 downto 0);
+        signal writeEnables       : std_logic_vector(stagesToForward-1 downto 0);
+      begin
+        br_fwd_gen_stageIndices: for index in 0 to stagesToForward-1 generate
+          writeDatas(index)   <= brLinkWritePort_arb(laneGroup).brData(stage + index + 1)(b);
+          writeEnables(index) <= brLinkWritePort_arb(laneGroup).brForwardEnable(stage + index + 1)(b);
+        end generate;
+        
+        br_fwd: entity rvex.core_forward
+          generic map (
+            ENABLE_FORWARDING     => CFG.forwarding,
+            DATA_WIDTH            => 1,
+            ADDRESS_WIDTH         => 0,
+            NUM_LANES             => 1,
+            NUM_STAGES_TO_FORWARD => stagesToForward
+          )
+          port map (
+            
+            -- Register read connections.
+            readAddress           => (others => '0'),
+            readDataIn(0)         => brReadData_mux(laneGroup)(b),
+            readDataOut(0)        => brLinkReadPort_mux(laneGroup).brData(stage)(b),
+            readDataForwarded     => open,
+            
+            -- Queued write signals.
+            writeAddresses        => (others => '0'),
+            writeDatas            => writeDatas,
+            writeEnables          => writeEnables,
+            coupled               => "1"
+            
+          );
+      
+      end generate;
+    end generate;
+  end generate;
+  
+  -----------------------------------------------------------------------------
+  -- Link register forwarding logic
+  -----------------------------------------------------------------------------
+  link_fwd_gen_group: for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 generate
+    link_fwd_gen_stage: for stage in S_SRD to S_SFW generate
+      constant stagesToForward    : natural := S_SWB-stage;
+      signal writeDatas           : std_logic_vector(32*stagesToForward-1 downto 0);
+      signal writeEnables         : std_logic_vector(stagesToForward-1 downto 0);
+    begin
+      link_fwd_gen_stageIndices: for index in 0 to stagesToForward-1 generate
+        writeDatas(32*index+31 downto 32*index) <= brLinkWritePort_arb(laneGroup).linkData(stage + index + 1);
+        writeEnables(index) <= brLinkWritePort_arb(laneGroup).linkForwardEnable(stage + index + 1);
+      end generate;
+      
+      link_fwd: entity rvex.core_forward
+        generic map (
+          ENABLE_FORWARDING       => CFG.forwarding,
+          DATA_WIDTH              => 32,
+          ADDRESS_WIDTH           => 0,
+          NUM_LANES               => 1,
+          NUM_STAGES_TO_FORWARD   => stagesToForward
+        )
+        port map (
+          
+          -- Register read connections.
+          readAddress             => (others => '0'),
+          readDataIn              => linkReadData_mux(laneGroup),
+          readDataOut             => brLinkReadPort_mux(laneGroup).linkData(stage),
+          readDataForwarded       => open,
+          
+          -- Queued write signals.
+          writeAddresses          => (others => '0'),
+          writeDatas              => writeDatas,
+          writeEnables            => writeEnables,
+          coupled                 => "1"
+          
+        );
+    end generate;
   end generate;
   
 end Behavioral;

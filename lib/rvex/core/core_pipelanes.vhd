@@ -221,10 +221,8 @@ entity core_pipelanes is
     ---------------------------------------------------------------------------
     -- Register file interface
     ---------------------------------------------------------------------------
-    -- These signals are array'd outside this entity and contain pipeline
-    -- configuration dependent data types, so they need to be put in records.
-    -- The signals are documented in rvex_intIface_pkg.vhd, where the types are
-    -- defined.
+    -- The general purpose register file signals are documented in
+    -- rvex_intIface_pkg.vhd, where the types are defined.
     
     -- General purpose register file read ports.
     pl2gpreg_readPorts          : out pl2gpreg_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
@@ -233,11 +231,15 @@ entity core_pipelanes is
     -- General purpose register file write ports.
     pl2gpreg_writePorts         : out pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
     
-    -- Branch/link register read port for each context.
-    cxreg2cxplif_brLinkReadPort : in  cxreg2pl_readPort_array(2**CFG.numContextsLog2-1 downto 0);
+    -- Branch register interface (without forwarding) for each context.
+    cxplif2cxreg_brWriteData    : out rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_brWriteEnable  : out rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_brReadData     : in  rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
     
-    -- Branch/link register write port for each context.
-    cxplif2cxreg_brLinkWritePort: out pl2cxreg_writePort_array(2**CFG.numContextsLog2-1 downto 0);
+    -- Link register interface (without forwarding) for each context.
+    cxplif2cxreg_linkWriteData  : out rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_linkWriteEnable: out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_linkReadData   : in  rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Special context register interface
@@ -587,8 +589,12 @@ begin -- architecture
       cxplif2cxreg_stop                 => cxplif2cxreg_stop,
       
       -- Context register interface: branch/link registers.
-      cxreg2cxplif_brLinkReadPort       => cxreg2cxplif_brLinkReadPort,
-      cxplif2cxreg_brLinkWritePort      => cxplif2cxreg_brLinkWritePort,
+      cxplif2cxreg_brWriteData          => cxplif2cxreg_brWriteData,
+      cxplif2cxreg_brWriteEnable        => cxplif2cxreg_brWriteEnable,
+      cxreg2cxplif_brReadData           => cxreg2cxplif_brReadData,
+      cxplif2cxreg_linkWriteData        => cxplif2cxreg_linkWriteData,
+      cxplif2cxreg_linkWriteEnable      => cxplif2cxreg_linkWriteEnable,
+      cxreg2cxplif_linkReadData         => cxreg2cxplif_linkReadData,
       
       -- Context register interface: program counter.
       cxplif2cxreg_nextPC               => cxplif2cxreg_nextPC,
