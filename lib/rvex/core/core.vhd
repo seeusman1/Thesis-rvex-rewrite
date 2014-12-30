@@ -229,7 +229,7 @@ entity core is
     clk                         : in  std_logic;
     
     -- Active high global clock enable input.
-    clkEn                       : in  std_logic;
+    clkEn                       : in  std_logic := '1';
     
     ---------------------------------------------------------------------------
     -- VHDL simulation debug information
@@ -305,9 +305,7 @@ entity core is
     --    pipelane groups, the only decouple outputs generated under normal
     --    conditions are "1111", "1110", "1011", "1010" and "1000".
     --  - The decouple outputs will not split or merge two groups when either
-    --    group is requesting either an instruction or a data memory
-    --    read/write, when either group is stalled, or when the blockReconfig
-    --    signal is asserted by the memory for either group.
+    --    group is asserting the blockReconfig signal.
     rv2mem_decouple             : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high reconfiguration block input from the instruction and data
@@ -342,19 +340,19 @@ entity core is
     -- the associated vector in imem_pcs.
     rv2imem_fetch               : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
+    -- Combinatorial cancel signal, valid one cycle after rv2imem_PCs and
+    -- rv2imem_fetch, regardless of memory stalls. This will go high when a
+    -- branch is detected by the next pipeline stage and the previously
+    -- requested instruction is not going to be executed. In this case, the
+    -- instruction memory may choose not to complete the request if that is
+    -- faster somehow (a cache may choose to cancel line validation if a miss
+    -- occured to allow the core to continue earlier). Note that this signal
+    -- can be safely ignored for proper operation, it's just a hint which may
+    -- be used to speed things up.
+    rv2imem_cancel              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
     -- (L_IF clock cycles delay with clkEn high and stallOut low; L_IF is set
     -- in rvex_pipeline_pkg.vhd)
-    
-    -- Combinatorial cancel signal, valid one cycle after imem_pcs and
-    -- imem_fetch, regardless of memory stalls. This will go high when a branch
-    -- is detected by the next pipeline stage and the previously requested
-    -- instruction is not going to be executed. In this case, the instruction
-    -- memory may choose not to complete the request if that is faster somehow
-    -- (a cache may choose to cancel line validation if a miss occured to allow
-    -- the core to continue earlier). Note that this signal can be safely
-    -- ignored for proper operation, it's just a hint which may be used to
-    -- speed things up.
-    rv2imem_cancel              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Fetched instruction, from instruction memory to the rvex.
     imem2rv_instr               : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);

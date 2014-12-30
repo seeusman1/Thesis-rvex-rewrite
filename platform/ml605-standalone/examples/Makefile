@@ -38,7 +38,7 @@ all: $(EXECUTABLES)
 	$(CC) $(CFLAGS) -S $<
 
 # Where to get assembly files;
-%.s: $(SRC)/%.s
+%.s: $(SRC)/%.S
 	$(CP) $< $@
 
 # How to assemble;

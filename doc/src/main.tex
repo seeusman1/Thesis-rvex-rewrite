@@ -1,4 +1,4 @@
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 \usepackage{geometry} \geometry{a4paper}
 \usepackage{graphicx}
 \usepackage{float}
@@ -7,9 +7,34 @@
 \usepackage{subcaption}
 \usepackage{tabularx}
 \usepackage{subfiles}
+\usepackage{color}
+\usepackage[hidelinks]{hyperref}
 \usepackage{listings}
+\lstset{language=VHDL}
+\definecolor{codeBackgroundColor}{rgb}{0.97,0.98,0.99}
+\definecolor{codeBorderColor}    {rgb}{0.90,0.933,0.966}
+\definecolor{codeCommentColor}   {rgb}{0.0,0.6,0.0}
+\definecolor{codeNumberColor}    {rgb}{0.75,0.8,0.85}
+\definecolor{codeKeywordColor}   {rgb}{0.0,0.0,1.0}
+\definecolor{codeStringColor}    {rgb}{0.5,0.5,0.5}
+\definecolor{codeInlineColor}    {rgb}{0.2,0.2,0.2}
+\lstset{ %
+  basicstyle=\scriptsize,
+  frame=single,
+  rulecolor=\color{codeBorderColor},
+  backgroundcolor=\color{codeBackgroundColor},
+  commentstyle=\color{codeCommentColor},
+  keywordstyle=\color{codeKeywordColor},
+  numberstyle=\color{codeNumberColor},
+  stringstyle=\color{codeStringColor},
+  numbers=left,
+  numbersep=5pt,
+  stepnumber=1,
+  tabsize=2
+}
 
 \newcommand{\rvex}{$\rho$-VEX}
+\newcommand{\code}[1]{{\color{codeInlineColor}\small{\texttt{\detokenize{#1}}}}}
 
 \begin{document}
 
@@ -36,8 +61,370 @@ December 29, 2014
 
 \section{Introduction}
 
-This document serves as basic documentation for the \rvex{} core files in \texttt{/lib/rvex/core}. More detailed (and probably more up-to-date) documentation can be found in the VHDL source code itself.
+The \rvex{} core is an optionally runtime-reconfigurable VLIW processor based on the HP VEX architecture. Aside from being runtime-reconfigurable, the core has several design-time configurable parameters by means of generics, and many more are available through package constants. A coarse list of configuration parameters is listed below; this list is not exhaustive.
+
+\begin{itemize}
+  
+  \item Runtime-reconfigurable parameters\footnote{The degree in which these parameters are configurable depends on design-time configuration of the core.}:
+  \begin{itemize}
+    \item Number of lanes active.
+    \item Context to lane mapping: multiple contexts can be run at once, or a single context can run on all lanes.
+  \end{itemize}
+  
+  \item Design-time-configurable parameters through generics:
+  \begin{itemize}
+    \item Number of lanes: 2, 4, 8 or 16.
+    \item Number of hardware contexts (to switch between and/or run in parallel): 1, 2, 4, 8 or 16.
+    \item Number of lane groups; determines the degree of reconfigurability.
+    \item Lane resource configuration: each lane within a group can optionally have a multiplier, and it is configurable which lane within the group has a memory interface and which can handle branch operations.
+    \item Long immediate forwarding options.
+    \item Whether forwarding logic is instantiated or not.
+  \end{itemize}
+  
+  \item Design-time-configurable parameters through package constants:
+  \begin{itemize}
+    \item Instruction set and opcode mapping\footnote{Modifications to the datapath require changes to behavioral VHDL code.}.
+    \item Pipeline and forwarding configuration, including memory bus latency: the timing of all functional units within the pipeline can be changed as much as the functional units permit, to augment the timing characteristics of the core without changing behavioral VHDL code.
+  \end{itemize}
+
+\end{itemize}
+
+todo: short history about the core; previous versions and references
+
+This document serves as basic documentation for the \rvex{} core files in \code{/lib/rvex/core}. More detailed (and probably more up-to-date) documentation can be found in the VHDL source code itself. This document does not provide documentation for the support packages within the \code{rvex} library.
 
 \clearpage
+\section{Naming conventions}
+
+All entities, packages, labels, types and hierarchy-crossing signals use the following naming conventions.
+
+\begin{itemize}
+
+  \item All signals, entity names, package names and types use a combination of camelCase and underscores. Typically, underscores are used as a form of hierarchy separation, where the VHDL language does not otherwise allow it, and camelCase is used to indicate word boundaries within one level of hierarchy. For example, \code{core_ctrlRegs_bank} refers to a (register) bank for the control registers for the \rvex{} core.
+  
+  \item Most signal names start with an underscore-terminated abbreviation which indicates the source and destination entity. This identifier contains two entity abbreviation codes separated by a \code{2}. The entity abbreviation codes are defined at the top of \code{core.vhd} and are also listed in Section \ref{subsec:entity-abbreviations}. Sometimes other abbreviations are used for signals local to one entity, which should be clear from context.
+  
+  \item All constant names are uppercase with underscores.
+
+  \item Labels typically use underscores only, to prevent conflicts between similarly named entities and signals.
+
+  \item Types use one of the following suffixes to indicate what kind of type they represent.
+  \begin{itemize}
+    \item \code{_type}: scalar type.
+    \item \code{_array}: array type.
+    \item \code{_ptr}: access type for a scalar.
+    \item \code{_array_ptr}: access type for an array.
+  \end{itemize}
+
+  \item Enties and packages have the same name as their filename; exactly one entity or package is defined per VHDL file. Package names end in \code{_pkg}. All \rvex{} core files start with \code{core_} to keep their names unique within the \code{rvex} package, which contains a number of supporting packages as well.
+
+\end{itemize}
+
+\clearpage
+\section{Overview}
+
+todo: block diagram
+
+\subsection{Entity abbreviations}
+\label{subsec:entity-abbreviations}
+
+The abbreviations listed here are not only used in the block diagram, but also in signal names, to indicate their source and destination entity.
+
+todo: abbreviation list
+
+\clearpage
+\section{Instantiation}
+
+The following listing serves as an instantiation template for the core. The code is documented in the following sections.
+
+\begin{lstlisting}[numbers=none]
+library rvex;
+use rvex.common_pkg.all;
+use rvex.core_pkg.all;
+
+-- ...
+
+rvex_inst: entity rvex.core
+  generic map (
+    
+    -- Core configuration.
+    CFG => rvex_cfg(
+      numLanesLog2              => 3,
+      numLaneGroupsLog2         => 2,
+      numContextsLog2           => 2
+      -- ...
+    )
+    
+  )
+  port map (
+    
+    -- System control.
+    reset                       => reset,
+    clk                         => clk,
+    clkEn                       => clkEn,
+    
+    -- Run control interface.
+    rctrl2rv_irq                => rctrl2rv_irq,
+    rctrl2rv_irqID              => rctrl2rv_irqID,
+    rv2rctrl_irqAck             => rv2rctrl_irqAck,
+    rctrl2rv_run                => rctrl2rv_run,
+    rv2rctrl_idle               => rv2rctrl_idle,
+    rctrl2rv_reset              => rctrl2rv_reset,
+    rv2rctrl_done               => rv2rctrl_done,
+    
+    -- Common memory interface.
+    rv2mem_decouple             => rv2mem_decouple,
+    mem2rv_blockReconfig        => mem2rv_blockReconfig,
+    mem2rv_stallIn              => mem2rv_stallIn,
+    rv2mem_stallOut             => rv2mem_stallOut,
+    
+    -- Instruction memory interface.
+    rv2imem_PCs                 => rv2imem_PCs,
+    rv2imem_fetch               => rv2imem_fetch,
+    rv2imem_cancel              => rv2imem_cancel,
+    imem2rv_instr               => imem2rv_instr,
+    imem2rv_affinity            => imem2rv_affinity,
+    imem2rv_fault               => imem2rv_fault,
+    
+    -- Data memory interface.
+    rv2dmem_addr                => rv2dmem_addr,
+    rv2dmem_readEnable          => rv2dmem_readEnable,
+    rv2dmem_writeData           => rv2dmem_writeData,
+    rv2dmem_writeMask           => rv2dmem_writeMask,
+    rv2dmem_writeEnable         => rv2dmem_writeEnable,
+    dmem2rv_readData            => dmem2rv_readData,
+    dmem2rv_fault               => dmem2rv_fault,
+    
+    -- Control/debug bus interface.
+    dbg2rv_addr                 => dbg2rv_addr,
+    dbg2rv_readEnable           => dbg2rv_readEnable,
+    dbg2rv_writeEnable          => dbg2rv_writeEnable,
+    dbg2rv_writeMask            => dbg2rv_writeMask,
+    dbg2rv_writeData            => dbg2rv_writeData,
+    rv2dbg_readData             => rv2dbg_readData
+    
+  );
+
+\end{lstlisting}
+
+\clearpage
+\subsection{Configuration vector}
+
+The \code{CFG} generic is used to configure the \rvex{} core. A function from the \code{core_pkg} package is used to generate this record in such a way that code instantiating the core will be forward compatible: because the parameters in the function are optional, parameters can be added without breaking old instantiation code.
+
+The instantiation template does not list all the configuration parameters available. For an up-to-date list, refer to the comments in the \code{rvex_generic_config_type} type declaration in \code{core_pkg}.
+
+\subsection{Signal types}
+
+The following custom VHDL types are used in the interface signals. They are defined in \code{common_pkg}.
+
+\begin{lstlisting}[numbers=none]
+subtype rvex_address_type     is std_logic_vector(31 downto  0);
+subtype rvex_data_type        is std_logic_vector(31 downto  0);
+subtype rvex_mask_type        is std_logic_vector( 3 downto  0);
+subtype rvex_syllable_type    is std_logic_vector(31 downto  0);
+
+type rvex_address_array       is array (natural range <>) of rvex_address_type;
+type rvex_data_array          is array (natural range <>) of rvex_data_type;
+type rvex_mask_array          is array (natural range <>) of rvex_mask_type;
+type rvex_syllable_array      is array (natural range <>) of rvex_syllable_type;
+\end{lstlisting}
+
+The \code{address}, \code{data} and \code{mask} types are used for the data bus interfaces, wherein \code{mask} is used for a per-byte write mask. The \code{syllable} types represent a syllable, i.e., an instruction word for a single lane.
+
+\subsection{System control}
+
+The system control signals include the clock source for the core, a synchronous reset signal and a global clock enable signal. \code{clk} and \code{reset} are required \code{std_logic} input signals. \code{clkEn} is an optional \code{std_logic} input signal.
+
+The core is clocked on the rising edge of \code{clk} while \code{clkEn} is high. When a rising edge on \code{clk} occurs while \code{reset} is high, all resettable components of the core will be reset, regardless of the state of \code{clkEn}. Only block and distributed RAM resources are not reset, because this is not possible on Xilinx FPGAs without reconfiguration. In particular, this means that the general purpose registers are not reset to 0 by asserting \code{reset}, thus their contents should be considered to be undefined when a program starts. \code{r0.0} is an exception to this rule, as it is always zero.
+
+\subsection{Run control}
+
+The run control signals provide an interface between the core and an interrupt controller and/or host controller. All signals are optional. All signals are arrays of some sort, indexed by hardware context IDs in descending order.
+
+\begin{itemize}
+
+  \item \code{rctrl2rv_irq : in std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+  \item \code{rctrl2rv_irqID : in rvex_address_array(}\textit{number of contexts - 1}\code{ downto 0)}
+  \item \code{rv2rctrl_irqAck : out std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+  
+  When \code{rctrl2rv_irq} is high, an interrupt trap will be generated within the indexed context as soon as possible, if the interrupt enable flag in the context control register is set. Interrupt entry is acknowledged by \code{rv2rctrl_irqAck} being asserted high for one \code{clkEn}abled cycle. \code{rctrl2rv_irqID} is sampled in exactly that cycle and is made available to the trap handler through the trap argument register. When not specified, \code{rctrl2rv_irq} is tied to \code{'0'} and \code{rctrl2rv_irqID} is tied to \code{X"00000000"}.
+  
+  When \code{rv2rctrl_irqAck} is high, an interrupt controller would typically release \code{rctrl2rv_irq} and set \code{rctrl2rv_irqID} to a value signalling that no interrupt is active. Alternatively, if more interrupts are pending, \code{rctrl2rv_irq} may remain high and \code{rctrl2rv_irqID} may be set to the code identifying the next interrupt.
+  
+  Releasing \code{rctrl2rv_irq} while \code{rv2rctrl_irqAck} is \textit{not} high may lead to unexpected behavior. Because it takes time for traps to propagate through the pipeline, interrupt traps are issued before they are acknowledged, after which they cannot be stopped anymore. Therefore, the core might acknowledge an interrupt which was recently cleared while interrupts are enabled, and enter the trap handler accordingly.
+  
+  Acknowledging the interrupt and registering the ID when the trap is issued is not a viable option, because the trap might theoretically be overruled by a regular trap issued by a previous instruction in a later pipeline stage, in which case it would be possible for interrupts to be lost. The stage in which interrupt traps are issued is defined by the stage in which the application can update the interrupt enable flag.
+  
+  This behavior may be handled by defining a certain interrupt ID as a cleared interrupt, which is serviced by the trap handler as no operation. In addition, the behavior may be prevented altogether by only clearing interrupts while interrupts are disabled.
+  
+  \vspace{1em}
+  \item \code{rctrl2rv_run : in std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+  \item \code{rv2rctrl_idle : out std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+  
+  When \code{rctrl2rv_run} is asserted low, the indexed context will stop executing instructions as soon as possible. It will finish instructions which were already in the pipeline and have already committed data, and set the program counter to point to the next instruction which should be issued for the program to be resumed correctly. When the context has finished pausing, \code{rv2rctrl_idle} will be asserted high. This may also happen while \code{rctrl2rv_run} is low, when the core is being halted for a different reason (for example, to prepare for reconfiguration, because a context is not configured to run, etc.).
+  
+  When \code{rctrl2rv_run} is not specified, it is tied to \code{'1'}.
+  
+  Note that per this definition of idle, a context is not necessarily idle when it is stalled, because instructions may still be pending completion in the pipeline.
+  
+  \vspace{1em}
+  \item \code{rctrl2rv_reset : in std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+  \item \code{rv2rctrl_done : out std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+  
+  When \code{rctrl2rv_reset} is asserted, the context control registers for the indexed context are synchronously reset in the next \code{clkEn}abled cycle. When it is not specified, it is tied to \code{'0'}. \code{rv2rctrl_done} will be asserted high when a \code{stop} instruction is encountered.
+  
+  When the \rvex{} is running as a co-processor, \code{rctrl2rv_reset} could be used as an active low flag indicating that the currently loaded kernel needs to be executed, in which case \code{rv2rctrl_done} signals completion.
+  
+\end{itemize}
+
+\subsection{Common memory interface}
+
+These control signals are common to both the data and instruction memory interface.
+
+\begin{itemize}
+  
+  \item \code{rv2mem_decouple : out std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+  
+  This vector represents the current runtime configuration of the core. In particular, it specifies which lane groups are working together to execute code within a single context. When a bit in this vector is high, the indexed lane group is ``decoupled'' from the next lane group, i.e., is operating within a different context. When a bit is low, the indexed lane group is working as a slave to the next higher indexed lane group for which the bit is set.
+  
+  Due to constraints in the core, the indices of pipelane groups working together are always aligned to the number of pipelane groups in the group. As an example, if pipelane groups 0 and 1 are working together, group 2 cannot join them without group 3 also joining them. This allows binary tree structures to be used in the coupling logic. This means that, in the default core configuration, only the following decouple vectors are legal: \code{"1111"}, \code{"1110"}, \code{"1011"}, \code{"1010"} and \code{"1000"}.
+  
+  The state of the \code{rv2mem_decouple} signal has several implications on the behavior of the memory ports on the \rvex{}.
+  
+  \begin{itemize}
+    
+    \item The data memory ports associated with lane groups for which the \code{rv2mem_decouple} signal is low will not make requests, and may thus be ignored if this is favourable for the memory implementation.
+    
+    \item The PCs presented by the instruction memory ports will always be contiguous and aligned for groups which are working together. The fetch and cancel signals will always be identical.
+    
+  \end{itemize}
+  
+  In addition, the \rvex{} assumes that the \code{mem2rv_blockReconfig} and \code{mem2rv_stallIn} signals are identical for coupled pipelane groups. Undefined behavior will result if these assumptions are violated.
+  
+  \vspace{1em}
+  \item \code{mem2rv_blockReconfig : in std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+  
+  This signal can be used by the memories to block reconfiguration due to ongoing operations. When a bit in this vector is high, the indexed group will not split up or merge with other groups. The \rvex{} will assume that the associated bits in the \code{mem2rv_blockReconfig} signal will be released eventually when no operations are requested by those pipelane groups. When pipelane groups are coupled, their respective \code{mem2rv_blockReconfig} signals must be identical. When this signal is not specified, it is tied to all zeros.
+  
+  \vspace{1em}
+  \item \code{mem2rv_stallIn : in std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+
+  Stall input signals for each pipelane group. When the stall signal for a pipelane group is high, it will behave as if it is clock gated. When pipelane groups are coupled, their respective \code{mem2rv_stallIn} signals must be identical. When this signal is not specified, it is tied to all zeros.
+  
+  \vspace{1em}
+  \item \code{rv2mem_stallOut : out std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+  
+  Stall output signals for each pipelane group. This serves as a combined stall signal from all stall sources, indicating whether a pipelane group is actually stalled or not. When \code{rv2mem_stallOut} is high, all memory request signals from the associated pipelane group should be considered to be undefined. Memory access requests should thus be initiated (and registered) only at the rising edge of the \code{clk} signal when \code{clkEn} is high and the associated \code{rv2mem_stallOut} signal is low.
+  
+  When pipelane groups are coupled, their respective \code{rv2mem_stallOut} signals will be equal. In addition, the \code{unifiedStall} configuration parameter in the \code{CFG} record may be set to \code{true} to enforce equal stall signals for all pipelane groups at all times, should this be desirable for the memory implementation.
+
+\end{itemize}
+
+\subsection{Instruction memory interface}
+
+These signals interface between the \rvex{} and the instruction memory or cache. All signals in this section are clock gated by not only \code{clkEn}, but also by the respective signal in \code{rv2mem_stallOut}. They should be considered to be invalid when the respective \code{rv2mem_stallOut} signal is high. The number of enabled clock cycles after which the reply for a request is assumed to be valid is defined by \code{L_IF}, which is defined in \code{core_pipeline_pkg}. \code{L_IF} defaults to 1.
+
+\begin{itemize}
+
+  \item \code{rv2imem_PCs : out rvex_address_array(}\textit{number of lane groups - 1}\code{ downto 0)}
+  %-- Program counters from each pipelane group.
+  
+  \item \code{rv2imem_fetch : out std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+  %-- Active high instruction fetch enable signal. When a bit in this vector
+  %-- is high, the bit in mem_stallOut is low and the bit in mem_decouple is
+  %-- high, the instruction memory must fetch the instruction pointed to by
+  %-- the associated vector in imem_pcs.
+  
+  \item \code{rv2imem_cancel : out std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+  %-- Combinatorial cancel signal, valid one cycle after imem_pcs and
+  %-- imem_fetch, regardless of memory stalls. This will go high when a branch
+  %-- is detected by the next pipeline stage and the previously requested
+  %-- instruction is not going to be executed. In this case, the instruction
+  %-- memory may choose not to complete the request if that is faster somehow
+  %-- (a cache may choose to cancel line validation if a miss occured to allow
+  %-- the core to continue earlier). Note that this signal can be safely
+  %-- ignored for proper operation, it's just a hint which may be used to
+  %-- speed things up.
+  
+  \item \code{imem2rv_instr : in rvex_syllable_array(}\textit{number of} lanes \textit{- 1}\code{ downto 0)}
+  %-- Fetched instruction, from instruction memory to the rvex.
+  
+  \item \code{imem2rv_affinity : in std_logic_vector(}\textit{(number of lane groups)$^2$ - 1}\code{ downto 0)}
+  %-- Cache block affinity data from cache. This should be set to cache block
+  %-- index which serviced the request. This is just a hint for the processor
+  %-- (when a core splits, the affinity values are used to determine which
+  %-- lane the context which was running should be run on for maximum cache
+  %-- locality).
+  
+  \item \code{imem2rv_fault : in std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+  %-- Active high fault signal from the instruction memory. When high,
+  %-- imem2rv_instr is assumed to be invalid and an exception will be thrown.
+  
+\end{itemize}
+
+\subsection{Data memory interface}
+
+These signals interface between the \rvex{} and the data memory or cache. All signals in this section are clock gated by not only \code{clkEn}, but also by the respective signal in \code{rv2mem_stallOut}. They should be considered to be invalid when the respective \code{rv2mem_stallOut} signal is high. The number of enabled clock cycles after which the reply for a request is assumed to be valid is defined by \code{L_MEM}, which is defined in \code{core_pipeline_pkg}. \code{L_MEM} defaults to 1.
+
+\begin{itemize}
+  
+  \item \code{rv2dmem_addr : out rvex_address_array(}\textit{number of lane groups - 1}\code{ downto 0)}
+  
+  Memory address which is to be accessed if \code{rv2dmem_readEnable} or \code{rv2dmem_writeEnable} is high. The two least significant bits of the address will always be \code{"00"} and may be ignored. Note that a configurable 128 byte block within this 4 GiB memory space is inaccessible, because it is replaced by the core control registers. This is configurable through the \code{cregStartAddress} entry in \code{CFG}, which defaults to 0xFFFFFF80, meaning that 0xFFFFFF80..0xFFFFFFFF is inaccessible.
+  
+  \vspace{1em}
+  \item \code{rv2dmem_readEnable : out std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+  
+  Active high read enable signal from the core for each memory unit. This signal will never be asserted when the respective signal in \code{rv2mem_decouple} is low. When high during an enabled rising clock edge, the \rvex{} expects the access result to be valid \code{L_MEM} enabled cycles later.
+  
+  \vspace{1em}
+  \item \code{rv2dmem_writeData : out rvex_data_array(}\textit{number of lane groups - 1}\code{ downto 0)}
+  \item \code{rv2dmem_writeMask : out rvex_mask_array(}\textit{number of lane groups - 1}\code{ downto 0)}
+  
+  These signals define the write operation to be performed when \code{rv2dmem_writeEnable} is high. \code{rv2dmem_writeMask} contains a bit for each byte in \code{rv2dmem_writeData}, which determines whether the byte should be written or not: when high, the respective byte should be written; when low, the byte should not be affected. Mask bit $i$ governs data bits $i*8+7$ downto $i*8$.
+
+  \vspace{1em}
+  \item \code{rv2dmem_writeEnable : out std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+  
+  Active high read enable signal from the core for each memory unit. This signal will never be asserted when the respective signal in \code{rv2mem_decouple} is low. When high during an enabled rising clock edge, the \rvex{} expects either that the write request defined by \code{rv2dmem_addr}, \code{rv2dmem_writeData} and \code{rv2dmem_writeMask} will be performed, or that \code{dmem2rv_fault} is asserted high \code{L_MEM} cycles later.
+
+  \vspace{1em}
+  \item \code{dmem2rv_readData : in rvex_data_array(}\textit{number of lane groups - 1}\code{ downto 0)}
+  
+  This is expected to contain the read data for read requested by \code{rv2dmem_readEnable} and \code{rv2dmem_addr} \code{L_MEM} enabled cycles earlier, unless \code{dmem2rv_fault} is high, indicating that a bus fault occurred.
+
+  \vspace{1em}
+  \item \code{dmem2rv_fault : in std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+  
+  This is expected to be valid \code{L_MEM} enabled cycles after a read or write request. When high, this indicates that the read or write could not be performed for some reason. In this case, a \code{DMEM_FAULT} trap will be issued. The trap argument will be set to the address which was requested.
+  
+\end{itemize}
+
+\subsection{Control/debug bus interface}
+
+The debug bus provides an optional slave bus interface capable of accessing most of the registers within the core.
+
+\begin{itemize}
+  
+  \item \code{dbg2rv_addr : in  rvex_address_type}
+  \item \code{dbg2rv_readEnable : in std_logic}
+  \item \code{dbg2rv_writeEnable : in std_logic}
+  \item \code{dbg2rv_writeMask : in rvex_mask_type}
+  \item \code{dbg2rv_writeData : in rvex_data_type}
+  \item \code{rv2dbg_readData : out rvex_data_type}
+  
+  Debug interface bus. \code{dbg2rv_readEnable} and \code{dbg2rv_writeEnable} are active high and should not be active at the same time. \code{rv2dbg_readData} is valid one cycle after \code{dbg2rv_readEnable} is asserted and contains the data read from \code{dbg2rv_addr} as it was while \code{dbg2rv_readEnable} was asserted. \code{dbg2rv_writeMask}, \code{dbg2rv_writeData} and \code{dbg2rv_addr} define the write request when \code{dbg2rv_writeEnable} is asserted. All input signals are tied to \code{'0'} when not specified.
+  
+\end{itemize}
+
+\clearpage
+\section{Known issues}
+
+\begin{itemize}
+  
+  \item Accessing general purpose or context control registers through the debug bus while the core is running leads to undefined behavior, i.e., the bus claiming logic does not work correctly. Note that accessing \textit{any} context while \textit{any} (other) context is running triggers the defect.
+  
+\end{itemize}
 
 \end{document}
