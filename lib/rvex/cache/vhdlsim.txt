@@ -1,7 +1,0 @@
-instr/cache_instr_tb_mockAtom.vhd
-instr/cache_instr_tb.vhd
-cache_tb_rng.vhd
-cache_tb_mockAtom.vhd
-cache_tb_mockMemBus.vhd
-cache_tb.vhd
-cache_tb_arbiter.vhd

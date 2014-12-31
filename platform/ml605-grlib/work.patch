@@ -1,0 +1,323 @@
+diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/.config work/.config
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/.config	2014-04-16 16:50:08.000000000 +0200
++++ work/.config	2014-12-30 15:15:16.000000000 +0100
+@@ -1,8 +1,8 @@
+ #
+ # Automatically generated make config: don't edit
+ #
+-CONFIG_LEON3FT_PRESENT=y
+-CONFIG_HAS_SHARED_GRFPU=y
++# CONFIG_LEON3FT_PRESENT=y
++# CONFIG_HAS_SHARED_GRFPU=y
+ 
+ #
+ # Synthesis      
+@@ -74,8 +74,8 @@ CONFIG_FREQ75=y
+ #
+ # Processor            
+ #
+-CONFIG_LEON3=y
+-CONFIG_PROC_NUM=1
++# CONFIG_LEON3 is not set
++CONFIG_PROC_NUM=4
+ # CONFIG_LEON3_MIN is not set
+ # CONFIG_LEON3_GP is not set
+ # CONFIG_LEON3_HP is not set
+diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
++++ work/config.vhd	2014-12-31 00:10:44.000000000 +0100
+@@ -20,9 +20,12 @@ package config is
+   constant CFG_PADTECH : integer := virtex6;
+   constant CFG_NOASYNC : integer := 0;
+   constant CFG_SCAN : integer := 0;
++-- r-VEX processor core
++  constant CFG_RVEX : integer := 0;
++  constant CFG_RVEX_NAHBMST : integer := 4;
+ -- LEON3 processor core
+-  constant CFG_LEON3 : integer := 1;
+-  constant CFG_NCPU : integer := (1);
++  constant CFG_LEON3 : integer := 0;
++  constant CFG_NCPU : integer := 1;
+   constant CFG_NWIN : integer := (8);
+   constant CFG_V8 : integer := 16#32# + 4*0;
+   constant CFG_MAC : integer := 0;
+diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
++++ work/leon3mp.vhd	2014-12-31 00:04:23.000000000 +0100
+@@ -62,6 +62,7 @@ entity leon3mp is
+     );
+   port (
+     reset     : in    std_ulogic;
++    vex_reset     : in    std_ulogic;    
+     errorn    : out   std_ulogic;
+     clk_ref_p     : in    std_logic;
+     clk_ref_n     : in    std_logic;
+@@ -229,6 +230,12 @@ architecture rtl of leon3mp is
+   -- Used for connecting input/output signals to the DDR3 controller
+   signal migi		: mig_app_in_type;
+   signal migo		: mig_app_out_type;
++  
++  -- VEX
++  constant CFG_VEX : integer := 1;
++  
++  signal vex_halt_s : std_logic;
++  signal vrstn		: std_ulogic;
+ 
+   attribute keep                     : boolean;
+   attribute syn_keep                 : boolean;
+@@ -261,6 +268,9 @@ begin
+ 
+   rst0 : rstgen generic map (acthigh => 1)
+     port map (reset, clkm, lock, rstn, rstraw);
++    
++  rst1 : rstgen generic map (acthigh => 1)
++    port map (vex_reset, clkm, lock, vrstn, rstraw);
+ 
+ ----------------------------------------------------------------------
+ ---  AHB CONTROLLER --------------------------------------------------
+@@ -277,72 +287,6 @@ begin
+ ---  LEON3 processor and DSU -----------------------------------------
+ ----------------------------------------------------------------------
+ 
+-  -- LEON3 processor
+-  nosh : if CFG_GRFPUSH = 0 generate
+-    cpu : for i in 0 to CFG_NCPU-1 generate
+-      l3ft : if CFG_LEON3FT_EN /= 0 generate
+-        leon3ft0 : leon3ft		-- LEON3 processor
+-        generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU*(1-CFG_GRFPUSH), CFG_V8,
+-  	  0, CFG_MAC, pclow, CFG_NOTAG, CFG_NWP, CFG_ICEN, CFG_IREPL, CFG_ISETS, CFG_ILINE,
+-	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+-	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+-          CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
+-	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
+-	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
+-        port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+-    		irqi(i), irqo(i), dbgi(i), dbgo(i), clkm);
+-      end generate;
+-
+-      l3s : if CFG_LEON3FT_EN = 0 generate
+-        u0 : leon3s 		-- LEON3 processor
+-        generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU*(1-CFG_GRFPUSH), CFG_V8,
+-	  0, CFG_MAC, pclow, CFG_NOTAG, CFG_NWP, CFG_ICEN, CFG_IREPL, CFG_ISETS, CFG_ILINE,
+-	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+-	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+-          CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
+-	  CFG_DFIXED, CFG_SCAN, CFG_MMU_PAGE)
+-        port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+-    		irqi(i), irqo(i), dbgi(i), dbgo(i));
+-      end generate;
+-    end generate;
+-  end generate;
+-
+-  sh : if CFG_GRFPUSH = 1 generate
+-    cpu : for i in 0 to CFG_NCPU-1 generate
+-      l3ft : if CFG_LEON3FT_EN /= 0 generate
+-        leon3ft0 : leon3ftsh		-- LEON3 processor
+-        generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU, CFG_V8,
+-  	  0, CFG_MAC, pclow, CFG_NOTAG, CFG_NWP, CFG_ICEN, CFG_IREPL, CFG_ISETS, CFG_ILINE,
+-	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+-	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+-          CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
+-	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
+-	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
+-        port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+-    		irqi(i), irqo(i), dbgi(i), dbgo(i), clkm,  fpi(i), fpo(i));
+-
+-      end generate;
+-      l3s : if CFG_LEON3FT_EN = 0 generate
+-        u0 : leon3sh 		-- LEON3 processor
+-        generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU, CFG_V8,
+-	  0, CFG_MAC, pclow, CFG_NOTAG, CFG_NWP, CFG_ICEN, CFG_IREPL, CFG_ISETS, CFG_ILINE,
+-	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+-	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+-          CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
+-	  CFG_DFIXED, CFG_SCAN, CFG_MMU_PAGE)
+-        port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+-    		irqi(i), irqo(i), dbgi(i), dbgo(i), fpi(i), fpo(i));
+-      end generate;
+-    end generate;
+-
+-    grfpush0 : grfpushwx generic map ((CFG_FPU-1), CFG_NCPU, fabtech)
+-    port map (clkm, rstn, fpi, fpo);
+-
+-  end generate;
+ 
+   lerrorn <= dbgo(0).error and rstn;
+   error_pad : odpad generic map (level => cmos, voltage => x25v, tech => padtech) port map (errorn, lerrorn);
+@@ -382,6 +326,36 @@ begin
+       port map(rstn, clkm, tck, tms, tdi, tdo, ahbmi, ahbmo(CFG_NCPU+CFG_AHB_UART),
+                open, open, open, open, open, open, open, gnd);
+   end generate;
++  
++  
++----------------------------------------------------------------------
++---  VEX processor ---------------------------------------------------
++----------------------------------------------------------------------
++
++  vex : entity work.rovex_system
++  generic map (
++    hindex => CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP,
++    pindexglob             => 5,
++    paddrglob              => 5,
++    pmaskglob              => 16#FFF#
++    )
++    port map (
++      clk               => clkm,
++      clkEn             => '1',
++      reset             => vrstn,
++      ahbi              => ahbmi,
++      ahbo(3)           => ahbmo(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP+3),
++      ahbo(2)           => ahbmo(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP+2),
++      ahbo(1)           => ahbmo(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP+1),
++      ahbo(0)           => ahbmo(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP+0),
++      apbiglob          => apbi,
++      apboglob          => apbo(5),
++      irqi              => irqi,
++      irqo              => irqo
++      );
++      --H TODO: add vex_halt_s to stop timer when core is halted by debugger
++
++  
+ 
+ ----------------------------------------------------------------------
+ ---  Memory controllers ----------------------------------------------
+@@ -642,7 +616,7 @@ end generate;
+                    sepirq => CFG_GPT_SEPIRQ, sbits => CFG_GPT_SW,
+                    ntimers => CFG_GPT_NTIM, nbits  => CFG_GPT_TW)
+       port map (rstn, clkm, apbi, apbo(3), gpti, open);
+-    gpti.dhalt  <= dsuo.tstop;
++    gpti.dhalt  <= vex_halt_s;
+     gpti.extclk <= '0';
+   end generate;
+   notim : if CFG_GPT_ENABLE = 0 generate apbo(3) <= apb_none; end generate;
+@@ -832,7 +806,7 @@ end generate;
+ ---  Drive unused bus elements  ---------------------------------------
+ -----------------------------------------------------------------------
+ 
+-  nam1 : for i in (CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP) to NAHBMST-1 generate
++  nam1 : for i in (CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP+CFG_RVEX*CFG_RVEX_NAHBMST) to NAHBMST-1 generate
+     ahbmo(i) <= ahbm_none;
+   end generate;
+ 
+diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile work/Makefile
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile	2014-04-16 16:50:08.000000000 +0200
++++ work/Makefile	2014-12-31 00:25:52.000000000 +0100
+@@ -1,5 +1,5 @@
+ include .config
+-GRLIB=../..
++GRLIB=../../../grlib/grlib-gpl-1.3.7-b4144
+ TOP=leon3mp
+ DESIGN=leon3-xilinx-ml605
+ BOARD=xilinx-ml605-xc6vlx240t
+@@ -14,6 +14,7 @@ EFFORT=high
+ XSTOPT=-uc leon3mp.xcf
+ SYNPOPT="set_option -pipe 1; set_option -retiming 0; set_option -enable_prepacking 1;\
+ set_option -write_apr_constraint 0;set_option -resource_sharing 1; set_option -symbolic_fsm_compiler 1"
++
+ VHDLOPTSYNFILES= \
+ 	mig_37/user_design/rtl/controller/arb_mux.vhd \
+ 	mig_37/user_design/rtl/controller/arb_row_col.vhd \
+@@ -69,58 +70,6 @@ VHDLOPTSYNFILES= \
+ 	pcie/v6_pcie_v1_7/source/*.vhd \
+ 	$(GRLIB)/lib/gaisler/pcie/pcie.vhd
+ 
+-ifeq ("$(CONFIG_PCIEXP_MASTER_TARGET)","y")
+-  ifeq ("$(CONFIG_LANE_WIDTH1)","y")
+-  UCF+=pcie_ucf/pcie_master_target_lane1.ucf
+-  UCF_PLANAHEAD+=pcie_ucf/pcie_master_target_lane1.ucf
+-  endif
+-  ifeq ("$(CONFIG_LANE_WIDTH2)","y")
+-  UCF+=pcie_ucf/pcie_master_target_lane2.ucf
+-  UCF_PLANAHEAD+=pcie_ucf/pcie_master_target_lane2.ucf
+-  endif
+-  ifeq ("$(CONFIG_LANE_WIDTH4)","y")
+-  UCF+=pcie_ucf/pcie_master_target_lane4.ucf
+-  UCF_PLANAHEAD+=pcie_ucf/pcie_master_target_lane4.ucf
+-  endif
+-  ifeq ("$(CONFIG_LANE_WIDTH8)","y")
+-  UCF+=pcie_ucf/pcie_master_target_lane8.ucf
+-  UCF_PLANAHEAD+=pcie_ucf/pcie_master_target_lane8.ucf
+-  endif
+-VHDLOPTSYNFILES+=$(GRLIB)/lib/gaisler/pcie/pcie_master_target_virtex.vhd
+-endif
+-ifeq ("$(CONFIG_PCIEXP_MASTER_FIFO)","y")
+-  ifeq ("$(CONFIG_PCIEXP_MASTER_FIFO_DMA)","y")
+-    ifeq ("$(CONFIG_LANE_WIDTH1)","y")
+-    UCF+=pcie_ucf/pcie_master_fifo_dma_lane1.ucf
+-    UCF_PLANAHEAD+=pcie_ucf/pcie_master_fifo_dma_lane1.ucf
+-    endif
+-    ifeq ("$(CONFIG_LANE_WIDTH2)","y")
+-    UCF+=pcie_ucf/pcie_master_fifo_dma_lane2.ucf
+-    UCF_PLANAHEAD+=pcie_ucf/pcie_master_fifo_dma_lane2.ucf
+-    endif
+-    ifeq ("$(CONFIG_LANE_WIDTH4)","y")
+-    UCF+=pcie_ucf/pcie_master_fifo_dma_lane4.ucf
+-    UCF_PLANAHEAD+=pcie_ucf/pcie_master_fifo_dma_lane4.ucf
+-    endif
+-VHDLOPTSYNFILES+=$(GRLIB)/lib/gaisler/pcie/pcie_master_fifo_virtex.vhd
+-VHDLOPTSYNFILES+=$(GRLIB)/lib/gaisler/pcie/pciedma.vhd
+-  endif
+-  ifneq ("$(CONFIG_PCIEXP_MASTER_FIFO_DMA)","y")
+-    ifeq ("$(CONFIG_LANE_WIDTH1)","y")
+-    UCF+=pcie_ucf/pcie_master_fifo_lane1.ucf
+-    UCF_PLANAHEAD+=pcie_ucf/pcie_master_fifo_lane1.ucf
+-    endif
+-    ifeq ("$(CONFIG_LANE_WIDTH2)","y")
+-    UCF+=pcie_ucf/pcie_master_fifo_lane2.ucf
+-    UCF_PLANAHEAD+=pcie_ucf/pcie_master_fifo_lane2.ucf
+-    endif
+-    ifeq ("$(CONFIG_LANE_WIDTH4)","y")
+-    UCF+=pcie_ucf/pcie_master_fifo_lane4.ucf
+-    UCF_PLANAHEAD+=pcie_ucf/pcie_master_fifo_lane4.ucf
+-    endif
+-VHDLOPTSYNFILES+=$(GRLIB)/lib/gaisler/pcie/pcie_master_fifo_virtex.vhd
+-  endif
+-endif
+ 
+ VERILOGOPTSYNFILES= \
+ 	mig/user_design/rtl/controller/*.v \
+@@ -132,27 +81,16 @@ VERILOGOPTSYNFILES= \
+ 	$$XILINX/verilog/src/glbl.v
+ VHDLSYNFILES= \
+ 	ahb2mig_ml605.vhd config.vhd ahbrom.vhd \
+-	svga2ch7301c.vhd gtxclk.vhd leon3mp.vhd
++	svga2ch7301c.vhd gtxclk.vhd ../design/rvex_system.vhd leon3mp.vhd
+ 
+ VHDLSIMFILES=testbench.vhd
+ 
+-ifeq ("$(CONFIG_PCIEXP_MASTER_TARGET)","y")
+-VHDLSIMFILES+=$(GRLIB)/lib/tech/unisim/ise/GTPA1_DUAL.vhd $(GRLIB)/lib/tech/unisim/ise/GTP_DUAL.vhd \
+-$(GRLIB)/lib/tech/unisim/ise/GTXE1.vhd $(GRLIB)/lib/tech/unisim/ise/GTX_DUAL.vhd \
+-$(GRLIB)/lib/tech/unisim/ise/PCIE_2_0.vhd $(GRLIB)/lib/tech/unisim/ise/PCIE_A1.vhd
+-else 
+-ifeq ("$(CONFIG_PCIEXP_MASTER_FIFO)","y")
+-VHDLSIMFILES+=$(GRLIB)/lib/tech/unisim/ise/GTPA1_DUAL.vhd $(GRLIB)/lib/tech/unisim/ise/GTP_DUAL.vhd \
+-$(GRLIB)/lib/tech/unisim/ise/GTXE1.vhd $(GRLIB)/lib/tech/unisim/ise/GTX_DUAL.vhd \
+-$(GRLIB)/lib/tech/unisim/ise/PCIE_2_0.vhd $(GRLIB)/lib/tech/unisim/ise/PCIE_A1.vhd
+-endif
+-endif
+-
+ SIMTOP=testbench
+ SDCFILE=default.sdc
+ BITGEN=$(GRLIB)/boards/$(BOARD)/default.ut
+ CLEAN=soft-clean migclean pcieclean
+ TECHLIBS = secureip unisim
++EXTRALIBS=../../../lib
+ VLOGOPT= -O0
+ VCOMOPT= -explicit -O0 
+ ifeq ("$(GRLIB_SIMULATOR)","ALDEC")
+diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd work/testbench.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd	2014-04-16 16:51:31.000000000 +0200
++++ work/testbench.vhd	2014-12-30 17:35:06.000000000 +0100
+@@ -181,6 +181,7 @@ begin
+                  SIM_BYPASS_INIT_CAL)
+     port map (
+       reset     => rst,
++      vex_reset => rst,
+       errorn    => error,
+       clk_ref_p    => clk200p,
+       clk_ref_n    => clk200n,

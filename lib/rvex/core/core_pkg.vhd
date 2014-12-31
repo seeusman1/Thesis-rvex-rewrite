@@ -356,7 +356,7 @@ package body core_pkg is
   end lane2firstLane;
   
   -- Converts a lane index to the index of the last lane in the group.
-  function lane2lastLane ("  "
+  function lane2lastLane (
     lane      : natural;
     CFG       : rvex_generic_config_type
   ) return natural is

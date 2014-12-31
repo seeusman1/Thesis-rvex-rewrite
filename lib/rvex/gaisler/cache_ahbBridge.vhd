@@ -56,8 +56,8 @@ use grlib.stdlib.all;
 use grlib.devices.all;
 library gaisler;
 use gaisler.misc.all;
-library work;
-use work.reconfCache_pkg.all;
+library rvex;
+use rvex.cache_pkg.all;
 
 entity cache_ahbBridge is
   generic (

@@ -172,7 +172,7 @@ package bus_pkg is
     writeEnable => '0',
     writeMask   => (others => '0'),
     writeData   => (others => '0'),
-    flags       => bus_flags_gen
+    flags       => BUS_FLAGS_DEFAULT
   );
   
   -- Idle state for the bus signals from master to slave.

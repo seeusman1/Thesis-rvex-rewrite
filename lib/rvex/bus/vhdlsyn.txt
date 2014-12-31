@@ -3,4 +3,4 @@ bus_addrConv_pkg.vhd
 bus_ramBlock_singlePort.vhd
 bus_ramBlock.vhd
 bus_arbiter.vhd
-bus_demux_vhd
+bus_demux.vhd

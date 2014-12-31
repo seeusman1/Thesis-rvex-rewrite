@@ -7,10 +7,10 @@ core_opcodeMemory_pkg.vhd
 core_opcodeMultiplier_pkg.vhd
 core_opcode_pkg.vhd
 core_ctrlRegs_pkg.vhd
+core_trap_pkg.vhd
 core_asDisas_pkg.vhd
 core_pkg.vhd
 core_alu.vhd
-core_trap_pkg.vhd
 core_brku.vhd
 core_br.vhd
 core_cfgCtrl_decode.vhd
