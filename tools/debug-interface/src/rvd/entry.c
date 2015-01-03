@@ -1,6 +1,6 @@
 /* Debug interface for standalone r-VEX processor
  * 
- * Copyright (C) 2008-2014 by TU Delft.
+ * Copyright (C) 2008-2015 by TU Delft.
  * All Rights Reserved.
  * 
  * THIS IS A LEGAL DOCUMENT, BY USING r-VEX,
@@ -43,7 +43,7 @@
  * Roel Seedorf, Anthony Brandon, Jeroen van Straten. r-VEX is currently
  * maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).
  * 
- * Copyright (C) 2008-2014 by TU Delft.
+ * Copyright (C) 2008-2015 by TU Delft.
  */
 
 #include <stdio.h>
@@ -257,7 +257,7 @@ static void usage(char *progName, int verbose) {
     "\n"
     "Debug interface for standalone r-VEX processor\n"
     "\n"
-    "Copyright (C) 2008-2014 by TU Delft.\n"
+    "Copyright (C) 2008-2015 by TU Delft.\n"
     "All Rights Reserved.\n"
     "\n"
     "Run \"%s license\" for the full license.\n"
@@ -329,7 +329,7 @@ static void license(void) {
     "\n"
     "Debug interface for standalone r-VEX processor\n"
     "\n"
-    "Copyright (C) 2008-2014 by TU Delft.\n"
+    "Copyright (C) 2008-2015 by TU Delft.\n"
     "All Rights Reserved.\n"
     "\n"
     "THIS IS A LEGAL DOCUMENT, BY USING r-VEX,\n"
@@ -372,7 +372,7 @@ static void license(void) {
     "Roel Seedorf, Anthony Brandon, Jeroen van Straten. r-VEX is currently\n"
     "maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).\n"
     "\n"
-    "Copyright (C) 2008-2014 by TU Delft.\n"
+    "Copyright (C) 2008-2015 by TU Delft.\n"
     "\n"
   );
 }

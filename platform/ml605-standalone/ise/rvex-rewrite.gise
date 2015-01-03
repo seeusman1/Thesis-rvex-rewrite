@@ -29,6 +29,7 @@
     <file xil_pn:fileType="FILE_XMSGS" xil_pn:name="_xmsgs/par.xmsgs"/>
     <file xil_pn:fileType="FILE_XMSGS" xil_pn:name="_xmsgs/trce.xmsgs"/>
     <file xil_pn:fileType="FILE_XMSGS" xil_pn:name="_xmsgs/xst.xmsgs"/>
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="isim"/>
     <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_BITGEN_REPORT" xil_pn:name="ml605.bgn" xil_pn:subbranch="FPGAConfiguration"/>
     <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_BIT" xil_pn:name="ml605.bit" xil_pn:subbranch="FPGAConfiguration"/>
     <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGDBUILD_LOG" xil_pn:name="ml605.bld"/>
@@ -64,15 +65,31 @@
     <file xil_pn:fileType="FILE_XRPT" xil_pn:name="ml605_par.xrpt"/>
     <file xil_pn:fileType="FILE_HTML" xil_pn:name="ml605_summary.html"/>
     <file xil_pn:fileType="FILE_FITTER_REPORT" xil_pn:name="ml605_summary.xml"/>
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="ml605_tb_stx_beh.prj"/>
     <file xil_pn:fileType="FILE_WEBTALK" xil_pn:name="ml605_usage.xml"/>
     <file xil_pn:fileType="FILE_XRPT" xil_pn:name="ml605_xst.xrpt"/>
     <file xil_pn:fileType="FILE_LOG" xil_pn:name="webtalk.log"/>
     <file xil_pn:fileType="FILE_FITTER_REPORT" xil_pn:name="webtalk_pn.xml"/>
+    <file xil_pn:fileType="FILE_INI" xil_pn:name="xilinxsim.ini"/>
     <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="xlnx_auto_0_xdb"/>
     <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="xst"/>
   </files>
 
   <transforms xmlns="http://www.xilinx.com/XMLSchema">
+    <transform xil_pn:end_ts="1420296175" xil_pn:name="TRAN_copyInitialToAbstractSimulation" xil_pn:start_ts="1420296175">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420296192" xil_pn:in_ck="-2493667746549541633" xil_pn:name="TRAN_copyAbstractToPostAbstractSimulation" xil_pn:start_ts="1420296192">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
+      <status xil_pn:value="OutOfDateForOutputs"/>
+      <status xil_pn:value="InputAdded"/>
+      <status xil_pn:value="InputChanged"/>
+      <status xil_pn:value="InputRemoved"/>
+      <status xil_pn:value="OutputRemoved"/>
+    </transform>
     <transform xil_pn:end_ts="1419943890" xil_pn:name="TRAN_copyInitialToXSTAbstractSynthesis" xil_pn:start_ts="1419943890">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
@@ -105,19 +122,13 @@
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="WarningsGenerated"/>
       <status xil_pn:value="ReadyToRun"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
       <status xil_pn:value="OutOfDateForOutputs"/>
+      <status xil_pn:value="InputAdded"/>
+      <status xil_pn:value="InputChanged"/>
+      <status xil_pn:value="InputRemoved"/>
       <status xil_pn:value="OutputChanged"/>
-      <outfile xil_pn:name="_xmsgs/xst.xmsgs"/>
-      <outfile xil_pn:name="ml605.lso"/>
-      <outfile xil_pn:name="ml605.ngc"/>
-      <outfile xil_pn:name="ml605.ngr"/>
-      <outfile xil_pn:name="ml605.prj"/>
-      <outfile xil_pn:name="ml605.stx"/>
-      <outfile xil_pn:name="ml605.syr"/>
-      <outfile xil_pn:name="ml605.xst"/>
-      <outfile xil_pn:name="ml605_xst.xrpt"/>
-      <outfile xil_pn:name="webtalk_pn.xml"/>
-      <outfile xil_pn:name="xst"/>
+      <status xil_pn:value="OutputRemoved"/>
     </transform>
     <transform xil_pn:end_ts="1419944218" xil_pn:in_ck="-3633304478938259116" xil_pn:name="TRAN_compileBCD2" xil_pn:prop_ck="-4816501385836071956" xil_pn:start_ts="1419944218">
       <status xil_pn:value="SuccessfullyRun"/>
@@ -127,58 +138,49 @@
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="WarningsGenerated"/>
       <status xil_pn:value="ReadyToRun"/>
-      <outfile xil_pn:name="_ngo"/>
-      <outfile xil_pn:name="_xmsgs/ngdbuild.xmsgs"/>
-      <outfile xil_pn:name="ml605.bld"/>
-      <outfile xil_pn:name="ml605.ngd"/>
-      <outfile xil_pn:name="ml605_ngdbuild.xrpt"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
+      <status xil_pn:value="OutOfDateForPredecessor"/>
+      <status xil_pn:value="OutOfDateForOutputs"/>
+      <status xil_pn:value="InputRemoved"/>
+      <status xil_pn:value="OutputRemoved"/>
     </transform>
     <transform xil_pn:end_ts="1419944893" xil_pn:in_ck="-385281476617967409" xil_pn:name="TRANEXT_map_virtex6" xil_pn:prop_ck="6743617730861984955" xil_pn:start_ts="1419944386">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
-      <outfile xil_pn:name="_xmsgs/map.xmsgs"/>
-      <outfile xil_pn:name="ml605.pcf"/>
-      <outfile xil_pn:name="ml605_map.map"/>
-      <outfile xil_pn:name="ml605_map.mrp"/>
-      <outfile xil_pn:name="ml605_map.ncd"/>
-      <outfile xil_pn:name="ml605_map.ngm"/>
-      <outfile xil_pn:name="ml605_map.xrpt"/>
-      <outfile xil_pn:name="ml605_summary.xml"/>
-      <outfile xil_pn:name="ml605_usage.xml"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
+      <status xil_pn:value="OutOfDateForPredecessor"/>
+      <status xil_pn:value="OutOfDateForOutputs"/>
+      <status xil_pn:value="InputRemoved"/>
+      <status xil_pn:value="OutputRemoved"/>
     </transform>
     <transform xil_pn:end_ts="1419945759" xil_pn:in_ck="-5990068457850239128" xil_pn:name="TRANEXT_par_virtex5" xil_pn:prop_ck="9170268990519239812" xil_pn:start_ts="1419944893">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="WarningsGenerated"/>
       <status xil_pn:value="ReadyToRun"/>
-      <outfile xil_pn:name="_xmsgs/par.xmsgs"/>
-      <outfile xil_pn:name="ml605.ncd"/>
-      <outfile xil_pn:name="ml605.pad"/>
-      <outfile xil_pn:name="ml605.par"/>
-      <outfile xil_pn:name="ml605.ptwx"/>
-      <outfile xil_pn:name="ml605.unroutes"/>
-      <outfile xil_pn:name="ml605.xpi"/>
-      <outfile xil_pn:name="ml605_pad.csv"/>
-      <outfile xil_pn:name="ml605_pad.txt"/>
-      <outfile xil_pn:name="ml605_par.xrpt"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
+      <status xil_pn:value="OutOfDateForPredecessor"/>
+      <status xil_pn:value="OutOfDateForOutputs"/>
+      <status xil_pn:value="InputRemoved"/>
+      <status xil_pn:value="OutputRemoved"/>
     </transform>
     <transform xil_pn:end_ts="1419945954" xil_pn:in_ck="157973013629047" xil_pn:name="TRANEXT_bitFile_virtex6" xil_pn:prop_ck="8799862395714727328" xil_pn:start_ts="1419945759">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="WarningsGenerated"/>
       <status xil_pn:value="ReadyToRun"/>
-      <outfile xil_pn:name="_xmsgs/bitgen.xmsgs"/>
-      <outfile xil_pn:name="ml605.bgn"/>
-      <outfile xil_pn:name="ml605.bit"/>
-      <outfile xil_pn:name="ml605.drc"/>
-      <outfile xil_pn:name="ml605.ut"/>
-      <outfile xil_pn:name="webtalk.log"/>
-      <outfile xil_pn:name="webtalk_pn.xml"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
+      <status xil_pn:value="OutOfDateForPredecessor"/>
+      <status xil_pn:value="OutOfDateForOutputs"/>
+      <status xil_pn:value="InputRemoved"/>
+      <status xil_pn:value="OutputRemoved"/>
     </transform>
     <transform xil_pn:end_ts="1419945759" xil_pn:in_ck="-385281476617967541" xil_pn:name="TRAN_postRouteTrce" xil_pn:prop_ck="445577401284416183" xil_pn:start_ts="1419945273">
       <status xil_pn:value="SuccessfullyRun"/>
       <status xil_pn:value="ReadyToRun"/>
-      <outfile xil_pn:name="_xmsgs/trce.xmsgs"/>
-      <outfile xil_pn:name="ml605.twr"/>
-      <outfile xil_pn:name="ml605.twx"/>
+      <status xil_pn:value="OutOfDateForInputs"/>
+      <status xil_pn:value="OutOfDateForPredecessor"/>
+      <status xil_pn:value="OutOfDateForOutputs"/>
+      <status xil_pn:value="InputRemoved"/>
+      <status xil_pn:value="OutputRemoved"/>
     </transform>
   </transforms>
 
