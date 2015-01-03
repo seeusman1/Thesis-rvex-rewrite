@@ -44,17 +44,30 @@
 
 -- Copyright (C) 2008-2014 by TU Delft.
 
--- Refer to reconfICache_pkg.vhd for configuration constants and most
--- documentation.
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
-use rvex.cache_instr_pkg.all;
+use rvex.common_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
+--=============================================================================
+-- This entity infers the valid bit storage for an instruction cache block.
+-------------------------------------------------------------------------------
 entity cache_instr_blockValid is
+--=============================================================================
+  generic (
+    
+    -- Core configuration. Must be equal to the configuration presented to the
+    -- rvex core connected to the cache.
+    RCFG                        : rvex_generic_config_type := rvex_cfg;
+    
+    -- Cache configuration.
+    CCFG                        : cache_generic_config_type := cache_cfg
+    
+  );
   port (
     
     -- Clock input.
@@ -70,7 +83,7 @@ entity cache_instr_blockValid is
     enableBus                 : in  std_logic;
     
     -- CPU address/PC input.
-    cpuAddr                   : in  std_logic_vector(RIC_PC_WIDTH-1 downto 0);
+    cpuAddr                   : in  rvex_address_type;
     
     -- Valid output for the CPU, delayed by one cycle to synchronize with the
     -- tag memory. Governed by enableCPU.
@@ -81,7 +94,7 @@ entity cache_instr_blockValid is
     validate                  : in  std_logic;
     
     -- Invalidate address input. Governed by enableBus.
-    invalAddr                 : in  std_logic_vector(RIC_PC_WIDTH-1 downto 0);
+    invalAddr                 : in  rvex_address_type;
     
     -- Active high invalidate input. This synchronously resets the valid bit
     -- addressed by invalAddr. Governed by enableBus.
@@ -94,26 +107,30 @@ entity cache_instr_blockValid is
   );
 end cache_instr_blockValid;
 
+--=============================================================================
 architecture Behavioral of cache_instr_blockValid is
+--=============================================================================
   
   -- Valid bit memory.
-  signal ram_valid            : std_logic_vector(RIC_CACHE_DEPTH-1 downto 0);
+  signal ram_valid            : std_logic_vector(CCFG.instrCacheLinesLog2-1 downto 0);
+  
+  -- Load shorthand notations for the address vector metrics.
+  constant OFFSET_LSB         : natural := icacheOffsetLSB(RCFG, CCFG);
+  constant OFFSET_SIZE        : natural := icacheOffsetSize(RCFG, CCFG);
   
   -- CPU offset extracted from byte address/PC.
-  signal cpuOffset            : std_logic_vector(RIC_ADDR_OFFSET_SIZE-1 downto 0);
+  signal cpuOffset            : std_logic_vector(OFFSET_SIZE-1 downto 0);
   
   -- Invalidate offset extracted from byte address.
-  signal invalOffset          : std_logic_vector(RIC_ADDR_OFFSET_SIZE-1 downto 0);
+  signal invalOffset          : std_logic_vector(OFFSET_SIZE-1 downto 0);
   
-begin
+--=============================================================================
+begin -- architecture
+--=============================================================================
   
   -- Extract the offsets and tags from the CPU and invalidate addresses.
-  cpuOffset <= cpuAddr(
-    RIC_ADDR_OFFSET_LSB+RIC_ADDR_OFFSET_SIZE-1 downto RIC_ADDR_OFFSET_LSB
-  );
-  invalOffset <= invalAddr(
-    RIC_ADDR_OFFSET_LSB+RIC_ADDR_OFFSET_SIZE-1 downto RIC_ADDR_OFFSET_LSB
-  );
+  cpuOffset   <= cpuAddr  (OFFSET_LSB+OFFSET_SIZE-1 downto OFFSET_LSB);
+  invalOffset <= invalAddr(OFFSET_LSB+OFFSET_SIZE-1 downto OFFSET_LSB);
   
   -- Instantiate the valid memory. The memory is write-first, with the
   -- following order of precedence:

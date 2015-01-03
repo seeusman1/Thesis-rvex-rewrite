@@ -46,198 +46,227 @@
 
 library IEEE;
 use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+library rvex;
+use rvex.common_pkg.all;
+use rvex.utils_pkg.all;
+use rvex.core_pkg.all;
 
 --=============================================================================
--- Definitions
---=============================================================================
--- Atom: a maximal set of inseperable pipelanes. For the current design, with
---   4 cores of 2 pipelanes being the configuration with the greatest number
---   of independent cores, an atom would be 2 pipelanes.
-
+-- This package contains type definitions and constants for the rvex cache.
+-------------------------------------------------------------------------------
 package cache_pkg is
+--=============================================================================
   
-  --===========================================================================
-  -- Configuration constants
-  --===========================================================================
-  -- Size of the entire address space represented as log2(depthInBytes). This
-  -- is also the expected width of the PC.
-  constant RC_ADDR_SPACE_BLOG2  : natural := 32;
-  
-  -- Bus data size represented as log2(sizeInBytes).
-  constant RC_BUS_SIZE_BLOG2    : natural := 2;
-  
-  -- Number of cache lines in the data cache represented as
-  -- log2(numberOfLines). A data cache line has the same size as the bus width.
-  constant RC_DCACHE_LINES_LOG2 : natural := 6;
-  
-  -- Number of cache lines in the instruction cache represented as
-  -- log2(numberOfLines). An instruction cache line has the size of a full
-  -- rvex instruction.
-  constant RC_ICACHE_LINES_LOG2 : natural := 6;
-  
-  -- Number of "atoms". This is the number of sets of inseperable pipelanes.
-  -- Represented as log2(numberOfAtoms).
-  constant RC_NUM_ATOMS_LOG2    : natural := 2;
-  
-  -- Size of an instruction for *a single atom*, represented as
-  -- log2(sizeInBytes).
-  constant RC_INSTR_SIZE_BLOG2  : natural := 3;
-  
-  --===========================================================================
-  -- Configuration constant math
-  --===========================================================================
-  -- Data bus address width.
-  constant RC_BUS_ADDR_WIDTH    : natural := RC_ADDR_SPACE_BLOG2;
-  
-  -- Data bus data width.
-  constant RC_BUS_DATA_WIDTH    : natural := 8*(2**RC_BUS_SIZE_BLOG2);
-  
-  -- Data bus bytemask.
-  constant RC_BUS_MASK_WIDTH    : natural := 2**RC_BUS_SIZE_BLOG2;
-  
-  -- Number of atoms.
-  constant RC_NUM_ATOMS         : natural := 2**RC_NUM_ATOMS_LOG2;
-  
-  -- Instruction width for an atom.
-  constant RC_ATOM_INSTR_WIDTH  : natural := 8*(2**RC_INSTR_SIZE_BLOG2);
-  
-  --===========================================================================
-  -- External interface port record types
-  --===========================================================================
-  -- Signals from an atom to the cache.
-  type reconfCache_atomIn is record
+  -- Cache configuration record.
+  type cache_generic_config_type is record
     
-    -- This bit determines whether this atom is currently configured to be a
-    -- master (high) or a slave (low). When an atom is a slave, its memory
-    -- interface is ignored and replaced with that of the next higher indexed
-    -- atom with decouple driven high. The following rules should be followed
-    -- with respect to these decouple signals.
-    --  - The decouple bit for the highest indexed atom must be driven high.
-    --  - A decouple bit may not have transition while one or both of the
-    --    associated atoms are accessing the memory or in the middle of a
-    --    stall, beit from this cache or elsewhere.
-    decouple                    : std_logic;
+    -- log2 of the number of cache lines in the instruction cache. An
+    -- instruction cache line has the size of a full rvex instruction, so
+    -- that's the number of lanes in the core times 32 bits.
+    instrCacheLinesLog2         : natural;
     
-    -- Instruction memory interface. fetch is an active high read enable
-    -- signal.
-    PC                          : std_logic_vector(RC_BUS_ADDR_WIDTH-1 downto 0);
-    fetch                       : std_logic;
-    
-    -- Data memory interface. All control signals are active high. When the
-    -- bypass signal is high, the memory will be accessed directly (i.e. it
-    -- will always miss, and the cache will not update).
-    addr                        : std_logic_vector(RC_BUS_ADDR_WIDTH-1 downto 0);
-    readEnable                  : std_logic;
-    writeData                   : std_logic_vector(RC_BUS_DATA_WIDTH-1 downto 0);
-    writeMask                   : std_logic_vector(RC_BUS_MASK_WIDTH-1 downto 0);
-    writeEnable                 : std_logic;
-    bypass                      : std_logic;
-    
-    -- Stall input. Connect to the final, merged pipeline stall signal used by
-    -- the connected atom.
-    stall                       : std_logic;
+    -- log2 of the number of cache lines in the data cache. A data cache line
+    -- is fixed to 32 bits.
+    dataCacheLinesLog2          : natural;
     
   end record;
   
-  -- Signals from the cache to an atom.
-  type reconfCache_atomOut is record
-    
-    -- Instruction memory interface.
-    instr                       : std_logic_vector(RC_ATOM_INSTR_WIDTH-1 downto 0);
-    
-    -- Data memory interface.
-    readData                    : std_logic_vector(RC_BUS_DATA_WIDTH-1 downto 0);
-    
-    -- Stall output. When this is high, the processor pipeline should be
-    -- halted.
-    stall                       : std_logic;
-    
-  end record;
+  -- Default cache configuration.
+  constant CACHE_DEFAULT_CONFIG  : cache_generic_config_type := (
+    instrCacheLinesLog2         => 6,
+    dataCacheLinesLog2          => 6
+  );
   
-  -- Signals from a memory bus interface to the cache.
-  type reconfCache_memIn is record
-    
-    -- Read data from the bus, expected to be the data at the address
-    -- requested in the previous cycle when ready is high.
-    data                        : std_logic_vector(RC_BUS_DATA_WIDTH-1 downto 0);
-    
-    -- Ready flag, active high.
-    ready                       : std_logic;
-    
-  end record;
+  -- Generates a configuration for the rvex cache. None of the parameters are
+  -- required; just use named associations to set the parameters you want to
+  -- affect, the rest of the parameters will take their value from base, which
+  -- is itself set to the default configuration if not specified. By using this
+  -- method to generate configurations, code instantiating the rvex cache will
+  -- be forward compatible when new configuration options are added.
+  function cache_cfg(
+    base                        : cache_generic_config_type := CACHE_DEFAULT_CONFIG;
+    instrCacheLinesLog2         : integer := -1;
+    dataCacheLinesLog2          : integer := -1
+  ) return cache_generic_config_type;
   
-  -- Signals from the cache to a memory bus interface.
-  type reconfCache_memOut is record
-    
-    -- Requested byte address, aligned to bus size.
-    addr                        : std_logic_vector(RC_BUS_ADDR_WIDTH-1 downto 0);
-    
-    -- Bus read enable, active high.
-    readEnable                  : std_logic;
-    
-    -- Bus write data.
-    writeData                   : std_logic_vector(RC_BUS_DATA_WIDTH-1 downto 0);
-    
-    -- Active high bytemask for bus writes.
-    writeMask                   : std_logic_vector(RC_BUS_MASK_WIDTH-1 downto 0);
-    
-    -- Active high bus write enable signal.
-    writeEnable                 : std_logic;
-    
-    -- Active high burst enable signal. This is asserted when the next request
-    -- is going to be the same kind of operation on the next address.
-    burstEnable                 : std_logic;
-    
-  end record;
+  -- Returns the log2 of the number of bytes needed to represent the
+  -- instruction for a single lane group.
+  function laneGroupInstrSizeBLog2(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
   
-  -- Array types for the above four records.
-  type reconfCache_atomIn_array
-    is array (0 to RC_NUM_ATOMS-1)
-    of reconfCache_atomIn;
-  type reconfCache_atomOut_array
-    is array (0 to RC_NUM_ATOMS-1)
-    of reconfCache_atomOut;
-  type reconfCache_memIn_array
-    is array (0 to RC_NUM_ATOMS-1)
-    of reconfCache_memIn;
-  type reconfCache_memOut_array
-    is array (0 to RC_NUM_ATOMS-1)
-    of reconfCache_memOut;
+  -- Returns the instruction cache line width.
+  function icacheLineWidth(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
   
-  -- Cache invalidation system input.
-  type reconfCache_invalIn is record
-    
-    -- Active high address invalidation request.
-    invalEnable                 : std_logic;
-    
-    -- Address which is to be invalidated.
-    invalAddr                   : std_logic_vector(RC_BUS_ADDR_WIDTH-1 downto 0);
-    
-    -- Active high flush requests. These are not governed by the stall signal,
-    -- they always invalidate the entire cache within a clock cycle when
-    -- clkEnBus is high.
-    flushICache                 : std_logic;
-    flushDCache                 : std_logic;
-    
-  end record;
+  -- Returns the LSB of the line offset within the instruction cache for a
+  -- given address.
+  function icacheOffsetLSB(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
   
-  -- Cache invalidation system output.
-  type reconfCache_invalOut is record
-    
-    -- Active high stall signal, asserted when the invalidation logic is busy.
-    -- invalEnable should not be asserted when stall is high.
-    stall                       : std_logic;
-    
-    -- Invalidation error output. An invalidation error occurs when multiple
-    -- invalidation sources are requesting cache line invalidation at the same
-    -- time. This should never happen in a proper design because all these
-    -- sources should be connected to the same bus, but at least for simulation
-    -- this signal is useful.
-    error                       : std_logic;
-    
-  end record;
+  -- Returns the number of bits used to represent the line offset within the
+  -- instruction cache for a given address.
+  function icacheOffsetSize(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
+  
+  -- Returns the LSB of the instruction cache tag for a given address.
+  function icacheTagLSB(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
+  
+  -- Returns number of bits used to represent the instruction cache tag.
+  function icacheTagSize(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
+  
+  -- Returns the LSB of the line offset within the data cache for a given
+  -- address.
+  function dcacheOffsetLSB(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
+  
+  -- Returns the number of bits used to represent the line offset within the
+  -- data cache for a given address.
+  function dcacheOffsetSize(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
+  
+  -- Returns the LSB of the data cache tag for a given address.
+  function dcacheTagLSB(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
+  
+  -- Returns number of bits used to represent the data cache tag.
+  function dcacheTagSize(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural;
   
 end cache_pkg;
 
 package body cache_pkg is
+
+  -- Generates a configuration for the cache.
+  function cache_cfg(
+    base                        : cache_generic_config_type := CACHE_DEFAULT_CONFIG;
+    instrCacheLinesLog2         : integer := -1;
+    dataCacheLinesLog2          : integer := -1
+  ) return cache_generic_config_type is
+    variable cfg  : cache_generic_config_type;
+  begin
+    cfg := base;
+    if instrCacheLinesLog2  >= 0 then cfg.instrCacheLinesLog2 := instrCacheLinesLog2; end if;
+    if dataCacheLinesLog2   >= 0 then cfg.dataCacheLinesLog2  := dataCacheLinesLog2;  end if;
+    return cfg;
+  end cache_cfg;
+  
+  -- Returns the log2 of the number of bytes needed to represent the
+  -- instruction for a single lane group.
+  function laneGroupInstrSizeBLog2(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return RCFG.numLanesLog2 - RCFG.numLaneGroupsLog2 + 2;
+  end laneGroupInstrSizeBLog2;
+  
+  -- Returns the instruction cache line width.
+  function icacheLineWidth(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return rvex_syllable_type'length * 2**RCFG.numLanesLog2;
+  end icacheLineWidth;
+  
+  -- Returns the LSB of the line offset within the instruction cache for a
+  -- given address.
+  function icacheOffsetLSB(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return RCFG.numLanesLog2 + 2;
+  end icacheOffsetLSB;
+  
+  -- Returns the number of bits used to represent the line offset within the
+  -- instruction cache for a given address.
+  function icacheOffsetSize(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return CCFG.instrCacheLinesLog2;
+  end icacheOffsetSize;
+  
+  -- Returns the LSB of the instruction cache tag for a given address.
+  function icacheTagLSB(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return icacheOffsetLSB(RCFG, CCFG) + icacheOffsetSize(RCFG, CCFG);
+  end icacheTagLSB;
+  
+  -- Returns number of bits used to represent the instruction cache tag.
+  function icacheTagSize(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return rvex_address_type'length - icacheTagLSB(RCFG, CCFG);
+  end icacheTagSize;
+  
+  -- Returns the LSB of the line offset within the data cache for a given
+  -- address.
+  function dcacheOffsetLSB(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return 2;
+  end dcacheOffsetLSB;
+  
+  -- Returns the number of bits used to represent the line offset within the
+  -- data cache for a given address.
+  function dcacheOffsetSize(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return CCFG.dataCacheLinesLog2;
+  end dcacheOffsetSize;
+  
+  -- Returns the LSB of the data cache tag for a given address.
+  function dcacheTagLSB(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return dcacheOffsetLSB(RCFG, CCFG) + dcacheOffsetSize(RCFG, CCFG);
+  end dcacheTagLSB;
+  
+  -- Returns number of bits used to represent the data cache tag.
+  function dcacheTagSize(
+    RCFG                        : rvex_generic_config_type;
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return rvex_address_type'length - dcacheTagLSB(RCFG, CCFG);
+  end dcacheTagSize;
+  
 end cache_pkg;

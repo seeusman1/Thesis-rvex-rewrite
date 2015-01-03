@@ -44,111 +44,135 @@
 
 -- Copyright (C) 2008-2014 by TU Delft.
 
--- Refer to reconfICache_pkg.vhd for configuration constants and most
--- documentation.
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
-use rvex.cache_data_pkg.all;
+use rvex.common_pkg.all;
+use rvex.bus_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
+--=============================================================================
+-- This entity contains the state machine which handles cache misses,
+-- write-through accesses and bypass accesses for a data cache block.
+-------------------------------------------------------------------------------
 entity cache_data_mainCtrl is
+--=============================================================================
+  generic (
+    
+    -- Core configuration. Must be equal to the configuration presented to the
+    -- rvex core connected to the cache.
+    RCFG                        : rvex_generic_config_type := rvex_cfg;
+    
+    -- Cache configuration.
+    CCFG                        : cache_generic_config_type := cache_cfg
+    
+  );
   port (
     
+    ---------------------------------------------------------------------------
+    -- System control
+    ---------------------------------------------------------------------------
     -- Clock input.
-    clk                       : in  std_logic;
+    clk                         : in  std_logic;
     
     -- Active high reset input.
-    reset                     : in  std_logic;
+    reset                       : in  std_logic;
     
     -- Active high clock enable input for the CPU domain.
-    clkEnCPU                  : in  std_logic;
+    clkEnCPU                    : in  std_logic;
     
     -- Active high clock enable input for the bus domain.
-    clkEnBus                  : in  std_logic;
+    clkEnBus                    : in  std_logic;
     
-    --=========================================================================
+    ---------------------------------------------------------------------------
     -- CPU interface signals
-    --=========================================================================
+    ---------------------------------------------------------------------------
     -- CPU address input, delayed by one cycle to sync up with hit.
-    addr                      : in  std_logic_vector(RDC_BUS_ADDR_WIDTH-1 downto 0);
+    addr                        : in  rvex_address_type;
     
     -- CPU read enable signal, delayed by one cycle to sync up with hit.
-    readEnable                : in  std_logic;
+    readEnable                  : in  std_logic;
     
     -- CPU read data output. Valid when clkEnCPU is high and stall is low.
-    readData                  : out std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
+    readData                    : out rvex_data_type;
     
     -- CPU write enable signal, delayed by one cycle to sync up with hit.
-    writeEnable               : in  std_logic;
+    writeEnable                 : in  std_logic;
     
     -- CPU write data, delayed by one cycle to sync up with hit.
-    writeData                 : in  std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
+    writeData                   : in  rvex_data_type;
     
     -- CPU write data byte mask, delayed by one cycle to sync up with hit.
-    writeMask                 : in  std_logic_vector(RDC_BUS_MASK_WIDTH-1 downto 0);
+    writeMask                   : in  rvex_mask_type;
     
     -- CPU bypass signal, delayed by one cycle to sync up with hit.
-    bypass                    : in  std_logic;
+    bypass                      : in  std_logic;
     
     -- Stall input from the CPU.
-    stall                     : in  std_logic;
+    stall                       : in  std_logic;
+    
+    -- Reconfiguration blocking signal. When high, reconfiguration is not
+    -- allowed because the cache block is busy.
+    blockReconfig               : out std_logic;
     
     -- Stall output signal for write or bypass signals. Read miss stalls are
     -- computed in the mux/demux network.
-    writeOrBypassStall        : out std_logic;
+    writeOrBypassStall          : out std_logic;
     
-    --=========================================================================
+    ---------------------------------------------------------------------------
     -- Mux control signals
-    --=========================================================================
+    ---------------------------------------------------------------------------
     -- Update enable signal from the mux/demux logic signalling that the cache
     -- line which contains cpuAddr should be refreshed. While an update is in
     -- progress, cpuAddr is assumed to be stable. Governed by the clkEnCPU
     -- clock gate signal.
-    updateEnable              : in  std_logic;
+    updateEnable                : in  std_logic;
     
     -- Control signal from the mux/demux logic, indicating that this block
     -- should be the one to handle the write request. Synchronized with the
     -- hit signal like everything else.
-    handleWrite               : in  std_logic;
+    handleWrite                 : in  std_logic;
     
     -- Write selection priority. This is used to determine which of the cache
     -- blocks should handle writes by the mux/demux network.
-    writePrio                 : out std_logic_vector(1 downto 0);
+    writePrio                   : out std_logic_vector(1 downto 0);
     
-    --=========================================================================
+    ---------------------------------------------------------------------------
     -- Cache memory interface signals
-    --=========================================================================
+    ---------------------------------------------------------------------------
     -- Whether the cache memory is valid for the word requested by the CPU.
-    hit                       : in  std_logic;
+    hit                         : in  std_logic;
     
     -- Data read from the cache memory.
-    cacheReadData             : in  std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
+    cacheReadData               : in  rvex_data_type;
     
     -- Signals that the updateData should be written to the addressed line
     -- in the cache data memory in accordance with updateMask, that the tag
     -- must be updated and that the valid bit must be set.
-    update                    : out std_logic;
+    update                      : out std_logic;
     
     -- Write data for the cache data memory.
-    updateData                : out std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
+    updateData                  : out rvex_data_type;
     
     -- Write data for the cache data memory.
-    updateMask                : out std_logic_vector(RDC_BUS_MASK_WIDTH-1 downto 0);
+    updateMask                  : out rvex_mask_type;
     
-    --=========================================================================
+    ---------------------------------------------------------------------------
     -- Main memory interface signals
-    --=========================================================================
+    ---------------------------------------------------------------------------
     -- Connections to the memory bus. Governed by clkEnBus.
-    memToCache                : in  reconfDCache_memIn;
-    cacheToMem                : out reconfDCache_memOut
+    cacheToBus                  : out bus_mst2slv_type;
+    busToCache                  : in  bus_slv2mst_type
     
   );
 end cache_data_mainCtrl;
 
+--=============================================================================
 architecture Behavioral of cache_data_mainCtrl is
+--=============================================================================
   
   -- Control unit state machine state type.
   type controllerState_type is (
@@ -157,31 +181,33 @@ architecture Behavioral of cache_data_mainCtrl is
   );
   
   -- Current and next state machine state.
-  signal state                : controllerState_type;
-  signal nextState            : controllerState_type;
+  signal state                  : controllerState_type;
+  signal nextState              : controllerState_type;
   
   -- Write buffer signals.
-  signal writeBufEna          : std_logic;
-  signal writeBufAddr         : std_logic_vector(RDC_BUS_ADDR_WIDTH-1 downto 0);
-  signal writeBufData         : std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
-  signal writeBufMask         : std_logic_vector(RDC_BUS_MASK_WIDTH-1 downto 0);
+  signal writeBufEna            : std_logic;
+  signal writeBufAddr           : rvex_address_type;
+  signal writeBufData           : rvex_data_type;
+  signal writeBufMask           : rvex_mask_type;
   
   -- Read data synchronization register signals.
-  signal memSyncRegEna        : std_logic;
-  signal memSyncRegData       : std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
+  signal memSyncRegEna          : std_logic;
+  signal memSyncRegData         : rvex_data_type;
   
   -- Write accepted register. This is set when a write is started and reset
   -- only when the CPU moves on to the next command.
-  signal acceptWrite          : std_logic;
-  signal writeAccepted        : std_logic;
+  signal acceptWrite            : std_logic;
+  signal writeAccepted          : std_logic;
   
   -- When a write is buffered and executed in the cache, we want the CPU to
   -- resume in the cycle thereafter. To accomplish that one cycle delay, we
   -- have this register.
-  signal resumeAfterWrite     : std_logic;
-  signal resumeAfterWrite_next: std_logic;
+  signal resumeAfterWrite       : std_logic;
+  signal resumeAfterWrite_next  : std_logic;
   
-begin
+--=============================================================================
+begin -- architecture
+--=============================================================================
   
   -- Instantiate registers.
   seq_proc: process (clk) is
@@ -206,7 +232,7 @@ begin
       -- domain to the clkEnCPU domain. When the bus returns read data, this
       -- stores the data in case clkEnCPU was not active in that cycle.
       if memSyncRegEna = '1' then
-        memSyncRegData <= memToCache.data;
+        memSyncRegData <= busToCache.readData;
       end if;
       
       -- Instantiate write accepted register.
@@ -245,7 +271,7 @@ begin
     hit, cacheReadData,
     
     -- Inputs from main memory bus.
-    memToCache,
+    busToCache,
     
     -- Inputs from write buffer registers.
     writeBufAddr, writeBufData, writeBufMask,
@@ -265,7 +291,7 @@ begin
     
     -- Determine if the write mask masks out any bytes.
     writeMaskFull := true;
-    for i in 0 to RDC_BUS_MASK_WIDTH-1 loop
+    for i in 0 to 3 loop
       if writeMask(i) = '0' then
         writeMaskFull := false;
       end if;
@@ -273,11 +299,10 @@ begin
     
     -- Load default values.
     nextState <= state;
-    cacheToMem.addr <= addr;
-    cacheToMem.readEnable <= '0';
-    cacheToMem.writeEnable <= '0';
-    cacheToMem.writeData <= writeData;
-    cacheToMem.writeMask <= writeMask;
+    cacheToBus <= BUS_MST2SLV_IDLE;
+    cacheToBus.address <= addr;
+    cacheToBus.writeData <= writeData;
+    cacheToBus.writeMask <= writeMask;
     update <= '0';
     updateData <= writeData;
     updateMask <= writeMask;
@@ -292,6 +317,7 @@ begin
     writePrio <= "11";
     acceptWrite <= '0';
     resumeAfterWrite_next <= '0';
+    blockReconfig <= '1';
     
     -- Handle state machine states.
     case state is
@@ -299,18 +325,18 @@ begin
         
         if (readEnable = '1' or writeEnable = '1') and bypass = '1' then
           
-          cacheToMem.writeData <= writeData;
-          cacheToMem.writeMask <= writeMask;
+          cacheToBus.writeData <= writeData;
+          cacheToBus.writeMask <= writeMask;
           if clkEnCPU = '1' then
-            cacheToMem.readEnable <= readEnable;
-            cacheToMem.writeEnable <= writeEnable;
+            cacheToBus.readEnable <= readEnable;
+            cacheToBus.writeEnable <= writeEnable;
             nextState <= STATE_BYPASS;
           end if;
           
         elsif updateEnable = '1' and clkEnCPU = '1' then
           
           -- Initiate read from the memory to the cache.
-          cacheToMem.readEnable <= '1';
+          cacheToBus.readEnable <= '1';
           nextState <= STATE_UPDATE_1;
           
         elsif writeEnable = '1' and handleWrite = '1' then
@@ -326,7 +352,7 @@ begin
             -- after the update, hit will be high and the write will be
             -- executed.
             if clkEnCPU = '1' then
-              cacheToMem.readEnable <= '1';
+              cacheToBus.readEnable <= '1';
               nextState <= STATE_UPDATE_1;
             end if;
             
@@ -345,13 +371,18 @@ begin
             
             -- Initiate write to the memory.
             if clkEnCPU = '1' then
-              cacheToMem.writeEnable <= '1';
-              cacheToMem.writeData <= writeData;
-              cacheToMem.writeMask <= writeMask;
+              cacheToBus.writeEnable <= '1';
+              cacheToBus.writeData <= writeData;
+              cacheToBus.writeMask <= writeMask;
               nextState <= STATE_WRITE;
             end if;
             
           end if;
+        else
+          
+          -- Idle.
+          blockReconfig <= '0';
+          
         end if;
         
         -- Compute the proper write priority.
@@ -363,7 +394,7 @@ begin
       
       when STATE_WRITE =>
         
-        if clkEnBus = '1' and memToCache.ready = '1' then
+        if clkEnBus = '1' and busToCache.ack = '1' then
           
           -- Memory write completed. Wait for the CPU to finish processing the
           -- write instruction (there might be other stall signals preventing
@@ -377,10 +408,10 @@ begin
         else
           
           -- Keep requesting the write, using the write buffer data.
-          cacheToMem.addr <= writeBufAddr;
-          cacheToMem.writeEnable <= '1';
-          cacheToMem.writeData <= writeBufData;
-          cacheToMem.writeMask <= writeBufMask;
+          cacheToBus.address <= writeBufAddr;
+          cacheToBus.writeEnable <= '1';
+          cacheToBus.writeData <= writeBufData;
+          cacheToBus.writeMask <= writeBufMask;
           
         end if;
         
@@ -394,10 +425,10 @@ begin
       when STATE_UPDATE_1 =>
         
         -- Prepare the update command and synchronization register data inputs.
-        updateData <= memToCache.data;
+        updateData <= busToCache.readData;
         updateMask <= (others => '1');
         
-        if clkEnBus = '1' and memToCache.ready = '1' then
+        if clkEnBus = '1' and busToCache.ack = '1' then
           
           -- Update the cache line. Note that this only works if clkEnCPU is
           -- high and that the data from the bus might not stay valid that
@@ -414,7 +445,7 @@ begin
         else
           
           -- Keep requesting the read.
-          cacheToMem.readEnable <= '1';
+          cacheToBus.readEnable <= '1';
           
         end if;
       
@@ -431,9 +462,9 @@ begin
       when STATE_BYPASS =>
         
         -- Prepare the synchronization register data input.
-        readData <= memToCache.data;
+        readData <= busToCache.readData;
         
-        if clkEnBus = '1' and memToCache.ready = '1' then
+        if clkEnBus = '1' and busToCache.ack = '1' then
           
           -- Return the data read from the memory (if this was a read). Note
           -- that this only works if clkEnCPU is high and that the data from
@@ -451,10 +482,10 @@ begin
         else
           
           -- Keep requesting.
-          cacheToMem.readEnable <= readEnable;
-          cacheToMem.writeData <= writeData;
-          cacheToMem.writeMask <= writeMask;
-          cacheToMem.writeEnable <= writeEnable;
+          cacheToBus.readEnable <= readEnable;
+          cacheToBus.writeData <= writeData;
+          cacheToBus.writeMask <= writeMask;
+          cacheToBus.writeEnable <= writeEnable;
           
         end if;
       

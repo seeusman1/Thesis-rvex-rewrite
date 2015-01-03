@@ -44,76 +44,93 @@
 
 -- Copyright (C) 2008-2014 by TU Delft.
 
--- Refer to reconfDCache_pkg.vhd for configuration constants and most
--- documentation.
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
-use rvex.cache_data_pkg.all;
+use rvex.common_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
+--=============================================================================
+-- This entity infers the valid bit storage for a data cache block.
+-------------------------------------------------------------------------------
 entity cache_data_blockValid is
+--=============================================================================
+  generic (
+    
+    -- Core configuration. Must be equal to the configuration presented to the
+    -- rvex core connected to the cache.
+    RCFG                        : rvex_generic_config_type := rvex_cfg;
+    
+    -- Cache configuration.
+    CCFG                        : cache_generic_config_type := cache_cfg
+    
+  );
   port (
     
     -- Clock input.
-    clk                       : in  std_logic;
+    clk                         : in  std_logic;
     
     -- Active high reset input.
-    reset                     : in  std_logic;
+    reset                       : in  std_logic;
     
     -- Active high enable input for the CPU domain.
-    enableCPU                 : in  std_logic;
+    enableCPU                   : in  std_logic;
     
     -- Active high enable input for the bus domain.
-    enableBus                 : in  std_logic;
+    enableBus                   : in  std_logic;
     
     -- CPU address input.
-    cpuAddr                   : in  std_logic_vector(RDC_BUS_ADDR_WIDTH-1 downto 0);
+    cpuAddr                     : in  rvex_address_type;
     
     -- Valid output for the CPU, delayed by one cycle to synchronize with the
     -- tag memory. Governed by enableCPU.
-    cpuValid                  : out std_logic;
+    cpuValid                    : out std_logic;
     
     -- Active high validate input. This synchronously sets the valid bit
     -- addressed by the CPU. Governed by enableCPU.
-    validate                  : in  std_logic;
+    validate                    : in  std_logic;
     
     -- Invalidate address input. Governed by enableBus.
-    invalAddr                 : in  std_logic_vector(RDC_BUS_ADDR_WIDTH-1 downto 0);
+    invalAddr                   : in  rvex_address_type;
     
     -- Active high invalidate input. This synchronously resets the valid bit
     -- addressed by invalAddr. Governed by enableBus.
-    invalidate                : in  std_logic;
+    invalidate                  : in  std_logic;
     
     -- Active high flush input. This synchronously resets all valid bits.
     -- Governed by enableBus.
-    flush                     : in  std_logic
+    flush                       : in  std_logic
     
   );
 end cache_data_blockValid;
 
+--=============================================================================
 architecture Behavioral of cache_data_blockValid is
+--=============================================================================
   
   -- Valid bit memory.
-  signal ram_valid            : std_logic_vector(RDC_CACHE_DEPTH-1 downto 0);
+  signal ram_valid            : std_logic_vector(CCFG.dataCacheLinesLog2-1 downto 0);
+  
+  -- Load shorthand notations for the address vector metrics.
+  constant OFFSET_LSB         : natural := dcacheOffsetLSB(RCFG, CCFG);
+  constant OFFSET_SIZE        : natural := dcacheOffsetSize(RCFG, CCFG);
   
   -- CPU offset extracted from byte address/PC.
-  signal cpuOffset            : std_logic_vector(RDC_ADDR_OFFSET_SIZE-1 downto 0);
+  signal cpuOffset            : std_logic_vector(OFFSET_SIZE-1 downto 0);
   
   -- Invalidate offset extracted from byte address.
-  signal invalOffset          : std_logic_vector(RDC_ADDR_OFFSET_SIZE-1 downto 0);
+  signal invalOffset          : std_logic_vector(OFFSET_SIZE-1 downto 0);
   
-begin
+--=============================================================================
+begin -- architecture
+--=============================================================================
   
   -- Extract the offsets and tags from the CPU and invalidate addresses.
-  cpuOffset <= cpuAddr(
-    RDC_ADDR_OFFSET_LSB+RDC_ADDR_OFFSET_SIZE-1 downto RDC_ADDR_OFFSET_LSB
-  );
-  invalOffset <= invalAddr(
-    RDC_ADDR_OFFSET_LSB+RDC_ADDR_OFFSET_SIZE-1 downto RDC_ADDR_OFFSET_LSB
-  );
+  cpuOffset   <= cpuAddr  (OFFSET_LSB+OFFSET_SIZE-1 downto OFFSET_LSB);
+  invalOffset <= invalAddr(OFFSET_LSB+OFFSET_SIZE-1 downto OFFSET_LSB);
   
   -- Instantiate the valid memory. The memory is write-first, with the
   -- following order of precedence:

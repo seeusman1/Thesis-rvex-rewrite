@@ -44,53 +44,67 @@
 
 -- Copyright (C) 2008-2014 by TU Delft.
 
--- Refer to reconfICache_pkg.vhd for configuration constants and most
--- documentation.
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
-use rvex.cache_data_pkg.all;
+use rvex.common_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
+--=============================================================================
+-- This entity infers the block RAMs which store the cache lines for a data
+-- cache block.
+-------------------------------------------------------------------------------
 entity cache_data_blockData is
+--=============================================================================
+  generic (
+    
+    -- Core configuration. Must be equal to the configuration presented to the
+    -- rvex core connected to the cache.
+    RCFG                        : rvex_generic_config_type := rvex_cfg;
+    
+    -- Cache configuration.
+    CCFG                        : cache_generic_config_type := cache_cfg
+    
+  );
   port (
     
     -- Clock input.
-    clk                       : in  std_logic;
+    clk                         : in  std_logic;
     
     -- Active high enable input.
-    enable                    : in  std_logic;
+    enable                      : in  std_logic;
     
     -- CPU address input.
-    cpuAddr                   : in  std_logic_vector(RDC_BUS_ADDR_WIDTH-1 downto 0);
+    cpuAddr                     : in  rvex_address_type;
     
     -- Read data output.
-    readData                  : out std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
+    readData                    : out rvex_data_type;
     
     -- Active high write enable input.
-    writeEnable               : in  std_logic;
+    writeEnable                 : in  std_logic;
     
     -- Write data input.
-    writeData                 : in  std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
+    writeData                   : in  rvex_data_type;
     
     -- Write byte mask input.
-    writeMask                 : in  std_logic_vector(RDC_BUS_MASK_WIDTH-1 downto 0)
+    writeMask                   : in  rvex_mask_type
     
   );
 end cache_data_blockData;
 
+--=============================================================================
 architecture Behavioral of cache_data_blockData is
+--=============================================================================
   
   -- Declare XST RAM extraction hints.
   attribute ram_extract       : string;
   attribute ram_style         : string;
   
   -- Cache data memory.
-  type ram_data_type
-    is array(0 to RDC_CACHE_DEPTH-1)
-    of std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
+  subtype ram_data_type is rvex_data_array(0 to CCFG.dataCacheLinesLog2-1);
   signal ram_data             : ram_data_type := (others => (others => 'X'));
   
   -- Hints for XST to implement the data memory in block RAMs.
@@ -98,22 +112,25 @@ architecture Behavioral of cache_data_blockData is
   attribute ram_style   of ram_data : signal is "block";
   
   -- CPU address/PC signals.
-  signal cpuOffset            : std_logic_vector(RDC_ADDR_OFFSET_SIZE-1 downto 0);
+  signal cpuOffset            : std_logic_vector(dcacheOffsetSize(RCFG, CCFG)-1 downto 0);
   
   -- Individual write enable signals for each byte.
-  signal byteWriteEnable      : std_logic_vector(RDC_BUS_MASK_WIDTH-1 downto 0);
+  signal byteWriteEnable      : rvex_mask_type;
   
-begin
+--=============================================================================
+begin -- architecture
+--=============================================================================
   
   -- Extract the offset from the CPU address.
   cpuOffset <= cpuAddr(
-    RDC_ADDR_OFFSET_LSB+RDC_ADDR_OFFSET_SIZE-1 downto RDC_ADDR_OFFSET_LSB
+    dcacheOffsetLSB(RCFG, CCFG) + dcacheOffsetSize(RCFG, CCFG) - 1
+    downto dcacheOffsetLSB(RCFG, CCFG)
   );
   
   -- Construct the byte write enable signal.
   byte_we_proc: process (writeEnable, writeMask) is
   begin
-    for i in 0 to RDC_BUS_MASK_WIDTH-1 loop
+    for i in 0 to 3 loop
       byteWriteEnable(i) <= writeEnable and writeMask(i);
     end loop;
   end process;
@@ -123,7 +140,7 @@ begin
   begin
     if rising_edge(clk) then
       if enable = '1' then
-        for i in 0 to RDC_BUS_MASK_WIDTH-1 loop
+        for i in 0 to 3 loop
           if byteWriteEnable(i) = '1' then
             ram_data(to_integer(unsigned(cpuOffset)))(8*i+7 downto 8*i) <=
               writeData(8*i+7 downto 8*i);

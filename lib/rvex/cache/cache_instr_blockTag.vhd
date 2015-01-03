@@ -44,91 +44,108 @@
 
 -- Copyright (C) 2008-2014 by TU Delft.
 
--- Refer to reconfICache_pkg.vhd for configuration constants and most
--- documentation.
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
-use rvex.cache_instr_pkg.all;
+use rvex.common_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
+--=============================================================================
+-- This entity infers the block RAMs which store the cache tags for an
+-- instruction cache block and checks whether the tag matches the incoming
+-- address.
+-------------------------------------------------------------------------------
 entity cache_instr_blockTag is
+--=============================================================================
+  generic (
+    
+    -- Core configuration. Must be equal to the configuration presented to the
+    -- rvex core connected to the cache.
+    RCFG                        : rvex_generic_config_type := rvex_cfg;
+    
+    -- Cache configuration.
+    CCFG                        : cache_generic_config_type := cache_cfg
+    
+  );
   port (
     
     -- Clock input.
-    clk                       : in  std_logic;
+    clk                         : in  std_logic;
     
     -- Active high enable input for CPU signals.
-    enableCPU                 : in  std_logic;
+    enableCPU                   : in  std_logic;
     
     -- Active high enable input for bus signals.
-    enableBus                 : in  std_logic;
+    enableBus                   : in  std_logic;
     
     -- CPU address/PC input.
-    cpuAddr                   : in  std_logic_vector(RIC_PC_WIDTH-1 downto 0);
+    cpuAddr                     : in  rvex_address_type;
     
     -- Hit output for the CPU, delayed by one cycle with enable high due to
     -- the memory.
-    cpuHit                    : out std_logic;
+    cpuHit                      : out std_logic;
     
     -- Write enable signal to write the CPU tag to the memory.
-    writeCpuTag               : in  std_logic;
+    writeCpuTag                 : in  std_logic;
     
     -- Invalidate address input.
-    invalAddr                 : in  std_logic_vector(RIC_PC_WIDTH-1 downto 0);
+    invalAddr                   : in  rvex_address_type;
     
     -- Hit output for the invalidation logic, delayed by one cycle with
     -- enable high due to the memory.
-    invalHit                  : out std_logic
+    invalHit                    : out std_logic
     
   );
 end cache_instr_blockTag;
 
+--=============================================================================
 architecture Behavioral of cache_instr_blockTag is
+--=============================================================================
   
   -- Declare XST RAM extraction hints.
-  attribute ram_extract       : string;
-  attribute ram_style         : string;
+  attribute ram_extract         : string;
+  attribute ram_style           : string;
+  
+  -- Load shorthand notations for the address vector metrics.
+  constant OFFSET_LSB           : natural := icacheOffsetLSB(RCFG, CCFG);
+  constant OFFSET_SIZE          : natural := icacheOffsetSize(RCFG, CCFG);
+  constant TAG_LSB              : natural := icacheTagLSB(RCFG, CCFG);
+  constant TAG_SIZE             : natural := icacheTagSize(RCFG, CCFG);
   
   -- Cache tag memory.
   type ram_tag_type
-    is array(0 to RIC_CACHE_DEPTH-1)
-    of std_logic_vector(RIC_ADDR_TAG_SIZE-1 downto 0);
-  signal ram_tag              : ram_tag_type := (others => (others => 'X'));
+    is array(0 to 2**CCFG.instrCacheLinesLog2-1)
+    of std_logic_vector(TAG_SIZE-1 downto 0);
+  signal ram_tag                : ram_tag_type := (others => (others => 'X'));
   
   -- Hints for XST to implement the tag memory in block RAMs.
   attribute ram_extract of ram_tag  : signal is "yes";
   attribute ram_style   of ram_tag  : signal is "block";
   
   -- CPU address/PC signals.
-  signal cpuOffset            : std_logic_vector(RIC_ADDR_OFFSET_SIZE-1 downto 0);
-  signal cpuTag               : std_logic_vector(RIC_ADDR_TAG_SIZE-1 downto 0);
-  signal cpuTag_r             : std_logic_vector(RIC_ADDR_TAG_SIZE-1 downto 0);
-  signal cpuTag_mem           : std_logic_vector(RIC_ADDR_TAG_SIZE-1 downto 0);
+  signal cpuOffset              : std_logic_vector(OFFSET_SIZE-1 downto 0);
+  signal cpuTag                 : std_logic_vector(TAG_SIZE-1 downto 0);
+  signal cpuTag_r               : std_logic_vector(TAG_SIZE-1 downto 0);
+  signal cpuTag_mem             : std_logic_vector(TAG_SIZE-1 downto 0);
   
   -- Invalidate address/PC signals.
-  signal invalOffset          : std_logic_vector(RIC_ADDR_OFFSET_SIZE-1 downto 0);
-  signal invalTag             : std_logic_vector(RIC_ADDR_TAG_SIZE-1 downto 0);
-  signal invalTag_r           : std_logic_vector(RIC_ADDR_TAG_SIZE-1 downto 0);
-  signal invalTag_mem         : std_logic_vector(RIC_ADDR_TAG_SIZE-1 downto 0);
+  signal invalOffset            : std_logic_vector(OFFSET_SIZE-1 downto 0);
+  signal invalTag               : std_logic_vector(TAG_SIZE-1 downto 0);
+  signal invalTag_r             : std_logic_vector(TAG_SIZE-1 downto 0);
+  signal invalTag_mem           : std_logic_vector(TAG_SIZE-1 downto 0);
   
-begin
+--=============================================================================
+begin -- architecture
+--=============================================================================
   
   -- Extract the offsets and tags from the CPU and invalidate addresses.
-  cpuOffset <= cpuAddr(
-    RIC_ADDR_OFFSET_LSB+RIC_ADDR_OFFSET_SIZE-1 downto RIC_ADDR_OFFSET_LSB
-  );
-  cpuTag <= cpuAddr(
-    RIC_ADDR_TAG_LSB+RIC_ADDR_TAG_SIZE-1 downto RIC_ADDR_TAG_LSB
-  );
-  invalOffset <= invalAddr(
-    RIC_ADDR_OFFSET_LSB+RIC_ADDR_OFFSET_SIZE-1 downto RIC_ADDR_OFFSET_LSB
-  );
-  invalTag <= invalAddr(
-    RIC_ADDR_TAG_LSB+RIC_ADDR_TAG_SIZE-1 downto RIC_ADDR_TAG_LSB
-  );
+  cpuOffset   <= cpuAddr  (OFFSET_LSB + OFFSET_SIZE-1 downto OFFSET_LSB);
+  cpuTag      <= cpuAddr  (TAG_LSB    + TAG_SIZE-1    downto TAG_LSB);
+  invalOffset <= invalAddr(OFFSET_LSB + OFFSET_SIZE-1 downto OFFSET_LSB);
+  invalTag    <= invalAddr(TAG_LSB    + TAG_SIZE-1    downto TAG_LSB);
   
   -- Register the CPU and invalidate tags for the tag comparator, to account
   -- for the delay in memory access.

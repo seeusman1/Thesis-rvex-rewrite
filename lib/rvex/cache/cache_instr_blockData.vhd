@@ -44,17 +44,31 @@
 
 -- Copyright (C) 2008-2014 by TU Delft.
 
--- Refer to reconfICache_pkg.vhd for configuration constants and most
--- documentation.
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
-use rvex.cache_instr_pkg.all;
+use rvex.common_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
+--=============================================================================
+-- This entity infers the block RAMs which store the cache lines for an
+-- instruction cache block.
+-------------------------------------------------------------------------------
 entity cache_instr_blockData is
+--=============================================================================
+  generic (
+    
+    -- Core configuration. Must be equal to the configuration presented to the
+    -- rvex core connected to the cache.
+    RCFG                        : rvex_generic_config_type := rvex_cfg;
+    
+    -- Cache configuration.
+    CCFG                        : cache_generic_config_type := cache_cfg
+    
+  );
   port (
     
     -- Clock input.
@@ -64,21 +78,23 @@ entity cache_instr_blockData is
     enable                    : in  std_logic;
     
     -- CPU address input.
-    cpuAddr                   : in  std_logic_vector(RIC_PC_WIDTH-1 downto 0);
+    cpuAddr                   : in  rvex_address_type;
     
     -- Read data output.
-    readData                  : out std_logic_vector(RIC_LINE_WIDTH-1 downto 0);
+    readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
     
     -- Active high write enable input.
     writeEnable               : in  std_logic;
     
     -- Write data input.
-    writeData                 : in  std_logic_vector(RIC_LINE_WIDTH-1 downto 0)
+    writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0)
     
   );
 end cache_instr_blockData;
 
+--=============================================================================
 architecture Behavioral of cache_instr_blockData is
+--=============================================================================
   
   -- Declare XST RAM extraction hints.
   attribute ram_extract       : string;
@@ -86,8 +102,8 @@ architecture Behavioral of cache_instr_blockData is
   
   -- Cache data memory.
   type ram_data_type
-    is array(0 to RIC_CACHE_DEPTH-1)
-    of std_logic_vector(RIC_LINE_WIDTH-1 downto 0);
+    is array(0 to 2**CCFG.instrCacheLinesLog2-1)
+    of std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
   signal ram_data             : ram_data_type := (others => (others => 'X'));
   
   -- Hints for XST to implement the data memory in block RAMs.
@@ -95,13 +111,16 @@ architecture Behavioral of cache_instr_blockData is
   attribute ram_style   of ram_data : signal is "block";
   
   -- CPU address/PC signals.
-  signal cpuOffset            : std_logic_vector(RIC_ADDR_OFFSET_SIZE-1 downto 0);
+  signal cpuOffset            : std_logic_vector(icacheOffsetSize(RCFG, CCFG)-1 downto 0);
   
-begin
+--=============================================================================
+begin -- architecture
+--=============================================================================
   
   -- Extract the offset from the CPU address.
   cpuOffset <= cpuAddr(
-    RIC_ADDR_OFFSET_LSB+RIC_ADDR_OFFSET_SIZE-1 downto RIC_ADDR_OFFSET_LSB
+    icacheOffsetLSB(RCFG, CCFG) + icacheOffsetSize(RCFG, CCFG) - 1
+    downto icacheOffsetLSB(RCFG, CCFG)
   );
   
   -- Instantiate the data memory.

@@ -44,207 +44,256 @@
 
 -- Copyright (C) 2008-2014 by TU Delft.
 
--- Refer to reconfCache_pkg.vhd for configuration constants and most
--- documentation.
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
+use rvex.common_pkg.all;
+use rvex.bus_pkg.all;
+use rvex.core_pkg.all;
 use rvex.cache_pkg.all;
-use rvex.cache_intIface_pkg.all;
-use rvex.cache_instr_pkg.all;
-use rvex.cache_data_pkg.all;
 
+--=============================================================================
+-- This is the toplevel entity for the reconfigurable instruction and data
+-- cache designed for the rvex core.
+-------------------------------------------------------------------------------
 entity cache is
+--=============================================================================
+  generic (
+    
+    -- Core configuration. Must be equal to the configuration presented to the
+    -- rvex core connected to the cache.
+    RCFG                        : rvex_generic_config_type := rvex_cfg;
+    
+    -- Cache configuration.
+    CCFG                        : cache_generic_config_type := cache_cfg
+    
+  );
   port (
     
-    -- Clock input.
-    clk                       : in  std_logic;
+    ---------------------------------------------------------------------------
+    -- System control
+    ---------------------------------------------------------------------------
+    -- Active high synchronous reset input.
+    reset                       : in  std_logic;
     
-    -- Active high reset input.
-    reset                     : in  std_logic;
+    -- Clock input, registers are rising edge triggered.
+    clk                         : in  std_logic;
     
     -- Active high CPU interface clock enable input.
-    clkEnCPU                  : in  std_logic;
+    clkEnCPU                    : in  std_logic;
     
     -- Active high bus interface clock enable input.
-    clkEnBus                  : in  std_logic;
+    clkEnBus                    : in  std_logic;
     
-    -- Connections to the r-vex cores. Governed by clkEnCPU.
-    atomsToCache              : in  reconfCache_atomIn_array;
-    cacheToAtoms              : inout reconfCache_atomOut_array; -- i am ugly
+    ---------------------------------------------------------------------------
+    -- Core interface
+    ---------------------------------------------------------------------------
+    -- The data cache bypass signal may be used to access volatile memory
+    -- regions (i.e. peripherals): when high, the cache is bypassed and the bus
+    -- is accessed transparently. Refer to the entity description in core.vhd
+    -- for documentation on the rest of the signals. The timing of these
+    -- signals is governed by clkEnCPU.
     
-    -- Connections to the memory bus. Governed by clkEnBus.
-    memToCache                : in  reconfCache_memIn_array;
-    cacheToMem                : out reconfCache_memOut_array;
+    -- Common memory interface.
+    rv2cache_decouple           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    cache2rv_blockReconfig      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    cache2rv_stallIn            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_stallOut           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Cache invalidation connections. Governed by clkEnBus.
-    invalToCache              : in  reconfCache_invalIn;
-    cacheToInval              : out reconfCache_invalOut
+    -- Instruction memory interface.
+    rv2icache_PCs               : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2icache_fetch             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2icache_cancel            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+    icache2rv_affinity          : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Data memory interface.
+    rv2dcache_addr              : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_readEnable        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_writeData         : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_writeMask         : in  rvex_mask_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_writeEnable       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_bypass            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_readData          : out rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Bus master interface
+    ---------------------------------------------------------------------------
+    -- Bus interface for the caches. The timing of these signals is governed by
+    -- clkEnBus. 
+    cache2bus_bus               : out bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    bus2cache_bus               : in  bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Bus snooping interface
+    ---------------------------------------------------------------------------
+    -- These signals are optional. They are needed for cache coherency on
+    -- multi-processor systems and/or for dynamic cores. The timing of these
+    -- signals is governed by clkEnBus.
+    
+    -- Bus address which is to be invalidated when invalEnable is high.
+    bus2cache_invalAddr         : in  rvex_address_type := (others => '0');
+    
+    -- If one of the data caches is causing the invalidation due to a write,
+    -- the signal in this vector indexed by that data cache must be high. In
+    -- all other cases, these signals should be low.
+    bus2cache_invalSource       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Active high enable signal for line invalidation.
+    bus2cache_invalEnable       : in  std_logic := '0';
+    
+    ---------------------------------------------------------------------------
+    -- Status and control signals
+    ---------------------------------------------------------------------------
+    -- The timing of these signals is governed by clkEnBus.
+    
+    -- Cache flush request signals for each instruction and data cache.
+    sc2icache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    sc2dcache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0)
     
   );
 end cache;
 
+--=============================================================================
 architecture Behavioral of cache is
+--=============================================================================
   
-  -- Interconnect between atoms and caches.
-  signal atomsToICache        : reconfICache_atomIn_array;
-  signal ICacheToAtoms        : reconfICache_atomOut_array;
-  signal atomsToDCache        : reconfDCache_atomIn_array;
-  signal DCacheToAtoms        : reconfDCache_atomOut_array;
+  -- Instruction cache signals.
+  signal icache2bus_bus         : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal bus2icache_bus         : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
-  -- Interconnect between caches and memory bus arbiters.
-  signal arbToICache          : reconfICache_memIn_array;
-  signal ICacheToArb          : reconfICache_memOut_array;
-  signal arbToDCache          : reconfDCache_memIn_array;
-  signal DCacheToArb          : reconfDCache_memOut_array;
+  -- Data cache signals.
+  signal dcache2bus_bus         : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal bus2dcache_bus         : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
-  -- Invalidation interconnect.
-  signal arbiterInvalOutputs  : RC_arbiterInvalOutput_array;
-  signal invalICache          : reconfICache_invalIn;
-  signal invalDCache          : reconfDCache_invalIn;
+--=============================================================================
+begin -- architecture
+--=============================================================================
   
-  
-  -- Sanity check memory.
-  -- pragma translate-off
-  type ram_data_type
-    is array(0 to 4095)
-    of std_logic_vector(RDC_BUS_DATA_WIDTH-1 downto 0);
-  shared variable check_data  : ram_data_type := (others => (others => '-'));
-  signal check_address_r      : std_logic_vector(31 downto 0);
-  signal check_readEnable_r   : std_logic;
-  -- pragma translate-on
-  
-begin
-  
-  --===========================================================================
-  -- Interconnect between atoms and cache
-  --===========================================================================
-  atom_cache_intercon_gen: for i in 0 to RC_NUM_ATOMS-1 generate
-    
-    -- Atoms to instruction cache.
-    atomsToICache(i).decouple     <= atomsToCache(i).decouple;
-    atomsToICache(i).PC           <= atomsToCache(i).PC;
-    atomsToICache(i).readEnable   <= atomsToCache(i).fetch;
-    atomsToICache(i).stall        <= atomsToCache(i).stall;
-    
-    -- Atoms to data cache.
-    atomsToDCache(i).decouple     <= atomsToCache(i).decouple;
-    atomsToDCache(i).addr         <= atomsToCache(i).addr;
-    atomsToDCache(i).readEnable   <= atomsToCache(i).readEnable;
-    atomsToDCache(i).writeData    <= atomsToCache(i).writeData;
-    atomsToDCache(i).writeMask    <= atomsToCache(i).writeMask;
-    atomsToDCache(i).writeEnable  <= atomsToCache(i).writeEnable;
-    atomsToDCache(i).bypass       <= atomsToCache(i).bypass;
-    atomsToDCache(i).stall        <= atomsToCache(i).stall;
-    
-    -- Caches to atoms.
-    cacheToAtoms(i).instr         <= ICacheToAtoms(i).instr;
-    cacheToAtoms(i).readData      <= DCacheToAtoms(i).readData;
-    cacheToAtoms(i).stall         <= ICacheToAtoms(i).stall or DCacheToAtoms(i).stall;
-    
-  end generate;
-  
-  --===========================================================================
-  -- Instantiate instruction caches
-  --===========================================================================
-  instruction_cache: entity rvex.cache_instr
+  -----------------------------------------------------------------------------
+  -- Instantiate the instruction cache
+  -----------------------------------------------------------------------------
+  icache_inst: entity rvex.cache_instr
+    generic map (
+      RCFG                      => RCFG,
+      CCFG                      => CCFG
+    )
     port map (
       
-      -- System control inputs.
-      clk                     => clk,
-      reset                   => reset,
-      clkEnCPU                => clkEnCPU,
-      clkEnBus                => clkEnBus,
+      -- System control.
+      reset                     => reset,
+      clk                       => clk,
+      clkEnCPU                  => clkEnCPU,
+      clkEnBus                  => clkEnBus,
       
-      -- Connections to the atoms. Governed by clkEnCPU.
-      atomsToCache            => atomsToICache,
-      cacheToAtoms            => ICacheToAtoms,
+      -- Core interface.
+      rv2icache_decouple        => rv2cache_decouple,
+      icache2rv_blockReconfig   => icache2rv_blockReconfig,
+      icache2rv_stallIn         => icache2rv_stallIn,
+      rv2icache_stallOut        => rv2cache_stallOut,
+      rv2icache_PCs             => rv2icache_PCs,
+      rv2icache_fetch           => rv2icache_fetch,
+      rv2icache_cancel          => rv2icache_cancel,
+      icache2rv_instr           => icache2rv_instr,
+      icache2rv_affinity        => icache2rv_affinity,
       
-      -- Connections to the memory bus. Governed by clkEnBus.
-      memToCache              => arbToICache,
-      cacheToMem              => ICacheToArb,
+      -- Bus master interface.
+      icache2bus_bus            => icache2bus_bus,
+      bus2icache_bus            => bus2icache_bus,
       
-      -- Cache line invalidation input. Governed by clkEnBus.
-      inval                   => invalICache
+      -- Bus snooping interface.
+      bus2icache_invalAddr      => bus2cache_invalAddr,
+      bus2icache_invalEnable    => bus2cache_invalEnable,
+      
+      -- Status and control signals.
+      sc2icache_flush           => sc2icache_flush
       
     );
   
-  --===========================================================================
-  -- Instantiate data caches
-  --===========================================================================
-  data_cache: entity rvex.cache_data
+  -----------------------------------------------------------------------------
+  -- Instantiate the data cache
+  -----------------------------------------------------------------------------
+  dcache_inst: entity rvex.cache_data
+    generic map (
+      RCFG                      => RCFG,
+      CCFG                      => CCFG
+    )
     port map (
       
-      -- System control inputs.
-      clk                     => clk,
-      reset                   => reset,
-      clkEnCPU                => clkEnCPU,
-      clkEnBus                => clkEnBus,
+      -- System control.
+      reset                     => reset,
+      clk                       => clk,
+      clkEnCPU                  => clkEnCPU,
+      clkEnBus                  => clkEnBus,
       
-      -- Connections to the atoms. Governed by clkEnCPU.
-      atomsToCache            => atomsToDCache,
-      cacheToAtoms            => DCacheToAtoms,
+      -- Core interface.
+      rv2dcache_decouple        => rv2cache_decouple,
+      dcache2rv_blockReconfig   => dcache2rv_blockReconfig,
+      dcache2rv_stallIn         => dcache2rv_stallIn,
+      rv2dcache_stallOut        => rv2cache_stallOut,
+      rv2dcache_addr            => rv2dcache_addr,
+      rv2dcache_readEnable      => rv2dcache_readEnable,
+      rv2dcache_writeData       => rv2dcache_writeData,
+      rv2dcache_writeMask       => rv2dcache_writeMask,
+      rv2dcache_writeEnable     => rv2dcache_writeEnable,
+      rv2dcache_bypass          => rv2dcache_bypass,
+      dcache2rv_readData        => dcache2rv_readData,
       
-      -- Connections to the memory bus. Governed by clkEnBus.
-      memToCache              => arbToDCache,
-      cacheToMem              => DCacheToArb,
+      -- Bus master interface.
+      dcache2bus_bus            => dcache2bus_bus,
+      bus2dcache_bus            => bus2dcache_bus,
       
-      -- Cache line invalidation input. Governed by clkEnBus.
-      inval                   => invalDCache
+      -- Bus snooping interface.
+      bus2dcache_invalAddr      => bus2cache_invalAddr,
+      bus2dcache_invalSource    => bus2cache_invalSource,
+      bus2dcache_invalEnable    => bus2cache_invalEnable,
+      
+      -- Status and control signals.
+      sc2dcache_flush           => sc2dcache_flush
       
     );
   
-  --===========================================================================
-  -- Instantiate memory bus arbiters
-  --===========================================================================
-  mem_arbiter_gen: for i in 0 to RC_NUM_ATOMS-1 generate
-    mem_arbiter_n: entity rvex.cache_arbiter
+  -----------------------------------------------------------------------------
+  -- Merge blockReconfig and stallIn signals
+  -----------------------------------------------------------------------------
+  cache2rv_blockReconfig  <= icache2rv_blockReconfig or dcache2rv_blockReconfig;
+  cache2rv_stallIn        <= icache2rv_stallIn       or dcache2rv_stallIn;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the data/instruction update bus arbiters
+  -----------------------------------------------------------------------------
+  bus_arbiter_gen: for laneGroup in 2**RCFG.numLaneGroupsLog2-1 downto 0 generate
+    
+    bus_arbiter_inst: entity rvex.bus_arbiter
+      generic map (
+        NUM_MASTERS             => 2
+      )
       port map (
         
-        -- System control inputs.
-        clk                   => clk,
-        reset                 => reset,
-        clkEn                 => clkEnBus,
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEnBus,
         
-        -- Instruction cache memory bus.
-        arbToICache           => arbToICache(i),
-        ICacheToArb           => ICacheToArb(i),
+        -- Master busses.
+        mst2arb(1)              => icache2bus_bus(laneGroup),
+        mst2arb(0)              => dcache2bus_bus(laneGroup),
+        arb2mst(1)              => bus2icache_bus(laneGroup),
+        arb2mst(0)              => bus2dcache_bus(laneGroup),
         
-        -- Data cache memory bus.
-        arbToDCache           => arbToDCache(i),
-        DCacheToArb           => DCacheToArb(i),
-        
-        -- Combined memory bus.
-        memToArb              => memToCache(i),
-        arbToMem              => cacheToMem(i),
-        
-        -- Invalidation output.
-        invalOutput           => arbiterInvalOutputs(i)
+        -- Slave bus.
+        arb2slv                 => cache2bus_bus(laneGroup),
+        slv2arb                 => bus2cache_bus(laneGroup)
         
       );
+    
   end generate;
-  
-  --===========================================================================
-  -- Instantiate invalidation control unit
-  --===========================================================================
-  invalidation_controller: entity rvex.cache_invalCtrl
-    port map (
-      
-      -- Inputs from arbiters.
-      arbToInvalCtrl          => arbiterInvalOutputs,
-      
-      -- External invalidation bus.
-      extToInvalCtrl          => invalToCache,
-      invalCtrlToExt          => cacheToInval,
-      
-      -- Outputs to instruction and data caches.
-      invalICache             => invalICache,
-      invalDCache             => invalDCache
-      
-    );
   
 end Behavioral;
 

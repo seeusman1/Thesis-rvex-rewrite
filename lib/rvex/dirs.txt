@@ -1,8 +1,8 @@
 common
 utils
-cache
-core
-gaisler
 bus
+core
+cache
+gaisler
 periph
 system

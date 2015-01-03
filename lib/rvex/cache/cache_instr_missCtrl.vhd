@@ -44,82 +44,108 @@
 
 -- Copyright (C) 2008-2014 by TU Delft.
 
--- Refer to reconfICache_pkg.vhd for configuration constants and most
--- documentation.
-
 library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
-use rvex.cache_instr_pkg.all;
+use rvex.common_pkg.all;
+use rvex.bus_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
+--=============================================================================
+-- This entity contains the state machine which handles cache misses for an
+-- instruction cache block.
+-------------------------------------------------------------------------------
 entity cache_instr_missCtrl is
+--=============================================================================
+  generic (
+    
+    -- Core configuration. Must be equal to the configuration presented to the
+    -- rvex core connected to the cache.
+    RCFG                        : rvex_generic_config_type := rvex_cfg;
+    
+    -- Cache configuration.
+    CCFG                        : cache_generic_config_type := cache_cfg
+    
+  );
   port (
     
     -- Clock input.
-    clk                       : in  std_logic;
+    clk                         : in  std_logic;
     
     -- Active high reset input.
-    reset                     : in  std_logic;
+    reset                       : in  std_logic;
     
     -- Active high clock enable input for the CPU domain.
-    clkEnCPU                  : in  std_logic;
+    clkEnCPU                    : in  std_logic;
     
     -- Active high clock enable input for the bus domain.
-    clkEnBus                  : in  std_logic;
+    clkEnBus                    : in  std_logic;
     
     -- CPU address/PC input.
-    cpuAddr                   : in  std_logic_vector(RIC_PC_WIDTH-1 downto 0);
+    cpuAddr                     : in  rvex_address_type;
     
     -- Update enable signal from the mux/demux logic signalling that the
     -- cache line which contains cpuAddr should be refreshed. While an
     -- update is in progress, cpuAddr is assumed to be stable. Governed by 
     -- the clkEnCPU clock gate signal.
-    updateEnable              : in  std_logic;
+    updateEnable                : in  std_logic;
     
     -- Signals that the line fetch is complete and that the data in line is
     -- to be written to the data memory. Governed by the clkEnCPU clock gate
     -- signal.
-    done                      : out std_logic;
+    done                        : out std_logic;
     
     -- Cache line data output, valid when done is high.
-    line                      : out std_logic_vector(RIC_LINE_WIDTH-1 downto 0);
+    line                        : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    
+    -- This signal is high when the controller is busy, signalling that
+    -- reconfiguration is not possible at this time.
+    blockReconfig               : out std_logic;
     
     -- Connections to the memory bus. Governed by clkEnBus.
-    memToCache                : in  reconfICache_memIn;
-    cacheToMem                : out reconfICache_memOut
+    cacheToBus                  : out bus_mst2slv_type;
+    busToCache                  : in  bus_slv2mst_type
     
   );
 end cache_instr_missCtrl;
 
+--=============================================================================
 architecture Behavioral of cache_instr_missCtrl is
+--=============================================================================
+  
+  -- The number of bus accesses necessary to update an entire cache line.
+  constant ACCESSES_PER_LINE    : natural := 2**RCFG.numLanesLog2;
   
   -- Current state.
-  signal state                : integer range 0 to RIC_BUS_PER_LINE+1;
+  signal state                  : natural range 0 to ACCESSES_PER_LINE+1;
   
   -- When set, advances to the next state.
-  signal advance              : std_logic;
+  signal advance                : std_logic;
   
   -- When set, returns to idle state.
-  signal resetState           : std_logic;
+  signal resetState             : std_logic;
   
   -- Next state.
-  signal state_next           : integer range 0 to RIC_BUS_PER_LINE+1;
+  signal state_next             : natural range 0 to ACCESSES_PER_LINE+1;
   
   -- State names.
-  constant IDLE_STATE         : integer := 0;
-  constant REQ_N_STATE        : integer := RIC_BUS_PER_LINE;
-  constant WAIT_STATE         : integer := RIC_BUS_PER_LINE+1;
+  constant IDLE_STATE           : natural := 0;
+  constant REQ_N_STATE          : natural := ACCESSES_PER_LINE;
+  constant WAIT_STATE           : natural := ACCESSES_PER_LINE+1;
   
   -- Line buffer registers.
-  signal line_buffer          : std_logic_vector(RIC_LINE_WIDTH-1 downto 0);
+  signal line_buffer            : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
   
-begin
+--=============================================================================
+begin -- architecture
+--=============================================================================
   
-  --===========================================================================
+  -----------------------------------------------------------------------------
   -- FSM documentation
-  --===========================================================================
+  -----------------------------------------------------------------------------
   -- This component implements the following FSM to handle cache line retrieval
   -- over the memory bus, taking sycnhronization of the two clock gate domains
   -- into consideration. This allows the CPU to be stopped for debugging
@@ -136,15 +162,15 @@ begin
   -- |   | req_0 | - - - - - - - | bus, i.e. readEnable is high. When advance
   -- |   '-------'               | is high, the read data is stored in r0.
   -- |       | clkEnBus
-  -- |       v & mem.ready
+  -- |       v & mem.ack
   -- |      ...  - - - - - - - - | Same behavior as req_0 for next parts.
   -- |       | clkEnBus
-  -- |       v & mem.ready
+  -- |       v & mem.ack
   -- |   .-------.               | Same behavior as req_0, but now when advance
   -- |`--| req_n | - - - - - - - | is high done is also asserted. line is set
   -- | * '-------'               | to r0..rn-1 & mem.data.
   -- |       | clkEnBus
-  -- |       | & mem.ready       * clkEnBus & ready & clkEnCpu
+  -- |       | & mem.ack         * clkEnBus & mem.ack & clkEnCpu
   -- |       v & !clkEnCpu
   -- |   .-------.               
   -- |   | wait  | - - - - - - - | done is asserted, line is set to r0..rn.
@@ -155,9 +181,9 @@ begin
   -- advance is used to go to the next state, resetState is used to return to
   -- the idle state.
   
-  --===========================================================================
-  -- FSM control
-  --===========================================================================
+  -----------------------------------------------------------------------------
+  -- FSM registers
+  -----------------------------------------------------------------------------
   fsm_ctrl: process(clk) is
   begin
     if rising_edge(clk) then
@@ -169,12 +195,12 @@ begin
     end if;
   end process;
   
-  --===========================================================================
+  -----------------------------------------------------------------------------
   -- FSM state decoding
-  --===========================================================================
+  -----------------------------------------------------------------------------
   -- Determine the values for the advance and resetState signals.
   fsm_decode_1: process (
-    state, clkEnCPU, clkEnBus, updateEnable, memToCache.ready
+    state, clkEnCPU, clkEnBus, updateEnable, busToCache.ack
   ) is
   begin
     
@@ -192,7 +218,7 @@ begin
         resetState <= '1';
       end if;
     else
-      if clkEnBus = '1' and memToCache.ready = '1' then
+      if clkEnBus = '1' and busToCache.ack = '1' then
         if clkEnCPU = '1' and state = REQ_N_STATE then
           resetState <= '1';
         else
@@ -208,50 +234,56 @@ begin
                 state;
   
   -- Determine the memory bus address and whether we should request a read.
-  cacheToMem.addr(RIC_PC_WIDTH-1 downto RIC_ADDR_OFFSET_LSB)
-    <= cpuAddr(RIC_PC_WIDTH-1 downto RIC_ADDR_OFFSET_LSB);
-  cacheToMem.addr(RIC_BUS_SIZE_BLOG2-1 downto 0)
-    <= (others => '0');
-  det_mem_bus_access: process (state_next) is
+  det_mem_bus_access: process (state_next, cpuAddr) is
   begin
-    if state_next < 1 or state_next > RIC_BUS_PER_LINE then
-      -- No bus access.
-      cacheToMem.readEnable <= '0';
-      cacheToMem.addr(RIC_ADDR_OFFSET_LSB-1 downto RIC_BUS_SIZE_BLOG2)
-        <= (others => '0');
-    else
-      -- Request the next part.
-      cacheToMem.readEnable <= '1';
-      cacheToMem.addr(RIC_ADDR_OFFSET_LSB-1 downto RIC_BUS_SIZE_BLOG2)
-        <= std_logic_vector(to_unsigned(state_next-1, RIC_ADDR_OFFSET_LSB-RIC_BUS_SIZE_BLOG2));
+    
+    -- Set the bus defaults.
+    cacheToBus <= BUS_MST2SLV_IDLE;
+    cacheToBus.address <= (others => '0');
+    
+    cacheToBus.address(31 downto icacheOffsetLSB(RCFG, CCFG))
+      <= cpuAddr(31 downto icacheOffsetLSB(RCFG, CCFG));
+    
+    if state_next >= 1 or state_next <= ACCESSES_PER_LINE then
+      
+      -- Request the next part. Set the burst and lock bus flags in order to do
+      -- a burst transfer to speed things up.
+      cacheToBus.readEnable <= '1';
+      cacheToBus.flags <= bus_flags_gen(burst => '1', lock  => '1');
+      cacheToBus.address(icacheOffsetLSB(RCFG, CCFG)-1 downto 2)
+        <= std_logic_vector(to_unsigned(state_next-1, icacheOffsetLSB(RCFG, CCFG)-2));
+      
     end if;
   end process;
   
   -- Generate the done signal.
   done <= '1' when state_next = WAIT_STATE or resetState = '1' else '0';
   
+  -- Generate the blockReconfig signal.
+  blockReconfig <= '1' when state /= IDLE_STATE else updateEnable;
+  
   -- Instantiate the line buffer registers.
-  line_buf_reg_gen: for i in 0 to RIC_BUS_PER_LINE-1 generate
+  line_buf_reg_gen: for i in 0 to ACCESSES_PER_LINE-1 generate
     line_buf_reg_n: process (clk) is
     begin
       if rising_edge(clk) then
         if state = i + 1 then
-          line_buffer((i+1)*RIC_BUS_DATA_WIDTH-1 downto i*RIC_BUS_DATA_WIDTH)
-            <= memToCache.data;
+          line_buffer(32*i + 31 downto 32*i)
+            <= busToCache.readData;
         end if;
       end if;
     end process;
   end generate;
   
   -- Forward the cache line to the cache memory.
-  line_buf_forward_a: if RIC_BUS_PER_LINE > 1 generate
-    line(RIC_LINE_WIDTH-RIC_BUS_DATA_WIDTH-1 downto 0)
-      <= line_buffer(RIC_LINE_WIDTH-RIC_BUS_DATA_WIDTH-1 downto 0);
+  line_buf_forward_a: if ACCESSES_PER_LINE > 1 generate
+    line(icacheLineWidth(RCFG, CCFG)-32-1 downto 0)
+      <= line_buffer(icacheLineWidth(RCFG, CCFG)-32-1 downto 0);
   end generate;
   
-  line(RIC_LINE_WIDTH-1 downto RIC_LINE_WIDTH-RIC_BUS_DATA_WIDTH) <=
-    memToCache.data when state = WAIT_STATE - 1 else
-    line_buffer(RIC_LINE_WIDTH-1 downto RIC_LINE_WIDTH-RIC_BUS_DATA_WIDTH);
+  line(icacheLineWidth(RCFG, CCFG)-1 downto icacheLineWidth(RCFG, CCFG)-32) <=
+    busToCache.readData when state = WAIT_STATE - 1 else
+    line_buffer(icacheLineWidth(RCFG, CCFG)-1 downto icacheLineWidth(RCFG, CCFG)-32);
     
 end Behavioral;
 

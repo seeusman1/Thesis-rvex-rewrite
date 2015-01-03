@@ -89,7 +89,7 @@ entity bus_arbiter is
     mst2arb                     : in  bus_mst2slv_array(NUM_MASTERS-1 downto 0);
     arb2mst                     : out bus_slv2mst_array(NUM_MASTERS-1 downto 0);
     
-    -- Slave bus(ses).
+    -- Slave bus.
     arb2slv                     : out bus_mst2slv_type;
     slv2arb                     : in  bus_slv2mst_type
     
@@ -187,11 +187,19 @@ architecture Behavioral of bus_arbiter is
   -- busy signals for the masters.
   signal requesting_r           : std_logic_vector(NUM_MASTERS-1 downto 0);
   
+  -- This signal is tied to the flags.lock signal of the currently active
+  -- master, delayed by one cycle. When high, the arbiter will not grant access
+  -- to another master.
+  signal locked                 : std_logic;
+  
   -- These signals select the currently active master for the request and
   -- result stage respectively (resultSelect is simply requestSelect delayed
   -- by one cycle).
   signal requestSelect          : select_type;
   signal resultSelect           : select_type;
+  
+  -- Local signal for the request from the currently selected master.
+  signal arb2slv_s              : bus_mst2slv_type;
   
 --=============================================================================
 begin -- architecture
@@ -217,9 +225,24 @@ begin -- architecture
     end if;
   end process;
   
+  -- Generate the locked signal.
+  lock_reg_proc: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        locked <= '0';
+      elsif clkEn = '1' then
+        locked <= arb2slv_s.flags.lock;
+      end if;
+    end if;
+  end process;
+  
   -- Use the lookup table to select the currently active master in the request
-  -- stage.
-  requestSelect <= SCHED_LOOKUP(vect2uint(requesting & resultSelect));
+  -- stage. Do not switch masters when locked is asserted.
+  requestSelect <=
+    SCHED_LOOKUP(vect2uint(requesting & resultSelect))
+    when locked = '0'
+    else resultSelect;
   
   -- Register the requestSelect signal when the slave is ready to accept a new
   -- command to get the resultSelect signal.
@@ -238,10 +261,12 @@ begin -- architecture
   -- Perform bus muxing
   -----------------------------------------------------------------------------
   -- Mux between the requests from the masters.
-  arb2slv <=
+  arb2slv_s <=
     mst2arb(vect2uint(requestSelect))
     when vect2uint(requestSelect) < NUM_MASTERS
     else mst2arb(0);
+  
+  arb2slv <= arb2slv_s;
   
   -- Demux the result.
   result_demux_gen: for mst in 0 to NUM_MASTERS-1 generate
