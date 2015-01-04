@@ -1,5 +1,5 @@
 
-.PHONY: help update-patch very-clean gr-%
+.PHONY: help update-patch very-clean sim gr-%
 
 help: work
 	@echo ""
@@ -16,6 +16,10 @@ help: work
 	@echo "                     base project."
 	@echo " make very-clean   : removes the ENTIRE grlib working directory: careful! This"
 	@echo "                     might remove source files!"
+	@echo " make sim          : Shorthand for *cleaning* and running all necessary targets"
+	@echo "                     for modelsim simulation. Source both modelsim and xilinx"
+	@echo "                     environment scripts first; tested with ISE 13.4 and"
+	@echo "                     modelsim 10.2a on OpenSUSE 13.1."
 	@echo ""
 	@echo " The following targets are from the grlib makefile (you can also cd to work if"
 	@echo " you don't want to type gr- all the time)"
@@ -47,6 +51,10 @@ update-patch:
 # source files as well, which may not have been put in the patch file yet).
 very-clean:
 	rm -Ir work
+
+# Shorthand notation for simulating.
+sim: work
+	cd work && $(MAKE) distclean scripts-clean mig install-secureip vsim vsim-launch
 
 # Recursively calls grlib's makefile.
 gr-%: work

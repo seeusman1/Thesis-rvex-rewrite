@@ -80,9 +80,44 @@ entity rvsys_grlib is
     -- APB slave index.
     APB_INDEX                   : integer := 0;
     
-    -- APB slave configuration.
+    -- APB slave configuration. ADDR and MASK define the address ranges which
+    -- the rvex should respond to, mapping to address bits 19 downto 8. With
+    -- 8 bits of address space, all rvex core debug registers are mapped
+    -- through the banking mechanism. With 9 bits of address space, additional
+    -- platform-specific registers are mapped as well. With 13 bits of address
+    -- space, all registers are mapped without banking. The address map is
+    -- depicted below:
+    -- 
+    --          _____________________________
+    --  0x1FFF | Context 7 GP reg 32-63      |
+    --  0x1F80 |_____________________________|
+    --         |_____________________________|
+    --  0x1EFF | Context 7 GP reg 0-31       |
+    --  0x1E80 |_____________________________|
+    --  0x1E7F | Context 7 ctrl regs         |
+    --  0x1E00 |_____________________________|
+    --  0x1DFF | (context 1..6 mapped here)  |
+    --  0x1200 |_____________________________|
+    --  0x11FF | Context 0 GP reg 32-63      |
+    --  0x1180 |_____________________________|
+    --         |_____________________________|
+    --  0x10FF | Context 0 GP reg 0-31       |
+    --  0x1080 |_____________________________|
+    --  0x107F | Context 0 ctrl regs         |
+    --  0x1000 |_____________________________|
+    --         |_____________________________|
+    --  0x01FF | Reserved for MMU regs       |
+    --  0x0180 |_____________________________|
+    --  0x017F | Reserved for cache regs     |
+    --  0x0100 |_____________________________| _
+    --  0x00FF | Context i GP reg 0-31/32-63 |  \
+    --  0x0080 |_____________________________|   \ Context and GP registers are
+    --  0x007F | Context i ctrl regs         |   / selected using bank register
+    --  0x0000 |_____________________________| _/
+    -- 
+    -- By default, we'll claim the full 13 bits of address space.
     APB_ADDR                    : integer := 0;
-    APB_MASK                    : integer := 16#FFF#
+    APB_MASK                    : integer := 16#FE0#
     
   );
   port (
@@ -112,8 +147,8 @@ entity rvsys_grlib is
     -- Interrupt controller interface. This entity handles translation from the
     -- LEON3 interrupt controller to the rvex interrupt control signals. Note
     -- that each rvex context requires its own interrupt controller.
-    irqi                        : in  irq_in_vector(2**CFG.core.numContextsLog2-1 downto 0);
-    irqo                        : out irq_out_vector(2**CFG.core.numContextsLog2-1 downto 0)
+    irqi                        : in  irq_in_vector(0 to 2**CFG.core.numContextsLog2-1);
+    irqo                        : out irq_out_vector(0 to 2**CFG.core.numContextsLog2-1)
     
   );
 end rvsys_grlib;

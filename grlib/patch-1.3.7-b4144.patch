@@ -1,4 +1,4 @@
-diff -rupN clean/grlib-gpl-1.3.7-b4144/lib/grlib/amba/devices.vhd grlib-gpl-1.3.7-b4144/lib/grlib/amba/devices.vhd
+diff -rupN --exclude tech clean/grlib-gpl-1.3.7-b4144/lib/grlib/amba/devices.vhd grlib-gpl-1.3.7-b4144/lib/grlib/amba/devices.vhd
 --- clean/grlib-gpl-1.3.7-b4144/lib/grlib/amba/devices.vhd	2014-04-16 16:51:32.000000000 +0200
 +++ grlib-gpl-1.3.7-b4144/lib/grlib/amba/devices.vhd	2015-01-04 00:16:46.346401929 +0100
 @@ -63,6 +63,7 @@ package devices is

@@ -26,6 +26,10 @@ grlib-gpl-%: grlib-gpl-%.tar.gz
 patch-%:
 	mkdir clean
 	cd clean && tar -xzf ../$(patsubst patch-%,grlib-gpl-%,$@).tar.gz
-	diff -rupN clean/$(patsubst patch-%,grlib-gpl-%,$@)/ $(patsubst patch-%,grlib-gpl-%,$@)/ > $@.patch ; true
+	diff -rupN\
+	  --exclude 'tech'\
+	  clean/$(patsubst patch-%,grlib-gpl-%,$@)/\
+	  $(patsubst patch-%,grlib-gpl-%,$@)/\
+	  > $@.patch ; true
 	rm -rf clean
 

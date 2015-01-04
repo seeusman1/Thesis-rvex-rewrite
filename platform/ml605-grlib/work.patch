@@ -1,3 +1,229 @@
+diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
++++ work/config.vhd	2015-01-04 13:48:07.397759177 +0100
+@@ -13,6 +13,12 @@
+ library techmap;
+ use techmap.gencomp.all;
+ 
++library rvex;
++use rvex.common_pkg.all;
++use rvex.core_pkg.all;
++use rvex.cache_pkg.all;
++use rvex.rvsys_grlib_pkg.all;
++
+ package config is
+ -- Technology and synthesis options
+   constant CFG_FABTECH : integer := virtex6;
+@@ -22,7 +28,7 @@ package config is
+   constant CFG_SCAN : integer := 0;
+ -- LEON3 processor core
+   constant CFG_LEON3 : integer := 1;
+-  constant CFG_NCPU : integer := (1);
++  constant CFG_NLEON : integer := 0;
+   constant CFG_NWIN : integer := (8);
+   constant CFG_V8 : integer := 16#32# + 4*0;
+   constant CFG_MAC : integer := 0;
+@@ -61,7 +67,7 @@ package config is
+   constant CFG_TLB_TYPE : integer := 1 + 0*2;
+   constant CFG_TLB_REP : integer := 1;
+   constant CFG_MMU_PAGE : integer := 0;
+-  constant CFG_DSU : integer := 1;
++  constant CFG_DSU : integer := 0;
+   constant CFG_ITBSZ : integer := 4;
+   constant CFG_ATBSZ : integer := 4;
+   constant CFG_LEON3FT_EN : integer := 0;
+@@ -73,6 +79,27 @@ package config is
+   constant CFG_LEON3_NETLIST: integer := 0;
+   constant CFG_DISAS : integer := 0 + 0;
+   constant CFG_PCLOW : integer := 2;
++-- r-VEX processor core
++  constant CFG_RVEX : integer := 1;
++  constant CFG_NRVEX : integer := 1;
++  constant CFG_RVEX_CFG : rvex_grlib_generic_config_type := rvex_grlib_cfg(
++    
++    -- Core configuration
++    core => rvex_cfg(
++      numLanesLog2        => 3,
++      numLaneGroupsLog2   => 2,
++      numContextsLog2     => 2
++    ), core_valid => true,
++    
++    -- Cache configuration
++    cache => cache_cfg(
++      instrCacheLinesLog2 => 8, -- 8 kiB
++      dataCacheLinesLog2  => 8  -- 1 KiB
++    ), cache_valid => true
++    
++  );
++-- Total number of processors
++  constant CFG_NCPU : integer := CFG_NLEON + CFG_NRVEX * 2**CFG_RVEX_CFG.core.numLaneGroupsLog2;
+ -- AMBA settings
+   constant CFG_DEFMST : integer := (0);
+   constant CFG_RROBIN : integer := 1;
+diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
++++ work/leon3mp.vhd	2015-01-04 13:56:09.719809084 +0100
+@@ -49,6 +49,11 @@ use work.pcie.all;
+ -- pragma translate_off
+ use gaisler.sim.all;
+ -- pragma translate_on
++library rvex;
++use rvex.common_pkg.all;
++use rvex.core_pkg.all;
++use rvex.cache_pkg.all;
++use rvex.rvsys_grlib_pkg.all;
+ 
+ entity leon3mp is
+   generic (
+@@ -179,8 +184,8 @@ architecture rtl of leon3mp is
+   signal irqi : irq_in_vector(0 to CFG_NCPU-1);
+   signal irqo : irq_out_vector(0 to CFG_NCPU-1);
+ 
+-  signal dbgi : l3_debug_in_vector(0 to CFG_NCPU-1);
+-  signal dbgo : l3_debug_out_vector(0 to CFG_NCPU-1);
++  signal dbgi : l3_debug_in_vector(0 to CFG_NLEON-1);
++  signal dbgo : l3_debug_out_vector(0 to CFG_NLEON-1);
+ 
+   signal dsui : dsu_in_type;
+   signal dsuo : dsu_out_type;
+@@ -247,7 +252,7 @@ architecture rtl of leon3mp is
+   constant I2C_FILTER : integer := (CPU_FREQ*5+50000)/100000+1;
+ 
+ begin
+-
++  
+ ----------------------------------------------------------------------
+ ---  Reset and Clock generation  -------------------------------------
+ ----------------------------------------------------------------------
+@@ -279,7 +284,7 @@ begin
+ 
+   -- LEON3 processor
+   nosh : if CFG_GRFPUSH = 0 generate
+-    cpu : for i in 0 to CFG_NCPU-1 generate
++    cpu : for i in 0 to CFG_NLEON-1 generate
+       l3ft : if CFG_LEON3FT_EN /= 0 generate
+         leon3ft0 : leon3ft		-- LEON3 processor
+         generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU*(1-CFG_GRFPUSH), CFG_V8,
+@@ -287,7 +292,7 @@ begin
+ 	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+ 	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+           CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
++          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NLEON-1,
+ 	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
+ 	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
+         port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+@@ -301,7 +306,7 @@ begin
+ 	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+ 	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+           CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
++          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NLEON-1,
+ 	  CFG_DFIXED, CFG_SCAN, CFG_MMU_PAGE)
+         port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+     		irqi(i), irqo(i), dbgi(i), dbgo(i));
+@@ -310,7 +315,7 @@ begin
+   end generate;
+ 
+   sh : if CFG_GRFPUSH = 1 generate
+-    cpu : for i in 0 to CFG_NCPU-1 generate
++    cpu : for i in 0 to CFG_NLEON-1 generate
+       l3ft : if CFG_LEON3FT_EN /= 0 generate
+         leon3ft0 : leon3ftsh		-- LEON3 processor
+         generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU, CFG_V8,
+@@ -318,7 +323,7 @@ begin
+ 	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+ 	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+           CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
++          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NLEON-1,
+ 	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
+ 	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
+         port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+@@ -332,27 +337,32 @@ begin
+ 	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+ 	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+           CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
++          CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NLEON-1,
+ 	  CFG_DFIXED, CFG_SCAN, CFG_MMU_PAGE)
+         port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+     		irqi(i), irqo(i), dbgi(i), dbgo(i), fpi(i), fpo(i));
+       end generate;
+     end generate;
+ 
+-    grfpush0 : grfpushwx generic map ((CFG_FPU-1), CFG_NCPU, fabtech)
++    grfpush0 : grfpushwx generic map ((CFG_FPU-1), CFG_NLEON, fabtech)
+     port map (clkm, rstn, fpi, fpo);
+ 
+   end generate;
+ 
+-  lerrorn <= dbgo(0).error and rstn;
++  error_leon: if CFG_NLEON /= 0 generate
++    lerrorn <= dbgo(0).error and rstn;
++  end generate;
++  error_no_leon: if CFG_NLEON = 0 generate
++    lerrorn <= rstn;
++  end generate;
+   error_pad : odpad generic map (level => cmos, voltage => x25v, tech => padtech) port map (errorn, lerrorn);
+ 
+-  dsugen : if CFG_DSU = 1 generate
++  dsugen : if CFG_DSU = 1 and CFG_NLEON /= 0 generate
+     -- LEON3 Debug Support Unit
+     dsugen : if CFG_DSU = 1 generate
+       dsu0 : dsu3
+         generic map (hindex => 2, haddr => 16#900#, hmask => 16#F00#,
+-                     ncpu   => CFG_NCPU, tbits => 30, tech => memtech, irq => 0, kbytes => CFG_ATBSZ)
++                     ncpu   => CFG_NLEON, tbits => 30, tech => memtech, irq => 0, kbytes => CFG_ATBSZ)
+         port map (rstn, clkm, ahbmi, ahbsi, ahbso(2), dbgo, dbgi, dsui, dsuo);
+ 
+       dsubre_pad : inpad generic map (level => cmos, voltage => x15v, tech  => padtech) port map (dsubre, dsui.break);
+@@ -384,6 +394,45 @@ begin
+   end generate;
+ 
+ ----------------------------------------------------------------------
++---  r-VEX processor -------------------------------------------------
++----------------------------------------------------------------------
++  
++  -- Check rvex configuration.
++  assert CFG_RVEX_CFG.core.numLaneGroupsLog2 = CFG_RVEX_CFG.core.numContextsLog2
++    report "numLaneGroups must equal numContexts due to platform constraints"
++    severity failure;
++  
++  assert CFG_NRVEX < 2
++    report "Can't find free APB interface for rvex core 2"
++    severity failure;
++  
++  rvsys_gen: for i in 0 to CFG_NRVEX-1 generate
++    constant PIND : integer := CFG_NLEON + i * 2**CFG_RVEX_CFG.core.numLaneGroupsLog2;
++    constant PNUM : integer := 2**CFG_RVEX_CFG.core.numLaneGroupsLog2;
++  begin
++  
++    rvsys_inst: entity rvex.rvsys_grlib
++      generic map (
++        CFG                     => CFG_RVEX_CFG,
++        AHB_MASTER_INDEX_START  => PIND,
++        APB_INDEX               => 13 + i,
++        APB_ADDR                => 16#800# + i * 16#020#,
++        APB_MASK                => 16#FE0#
++      )
++      port map (
++        clki                    => clkm,
++        rstn                    => rstn,
++        ahbi                    => ahbmi,
++        ahbo                    => ahbmo(PIND+PNUM-1 downto PIND),
++        apbi                    => apbi,
++        apbo                    => apbo(13 + i),
++        irqi                    => irqi(PIND to PIND+PNUM-1),
++        irqo                    => irqo(PIND to PIND+PNUM-1)
++      );
++    
++  end generate;
++  
++----------------------------------------------------------------------
+ ---  Memory controllers ----------------------------------------------
+ ----------------------------------------------------------------------
+ 
 diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile work/Makefile
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile	2014-04-16 16:50:08.000000000 +0200
 +++ work/Makefile	2015-01-04 02:21:07.651044424 +0100

@@ -100,8 +100,16 @@ There are currently 3 "platforms" for the rvex:
  - GRLIB platform: :/platform/ml605-grlib
    
    This platform will run the rvex with instruction and data cache within a
-   grlib environment. It's not done yet though. To get started on hacking it,
-   run the following and read the output:
+   grlib environment. It doesn't work yet, but the grlib stuff is set up
+   properly now, so the simulation runs at least. You can run the following
+   command (after sourcing the xilinx and modelsim environment setup scripts
+   for ISE 13.4 and Modelsim 10.2a) to run the simulation. It'll take a while
+   for it to set everything up, but should eventually launch modelsim:
+   
+   cd platform/ml605-grlib && make sim
+   
+   Or you can run the following command to just set up the environment and
+   dump some readme files to the console:
    
    cd platform/ml605-grlib && make && cat work/README.txt
    
