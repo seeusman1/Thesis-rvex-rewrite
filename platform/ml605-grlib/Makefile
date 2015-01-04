@@ -26,14 +26,9 @@ help: work
 	@# the make recursion.
 	@cd work && $(MAKE) help | sed -e "s/make \([a-zA-Z0-9_-]*\)/make gr-\1/;s/make\[1\]\([^\n]*\)work'//"
 
-# Automatically downloads grlib if it doesn't exist.
-../../grlib/grlib-gpl-1.3.7-b4144.tar.gz:
-	cd ../../grlib && wget http://www.gaisler.com/products/grlib/grlib-gpl-1.3.7-b4144.tar.gz
-
-# Automatically unpacks the grlib tar.gz if it exists but the directory
-# doesn't.
-../../grlib/grlib-gpl-1.3.7-b4144: ../../grlib/grlib-gpl-1.3.7-b4144.tar.gz
-	cd ../../grlib && tar -xzf grlib-gpl-1.3.7-b4144.tar.gz
+# Call the makefile in the grlib directory.
+../../grlib/grlib-gpl-1.3.7-b4144:
+	cd ../../grlib && $(MAKE) grlib-gpl-1.3.7-b4144
 
 # Copies the base project from grlib into work and patches it.
 work: ../../grlib/grlib-gpl-1.3.7-b4144

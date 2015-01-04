@@ -58,7 +58,7 @@ use rvex.utils_pkg.all;
 use rvex.simUtils_pkg.all;
 use rvex.bus_pkg.all;
 use rvex.bus_addrConv_pkg.all;
-use rvex.standalone_pkg.all;
+use rvex.rvsys_standalone_pkg.all;
 use rvex.core_pkg.all;
 
 --=============================================================================
@@ -141,7 +141,7 @@ begin -- architecture
     
   begin
     
-    rvex_inst: entity rvex.standalone
+    rvex_inst: entity rvex.rvsys_standalone
       generic map (
         
         -- Configuration.

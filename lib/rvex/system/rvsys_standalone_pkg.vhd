@@ -59,7 +59,7 @@ use rvex.core_pkg.all;
 -- standalone system internally and for anything which wants to instantiate
 -- the standalone system.
 -------------------------------------------------------------------------------
-package standalone_pkg is
+package rvsys_standalone_pkg is
 --=============================================================================
   
   -- rvex core configuration record.
@@ -125,10 +125,10 @@ package standalone_pkg is
     rvexDataMap_bus             : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF
   ) return rvex_sa_generic_config_type;
     
-end standalone_pkg;
+end rvsys_standalone_pkg;
 
 --=============================================================================
-package body standalone_pkg is
+package body rvsys_standalone_pkg is
 --=============================================================================
 
   -- Generates a configuration for the rvex core.
@@ -166,4 +166,4 @@ package body standalone_pkg is
     return cfg;
   end rvex_sa_cfg;
     
-end standalone_pkg;
+end rvsys_standalone_pkg;

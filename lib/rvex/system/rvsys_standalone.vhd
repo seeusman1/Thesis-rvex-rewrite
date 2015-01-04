@@ -55,7 +55,7 @@ use rvex.utils_pkg.all;
 use rvex.bus_pkg.all;
 use rvex.bus_addrConv_pkg.all;
 use rvex.core_pkg.all;
-use rvex.standalone_pkg.all;
+use rvex.rvsys_standalone_pkg.all;
 
 --=============================================================================
 -- This is the toplevel for a "standalone" rvex core. A standalone core has
@@ -65,7 +65,7 @@ use rvex.standalone_pkg.all;
 -- the core will access when it does a memory operation which is out of the
 -- range of the local memory.
 -------------------------------------------------------------------------------
-entity standalone is
+entity rvsys_standalone is
 --=============================================================================
   generic (
     
@@ -131,10 +131,10 @@ entity standalone is
     rvsa2debug                  : out bus_slv2mst_type
     
   );
-end standalone;
+end rvsys_standalone;
 
 --=============================================================================
-architecture Behavioral of standalone is
+architecture Behavioral of rvsys_standalone is
 --=============================================================================
   -- 
   -- The diagram below shows the bus network instantiated by this unit.
@@ -221,7 +221,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the rvex core
   -----------------------------------------------------------------------------
-  core: entity rvex.standalone_core
+  core: entity rvex.rvsys_standalone_core
     generic map (
       CFG                       => CFG.core
     )

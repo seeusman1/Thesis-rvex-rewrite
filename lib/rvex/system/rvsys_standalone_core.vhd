@@ -59,7 +59,7 @@ use rvex.core_pkg.all;
 -- This unit wraps the rvex core, bridging between the raw data/instruction
 -- I/O ports and a number of busses as specified in bus_pkg.vhd.
 -------------------------------------------------------------------------------
-entity standalone_core is
+entity rvsys_standalone_core is
 --=============================================================================
   generic (
     
@@ -132,10 +132,10 @@ entity standalone_core is
     rv2dbg                      : out bus_slv2mst_type
     
   );
-end standalone_core;
+end rvsys_standalone_core;
 
 --=============================================================================
-architecture Behavioral of standalone_core is
+architecture Behavioral of rvsys_standalone_core is
 --=============================================================================
   
   -- Common memory interface.
