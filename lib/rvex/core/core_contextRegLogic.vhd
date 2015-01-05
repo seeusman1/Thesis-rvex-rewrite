@@ -435,6 +435,7 @@ begin -- architecture
     -- when the debug bus writes to the register, stall will also be high due
     -- to the bus claiming logic.
     creg_makeNormalRegister(l2c, c2l, CR_PC, 31, 0,
+      resetState    => CFG.resetVectors(CONTEXT_INDEX),
       writeEnable   => (not cxplif2cxreg_stall)
                    and (not creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_JUMP)),
       writeData     => cxplif2cxreg_nextPC,

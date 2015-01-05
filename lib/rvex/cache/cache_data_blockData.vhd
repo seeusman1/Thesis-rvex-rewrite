@@ -104,7 +104,7 @@ architecture Behavioral of cache_data_blockData is
   attribute ram_style         : string;
   
   -- Cache data memory.
-  subtype ram_data_type is rvex_data_array(0 to CCFG.dataCacheLinesLog2-1);
+  subtype ram_data_type is rvex_data_array(0 to 2**CCFG.dataCacheLinesLog2-1);
   signal ram_data             : ram_data_type := (others => (others => 'X'));
   
   -- Hints for XST to implement the data memory in block RAMs.

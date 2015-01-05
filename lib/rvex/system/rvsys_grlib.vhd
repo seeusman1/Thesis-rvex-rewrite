@@ -354,6 +354,11 @@ begin -- architecture
       
     );
   
+  -- We don't have a bus snooping interface yet.
+  bus2cache_invalAddr   <= (others => '0');
+  bus2cache_invalSource <= (others => '0');
+  bus2cache_invalEnable <= '0';
+  
   -- We don't have anything to control the flush signals with yet.
   sc2icache_flush <= (others => '0');
   sc2dcache_flush <= (others => '0');

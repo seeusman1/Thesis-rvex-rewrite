@@ -112,7 +112,7 @@ architecture Behavioral of cache_data_blockValid is
 --=============================================================================
   
   -- Valid bit memory.
-  signal ram_valid            : std_logic_vector(CCFG.dataCacheLinesLog2-1 downto 0);
+  signal ram_valid            : std_logic_vector(2**CCFG.dataCacheLinesLog2-1 downto 0);
   
   -- Load shorthand notations for the address vector metrics.
   constant OFFSET_LSB         : natural := dcacheOffsetLSB(RCFG, CCFG);

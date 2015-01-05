@@ -475,7 +475,7 @@ begin -- architecture
             -- Override the PC output bits related to the offset within the
             -- cache line. Note: if unaligned reads are to become a thing later
             -- on, this needs to become a full blown adder.
-            outLo.PC_r(laneGroupInstrSizeBLog2(RCFG, CCFG) + 2 + lvl) := '0';
+            outLo.PC_r(laneGroupInstrSizeBLog2(RCFG, CCFG) + lvl) := '0';
             outHi.PC_r(laneGroupInstrSizeBLog2(RCFG, CCFG) + lvl) := '1';
             
             -- Merge the blockReconfig signals.
@@ -503,27 +503,36 @@ begin -- architecture
     -- previous cycle.
     process (outNetwork(RCFG.numLaneGroupsLog2)(i)) is
       variable omd                    : outNetworkEdge_type;
-      variable bitOffset              : natural;
+      variable offset                 : natural range 0 to 2**RCFG.numLaneGroupsLog2-1;
       constant LANE_GROUP_SIZE_BLOG2  : natural := laneGroupInstrSizeBLog2(RCFG, CCFG);
       constant LANE_GROUP_SIZE_BITS   : natural := 8 * 2**LANE_GROUP_SIZE_BLOG2;
-      variable groupInstr             : std_logic_vector(LANE_GROUP_SIZE_BITS-1 downto 0);
     begin
       
       -- Shorthand for our output signal.
       omd := outNetwork(RCFG.numLaneGroupsLog2)(i);
       
-      -- Compute the bit offset within the cache line based upon the PC.
-      bitOffset := to_integer(unsigned(omd.PC_r(
+      -- Compute the offset within the cache line based upon the PC.
+      offset := to_integer(unsigned(omd.PC_r(
         LANE_GROUP_SIZE_BLOG2 + RCFG.numLaneGroupsLog2 - 1 downto LANE_GROUP_SIZE_BLOG2
-      ))) * LANE_GROUP_SIZE_BITS;
-      
-      -- Select the instruction based upon the computed offset within the line.
-      groupInstr := omd.line(bitOffset + LANE_GROUP_SIZE_BITS - 1 downto bitOffset);
+      )));
       
       -- Drive the syllable outputs.
       for laneIndex in 0 to 2**(RCFG.numLanesLog2 - RCFG.numLaneGroupsLog2)-1 loop
-        icache2rv_instr(laneIndex + group2firstLane(i, RCFG))
-          <= groupInstr(32*laneIndex + 31 downto 32*laneIndex);
+        report "Assigning omd.line("
+             & integer'image(LANE_GROUP_SIZE_BITS*offset + 32*laneIndex + 31)
+             & " downto "
+             & integer'image(LANE_GROUP_SIZE_BITS*offset + 32*laneIndex)
+             & ") to instr("
+             & integer'image(group2firstLane(i, RCFG) + laneIndex)
+             & ")..."
+          severity note;
+        
+        icache2rv_instr(group2firstLane(i, RCFG) + laneIndex)
+          <= omd.line(
+            LANE_GROUP_SIZE_BITS*offset + 32*laneIndex + 31
+            downto
+            LANE_GROUP_SIZE_BITS*offset + 32*laneIndex
+          );
       end loop;
       
     end process;

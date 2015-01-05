@@ -1,10 +1,13 @@
 diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/config.vhd	2015-01-04 13:48:07.397759177 +0100
-@@ -13,6 +13,12 @@
++++ work/config.vhd	2015-01-04 21:34:13.737357066 +0100
+@@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
  
++library ieee;
++use ieee.std_logic_1164.all;
++
 +library rvex;
 +use rvex.common_pkg.all;
 +use rvex.core_pkg.all;
@@ -14,7 +17,7 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.v
  package config is
  -- Technology and synthesis options
    constant CFG_FABTECH : integer := virtex6;
-@@ -22,7 +28,7 @@ package config is
+@@ -22,7 +31,7 @@ package config is
    constant CFG_SCAN : integer := 0;
  -- LEON3 processor core
    constant CFG_LEON3 : integer := 1;
@@ -23,7 +26,7 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.v
    constant CFG_NWIN : integer := (8);
    constant CFG_V8 : integer := 16#32# + 4*0;
    constant CFG_MAC : integer := 0;
-@@ -61,7 +67,7 @@ package config is
+@@ -61,7 +70,7 @@ package config is
    constant CFG_TLB_TYPE : integer := 1 + 0*2;
    constant CFG_TLB_REP : integer := 1;
    constant CFG_MMU_PAGE : integer := 0;
@@ -32,7 +35,7 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.v
    constant CFG_ITBSZ : integer := 4;
    constant CFG_ATBSZ : integer := 4;
    constant CFG_LEON3FT_EN : integer := 0;
-@@ -73,6 +79,27 @@ package config is
+@@ -73,6 +82,28 @@ package config is
    constant CFG_LEON3_NETLIST: integer := 0;
    constant CFG_DISAS : integer := 0 + 0;
    constant CFG_PCLOW : integer := 2;
@@ -45,7 +48,8 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.v
 +    core => rvex_cfg(
 +      numLanesLog2        => 3,
 +      numLaneGroupsLog2   => 2,
-+      numContextsLog2     => 2
++      numContextsLog2     => 2,
++      resetVectors        => (others => X"40000000") -- DDR memory does not start at 0!
 +    ), core_valid => true,
 +    
 +    -- Cache configuration
@@ -62,7 +66,7 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.v
    constant CFG_RROBIN : integer := 1;
 diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/leon3mp.vhd	2015-01-04 13:56:09.719809084 +0100
++++ work/leon3mp.vhd	2015-01-04 18:54:18.037364166 +0100
 @@ -49,6 +49,11 @@ use work.pcie.all;
  -- pragma translate_off
  use gaisler.sim.all;
@@ -226,7 +230,7 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.
  
 diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile work/Makefile
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile	2014-04-16 16:50:08.000000000 +0200
-+++ work/Makefile	2015-01-04 02:21:07.651044424 +0100
++++ work/Makefile	2015-01-04 23:29:58.079075621 +0100
 @@ -1,5 +1,5 @@
  include .config
 -GRLIB=../..
@@ -301,7 +305,7 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile
  
  VERILOGOPTSYNFILES= \
  	mig/user_design/rtl/controller/*.v \
-@@ -136,23 +85,12 @@ VHDLSYNFILES= \
+@@ -136,29 +85,18 @@ VHDLSYNFILES= \
  
  VHDLSIMFILES=testbench.vhd
  
@@ -324,5 +328,13 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile
  TECHLIBS = secureip unisim
 +EXTRALIBS=../../../lib
  VLOGOPT= -O0
- VCOMOPT= -explicit -O0 
+-VCOMOPT= -explicit -O0 
++VCOMOPT= -explicit -O0
  ifeq ("$(GRLIB_SIMULATOR)","ALDEC")
+ VSIMOPT= +access +w -t ps -novopt +notimingchecks -L secureip_ver -L xilinxcorelib_ver -L unisims_ver glbl $(SIMTOP)
+ else
+-VSIMOPT= -t ps -novopt +notimingchecks -L secureip_ver -L xilinxcorelib_ver -L unisims_ver glbl $(SIMTOP)
++VSIMOPT= -t ps -do ../phy.do -novopt +notimingchecks -L secureip_ver -L xilinxcorelib_ver -L unisims_ver glbl $(SIMTOP)
+ endif
+ 
+ LIBSKIP = core1553bbc core1553brm core1553brt gr1553 corePCIF \

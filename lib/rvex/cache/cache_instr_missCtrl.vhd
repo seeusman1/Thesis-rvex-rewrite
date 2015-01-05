@@ -244,7 +244,7 @@ begin -- architecture
     cacheToBus.address(31 downto icacheOffsetLSB(RCFG, CCFG))
       <= cpuAddr(31 downto icacheOffsetLSB(RCFG, CCFG));
     
-    if state_next >= 1 or state_next <= ACCESSES_PER_LINE then
+    if state_next >= 1 and state_next <= ACCESSES_PER_LINE then
       
       -- Request the next part. Set the burst and lock bus flags in order to do
       -- a burst transfer to speed things up.

@@ -107,6 +107,16 @@ end bus2ahb;
 architecture Behavioral of bus2ahb is
 --=============================================================================
   
+  -- Registered and latched versions of the bus command. _r is simply delayed
+  -- by one cycle, _l is connected to the combinatorial bus request in the
+  -- first cycle of a transfer and then switches to the registered version
+  -- while busy is high.
+  signal bus2bridge_r           : bus_mst2slv_type;
+  signal bus2bridge_l           : bus_mst2slv_type;
+  
+  -- Local bus result signal.
+  signal bridge2bus_s           : bus_slv2mst_type;
+  
   -- Interfacing signals for grlib.dma2ahb.
   signal bus2bridge_dma         : dma_in_type;
   signal bridge2bus_dma         : dma_out_type;
@@ -122,27 +132,44 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Bus request translation
   -----------------------------------------------------------------------------
-  bus_request_proc: process (bus2bridge, reset) is
+  -- Generate a register which stores the bus request for the ongoing transfer.
+  bus_request_reg: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        bus2bridge_r <= BUS_MST2SLV_IDLE;
+      else
+        bus2bridge_r <= bus2bridge;
+      end if;
+    end if;
+  end process;
+  
+  -- Switch from the incoming bus request to the registered version of the
+  -- request while the bus is busy.
+  bus2bridge_l <= bus2bridge_r when bridge2bus_s.busy = '1' else bus2bridge;
+  
+  -- Convert the bus request into the format expected by the AHB master.
+  bus_request_proc: process (bus2bridge_l, reset) is
     variable size               : std_logic_vector(1 downto 0);
     variable index              : std_logic_vector(1 downto 0);
   begin
     
     -- Assign trivial signals and set defaults.
     bus2bridge_dma.reset        <= reset;
-    bus2bridge_dma.address      <= bus2bridge.address;
-    bus2bridge_dma.data         <= bus2bridge.writeData;
-    bus2bridge_dma.request      <= bus2bridge.readEnable or bus2bridge.writeEnable;
-    bus2bridge_dma.burst        <= bus2bridge.flags.burst;
+    bus2bridge_dma.address      <= bus2bridge_l.address;
+    bus2bridge_dma.data         <= bus2bridge_l.writeData;
+    bus2bridge_dma.request      <= bus2bridge_l.readEnable or bus2bridge_l.writeEnable;
+    bus2bridge_dma.burst        <= bus2bridge_l.flags.burst;
     bus2bridge_dma.beat         <= HINCR4;
     bus2bridge_dma.size         <= HSIZE32;
-    bus2bridge_dma.store        <= bus2bridge.writeEnable;
-    bus2bridge_dma.lock         <= bus2bridge.flags.lock;
+    bus2bridge_dma.store        <= bus2bridge_l.writeEnable;
+    bus2bridge_dma.lock         <= bus2bridge_l.flags.lock;
     
     -- Perform byte mask to size/address translation.
     size := HSIZE32;
     index := "00";
-    if bus2bridge.writeEnable = '1' then
-      case bus2bridge.writeMask is
+    if bus2bridge_l.writeEnable = '1' then
+      case bus2bridge_l.writeMask is
         when "1000" => size := HSIZE8;  index := "00";
         when "0100" => size := HSIZE8;  index := "01";
         when "0010" => size := HSIZE8;  index := "10";
@@ -173,33 +200,38 @@ begin -- architecture
     end if;
   end process;
   
-  -- Drive the bus result output.
+  -- Determine the bus result.
   bus_result_proc: process (bridge2bus_dma, requesting_r) is
     variable ack  : std_logic;
   begin
     
     -- Set default values.
-    bridge2bus <= BUS_SLV2MST_IDLE;
+    bridge2bus_s <= BUS_SLV2MST_IDLE;
     
     -- Handle normal operation.
-    bridge2bus.readData   <= bridge2bus_dma.data;
-    bridge2bus.fault      <= '0';
-    bridge2bus.busy       <= requesting_r and not bridge2bus_dma.okay;
-    bridge2bus.ack        <= bridge2bus_dma.okay;
+    bridge2bus_s.readData   <= bridge2bus_dma.data;
+    bridge2bus_s.fault      <= '0';
+    bridge2bus_s.busy       <= requesting_r and not bridge2bus_dma.okay;
+    bridge2bus_s.ack        <= bridge2bus_dma.okay;
     
     -- Handle bus errors.
     if bridge2bus_dma.fault = '1' then
-      bridge2bus.readData <= BUS_ERROR_CODE;
-      bridge2bus.fault    <= '1';
-      bridge2bus.busy     <= '0';
-      bridge2bus.ack      <= '1';
+      bridge2bus_s.readData <= BUS_ERROR_CODE;
+      bridge2bus_s.fault    <= '1';
+      bridge2bus_s.busy     <= '0';
+      bridge2bus_s.ack      <= '1';
     end if;
     
   end process;
   
+  -- Forward the bus result.
+  bridge2bus <= bridge2bus_s;
+  
   -----------------------------------------------------------------------------
   -- Instantiate the grlib AHB master
   -----------------------------------------------------------------------------
+  -- FIXME: dma2ahb seems to deadlock when a bus error occurs. Need to either
+  -- fix dma2ahb, use another master from grlib or make our own AHB master.
   ahb_master_block: block is
     signal hreset_n             : std_ulogic;
     signal hclk                 : std_ulogic;

@@ -71,38 +71,38 @@ entity cache_instr_blockValid is
   port (
     
     -- Clock input.
-    clk                       : in  std_logic;
+    clk                         : in  std_logic;
     
     -- Active high reset input.
-    reset                     : in  std_logic;
+    reset                       : in  std_logic;
     
     -- Active high enable input for the CPU domain.
-    enableCPU                 : in  std_logic;
+    enableCPU                   : in  std_logic;
     
     -- Active high enable input for the bus domain.
-    enableBus                 : in  std_logic;
+    enableBus                   : in  std_logic;
     
     -- CPU address/PC input.
-    cpuAddr                   : in  rvex_address_type;
+    cpuAddr                     : in  rvex_address_type;
     
     -- Valid output for the CPU, delayed by one cycle to synchronize with the
     -- tag memory. Governed by enableCPU.
-    cpuValid                  : out std_logic;
+    cpuValid                    : out std_logic;
     
     -- Active high validate input. This synchronously sets the valid bit
     -- addressed by the CPU. Governed by enableCPU.
-    validate                  : in  std_logic;
+    validate                    : in  std_logic;
     
     -- Invalidate address input. Governed by enableBus.
-    invalAddr                 : in  rvex_address_type;
+    invalAddr                   : in  rvex_address_type;
     
     -- Active high invalidate input. This synchronously resets the valid bit
     -- addressed by invalAddr. Governed by enableBus.
-    invalidate                : in  std_logic;
+    invalidate                  : in  std_logic;
     
     -- Active high flush input. This synchronously resets all valid bits.
     -- Governed by enableBus.
-    flush                     : in  std_logic
+    flush                       : in  std_logic
     
   );
 end cache_instr_blockValid;
@@ -112,17 +112,17 @@ architecture Behavioral of cache_instr_blockValid is
 --=============================================================================
   
   -- Valid bit memory.
-  signal ram_valid            : std_logic_vector(CCFG.instrCacheLinesLog2-1 downto 0);
+  signal ram_valid              : std_logic_vector(2**CCFG.instrCacheLinesLog2-1 downto 0);
   
   -- Load shorthand notations for the address vector metrics.
-  constant OFFSET_LSB         : natural := icacheOffsetLSB(RCFG, CCFG);
-  constant OFFSET_SIZE        : natural := icacheOffsetSize(RCFG, CCFG);
+  constant OFFSET_LSB           : natural := icacheOffsetLSB(RCFG, CCFG);
+  constant OFFSET_SIZE          : natural := icacheOffsetSize(RCFG, CCFG);
   
   -- CPU offset extracted from byte address/PC.
-  signal cpuOffset            : std_logic_vector(OFFSET_SIZE-1 downto 0);
+  signal cpuOffset              : std_logic_vector(OFFSET_SIZE-1 downto 0);
   
   -- Invalidate offset extracted from byte address.
-  signal invalOffset          : std_logic_vector(OFFSET_SIZE-1 downto 0);
+  signal invalOffset            : std_logic_vector(OFFSET_SIZE-1 downto 0);
   
 --=============================================================================
 begin -- architecture
