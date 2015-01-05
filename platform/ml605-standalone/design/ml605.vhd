@@ -146,8 +146,8 @@ begin -- architecture
         
         -- Configuration.
         CFG                       => rvex_sa_cfg(
-          imemDepthLog2B          => 16,
-          dmemDepthLog2B          => 16
+          imemDepthLog2B          => 18, -- 256 kiB (0x00000..0x3FFFF)
+          dmemDepthLog2B          => 18
         )
         
       )
