@@ -37,6 +37,14 @@ architecture Behavioral of testbench is
   signal clkEnCPU               : std_logic;
   signal clkEnBus               : std_logic;
   
+  -- Debug interface signals.
+  signal dbg2rv_addr            : rvex_address_type;
+  signal dbg2rv_readEnable      : std_logic;
+  signal dbg2rv_writeEnable     : std_logic;
+  signal dbg2rv_writeMask       : rvex_mask_type;
+  signal dbg2rv_writeData       : rvex_data_type;
+  signal rv2dbg_readData        : rvex_data_type;
+  
   -- Common cache interface signals.
   signal rv2cache_decouple      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal cache2rv_blockReconfig : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -130,9 +138,54 @@ begin -- architecture
       rv2dmem_writeData         => rv2dcache_writeData,
       rv2dmem_writeMask         => rv2dcache_writeMask,
       rv2dmem_writeEnable       => rv2dcache_writeEnable,
-      dmem2rv_readData          => dcache2rv_readData
+      dmem2rv_readData          => dcache2rv_readData,
+      
+      -- Control/debug bus interface.
+      dbg2rv_addr               => dbg2rv_addr,
+      dbg2rv_readEnable         => dbg2rv_readEnable,
+      dbg2rv_writeEnable        => dbg2rv_writeEnable,
+      dbg2rv_writeMask          => dbg2rv_writeMask,
+      dbg2rv_writeData          => dbg2rv_writeData,
+      rv2dbg_readData           => rv2dbg_readData
       
     );
+  
+  -- Spam debug interface requests...
+  debug_interface_spam: process is
+  begin
+    dbg2rv_addr         <= (others => '0');
+    dbg2rv_readEnable   <= '0';
+    dbg2rv_writeEnable  <= '0';
+    dbg2rv_writeMask    <= (others => '1');
+    dbg2rv_writeData    <= (others => '0');
+--    for i in 0 to 20 loop
+--      wait until rising_edge(clk);
+--    end loop;
+--    loop
+--      for i in 0 to 0 loop
+--        wait until rising_edge(clk);
+--      end loop;
+--      dbg2rv_addr <= X"00000030";
+--      dbg2rv_readEnable <= '1';
+--      wait until rising_edge(clk);
+--      dbg2rv_readEnable <= '0';
+--      for i in 0 to 0 loop
+--        wait until rising_edge(clk);
+--      end loop;
+--      dbg2rv_addr <= X"00000080";
+--      dbg2rv_writeEnable <= '1';
+--      wait until rising_edge(clk);
+--      dbg2rv_writeEnable <= '0';
+--      for i in 0 to 0 loop
+--        wait until rising_edge(clk);
+--      end loop;
+--      dbg2rv_addr <= X"00000000";
+--      dbg2rv_writeEnable <= '1';
+--      wait until rising_edge(clk);
+--      dbg2rv_writeEnable <= '0';
+--    end loop;
+    wait;
+  end process;
   
   -----------------------------------------------------------------------------
   -- Test cache integrity
