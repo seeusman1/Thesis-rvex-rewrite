@@ -516,17 +516,17 @@ begin -- architecture
         LANE_GROUP_SIZE_BLOG2 + RCFG.numLaneGroupsLog2 - 1 downto LANE_GROUP_SIZE_BLOG2
       )));
       
+      -- VHDL doesn't seem to understand that we're only ever assigning part
+      -- of icache2rv_instr each time this process is instantiated by the
+      -- generate statement. To get it to stop forcing 'U' on signals from
+      -- processes which shouldn't even be assigning the signal, we initialize
+      -- with 'Z' instead and let the std_logic resolution function handle it.
+      -- Synthesis tools should handle this appropriately too, I would think;
+      -- this is very ugly though.
+      icache2rv_instr <= (others => (others => 'Z'));
+      
       -- Drive the syllable outputs.
       for laneIndex in 0 to 2**(RCFG.numLanesLog2 - RCFG.numLaneGroupsLog2)-1 loop
-        report "Assigning omd.line("
-             & integer'image(LANE_GROUP_SIZE_BITS*offset + 32*laneIndex + 31)
-             & " downto "
-             & integer'image(LANE_GROUP_SIZE_BITS*offset + 32*laneIndex)
-             & ") to instr("
-             & integer'image(group2firstLane(i, RCFG) + laneIndex)
-             & ")..."
-          severity note;
-        
         icache2rv_instr(group2firstLane(i, RCFG) + laneIndex)
           <= omd.line(
             LANE_GROUP_SIZE_BITS*offset + 32*laneIndex + 31

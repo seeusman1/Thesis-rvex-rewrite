@@ -334,8 +334,11 @@ begin -- architecture
     -- Active high write enable signals from the lane groups.
     inNetwork(0)(i).writeEnable <= rv2dcache_writeEnable(i);
     
-    -- Active high bypass signals from the lane groups.
-    inNetwork(0)(i).bypass <= rv2dcache_bypass(i);
+    -- Active high bypass signals from the lane groups. Only pass this through
+    -- when readEnable or writeEnable is high.
+    inNetwork(0)(i).bypass
+      <= rv2dcache_bypass(i)
+      and (rv2dcache_readEnable(i) or rv2dcache_writeEnable(i));
     
     -- Stall network input.
     inNetwork(0)(i).stall <= rv2dcache_stallOut(i);
@@ -424,6 +427,7 @@ begin -- architecture
             outLo.writeData   := inHi.writeData;
             outLo.writeMask   := inHi.writeMask;
             outLo.writeEnable := inHi.writeEnable;
+            outLo.bypass      := inHi.bypass;
             
             -- If bypass is active, set the lo output request signals to idle,
             -- so only the highest indexed block will service the bypass

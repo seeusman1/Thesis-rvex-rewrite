@@ -238,10 +238,11 @@ begin -- architecture
   end process;
   
   -- Use the lookup table to select the currently active master in the request
-  -- stage. Do not switch masters when locked is asserted.
+  -- stage. Do not switch masters when locked is asserted, or when the slave is
+  -- busy.
   requestSelect <=
     SCHED_LOOKUP(vect2uint(requesting & resultSelect))
-    when locked = '0'
+    when locked = '0' and slv2arb.busy = '0'
     else resultSelect;
   
   -- Register the requestSelect signal when the slave is ready to accept a new

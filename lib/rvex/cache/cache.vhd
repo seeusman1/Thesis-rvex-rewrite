@@ -150,8 +150,8 @@ entity cache is
     -- The timing of these signals is governed by clkEnBus.
     
     -- Cache flush request signals for each instruction and data cache.
-    sc2icache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    sc2dcache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0)
+    sc2icache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    sc2dcache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0')
     
   );
 end cache;
