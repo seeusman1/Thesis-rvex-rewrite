@@ -1,0 +1,1 @@
+C compilation of x264.c_ causes invalid schedules; x264.S fixes those bundles.
