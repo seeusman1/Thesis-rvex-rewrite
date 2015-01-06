@@ -107,6 +107,18 @@ end ml605;
 architecture Behavioral of ml605 is
 --=============================================================================
   
+  -- Core and standalone system configuration.
+  constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg_c(
+    base => rvex_sa_cfg(
+      imemDepthLog2B            => 18, -- 256 kiB (0x00000..0x3FFFF)
+      dmemDepthLog2B            => 18
+    ), core => rvex_cfg(
+      numLanesLog2              => 3,
+      numLaneGroupsLog2         => 0,
+      numContextsLog2           => 2
+    )
+  );
+  
   -- This determines the internal clock frequency.
   function f_clk_fn return real is
   begin
@@ -134,10 +146,47 @@ begin -- architecture
   -----------------------------------------------------------------------------
   rvex_standalone: block is
     
+    constant DEBUG_ADDRESS_MAP    : addrRangeAndMapping_array(0 to 1) := (
+      
+      -- Standalone platform debug port.
+      --   0x00------ = IMEM
+      --   0x10------ = DMEM
+      --   0xF0------ = core debug port
+      0 => addrRangeAndMap(
+        match => "----0000------------------------"
+      ),
+      
+      -- RIT timer.
+      --   0xF1------ = RIT timer.
+      1 => addrRangeAndMap(
+        match => "----0001------------------------"
+      )
+      
+    );
+    
+    -- Peripheral bus.
     signal rvsa2bus               : bus_mst2slv_type;
     signal bus2rvsa               : bus_slv2mst_type;
-    signal debug2rvsa             : bus_mst2slv_type;
-    signal rvsa2debug             : bus_slv2mst_type;
+    
+    -- Debug bus from the UART.
+    signal uart2dbg               : bus_mst2slv_type;
+    signal dbg2uart               : bus_slv2mst_type;
+    
+    -- Standalone core debug access bus.
+    signal dbg2rvsa               : bus_mst2slv_type;
+    signal rvsa2dbg               : bus_slv2mst_type;
+    
+    -- RIT access bus.
+    signal dbg2rit                : bus_mst2slv_type;
+    signal rit2dbg                : bus_slv2mst_type;
+    
+    -- Interrupt signals from and to the core.
+    signal rctrl2rvsa_irq         : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
+    signal rctrl2rvsa_irqID       : rvex_address_array(2**CFG.core.numContextsLog2-1 downto 0);
+    signal rvsa2rctrl_irqAck      : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
+    
+    -- Local transmit signal, so we can also tie it to an LED.
+    signal tx_s                   : std_logic;
     
   begin
     
@@ -145,10 +194,7 @@ begin -- architecture
       generic map (
         
         -- Configuration.
-        CFG                       => rvex_sa_cfg(
-          imemDepthLog2B          => 18, -- 256 kiB (0x00000..0x3FFFF)
-          dmemDepthLog2B          => 18
-        )
+        CFG                       => CFG
         
       )
       port map (
@@ -158,11 +204,16 @@ begin -- architecture
         clk                       => clk,
         clkEn                     => clkEn,
         
+        -- Run control interface.
+        rctrl2rvsa_irq            => rctrl2rvsa_irq,
+        rctrl2rvsa_irqID          => rctrl2rvsa_irqID,
+        rvsa2rctrl_irqAck         => rvsa2rctrl_irqAck,
+        
         -- Bus interfaces.
         rvsa2bus                  => rvsa2bus,
         bus2rvsa                  => bus2rvsa,
-        debug2rvsa                => debug2rvsa,
-        rvsa2debug                => rvsa2debug
+        debug2rvsa                => dbg2rvsa,
+        rvsa2debug                => rvsa2dbg
         
       );
     
@@ -180,7 +231,7 @@ begin -- architecture
         
         -- UART pins.
         rx                        => rx,
-        tx                        => tx,
+        tx                        => tx_s,
         
         -- Slave bus.
         bus2uart                  => rvsa2bus,
@@ -188,12 +239,125 @@ begin -- architecture
         irq                       => open,
         
         -- Debug interface.
-        uart2dbg_bus              => debug2rvsa,
-        dbg2uart_bus              => rvsa2debug
+        uart2dbg_bus              => uart2dbg,
+        dbg2uart_bus              => dbg2uart
         
       );
     
-    leds <= (others => '0');
+    dbg_bus_demux: entity rvex.bus_demux
+      generic map (
+        ADDRESS_MAP               => DEBUG_ADDRESS_MAP
+      )
+      port map (
+        
+        -- System control.
+        reset                     => reset,
+        clk                       => clk,
+        clkEn                     => clkEn,
+        
+        -- Busses.
+        mst2demux                 => uart2dbg,
+        demux2mst                 => dbg2uart,
+        demux2slv(0)              => dbg2rvsa,
+        demux2slv(1)              => dbg2rit,
+        slv2demux(0)              => rvsa2dbg,
+        slv2demux(1)              => rit2dbg
+        
+      );
+    
+    -- Repititive interrupt timer.
+    rit_block: block is
+      
+      -- Interrupt pending and acknowledge flags.
+      signal rit_pend             : std_logic;
+      signal rit_ack              : std_logic;
+      
+      -- Current timer and max timer value.
+      signal rit_timer            : rvex_data_type;
+      signal rit_max              : rvex_data_type;
+      
+    begin
+      
+      -- Broadcast the RIT overflow interrupt flag to all contexts as interrupt
+      -- ID 1.
+      rctrl2rvsa_irq
+        <= (others => rit_pend);
+      rctrl2rvsa_irqID
+        <= (others => X"00000001") when rit_pend = '1' else (others => X"00000000");
+      
+      -- Combine all the interrupt acknowledge signals into a single ack signal.
+      rit_ack_proc: process (rvsa2rctrl_irqAck) is
+      begin
+        rit_ack <= '0';
+        for ctxt in 0 to 2**CFG.core.numContextsLog2-1 loop
+          if rvsa2rctrl_irqAck(ctxt) = '1' then
+            rit_ack <= '1';
+          end if;
+        end loop;
+      end process;
+      
+      -- Create the RIT timer.
+      rit_regs: process (clk) is
+      begin
+        if rising_edge(clk) then
+          if reset = '1' then
+            rit_pend  <= '0';
+            rit_timer <= X"00000000";
+            rit_max   <= X"0000FFFF";
+            rit2dbg   <= BUS_SLV2MST_IDLE;
+          elsif clkEn = '1' then
+            
+            -- Clear the pending flag when we get an acknowledge from a core.
+            if rit_ack = '1' then
+              rit_pend <= '0';
+            end if;
+            
+            -- Increment the timer, checking for overflows.
+            if rit_timer = rit_max then
+              rit_timer <= (others => '0');
+            else
+              rit_timer <= std_logic_vector(unsigned(rit_timer) + 1);
+            end if;
+            
+            -- Handle bus commands.
+            rit2dbg <= BUS_SLV2MST_IDLE;
+            if dbg2rit.readEnable = '1' then
+              if dbg2rit.address(2) = '0' then
+                rit2dbg.readData <= rit_timer;
+              else
+                rit2dbg.readData <= rit_max;
+              end if;
+              rit2dbg.ack <= '1';
+            elsif dbg2rit.writeEnable = '1' then
+              if dbg2rit.writeMask = "1111" then
+                if dbg2rit.address(2) = '0' then
+                  rit_timer <= dbg2rit.writeData;
+                else
+                  rit_max <= dbg2rit.writeData;
+                end if;
+              end if;
+              rit2dbg.ack <= '1';
+            end if;
+            
+          end if;
+        end if;
+      end process;
+      
+    end block;
+    
+    -- Tie LEDs to useful signals.
+    leds <= (
+      0 => rx,
+      1 => tx_s,
+      2 => '0',
+      3 => rctrl2rvsa_irq(0),
+      4 => '0',
+      5 => '0',
+      6 => '0',
+      7 => reset
+    );
+    
+    tx <= tx_s;
     
   end block;
   

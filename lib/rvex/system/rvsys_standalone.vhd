@@ -330,11 +330,11 @@ begin -- architecture
     
     -- First and last data memory bus connected to port A.
     constant SA : natural := 0;
-    constant EA : natural := (2**CFG.core.numLaneGroupsLog2 / 2) - 1;
+    constant EA : integer := (2**CFG.core.numLaneGroupsLog2 / 2) - 1;
     
     -- First and last data memory bus connected to port B.
     constant SB : natural := EA + 1;
-    constant EB : natural := 2**CFG.core.numLaneGroupsLog2-1;
+    constant EB : integer := 2**CFG.core.numLaneGroupsLog2-1;
     
   begin
     

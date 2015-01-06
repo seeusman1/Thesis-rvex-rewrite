@@ -95,7 +95,7 @@ SRC = src
 
 EXECUTABLES = adpcm blit crc des fir pocsag \
 	ucbqsort bcnt compress engine g3fax jpeg qurt v42 \
-	adpcm1 dft itver2 matrix memwrite soma x264 uart #This line contains programs not from Powerstone
+	adpcm1 dft itver2 matrix memwrite soma x264 uart timer #This line contains programs not from Powerstone
 
 .SUFFIXES:
 .PRECIOUS: %.o %.s %.elf %.srec %.disas
