@@ -250,7 +250,7 @@ begin -- architecture
   
   -- Connect the debug override read data result to the read output of read
   -- port 1.
-  gpreg2creg_readData <= readData(0);
+  gpreg2creg_readData <= readData_comb(0);
   
   -----------------------------------------------------------------------------
   -- Instantiate forwarding logic

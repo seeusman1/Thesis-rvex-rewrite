@@ -1,0 +1,18 @@
+
+# Pin mapping constraints for the ZedBoard.
+NET "sysclk" LOC = Y9;
+NET "resetButton" LOC = R16;
+NET "rx" LOC = C14;
+NET "tx" LOC = D11;
+NET "leds[0]" LOC = T22;
+NET "leds[1]" LOC = T21;
+NET "leds[2]" LOC = U22;
+NET "leds[3]" LOC = U21;
+NET "leds[4]" LOC = V22;
+NET "leds[5]" LOC = W22;
+NET "leds[6]" LOC = U19;
+NET "leds[7]" LOC = U14;
+
+# Timing constraints for system clock.
+NET "sysclk" TNM_NET = sysclk;
+TIMESPEC TS_sysclk = PERIOD "sysclk" 100 MHz HIGH 50%;

@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<generated_project xmlns="http://www.xilinx.com/XMLSchema" xmlns:xil_pn="http://www.xilinx.com/XMLSchema">
+
+  <!--                                                          -->
+
+  <!--             For tool use only. Do not edit.              -->
+
+  <!--                                                          -->
+
+  <!-- ProjectNavigator created generated project file.         -->
+
+  <!-- For use in tracking generated file and other information -->
+
+  <!-- allowing preservation of process status.                 -->
+
+  <!--                                                          -->
+
+  <!-- Copyright (c) 1995-2011 Xilinx, Inc.  All rights reserved. -->
+
+  <version xmlns="http://www.xilinx.com/XMLSchema">11.1</version>
+
+  <sourceproject xmlns="http://www.xilinx.com/XMLSchema" xil_pn:fileType="FILE_XISE" xil_pn:name="standalone.xise"/>
+
+  <files xmlns="http://www.xilinx.com/XMLSchema">
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="_ngo"/>
+    <file xil_pn:fileType="FILE_XMSGS" xil_pn:name="_xmsgs/map.xmsgs"/>
+    <file xil_pn:fileType="FILE_XMSGS" xil_pn:name="_xmsgs/ngdbuild.xmsgs"/>
+    <file xil_pn:fileType="FILE_XMSGS" xil_pn:name="_xmsgs/xst.xmsgs"/>
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="core_cfgCtrl_tb_beh.prj"/>
+    <file xil_pn:branch="BehavioralSim" xil_pn:fileType="FILE_ISIM_EXE" xil_pn:name="core_cfgCtrl_tb_isim_beh.exe"/>
+    <file xil_pn:fileType="FILE_ISIM_MISC" xil_pn:name="core_cfgCtrl_tb_isim_beh.wdb"/>
+    <file xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="core_cfgCtrl_tb_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_LOG" xil_pn:name="fuse.log"/>
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="isim"/>
+    <file xil_pn:branch="BehavioralSim" xil_pn:fileType="FILE_CMD" xil_pn:name="isim.cmd"/>
+    <file xil_pn:fileType="FILE_CMD_LOG" xil_pn:name="ml605.cmd_log"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_LSO" xil_pn:name="ml605.lso"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGC" xil_pn:name="ml605.ngc"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGR" xil_pn:name="ml605.ngr"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="ml605.prj"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_STX" xil_pn:name="ml605.stx"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_REPORT" xil_pn:name="ml605.syr"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST" xil_pn:name="ml605.xst"/>
+    <file xil_pn:fileType="FILE_NCD" xil_pn:name="ml605_guide.ncd" xil_pn:origination="imported"/>
+    <file xil_pn:fileType="FILE_HTML" xil_pn:name="ml605_summary.html"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="ml605_tb_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_XRPT" xil_pn:name="ml605_xst.xrpt"/>
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="planAhead_run_1"/>
+    <file xil_pn:fileType="FILE_FITTER_REPORT" xil_pn:name="webtalk_pn.xml"/>
+    <file xil_pn:branch="BehavioralSim" xil_pn:fileType="FILE_INI" xil_pn:name="xilinxsim.ini"/>
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="xlnx_auto_0_xdb"/>
+    <file xil_pn:fileType="FILE_DIRECTORY" xil_pn:name="xst"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGDBUILD_LOG" xil_pn:name="zed.bld"/>
+    <file xil_pn:fileType="FILE_CMD_LOG" xil_pn:name="zed.cmd_log"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_LSO" xil_pn:name="zed.lso"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGC" xil_pn:name="zed.ngc"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGD" xil_pn:name="zed.ngd"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGR" xil_pn:name="zed.ngr"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="zed.prj"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_STX" xil_pn:name="zed.stx"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_REPORT" xil_pn:name="zed.syr"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST" xil_pn:name="zed.xst"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_MAP_REPORT" xil_pn:name="zed_map.map" xil_pn:subbranch="Map"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_MAP_REPORT" xil_pn:name="zed_map.mrp" xil_pn:subbranch="Map"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_NGM" xil_pn:name="zed_map.ngm" xil_pn:subbranch="Map"/>
+    <file xil_pn:fileType="FILE_XRPT" xil_pn:name="zed_ngdbuild.xrpt"/>
+    <file xil_pn:fileType="FILE_HTML" xil_pn:name="zed_summary.html"/>
+    <file xil_pn:branch="Implementation" xil_pn:fileType="FILE_XST_PROJECT" xil_pn:name="zed_tb_stx_beh.prj"/>
+    <file xil_pn:fileType="FILE_XRPT" xil_pn:name="zed_xst.xrpt"/>
+  </files>
+
+  <transforms xmlns="http://www.xilinx.com/XMLSchema">
+    <transform xil_pn:end_ts="1420547624" xil_pn:name="TRAN_copyInitialToAbstractSimulation" xil_pn:start_ts="1420547624">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420547661" xil_pn:in_ck="-3354923612332668477" xil_pn:name="TRAN_copyAbstractToPostAbstractSimulation" xil_pn:start_ts="1420547660">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="../../../lib/rvex/bus/bus_addrConv_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/bus/bus_arbiter.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/bus/bus_demux.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/bus/bus_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/bus/bus_ramBlock.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/common/common_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_alu.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_asDisas_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_br.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_brku.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_cfgCtrl.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_cfgCtrl_decode.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_cfgCtrl_tb.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_contextPipelaneIFace.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_contextRegLogic.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_ctrlRegs.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_ctrlRegs_bank.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_ctrlRegs_busSwitch.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_ctrlRegs_contextLaneSwitch.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_ctrlRegs_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_ctrlRegs_readPort.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_dmemSwitch.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_forward.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_globalRegLogic.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_gpRegs.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_gpRegs_mem.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_gpRegs_sim.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_intIface_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_limmRouting.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_listOpcodes_tb.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_memu.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_mulu.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_opcodeAlu_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_opcodeBranch_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_opcodeDatapath_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_opcodeMemory_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_opcodeMultiplier_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_opcode_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_pipelane.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_pipelanes.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_pipeline_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_trapRouting.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/core/core_trap_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/periph/periph_uart.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/periph/periph_uart_busIface.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/periph/periph_uart_fifo.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/periph/periph_uart_packetBuffer.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/periph/periph_uart_packetControl.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/periph/periph_uart_packetHandler.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/periph/periph_uart_switch.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/system/rvsys_standalone.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/system/rvsys_standalone_core.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/system/rvsys_standalone_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/temp/uart_tb.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/simUtils_mem_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/simUtils_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/simUtils_scanner_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/utils_crc.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/utils_fracDiv.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/utils_pkg.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/utils_uart.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/utils_uart_rxBit.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/utils_uart_rxByte.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/utils_uart_tb.vhd"/>
+      <outfile xil_pn:name="../../../lib/rvex/utils/utils_uart_tx.vhd"/>
+      <outfile xil_pn:name="../design/zed.vhd"/>
+      <outfile xil_pn:name="../design/zed_tb.vhd"/>
+    </transform>
+    <transform xil_pn:end_ts="1420538755" xil_pn:name="TRAN_copyInitialToXSTAbstractSynthesis" xil_pn:start_ts="1420538755">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420547672" xil_pn:name="TRAN_schematicsToHdl" xil_pn:prop_ck="8327407214437756362" xil_pn:start_ts="1420547672">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420547672" xil_pn:name="TRAN_regenerateCores" xil_pn:prop_ck="-7671489870515518461" xil_pn:start_ts="1420547672">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420538755" xil_pn:name="TRAN_SubProjectAbstractToPreProxy" xil_pn:start_ts="1420538755">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420547672" xil_pn:name="TRAN_xawsTohdl" xil_pn:prop_ck="-1310372328533088314" xil_pn:start_ts="1420547672">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420538755" xil_pn:name="TRAN_SubProjectPreToStructuralProxy" xil_pn:prop_ck="8962985228163542118" xil_pn:start_ts="1420538755">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420547672" xil_pn:name="TRAN_platgen" xil_pn:prop_ck="-898136161083992563" xil_pn:start_ts="1420547672">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420547841" xil_pn:in_ck="-407989067929322644" xil_pn:name="TRANEXT_xstsynthesize_virtex6" xil_pn:prop_ck="-4820124822028691536" xil_pn:start_ts="1420547672">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="WarningsGenerated"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="_xmsgs/xst.xmsgs"/>
+      <outfile xil_pn:name="webtalk_pn.xml"/>
+      <outfile xil_pn:name="xst"/>
+      <outfile xil_pn:name="zed.lso"/>
+      <outfile xil_pn:name="zed.ngc"/>
+      <outfile xil_pn:name="zed.ngr"/>
+      <outfile xil_pn:name="zed.prj"/>
+      <outfile xil_pn:name="zed.stx"/>
+      <outfile xil_pn:name="zed.syr"/>
+      <outfile xil_pn:name="zed.xst"/>
+      <outfile xil_pn:name="zed_tb_stx_beh.prj"/>
+      <outfile xil_pn:name="zed_xst.xrpt"/>
+    </transform>
+    <transform xil_pn:end_ts="1420547841" xil_pn:in_ck="-5017327394171327421" xil_pn:name="TRAN_compileBCD2" xil_pn:prop_ck="6055910155090134331" xil_pn:start_ts="1420547841">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="ReadyToRun"/>
+    </transform>
+    <transform xil_pn:end_ts="1420547872" xil_pn:in_ck="-6633292133059736628" xil_pn:name="TRANEXT_ngdbuild_FPGA" xil_pn:prop_ck="-6573561911745023759" xil_pn:start_ts="1420547841">
+      <status xil_pn:value="SuccessfullyRun"/>
+      <status xil_pn:value="WarningsGenerated"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="_ngo"/>
+      <outfile xil_pn:name="_xmsgs/ngdbuild.xmsgs"/>
+      <outfile xil_pn:name="zed.bld"/>
+      <outfile xil_pn:name="zed.ngd"/>
+      <outfile xil_pn:name="zed_ngdbuild.xrpt"/>
+    </transform>
+    <transform xil_pn:end_ts="1420547893" xil_pn:in_ck="-6633292133059736627" xil_pn:name="TRANEXT_map_virtex7" xil_pn:prop_ck="1846542590296566086" xil_pn:start_ts="1420547872">
+      <status xil_pn:value="FailedRun"/>
+      <status xil_pn:value="WarningsGenerated"/>
+      <status xil_pn:value="ReadyToRun"/>
+      <outfile xil_pn:name="_xmsgs/map.xmsgs"/>
+      <outfile xil_pn:name="zed_map.map"/>
+      <outfile xil_pn:name="zed_map.mrp"/>
+      <outfile xil_pn:name="zed_map.ngm"/>
+    </transform>
+  </transforms>
+
+</generated_project>

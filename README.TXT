@@ -33,7 +33,7 @@ There are currently 3 "platforms" for the rvex:
    To open the design, source your local Xilinx ISE environment setup script
    and run:
    
-   (cd platform/ml605-standalone/ise && ise rvex-rewrite.xise)
+   (cd platform/ml605-standalone/ise && ise standalone.xise)
    
    The ISE project can be used to synthesize the core and simulate it (kinda)
    using ISIM; there is no decent testbench yet, nor is there a modelsim

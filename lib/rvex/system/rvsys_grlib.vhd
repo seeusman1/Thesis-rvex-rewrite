@@ -158,10 +158,14 @@ architecture Behavioral of rvsys_grlib is
 --=============================================================================
   
   -- System control signals in the rvex library format.
-  signal reset                  : std_logic;
+  signal resetCPU               : std_logic;
+  signal resetBus               : std_logic;
   signal clk                    : std_logic;
   signal clkEnCPU               : std_logic;
   signal clkEnBus               : std_logic;
+  
+  -- Soft reset signal from the APB bus.
+  signal dbg_reset              : std_logic;
   
   -- rvex interrupt interface signals.
   signal rctrl2rv_irq           : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
@@ -227,7 +231,8 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- System control
   -----------------------------------------------------------------------------
-  reset     <= not rstn;
+  resetCPU  <= dbg_reset or not rstn;
+  resetBus  <= not rstn;
   clk       <= clki;
   clkEnCPU  <= '1';
   clkEnBus  <= '1';
@@ -242,7 +247,7 @@ begin -- architecture
     port map (
       
       -- System control.
-      reset                     => reset,
+      reset                     => resetCPU,
       clk                       => clk,
       clkEn                     => clkEnCPU,
       
@@ -282,13 +287,6 @@ begin -- architecture
       
     );
   
-  -- We don't have anything to control the debug bus interface with yet.
-  dbg2rv_addr         <= (others => '0');
-  dbg2rv_readEnable   <= '0';
-  dbg2rv_writeEnable  <= '0';
-  dbg2rv_writeMask    <= (others => '0');
-  dbg2rv_writeData    <= (others => '0');
-  
   -----------------------------------------------------------------------------
   -- Generate the bypass signals
   -----------------------------------------------------------------------------
@@ -312,7 +310,7 @@ begin -- architecture
     port map (
       
       -- System control.
-      reset                     => reset,
+      reset                     => resetCPU,
       clk                       => clk,
       clkEnCPU                  => clkEnCPU,
       clkEnBus                  => clkEnBus,
@@ -354,15 +352,6 @@ begin -- architecture
       
     );
   
-  -- We don't have a bus snooping interface yet.
-  bus2cache_invalAddr   <= (others => '0');
-  bus2cache_invalSource <= (others => '0');
-  bus2cache_invalEnable <= '0';
-  
-  -- We don't have anything to control the flush signals with yet.
-  sc2icache_flush <= (others => '0');
-  sc2dcache_flush <= (others => '0');
-  
   -----------------------------------------------------------------------------
   -- Instantiate the AHB bus bridges
   -----------------------------------------------------------------------------
@@ -384,7 +373,7 @@ begin -- architecture
       port map (
         
         -- System control.
-        reset                   => reset,
+        reset                   => resetBus,
         clk                     => clk,
         
         -- rvex library slave bus interface.
@@ -400,17 +389,21 @@ begin -- architecture
   end generate;
   
   -----------------------------------------------------------------------------
+  -- Bus snooper
+  -----------------------------------------------------------------------------
+  -- TODO
+  bus2cache_invalAddr   <= (others => '0');
+  bus2cache_invalSource <= (others => '0');
+  bus2cache_invalEnable <= '0';
+  
+  -----------------------------------------------------------------------------
   -- Interrupt controller bridge
   -----------------------------------------------------------------------------
-  -- TODO: this just ties things to null so things don't break, but it doesn't
-  -- do anything yet.
-  irq_dummy_gen: for ctxt in 2**CFG.core.numContextsLog2-1 downto 0 generate
+  irq_bridge_gen: for ctxt in 2**CFG.core.numContextsLog2-1 downto 0 generate
     
-    -- Drive the interrupt request signals.
+    -- TODO
     rctrl2rv_irq(ctxt)    <= '0';
     rctrl2rv_irqID(ctxt)  <= (others => '0');
-    
-    -- Drive the interrupt reply signals.
     irqo(ctxt).intack     <= '0';
     irqo(ctxt).irl        <= "0000";
     irqo(ctxt).pwd        <= '0';
@@ -418,6 +411,19 @@ begin -- architecture
     irqo(ctxt).idle       <= '1';
     
   end generate;
+  
+  -----------------------------------------------------------------------------
+  -- APB interface
+  -----------------------------------------------------------------------------
+  -- TODO
+  dbg2rv_addr         <= (others => '0');
+  dbg2rv_readEnable   <= '0';
+  dbg2rv_writeEnable  <= '0';
+  dbg2rv_writeMask    <= (others => '0');
+  dbg2rv_writeData    <= (others => '0');
+  sc2icache_flush     <= (others => '0');
+  sc2dcache_flush     <= (others => '0');
+  dbg_reset           <= '0';
   
 end Behavioral;
 
