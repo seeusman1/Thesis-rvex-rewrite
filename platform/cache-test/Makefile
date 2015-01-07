@@ -17,7 +17,7 @@ help:
 	@echo ""
 
 compile-%:
-	cd examples && $(MAKE) $(patsubst compile-%,%,$@)
+	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
 
 vsim-%: compile-%
 	cd modelsim && vsim -do sim.do
