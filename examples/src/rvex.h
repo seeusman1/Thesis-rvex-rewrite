@@ -86,22 +86,22 @@ int getchar(void);
 #define CR_SCCR                 CREG_UINT32_RW(0x24)
 
 // Interrupt enable/disable bits in (S)CCR.
-#define CR_CCR_IEN              0
-#define CR_CCR_IEN_C            1
+#define CR_CCR_IEN              1 << 0
+#define CR_CCR_IEN_C            1 << 1
 
 // Ready-for-trap enable/disable bits in (S)CCR.
-#define CR_CCR_RFT              2
-#define CR_CCR_RFT_C            3
+#define CR_CCR_RFT              1 << 2
+#define CR_CCR_RFT_C            1 << 3
 
 // Breakpoint enable/disable bits in (S)CCR (for self-hosted debug mode).
-#define CR_CCR_BPE              4
-#define CR_CCR_BPE_C            5
+#define CR_CCR_BPE              1 << 4
+#define CR_CCR_BPE_C            1 << 5
 
 // Shorthand notation for enabling/disabling interrupts/traps (in CCR).
-#define ENABLE_IRQ              CR_CCR = 1 << CR_CCR_IEN
-#define DISABLE_IRQ             CR_CCR = 1 << CR_CCR_IEN_C
-#define ENABLE_TRAPS            CR_CCR = 1 << CR_CCR_RFT
-#define DISABLE_TRAPS           CR_CCR = 1 << CR_CCR_RFT_C
+#define ENABLE_IRQ              CR_CCR = CR_CCR_IEN
+#define DISABLE_IRQ             CR_CCR = CR_CCR_IEN_C
+#define ENABLE_TRAPS            CR_CCR = CR_CCR_RFT
+#define DISABLE_TRAPS           CR_CCR = CR_CCR_RFT_C
 
 // Link register, branch registers and PC (intended for debug bus only).
 #define CR_LR                   CREG_UINT32_R(0x28)

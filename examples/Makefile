@@ -31,6 +31,14 @@ ifndef LIMMH_PREV
 LIMMH_PREV = true
 endif
 
+# Trace settings for the simulator (seen cfgdefault.sim for more info)
+ifndef SIM_TRACE
+SIM_TRACE = 3
+endif
+
+ifndef SIM_TRACEREGS
+SIM_TRACEREGS = 3
+endif
 
 
 # Define stuff for this makefile when called on its own (not included).
@@ -80,7 +88,7 @@ RM = rm -f
 MKDIR = mkdir
 SIM = $(TOOLS)/sim/xstsim-r-VEX-1.1.2
 SIMFLAGS = --ips='"[r-VEX c]"' --c.core.issue_width=$(ISSUE_WIDTH) \
-	-w --config-file=cfg.sim --c.trace=1 --c.trace_regs=1 
+	-w --config-file=cfg.sim --c.trace=$(SIM_TRACE) --c.trace_regs=$(SIM_TRACEREGS)
 PLATFORM_SRC = src
 GENERIC_SRC = $(GEN_EXAMPLES)/src
 
@@ -196,7 +204,7 @@ $(EXECUTABLES):
 	$(MAKE) $@.srec $@.disas
 
 xstsim-% : %
-	$(SIM) $(SIMFLAGS) --c.target_exec='"$^"'
+	$(SIM) $(SIMFLAGS) --c.target_exec='"$^.elf"'
 
 .PHONY: clean
 clean:
