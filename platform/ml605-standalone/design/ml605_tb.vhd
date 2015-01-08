@@ -82,7 +82,7 @@ begin -- architecture
 --=============================================================================
   
   -- Instantiate the unit-under-test.
-  uut: entity rvex.ml605
+  uut: entity work.ml605
     generic map (
       -- Baud rate to use for the UART.
       F_BAUD                    => 125000.0,

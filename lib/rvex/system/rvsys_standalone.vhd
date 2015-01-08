@@ -70,7 +70,10 @@ entity rvsys_standalone is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_sa_generic_config_type := rvex_sa_cfg
+    CFG                         : rvex_sa_generic_config_type := rvex_sa_cfg;
+    
+    -- Initial contents for the memory.
+    MEM_INIT                    : rvex_data_array := RVEX_DATA_ARRAY_NULL
     
   );
   port (
@@ -260,8 +263,8 @@ begin -- architecture
   -----------------------------------------------------------------------------
   debug_bus_demux_inst: entity rvex.bus_demux
     generic map (
-      ADDRESS_MAP(0)            => CFG.debugBusMap_dmem,
-      ADDRESS_MAP(1)            => CFG.debugBusMap_imem,
+      ADDRESS_MAP(0)            => CFG.debugBusMap_imem,
+      ADDRESS_MAP(1)            => CFG.debugBusMap_dmem,
       ADDRESS_MAP(2)            => CFG.debugBusMap_rvex
     )
     port map (
@@ -270,11 +273,11 @@ begin -- architecture
       clkEn                     => clkEn,
       mst2demux                 => debug_req,
       demux2mst                 => debug_res,
-      demux2slv(0)              => debugDataMem_req,
-      demux2slv(1)              => debugInstr_req,
+      demux2slv(0)              => debugInstr_req,
+      demux2slv(1)              => debugDataMem_req,
       demux2slv(2)              => debugRvex_req,
-      slv2demux(0)              => debugDataMem_res,
-      slv2demux(1)              => debugInstr_res,
+      slv2demux(0)              => debugInstr_res,
+      slv2demux(1)              => debugDataMem_res,
       slv2demux(2)              => debugRvex_res
     );
   
@@ -373,7 +376,8 @@ begin -- architecture
     -- Instantiate the memory itself.
     dmem_ram: entity rvex.bus_ramBlock
       generic map (
-        DEPTH_LOG2B             => CFG.dmemDepthLog2B
+        DEPTH_LOG2B             => CFG.dmemDepthLog2B,
+        MEM_INIT                => MEM_INIT
       )
       port map (
         reset                   => reset,
@@ -515,7 +519,10 @@ begin -- architecture
     imem_ram_gen: for blk in 0 to NUM_BLOCKS-1 generate
       imem_ram_inst: entity rvex.bus_ramBlock
         generic map (
-          DEPTH_LOG2B           => CFG.dmemDepthLog2B - INTERLEAVE_LOG2
+          DEPTH_LOG2B           => CFG.dmemDepthLog2B - INTERLEAVE_LOG2,
+          MEM_INIT              => MEM_INIT,
+          MEM_OFFSET            => blk mod 2**INTERLEAVE_LOG2,
+          MEM_STRIDE            => 2**INTERLEAVE_LOG2
         )
         port map (
           reset                 => reset,

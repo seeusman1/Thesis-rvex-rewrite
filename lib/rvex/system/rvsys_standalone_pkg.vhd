@@ -75,8 +75,8 @@ package rvsys_standalone_pkg is
     dmemDepthLog2B              : natural;
     
     -- The following entries define the memory map as seen by the debug bus.
-    debugBusMap_dmem            : addrRangeAndMapping_type;
     debugBusMap_imem            : addrRangeAndMapping_type;
+    debugBusMap_dmem            : addrRangeAndMapping_type;
     debugBusMap_rvex            : addrRangeAndMapping_type;
     
     -- The following entries define the memory map as seen by the rvex.
@@ -88,10 +88,10 @@ package rvsys_standalone_pkg is
   -- Default rvex core configuration.
   constant RVEX_SA_DEFAULT_CONFIG  : rvex_sa_generic_config_type := (
     core                        => RVEX_DEFAULT_CONFIG,
-    imemDepthLog2B              => 12,
-    dmemDepthLog2B              => 12,
-    debugBusMap_dmem            => addrRangeAndMap(match => "0000----------------------------"),
-    debugBusMap_imem            => addrRangeAndMap(match => "0001----------------------------"),
+    imemDepthLog2B              => 16,
+    dmemDepthLog2B              => 16,
+    debugBusMap_imem            => addrRangeAndMap(match => "0000----------------------------"),
+    debugBusMap_dmem            => addrRangeAndMap(match => "0001----------------------------"),
     debugBusMap_rvex            => addrRangeAndMap(match => "1111----------------------------"),
     rvexDataMap_dmem            => addrRangeAndMap(match => "0-------------------------------"),
     rvexDataMap_bus             => addrRangeAndMap(match => "1-------------------------------")
@@ -118,13 +118,13 @@ package rvsys_standalone_pkg is
     base                        : rvex_sa_generic_config_type := RVEX_SA_DEFAULT_CONFIG;
     imemDepthLog2B              : integer := -1;
     dmemDepthLog2B              : integer := -1;
-    debugBusMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_imem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
+    debugBusMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_rvex            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     rvexDataMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     rvexDataMap_bus             : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF
   ) return rvex_sa_generic_config_type;
-    
+  
 end rvsys_standalone_pkg;
 
 --=============================================================================
@@ -147,8 +147,8 @@ package body rvsys_standalone_pkg is
     base                        : rvex_sa_generic_config_type := RVEX_SA_DEFAULT_CONFIG;
     imemDepthLog2B              : integer := -1;
     dmemDepthLog2B              : integer := -1;
-    debugBusMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_imem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
+    debugBusMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_rvex            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     rvexDataMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     rvexDataMap_bus             : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF
@@ -158,8 +158,8 @@ package body rvsys_standalone_pkg is
     cfg := base;
     if imemDepthLog2B >= 0                    then cfg.imemDepthLog2B   := imemDepthLog2B;   end if;
     if dmemDepthLog2B >= 0                    then cfg.dmemDepthLog2B   := dmemDepthLog2B;   end if;
-    if debugBusMap_dmem /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_dmem := debugBusMap_dmem; end if;
     if debugBusMap_imem /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_imem := debugBusMap_imem; end if;
+    if debugBusMap_dmem /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_dmem := debugBusMap_dmem; end if;
     if debugBusMap_rvex /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_rvex := debugBusMap_rvex; end if;
     if rvexDataMap_dmem /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_dmem := rvexDataMap_dmem; end if;
     if rvexDataMap_bus  /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_bus  := rvexDataMap_bus;  end if;

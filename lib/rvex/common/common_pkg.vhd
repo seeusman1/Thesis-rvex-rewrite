@@ -70,6 +70,9 @@ package common_pkg is
   type rvex_mask_array          is array (natural range <>) of rvex_mask_type;
   type rvex_syllable_array      is array (natural range <>) of rvex_syllable_type;
   
+  -- Null array constants.
+  constant RVEX_DATA_ARRAY_NULL : rvex_data_array(0 to -1) := (others => (others => '0'));
+  
 end common_pkg;
 
 package body common_pkg is

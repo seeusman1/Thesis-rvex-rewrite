@@ -60,10 +60,13 @@ use rvex.simUtils_pkg.all;
 -- This package contains a way to make a universally accessible 2^32 byte
 -- memory. The memory is obviously implemented in such a way not the entire
 -- memory will be kept in physical simulation host memory - allocation is done
--- dynamically when needed.
+-- dynamically when needed. In addition, methods are provided to load the
+-- initial contents of a synthesizable memory from an srec.
 -------------------------------------------------------------------------------
 package simUtils_mem_pkg is
 --=============================================================================
+  
+  -- pragma translate_off
   
   -----------------------------------------------------------------------------
   -- Type declarations
@@ -159,6 +162,25 @@ package simUtils_mem_pkg is
     fname : in    string
   );
   
+  -- pragma translate_on
+  
+  -- NOTE: while the below function seems to work, it is amazingly slow. So
+  -- slow in fact, that it seems to be faster to just synthesize and run a
+  -- decent program on the board, just from static elaboration time. You have
+  -- been warned.
+  -- 
+  -- Returns mem, updated with the contents of the specified s-record file.
+  -- offset is added to every s-record address before assignment to mem. After
+  -- adding, the word address is divided by stride to get an index within mem.
+  -- Only if the srec word address + offset was divisible by stride will the
+  -- word be saved. If fname is an empty string, this function is no-op.
+  function rvmem_initFromSRec(
+    mem   : rvex_data_array;
+    fname : string;
+    offset: rvex_address_type := (others => '0');
+    stride: integer := 1
+  ) return rvex_data_array;
+  
 end simUtils_mem_pkg;
 
 --=============================================================================
@@ -168,6 +190,8 @@ package body simUtils_mem_pkg is
   -----------------------------------------------------------------------------
   -- Private methods for tree walking in the dynamically allocated memory
   -----------------------------------------------------------------------------
+  -- pragma translate_off
+  
   -- Deallocates everything in a node.
   procedure clearNode(
     node  : inout rvmem_node_type
@@ -334,6 +358,8 @@ package body simUtils_mem_pkg is
     end if;
     
   end writeToNode;
+  
+  -- pragma translate_on
   
   -----------------------------------------------------------------------------
   -- Private types and methods for SREC parsing and generation
@@ -507,6 +533,8 @@ package body simUtils_mem_pkg is
     
   end str2srec;
   
+  -- pragma translate_off
+  
   -- Output file format for srec2str and dumpNode.
   type dumpFormat_type is (DUMP_SREC, DUMP_HUMAN);
   
@@ -616,7 +644,7 @@ package body simUtils_mem_pkg is
     
   end srec2str;
   
-  -- Deallocates everything in a node.
+  -- Dumps a node to a file.
   procedure dumpNode(
     node    : inout rvmem_node_type;
     file f  :       text;
@@ -761,9 +789,13 @@ package body simUtils_mem_pkg is
     file_close(f);
   end dumpMem;
   
+  -- pragma translate_on
+  
   -----------------------------------------------------------------------------
   -- Public methods
   -----------------------------------------------------------------------------
+  -- pragma translate_off
+  
   -- Clears the memory specified by mem and sets the default read value of the
   -- memory to value.
   procedure rvmem_clear(
@@ -950,5 +982,119 @@ package body simUtils_mem_pkg is
       format  => DUMP_HUMAN
     );
   end rvmem_dump;
+  
+  -- pragma translate_on
+  
+  -- Returns mem, updated with the contents of the specified s-record file.
+  -- offset is added to every s-record address before assignment to mem. After
+  -- adding, the word address is divided by stride to get an index within mem.
+  -- Only if the srec word address + offset was divisible by stride will the
+  -- word be saved. If fname is an empty string, this function is no-op.
+  function rvmem_initFromSRec(
+    mem   : rvex_data_array;
+    fname : string;
+    offset: rvex_address_type := (others => '0');
+    stride: integer := 1
+  ) return rvex_data_array is
+    variable res  : rvex_data_array(mem'range);
+    file     f    : text;
+    variable l    : line;
+    variable sr   : srec_line_type;
+    variable lNr  : positive;
+    variable addr : unsigned(31 downto 0);
+    variable index: natural;
+    variable di   : integer;
+  begin
+    
+    -- If fname is an empty string, don't do anything.
+    if fname = "" then
+      return mem;
+    end if;
+    
+    -- Initialize result with the given memory array.
+    res := mem;
+    
+    -- Read the s-record file.
+    file_open(f, fname, read_mode);
+    report "Reading s-rec file " & fname & " while elaborating initial "
+         & "contents for " & integer'image(res'length) & "-word memory."
+      severity note;
+    lNr := 1;
+    while not endfile(f) loop
+      
+      -- Parse the s-record on this line.
+      readline(f, l);
+      sr := str2srec(l.all, lNr);
+      
+      -- Increment line number.
+      lNr := lNr + 1;
+
+      -- Ignore non-DATA s-records.
+      if sr.rec /= DATA_REC then
+        next;
+      end if;
+      
+      -- Write the bytes to the memory.
+      index := 0;
+      addr := unsigned(sr.addr) + unsigned(offset);
+      
+      while index < sr.dataCount loop
+        
+        -- Do a word access if we can, otherwise do byte accesses. This can be
+        -- done a bit nicer but lazy.
+        if (addr(1 downto 0) = 0) and index + 4 <= sr.dataCount then
+          
+          -- Determine the index to update.
+          di := to_integer(shift_right(addr(31 downto 0), 2));
+          if di mod stride = 0 then
+            di := di / stride;
+            if (di >= res'low) and (di <= res'high) then
+              
+              -- Perform the update.
+              res(di) := sr.data(index)
+                       & sr.data(index + 1)
+                       & sr.data(index + 2)
+                       & sr.data(index + 3);
+              
+            end if;
+          end if;
+          
+          -- Increment address and index.
+          index := index + 4;
+          addr := addr + 4;
+          
+        else
+          
+          -- Determine the index to update.
+          di := to_integer(shift_right(addr(31 downto 0), 2));
+          if di mod stride = 0 then
+            di := di / stride;
+            if (di >= res'low) and (di <= res'high) then
+              
+              -- Perform the update.
+              case addr(1 downto 0) is
+                when "00" => res(di)(31 downto 24) := sr.data(index);
+                when "01" => res(di)(23 downto 16) := sr.data(index);
+                when "10" => res(di)(15 downto  8) := sr.data(index);
+                when "11" => res(di)( 7 downto  0) := sr.data(index);
+                when others => null;
+              end case;
+              
+            end if;
+          end if;
+          
+          -- Increment address and index.
+          index := index + 1;
+          addr := addr + 1;
+          
+        end if;
+        
+      end loop;
+      
+    end loop;
+    file_close(f);
+    
+    return res;
+  end rvmem_initFromSRec;
   
 end simUtils_mem_pkg;

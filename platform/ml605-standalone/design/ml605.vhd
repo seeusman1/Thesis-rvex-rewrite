@@ -61,6 +61,9 @@ use rvex.bus_addrConv_pkg.all;
 use rvex.rvsys_standalone_pkg.all;
 use rvex.core_pkg.all;
 
+library work;
+use work.mem_init_pkg.all;
+
 --=============================================================================
 -- This is the toplevel file for synthesizing a basic rvex platform on a Xilinx
 -- ML605 Virtex-6 evaluation board.
@@ -114,10 +117,13 @@ architecture Behavioral of ml605 is
       dmemDepthLog2B            => 18
     ), core => rvex_cfg(
       numLanesLog2              => 3,
-      numLaneGroupsLog2         => 0,
+      numLaneGroupsLog2         => 2,
       numContextsLog2           => 2
     )
   );
+  
+  -- S-rec file specifying the initial contents for the memories.
+  constant SREC_FILENAME        : string := "../examples/init.srec";
   
   -- This determines the internal clock frequency.
   function f_clk_fn return real is
@@ -194,7 +200,10 @@ begin -- architecture
       generic map (
         
         -- Configuration.
-        CFG                       => CFG
+        CFG                       => CFG,
+        
+        -- S-rec file specifying the initial contents for the memories.
+        MEM_INIT                  => MEM_INIT
         
       )
       port map (

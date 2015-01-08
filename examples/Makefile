@@ -8,6 +8,7 @@
 #   EXECUTABLES - list of platform-specific programs to compile
 #   OBJECTS - list of platform-specific object files to build and link
 #   TARGETS - list of platform-specific make targets for make help
+#   CLEAN - list of platform-specific file(type)s to clean
 
 # Issue width; must be 2, 4 or 8. Default = 8.
 ifndef ISSUE_WIDTH
@@ -55,7 +56,7 @@ endif
 # List of platform-agnostic (generic) programs.
 EXECUTABLES += adpcm blit crc des fir pocsag \
 	ucbqsort bcnt compress engine g3fax jpeg qurt v42 \
-	adpcm1 dft itver2 matrix memwrite soma x264 uart #This line contains programs not from Powerstone
+	adpcm1 dft itver2 itver2-repeat matrix memwrite soma x264 uart #This line contains programs not from Powerstone
 
 # List of library files to link with.
 OBJECTS += _start.o
@@ -208,6 +209,6 @@ xstsim-% : %
 
 .PHONY: clean
 clean:
-	$(RM) *.o *.s *.elf *.srec *.disas
+	$(RM) *.o *.s *.elf *.srec *.disas $(CLEAN)
 
 

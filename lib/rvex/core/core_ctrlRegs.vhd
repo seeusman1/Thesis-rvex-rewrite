@@ -579,7 +579,7 @@ begin -- architecture
   -- happen. Also, it might not be permissible to only stall a single lane
   -- group based on the current configuration. Since debug bus accesses are
   -- (supposed to be) spurious events, it shouldn't degrade performance too
-  -- much if we just stall all lanes two cycles for every debug bus event.
+  -- much if we just stall all lanes one cycle for every debug bus event.
   stallOut <= (others => dbg_claim);
   
   -----------------------------------------------------------------------------

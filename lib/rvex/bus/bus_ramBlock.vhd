@@ -53,6 +53,8 @@ library rvex;
 use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
 use rvex.bus_pkg.all;
+use rvex.utils_pkg.all;
+use rvex.simUtils_mem_pkg.all;
 
 --=============================================================================
 -- This entity infers block RAMs, which are accessible using the standard bus
@@ -66,7 +68,27 @@ entity bus_ramBlock is
     DEPTH_LOG2B                 : natural;
     
     -- Initial value for the memory. Should probably be '0' or 'U'.
-    INIT_STATE                  : std_logic := '0'
+    INIT_STATE                  : std_logic := '0';
+    
+    -- Memory initialization vector, overriding INIT_STATE if specified. The
+    -- indices from MEM_INIT are transformed before assignment to the memory as
+    -- follows: memory_index = (mem_init_index + offset) / stride. When
+    -- memory_index is not an integer, the word is ignored, allowing strided
+    -- loading.
+    MEM_INIT                    : rvex_data_array := RVEX_DATA_ARRAY_NULL;
+    MEM_OFFSET                  : integer := 0;
+    MEM_STRIDE                  : natural := 1;
+    
+    -- S-record file to initialize memory with, overriding INIT_STATE and
+    -- MEM_INIT when specified. Offset is added to all S-record addresses
+    -- before assignment to the memory. The S-record address + SREC_OFFSET as
+    -- a word address is divided by stride to determine the word index within
+    -- the memory. Non-integer word addresses are ignored. WARNING: LOADING
+    -- S-RECORD FILES DURING ELABORATION IS RIDICULOUSLY SLOW FOR SOME REASON.
+    -- USE MEM_INIT INSTEAD WHEN POSSIBLE.
+    SREC_FILENAME               : string := "";
+    SREC_OFFSET                 : rvex_address_type := (others => '0');
+    SREC_STRIDE                 : natural := 1
     
   );
   port (
@@ -105,10 +127,44 @@ end bus_ramBlock;
 architecture Behavioral of bus_ramBlock is
 --=============================================================================
   
+  -- RAM word array type.
+  subtype ram_type is rvex_data_array(0 to 2**(DEPTH_LOG2B-2)-1);
+  
+  -- Empty RAM, before loading the srec file.
+  function mem_initialized return ram_type is
+    variable ram  : ram_type := (others => (others => INIT_STATE));
+    variable start: integer;
+    variable stop : integer;
+  begin
+    
+    -- Apply MEM_INIT.
+    if MEM_INIT'length > 0 then
+      start := (MEM_INIT'low - MEM_OFFSET + MEM_STRIDE - 1) / MEM_STRIDE;
+      stop := (MEM_INIT'high - MEM_OFFSET) / MEM_STRIDE;
+      if start < ram'low then
+        start := ram'low;
+      end if;
+      if stop > ram'high then
+        stop := ram'high;
+      end if;
+      report "Copying " & integer'image(stop - start + 1) & " words..." severity note;
+      for i in start to stop loop
+        ram(i) := MEM_INIT(i * MEM_STRIDE + MEM_OFFSET);
+      end loop;
+    end if;
+    
+    -- Apply S-record contents.
+    if SREC_FILENAME /= "" then
+      return rvmem_initFromSRec(ram, SREC_FILENAME, SREC_OFFSET, SREC_STRIDE);
+    else
+      return ram;
+    end if;
+    
+  end mem_initialized;
+  
   -- Current contents of the RAM. We need to use a shared variable to allow XST
   -- to recognize a RAM with two write ports.
-  shared variable ram           : rvex_data_array(0 to 2**(DEPTH_LOG2B-2)-1)
-    := (others => (others => INIT_STATE));
+  shared variable ram           : ram_type := mem_initialized;
   
 --=============================================================================
 begin -- architecture
