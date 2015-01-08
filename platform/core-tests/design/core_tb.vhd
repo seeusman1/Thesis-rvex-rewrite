@@ -1666,6 +1666,7 @@ begin -- architecture
       variable addr       : rvex_address_type;
       variable mask       : rvex_mask_type;
       variable value      : rvex_data_type;
+      variable writeValue : rvex_data_type;
       variable readVal    : rvex_data_type;
       
     begin
@@ -1741,14 +1742,18 @@ begin -- architecture
       
       -- Decode given address and access size into word address and mask.
       if accessSize = MEM_WORD then
+        writeValue := value;
         mask := "1111";
       elsif accessSize = MEM_HALF then
+        writeValue := value(15 downto 0) & value(15 downto 0);
         if addr(1) = '0' then
           mask := "1100";
         else
           mask := "0011";
         end if;
       else
+        writeValue := value(7 downto 0) & value(7 downto 0)
+                    & value(7 downto 0) & value(7 downto 0);
         if addr(1 downto 0) = "00" then
           mask := "1000";
         elsif addr(1 downto 0) = "01" then
@@ -1777,7 +1782,7 @@ begin -- architecture
           stim2mem_readEnable <= '0';
           stim2mem_writeEnable <= '1';
           stim2mem_writeMask <= mask;
-          stim2mem_writeData <= value;
+          stim2mem_writeData <= writeValue;
         end if;
         wait for 0 ns;
         stim2mem_readEnable <= '0';
@@ -1797,7 +1802,7 @@ begin -- architecture
           dbg2rv_readEnable <= '0';
           dbg2rv_writeEnable <= '1';
           dbg2rv_writeMask <= mask;
-          dbg2rv_writeData <= value;
+          dbg2rv_writeData <= writeValue;
         end if;
         cycles(1);
         dbg2rv_readEnable <= '0';

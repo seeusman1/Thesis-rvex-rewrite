@@ -1,0 +1,4 @@
+-- This tests basic debug support.
+
+-- Test stepping through a NOP-only program in different core configurations.
+simpleStep.test

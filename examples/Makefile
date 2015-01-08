@@ -15,10 +15,16 @@ ifndef ISSUE_WIDTH
 ISSUE_WIDTH = 8
 endif
 
-# Must be true for generic binary compilation, false for regular compilation.
-# Default = true.
+# Must be one of the following;
+#   false   - compile for the specified issue width only.
+#   true    - use the -u assembler flag to compile generic binaries.
+#   fix     - same as true, but run the vexparse script to attempt to fix
+#             scheduling first.
+#   resched - same as fix, with the addition of the --resched switch for
+#             vexparse.
+# Default = false.
 ifndef DYNAMIC
-DYNAMIC = true
+DYNAMIC = false
 endif
 
 # Compiler to use, must be HP, GCC or ST200. Default = HP.
@@ -87,6 +93,8 @@ CP = cp
 MV = mv
 RM = rm -f
 MKDIR = mkdir
+PYTHON = python3
+VEXPARSE = $(PYTHON) $(TOOLS)/vexparse/main.py
 SIM = $(TOOLS)/sim/xstsim-r-VEX-1.1.2
 SIMFLAGS = --ips='"[r-VEX c]"' --c.core.issue_width=$(ISSUE_WIDTH) \
 	-w --config-file=cfg.sim --c.trace=$(SIM_TRACE) --c.trace_regs=$(SIM_TRACEREGS)
@@ -134,7 +142,7 @@ endif
 
 # Make magic.
 .SUFFIXES:
-.PRECIOUS: %.o %.s %.elf %.srec %.disas
+.PRECIOUS: %.o %.s *.s %.elf %.srec %.disas
 
 .PHONY: help
 help:
@@ -185,6 +193,14 @@ all: $(EXECUTABLES)
 
 # How to assemble;
 %.o: %.s
+ifeq ($(DYNAMIC), fix)
+	$(CP) $< $(patsubst %.s,%.orig.s,$<)
+	$(VEXPARSE) $(patsubst %.s,%.orig.s,$<) -o $<
+endif
+ifeq ($(DYNAMIC), resched)
+	$(CP) $< $(patsubst %.s,%.orig.s,$<)
+	$(VEXPARSE) $(patsubst %.s,%.orig.s,$<) --resched -o $<
+endif
 	$(AS) $(ASFLAGS) $< -o $@
 
 # How to link;

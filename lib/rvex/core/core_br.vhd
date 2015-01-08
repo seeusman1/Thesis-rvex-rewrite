@@ -354,8 +354,8 @@ begin -- architecture
     br2cxplif_trapPoint(S_BR)     <= pl2br_trapToHandlePoint(S_BR);
     br2cxplif_exDbgTrapInfo(S_BR) <= pl2br_trapToHandleInfo(S_BR);
     
-    -- This is a normal branch by default.
-    noLimmPrefetch(S_BR) <= '0';
+    -- Don't try to fetch the previous instruction first by default.
+    noLimmPrefetch(S_BR) <= '1';
     
     -- Set special instruction flags low by default.
     br2pl_rfi(S_BR) <= '0';
@@ -372,6 +372,10 @@ begin -- architecture
       
       -- Branch to the address in the context PC register when requested.
       nextPCsrc(S_BR) <= NEXT_PC_CURRENT;
+      
+      -- Fetch the previous instruction first if it's possible that there's
+      -- relevant LIMMH instructions there.
+      noLimmPrefetch(S_BR) <= '0';
       
       -- pragma translate_off
       simReason <= to_rvs("resuming");
@@ -433,6 +437,10 @@ begin -- architecture
         nextPCsrc(S_BR) <= NEXT_PC_TRAP_HANDLER;
         br2cxplif_exDbgTrapInfo(S_BR).active <= '0';
         
+        -- Fetch the previous instruction first if it's possible that there's
+        -- relevant LIMMH instructions there.
+        noLimmPrefetch(S_BR) <= '0';
+        
         -- Handle interrupt handshaking and override the trap argument with the
         -- current interrupt ID.
         if rvex_isInterruptTrap(pl2br_trapToHandleInfo(S_BR)) = '1' then
@@ -453,6 +461,10 @@ begin -- architecture
       -- control register restore logic.
       nextPCsrc(S_BR) <= NEXT_PC_TRAP_RETURN;
       br2pl_rfi(S_BR) <= '1';
+      
+      -- Fetch the previous instruction first if it's possible that there's
+      -- relevant LIMMH instructions there.
+      noLimmPrefetch(S_BR) <= '0';
       
       -- If we were are returning from a debug trap, disable breakpoints for
       -- the next cycle.
@@ -497,16 +509,16 @@ begin -- architecture
         -- pragma translate_on
       end if;
       
+      -- Fetch the previous instruction first if it's possible that there's
+      -- relevant LIMMH instructions there.
+      noLimmPrefetch(S_BR) <= '1';
+      
     elsif run(S_BR) = '0' or pl2br_trapPending(S_BR) = '1' then
       
       -- Halt the core. We need to "branch" to the current instruction
       -- constantly while the core is halted to maintain the current value of
       -- the PC register.
       nextPCsrc(S_BR) <= NEXT_PC_CURRENT;
-      
-      -- Don't try to fetch the previous instruction, because that will mess up
-      -- the PC register.
-      noLimmPrefetch(S_BR) <= '1';
       
       -- pragma translate_off
       if run(S_BR) = '0' then
@@ -527,6 +539,10 @@ begin -- architecture
       -- immediately following.
       nextPCsrc(S_BR) <= NEXT_PC_CURRENT;
       
+      -- Fetch the previous instruction first if it's possible that there's
+      -- relevant LIMMH instructions there.
+      noLimmPrefetch(S_BR) <= '0';
+      
       -- pragma translate_off
       simReason <= to_rvs("resuming");
       -- pragma translate_on
@@ -535,11 +551,6 @@ begin -- architecture
       
       -- Normal operation; don't branch.
       nextPCsrc(S_BR) <= NEXT_PC_NORMAL;
-      
-      -- No need to fetch the previous instruction first, because we either
-      -- have already done that at this point or instructions are being
-      -- executed in order.
-      noLimmPrefetch(S_BR) <= '1';
       
       -- pragma translate_off
       simReason <= to_rvs("running");

@@ -2,11 +2,15 @@ To finish setting up the environment after cloning the git repo, copy or make
 symlinks to the contents of the tools directory from the rvex release in
 :/tools/. From this directory, you can do this from the command line as
 follows:
-   
+
 (cd tools && ln -s <path to release dir>/tools/* .)
-   
+
 The path needs to be an absolute path or needs to be relative to the tools
-directory, as the cd command would suggest.
+directory, as the cd command would suggest. In addition, if you want to compile
+generic binaries, you should have python3 installed and link vexparse in the
+tools directory as well:
+
+(cd tools && ln -s <path to vexparse> vexparse)
 
 Aside from all that, you should have Xilinx ISE 14.7 and Modelsim SE 10.2a.
 DO NOT USE OLDER ISE VERSIONS: ISE 13.4 at least synthesizes the rvex core

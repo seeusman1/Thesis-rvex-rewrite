@@ -4,3 +4,4 @@ comm
 gcc
 sim
 vex-3.43
+vexparse
