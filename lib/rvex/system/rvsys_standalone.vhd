@@ -339,6 +339,10 @@ begin -- architecture
     constant SB : natural := EA + 1;
     constant EB : integer := 2**CFG.core.numLaneGroupsLog2-1;
     
+    -- Signals to connect to the port A arbiter.
+    signal arb2mst_a : bus_slv2mst_array(EA-SA+1 downto 0);
+    signal mst2arb_a : bus_mst2slv_array(EA-SA+1 downto 0);
+    
   begin
     
     -- Arbiter for port A.
@@ -350,13 +354,19 @@ begin -- architecture
         reset                   => reset,
         clk                     => clk,
         clkEn                   => clkEn,
-        mst2arb(EA-SA+1 downto 1)=>rvexDataMem_req(EA downto SA),
-        mst2arb(0)              => debugDataMem_req,
-        arb2mst(EA-SA+1 downto 1)=>rvexDataMem_res(EA downto SA),
-        arb2mst(0)              => debugDataMem_res,
+        mst2arb                 => mst2arb_a,
+        arb2mst                 => arb2mst_a,
         arb2slv                 => dataMem_req(0),
         slv2arb                 => dataMem_res(0)
       );
+    
+    -- Connect port A arbiter to data memory ports.
+    mst2arb_a(EA-SA+1 downto 1) <= rvexDataMem_req(EA downto SA);
+    rvexDataMem_res(EA downto SA) <= arb2mst_a(EA-SA+1 downto 1);
+	 
+    -- Connect port A arbiter to debug bus.
+	 mst2arb_a(0) <= debugDataMem_req;
+    debugDataMem_res <= arb2mst_a(0);
     
     -- Arbiter for port B.
     dmem_arbiter_b: entity rvex.bus_arbiter

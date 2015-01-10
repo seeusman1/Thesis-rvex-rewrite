@@ -10,7 +10,7 @@ directory, as the cd command would suggest. In addition, if you want to compile
 generic binaries, you should have python3 installed and link vexparse in the
 tools directory as well:
 
-(cd tools && ln -s <path to vexparse> vexparse)
+(cd tools && ln -s <path to vexparse>/vexparse)
 
 Aside from all that, you should have Xilinx ISE 14.7 and Modelsim SE 10.2a.
 DO NOT USE OLDER ISE VERSIONS: ISE 13.4 at least synthesizes the rvex core
@@ -39,14 +39,25 @@ There are currently 3 "platforms" for the rvex:
    (Those who do know how things work can figure out what the commands do for
    themselves.)
    
-   To open the design, source your local Xilinx ISE environment setup script
-   and run:
+   To simulate the design, source your local Modelsim AND Xilinx ISE
+   environment setup scripts and run:
    
-   (cd platform/ml605-standalone/ise && ise standalone.xise)
+   (cd platform/ml605-standalone && make vsim-x264)
    
-   The ISE project can be used to synthesize the core and simulate it (kinda)
-   using ISIM; there is no decent testbench yet, nor is there a modelsim
-   environment for this platform.
+   Initialization may take up to a couple minutes due to the size of the loaded
+   program. You can change "x264" into whatever program you want to, or to
+   "none" if you don't need a program loaded into the memory. The following
+   command lists which program names are valid (among other things):
+   
+   (cd platform/ml605-standalone && make)
+   
+   To start Xilinx ISE in order to synthesize the design, make sure you have
+   sourced the Xilinx ISE startup script and run:
+   
+   (cd platform/ml605-standalone && make ise-none)
+   
+   Use the usual Xilinx ISE GUI design flow to synthesize the design and
+   program the board.
    
    Once programmed onto the board using the Xilinx toolchain, you can load
    program onto the board using the debug support unit. To do that, you first

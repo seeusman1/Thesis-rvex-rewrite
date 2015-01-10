@@ -144,7 +144,7 @@ endif
 .SUFFIXES:
 .PRECIOUS: %.o %.s *.s %.elf %.srec %.disas
 
-.PHONY: help
+.PHONY: help list-executables
 help:
 	@echo ""
 	@echo " Compiles programs for the rvex. The following targets are available."
@@ -164,6 +164,15 @@ help:
 	@echo "  make <target> DYNAMIC=<true|false>    (default = true)"
 	@echo "  make <target> COMPILER=<HP|GCC|ST200> (default = HP)"
 	@echo "  make <target> LIMMH_PREV=<true|false> (default = true)"
+	@echo ""
+	@echo " The following programs are available:"
+	@echo ""
+	@for exec in $(EXECUTABLES) ; do \
+		echo "  $$exec" ; \
+	done
+	@echo ""
+
+list-executables:
 	@echo ""
 	@echo " The following programs are available:"
 	@echo ""
