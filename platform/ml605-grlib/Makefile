@@ -1,34 +1,47 @@
 
-.PHONY: help update-patch very-clean sim gr-%
+.PHONY: help update-patch clean very-clean compile-& sim-% resim-% synth upload-% gr-%
 
 help: work
 	@echo ""
-	@echo " This makefile generates the grlib design directory from the leon3-xilinx-ml605"
-	@echo " design in grlib in work, keeping all the grlib specific sources away from the"
-	@echo " rvex repository (where it doesn't belong, and which is differently licensed)."
-	@echo " The makefile has already generated the working directory as you're reading"
-	@echo " this."
+	@echo " This platform is essentially grlib's LEON3 project for the ML605 board, with"
+	@echo " the rvex processor and debug support UART added to it."
 	@echo ""
-	@echo " Targets specific to wrapper makefile:"
+	@echo " Synthesis and simulation have been verified to work with modelsim 10.2a and"
+	@echo " Xilinx ISE 14.7. Xilinx ISE 13.4 is known NOT to synthesize correctly. Use"
+	@echo " other versions at your own risk."
+	@echo ""
+	@echo " Make targets:"
+	@echo ""
+	@echo " make sim-<prog>   : shorthand for cleaning and running all necessary targets"
+	@echo "                     for modelsim simulation. Source both modelsim and xilinx"
+	@echo "                     environment scripts first. <prog> may be set to one of the"
+	@echo "                     known programs, listed below."
+	@echo ""
+	@echo " make resim-<prog> : shorthand for recompiling and restarting simulation if"
+	@echo "                     only already existing VHDL files have been changed."
+	@echo ""
+	@echo " make synth        : shorthand for cleaning and running all necessary targets"
+	@echo "                     for command-line based synthesis of the design using ISE."
+	@echo "                     Source the ISE 14.7 environment script first."
+	@echo ""
+	@echo " make upload-<prog>: compiles the specified program and uploads it to the FPGA"
+	@echo "                     using the rvex debugging UART."
+	@echo ""
+	@echo " make clean        : cleans most grlib and rvex compilation intermediate files."
+	@echo ""
+	@echo " make very-clean   : on top of clean, removes the ENTIRE grlib working"
+	@echo "                     directory. This might contain modified source files - it"
+	@echo "                     is your own responsibility to run make update-patch first"
+	@echo "                     if so."
 	@echo ""
 	@echo " make update-patch : cleans the working directory and generates the work.patch"
 	@echo "                     file used to rebuild the working directory from the grlib"
-	@echo "                     base project."
-	@echo " make very-clean   : removes the ENTIRE grlib working directory: careful! This"
-	@echo "                     might remove source files!"
-	@echo " make sim          : Shorthand for *cleaning* and running all necessary targets"
-	@echo "                     for modelsim simulation. Source both modelsim and xilinx"
-	@echo "                     environment scripts first; tested with ISE 13.4 and"
-	@echo "                     modelsim 10.2a on OpenSUSE 13.1."
-	@echo ""
-	@echo " The following targets are from the grlib makefile (you can also cd to work if"
-	@echo " you don't want to type gr- all the time)"
-	
-	@# The sed magic replaces the make commands listed in grlib's help to prefix
-	@# them with "gr-", which is how this makefile expects them to be called. It
-	@# also removes the "entering directory" and "leaving directory" spam from
-	@# the make recursion.
-	@cd work && $(MAKE) help | sed -e "s/make \([a-zA-Z0-9_-]*\)/make gr-\1/;s/make\[1\]\([^\n]*\)work'//"
+	@echo "                     base project. This must be run if changes are made to the"
+	@echo "                     files in work before committing to git."
+	@cd examples && $(MAKE) --no-print-directory list-executables
+	@echo " For convenience, you can also call the usual grlib makefile targets from this"
+	@echo " file, by prefixing with gr-. The targets are listed below."
+	@cd work && $(MAKE) --no-print-directory help | sed -e "s/make \([a-zA-Z0-9_-]*\)/make gr-\1/"
 
 # Call the makefile in the grlib directory.
 ../../grlib/grlib-gpl-1.3.7-b4144:
@@ -45,16 +58,56 @@ work: ../../grlib/grlib-gpl-1.3.7-b4144
 # the "work" target.
 update-patch:
 	@cd work && $(MAKE) distclean
-	diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/ work/ > work.patch ; true
+	diff -rupN --exclude="ram.srec" ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/ work/ > work.patch ; true
+
+# Cleans all grlib and rvex compilation intermediate files.
+clean:
+	cd examples && $(MAKE) clean
+	-cd work && $(MAKE) distclean scripts-clean migclean
 
 # Removes the entire working directory; use with care (because the work dir might contain
 # source files as well, which may not have been put in the patch file yet).
-very-clean:
+very-clean: clean
 	rm -Ir work
 
-# Shorthand notation for simulating.
-sim: work
-	cd work && $(MAKE) distclean scripts-clean mig install-secureip vsim vsim-launch
+# Chains to the examples makefile to build the specified program and copy it to
+# the s-record file read by the micron DDR memory model.
+compile-%:
+	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
+
+# Shorthand notations for simulating, as descibed in the grlib leon project
+# readme.
+sim-%: work compile-%
+	cd work && $(MAKE) \
+		distclean\
+		scripts-clean\
+		migclean\
+		mig39\
+		install-secureip\
+		compile_xilinx_verilog_lib\
+		vsim\
+		map_xilinx_verilog_lib\
+		vsim-launch
+
+resim-%: work compile-%
+	cd work && $(MAKE) \
+		vsim\
+		map_xilinx_verilog_lib\
+		vsim-launch
+
+# Shorthand notations for synthesizing, as descibed in the grlib leon project
+# readme.
+synth: work
+	cd work && $(MAKE) \
+		distclean\
+		scripts-clean\
+		migclean\
+		mig39\
+		planahead
+
+# Chains to the examples makefile to upload the specified program to the FPGA.
+upload-%:
+	cd examples && $(MAKE) $@
 
 # Recursively calls grlib's makefile.
 gr-%: work

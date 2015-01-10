@@ -5,3 +5,6 @@ utils_uart_rxBit.vhd
 utils_uart_rxByte.vhd
 utils_uart_tx.vhd
 utils_uart.vhd
+simUtils_pkg.vhd
+simUtils_mem_pkg.vhd
+simUtils_scanner_pkg.vhd

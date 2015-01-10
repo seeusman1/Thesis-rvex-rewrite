@@ -1,6 +1,6 @@
-diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/config.vhd	2015-01-04 21:34:13.737357066 +0100
++++ work/config.vhd	2015-01-10 21:13:09.296408880 +0100
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -17,11 +17,13 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.v
  package config is
  -- Technology and synthesis options
    constant CFG_FABTECH : integer := virtex6;
-@@ -22,7 +31,7 @@ package config is
+@@ -21,8 +30,8 @@ package config is
+   constant CFG_NOASYNC : integer := 0;
    constant CFG_SCAN : integer := 0;
  -- LEON3 processor core
-   constant CFG_LEON3 : integer := 1;
+-  constant CFG_LEON3 : integer := 1;
 -  constant CFG_NCPU : integer := (1);
++  constant CFG_LEON3 : integer := 0;
 +  constant CFG_NLEON : integer := 0;
    constant CFG_NWIN : integer := (8);
    constant CFG_V8 : integer := 16#32# + 4*0;
@@ -35,7 +37,7 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.v
    constant CFG_ITBSZ : integer := 4;
    constant CFG_ATBSZ : integer := 4;
    constant CFG_LEON3FT_EN : integer := 0;
-@@ -73,6 +82,28 @@ package config is
+@@ -73,6 +82,27 @@ package config is
    constant CFG_LEON3_NETLIST: integer := 0;
    constant CFG_DISAS : integer := 0 + 0;
    constant CFG_PCLOW : integer := 2;
@@ -48,8 +50,7 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.v
 +    core => rvex_cfg(
 +      numLanesLog2        => 3,
 +      numLaneGroupsLog2   => 2,
-+      numContextsLog2     => 2,
-+      resetVectors        => (others => X"40000000") -- DDR memory does not start at 0!
++      numContextsLog2     => 2
 +    ), core_valid => true,
 +    
 +    -- Cache configuration
@@ -64,9 +65,18 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.v
  -- AMBA settings
    constant CFG_DEFMST : integer := (0);
    constant CFG_RROBIN : integer := 1;
-diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
+@@ -96,7 +126,7 @@ package config is
+   constant CFG_ETH_ENM : integer := 16#020789#;
+   constant CFG_ETH_ENL : integer := 16#000123#;
+ -- LEON2 memory controller
+-  constant CFG_MCTRL_LEON2 : integer := 1;
++  constant CFG_MCTRL_LEON2 : integer := 0;
+   constant CFG_MCTRL_RAM8BIT : integer := 1;
+   constant CFG_MCTRL_RAM16BIT : integer := 1;
+   constant CFG_MCTRL_5CS : integer := 0;
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/leon3mp.vhd	2015-01-04 18:54:18.037364166 +0100
++++ work/leon3mp.vhd	2015-01-10 21:11:55.008401193 +0100
 @@ -49,6 +49,11 @@ use work.pcie.all;
  -- pragma translate_off
  use gaisler.sim.all;
@@ -228,9 +238,18 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.
  ---  Memory controllers ----------------------------------------------
  ----------------------------------------------------------------------
  
-diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile work/Makefile
+@@ -429,7 +478,7 @@ begin
+ --  mig_gen : if (CFG_MIG_DDR2 = 1) generate
+ 
+     ahb2mig0 : ahb2mig_ml605
+-      generic map ( hindex => 0, haddr => 16#400#, hmask => 16#E00#,
++      generic map ( hindex => 0, haddr => 16#000#, hmask => 16#E00#,
+     MHz => 400, Mbyte => 512, nosync => boolean'pos(CFG_MIG_CLK4=12)) --CFG_CLKDIV/12)
+       port map (
+     rst => rstn, clk_ahb => clkm, clk_ddr => clk_ddr,
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile work/Makefile
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile	2014-04-16 16:50:08.000000000 +0200
-+++ work/Makefile	2015-01-04 23:29:58.079075621 +0100
++++ work/Makefile	2015-01-10 21:00:21.189329402 +0100
 @@ -1,5 +1,5 @@
  include .config
 -GRLIB=../..
@@ -246,7 +265,7 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile
  VHDLOPTSYNFILES= \
  	mig_37/user_design/rtl/controller/arb_mux.vhd \
  	mig_37/user_design/rtl/controller/arb_row_col.vhd \
-@@ -69,58 +70,6 @@ VHDLOPTSYNFILES= \
+@@ -69,65 +70,12 @@ VHDLOPTSYNFILES= \
  	pcie/v6_pcie_v1_7/source/*.vhd \
  	$(GRLIB)/lib/gaisler/pcie/pcie.vhd
  
@@ -305,7 +324,14 @@ diff -rupN ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile
  
  VERILOGOPTSYNFILES= \
  	mig/user_design/rtl/controller/*.v \
-@@ -136,29 +85,18 @@ VHDLSYNFILES= \
+ 	mig/user_design/rtl/ecc/*.v \
+ 	mig/user_design/rtl/ip_top/*.v \
+ 	mig/user_design/rtl/phy/*.v \
+-	mig/user_design/rtl/phy/*.v \
+ 	mig/user_design/rtl/ui/*.v \
+ 	$$XILINX/verilog/src/glbl.v
+ VHDLSYNFILES= \
+@@ -136,29 +84,18 @@ VHDLSYNFILES= \
  
  VHDLSIMFILES=testbench.vhd
  

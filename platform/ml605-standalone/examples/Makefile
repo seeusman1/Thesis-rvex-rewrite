@@ -14,7 +14,9 @@ OBJECTS = rvex-standalone.o
 
 # Platform specific targets for help.
 TARGETS = \
-"make upload-<program>    uploads program to platform using rvd"
+"make upload-<program>    uploads program to platform using rvd"\
+"make copy-<program>      registers program files for simulation"\
+"make copy-none           unregisters files for simulation"
 
 # Additional things to clean.
 CLEAN = *.bin tools/b2v ../design/mem_init_pkg.vhd

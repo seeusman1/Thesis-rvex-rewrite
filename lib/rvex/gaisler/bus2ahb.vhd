@@ -211,8 +211,8 @@ begin -- architecture
     -- Handle normal operation.
     bridge2bus_s.readData   <= bridge2bus_dma.data;
     bridge2bus_s.fault      <= '0';
-    bridge2bus_s.busy       <= requesting_r and not bridge2bus_dma.okay;
-    bridge2bus_s.ack        <= bridge2bus_dma.okay;
+    bridge2bus_s.busy       <= requesting_r and not bridge2bus_dma.ready;
+    bridge2bus_s.ack        <= bridge2bus_dma.ready;
     
     -- Handle bus errors.
     if bridge2bus_dma.fault = '1' then

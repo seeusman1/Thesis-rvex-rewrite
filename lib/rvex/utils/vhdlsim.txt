@@ -1,5 +1,0 @@
-simUtils_pkg.vhd
-simUtils_scanner_pkg.vhd
-simUtils_mem_pkg.vhd
-utils_fracDiv.vhd
-utils_uart.vhd
