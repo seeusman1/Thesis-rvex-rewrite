@@ -90,9 +90,12 @@ package bus_pkg is
   -- Bus request flags.
   type bus_flags_type is record
     
-    -- Burst flag. When high, the bus is expected to make several requests
-    -- without delaying which map to a contiguous region of memory.
-    burst                       : std_logic;
+    -- Burst flags. When burstEnable is high, the bus is expected to make
+    -- several word requests without delaying which map to a contiguous region
+    -- of memory which does not cross a 1kB boundary. burstStart must be
+    -- asserted during the first transfer of the burst.
+    burstEnable                 : std_logic;
+    burstStart                  : std_logic;
     
     -- Lock flag for bus arbitration. While the master which has access over
     -- the bus asserts this signal, arbiters may not grant access to another
@@ -103,7 +106,8 @@ package bus_pkg is
   
   -- Default values for the bus flags.
   constant BUS_FLAGS_DEFAULT    : bus_flags_type := (
-    burst                       => '0',
+    burstEnable                 => '0',
+    burstStart                  => '0',
     lock                        => '0'
   );
   
@@ -166,7 +170,8 @@ package bus_pkg is
   -- compatible with additions to the bus flags.
   function bus_flags_gen(
     base                        : bus_flags_type := BUS_FLAGS_DEFAULT;
-    burst                       : std_logic := '-';
+    burstEnable                 : std_logic := '-';
+    burstStart                  : std_logic := '-';
     lock                        : std_logic := '-'
   ) return bus_flags_type;
   
@@ -213,13 +218,15 @@ package body bus_pkg is
   -- This function generates or modifies bus flags.
   function bus_flags_gen(
     base                        : bus_flags_type := BUS_FLAGS_DEFAULT;
-    burst                       : std_logic := '-';
+    burstEnable                 : std_logic := '-';
+    burstStart                  : std_logic := '-';
     lock                        : std_logic := '-'
   ) return bus_flags_type is
     variable f  : bus_flags_type;
   begin
     f := base;
-    f.burst := overrideStdLogic(f.burst, burst);
+    f.burstEnable := overrideStdLogic(f.burstEnable, burstEnable);
+    f.burstStart := overrideStdLogic(f.burstStart, burstStart);
     f.lock := overrideStdLogic(f.lock, lock);
     return f;
   end bus_flags_gen;

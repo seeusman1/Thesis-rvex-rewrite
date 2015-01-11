@@ -74,7 +74,14 @@ entity bus2ahb is
     AHB_VERSION                 : integer := 0;
     
     -- rvex bus fault code used to indicate that an AHB bus error occured.
-    BUS_ERROR_CODE              : rvex_address_type := (others => '0')
+    BUS_ERROR_CODE              : rvex_address_type := (others => '0');
+    
+    -- rvex bus fault code used to indicate that an invalid rvex bus request
+    -- was issued.
+    REQ_ERROR_CODE              : rvex_address_type := (others => '0');
+    
+    -- Protection control bits to use.
+    HPROT                       : std_logic_vector(3 downto 0) := "0011"
     
   );
   port (
@@ -107,158 +114,322 @@ end bus2ahb;
 architecture Behavioral of bus2ahb is
 --=============================================================================
   
-  -- Registered and latched versions of the bus command. _r is simply delayed
-  -- by one cycle, _l is connected to the combinatorial bus request in the
-  -- first cycle of a transfer and then switches to the registered version
-  -- while busy is high.
-  signal bus2bridge_r           : bus_mst2slv_type;
-  signal bus2bridge_l           : bus_mst2slv_type;
+  -- AHB master plug and play configuration.
+  constant hconfig              : ahb_config_type := (
+    0 => ahb_device_reg(
+      AHB_VENDOR_ID,
+      AHB_DEVICE_ID,
+      0,
+      AHB_VERSION,
+      0
+    ),
+    others => (others => '0')
+  );
   
-  -- Local bus result signal.
-  signal bridge2bus_s           : bus_slv2mst_type;
+  -- Decoded rvex bus request signals for the AHB bus.
+  signal ahbReq_enable          : std_logic;
+  signal ahbReq_address         : std_logic_vector(31 downto 0);
+  signal ahbReq_size            : std_logic_vector(2 downto 0);
+  signal ahbReq_hprot           : std_logic_vector(3 downto 0);
+  signal ahbReq_writeEnable     : std_logic;
+  signal ahbReq_writeData       : std_logic_vector(AHBDW-1 downto 0);
+  signal ahbReq_error           : std_logic;
   
-  -- Interfacing signals for grlib.dma2ahb.
-  signal bus2bridge_dma         : dma_in_type;
-  signal bridge2bus_dma         : dma_out_type;
+  -- These signals are used to force insertion of a BUSY or IDLE transfer.
+  -- forceIdle always forces an IDLE transfer, forceWait forces an IDLE or BUSY
+  -- transfer depending on the burst flag.
+  signal ahb_forceIdle          : std_logic;
+  signal ahb_forceWait          : std_logic;
   
-  -- This is set when the bus was requesting something in the previous cycle.
-  -- Used to generate the busy signal.
-  signal requesting_r           : std_logic;
+  -- This signal is set when the address for this transfer immediately follows 
+  -- the address of the previous transfer per the AMBA burst specification for
+  -- undefined burst lengths.
+  signal ahb_sequential         : std_logic;
+  
+  -- Decoded AHB bus response signals for the rvex bus.
+  signal busRes_ack             : std_logic;
+  signal busRes_readData        : std_logic_vector(AHBDW-1 downto 0);
+  signal busRes_error           : std_logic;
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
   
   -----------------------------------------------------------------------------
-  -- Bus request translation
+  -- Decode the rvex bus request
   -----------------------------------------------------------------------------
-  -- Generate a register which stores the bus request for the ongoing transfer.
-  bus_request_reg: process (clk) is
-  begin
-    if rising_edge(clk) then
-      if reset = '1' then
-        bus2bridge_r <= BUS_MST2SLV_IDLE;
-      else
-        bus2bridge_r <= bus2bridge;
-      end if;
-    end if;
-  end process;
-  
-  -- Switch from the incoming bus request to the registered version of the
-  -- request while the bus is busy.
-  bus2bridge_l <= bus2bridge_r when bridge2bus_s.busy = '1' else bus2bridge;
-  
   -- Convert the bus request into the format expected by the AHB master.
-  bus_request_proc: process (bus2bridge_l, reset) is
+  bus_request_proc: process (bus2bridge) is
     variable size               : std_logic_vector(1 downto 0);
     variable index              : std_logic_vector(1 downto 0);
   begin
     
-    -- Assign trivial signals and set defaults.
-    bus2bridge_dma.reset        <= reset;
-    bus2bridge_dma.address      <= bus2bridge_l.address;
-    bus2bridge_dma.data         <= bus2bridge_l.writeData;
-    bus2bridge_dma.request      <= bus2bridge_l.readEnable or bus2bridge_l.writeEnable;
-    bus2bridge_dma.burst        <= bus2bridge_l.flags.burst;
-    bus2bridge_dma.beat         <= HINCR4;
-    bus2bridge_dma.size         <= HSIZE32;
-    bus2bridge_dma.store        <= bus2bridge_l.writeEnable;
-    bus2bridge_dma.lock         <= bus2bridge_l.flags.lock;
+    -- Set default request values.
+    ahbReq_enable       <= '0';
+    ahbReq_address      <= bus2bridge.address;
+    ahbReq_size         <= HSIZE_WORD;
+    ahbReq_hprot        <= HPROT;
+    ahbReq_writeEnable  <= '0';
+    ahbReq_writeData    <= ahbdrivedata(bus2bridge.writeData);
+    ahbReq_error        <= '0';
     
-    -- Perform byte mask to size/address translation.
-    size := HSIZE32;
-    index := "00";
-    if bus2bridge_l.writeEnable = '1' then
-      case bus2bridge_l.writeMask is
-        when "1000" => size := HSIZE8;  index := "00";
-        when "0100" => size := HSIZE8;  index := "01";
-        when "0010" => size := HSIZE8;  index := "10";
-        when "0001" => size := HSIZE8;  index := "11";
-        when "1100" => size := HSIZE16; index := "00";
-        when "0011" => size := HSIZE16; index := "10";
-        when "1111" => size := HSIZE32; index := "00";
-        when others => report "Invalid write mask detected." severity warning;
+    -- Handle reads.
+    if bus2bridge.readEnable = '1' then
+      ahbReq_enable <= '1';
+      ahbReq_address(1 downto 0) <= "00";
+    end if;
+    
+    -- Handle writes.
+    if bus2bridge.writeEnable = '1' then
+      ahbReq_enable <= '1';
+      ahbReq_writeEnable <= '1';
+      case bus2bridge.writeMask is
+        
+        -- Handle byte writes.
+        when "1000" =>
+          ahbReq_size <= HSIZE_BYTE;
+          ahbReq_address(1 downto 0) <= "00";
+          ahbReq_writeData <= ahbdrivedata(bus2bridge.writeData(31 downto 24));
+          
+        when "0100" =>
+          ahbReq_size <= HSIZE_BYTE;
+          ahbReq_address(1 downto 0) <= "01";
+          ahbReq_writeData <= ahbdrivedata(bus2bridge.writeData(23 downto 16));
+          
+        when "0010" =>
+          ahbReq_size <= HSIZE_BYTE;
+          ahbReq_address(1 downto 0) <= "10";
+          ahbReq_writeData <= ahbdrivedata(bus2bridge.writeData(15 downto 8));
+          
+        when "0001" =>
+          ahbReq_size <= HSIZE_BYTE;
+          ahbReq_address(1 downto 0) <= "11";
+          ahbReq_writeData <= ahbdrivedata(bus2bridge.writeData(7 downto 0));
+        
+        -- Handle halfword writes.
+        when "1100" =>
+          ahbReq_size <= HSIZE_HWORD;
+          ahbReq_address(1 downto 0) <= "00";
+          ahbReq_writeData <= ahbdrivedata(bus2bridge.writeData(31 downto 16));
+          
+        when "0011" =>
+          ahbReq_size <= HSIZE_HWORD;
+          ahbReq_address(1 downto 0) <= "10";
+          ahbReq_writeData <= ahbdrivedata(bus2bridge.writeData(15 downto 0));
+          
+        -- Handle word writes.
+        when "1111" =>
+          ahbReq_size <= HSIZE_WORD;
+          ahbReq_address(1 downto 0) <= "00";
+          ahbReq_writeData <= ahbdrivedata(bus2bridge.writeData(31 downto 0));
+          
+        -- Handle illegal accesses.
+        when others =>
+          ahbReq_enable <= '0';
+          ahbReq_error <= '1';
+          
       end case;
     end if;
-    bus2bridge_dma.size <= size;
-    bus2bridge_dma.address(1 downto 0) <= index;
+    
+    -- Read and write at the same time is illegal.
+    if bus2bridge.readEnable = '1' and bus2bridge.writeEnable = '1' then
+      ahbReq_enable <= '0';
+      ahbReq_error <= '1';
+    end if;
     
   end process;
   
   -----------------------------------------------------------------------------
-  -- Bus result translation
+  -- Drive the AHB master output signals
   -----------------------------------------------------------------------------
-  -- Delay the requesting signal by one cycle.
-  requesting_reg: process (clk) is
+  -- Drive unused and/or constant AHB signals.
+  bridge2ahb.hirq     <= (others => '0');
+  bridge2ahb.hconfig  <= hconfig;
+  bridge2ahb.hindex   <= AHB_MASTER_INDEX;
+  
+  -- Bus access request phase signals.
+  bridge2ahb.hbusreq  <= ahbReq_enable;
+  bridge2ahb.hlock    <= ahbReq_enable and bus2bridge.flags.lock;
+  
+  -- Drive AHB transfer type.
+  bridge2ahb.htrans   <= HTRANS_IDLE    when ahbReq_enable = '0' or ahb_forceIdle = '1'
+                    else HTRANS_BUSY    when (ahb_forceWait = '1' and bus2bridge.flags.burstEnable = '1')
+                    else HTRANS_IDLE    when ahb_forceWait = '1'
+                    else HTRANS_SEQ     when (ahb_sequential = '1' and bus2bridge.flags.burstEnable = '1')
+                    else HTRANS_NONSEQ;
+  
+  -- Drive AHB burst type.
+  bridge2ahb.hburst   <= HBURST_INCR when bus2bridge.flags.burstEnable = '1'
+                    else HBURST_SINGLE;
+  
+  -- Drive the decoded AHB request signals from the rvex bus which are valid in
+  -- the AHB address/control phase.
+  bridge2ahb.haddr    <= ahbReq_address;
+  bridge2ahb.hsize    <= ahbReq_size;
+  bridge2ahb.hwrite   <= ahbReq_writeEnable;
+  bridge2ahb.hprot    <= ahbReq_hprot;
+    
+  -- Drive write data. This needs to be delayed by one AHB bus phase, because
+  -- write data is part of the first phase (request) in the rvex bus but part
+  -- of the second phase (data) in AHB.
+  ahb_wdata_reg: process (clk) is
   begin
     if rising_edge(clk) then
       if reset = '1' then
-        requesting_r <= '0';
-      else
-        requesting_r <= bus2bridge_dma.request;
+        bridge2ahb.hwdata <= (others => '0');
+      elsif ahb2bridge.hready = '1' then
+        bridge2ahb.hwdata <= ahbReq_writeData;
       end if;
     end if;
   end process;
   
-  -- Determine the bus result.
-  bus_result_proc: process (bridge2bus_dma, requesting_r) is
-    variable ack  : std_logic;
+  -----------------------------------------------------------------------------
+  -- Handle AHB timing
+  -----------------------------------------------------------------------------
+  ahb_timing_block: block is
+    
+    -- These signals are asserted high when we have control over the bus
+    -- address, control or data signals.
+    signal addrCtrlPhase        : std_logic;
+    signal dataPhase            : std_logic;
+    
+    -- AHB request enable signal delayed to align with the data phase.
+    signal ahbReq_enable_dat    : std_logic;
+    
+    -- This is set when we're performing the first transfer since we had to
+    -- stop requesting things for some reason.
+    signal firstTransfer        : std_logic;
+    
   begin
     
-    -- Set default values.
-    bridge2bus_s <= BUS_SLV2MST_IDLE;
+    -- Generate AHB control registers.
+    ahb_regs: process (clk) is
+      variable requesting : std_logic;
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          addrCtrlPhase     <= '0';
+          dataPhase         <= '0';
+          ahbReq_enable_dat <= '0';
+          ahb_forceIdle     <= '0';
+          firstTransfer     <= '1';
+        else
+          
+          -- Determine whether we're requesting something right now.
+          requesting := ahbReq_enable
+                        and not ahb_forceIdle
+                        and not ahb_forceWait;
+          
+          -- Update phasing signals.
+          if ahb2bridge.hready = '1' then
+            addrCtrlPhase     <= ahb2bridge.hgrant(AHB_MASTER_INDEX);
+            dataPhase         <= addrCtrlPhase;
+            ahbReq_enable_dat <= addrCtrlPhase and requesting;
+          end if;
+          
+          -- Force an IDLE transfer following a SPLIT or RETRY bus response.
+          if ahb2bridge.hready = '0' and (
+            ahb2bridge.hresp = HRESP_SPLIT or ahb2bridge.hresp = HRESP_RETRY
+          ) then
+            ahb_forceIdle <= '1';
+          end if;
+          
+          -- Force an IDLE transfer when we don't have access to the control
+          -- signals.
+          if ahb2bridge.hready = '1' then
+            ahb_forceIdle <= not ahb2bridge.hgrant(AHB_MASTER_INDEX);
+          end if;
+          
+          -- Determine whether this is the first transfer since we had to delay
+          -- for some reason.
+          if ahb2bridge.hready = '1' then
+            if ahbReq_enable = '0' or ahb_forceIdle = '1' then
+              firstTransfer <= '1';
+            else
+              firstTransfer <= '0';
+            end if;
+          end if;
+          
+        end if;
+      end if;
+    end process;
     
-    -- Handle normal operation.
-    bridge2bus_s.readData   <= bridge2bus_dma.data;
-    bridge2bus_s.fault      <= '0';
-    bridge2bus_s.busy       <= requesting_r and not bridge2bus_dma.ready;
-    bridge2bus_s.ack        <= bridge2bus_dma.ready;
+    -- Force a BUSY or IDLE transfer when we're waiting in the data phase. We
+    -- need to do this, because the rvex bus does not provide information about
+    -- the next transfer until data is available.
+    ahb_forceWait   <= ahbReq_enable_dat and not busRes_ack;
     
-    -- Handle bus errors.
-    if bridge2bus_dma.fault = '1' then
-      bridge2bus_s.readData <= BUS_ERROR_CODE;
-      bridge2bus_s.fault    <= '1';
-      bridge2bus_s.busy     <= '0';
-      bridge2bus_s.ack      <= '1';
-    end if;
+    -- Determine whether this is a sequential/burst access.
+    ahb_sequential  <= (not firstTransfer) and (not bus2bridge.flags.burstStart);
     
-  end process;
-  
-  -- Forward the bus result.
-  bridge2bus <= bridge2bus_s;
+    -- Drive internal read data signal.
+    busRes_readData <= ahb2bridge.hrdata;
+    
+    -- Drive bus transfer complete signal.
+    busRes_ack      <= ahbReq_enable_dat and ahb2bridge.hready when (
+                         ahb2bridge.hresp = HRESP_OKAY
+                         or ahb2bridge.hresp = HRESP_ERROR
+                       ) else '0';
+    
+    -- Drive bus transfer error signal.
+    busRes_error    <= '1' when ahb2bridge.hresp = HRESP_ERROR else '0';
+    
+  end block;
   
   -----------------------------------------------------------------------------
-  -- Instantiate the grlib AHB master
+  -- Drive the rvex bus output signals
   -----------------------------------------------------------------------------
-  -- FIXME: dma2ahb seems to deadlock when a bus error occurs. Need to either
-  -- fix dma2ahb, use another master from grlib or make our own AHB master.
-  ahb_master_block: block is
-    signal hreset_n             : std_ulogic;
-    signal hclk                 : std_ulogic;
+  rvex_bus_output_block: block is
+    
+    -- Whether the rvex bus was requesting something in the previous cycle.
+    signal requesting_r         : std_logic;
+    
+    -- Delayed bus request error signal to align it with the bus result.
+    signal ahbReq_error_r       : std_logic;
+    
   begin
     
-    -- Convert the clock and reset signals to the right convention.
-    hreset_n <= not reset;
-    hclk <= clk;
+    -- Generate registers for the bus request active and error signals.
+    bus_req_regs: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          requesting_r <= '0';
+          ahbReq_error_r <= '0';
+        else
+          requesting_r <= bus2bridge.readEnable or bus2bridge.writeEnable;
+          ahbReq_error_r <= ahbReq_error;
+        end if;
+      end if;
+    end process;
     
-    -- Instantiate the grlib AHB master.
-    ahb_master_inst: entity grlib.dma2ahb
-      generic map (
-        hindex                  => AHB_MASTER_INDEX,
-        vendorid                => AHB_VENDOR_ID,
-        deviceid                => AHB_DEVICE_ID,
-        version                 => AHB_VERSION,
-        syncrst                 => 1,
-        boundary                => 1
-      )
-      port map (
-        HCLK                    => hclk,
-        HRESETn                 => hreset_n,
-        DMAIn                   => bus2bridge_dma,
-        DMAOut                  => bridge2bus_dma,
-        AHBIn                   => ahb2bridge,
-        AHBOut                  => bridge2ahb
-      );
+    -- Drive the bus result signal.
+    bus_res_proc: process (
+      ahbReq_error_r, busRes_error, busRes_readData,
+      requesting_r, busRes_ack
+    ) is
+    begin
+      
+      -- Drive with idle response by default.
+      bridge2bus <= BUS_SLV2MST_IDLE;
+      
+      -- Drive read data/fault code.
+      if ahbReq_error_r = '1' then
+        bridge2bus.readData <= REQ_ERROR_CODE;
+      elsif busRes_error = '1' then
+        bridge2bus.readData <= BUS_ERROR_CODE;
+      else
+        bridge2bus.readData <= ahbreadword(busRes_readData);
+      end if;
+      
+      -- Drive fault signal.
+      bridge2bus.fault <= ahbReq_error_r or busRes_error;
+      
+      -- Drive busy and acknowledge signals.
+      bridge2bus.busy <= requesting_r and not busRes_ack;
+      bridge2bus.ack  <= requesting_r and busRes_ack;
+    
+    end process;
     
   end block;
   
