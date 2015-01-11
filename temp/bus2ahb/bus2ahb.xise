@@ -16,7 +16,7 @@
 
   <files>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/amba/ahbctrl.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="23"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="28"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
       <library xil_pn:name="grlib"/>
     </file>
@@ -31,12 +31,12 @@
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/amba/amba.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="12"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="13"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/amba/apbctrl.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="22"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="27"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
       <library xil_pn:name="grlib"/>
     </file>
@@ -46,12 +46,12 @@
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/amba/devices.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="18"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="20"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/amba/dma2ahb_pkg.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="17"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="19"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
       <library xil_pn:name="grlib"/>
     </file>
@@ -76,7 +76,7 @@
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/stdlib/config.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="4"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="5"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
       <library xil_pn:name="grlib"/>
     </file>
@@ -88,95 +88,120 @@
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/stdlib/stdio.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="11"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="12"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/stdlib/stdlib.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="3"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="4"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/stdlib/testlib.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="16"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="18"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../lib/rvex/gaisler/bus2ahb.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="21"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="22"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="32"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../lib/rvex/bus/bus_pkg.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="13"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="10"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="33"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../lib/rvex/common/common_pkg.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="5"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="3"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="34"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../lib/rvex/utils/utils_pkg.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="9"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="6"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="36"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/gaisler/misc/ahbram.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="25"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="30"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="37"/>
       <library xil_pn:name="gaisler"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/techmap/gencomp/gencomp.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="8"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="9"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="39"/>
       <library xil_pn:name="techmap"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/techmap/inferred/memory_inferred.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="7"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="8"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="46"/>
       <library xil_pn:name="techmap"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/techmap/maps/syncrambw.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="14"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="16"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="48"/>
       <library xil_pn:name="techmap"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/techmap/maps/syncram.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="10"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="11"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="49"/>
       <library xil_pn:name="techmap"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/techmap/maps/allmem.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="6"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="7"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="50"/>
       <library xil_pn:name="techmap"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/grlib/util/util.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="15"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="17"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="51"/>
       <library xil_pn:name="grlib"/>
     </file>
     <file xil_pn:name="../../lib/rvex/utils/simUtils_pkg.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="20"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="14"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="57"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/gaisler/spi/spi.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="19"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="21"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="58"/>
       <library xil_pn:name="gaisler"/>
     </file>
     <file xil_pn:name="../../grlib/grlib-gpl-1.3.7-b4144/lib/gaisler/spi/spimctrl.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="24"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="29"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="59"/>
       <library xil_pn:name="gaisler"/>
     </file>
     <file xil_pn:name="../../lib/rvex/gaisler/bus2ahb_tb.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="26"/>
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="31"/>
       <association xil_pn:name="PostMapSimulation" xil_pn:seqID="62"/>
       <association xil_pn:name="PostRouteSimulation" xil_pn:seqID="62"/>
       <association xil_pn:name="PostTranslateSimulation" xil_pn:seqID="62"/>
+    </file>
+    <file xil_pn:name="../../lib/rvex/gaisler/ahb2bus.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="24"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="33"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../lib/rvex/bus/bus_demux.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="26"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="34"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../lib/rvex/bus/bus_ramBlock_singlePort.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="25"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="35"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../lib/rvex/bus/bus_addrConv_pkg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="15"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="36"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../lib/rvex/gaisler/ahb_snoop.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="23"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="46"/>
+      <library xil_pn:name="rvex"/>
     </file>
   </files>
 

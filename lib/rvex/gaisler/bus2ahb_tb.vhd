@@ -62,11 +62,14 @@ library rvex;
 use rvex.common_pkg.all;
 use rvex.simUtils_pkg.all;
 use rvex.bus_pkg.all;
+use rvex.bus_addrConv_pkg.all;
 
 --=============================================================================
 -- This testbench may be used to test the bus2ahb interface. A dummy, but
 -- reasonably complete AHB system is modeled, with devices with and without
--- wait states and a device which sends a split reply.
+-- wait states and a device which sends a split reply. The AHB system also
+-- includes an ahb2bus interface with a memory attached to it and an ahb_snoop
+-- unit, allowing them to be tested as well.
 -------------------------------------------------------------------------------
 entity bus2ahb_tb is
 end bus2ahb_tb;
@@ -178,7 +181,7 @@ begin -- architecture
     end process;
     
     -- Connect unused slaves.
-    slvo(NAHBSLV-1 downto 3) <= (others => ahbs_none);
+    slvo(NAHBSLV-1 downto 4) <= (others => ahbs_none);
     
     -----------------------------------------------------------------------------
     -- Instantiate an APB bridge at address 0x800-----, to which we attach a
@@ -352,7 +355,7 @@ begin -- architecture
                 report
                   "SPI: returned " & rvs_hex(not address(7 downto 0)) &
                   " for address " & rvs_hex(address)
-                  severity error;
+                  severity note;
                 address := std_logic_vector(unsigned(address) + 1);
               end loop;
               
@@ -369,7 +372,136 @@ begin -- architecture
       end process;
       
     end block; -- SPIM
-  
+    
+    -----------------------------------------------------------------------------
+    -- Connect an rvex bus bridge with some memory attached to it to address
+    -- 0xA-------. A bus mux is placed in between such that accesses outside
+    -- 0xA0------ return bus errors.
+    -----------------------------------------------------------------------------
+    rvex_bus_bridge_block: block is
+      
+      -- Address map for the bus demuxer.
+      constant ADDR_MAP         : addrRangeAndMapping_array(0 downto 0) := (
+        0 => addrRangeAndMap(match => "----0000------------------------")
+      );
+      
+      -- Bridge to mux demuxer.
+      signal bridge2demux       : bus_mst2slv_type;
+      signal demux2bridge       : bus_slv2mst_type;
+      
+      -- Demuxer to memory block bus.
+      signal demux2mem          : bus_mst2slv_type;
+      signal mem2demux          : bus_slv2mst_type;
+      
+    begin
+      
+      -- Instantiate the bus bridge.
+      rvex_bus_bridge_inst: entity rvex.ahb2bus
+        generic map (
+          AHB_INDEX             => 3,
+          AHB_ADDR              => 16#A00#,
+          AHB_MASK              => 16#F00#
+        )
+        port map (
+          reset                 => reset,
+          clk                   => clk,
+          ahb2bridge            => slvi,
+          bridge2ahb            => slvo(3),
+          bridge2bus            => bridge2demux,
+          bus2bridge            => demux2bridge
+        );
+      
+      -- Instantiate a bus demuxer so we can get bus errors.
+      rvex_bus_demux_inst: entity rvex.bus_demux
+        generic map (
+          ADDRESS_MAP           => ADDR_MAP
+        )
+        port map (
+          reset                 => reset,
+          clk                   => clk,
+          clkEn                 => '1',
+          mst2demux             => bridge2demux,
+          demux2mst             => demux2bridge,
+          demux2slv(0)          => demux2mem,
+          slv2demux(0)          => mem2demux
+        );
+      
+      -- Instantiate the memory.
+      rvex_bus_memory_inst: entity rvex.bus_ramBlock_singlePort
+        generic map (
+          DEPTH_LOG2B           => 12
+        )
+        port map (
+          reset                 => reset,
+          clk                   => clk,
+          clkEn                 => '1',
+          mst2mem_port          => demux2mem,
+          mem2mst_port          => mem2demux
+        );
+      
+    end block; -- rvex bus bridge
+    
+    -----------------------------------------------------------------------------
+    -- Instantiate an AHB bus snooper to test it.
+    -----------------------------------------------------------------------------
+    ahb_snoop_block: block is
+      
+      -- Number of masters to monitor.
+      constant NUM_CACHE_BLOCKS : natural := 4;
+      
+      -- Invalidation status signals.
+      signal invalAddr          : rvex_address_type;
+      signal invalSource        : std_logic_vector(NUM_CACHE_BLOCKS-1 downto 0);
+      signal invalEnable        : std_logic;
+      
+    begin
+      
+      -- Instantiate the bus snooper.
+      ahb_snoop_inst: entity rvex.ahb_snoop
+        generic map (
+          FIRST_MASTER          => 0,
+          NUM_CACHE_BLOCKS      => NUM_CACHE_BLOCKS
+        )
+        port map (
+          reset                 => reset,
+          clk                   => clk,
+          ahbsi                 => slvi,
+          invalAddr             => invalAddr,
+          invalSource           => invalSource,
+          invalEnable           => invalEnable
+        );
+      
+      -- Report bus accesses to the simulation output.
+      ahb_snoop_report_proc: process (clk) is
+        variable index    : integer;
+      begin
+        if rising_edge(clk) and reset = '0' and invalEnable = '1' then
+          index := -1;
+          for i in 0 to NUM_CACHE_BLOCKS - 1 loop
+            if invalSource(i) = '1' then
+              if index = -1 then
+                index := i;
+              else
+                report
+                  "Bus snooper: invalSource has more than one signal active " &
+                  "while it should be one-hot."
+                  severity error;
+                index := -1;
+                exit;
+              end if;
+            end if;
+          end loop;
+          if index /= -1 then
+            report
+              "Bus snooper: block " & integer'image(index) &
+              " invalidated address " & rvs_hex(invalAddr) & "."
+              severity note;
+          end if;
+        end if;
+      end process;
+      
+    end block;
+    
   end block; -- AHB
   
   --===========================================================================
@@ -544,6 +676,18 @@ begin -- architecture
     bus_write(X"00000004", X"44444444", "0001");
     bus_read(X"00000000", bus_flags_gen(burstEnable => '1', burstStart => '1'));
     bus_read(X"00000004", bus_flags_gen(burstEnable => '1', burstStart => '0'));
+    bus_write(X"A0000000", X"DEADBEEF");
+    bus_write(X"A0000004", X"11111111", "1000");
+    bus_write(X"A0000004", X"22222222", "0100");
+    bus_write(X"A0000004", X"33333333", "0010");
+    bus_write(X"A0000004", X"44444444", "0001");
+    bus_write(X"A0000008", X"55665566", "1100");
+    bus_write(X"A0000008", X"77887788", "0011");
+    bus_write(X"A1000000", X"DEADBEEF");
+    bus_read(X"A0000000", bus_flags_gen(burstEnable => '1', burstStart => '1'));
+    bus_read(X"A0000004", bus_flags_gen(burstEnable => '1', burstStart => '0'));
+    bus_read(X"A0000008", bus_flags_gen(burstEnable => '1', burstStart => '0'));
+    bus_read(X"A1000000");
     
     -- Idle forever.
     loop

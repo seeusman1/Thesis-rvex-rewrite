@@ -67,8 +67,10 @@ entity bus2ahb is
 --=============================================================================
   generic (
     
-    -- Generic information as passed to grlib.dma2ahb.
+    -- AHB master index.
     AHB_MASTER_INDEX            : integer := 0;
+    
+    -- AHB device description.
     AHB_VENDOR_ID               : integer := VENDOR_TUDELFT;
     AHB_DEVICE_ID               : integer := 0;
     AHB_VERSION                 : integer := 0;
