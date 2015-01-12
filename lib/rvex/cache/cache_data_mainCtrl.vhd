@@ -461,23 +461,15 @@ begin -- architecture
       
       when STATE_BYPASS =>
         
-        -- Prepare the synchronization register data input.
-        readData <= busToCache.readData;
-        
         if clkEnBus = '1' and busToCache.ack = '1' then
           
-          -- Return the data read from the memory (if this was a read). Note
-          -- that this only works if clkEnCPU is high and that the data from
-          -- the bus might not stay valid that long. In this case, the
-          -- synchronization data register will buffer the data from the
-          -- memory.
-          writeOrBypassStall <= '0';
+          -- Store the data from the bus in the synchronization register. We
+          -- could return it here directly if the CPU is not stalled for any
+          -- other reason, but timing wise it's better to accept an extra cycle
+          -- of delay compared to having the whole bus in a combinatorial path
+          -- to the processor.
           memSyncRegEna <= '1';
-          if clkEnCPU = '1' and stall = '0' then
-            nextState <= STATE_IDLE;
-          else
-            nextState <= STATE_WAIT_FOR_CPU;
-          end if;
+          nextState <= STATE_WAIT_FOR_CPU;
           
         else
           

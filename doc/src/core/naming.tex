@@ -1,0 +1,31 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{Naming conventions}
+
+All entities, packages, labels, types and hierarchy-crossing signals use the following naming conventions.
+
+\begin{itemize}
+
+  \item All signals, entity names, package names and types use a combination of camelCase and underscores. Typically, underscores are used as a form of hierarchy separation, where the VHDL language does not otherwise allow it, and camelCase is used to indicate word boundaries within one level of hierarchy. For example, \code{core_ctrlRegs_bank} refers to a (register) bank for the control registers for the \rvex{} core.
+  
+  \item Most signal names start with an underscore-terminated abbreviation which indicates the source and destination entity. This identifier contains two entity abbreviation codes separated by a \code{2}. The entity abbreviation codes are defined at the top of \code{core.vhd} and are also listed in Section \ref{sec:overview}. Sometimes other abbreviations are used for signals local to one entity, which should be clear from context.
+  
+  \item All constant names are uppercase with underscores.
+
+  \item Labels typically use underscores only, to prevent conflicts between similarly named entities and signals.
+
+  \item Types use one of the following suffixes to indicate what kind of type they represent.
+  \begin{itemize}
+    \item \code{_type}: scalar type.
+    \item \code{_array}: array type.
+    \item \code{_ptr}: access type for a scalar.
+    \item \code{_array_ptr}: access type for an array.
+  \end{itemize}
+
+  \item Enties and packages have the same name as their filename; exactly one entity or package is defined per VHDL file. Package names end in \code{_pkg}. All \rvex{} core files start with \code{core_} to keep their names unique within the \code{rvex} package, which contains a number of supporting packages as well.
+
+\end{itemize}
+
+\end{document}

@@ -1,0 +1,198 @@
+\documentclass[main.tex]{subfiles}
+
+\begin{document}
+
+\section{Overview}
+\label{sec:overview}
+
+A block diagram of the rvex core is shown in Figure \ref{fig:block-diagram}. The abbreviations used are described below. The same abbreviations are used in the code to mark the source and/or destination of a signal.
+
+\begin{figure}[h!]
+  \input{assets/rvex-block-diagram/rvex-block-diagram-linked.tex}
+  \caption{Block diagram of the \rvex{} core.}
+  \label{fig:block-diagram}
+\end{figure}
+
+\newcommand{\entity}[4]{
+  \vspace{12pt} \noindent 
+  \begin{minipage}{\textwidth}
+    \textbf{#1} \tabto{5cm} \textbf{\code{#2}} \tabto{8cm} \code{#3} \\[6pt]
+    #4
+  \end{minipage}
+}
+
+\newcommand{\entitylbl}[4]{\hypertarget{entity:#2}{}\entity{#1}{#2}{#3}{#4}}
+
+\entitylbl{\rvex{} processor}{rv}{core.vhd}{
+  This is the toplevel file for the rvex processor.
+}
+
+\entity{External \rvex{} package}{-}{core_pkg.vhd}{
+  This package contains type definitions and constants relevant both in the core internally and for the external interface of the core. In particular, it contains the type specification for the \code{CFG} generic, and the \code{rvex_cfg} subprogram which should be used to construct or modify it.
+}
+
+\entity{Internal \rvex{} package}{-}{core_intIface_pkg.vhd}{
+  This package contains all type specifications, constants and subprograms which are relevant only to the core files and do not belong in a specific file. This file does not contain configuration constants, aside from the following constants related to simulation performance: \code{GEN_VHDL_SIM_INFO}, \code{SIM_FULL_GPREG_FILE} and \code{RVEX_UNDEF}. These constants are documented extensively in the code.
+}
+
+\entitylbl{Pipelanes}{pls}{core_pipelanes.vhd}{
+  This entity contains the datapaths for the processor. It also contains the reconfigurable routing logic used to couple or decouple lane groups.
+}
+
+\entitylbl{Pipelane}{pl}{core_pipelane.vhd}{
+  This entity contains the datapath for a single pipelane, capable of executing a single syllable. It instantiates the necessary functional units based on configuration and its index. The pipeline is described in a single behavioral process, in such a way that the timing can be modified by just changing constants. These constants may be found in \code{core_pipeline_pkg.vhd}. Assert statements are in place to check the configuration specified by \code{core_pipeline_pkg.vhd}.
+}
+
+\entity{Pipeline configuration}{-}{core_pipeline_pkg.vhd}{
+  This contains constants which define the timing and the number of stages of the pipeline. All stage definitions and latencies may be changed without breaking functionality, as long as the requirements for each constant are complied with. Assert statements in \code{core_pipelane.vhd} verify that the pipeline configuration is valid during static elaboration.
+}
+
+\entitylbl{Branch unit}{br}{core_branch.vhd}{
+  This entity determines the program counter for the next cycle and provides its pipelane with the capability of executing branch class syllables. There must be exactly one branch unit in each pipelane group, and only the branch unit in the highest indexed pipelane group is active when groups are coupled.
+}
+
+\entitylbl{Arithmetic logic unit}{alu}{core_alu.vhd}{
+  This entity contains the arithmetic unit for the \rvex{}. The ALU takes up to two 32-bit integer operands and one boolean operand as input, and outputs a 32-bit integer and/or a boolean. Registers may be inserted in two places in the datapath, affecting the timing of the ALU. Insertion is controlled by \code{L_ALU1} and \code{L_ALU2}, defined in \code{core_pipeline_pkg.vhd}.
+}
+
+\entitylbl{Memory unit}{memu}{core_memu.vhd}{
+  This entity interfaces with the data memory port and control registers of the \rvex{}. When present, it provides its pipelane with the capability of executing memory class syllables. There must be exactly one memory unit in each pipelane group, and only the memory unit in the highest indexed pipelane group is active when groups are coupled.
+}
+
+\entitylbl{Multiply unit}{mulu}{core_mulu.vhd}{
+  This entity contains a 32x16 multiplier. When present, it provides its pipelane with the capability of executing multiply class syllables. The latency is configurable using the \code{L_MUL} constant in \code{core_pipeline_pkg.vhd}. Directives for the Xilinx synthesis tools are in place to have the tools automatically insert the pipeline registers in the appropriate places within the DSP core.
+}
+
+\entitylbl{Breakpoint unit}{brku}{core_brku.vhd}{
+  This entity matches the PC and memory access command against the up to four enabled hardware breakpoint registers, and generates debug traps if there is a match. It should only be instantiated in pipelanes which also have a memory unit.
+}
+
+\entity{Opcode package}{-}{core_opcode_pkg.vhd}{
+  This package defines the \code{OPCODE_TABLE} constant array, which maps the 8-bit opcode portion of a syllable to its control signals and (dis)assembly information. Operations can be added, removed and modified without breaking the processor. In addition, if the (dis)assembly formatting strings are maintained properly, the core unit test runner will generate correct machine code regardless of the opcode configuration when the \code{load} command is used, but externally compiled code loaded with the \code{srec} command will of course need to be recompiled.
+}
+
+\entity{Datapath ctrl. signal package}{-}{core_opcodeDatapath_pkg.vhd}{
+  This package defines sets of control signals defining how the functional units are to be connected to the register files and each other, for use in \code{core_opcode_pkg.vhd}.
+}
+
+\entity{ALU ctrl. signal package}{-}{core_opcodeAlu_pkg.vhd}{
+  This package defines sets of control signals defining valid ALU functions for use in \code{core_opcode_pkg.vhd}.
+}
+
+\entity{Mult. ctrl. signal package}{-}{core_opcodeMultiplier_pkg.vhd}{
+  This package defines sets of control signals defining valid multiplier functions for use in \code{core_opcode_pkg.vhd}.
+}
+
+\entity{Mem. ctrl. signal package}{-}{core_opcodeMemory_pkg.vhd}{
+  This package defines sets of control signals defining valid memory unit functions for use in \code{core_opcode_pkg.vhd}.
+}
+
+\entity{Branch ctrl. signal package}{-}{core_opcodeBranch_pkg.vhd}{
+  This package defines sets of control signals defining valid branch unit functions for use in \code{core_opcode_pkg.vhd}.
+}
+
+\entity{(Dis)assembler package}{-}{core_asDisas_pkg.vhd}{
+  This package defines simulation/elaboration only subprograms which can perform basic assembly and disassembly, used for the core unit test runner and the simulation-only core state output signal.
+}
+
+\entitylbl{General purpose registers}{gpreg}{core_gpRegs.vhd}{
+  This entity instantiates the general purpose register file and associated forwarding logic. Two register file implementations are available, specified in \code{core_gpRegs_sim.vhd} and \code{core_gpRegs_mem.vhd}.
+}
+
+\entity{BRAM-based \code{gpreg} spec.}{-}{core_gpRegs_mem.vhd}{
+  This entity specifies the general purpose register file in such a way that block RAMs are inferred for the register contents. In order to provide simultaneous access to all read and write ports, the contents of the register file are duplicated for each read and write port pair. Fabric based registers are used to store which write port last wrote to each register. Because of the duplication, it is hard to trace the contents of the register file in simulation. Therefore, \code{core_gpRegs_sim.vhd} will be used for simulation instead, unless \code{SIM_FULL_GPREG_FILE} in \code{core_intIface_pkg.vhd} is set to \code{true}.
+}
+
+\entity{Behavioral \code{gpreg} spec.}{-}{core_gpRegs_sim.vhd}{
+  This entity specifies the general purpose register file behaviorally, in such a way that the register contents can be easily traced in simulation. However, it is not decently synthesizable.
+}
+
+\entitylbl{Forwarding logic}{fwd}{core_forward.vhd}{
+  This entity infers the priority encoder and muxes needed for forwarding. It is highly generic and customizable, allowing it to be used for both the general purpose register file as well as the branch register file and link register.
+}
+
+\entitylbl{Context-pipelane interface}{cxplif}{core_contextPipelaneIFace.vhd}{
+  This entity serves as a central reconfigurable routing matrix between all pipelanes, pipelane groups and contexts.
+}
+
+\entitylbl{Data memory switch}{dmsw}{core_dmemSwitch.vhd}{
+  This entity switches between forwarding data memory access requests to the external data memory port and the core control registers. It adds additional latency stages to the core control register read data signal when the memory latency (\code{L_MEM} in \code{core_pipeline_pkg.vhd}) is specified to be greater than one.
+}
+
+\entitylbl{Long immediate routing}{limm}{core_limmRouting.vhd}{
+  This entity contains the inter-pipelane routing needed to support long immediate (\code{LIMMH}) instructions. It can be configured to support routing long immediate data between aligned pipelane pairs and/or from the previous pair by means of the \code{limmhFromNeighbor} and \code{limmhFromPreviousPair} members of the \code{CFG} generic. When \code{limmhFromNeighbor} is set, a \code{LIMMH} instruction in lane 0 can forward to lane 1, lane 1 can forward to lane 0, lane 2 to 3, 3 to 2 and so on. When \code{limmhFromPreviousPair} is set, lane 0 can forward to lane 2, lane 1 to 3, 3 to 4 and so on. Registers are instantiated in this case when the generic binary bundle size (\code{genBundleSizeLog2} in \code{CFG}) is set to be larger than the size of a lane group to store the \code{LIMMH} data from the previous instruction when necessary.
+}
+
+\entitylbl{Trap routing}{trap}{core_trapRouting.vhd}{
+  This entity merges trap information from pipelanes together when they are coupled, and broadcasts the merged information back to the lanes for the invalidation logic.
+}
+
+\entity{Trap code package}{-}{core_trap_pkg.vhd}{
+  This package defines the \code{TRAP_TABLE} constant array, which maps an 8-bit trap cause code to its friendly name and control signals. Constants are also available for each trap cause, prefixed by \code{RVEX_TRAP_}. In general, the definitions in this package can be changed without breaking functionality, as long as existing traps are not removed.
+}
+
+\entitylbl{Control registers}{creg}{core_ctrlRegs.vhd}{
+  This entity contains the generic parts of the core control registers and the bus logic needed to access them. Functionality of the registers is defined by \code{core_contextRegLogic.vhd} and \code{core_globalRegLogic.vhd}, and the word addresses of the registers are defined in \code{core_ctrlRegs_pkg.vhd}.
+}
+
+\entity{Ctrl. reg. map package}{-}{core_ctrlRegs_pkg.vhd}{
+  This package defines the constants which determine the memory map of the core control registers and several boilerplate subprograms used to generate certain types of control registers with. All control register memory map related constants prefixed with \code{CR_} can be changed without breaking code, as long as the overal map remains consistent. Note that the constant specifying at which word the global registers stop and the context-specific registers start, \code{CTRL_REG_GLOB_WORDS}, is defined in \code{core_intIface_pkg.vhd}.
+}
+
+\entity{Ctrl. reg. bank}{-}{core_ctrlRegs_bank.vhd}{
+  This entity instantiates a group of generic control registers. Used by \code{core_ctrlRegs.vhd} to instantiate the global control registers and the context control registers for each context.
+}
+
+\entity{Ctrl. reg. read port}{-}{core_ctrlRegs_readPort.vhd}{
+  This entity instantiates an additional read port for a control register bank instantiated with \code{core_ctrlRegs_bank.vhd}.
+}
+
+\entity{Ctrl. reg. bus switch}{-}{core_ctrlRegs_busSwitch.vhd}{
+  This entity connects a single control register bus master to several slaves, switching based on the request address.
+}
+
+\entity{Ctrl. reg. context switch}{-}{core_ctrlRegs_contextLaneSwitch.vhd}{
+  This entity connects the control register busses from the memory units to the appropriate context-specific register bank, based on the current runtime configuration.
+}
+
+\entitylbl{Context register logic}{cxreg}{core_contextRegLogic.vhd}{
+  This entity defines the functionality of the context-specific control registers. Extensive documentation is provided in the code, and the registers are defined using the subprograms defined in \code{core_ctrlRegs_pkg.vhd}. This should make it easy to define new control registers and understand the current ones.
+}
+
+\entitylbl{Global register logic}{gbreg}{core_globalRegLogic.vhd}{
+  Similar to \code{core_contextRegLogic.vhd}, this entity defines the functionality of the global core control registers. Be aware that these registers are only writable from the external debug bus interface.
+}
+
+\entitylbl{Configuration control}{cfg}{core_cfgCtrl.vhd}{
+  This entity provides the runtime configuration control signals to the rest of the core and controls the timing for runtime reconfiguration.
+}
+
+\entity{Configuration decoder}{-}{core_cfgCtrl_decode.vhd}{
+  This entity error-checks and decodes the configuration words as presented by the core or the debug bus when they request reconfiguration.
+}
+
+\entitylbl{Memory}{mem}{-}{
+  Abbreviation for the memory or cache connected to the \rvex{}.
+}
+
+\entitylbl{Instruction memory}{imem}{-}{
+  Abbreviation for the instruction memory or cache connected to the \rvex{}.
+}
+
+\entitylbl{Data memory}{dmem}{-}{
+  Abbreviation for the data memory or cache connected to the \rvex{}.
+}
+
+\entitylbl{Debug bus}{dbg}{-}{
+  Abbreviation for the debug bus connected to the \rvex{}.
+}
+
+\entitylbl{Run control}{rctrl}{-}{
+  Abbreviation for the entity or group of entities connected to the \rvex{} run control interface.
+}
+
+\entitylbl{Simulation}{sim}{-}{
+  Abbreviation for the behavioral VHDL simulator, used as destination for simulation-only debug output signals.
+}
+
+\end{document}

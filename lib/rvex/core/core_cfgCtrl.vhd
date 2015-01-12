@@ -245,6 +245,11 @@ architecture Behavioral of core_cfgCtrl is
   -- bit is cleared do not need to be stopped to commit the new configuration.
   signal contextsToUpdate       : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
+  -- Block reconfiguration registers.
+  signal blockReconfig_ctxt     : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal blockReconfig_mem      : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal blockReconfig_decode   : std_logic;
+  
   -- Commit signal. When high, the new configuration will be committed to the
   -- current configuration registers and busy will be cleared.
   signal commit                 : std_logic;
@@ -477,12 +482,31 @@ begin -- architecture
     end loop;
   end process;
   
+  -- Place registers in the blockReconfig signal paths. This delays
+  -- reconfiguration by one cycle, but removes the decoding logic from the
+  -- paths driving the blockReconfig signals.
+  block_reconf_regs: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        blockReconfig_ctxt    <= (others => '0');
+        blockReconfig_mem     <= (others => '0');
+        blockReconfig_decode  <= '1';
+      elsif clkEn = '1' then
+        blockReconfig_ctxt    <= cxplif2cfg_blockReconfig;
+        blockReconfig_mem     <= mem2cfg_blockReconfig;
+        blockReconfig_decode  <= decoderBusy;
+      end if;
+    end if;
+  end process;
+  
   -- Generate the commit signal. We commit when the decoder is done but busy_r
   -- is still high, while all the contexts with their contextsToUpdate bit set
   -- are idle.
   gen_commit: process (
-    contextsToUpdate, decoderBusy, busy_r, cxplif2cfg_blockReconfig,
-    curContextEnable_r, curLastPipelaneGroupForContext_r, mem2cfg_blockReconfig
+    contextsToUpdate, decoderBusy, busy_r, blockReconfig_ctxt, 
+    curContextEnable_r, curLastPipelaneGroupForContext_r, blockReconfig_mem,
+    blockReconfig_decode
   ) is
     variable laneGroup : natural;
   begin
@@ -494,16 +518,26 @@ begin -- architecture
       
       -- Commit unless we find anything which is blocking reconfiguration.
       commit <= '1';
+      
+      -- Do not reconfigure the first cycle where we're halting the relevant
+      -- pipelanes, because at this time the blockReconfig signals are not yet
+      -- guaranteed to stay low if they are low now due to the register in the
+      -- path.
+      if blockReconfig_decode = '1' then
+        commit <= '0';
+      end if;
+      
+      -- Block reconfiguration if the 
       for i in 2**CFG.numContextsLog2-1 downto 0 loop
         if contextsToUpdate(i) = '1' then
-          if cxplif2cfg_blockReconfig(i) = '1' then
+          if blockReconfig_ctxt(i) = '1' then
             commit <= '0';
           end if;
           if curContextEnable_r(i) = '1' then
             laneGroup := vect2uint(
               curLastPipelaneGroupForContext_r(i)(CFG.numContextsLog2-1 downto 0)
             );
-            if mem2cfg_blockReconfig(laneGroup) = '1' then
+            if blockReconfig_mem(laneGroup) = '1' then
               commit <= '0';
             end if;
           end if;
