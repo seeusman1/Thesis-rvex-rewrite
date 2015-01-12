@@ -209,6 +209,20 @@ package bus_pkg is
     b     : bus_mst2slv_type
   ) return std_logic;
   
+  -- Returns true when the specified bus is reading from the specified address,
+  -- respecting don't cares.
+  function bus_reading(
+    b     : bus_mst2slv_type;
+    a     : rvex_address_type
+  ) return boolean;
+  
+  -- Returns true when the specified bus is writing to the specified byte
+  -- address, respecting don't cares.
+  function bus_writing(
+    b     : bus_mst2slv_type;
+    a     : rvex_address_type
+  ) return boolean;
+  
 end bus_pkg;
 
 --=============================================================================
@@ -263,5 +277,28 @@ package body bus_pkg is
   begin
     return b.readEnable or b.writeEnable;
   end bus_requesting;
+  
+  -- Returns true when the specified bus is reading from the specified address,
+  -- respecting don't cares.
+  function bus_reading(
+    b     : bus_mst2slv_type;
+    a     : rvex_address_type
+  ) return boolean is
+  begin
+    return b.readEnable = '1'
+       and std_match(b.address(31 downto 2), a(31 downto 2));
+  end bus_reading;
+  
+  -- Returns true when the specified bus is writing to the specified byte
+  -- address, respecting don't cares.
+  function bus_writing(
+    b     : bus_mst2slv_type;
+    a     : rvex_address_type
+  ) return boolean is
+  begin
+    return b.writeEnable = '1'
+       and std_match(b.address(31 downto 2), a(31 downto 2))
+       and b.writeMask(vect2uint(a(1 downto 0))) = '1';
+  end bus_writing;
   
 end bus_pkg;

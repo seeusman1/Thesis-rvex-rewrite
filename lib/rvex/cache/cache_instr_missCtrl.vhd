@@ -235,6 +235,7 @@ begin -- architecture
   
   -- Determine the memory bus address and whether we should request a read.
   det_mem_bus_access: process (state_next, cpuAddr) is
+    variable burstStart : std_logic;
   begin
     
     -- Set the bus defaults.
@@ -246,10 +247,21 @@ begin -- architecture
     
     if state_next >= 1 and state_next <= ACCESSES_PER_LINE then
       
+      -- Determine whether this is the first bus transfer in the burst.
+      if state_next = 1 then
+        burstStart := '1';
+      else
+        burstStart := '0';
+      end if;
+      
       -- Request the next part. Set the burst and lock bus flags in order to do
       -- a burst transfer to speed things up.
       cacheToBus.readEnable <= '1';
-      cacheToBus.flags <= bus_flags_gen(burst => '1', lock  => '1');
+      cacheToBus.flags <= bus_flags_gen(
+        burstStart  => burstStart,
+        burstEnable => '1',
+        lock        => '1'
+      );
       cacheToBus.address(icacheOffsetLSB(RCFG, CCFG)-1 downto 2)
         <= std_logic_vector(to_unsigned(state_next-1, icacheOffsetLSB(RCFG, CCFG)-2));
       

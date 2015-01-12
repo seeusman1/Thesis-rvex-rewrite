@@ -51,6 +51,7 @@ use IEEE.numeric_std.all;
 library rvex;
 use rvex.common_pkg.all;
 use rvex.bus_pkg.all;
+use rvex.bus_addrConv_pkg.all;
 use rvex.core_pkg.all;
 use rvex.cache_pkg.all;
 use rvex.rvsys_grlib_pkg.all;
@@ -75,49 +76,7 @@ entity rvsys_grlib is
     
     -- AHB master starting index. There will be as many AHB masters as there
     -- are lane groups in the core.
-    AHB_MASTER_INDEX_START      : integer range 0 to NAHBMST-1 := 0;
-    
-    -- APB slave index.
-    APB_INDEX                   : integer := 0;
-    
-    -- APB slave configuration. ADDR and MASK define the address ranges which
-    -- the rvex should respond to, mapping to address bits 19 downto 8. With
-    -- 8 bits of address space, all rvex core debug registers are mapped
-    -- through the banking mechanism. With 9 bits of address space, additional
-    -- platform-specific registers are mapped as well. With 13 bits of address
-    -- space, all registers are mapped without banking. The address map is
-    -- depicted below:
-    -- 
-    --          _____________________________
-    --  0x1FFF | Context 7 GP reg 32-63      |
-    --  0x1F80 |_____________________________|
-    --         |_____________________________|
-    --  0x1EFF | Context 7 GP reg 0-31       |
-    --  0x1E80 |_____________________________|
-    --  0x1E7F | Context 7 ctrl regs         |
-    --  0x1E00 |_____________________________|
-    --  0x1DFF | (context 1..6 mapped here)  |
-    --  0x1200 |_____________________________|
-    --  0x11FF | Context 0 GP reg 32-63      |
-    --  0x1180 |_____________________________|
-    --         |_____________________________|
-    --  0x10FF | Context 0 GP reg 0-31       |
-    --  0x1080 |_____________________________|
-    --  0x107F | Context 0 ctrl regs         |
-    --  0x1000 |_____________________________|
-    --         |_____________________________|
-    --  0x01FF | Reserved for MMU regs       |
-    --  0x0180 |_____________________________|
-    --  0x017F | Reserved for cache regs     |
-    --  0x0100 |_____________________________| _
-    --  0x00FF | Context i GP reg 0-31/32-63 |  \
-    --  0x0080 |_____________________________|   \ Context and GP registers are
-    --  0x007F | Context i ctrl regs         |   / selected using bank register
-    --  0x0000 |_____________________________| _/
-    -- 
-    -- By default, we'll claim the full 13 bits of address space.
-    APB_ADDR                    : integer := 0;
-    APB_MASK                    : integer := 16#FE0#
+    AHB_MASTER_INDEX_START      : integer range 0 to NAHBMST-1 := 0
     
   );
   port (
@@ -136,13 +95,46 @@ entity rvsys_grlib is
     ---------------------------------------------------------------------------
     -- AHB master interface. This is used for instruction and data access. Each
     -- lane group has its own AHB master.
-    ahbi                        : in  ahb_mst_in_type;
-    ahbo                        : out ahb_mst_out_vector_type(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+    ahbmi                       : in  ahb_mst_in_type;
+    ahbmo                       : out ahb_mst_out_vector_type(2**CFG.core.numLaneGroupsLog2-1 downto 0);
     
-    -- APB slave port, used to access the rvex debug and status registers from
-    -- the bus.
-    apbi                        : in  apb_slv_in_type;
-    apbo                        : out apb_slv_out_type;
+    -- AHB slave input for bus snooping.
+    ahbsi                       : in  ahb_slv_in_type;
+    
+    -- Slave rvex bus, to be connected to an ahb2bus bridge up the hierarchy.
+    -- Used to access debug control and status registers for the core, cache
+    -- and any other support systems. The register map is as follows.
+    --          _____________________________
+    --  0x1FFF | Context 7 GP reg 32-63      |
+    --  0x1F80 |_____________________________|
+    --         |_____________________________|
+    --  0x1EFF | Context 7 GP reg 0-31       |
+    --  0x1E80 |_____________________________|
+    --  0x1E7F | Context 7 ctrl regs         |
+    --  0x1E00 |_____________________________|
+    --  0x1DFF | (context 1..6 mapped here)  |
+    --  0x1200 |_____________________________|
+    --  0x11FF | Context 0 GP reg 32-63      |
+    --  0x1180 |_____________________________|
+    --         |_____________________________|
+    --  0x10FF | Context 0 GP reg 0-31       |
+    --  0x1080 |_____________________________|
+    --  0x107F | Context 0 ctrl regs         |
+    --  0x1000 |_____________________________|
+    --         |_____________________________| _
+    --  0x01FF | Context i GP reg 0-31/32-63 |  \
+    --  0x0180 |_____________________________|   \ Context and GP registers are
+    --  0x017F | Context i ctrl regs         |   / selected using bank register
+    --  0x0100 |_____________________________| _/
+    --  0x00FF | Reserved for MMU regs       |
+    --  0x0080 |_____________________________|
+    --  0x007F | Reserved for cache regs     |
+    --  0x0040 |_____________________________|
+    --  0x003F | Global regs                 |
+    --  0x0000 |_____________________________|
+    --
+    bus2dgb                     : in  bus_mst2slv_type;
+    dbg2bus                     : out bus_slv2mst_type;
     
     -- Interrupt controller interface. This entity handles translation from the
     -- LEON3 interrupt controller to the rvex interrupt control signals. Note
@@ -172,14 +164,6 @@ architecture Behavioral of rvsys_grlib is
   signal rctrl2rv_irqID         : rvex_address_array(2**CFG.core.numContextsLog2-1 downto 0);
   signal rv2rctrl_irqAck        : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
   
-  -- rvex debug bus interface signals.
-  signal dbg2rv_addr            : rvex_address_type;
-  signal dbg2rv_readEnable      : std_logic;
-  signal dbg2rv_writeEnable     : std_logic;
-  signal dbg2rv_writeMask       : rvex_mask_type;
-  signal dbg2rv_writeData       : rvex_data_type;
-  signal rv2dbg_readData        : rvex_data_type;
-  
   -- Common cache interface signals.
   signal rv2cache_decouple      : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal cache2rv_blockReconfig : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
@@ -206,27 +190,34 @@ architecture Behavioral of rvsys_grlib is
   signal cache2bridge_bus       : bus_mst2slv_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal bridge2cache_bus       : bus_slv2mst_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   
-  -- Bus address which is to be invalidated when invalEnable is high.
+  -- Bus snooper cache invalidation signals.
   signal bus2cache_invalAddr    : rvex_address_type;
-  
-  -- If one of the data caches is causing the invalidation due to a write,
-  -- the signal in this vector indexed by that data cache must be high. In
-  -- all other cases, these signals should be low.
   signal bus2cache_invalSource  : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
-  
-  -- Active high enable signal for line invalidation.
   signal bus2cache_invalEnable  : std_logic;
   
   -- Flush control signals.
   signal sc2icache_flush        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal sc2dcache_flush        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   
+  -- Debug bus demuxer to global control registers.
+  signal demux2glob             : bus_mst2slv_type;
+  signal glob2demux             : bus_slv2mst_type;
+  
+  -- Debug bus demuxer to cache control registers.
+  signal demux2cache            : bus_mst2slv_type;
+  signal cache2demux            : bus_slv2mst_type;
+  
+  -- Debug bus demuxer to MMU control registers.
+  signal demux2mmu              : bus_mst2slv_type;
+  signal mmu2demux              : bus_slv2mst_type;
+  
+  -- Debug bus demuxer to core control registers.
+  signal demux2rv               : bus_mst2slv_type;
+  signal rv2demux               : bus_slv2mst_type;
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
-  
-  -- The APB bus is not used yet.
-  apbo <= apb_none;
   
   -----------------------------------------------------------------------------
   -- System control
@@ -234,59 +225,108 @@ begin -- architecture
   resetCPU  <= dbg_reset or not rstn;
   resetBus  <= not rstn;
   clk       <= clki;
+  
+  -- clkEnCPU and clkEnBus kinda don't work in this platform because there's no
+  -- synchronization between the debug register bus and the registers, and
+  -- the bus clk is always enabled because AMBA doesn't have a clock enable. So
+  -- they're just tied to '1' here and exist only as a formality.
   clkEnCPU  <= '1';
   clkEnBus  <= '1';
   
   -----------------------------------------------------------------------------
   -- Instantiate the rvex core
   -----------------------------------------------------------------------------
-  rvex_inst: entity rvex.core
-    generic map (
-      CFG                       => CFG.core
-    )
-    port map (
-      
-      -- System control.
-      reset                     => resetCPU,
-      clk                       => clk,
-      clkEn                     => clkEnCPU,
-      
-      -- Run control interface.
-      rctrl2rv_irq              => rctrl2rv_irq,
-      rctrl2rv_irqID            => rctrl2rv_irqID,
-      rv2rctrl_irqAck           => rv2rctrl_irqAck,
-      
-      -- Common memory interface.
-      rv2mem_decouple           => rv2cache_decouple,
-      mem2rv_blockReconfig      => cache2rv_blockReconfig,
-      mem2rv_stallIn            => cache2rv_stallIn,
-      rv2mem_stallOut           => rv2cache_stallOut,
-      
-      -- Instruction memory interface.
-      rv2imem_PCs               => rv2icache_PCs,
-      rv2imem_fetch             => rv2icache_fetch,
-      rv2imem_cancel            => rv2icache_cancel,
-      imem2rv_instr             => icache2rv_instr,
-      imem2rv_affinity          => icache2rv_affinity,
-      
-      -- Data memory interface.
-      rv2dmem_addr              => rv2dcache_addr,
-      rv2dmem_readEnable        => rv2dcache_readEnable,
-      rv2dmem_writeData         => rv2dcache_writeData,
-      rv2dmem_writeMask         => rv2dcache_writeMask,
-      rv2dmem_writeEnable       => rv2dcache_writeEnable,
-      dmem2rv_readData          => dcache2rv_readData,
-      
-      -- Control/debug bus interface.
-      dbg2rv_addr               => dbg2rv_addr,
-      dbg2rv_readEnable         => dbg2rv_readEnable,
-      dbg2rv_writeEnable        => dbg2rv_writeEnable,
-      dbg2rv_writeMask          => dbg2rv_writeMask,
-      dbg2rv_writeData          => dbg2rv_writeData,
-      rv2dbg_readData           => rv2dbg_readData
-      
-    );
-  
+  rvex_block: block is
+    
+    -- Raw rvex debug bus interface signals.
+    signal dbg2rv_addr          : rvex_address_type;
+    signal dbg2rv_readEnable    : std_logic;
+    signal dbg2rv_writeEnable   : std_logic;
+    signal dbg2rv_writeMask     : rvex_mask_type;
+    signal dbg2rv_writeData     : rvex_data_type;
+    signal rv2dbg_readData      : rvex_data_type;
+    
+    -- Bus ack register.
+    signal ack                  : std_logic;
+    
+  begin
+    
+    -- Instantiate the rvex core.
+    rvex_inst: entity rvex.core
+      generic map (
+        CFG                       => CFG.core
+      )
+      port map (
+        
+        -- System control.
+        reset                     => resetCPU,
+        clk                       => clk,
+        clkEn                     => clkEnCPU,
+        
+        -- Run control interface.
+        rctrl2rv_irq              => rctrl2rv_irq,
+        rctrl2rv_irqID            => rctrl2rv_irqID,
+        rv2rctrl_irqAck           => rv2rctrl_irqAck,
+        
+        -- Common memory interface.
+        rv2mem_decouple           => rv2cache_decouple,
+        mem2rv_blockReconfig      => cache2rv_blockReconfig,
+        mem2rv_stallIn            => cache2rv_stallIn,
+        rv2mem_stallOut           => rv2cache_stallOut,
+        
+        -- Instruction memory interface.
+        rv2imem_PCs               => rv2icache_PCs,
+        rv2imem_fetch             => rv2icache_fetch,
+        rv2imem_cancel            => rv2icache_cancel,
+        imem2rv_instr             => icache2rv_instr,
+        imem2rv_affinity          => icache2rv_affinity,
+        
+        -- Data memory interface.
+        rv2dmem_addr              => rv2dcache_addr,
+        rv2dmem_readEnable        => rv2dcache_readEnable,
+        rv2dmem_writeData         => rv2dcache_writeData,
+        rv2dmem_writeMask         => rv2dcache_writeMask,
+        rv2dmem_writeEnable       => rv2dcache_writeEnable,
+        dmem2rv_readData          => dcache2rv_readData,
+        
+        -- Control/debug bus interface.
+        dbg2rv_addr               => dbg2rv_addr,
+        dbg2rv_readEnable         => dbg2rv_readEnable,
+        dbg2rv_writeEnable        => dbg2rv_writeEnable,
+        dbg2rv_writeMask          => dbg2rv_writeMask,
+        dbg2rv_writeData          => dbg2rv_writeData,
+        rv2dbg_readData           => rv2dbg_readData
+        
+      );
+    
+    -- Connect the debug bus.
+    dbg2rv_addr         <= demux2rv.address;
+    dbg2rv_readEnable   <= demux2rv.readEnable;
+    dbg2rv_writeEnable  <= demux2rv.writeEnable;
+    dbg2rv_writeMask    <= demux2rv.writeMask;
+    dbg2rv_writeData    <= demux2rv.writeData;
+    
+    -- Generate the bus acknowledge signal.
+    ack_reg_proc: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if resetBus = '1' then
+          ack <= '0';
+        elsif clkEnBus = '1' then
+          ack <= demux2rv.readEnable or demux2rv.writeEnable;
+        end if;
+      end if;
+    end process;
+    
+    -- Drive the bus result signals.
+    bus_result_proc: process (rv2dbg_readData, ack) is
+    begin
+      rv2demux <= BUS_SLV2MST_IDLE;
+      rv2demux.ack <= ack;
+      rv2demux.readData <= rv2dbg_readData;
+    end process;
+    
+  end block;
   -----------------------------------------------------------------------------
   -- Generate the bypass signals
   -----------------------------------------------------------------------------
@@ -352,6 +392,45 @@ begin -- architecture
       
     );
   
+  -- Instantiate the cache registers.
+  cache_control_reg_proc: process (clk) is
+    
+    -- Assigns signals to their reset/idle/default state.
+    procedure defaultState is
+    begin
+      cache2demux <= BUS_SLV2MST_IDLE;
+      sc2icache_flush <= (others => '0');
+      sc2dcache_flush <= (others => '0');
+    end defaultState;
+    
+  begin
+    if rising_edge(clk) then
+      if resetBus = '1' then
+        defaultState;
+      elsif clkEnBus = '1' then
+        defaultState;
+        
+        -- Acknowledge any bus requests we're given.
+        cache2demux.ack <= bus_requesting(demux2cache);
+        
+        -- Address 0x00 write: instruction cache flush bits.
+        if bus_writing(demux2cache, "--------------------------000000") then
+          sc2icache_flush <= demux2cache.writeData(
+            2**CFG.core.numLaneGroupsLog2 + 23 downto 24
+          );
+        end if;
+        
+        -- Address 0x01 write: data cache flush bits.
+        if bus_writing(demux2cache, "--------------------------000001") then
+          sc2dcache_flush <= demux2cache.writeData(
+            2**CFG.core.numLaneGroupsLog2 + 23 downto 24
+          );
+        end if;
+        
+      end if;
+    end if;
+  end process;
+  
   -----------------------------------------------------------------------------
   -- Instantiate the AHB bus bridges
   -----------------------------------------------------------------------------
@@ -367,7 +446,11 @@ begin -- architecture
         AHB_VERSION             => 0,
         
         -- rvex bus fault code used to indicate that an AHB bus error occured.
-        BUS_ERROR_CODE          => (others => '0')
+        BUS_ERROR_CODE          => X"00000000",
+        
+        -- rvex bus fault code used to indicate that an invalid rvex bus
+        -- request was issued.
+        REQ_ERROR_CODE          => X"00000001"
         
       )
       port map (
@@ -381,8 +464,8 @@ begin -- architecture
         bridge2bus              => bridge2cache_bus(laneGroup),
         
         -- AHB master interface.
-        bridge2ahb              => ahbo(laneGroup),
-        ahb2bridge              => ahbi
+        bridge2ahb              => ahbmo(laneGroup),
+        ahb2bridge              => ahbmi
         
       );
     
@@ -391,10 +474,26 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Bus snooper
   -----------------------------------------------------------------------------
-  -- TODO
-  bus2cache_invalAddr   <= (others => '0');
-  bus2cache_invalSource <= (others => '0');
-  bus2cache_invalEnable <= '0';
+  ahb_snoop_inst: entity rvex.ahb_snoop
+    generic map (
+      FIRST_MASTER        => AHB_MASTER_INDEX_START,
+      NUM_CACHE_BLOCKS    => 2**CFG.core.numLaneGroupsLog2
+    )
+    port map (
+      
+      -- System control.
+      reset               => resetBus,
+      clk                 => clk,
+      
+      -- AHB interface.
+      ahbsi               => ahbsi,
+        
+      -- Cache interface.
+      invalAddr           => bus2cache_invalAddr,
+      invalSource         => bus2cache_invalSource,
+      invalEnable         => bus2cache_invalEnable
+      
+    );
   
   -----------------------------------------------------------------------------
   -- Interrupt controller bridge
@@ -413,17 +512,117 @@ begin -- architecture
   end generate;
   
   -----------------------------------------------------------------------------
-  -- APB interface
+  -- Global control registers
   -----------------------------------------------------------------------------
-  -- TODO
-  dbg2rv_addr         <= (others => '0');
-  dbg2rv_readEnable   <= '0';
-  dbg2rv_writeEnable  <= '0';
-  dbg2rv_writeMask    <= (others => '0');
-  dbg2rv_writeData    <= (others => '0');
-  sc2icache_flush     <= (others => '0');
-  sc2dcache_flush     <= (others => '0');
-  dbg_reset           <= '0';
+  global_control_reg_proc: process (clk) is
+    
+    -- Assigns signals to their reset/idle/default state.
+    procedure defaultState is
+    begin
+      glob2demux <= BUS_SLV2MST_IDLE;
+      dbg_reset <= '0';
+    end defaultState;
+    
+  begin
+    if rising_edge(clk) then
+      if resetBus = '1' then
+        defaultState;
+      elsif clkEnBus = '1' then
+        defaultState;
+        
+        -- Acknowledge any bus requests we're given.
+        glob2demux.ack <= bus_requesting(demux2glob);
+        
+        -- Address 0x00 write: reset rvex system.
+        if bus_writing(demux2cache, "--------------------------000000") then
+          dbg_reset <= '1';
+        end if;
+        
+      end if;
+    end if;
+  end process;
+  
+  -----------------------------------------------------------------------------
+  -- Debug bus demuxer
+  -----------------------------------------------------------------------------
+  debug_bus_demux_block: block is
+    
+    constant ADDR_MAP : addrRangeAndMapping_array(0 to 3) := (
+      0 => addrRangeAndMap( -- Global status/ctrl (64 bytes).
+        low   => "00000000000000000000000000000000",
+        high  => "00000000000000000000000000111111",
+        mask  => "00000000000000000001111111111111"
+      ),
+      1 => addrRangeAndMap( -- Cache status/ctrl (64 bytes).
+        low   => "00000000000000000000000001000000",
+        high  => "00000000000000000000000001111111",
+        mask  => "00000000000000000001111111111111"
+      ),
+      2 => addrRangeAndMap( -- MMU status/ctrl (128 bytes).
+        low   => "00000000000000000000000010000000",
+        high  => "00000000000000000000000011111111",
+        mask  => "00000000000000000001111111111111"
+      ),
+      3 => addrRangeAndMap( -- rvex debug interface (at least 256 bytes).
+        low   => "00000000000000000000000100000000",
+        high  => "00000000000000000001111111111111",
+        mask  => "00000000000000000001111111111111"
+      )
+    );
+    
+  begin
+    
+    -- Instantiate the demuxing unit.
+    debug_bus_demux_inst: entity rvex.bus_demux
+      generic map (
+        ADDRESS_MAP       => ADDR_MAP
+      )
+      port map (
+        
+        -- System control.
+        reset             => resetBus,
+        clk               => clk,
+        clkEn             => clkEnBus,
+        
+        -- Busses.
+        mst2demux         => bus2dgb,
+        demux2mst         => dbg2bus,
+        demux2slv(0)      => demux2glob,
+        demux2slv(1)      => demux2cache,
+        demux2slv(2)      => demux2mmu,
+        demux2slv(3)      => demux2rv,
+        slv2demux(0)      => glob2demux,
+        slv2demux(1)      => cache2demux,
+        slv2demux(2)      => mmu2demux,
+        slv2demux(3)      => rv2demux
+        
+      );
+    
+  end block;
+  
+  -- Respond with bus faults to the registers reserved for the MMU.
+  mmu_control_reg_proc: process (clk) is
+    
+    -- Assigns signals to their reset/idle/default state.
+    procedure defaultState is
+    begin
+      mmu2demux <= BUS_SLV2MST_IDLE;
+    end defaultState;
+    
+  begin
+    if rising_edge(clk) then
+      if resetBus = '1' then
+        defaultState;
+      elsif clkEnBus = '1' then
+        defaultState;
+        
+        -- Return a bus fault for any address.
+        mmu2demux.ack <= bus_requesting(demux2mmu);
+        mmu2demux.fault <= '1';
+        
+      end if;
+    end if;
+  end process;
   
 end Behavioral;
 

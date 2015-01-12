@@ -64,11 +64,12 @@ package bus_addrConv_pkg is
   -- Address ranges
   -----------------------------------------------------------------------------
   -- Specifies a range of addresses. An address is considered in range when it
-  -- lies between low and high (both inclusive) AND std_match(address, match)
-  -- return true.
+  -- lies between low and high (both inclusive) when masked by mask AND
+  -- std_match(address, match) return true.
   type addrRange_type is record
     low       : rvex_address_type;
     high      : rvex_address_type;
+    mask      : rvex_address_type;
     match     : rvex_address_type;
   end record;
   
@@ -79,6 +80,7 @@ package bus_addrConv_pkg is
   function addrRange(
     low       : rvex_address_type := (others => '0');
     high      : rvex_address_type := (others => '1');
+    mask      : rvex_address_type := (others => '1');
     match     : rvex_address_type := (others => '-')
   ) return addrRange_type;
   
@@ -164,6 +166,7 @@ package bus_addrConv_pkg is
   function addrRangeAndMap(
     low       : rvex_address_type := (others => '0');
     high      : rvex_address_type := (others => '1');
+    mask      : rvex_address_type := (others => '1');
     match     : rvex_address_type := (others => '-');
     mapping   : addrMapping_type := mapRange(31, 0)
   ) return addrRangeAndMapping_type;
@@ -181,12 +184,14 @@ package body bus_addrConv_pkg is
   function addrRange(
     low       : rvex_address_type := (others => '0');
     high      : rvex_address_type := (others => '1');
+    mask      : rvex_address_type := (others => '1');
     match     : rvex_address_type := (others => '-')
   ) return addrRange_type is
   begin
     return (
       low   => low,
       high  => high,
+      mask  => mask,
       match => match
     );
   end addrRange;
@@ -198,8 +203,8 @@ package body bus_addrConv_pkg is
     addrRange : addrRange_type
   ) return boolean is
   begin
-    return (vect2unsigned(addr) >= vect2unsigned(addrRange.low))
-       and (vect2unsigned(addr) <= vect2unsigned(addrRange.high))
+    return (vect2unsigned(addr and addrRange.mask) >= vect2unsigned(addrRange.low))
+       and (vect2unsigned(addr and addrRange.mask) <= vect2unsigned(addrRange.high))
        and std_match(addr, addrRange.match);
   end isAddrInRange;
   
@@ -289,6 +294,7 @@ package body bus_addrConv_pkg is
   function addrRangeAndMap(
     low       : rvex_address_type := (others => '0');
     high      : rvex_address_type := (others => '1');
+    mask      : rvex_address_type := (others => '1');
     match     : rvex_address_type := (others => '-');
     mapping   : addrMapping_type := mapRange(31, 0)
   ) return addrRangeAndMapping_type is
@@ -297,6 +303,7 @@ package body bus_addrConv_pkg is
     retval.addrRange := (
       low   => low,
       high  => high,
+      mask  => mask,
       match => match
     );
     retval.addrMapping := mapping;

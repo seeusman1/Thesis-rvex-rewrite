@@ -24,6 +24,8 @@ help: work
 	@echo "                     for command-line based synthesis of the design using ISE."
 	@echo "                     Source the ISE 14.7 environment script first."
 	@echo ""
+	@echo " make ise          : launches the ISE GUI."
+	@echo ""
 	@echo " make upload-<prog>: compiles the specified program and uploads it to the FPGA"
 	@echo "                     using the rvex debugging UART."
 	@echo ""
@@ -56,7 +58,7 @@ work: ../../grlib/grlib-gpl-1.3.7-b4144
 # Updates the patchfile based upon the differences between the grlib base
 # project and the current contents of work. Kind of the inverse operation of
 # the "work" target.
-update-patch:
+update-patch: clean
 	@cd work && $(MAKE) distclean
 	diff -rupN --exclude="ram.srec" ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/ work/ > work.patch ; true
 
@@ -64,6 +66,7 @@ update-patch:
 clean:
 	cd examples && $(MAKE) clean
 	-cd work && $(MAKE) distclean scripts-clean migclean
+	rm -f work/*_beh.prj
 
 # Removes the entire working directory; use with care (because the work dir might contain
 # source files as well, which may not have been put in the patch file yet).
@@ -104,6 +107,14 @@ synth: work
 		migclean\
 		mig39\
 		planahead
+
+# Shorthand for launching ISE.
+ise: work
+	cd work && $(MAKE) \
+		scripts-clean\
+		migclean\
+		mig39\
+		ise-launch
 
 # Chains to the examples makefile to upload the specified program to the FPGA.
 upload-%:
