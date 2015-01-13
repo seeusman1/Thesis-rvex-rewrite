@@ -28,10 +28,11 @@ include $(GEN_EXAMPLES)/Makefile
 .PHONY: upload-%
 upload-%: %.srec debug
 	-cd $(DEBUGIFACE) && make server
-	$(RVD) -call -d"all:PRINT_STATUS{1}" break
+	$(RVD) -call -d"all:PRINT_STATE{1}" break
 	$(RVD) -c0 upload srec $< IMEM
 	$(RVD) -c0 upload srec $< DMEM
 	$(RVD) -call reset
+	$(RVD) -call c
 
 .PHONY: debug server stop monitor
 debug server stop monitor:
