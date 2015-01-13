@@ -38,10 +38,6 @@
 # point in defining a different number for different contexts (obviously).
 all:_NUM_CONTEXTS           { 4 }
 
-# Instruction and data memory start addresses, used for the load command.
-all:_IMEM                   { 0x00000000 }
-all:_DMEM                   { 0x10000000 }
-
 # Control register base address.
 all:CREG                    { 0xF0000000 }
 
@@ -72,8 +68,6 @@ all:DCRC                    { CREG + 0x51 } # Break cause (byte).
 all:DCRB                    { CREG + 0x52 } # Breakpoint configuration (half).
 all:CRR                     { CREG + 0x54 } # Context reconfiguration request.
 
-
-
 # General purpose register bank addresses. LOW defines the base address
 # for r0.0 through r0.31, HIGH defines it for r0.32 through r0.63. These are
 # guaranteed to always be evaluated once before accessing registers in the
@@ -100,7 +94,7 @@ all:SET_BANK_HIGH          { write(BUS_BANK, 0hh+(_CUR_CONTEXT<<1)+1) }
 # 2:SET_BANK               { write(BUS_BANK, 4hh) }
 # 3:SET_BANK               { write(BUS_BANK, 8hh) }
 
-all:PRINT_SHORT_STATE {
+all:PRINT_STATE {
   printf("Dumping state for context %d...\n\n", _CUR_CONTEXT);
   
   SET_BANK;
@@ -156,21 +150,20 @@ all:PRINT_SHORT_STATE {
     ));
   ));
   printf("\n");
-  
 }
 
 # This is evaluated when "rvd break" is called.
 all:_BREAK {
   SET_BANK;
   write(DCRF, 0x09hh);
-  PRINT_SHORT_STATE;
+  PRINT_STATE;
 }
 
 # This is evaluated when "rvd step" is called.
 all:_STEP {
   SET_BANK;
   write(DCRF, 0x0Ahh);
-  PRINT_SHORT_STATE;
+  PRINT_STATE;
 }
   
 # This is evaluated when "rvd resume" is called.
@@ -200,6 +193,6 @@ all:_RESET_BREAK {
 # This is evaluated when "rvd state" is called.
 all:_STATE {
   SET_BANK;
-  PRINT_SHORT_STATE;
+  PRINT_STATE;
 }
 

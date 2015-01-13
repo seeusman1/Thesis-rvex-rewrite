@@ -24,17 +24,18 @@ CLEAN = *.bin tools/b2v ../design/mem_init_pkg.vhd
 # Include generic examples makefile.
 include $(GEN_EXAMPLES)/Makefile
 
-# How to upload; (this requires make debug; source debug in debug-interface)
+# How to upload;
 .PHONY: upload-%
-upload-%: %.srec $(RVD)
+upload-%: %.srec debug
 	-cd $(DEBUGIFACE) && make server
-	$(RVD) -call break
-	$(RVD) -c0 upload srec $< _IMEM
-	$(RVD) -c0 upload srec $< _DMEM
+	$(RVD) -call -d"all:PRINT_STATUS{1}" break
+	$(RVD) -c0 upload srec $< IMEM
+	$(RVD) -c0 upload srec $< DMEM
 	$(RVD) -call reset
 
-$(RVD):
-	cd $(DEBUGIFACE) && make debug
+.PHONY: debug server stop monitor
+debug server stop monitor:
+	cd $(DEBUGIFACE) && make $@
 
 # Copies the given program machine code and disassembly to init* indicating
 # which program was used for synthesis/simulation and creates the VHDL file

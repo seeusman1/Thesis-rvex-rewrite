@@ -1,5 +1,5 @@
 
-.PHONY: help compile-% vsim-% ise-% clean list-executables
+.PHONY: help compile-% vsim-% ise-% upload-% server stop debug monitor clean
 
 UNISIM = $(XILINX)/vhdl/src/unisims
 
@@ -17,14 +17,42 @@ help:
 	@echo " Xilinx ISE 14.7. Xilinx ISE 13.4 is known NOT to synthesize correctly. Use"
 	@echo " other versions at your own risk."
 	@echo ""
-	@echo " To simulate using modelsim, run \"make vsim-<program>\" (valid programs are"
-	@echo " listed below). You need to have sourced both the modelsim and Xilinx ISE"
-	@echo " startup scripts; the latter is necessary to locate the Xilinx UNISIM library"
-	@echo " files, needed to simulate the clock generation primitives in ml605.vhd."
+	@echo " Make targets:"
 	@echo ""
-	@echo " To run ISE for synthesis or simulation using ISIM, run \"make ise-<program>\"."
+	@echo "  make compile-<prog>  : just compiles the specified program. Note that this is"
+	@echo "                         not enough to update the modelsim simulation, you'll"
+	@echo "                         need to run vsim-<prog> again for that."
+	@echo ""
+	@echo "  make vsim-<prog>     : compiles the specified program and runs the simulation"
+	@echo "                         in modelsim. You need to have sourced the environment"
+	@echo "                         script for ISE 14.7 as well for this, to let make"
+	@echo "                         generate the VHDL files needed to simulate FPGA"
+	@echo "                         primitives (Xilinx unisim library)."
+	@echo ""
+	@echo "  make ise-<prog>      : compiles the specified program and runs ISE for"
+	@echo "                         simulation using ISIM or synthesis."
+	@echo ""
+	@echo "  make upload-<prog>   : compiles the specified program, starts rvsrv if it is"
+	@echo "                         not already running and uploads the program to the"
+	@echo "                         core. Subsequently executes the debug target."
+	@echo ""
+	@echo "  make server          : starts rvsrv."
+	@echo ""
+	@echo "  make stop            : stops rvsrv."
+	@echo ""
+	@echo "  make debug           : generates a script which can be sourced to set up the"
+	@echo "                         rvd/rvsrv debugging environment; run \"source debug\""
+	@echo "                         after calling this command."
+	@echo ""
+	@echo "  make monitor         : uses netcat to connect to the application interface of"
+	@echo "                         rvsrv. Anything written by the application using puts"
+	@echo "                         will be dumped to the terminal and you can send lines"
+	@echo "                         to the program which can be read using getchar. Exit"
+	@echo "                         using ctrl+C."
+	@echo ""
 	@cd examples && $(MAKE) --no-print-directory list-executables
-	@echo " In addition, you can use \"none\" to initialize the memories with 0."
+	@echo " In addition, you can use \"none\" to initialize the memories with zeros for all"
+	@echo " targets but upload-<prog>."
 	@echo ""
 	@echo " NOTE: be aware that static elaboration can take several minutes when simulating"
 	@echo " or synthesizing with the memories initialized to a large program."
@@ -32,6 +60,9 @@ help:
 
 compile-%:
 	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
+	# Tries the thing below, but it's not enough. Modelsim doesn't seem to re-elaborate
+	# after dependent files change, I guess you need to recompile everything for that.
+	#-cd modelsim && vcom -quiet -93 -work work "../design/mem_init_pkg.vhd"
 
 # This was partially taken from the grlib makefile.
 modelsim/unisim_VITAL.vhd:
@@ -49,6 +80,20 @@ vsim-%: compile-% modelsim/unisim_VITAL.vhd
 
 ise-%: compile-%
 	cd ise && ise standalone.xise
+
+upload-%:
+	cd examples && $(MAKE) $@
+
+server stop monitor:
+	cd examples && $(MAKE) $@
+
+debug:
+	cd examples && $(MAKE) $@
+	cat ../../tools/debug-interface/debug > debug
+	echo 'export RVD_OPT="-m$(shell pwd)/design/memory.map"' >> debug
+	@echo ""
+	@echo " Run \"source debug\" now..."
+	@echo ""
 
 clean:
 	find modelsim/* ! -name 'sim.do' ! -name '.gitignore' -type f -exec rm -f {} +

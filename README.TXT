@@ -1,3 +1,7 @@
+--=============================================================================
+-- Installation
+--=============================================================================
+
 To finish setting up the environment after cloning the git repo, copy or make
 symlinks to the contents of the tools directory from the rvex release in
 :/tools/. From this directory, you can do this from the command line as
@@ -16,124 +20,165 @@ Aside from all that, you should have Xilinx ISE 14.7 and Modelsim SE 10.2a.
 DO NOT USE OLDER ISE VERSIONS: ISE 13.4 at least synthesizes the rvex core
 incorrectly for some reason, causing it to behave erratically when stalls
 occur.
-   
-There are currently 3 "platforms" for the rvex:
 
 
- - Unit test suite: :/platform/core-tests/
+--=============================================================================
+-- Basic platform usage
+--=============================================================================
+
+There are currently four maintained platforms for the rvex. Their purpose and
+a small tutorial for each is listed below. The tutorial assumes you're working
+from this directory for simplicity (for those who don't know much about Linux).
+Those people who do know about Linux should probably not do more than skim over
+this and just run "make" from the platform directory to get more detailed but
+less guided usage information.
+
+-------------------------------------------------------------------------------
+-- Unit test suite: :/platform/core-tests/
+-------------------------------------------------------------------------------
+
+This is a modelsim-only platform which runs unit tests on the rvex core. You
+can run the simulation as follows:
+
+(cd platform/core-tests && make sim)
+
+You will need to have sourced your modelsim environment setup script before
+doing so.
    
-   This is a modelsim-only platform which runs unit tests on the rvex core. You
-   can run the simulation as follows:
+-------------------------------------------------------------------------------
+-- Cache/specific program testbench: :/platform/cache-test/
+-------------------------------------------------------------------------------
    
-   (cd platform/core-tests && make sim)
-   
-   You will need to have sourced your modelsim environment setup script before
-   doing so.
-   
-   
- - Standalone core design: :/platform/ml605-standalone
-   
-   This is a basic platform for the ML605 FPGA board containing only an rvex
-   core, the rvex debug support unit (UART) and some basic clock generation.
-   Here's a little tutorial to get you started, even if you're new to Linux.
-   (Those who do know how things work can figure out what the commands do for
-   themselves.)
-   
-   To simulate the design, source your local Modelsim AND Xilinx ISE
-   environment setup scripts and run:
-   
-   (cd platform/ml605-standalone && make vsim-x264)
-   
-   Initialization may take up to a couple minutes due to the size of the loaded
-   program. You can change "x264" into whatever program you want to, or to
-   "none" if you don't need a program loaded into the memory. The following
-   command lists which program names are valid (among other things):
-   
-   (cd platform/ml605-standalone && make)
-   
-   To start Xilinx ISE in order to synthesize the design, make sure you have
-   sourced the Xilinx ISE startup script and run:
-   
-   (cd platform/ml605-standalone && make ise-none)
-   
-   Use the usual Xilinx ISE GUI design flow to synthesize the design and
-   program the board.
-   
-   Once programmed onto the board using the Xilinx toolchain, you can load
-   program onto the board using the debug support unit. To do that, you first
-   need to start the rvsrv daemon, which provides a bridge between the hardware
-   and any scripted programs which may want to connect with it. You can start
-   the server as follows:
-   
-   (cd tools/debug-interface && make server)
-   
-   If rvsrv won't start because it can't open the serial port, which it
-   probably will, you'll need to change the configuration file. The file you're
-   looking for is :/tools/debug-interface/configuration.cfg. You can edit this
-   with any text editor. You need to change the SERIAL_PORT = line to the
-   serial port which rvsrv is to use. This will probably need to be ttyUSB0
-   since the ML605 board contains an USB to serial converter.
-   
-   Once started, rvsrv will run in the background. To stop it, you can run the
-   following command (but you won't want to do this just yet):
-   
-   (cd tools/debug-interface && make stop)
-   
-   You should also set up the debugging environment at this point. Run the
-   following command:
-   
-   (cd tools/debug-interface && make debug); source tools/debug-interface/debug
-   
-   You can now run the rvd command to give commands to the board. Running rvd
-   without any parameters should tell you how to use it, so I won't get into
-   it here.
-   
-   You can now upload the UART test program to the board to see if it works
-   using the following command:
-   
-   (cd platform/ml605-standalone/examples && make uart-upload)
-   
-   If make complains that it can't find rvex-elf32-objcopy, running the
-   following command will probably do the trick (naming conventions yay):
-   
-   (cd tools/build/bin && ln -s vex-objcopy rvex-elf32-objcopy)
-   
-   The UART program will echo anything sent to it back in all-caps. To open a
-   UART terminal to communicate with the board, run:
-   
-   (cd tools/debug-interface && make monitor)
-   
-   You can press ctrl+C to exit the monitor program. Typing anything and
-   pressing enter will send it to the board; anything received from the board
-   will be shown in the terminal.
-   
-   To make a new, basic program for the platform, go to
-   :/platform/ml605-standalone/examples/src in a file browser and make a new
-   .c file. The name of the .c file will be the name of the program. You can
-   use the uart.c file as an example. Note that <stdio.h> and the likes don't
-   work (yet).
-   
-   When done, compile and upload your program in the same way that you uploaded
-   the UART program, but replacing uart-upload with <your c file name>-upload.
-   
-   
- - GRLIB platform: :/platform/ml605-grlib
-   
-   This platform will run the rvex with instruction and data cache within a
-   grlib environment. It doesn't work yet, but the grlib stuff is set up
-   properly now, so the simulation runs at least. You can run the following
-   command (after sourcing the xilinx and modelsim environment setup scripts
-   for ISE 13.4 and Modelsim 10.2a) to run the simulation. It'll take a while
-   for it to set everything up, but should eventually launch modelsim:
-   
-   cd platform/ml605-grlib && make sim
-   
-   Or you can run the following command to just set up the environment and
-   dump some readme files to the console:
-   
-   cd platform/ml605-grlib && make && cat work/README.txt
-   
-   Note that you'll need to prefix all make targets with gr- if you're using
-   the makefile in platform/ml605-grlib.
-   
-   
+This is a simulation-only platform which runs the specified program (from
+examples) on a platform with the default rvex processor and reconfigurable
+cache. Its primary purpose is to test the cache in a controlled environment,
+but it also works nicely to test rvex programs in a full core simulation.
+
+(cd platform/cache-test && make vsim-<prog>)
+
+You will need to have sourced your modelsim environment setup script before
+doing so. The following command lists which program names are valid (among
+other things):
+
+(cd platform/cache-test && make)
+
+-------------------------------------------------------------------------------
+-- Standalone core design: :/platform/ml605-standalone
+-------------------------------------------------------------------------------
+
+This is a basic platform for the ML605 FPGA board containing only an rvex
+core, the rvex debug support unit (UART) and some basic clock generation.
+Here's a little tutorial to get you started, even if you're new to Linux.
+(Those who do know how things work can figure out what the commands do for
+themselves.)
+
+To simulate the design, source your local Modelsim AND Xilinx ISE
+environment setup scripts and run:
+
+(cd platform/ml605-standalone && make vsim-x264)
+
+Initialization may take up to a couple minutes due to the size of the loaded
+program. You can change "x264" into whatever program you want to, or to
+"none" if you don't need a program loaded into the memory. The following
+command lists which program names are valid (among other things):
+
+(cd platform/ml605-standalone && make)
+
+To start Xilinx ISE in order to synthesize the design, make sure you have
+sourced the Xilinx ISE startup script and run:
+
+(cd platform/ml605-standalone && make ise-none)
+
+Use the usual Xilinx ISE GUI design flow to synthesize the design and
+program the board.
+
+Once programmed onto the board using the Xilinx toolchain, you can load
+program onto the board using the debug support unit. To do that, you first
+need to start the rvsrv daemon, which provides a bridge between the hardware
+and any scripted programs which may want to connect with it. You can start
+the server as follows:
+
+(cd platform/ml605-standalone && make server)
+
+If rvsrv won't start because it can't open the serial port, which it
+probably will, you'll need to change the configuration file. The file you're
+looking for is :/tools/debug-interface/configuration.cfg. You can edit this
+with any text editor. You need to change the SERIAL_PORT = line to the
+serial port which rvsrv is to use. This will probably need to be ttyUSB0
+since the ML605 board contains an USB to serial converter.
+
+Once started, rvsrv will run in the background. To stop it, you can run the
+following command (but you won't want to do this just yet):
+
+(cd platform/ml605-standalone && make stop)
+
+You should also set up the debugging environment at this point. Run the
+following command:
+
+(cd platform/ml605-standalone && make debug); source platform/ml605-standalone/debug
+
+You can now run the rvd command to give commands to the board. Running rvd
+without any parameters should tell you how to use it, so I won't get into
+it here.
+
+You can now upload the UART test program to the board to see if it works
+using the following command:
+
+(cd platform/ml605-standalone && make upload-uart)
+
+If make complains that it can't find rvex-elf32-objcopy, running the
+following command will probably do the trick:
+
+(cd tools/build/bin && ln -s vex-objcopy rvex-elf32-objcopy)
+
+The UART program will echo anything sent to it back in all-caps. To open a
+UART terminal to communicate with the board, run:
+
+(cd platform/ml605-standalone && make monitor)
+
+You can press ctrl+C to exit the monitor program. Typing anything and
+pressing enter will send it to the board; anything received from the board
+will be shown in the terminal.
+
+-------------------------------------------------------------------------------
+-- GRLIB platform: :/platform/ml605-grlib
+-------------------------------------------------------------------------------
+
+This platform will run the rvex with instruction and data cache within a
+grlib environment. It probably doesn't work yet, so I haven't made a tutorial
+for it yet. Run "make" from the platform directory to get up-to-date usage
+information.
+
+
+--=============================================================================
+-- Hacking the core
+--=============================================================================
+
+The rvex core files are located in :/lib/rvex/core. The code should be self-
+documenting; there's a lot of comments in there. Start with core.vhd.
+
+There's also work in progress on a manual, located in :/doc/core.pdf. If the
+file doesn't exist or you want to rebuild it for some other reason, run make
+from that directory.
+
+If you change things, please try to keep at least the documentation in the
+VHDL comments up-to-date. If you make permanent changes to the debugging
+interface (i.e. the control register map), be sure to update the rvd memory map
+definitions in :/tools/debug-interface/src/default-memory.map. The next time
+you run any make command to do with rvd, you will be queried to commit the new 
+you run any make currently active memory map.
+
+
+--=============================================================================
+-- Adding programs
+--=============================================================================
+
+Adding a basic program to be run on the rvex is easy. Simply add a c source
+file in :/examples/src/ and add the program name to the EXECUTABLES variable in
+:/examples/Makefile. All the platform makefiles eventually use that makefile
+for compilation, so your program should run on all platforms by just doing
+those things. You can test your program with xstsim using just the makefile in
+:/examples, or you can run it in a full hardware simulation with one of the
+platforms. The cache-test platform is the best one for the job.
+
+

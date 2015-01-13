@@ -150,48 +150,15 @@ begin -- architecture
       
     );
   
-  -- Spam debug interface requests...
-  debug_interface_spam: process is
-  begin
-    dbg2rv_addr         <= (others => '0');
-    dbg2rv_readEnable   <= '0';
-    dbg2rv_writeEnable  <= '0';
-    dbg2rv_writeMask    <= (others => '1');
-    dbg2rv_writeData    <= (others => '0');
---    for i in 0 to 20 loop
---      wait until rising_edge(clk);
---    end loop;
---    loop
---      for i in 0 to 0 loop
---        wait until rising_edge(clk);
---      end loop;
---      dbg2rv_addr <= X"00000030";
---      dbg2rv_readEnable <= '1';
---      wait until rising_edge(clk);
---      dbg2rv_readEnable <= '0';
---      for i in 0 to 0 loop
---        wait until rising_edge(clk);
---      end loop;
---      dbg2rv_addr <= X"00000080";
---      dbg2rv_writeEnable <= '1';
---      wait until rising_edge(clk);
---      dbg2rv_writeEnable <= '0';
---      for i in 0 to 0 loop
---        wait until rising_edge(clk);
---      end loop;
---      dbg2rv_addr <= X"00000000";
---      dbg2rv_writeEnable <= '1';
---      wait until rising_edge(clk);
---      dbg2rv_writeEnable <= '0';
---    end loop;
-    wait;
-  end process;
+  -- We're not using the debug interface.
+  dbg2rv_addr         <= (others => '0');
+  dbg2rv_readEnable   <= '0';
+  dbg2rv_writeEnable  <= '0';
+  dbg2rv_writeMask    <= (others => '1');
+  dbg2rv_writeData    <= (others => '0');
   
   -----------------------------------------------------------------------------
   -- Test cache integrity
-  -----------------------------------------------------------------------------
-  -----------------------------------------------------------------------------
-  -- Model the memory accessed by the cache
   -----------------------------------------------------------------------------
   test_mem_block: block is
     signal PCs_r                : rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);

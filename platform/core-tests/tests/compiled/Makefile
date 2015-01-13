@@ -5,7 +5,7 @@ MODEL = pipe_1_8_fw.mm
 ASFLAGS = --issue $(ISSUE_WIDTH) --borrow 1.0.3,0.2,1.5,2.4,3.7,4.6,5 --config 3333337B -u
 
 # Toolchain setup.
-TOOLS = ../../tools
+TOOLS = ../../../../tools
 BUILD = $(TOOLS)/build/bin
 AS = $(BUILD)/rvex-elf32-as
 LD = $(BUILD)/rvex-elf32-ld
@@ -29,8 +29,8 @@ EXECUTABLES = div x264 factorial extReconf
 all: $(EXECUTABLES)
 
 # Where to get assembly files from when there's no C code;
-%.s: $(SRC)/%.s
-	$(CP) $< .
+%.s: $(SRC)/%.S
+	$(CP) $< $@
 
 # How to compile;
 %.s: $(SRC)/%.c
@@ -41,7 +41,7 @@ all: $(EXECUTABLES)
 	$(AS) $(ASFLAGS) $< -o $@
 
 # How to link and generate srec;
-%: %.o _start.o
+$(EXECUTABLES) : % : %.o _start.o
 	$(LD) $^ -o $@
 	$(OBJCOPY) -O srec $@ $(SREC)/$@.srec
 
