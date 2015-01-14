@@ -320,7 +320,7 @@ begin -- architecture
   
   -- Generate the priority encoder for the incoming requests.
   request_priority_encoder: process (
-    cxreg2cfg_requestEnable, gbreg2cfg_requestEnable
+    contextRequestEnable_r, busRequestEnable_r
   ) is
   begin
     
@@ -330,9 +330,9 @@ begin -- architecture
     -- If there is no request from the bus, priority encode between the request
     -- signals from the contexts, giving the highest priority to the lowest
     -- indexed context.
-    if gbreg2cfg_requestEnable = '0' then
+    if busRequestEnable_r = '0' then
       for i in 2**CFG.numContextsLog2-1 downto 0 loop
-        if cxreg2cfg_requestEnable(i) = '1' then
+        if contextRequestEnable_r(i) = '1' then
           requesterID <= uint2vect(i, 4);
         end if;
       end loop;
