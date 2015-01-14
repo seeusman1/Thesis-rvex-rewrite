@@ -324,6 +324,7 @@ begin -- architecture
             -- Increment the timer, checking for overflows.
             if rit_timer = rit_max then
               rit_timer <= (others => '0');
+              rit_pend <= '1';
             else
               rit_timer <= std_logic_vector(unsigned(rit_timer) + 1);
             end if;

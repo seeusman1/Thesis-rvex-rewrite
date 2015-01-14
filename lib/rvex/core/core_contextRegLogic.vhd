@@ -380,13 +380,13 @@ begin -- architecture
     cxreg2cxplif_brReadData <= creg_readRegisterVect(l2c, c2l, CR_CCR, 23, 16);
     
     -- Make the cause register.
-    creg_makeNormalRegister(l2c, c2l, CR_TA, 31, 24,
+    creg_makeNormalRegister(l2c, c2l, CR_CCR, 31, 24,
       writeEnable   => (cxplif2cxreg_trapInfo.active and not cxplif2cxreg_stall),
       writeData     => cxplif2cxreg_trapInfo.cause,
       permissions   => DEBUG_CAN_WRITE
     );
     if cxplif2cxreg_rfi = '1' and cxplif2cxreg_stall = '0' then
-      creg_writeRegisterVect(l2c, c2l, CR_TA, 31, 24, "00000000");
+      creg_writeRegisterVect(l2c, c2l, CR_CCR, 31, 24, "00000000");
     end if;
     cxreg2cxplif_handlingDebugTrap <= TRAP_TABLE(vect2uint(creg_readRegisterVect(l2c, c2l, CR_CCR, 31, 24))).isDebugTrap;
     
