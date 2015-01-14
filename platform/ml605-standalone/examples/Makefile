@@ -25,7 +25,7 @@ CLEAN = *.bin tools/b2v ../design/mem_init_pkg.vhd
 include $(GEN_EXAMPLES)/Makefile
 
 # How to upload;
-.PHONY: upload-%
+.PHONY: upload-% upload-all
 upload-%: %.srec debug
 	-cd $(DEBUGIFACE) && make server
 	$(RVD) -call -d"all:PRINT_STATE{1}" break
@@ -33,6 +33,8 @@ upload-%: %.srec debug
 	$(RVD) -c0 upload srec $< DMEM
 	$(RVD) -call reset
 	$(RVD) -call c
+
+upload-all: $(patsubst %,upload-%,$(EXECUTABLES))
 
 .PHONY: debug server stop monitor
 debug server stop monitor:

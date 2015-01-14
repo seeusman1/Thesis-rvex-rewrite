@@ -67,9 +67,6 @@ EXECUTABLES += adpcm blit crc des fir pocsag \
 # List of library files to link with.
 OBJECTS += _start.o
 
-#technically, not every program really needs the FP lib. But there is FP code in common.h so they all need it to link succesfully
-OBJECTS += floatlib.o
-
 # Toolchain setup.
 ifndef TOOLS
 TOOLS = ../tools
@@ -213,7 +210,8 @@ endif
 	$(AS) $(ASFLAGS) $< -o $@
 
 # How to link;
-%.elf: %.o $(OBJECTS)
+.SECONDEXPANSION:
+%.elf: %.o $(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$@)
 	$(LD) $^ -o $@
 
 # How to generate an srec;

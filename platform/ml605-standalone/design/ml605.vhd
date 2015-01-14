@@ -74,7 +74,7 @@ entity ml605 is
     
     -- Clock division value. The internal clock will be 750 MHz divided by this
     -- number. Ignored when DIRECT_RESET_AND_CLOCK is set.
-    DIV_VAL                     : natural := 24;
+    DIV_VAL                     : natural := 18; -- 41.67 MHz
     
     -- Baud rate to use for the UART.
     F_BAUD                      : real := 115200.0;
