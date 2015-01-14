@@ -247,6 +247,9 @@ entity core_pipelanes is
     -- Refer to the documentation in the entity of rvex_contextPipelaneIFace or
     -- rvex_contextRegLogic for information about the signals.
     cxplif2cxreg_stall          : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_idle           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_sylCommit      : out rvex_sylStatus_array(2**CFG.numContextsLog2-1 downto 0);
+    cxplif2cxreg_sylNop         : out rvex_sylStatus_array(2**CFG.numContextsLog2-1 downto 0);
     cxplif2cxreg_stop           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     cxplif2cxreg_nextPC         : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_currentPC      : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
@@ -311,6 +314,8 @@ architecture Behavioral of core_pipelanes is
   signal cxplif2pl_debugTrapEnable  : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2brku_breakpoints    : cxreg2pl_breakpoint_info_array(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2brku_stepping       : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2cxplif2_sylCommit       : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2cxplif2_sylNop          : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   
   -- Data memory switch <-> pipelane interconnect signals.
   signal memu2dmsw_addr             : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -483,6 +488,10 @@ begin -- architecture
         cxplif2brku_breakpoints(S_BRK)    => cxplif2brku_breakpoints(lane),
         cxplif2brku_stepping(S_BRK)       => cxplif2brku_stepping(lane),
         
+        -- Performance counter status signals.
+        pl2cxplif2_sylCommit(S_LAST)      => pl2cxplif2_sylCommit(lane),
+        pl2cxplif2_sylNop(S_LAST)         => pl2cxplif2_sylNop(lane),
+      
         -- Long immediate routing interface.
         pl2limm_valid(S_LIMM)             => pl2limm_valid(lane),
         pl2limm_enable(S_LIMM)            => pl2limm_enable(lane),
@@ -568,6 +577,10 @@ begin -- architecture
       cxplif2brku_breakpoints           => cxplif2brku_breakpoints,
       cxplif2brku_stepping              => cxplif2brku_stepping,
       
+      -- Pipelane interface: performance counter status signals.
+      pl2cxplif2_sylCommit              => pl2cxplif2_sylCommit,
+      pl2cxplif2_sylNop                 => pl2cxplif2_sylNop,
+      
       -- Run control interface.
       rctrl2cxplif_irq                  => rctrl2cxplif_irq,
       rctrl2cxplif_irqID                => rctrl2cxplif_irqID,
@@ -586,6 +599,9 @@ begin -- architecture
       
       -- Context register interface: misc.
       cxplif2cxreg_stall                => cxplif2cxreg_stall,
+      cxplif2cxreg_idle                 => cxplif2cxreg_idle,
+      cxplif2cxreg_sylCommit            => cxplif2cxreg_sylCommit,
+      cxplif2cxreg_sylNop               => cxplif2cxreg_sylNop,
       cxplif2cxreg_stop                 => cxplif2cxreg_stop,
       
       -- Context register interface: branch/link registers.

@@ -275,6 +275,24 @@ begin -- architecture
     end if;
     
     ---------------------------------------------------------------------------
+    -- Cycle counter register (CNT)
+    ---------------------------------------------------------------------------
+    -- 
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- CNT   |                         cycle counter                         |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    --
+    -- Simply increments each processor cycle and overflows when it reaches
+    -- 0xFFFFFFFF.
+    
+    -- Make the cycle counter.
+    creg_makeCounter(l2c, c2l, CR_CNT, 31, 0,
+      inc           => '1',
+      clamp         => false,
+      permissions   => READ_ONLY
+    );
+    
+    ---------------------------------------------------------------------------
     -- Forward control signals
     ---------------------------------------------------------------------------
     gbreg2creg <= l2c;

@@ -484,6 +484,16 @@ entity core_pipelane is
     cxplif2brku_stepping        : in  std_logic_vector(S_BRK to S_BRK);
     
     ---------------------------------------------------------------------------
+    -- Performance counter status signals
+    ---------------------------------------------------------------------------
+    -- High when the instruction currently in the last pipeline stage has been
+    -- committed.
+    pl2cxplif2_sylCommit        : out std_logic_vector(S_LAST to S_LAST);
+    
+    -- High when the instruction currently in the last pipeline stage is a NOP.
+    pl2cxplif2_sylNop           : out std_logic_vector(S_LAST to S_LAST);
+    
+    ---------------------------------------------------------------------------
     -- Long immediate routing interface
     ---------------------------------------------------------------------------
     -- LIMMH outputs. Enable is high when this pipelane is executing a LIMMH
@@ -2009,6 +2019,12 @@ begin -- architecture
     pl2cxplif_brLinkWritePort.linkWriteEnable(S_SWB)
       <= s(S_SWB).dp.resLinkValid and s(S_SWB).valid;
     
+    ---------------------------------------------------------------------------
+    -- Generate performance counter signals
+    ---------------------------------------------------------------------------
+    pl2cxplif2_sylCommit(S_LAST) <= s(S_LAST).valid;
+    pl2cxplif2_sylNop(S_LAST) <= s(S_LAST).dp.c.isNOP;
+
     ---------------------------------------------------------------------------
     -- Generate VHDL simulation information
     ---------------------------------------------------------------------------

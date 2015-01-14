@@ -245,6 +245,17 @@ entity core_contextPipelaneIFace is
     cxplif2brku_stepping        : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
+    -- Pipelane interface: performance counter status signals
+    ---------------------------------------------------------------------------
+    -- Syllable committed flag for each lane, used for the performance
+    -- counters.
+    pl2cxplif2_sylCommit        : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- NOP flag for each lane with the same timing as sylCommit, used for the
+    -- performance counters.
+    pl2cxplif2_sylNop           : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
     -- Run control interface
     ---------------------------------------------------------------------------
     -- External interrupt request signal, active high. This is already masked
@@ -298,6 +309,18 @@ entity core_contextPipelaneIFace is
     -- When high, the context registers must maintain their current value.
     cxplif2cxreg_stall          : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
 
+    -- Idle flag, as reported to the external run control interface. Used for
+    -- the performance counters.
+    cxplif2cxreg_idle           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- Syllable committed flag for each lane, used for the performance
+    -- counters.
+    cxplif2cxreg_sylCommit      : out rvex_sylStatus_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- NOP flag for each lane with the same timing as sylCommit, used for the
+    -- performance counters.
+    cxplif2cxreg_sylNop         : out rvex_sylStatus_array(2**CFG.numContextsLog2-1 downto 0);
+    
     -- Stop flag. When high, the BRK and done flags in the debug control
     -- register should be set.
     cxplif2cxreg_stop           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
@@ -883,6 +906,7 @@ begin -- architecture
     cxplif2rctrl_irqAck(ctxt)           <= irqAck_arb(laneGroup) and cfg2cxplif_run(ctxt);
     cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_run(ctxt);
     cxplif2cxreg_stall(ctxt)            <= stall(laneGroup) or not cfg2cxplif_run(ctxt);
+    cxplif2cxreg_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_run(ctxt);
     cxplif2cxreg_stop(ctxt)             <= stop_arb(laneGroup);
     cxplif2cxreg_brWriteData(ctxt)      <= brLinkWritePort_arb(laneGroup).brData(S_SWB);
     cxplif2cxreg_brWriteEnable(ctxt)    <= brLinkWritePort_arb(laneGroup).brWriteEnable(S_SWB);
@@ -900,6 +924,21 @@ begin -- architecture
     -- data where necessary for each context.
     irq_ctxt(ctxt) <= rctrl2cxplif_irq(ctxt) and cxreg2cxplif_interruptEnable(ctxt);
     run_ctxt(ctxt) <= rctrl2cxplif_run(ctxt) and cfg2cxplif_run(ctxt) and not cxreg2cxplif_brk(ctxt);
+    
+    -- Mask the lane performance counter status signals for each context.
+    group2context_perf_count_status: process (
+      cfg2any_context, pl2cxplif2_sylCommit, pl2cxplif2_sylNop
+    ) is
+    begin
+      cxplif2cxreg_sylCommit(ctxt)      <= (others => '0');
+      cxplif2cxreg_sylNop(ctxt)         <= (others => '0');
+      for lane in 0 to 2**CFG.numLanesLog2-1 loop
+        if vect2uint(cfg2any_context(lane2group(lane, CFG))) = ctxt then
+          cxplif2cxreg_sylCommit(ctxt)(lane)  <= pl2cxplif2_sylCommit(lane);
+          cxplif2cxreg_sylNop(ctxt)(lane)     <= pl2cxplif2_sylNop(lane);
+        end if;
+      end loop;
+    end process;
     
   end generate;
   

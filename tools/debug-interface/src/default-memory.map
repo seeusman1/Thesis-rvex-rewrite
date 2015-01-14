@@ -48,6 +48,7 @@ all:BUS_BANK                { CREG + 0x03 } # Debug bus bank selection.
 all:BCRR                    { CREG + 0x04 } # Debug bus reconfiguration request.
 all:CC                      { CREG + 0x08 } # Current configuration.
 all:AFF                     { CREG + 0x0C } # Cache affinity.
+all:CNT                     { CREG + 0x10 } # Cycle counter.
 all:CCR                     { CREG + 0x20 } # Context control register.
 all:TC                      { CREG + 0x20 } # Trap cause (byte).
 all:BR                      { CREG + 0x21 } # Branch registers (byte).
@@ -67,6 +68,12 @@ all:DCRF                    { CREG + 0x50 } # Debug control flags (byte).
 all:DCRC                    { CREG + 0x51 } # Break cause (byte).
 all:DCRB                    { CREG + 0x52 } # Breakpoint configuration (half).
 all:CRR                     { CREG + 0x54 } # Context reconfiguration request.
+all:SCRP                    { CREG + 0x58 } # Scratch-pad register.
+all:C_CYC                   { CREG + 0x5C } # Non-idle cycle counter.
+all:C_STALL                 { CREG + 0x60 } # Non-idle stall counter.
+all:C_BUN                   { CREG + 0x64 } # Committed bundle counter.
+all:C_SYL                   { CREG + 0x68 } # Committed syllable counter.
+all:C_NOP                   { CREG + 0x6C } # Committed NOP counter.
 
 # General purpose register bank addresses. LOW defines the base address
 # for r0.0 through r0.31, HIGH defines it for r0.32 through r0.63. These are
@@ -99,7 +106,7 @@ all:PRINT_STATE {
   
   SET_BANK;
   
-  # General purpose registers
+  # Special registers
   printf("\033[1mSpecial regs:\033[0m\n");
   printf("   PC = 0x%08X\n", readWord(PC));
   printf(" l0.0 = 0x%08X\n\n", readWord(LR));
@@ -150,6 +157,16 @@ all:PRINT_STATE {
     ));
   ));
   printf("\n");
+  
+  # Performance counters
+  printf("\033[1mPerformance counters:\033[0m\n");
+  printf("            Active cycles = %u\n", readWord(C_CYC));
+  printf("           Stalled cycles = %u\n", readWord(C_STALL));
+  printf("   Committed bundle count = %u\n", readWord(C_BUN));
+  printf(" Committed syllable count = %u\n", readWord(C_SYL));
+  printf("      Committed NOP count = %u\n", readWord(C_NOP));
+  printf("\n");
+  
 }
 
 # This is evaluated when "rvd break" is called.

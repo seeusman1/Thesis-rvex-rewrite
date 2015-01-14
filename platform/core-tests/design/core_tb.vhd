@@ -2524,6 +2524,7 @@ begin -- architecture
     registerCtrlReg("CR_BCRR",  4*CR_BCRR);
     registerCtrlReg("CR_CC",    4*CR_CC);
     registerCtrlReg("CR_AFF",   4*CR_AFF);
+    registerCtrlReg("CR_CNT",   4*CR_CNT);
     registerCtrlReg("CR_CCR",   4*CR_CCR);
     registerCtrlReg("CR_SCCR",  4*CR_SCCR);
     registerCtrlReg("CR_LR",    4*CR_LR);
@@ -2538,6 +2539,12 @@ begin -- architecture
     registerCtrlReg("CR_BRK3",  4*CR_BRK3);
     registerCtrlReg("CR_DCR",   4*CR_DCR);
     registerCtrlReg("CR_CRR",   4*CR_CRR);
+    registerCtrlReg("CR_SCRP",  4*CR_SCRP);
+    registerCtrlReg("CR_C_CYC", 4*CR_C_CYC);
+    registerCtrlReg("CR_C_STALL",4*CR_C_STALL);
+    registerCtrlReg("CR_C_BUN", 4*CR_C_BUN);
+    registerCtrlReg("CR_C_SYL", 4*CR_C_SYL);
+    registerCtrlReg("CR_C_NOP", 4*CR_C_NOP);
     
     -- Register control register byte addresses.
     registerCtrlReg("CR_TC",    CR_TC);

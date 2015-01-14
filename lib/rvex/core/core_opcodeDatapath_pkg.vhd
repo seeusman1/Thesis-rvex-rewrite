@@ -191,6 +191,7 @@ package core_opcodeDatapath_pkg is
     -- instruction is executed.
     isLIMMH                     : std_logic;
     isTrap                      : std_logic;
+    isNOP                       : std_logic;
     
   end record;
   
@@ -221,6 +222,7 @@ package core_opcodeDatapath_pkg is
   --
   constant DP_CTRL_NOP          : datapathCtrlSignals_type := (
     funcSel                     => ALU,
+    isNOP                       => '1',
     others                      => '0'
   );
   

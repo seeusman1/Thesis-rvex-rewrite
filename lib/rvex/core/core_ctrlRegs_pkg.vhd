@@ -46,6 +46,7 @@
 
 library IEEE;
 use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
 
 library rvex;
 use rvex.core_intIface_pkg.all;
@@ -62,9 +63,9 @@ package core_ctrlRegs_pkg is
   -----------------------------------------------------------------------------
   -- Control register map specification
   -----------------------------------------------------------------------------
-  -- NOTE: these constants can be used in the rvex_tb.vhd test case when
+  -- NOTE: these constants can be used in the core_tb.vhd test case when
   -- properly loaded there. If you add or remove a constant here, add them to
-  -- rvex_tb.vhd as well! Registry is done at the end of the file; just search
+  -- core_tb.vhd as well! Registry is done at the end of the file; just search
   -- for one of the constant names if you can't find it.
   
   -- Global (shared) register word addresses. Refer to
@@ -73,6 +74,7 @@ package core_ctrlRegs_pkg is
   constant CR_BCRR    : natural := 1; -- Bus configuration request register.
   constant CR_CC      : natural := 2; -- Current configuration register.
   constant CR_AFF     : natural := 3; -- Cache/memory block affinity register.
+  constant CR_CNT     : natural := 4; -- CPU cycle counter.
   
   -- Context-specific register word addresses. Refer to
   -- rvex_contextRegLogic.vhd for documentation about the registers.
@@ -90,6 +92,12 @@ package core_ctrlRegs_pkg is
   constant CR_BRK3    : natural := CR_BRK0 + 3;              -- Breakpoint 3 register.
   constant CR_DCR     : natural := CTRL_REG_GLOB_WORDS + 12; -- Debug control register.
   constant CR_CRR     : natural := CTRL_REG_GLOB_WORDS + 13; -- Configuration request register.
+  constant CR_SCRP    : natural := CTRL_REG_GLOB_WORDS + 14; -- Scratch-pad register.
+  constant CR_C_CYC   : natural := CTRL_REG_GLOB_WORDS + 15; -- Non-idle cycle counter.
+  constant CR_C_STALL : natural := CTRL_REG_GLOB_WORDS + 16; -- Non-idle stall counter.
+  constant CR_C_BUN   : natural := CTRL_REG_GLOB_WORDS + 17; -- Committed bundle counter.
+  constant CR_C_SYL   : natural := CTRL_REG_GLOB_WORDS + 18; -- Committed syllable counter.
+  constant CR_C_NOP   : natural := CTRL_REG_GLOB_WORDS + 19; -- Committed NOP counter.
   
   -- Byte addresses for byte-aligned fields.
   constant CR_TC      : natural := 4*CR_CCR   + 0; -- Trap cause.
@@ -152,12 +160,29 @@ package core_ctrlRegs_pkg is
     l2c           : inout logic2creg_array;
     c2l           : inout creg2logic_array;
     wordAddr      : in    natural;          -- Word address of the register.
-    highBit       : in    natural := 31;    -- High bit index of the range which is saved/restored.
-    lowBit        : in    natural := 0;     -- Low bit index of the range which is saved/restored.
+    highBit       : in    natural := 31;    -- High bit index of the register.
+    lowBit        : in    natural := 0;     -- Low bit index of the register.
     resetState    : in    std_logic_vector := ""; -- Reset state for the register.
     writeEnable   : in    std_logic := '0'; -- Write enable bit for hardware writes.
     writeData     : in    std_logic_vector := ""; -- Write data for hardware writes.
     permissions   : in    creg_perm_type    -- Bus/processor permissions.
+  );
+  
+  -- Generates a counter register. The counter reg can be cleared by writing to
+  -- it, or using the clear input. The counter will stay at max value rather
+  -- than overflowing so overflows can be detected.
+  procedure creg_makeCounter(
+    l2c           : inout logic2creg_array;
+    c2l           : inout creg2logic_array;
+    wordAddr      : in    natural;          -- Word address of the register.
+    highBit       : in    natural := 31;    -- High bit index of the counter.
+    lowBit        : in    natural := 0;     -- Low bit index of the counter.
+    clear         : in    std_logic := '0'; -- External clear input.
+    inc           : in    std_logic := '0'; -- Single increment bit.
+    inc_vect      : in    std_logic_vector := ""; -- Additional increment bits in vector form.
+    enable        : in    std_logic := '1'; -- Increment enable bit.
+    clamp         : in    boolean := true;  -- Overflow behavior: clamp or modulo.
+    permissions   : in    creg_perm_type := READ_WRITE -- Bus/processor permissions (to clear register).
   );
   
   -- Hardwires the specified range to a certain value.
@@ -321,6 +346,67 @@ package body core_ctrlRegs_pkg is
     end if;
     creg_setPermissions(l2c, c2l, wordAddr, highBit, lowBit, permissions);
   end creg_makeNormalRegister;
+  
+  -- Generates a counter register. The counter reg can be cleared by writing to
+  -- it, or using the clear input. The counter will stay at max value rather
+  -- than overflowing so overflows can be detected.
+  procedure creg_makeCounter(
+    l2c           : inout logic2creg_array;
+    c2l           : inout creg2logic_array;
+    wordAddr      : in    natural;          -- Word address of the register.
+    highBit       : in    natural := 31;    -- High bit index of the counter.
+    lowBit        : in    natural := 0;     -- Low bit index of the counter.
+    clear         : in    std_logic := '0'; -- External clear input.
+    inc           : in    std_logic := '0'; -- Single increment bit.
+    inc_vect      : in    std_logic_vector := ""; -- Additional increment bits in vector form.
+    enable        : in    std_logic := '1'; -- Increment enable bit.
+    clamp         : in    boolean := true;  -- Overflow behavior: clamp or modulo.
+    permissions   : in    creg_perm_type := READ_WRITE -- Bus/processor permissions (to clear register).
+  ) is
+    constant zero     : std_logic_vector(highBit downto lowBit) := (others => '0');
+    variable count    : unsigned(highBit-lowBit+1 downto 0);
+    variable add      : unsigned(highBit-lowBit+1 downto 0);
+    variable inc_int  : std_logic_vector(inc_vect'length downto 0);
+    variable ena      : std_logic;
+  begin
+    
+    -- Make a normal register to begin with.
+    creg_makeNormalRegister(l2c, c2l, wordAddr, highBit, lowBit,
+      permissions => permissions
+    );
+    
+    -- Update enable signal.
+    ena := enable;
+    
+    -- Determine how much we need to add to the counter.
+    add := (0 => inc, others => '0');
+    for i in inc_vect'range loop
+      if inc_vect(i) = '1' then
+        add := add + to_unsigned(1, highBit-lowBit);
+      end if;
+    end loop;
+    
+    -- Read the current counter value and perform the addition.
+    count := "0" & unsigned(c2l(wordAddr).readData(highBit downto lowBit));
+    count := count + add;
+    
+    -- If there is an overflow and we're configured in clamp mode, overwrite
+    -- the value to write with all ones.
+    if clamp and count(highBit-lowBit+1) = '1' then
+      count(highBit-lowBit downto 0) := (others => '1');
+    end if;
+    
+    -- Handle counter clearing.
+    if (c2l(wordAddr).busWrite(highBit downto lowBit) /= zero) or (clear = '1') then
+      count(highBit-lowBit downto 0) := (others => '0');
+      ena := '1';
+    end if;
+    
+    -- Write the new counter value.
+    l2c(wordAddr).writeEnable(highBit downto lowBit) := (others => ena);
+    l2c(wordAddr).writeData(highBit downto lowBit) := std_logic_vector(count(highBit-lowBit downto 0));
+    
+  end creg_makeCounter;
   
   -- Hardwires the specified range to a certain value.
   procedure creg_makeHardwiredField(

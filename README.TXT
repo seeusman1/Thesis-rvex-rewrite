@@ -168,6 +168,26 @@ definitions in :/tools/debug-interface/src/default-memory.map. The next time
 you run any make command to do with rvd, you will be queried to commit the new 
 you run any make currently active memory map.
 
+-------------------------------------------------------------------------------
+-- Adding/modifying control registers
+-------------------------------------------------------------------------------
+
+The steps below explain how to properly add control registers to the rvex core.
+Modifying/removing registers follows the same steps, pretty much.
+
+ 1. Add the mnemonics for the new registers to
+    lib/rvex/core/core_ctrlRegs_pkg.vhd. While you're there, you might want to
+    look over the subprograms in that file which can be used to easily make
+    certain types of registers.
+    
+ 2. Define the logic for your new registers in:
+     - lib/rvex/core/core_contextRegLogic.vhd for context-specific registers
+     - lib/rvex/core/core_globalRegLogic.vhd for context-specific registers
+
+ 3. Register the new mnemonics in the following files:
+     - platform/core_tests/design/core_tb.vhd (bottom of the file)
+     - examples/src/rvex.h
+     - tools/debug-interface/src/default-memory.map
 
 --=============================================================================
 -- Adding programs

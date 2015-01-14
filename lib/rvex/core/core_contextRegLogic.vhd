@@ -116,6 +116,18 @@ entity core_contextRegLogic is
     -- When high, the context registers must maintain their current value.
     cxplif2cxreg_stall          : in  std_logic;
 
+    -- Idle flag, as reported to the external run control interface. Used for
+    -- the performance counters.
+    cxplif2cxreg_idle           : in  std_logic;
+
+    -- Syllable committed flag for each lane, used for the performance
+    -- counters.
+    cxplif2cxreg_sylCommit      : in  rvex_sylStatus_type;
+    
+    -- NOP flag for each lane with the same timing as sylCommit, used for the
+    -- performance counters.
+    cxplif2cxreg_sylNop         : in  rvex_sylStatus_type;
+
     -- Stop flag. When high, the BRK and done flags in the debug control
     -- register should be set.
     cxplif2cxreg_stop           : in  std_logic;
@@ -260,7 +272,9 @@ begin -- architecture
   ) is
     variable l2c  : cxreg2creg_type;
     variable c2l  : creg2cxreg_type;
-    variable enteringDebugTrap : std_logic;
+    variable enteringDebugTrap  : std_logic;
+    variable countClear         : std_logic;
+    variable bundleCommit       : std_logic;
   begin
     l2c := (others => HW2REG_DEFAULT);
     c2l := creg2cxreg;
@@ -759,6 +773,104 @@ begin -- architecture
     
     -- Drive requestEnable.
     cxreg2cfg_requestEnable <= creg_isBusWritingToBit(l2c, c2l, CR_CRR, 0);
+    
+    ---------------------------------------------------------------------------
+    -- Scratch-pad register (SCRP)
+    ---------------------------------------------------------------------------
+    -- 
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- SCRP  |                            scratch                            |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    --
+    -- Regular register with no effect on processor behavior.
+    
+    -- Make the register.
+    creg_makeNormalRegister(l2c, c2l, CR_SCRP, 31, 0,
+      permissions   => READ_WRITE
+    );
+    
+    ---------------------------------------------------------------------------
+    -- Performance counters (C_*)
+    ---------------------------------------------------------------------------
+    -- 
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_CYC |                         cycle counter                         |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_STALL                         stall counter                         |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_BUN |                   committed bundle counter                    |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_SYL |                  committed syllable counter                   |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_NOP |                     committed NOP counter                     |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    --
+    -- These registers will increment until they reach 0xFFFFFFFF when certain
+    -- events occur. C_CYC will increment every cycle while idle is low.
+    -- C_STALL does the same as C_CYC, but only when stall is high. Thus, their
+    -- difference can be used to determine the number of active cycles. C_BUN
+    -- counts the number of active cycles in which an instruction was
+    -- committed, so C_CYC - C_STALL - C_BUN can be used to determine the
+    -- number of cycles spent on pipeline flushing. C_SYL behaves almost
+    -- exactly the same as C_BUN, but instead of being incremented with 1 every
+    -- instruction, this is incremented by the number of syllables which were
+    -- committed (which may be dependent on configuration). C_NOP does the same
+    -- as C_SYL, but only counts NOP syllables.
+    --
+    -- When any of the counters are written to, they are reset to 0. The
+    -- written value is ignored for all but bit 0 of C_CYC; when that bit is
+    -- written 1, all counters are cleared simultaneously.
+    
+    -- Determine the reset-all-counter flag. We need to assert this while
+    -- resetting as well, or ongoing counter updates will override the soft
+    -- reset.
+    countClear := creg_isBusWritingOneToBit(l2c, c2l, CR_C_CYC, 0)
+               or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_DONE) -- DCR reset bit
+               or rctrl2cxreg_reset;
+    
+    -- Make the cycle counter.
+    creg_makeCounter(l2c, c2l, CR_C_CYC, 31, 0,
+      clear         => countClear,
+      inc           => not cxplif2cxreg_idle,
+      permissions   => READ_WRITE
+    );
+    
+    -- Make the stall counter.
+    creg_makeCounter(l2c, c2l, CR_C_STALL, 31, 0,
+      clear         => countClear,
+      inc           => cxplif2cxreg_stall and not cxplif2cxreg_idle,
+      permissions   => READ_WRITE
+    );
+    
+    -- Make the committed bundle counter.
+    bundleCommit := '0';
+    for i in cxplif2cxreg_sylCommit'range loop
+      if cxplif2cxreg_sylCommit(i) = '1' then
+        bundleCommit := '1';
+      end if;
+    end loop;
+    creg_makeCounter(l2c, c2l, CR_C_BUN, 31, 0,
+      clear         => countClear,
+      inc           => bundleCommit,
+      enable        => not cxplif2cxreg_stall,
+      permissions   => READ_WRITE
+    );
+    
+    -- Make the committed syllable counter.
+    creg_makeCounter(l2c, c2l, CR_C_SYL, 31, 0,
+      clear         => countClear,
+      inc_vect      => cxplif2cxreg_sylCommit,
+      enable        => not cxplif2cxreg_stall,
+      permissions   => READ_WRITE
+    );
+    
+    -- Make the committed NOP syllable counter.
+    creg_makeCounter(l2c, c2l, CR_C_NOP, 31, 0,
+      clear         => countClear,
+      inc_vect      => cxplif2cxreg_sylCommit and cxplif2cxreg_sylNop,
+      enable        => not cxplif2cxreg_stall,
+      permissions   => READ_WRITE
+    );
     
     ---------------------------------------------------------------------------
     -- Forward control signals

@@ -541,6 +541,9 @@ architecture Behavioral of core is
   signal cxplif2cxreg_linkWriteEnable : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_linkReadData    : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_stall           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_idle            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_sylCommit       : rvex_sylStatus_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_sylNop          : rvex_sylStatus_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_stop            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_nextPC          : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_currentPC       : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
@@ -714,6 +717,9 @@ begin -- architecture
       
       -- Special context register interface.
       cxplif2cxreg_stall            => cxplif2cxreg_stall,
+      cxplif2cxreg_idle             => cxplif2cxreg_idle,
+      cxplif2cxreg_sylCommit        => cxplif2cxreg_sylCommit,
+      cxplif2cxreg_sylNop           => cxplif2cxreg_sylNop,
       cxplif2cxreg_stop             => cxplif2cxreg_stop,
       cxplif2cxreg_nextPC           => cxplif2cxreg_nextPC,
       cxreg2cxplif_currentPC        => cxreg2cxplif_currentPC,
@@ -854,6 +860,9 @@ begin -- architecture
         
         -- Pipelane interface.
         cxplif2cxreg_stall          => cxplif2cxreg_stall(ctxt),
+        cxplif2cxreg_idle           => cxplif2cxreg_idle(ctxt),
+        cxplif2cxreg_sylCommit      => cxplif2cxreg_sylCommit(ctxt),
+        cxplif2cxreg_sylNop         => cxplif2cxreg_sylNop(ctxt),
         cxplif2cxreg_stop           => cxplif2cxreg_stop(ctxt),
         cxplif2cxreg_brWriteData    => cxplif2cxreg_brWriteData(ctxt),
         cxplif2cxreg_brWriteEnable  => cxplif2cxreg_brWriteEnable(ctxt),
