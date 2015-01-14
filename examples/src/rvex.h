@@ -46,18 +46,18 @@ int getchar(void);
 #define CREG_ADDR(offs)      (CREG_BASE + (offs))
 
 // Stub definitions for any register type.
-#define CREG_UINT32_R(addr)  (*(const volatile unsigned int*)(CREG_BASE+offs))
-#define CREG_INT32_R(addr)   (*(const volatile          int*)(CREG_BASE+offs))
-#define CREG_UINT32_RW(addr) (*(      volatile unsigned int*)(CREG_BASE+offs))
-#define CREG_INT32_RW(addr)  (*(      volatile          int*)(CREG_BASE+offs))
-#define CREG_UINT16_R(addr)  (*(const volatile unsigned short*)(CREG_BASE+offs))
-#define CREG_INT16_R(addr)   (*(const volatile          short*)(CREG_BASE+offs))
-#define CREG_UINT16_RW(addr) (*(      volatile unsigned short*)(CREG_BASE+offs))
-#define CREG_INT16_RW(addr)  (*(      volatile          short*)(CREG_BASE+offs))
-#define CREG_UINT8_R(addr)   (*(const volatile unsigned char*)(CREG_BASE+offs))
-#define CREG_INT8_R(addr)    (*(const volatile          char*)(CREG_BASE+offs))
-#define CREG_UINT8_RW(addr)  (*(      volatile unsigned char*)(CREG_BASE+offs))
-#define CREG_INT8_RW(addr)   (*(      volatile          char*)(CREG_BASE+offs))
+#define CREG_UINT32_R(addr)  (*(const volatile unsigned int*)(addr))
+#define CREG_INT32_R(addr)   (*(const volatile          int*)(addr))
+#define CREG_UINT32_RW(addr) (*(      volatile unsigned int*)(addr))
+#define CREG_INT32_RW(addr)  (*(      volatile          int*)(addr))
+#define CREG_UINT16_R(addr)  (*(const volatile unsigned short*)(addr))
+#define CREG_INT16_R(addr)   (*(const volatile          short*)(addr))
+#define CREG_UINT16_RW(addr) (*(      volatile unsigned short*)(addr))
+#define CREG_INT16_RW(addr)  (*(      volatile          short*)(addr))
+#define CREG_UINT8_R(addr)   (*(const volatile unsigned char*)(addr))
+#define CREG_INT8_R(addr)    (*(const volatile          char*)(addr))
+#define CREG_UINT8_RW(addr)  (*(      volatile unsigned char*)(addr))
+#define CREG_INT8_RW(addr)   (*(      volatile          char*)(addr))
 
 //-----------------------------------------------------------------------------
 // Global (shared) registers. Refer to lib/rvex/core/core_globalRegLogic.vhd
