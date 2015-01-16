@@ -1,6 +1,6 @@
 #include "rvex.h"
 
-#define UART_BASE 0xF0000000
+#define UART_BASE 0xD1000000
 #define UART_DATA (*((volatile unsigned char *)(UART_BASE)))
 #define UART_STAT (*((volatile unsigned char *)(UART_BASE+4)))
 
