@@ -169,6 +169,102 @@ all:PRINT_STATE {
   
 }
 
+# Waits for completion of a program and then prints statistics. Should only be
+# called using a single context.
+all:WAIT_COMPLETE {
+  
+  printf("Waiting for program to terminate");
+  
+  # In case _NUM_CONTEXTS expands to something complicated, we'll want to
+  # preload it here.
+  set(count, _NUM_CONTEXTS);
+  
+  # Initialize prev_cycle things.
+  set(prev_cyc0, 0);
+  set(prev_cyc1, 0);
+  set(prev_cyc2, 0);
+  set(prev_cyc3, 0);
+  set(prev_cyc4, 0);
+  set(prev_cyc5, 0);
+  set(prev_cyc6, 0);
+  set(prev_cyc7, 0);
+  
+  # Wait for completion.
+  set(diffs, 1);
+  while (diffs, (
+    
+    # Load the current cycle counter values.
+    if (count > 0, (set(_CUR_CONTEXT, 0); SET_BANK; set(cyc0, readWord(C_CYC))), set(cyc0, 0));
+    if (count > 1, (set(_CUR_CONTEXT, 1); SET_BANK; set(cyc1, readWord(C_CYC))), set(cyc1, 0));
+    if (count > 2, (set(_CUR_CONTEXT, 2); SET_BANK; set(cyc2, readWord(C_CYC))), set(cyc2, 0));
+    if (count > 3, (set(_CUR_CONTEXT, 3); SET_BANK; set(cyc3, readWord(C_CYC))), set(cyc3, 0));
+    if (count > 4, (set(_CUR_CONTEXT, 4); SET_BANK; set(cyc4, readWord(C_CYC))), set(cyc4, 0));
+    if (count > 5, (set(_CUR_CONTEXT, 5); SET_BANK; set(cyc5, readWord(C_CYC))), set(cyc5, 0));
+    if (count > 6, (set(_CUR_CONTEXT, 6); SET_BANK; set(cyc6, readWord(C_CYC))), set(cyc6, 0));
+    if (count > 7, (set(_CUR_CONTEXT, 7); SET_BANK; set(cyc7, readWord(C_CYC))), set(cyc7, 0));
+    
+    # See if the cycle counter values changed since the last time we read them.
+    set(diffs, 
+      (cyc0 != prev_cyc0) ||
+      (cyc1 != prev_cyc1) ||
+      (cyc2 != prev_cyc2) ||
+      (cyc3 != prev_cyc3) ||
+      (cyc4 != prev_cyc4) ||
+      (cyc5 != prev_cyc5) ||
+      (cyc6 != prev_cyc6) ||
+      (cyc7 != prev_cyc7)
+    );
+    
+    # Store the previous values.
+    set(prev_cyc0, cyc0);
+    set(prev_cyc1, cyc1);
+    set(prev_cyc2, cyc2);
+    set(prev_cyc3, cyc3);
+    set(prev_cyc4, cyc4);
+    set(prev_cyc5, cyc5);
+    set(prev_cyc6, cyc6);
+    set(prev_cyc7, cyc7);
+    
+    # Delay for 500 milliseconds between checks.
+    delay_ms(500);
+    
+    printf(".");
+    
+  ));
+  
+  printf(" done.\n\n");
+  
+  # Do a performance counter dump for each context.
+  set(cur, 0);
+  set(total_cyc, 0);
+  while (cur < count, (
+    
+    set(_CUR_CONTEXT, cur);
+    SET_BANK;
+    printf("\033[1mPerformance counters for context %d:\033[0m\n", cur);
+    set(cyc, readWord(C_CYC));
+    set(total_cyc, total_cyc + cyc);
+    printf("            Active cycles = %u\n", cyc);
+    printf("           Stalled cycles = %u\n", readWord(C_STALL));
+    printf("   Committed bundle count = %u\n", readWord(C_BUN));
+    printf(" Committed syllable count = %u\n", readWord(C_SYL));
+    printf("      Committed NOP count = %u\n", readWord(C_NOP));
+    printf("\n");
+    
+    set(cur, cur + 1);
+  ));
+  printf(" Sum of all active cycles = \033[1m%u\033[0m\n", total_cyc);
+  printf(" (this is the total cycle count if contexts are never active at the same time)\n\n");
+  
+}
+
+
+
+# This is evaluated before any rvd command is called.
+all:_ALWAYS {
+  SET_BANK;
+}
+
 # This is evaluated when "rvd break" is called.
 all:_BREAK {
   SET_BANK;
@@ -198,7 +294,19 @@ all:_RELEASE {
 # This is evaluated when "rvd reset" is called.
 all:_RESET {
   SET_BANK;
-  write(DCRF, 0x80hh);
+  write(DCRF, 0x09hh); # break
+  set(reg, 0);
+  while (reg < 32, (
+    writeWord(CREG + 0x80 + (reg*4), 0);
+    set(reg, reg + 1);
+  ));
+  SET_BANK_HIGH;
+  while (reg < 64, (
+    writeWord(CREG + (reg*4), 0);
+    set(reg, reg + 1);
+  ));
+  SET_BANK;
+  write(DCRF, 0x80hh); # reset
 }
   
 # This is evaluated when "rvd reset break" is called.

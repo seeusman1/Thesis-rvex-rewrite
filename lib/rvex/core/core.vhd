@@ -54,6 +54,7 @@ use rvex.utils_pkg.all;
 use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
 use rvex.core_trap_pkg.all;
+use rvex.core_pipeline_pkg.all;
 
 -- pragma translate_off
 use rvex.simUtils_pkg.all;
@@ -498,7 +499,8 @@ architecture Behavioral of core is
   -- or destination block for documentation.
   
   -- Pipelane <-> configuration control signals.
-  signal cfg2cxplif_run               : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cfg2cxplif_active            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cfg2cxplif_requestReconfig   : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cfg_blockReconfig     : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
   -- Data memory switch <-> control register signals.
@@ -670,7 +672,8 @@ begin -- architecture
       cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
       
       -- Configuration signals.
-      cfg2cxplif_run                => cfg2cxplif_run,
+      cfg2cxplif_active             => cfg2cxplif_active,
+      cfg2cxplif_requestReconfig    => cfg2cxplif_requestReconfig,
       cxplif2cfg_blockReconfig      => cxplif2cfg_blockReconfig,
       
       -- External run control signals.
@@ -958,7 +961,8 @@ begin -- architecture
       cfg2gbreg_requesterID         => cfg2gbreg_requesterID,
       
       -- Branch unit interface (through context-pipelane interface).
-      cfg2cxplif_run                => cfg2cxplif_run,
+      cfg2cxplif_active             => cfg2cxplif_active,
+      cfg2cxplif_requestReconfig    => cfg2cxplif_requestReconfig,
       cxplif2cfg_blockReconfig      => cxplif2cfg_blockReconfig,
       
       -- Memory interface.
@@ -982,8 +986,49 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- pragma translate_off
   sim_info_gen: if GEN_VHDL_SIM_INFO generate
+    
+    -- Generate pipeline registers for the configuration state to sync up with
+    -- the simulation output.
+    subtype ctxtMapping_type is rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    type ctxtMapping_array is array (natural range <>) of ctxtMapping_type;
+    signal ctxt                     : ctxtMapping_array(S_FIRST+1 to S_LAST);
+    signal currentCfg               : rvex_data_array(S_FIRST+1 to S_LAST);
+    
+  begin
+    
+    cfg_pipeline: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          ctxt <= (others => (others => (others => '0')));
+          currentCfg <= (others => (others => '0'));
+        elsif clkEn = '1' then
+          
+          -- Be careful to respect the stall signals.
+          for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+            if stall(laneGroup) = '0' then
+              
+              ctxt(S_FIRST+1)(laneGroup)
+                <= cfg2any_context(laneGroup);
+              currentCfg(S_FIRST+1)(4*laneGroup+3 downto 4*laneGroup)
+                <= cfg2gbreg_currentCfg(4*laneGroup+3 downto 4*laneGroup);
+              
+              for s in S_FIRST+2 to S_LAST loop
+                ctxt(s)(laneGroup)
+                  <= ctxt(s-1)(laneGroup);
+                currentCfg(s)(4*laneGroup+3 downto 4*laneGroup)
+                  <= currentCfg(s-1)(4*laneGroup+3 downto 4*laneGroup);
+              end loop;
+              
+            end if;
+          end loop;
+          
+        end if;
+      end if;
+    end process;
+    
     sim_info: process (
-      pl2sim_instr, pl2sim_op, br2sim, cfg2gbreg_currentCfg, cfg2any_context,
+      pl2sim_instr, pl2sim_op, br2sim, currentCfg(S_LAST), ctxt(S_LAST),
       cxreg2cxplif_currentPC
     ) is
       
@@ -1001,16 +1046,6 @@ begin -- architecture
       
     begin
       
-      -- This doesn't work like this; if the simulation is very slow look into
-      -- this some more.
-      ---- To speed up simulation, wait for all incoming signals to become
-      ---- stable before continuing, so we're not potentially doing the string
-      ---- manipulation more than once per cycle due to delta-delay signal
-      ---- propagation.
-      --wait until pl2sim_instr'stable and pl2sim_op'stable and br2sim'stable
-      --   and cfg2br_run'stable and cfg2any_context'stable
-      --   and cxreg2cxplif_currentPC'stable;
-      
       -- Add information about all active lanes/contexts to the simulation.
       line := 1;
       prevContext := -1;
@@ -1018,13 +1053,13 @@ begin -- architecture
       for lane in 0 to 2**CFG.numLanesLog2-1 loop
         
         -- Ignore lanes which aren't active.
-        if cfg2gbreg_currentCfg(lane2group(lane, CFG)*4+3) = '1' then
+        if currentCfg(S_LAST)(lane2group(lane, CFG)*4+3) = '1' then
           prevContext := -1;
           next;
         end if;
         
         -- Figure out the context running on the current lane.
-        curContext := vect2uint(cfg2any_context(lane2group(lane, CFG)));
+        curContext := vect2uint(ctxt(S_LAST)(lane2group(lane, CFG)));
         
         -- If this lane is operating in a different context than the previous
         -- lane, inject a line of whitespace and a line with context

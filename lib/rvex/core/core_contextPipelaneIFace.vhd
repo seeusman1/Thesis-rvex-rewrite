@@ -295,8 +295,16 @@ entity core_contextPipelaneIFace is
     ---------------------------------------------------------------------------
     -- Configuration control interface
     ---------------------------------------------------------------------------
-    -- Run bit for the pipelanes per context from the configuration logic.
-    cfg2cxplif_run              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    -- The active bits are tied to the run bits in the current configuration;
+    -- a context should not be modified and kept in a halted state when active
+    -- is low.
+    cfg2cxplif_active           : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Reconfiguration request signal. These bits will be pulled high when the
+    -- reconfiguration controller wants to reconfigure contexts while the
+    -- relevant blockReconfig signals are high. A context should halt when
+    -- this is high.
+    cfg2cxplif_requestReconfig  : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     -- Active high reconfiguration block bit. When high, reconfiguration is
     -- not permitted for the indexed context. This is essentially an active low
@@ -902,11 +910,11 @@ begin -- architecture
     laneGroup <= vect2uint(cfg2any_lastGroupForCtxt(ctxt));
     
     -- Generate all the muxes.
-    cxplif2cfg_blockReconfig(ctxt)      <= blockReconfig_arb(laneGroup) and cfg2cxplif_run(ctxt);
-    cxplif2rctrl_irqAck(ctxt)           <= irqAck_arb(laneGroup) and cfg2cxplif_run(ctxt);
-    cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_run(ctxt);
-    cxplif2cxreg_stall(ctxt)            <= stall(laneGroup) or not cfg2cxplif_run(ctxt);
-    cxplif2cxreg_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_run(ctxt);
+    cxplif2cfg_blockReconfig(ctxt)      <= blockReconfig_arb(laneGroup) and cfg2cxplif_active(ctxt);
+    cxplif2rctrl_irqAck(ctxt)           <= irqAck_arb(laneGroup) and cfg2cxplif_active(ctxt);
+    cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_active(ctxt);
+    cxplif2cxreg_stall(ctxt)            <= stall(laneGroup) or not cfg2cxplif_active(ctxt);
+    cxplif2cxreg_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_active(ctxt);
     cxplif2cxreg_stop(ctxt)             <= stop_arb(laneGroup);
     cxplif2cxreg_brWriteData(ctxt)      <= brLinkWritePort_arb(laneGroup).brData(S_SWB);
     cxplif2cxreg_brWriteEnable(ctxt)    <= brLinkWritePort_arb(laneGroup).brWriteEnable(S_SWB);
@@ -922,8 +930,12 @@ begin -- architecture
     
     -- While we're at it, combine the external run control and control register
     -- data where necessary for each context.
-    irq_ctxt(ctxt) <= rctrl2cxplif_irq(ctxt) and cxreg2cxplif_interruptEnable(ctxt);
-    run_ctxt(ctxt) <= rctrl2cxplif_run(ctxt) and cfg2cxplif_run(ctxt) and not cxreg2cxplif_brk(ctxt);
+    irq_ctxt(ctxt) <= rctrl2cxplif_irq(ctxt)
+                  and cxreg2cxplif_interruptEnable(ctxt);
+    run_ctxt(ctxt) <= rctrl2cxplif_run(ctxt)
+                  and cfg2cxplif_active(ctxt)
+                  and (not cfg2cxplif_requestReconfig(ctxt))
+                  and (not cxreg2cxplif_brk(ctxt));
     
     -- Mask the lane performance counter status signals for each context.
     group2context_perf_count_status: process (

@@ -34,7 +34,15 @@ help:
 	@echo ""
 	@echo "  make upload-<prog>   : compiles the specified program, starts rvsrv if it is"
 	@echo "                         not already running and uploads the program to the"
-	@echo "                         core. Subsequently executes the debug target."
+	@echo "                         core. Leaves the core reset at PC 0."
+	@echo ""
+	@echo "  make start-<prog>    : same as upload-<prog>, but also starts the program."
+	@echo ""
+	@echo "  make run-<prog>      : same as start-<prog>, but also waits for completion."
+	@echo "                         Completion is detected when none of the context cycle"
+	@echo "                         counters increment between two reads."
+	@echo ""
+	@echo "  make run-all         : calls run-<prog> for all executables."
 	@echo ""
 	@echo "  make server          : starts rvsrv."
 	@echo ""
@@ -52,7 +60,7 @@ help:
 	@echo ""
 	@cd examples && $(MAKE) --no-print-directory list-executables
 	@echo " In addition, you can use \"none\" to initialize the memories with zeros for all"
-	@echo " targets but upload-<prog>."
+	@echo " targets but upload-<prog> and run-<prog>."
 	@echo ""
 	@echo " NOTE: be aware that static elaboration can take several minutes when simulating"
 	@echo " or synthesizing with the memories initialized to a large program."
@@ -82,6 +90,12 @@ ise-%: compile-%
 	cd ise && ise standalone.xise
 
 upload-%:
+	cd examples && $(MAKE) $@
+
+start-%:
+	cd examples && $(MAKE) $@
+
+run-%:
 	cd examples && $(MAKE) $@
 
 server stop monitor:

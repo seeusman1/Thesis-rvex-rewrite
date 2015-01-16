@@ -137,8 +137,16 @@ entity core_pipelanes is
     ---------------------------------------------------------------------------
     -- Configuration and run control
     ---------------------------------------------------------------------------
-    -- Run bit for the pipelanes per context from the configuration logic.
-    cfg2cxplif_run              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    -- The active bits are tied to the run bits in the current configuration;
+    -- a context should not be modified and kept in a halted state when active
+    -- is low.
+    cfg2cxplif_active           : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Reconfiguration request signal. These bits will be pulled high when the
+    -- reconfiguration controller wants to reconfigure contexts while the
+    -- relevant blockReconfig signals are high. A context should halt when
+    -- this is high.
+    cfg2cxplif_requestReconfig  : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     -- Active high reconfiguration block bit. When high, reconfiguration is
     -- not permitted for the indexed context. This is essentially an active low
@@ -594,7 +602,8 @@ begin -- architecture
       cxplif2imem_cancel                => cxplif2imem_cancel,
       
       -- Configuration control interface.
-      cfg2cxplif_run                    => cfg2cxplif_run,
+      cfg2cxplif_active                 => cfg2cxplif_active,
+      cfg2cxplif_requestReconfig        => cfg2cxplif_requestReconfig,
       cxplif2cfg_blockReconfig          => cxplif2cfg_blockReconfig,
       
       -- Context register interface: misc.

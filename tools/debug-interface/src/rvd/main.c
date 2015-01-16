@@ -260,6 +260,12 @@ int run(commandLineArgs_t *args) {
     FOR_EACH_CONTEXT(
       
       value_t value;
+      value_t dummyValue;
+      
+      // Execute the _ALWAYS definition.
+      if (evaluate("_ALWAYS", &dummyValue, "") < 1) {
+        return -1;
+      }
       
       // Evaluate the given command.
       if (evaluate(args->params[0], &value, "") < 1) {
@@ -353,6 +359,12 @@ int run(commandLineArgs_t *args) {
       value_t value;
       int size;
       uint32_t fault;
+      value_t dummyValue;
+      
+      // Execute the _ALWAYS definition.
+      if (evaluate("_ALWAYS", &dummyValue, "") < 1) {
+        return -1;
+      }
       
       // Evaluate the address.
       if (evaluate(args->params[0], &address, "") < 1) {
@@ -470,6 +482,12 @@ int run(commandLineArgs_t *args) {
     FOR_EACH_CONTEXT(
       
       value_t address;
+      value_t dummyValue;
+      
+      // Execute the _ALWAYS definition.
+      if (evaluate("_ALWAYS", &dummyValue, "") < 1) {
+        return -1;
+      }
       
       // Evaluate the address.
       if (evaluate(args->params[(args->paramCount > 1) ? 1 : 0], &address, "") < 1) {
@@ -594,6 +612,12 @@ int run(commandLineArgs_t *args) {
       value_t address;
       value_t count;
       value_t value;
+      value_t dummyValue;
+      
+      // Execute the _ALWAYS definition.
+      if (evaluate("_ALWAYS", &dummyValue, "") < 1) {
+        return -1;
+      }
       
       // Evaluate the address.
       if (evaluate(args->params[0], &address, "") < 1) {
@@ -726,6 +750,12 @@ int run(commandLineArgs_t *args) {
       int totalFileBytes;
       int totalDataBytes;
       char prefix[16];
+      value_t dummyValue;
+      
+      // Execute the _ALWAYS definition.
+      if (evaluate("_ALWAYS", &dummyValue, "") < 1) {
+        return -1;
+      }
       
       // Evaluate the address if it is specified, otherwise set it to 0.
       if (args->paramCount > 2) {
@@ -931,6 +961,7 @@ int run(commandLineArgs_t *args) {
     int f;
     iterPage_t i;
     char prefix[16];
+    value_t dummyValue;
     
     if (isHelp(args) || (args->paramCount != 4)) {
       printf(
@@ -976,6 +1007,11 @@ int run(commandLineArgs_t *args) {
       selectedContext = ctxt;
       multipleContexts = 1;
     );
+    
+    // Execute the _ALWAYS definition.
+    if (evaluate("_ALWAYS", &dummyValue, "") < 1) {
+      return -1;
+    }
     
     // Evaluate the start address.
     if (evaluate(args->params[2], &address, "") < 1) {
@@ -1194,6 +1230,10 @@ int run(commandLineArgs_t *args) {
     FOR_EACH_CONTEXT(
       value_t dummyValue;
       
+      if (evaluate("_ALWAYS", &dummyValue, "") < 1) {
+        return -1;
+      }
+      
       if (evaluate(expr, &dummyValue, "") < 1) {
         return -1;
       }
@@ -1329,6 +1369,18 @@ int run(commandLineArgs_t *args) {
         "variable), whereas def() defers evaluation until the definition is used (like\n"
         "a function).\n"
         "\n"
+        "Required definitions\n"
+        "--------------------\n"
+        "There are a few definitions which should always be defined, either in a memory\n"
+        "map file or as a command line parameter. These are the following.\n"
+        "\n"
+        "  _ALWAYS        This is always executed once before rvd does its first hardware\n"
+        "                 access. Can be used to set up banking based on the predefined\n"
+        "                 _CUR_CONTEXT definition.\n"
+        "\n"
+        "  _NUM_CONTEXTS  This defines the number of contexts available. Should expand\n"
+        "                 to the same value for all contexts.\n"
+        "\n"
         "Functions\n"
         "---------\n"
         "In order for expression evaluation to actually do something, a number of\n"
@@ -1378,6 +1430,9 @@ int run(commandLineArgs_t *args) {
         "    Obviously, condition will also be evaluated for every iteration. while()\n"
         "    returns the last evaluated value for command, or 0 if it has not been\n"
         "    evaluated.\n"
+        "\n"
+        "  delay_ms(time)\n"
+        "    Delays execution for the specified amount of milliseconds.\n"
         "\n"
       );
       return 0;

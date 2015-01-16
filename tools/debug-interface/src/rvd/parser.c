@@ -50,6 +50,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "parser.h"
 #include "definitions.h"
@@ -1118,6 +1119,34 @@ static int scanOperand(const char **str, value_t *value, int depth) {
           // Move the scan position back to the end of the while function.
           ptr = endPtr;
           
+        }
+        
+      // ----------------------------------------------------------------------
+      } else if (
+        (!strcmp(name, "delay_ms"))
+      ) {
+        
+        // We don't need the command name anymore.
+        free(name);
+        name = 0;
+        
+        // Scan the amount of milliseconds to wait.
+        if ((retval = scanExpression(&ptr, &v, depth)) < 1) {
+          return retval;
+        }
+        
+        // Scan the close parenthesis.
+        if (*ptr != ')') {
+          sprintf(scanError, "expected ')'");
+          scanErrorPos = ptr;
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+        // Sleep.
+        if (depth != -1) {
+          usleep(v.value * 1000);
         }
         
       // ----------------------------------------------------------------------

@@ -124,10 +124,16 @@ entity core_cfgCtrl is
     ---------------------------------------------------------------------------
     -- Branch unit interface (through context-pipelane interface)
     ---------------------------------------------------------------------------
-    -- Run enable signal. This serves a dual purpose: when a reconfiguration is
-    -- requested, these bits are forced low; under normal circumstances these
-    -- bits are tied to the run bits in the current configuration.
-    cfg2cxplif_run              : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    -- The active bits are tied to the run bits in the current configuration;
+    -- a context should not be modified and kept in a halted state when active
+    -- is low.
+    cfg2cxplif_active           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Reconfiguration request signal. These bits will be pulled high when the
+    -- reconfiguration controller wants to reconfigure contexts while the
+    -- relevant blockReconfig signals are high. A context should halt when
+    -- this is high.
+    cfg2cxplif_requestReconfig  : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     -- Active high reconfiguration block input from the branch units. When this
     -- is low, associated contexts may not be reconfigured.
@@ -451,6 +457,9 @@ begin -- architecture
     for i in 2**CFG.numContextsLog2-1 downto 0 loop
       contextsToUpdate(i) <= '0';
       if newContextEnable_r(i) = '1' or curContextEnable_r(i) = '1' then
+        if newContextEnable_r(i) /= curContextEnable_r(i) then
+          contextsToUpdate(i) <= '1';
+        end if;
         if newLastPipelaneGroupForContext_r(i) /= curLastPipelaneGroupForContext_r(i) then
           contextsToUpdate(i) <= '1';
         end if;
@@ -461,23 +470,21 @@ begin -- architecture
     end loop;
   end process;
   
-  -- Generate the run bits for each context.
-  gen_run_bits: process (
-    contextsToUpdate, decoderBusy, busy_r, curContextEnable_r
+  -- Generate the active bits for each context.
+  cfg2cxplif_active <= curContextEnable_r;
+  
+  -- Generate the requestReconfig bits for each context.
+  gen_request_reconfig_bits: process (
+    contextsToUpdate, decoderBusy, busy_r
   ) is
   begin
     for i in 2**CFG.numContextsLog2-1 downto 0 loop
       
       -- We should start disabling the run bit for the contexts which need to
       -- be updated when the decoder is done, so when decoderBusy goes low but
-      -- busy_r is still high. So force the run bits for those contexts low in
-      -- that case. Otherwise, connect them to the current configuration
-      -- register.
-      if busy_r = '1' and decoderBusy = '0' and contextsToUpdate(i) = '1' then
-        cfg2cxplif_run(i) <= '0';
-      else
-        cfg2cxplif_run(i) <= curContextEnable_r(i);
-      end if;
+      -- busy_r is still high.
+      cfg2cxplif_requestReconfig(i)
+        <= contextsToUpdate(i) and busy_r and not decoderBusy;
       
     end loop;
   end process;

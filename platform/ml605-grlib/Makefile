@@ -1,5 +1,6 @@
 
 .PHONY: help update-patch clean very-clean compile-& sim-% resim-% synth upload-% gr-%
+.PHONY: stop debug monitor clean
 
 help: work
 	@echo ""
@@ -28,6 +29,20 @@ help: work
 	@echo ""
 	@echo "  make upload-<prog>: compiles the specified program and uploads it to the FPGA"
 	@echo "                      using the rvex debugging UART."
+	@echo ""
+	@echo "  make server       : starts rvsrv."
+	@echo ""
+	@echo "  make stop         : stops rvsrv."
+	@echo ""
+	@echo "  make debug        : generates a script which can be sourced to set up the"
+	@echo "                      rvd/rvsrv debugging environment; run \"source debug\""
+	@echo "                      after calling this command."
+	@echo ""
+	@echo "  make monitor      : uses netcat to connect to the application interface of"
+	@echo "                      rvsrv. Anything written by the application using puts"
+	@echo "                      will be dumped to the terminal and you can send lines"
+	@echo "                      to the program which can be read using getchar. Exit"
+	@echo "                      using ctrl+C."
 	@echo ""
 	@echo "  make clean        : cleans most grlib and rvex compilation intermediate files."
 	@echo ""
@@ -119,6 +134,17 @@ ise: work
 # Chains to the examples makefile to upload the specified program to the FPGA.
 upload-%:
 	cd examples && $(MAKE) $@
+
+server stop monitor:
+	cd examples && $(MAKE) $@
+
+debug:
+	cd examples && $(MAKE) $@
+	cat ../../tools/debug-interface/debug > debug
+	echo 'export RVD_OPT="-m$(shell pwd)/memory.map"' >> debug
+	@echo ""
+	@echo " Run \"source debug\" now..."
+	@echo ""
 
 # Recursively calls grlib's makefile.
 gr-%: work

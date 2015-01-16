@@ -58,14 +58,14 @@ endif
 ifndef GEN_EXAMPLES
 GEN_EXAMPLES = .
 endif
+ifndef START
+START = default_start
+endif
 
 # List of platform-agnostic (generic) programs.
 EXECUTABLES += adpcm blit crc des fir pocsag \
 	ucbqsort bcnt compress engine g3fax jpeg qurt v42 \
-	adpcm1 dft itver2 itver2-repeat matrix memwrite soma x264 uart #This line contains programs not from Powerstone
-
-# List of library files to link with.
-OBJECTS += _start.o
+	adpcm1 dft itver2 itver2-repeat matrix memwrite soma x264 uart xstsimframebuffer#This line contains programs not from Powerstone
 
 # Toolchain setup.
 ifndef TOOLS
@@ -183,19 +183,29 @@ all: $(EXECUTABLES)
 
 # How to compile platform-specific sources;
 %.s: $(PLATFORM_SRC)/%.c
-	$(CC) $(CFLAGS) -S $<
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -S $<
 
-# Where to get platform-specific assembly files;
+# Where to get platform-specific assembly files and how to preprocess them;
+ifeq ($(COMPILER), HP)
 %.s: $(PLATFORM_SRC)/%.S
-	$(CP) $< $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< > $@
+else
+%.s: $(PLATFORM_SRC)/%.S
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< -o $@
+endif
 
 # How to compile generic sources;
 %.s: $(GENERIC_SRC)/%.c
-	$(CC) $(CFLAGS) -S $<
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -S $<
 
-# Where to get generic assembly files;
+# Where to get generic assembly files and how to preprocess them;
+ifeq ($(COMPILER), HP)
 %.s: $(GENERIC_SRC)/%.S
-	$(CP) $< $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< > $@
+else
+%.s: $(GENERIC_SRC)/%.S
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< -o $@
+endif
 
 # How to assemble;
 %.o: %.s
@@ -209,10 +219,16 @@ ifeq ($(DYNAMIC), resched)
 endif
 	$(AS) $(ASFLAGS) $< -o $@
 
+# Special rule for _start.o, may be overwritten target-specifically;
+.PHONY: _start.o-%
+_start.o-%: default_start.o
+	$(RM) _start.o
+	$(CP) default_start.o _start.o
+
 # How to link;
 .SECONDEXPANSION:
-%.elf: %.o $(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$@)
-	$(LD) $^ -o $@
+%.elf: _start.o-% %.o $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$@)
+	$(LD) _start.o $(filter-out $<,$^) -o $@
 
 # How to generate an srec;
 %.srec: %.elf

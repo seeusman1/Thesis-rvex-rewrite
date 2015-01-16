@@ -1,4 +1,4 @@
-name    External reconfiguration
+name    Internal reconfiguration
 
 -- Check configuration.
 config  genBundleSize         8

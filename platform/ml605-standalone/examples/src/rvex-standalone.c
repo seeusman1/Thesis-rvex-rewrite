@@ -1,4 +1,5 @@
 #include "rvex.h"
+#include "rvex_io.h"
 
 #define UART_BASE 0xF0000000
 #define UART_DATA (*((volatile unsigned char *)(UART_BASE)))

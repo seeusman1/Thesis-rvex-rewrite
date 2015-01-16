@@ -1,0 +1,17 @@
+
+# Number of contexts in the core.
+all: _NUM_CONTEXTS           { 4 }
+
+# Memory map as seen from the debugging interface.
+all: MEM                     { 0x00000000 }
+all: PLATFORM                { 0xD0000000 }
+all: CACHE                   { 0xD0000040 }
+all: MMU                     { 0xD0000080 }
+all: CREG                    { 0xD0000100 }
+
+all: RESET_ALL {
+  printf("Flushing caches...\n");
+  write(CACHE + 0x00, 0xF);
+  write(CACHE + 0x04, 0xF);
+  write(CREG, 0x80000000);
+}

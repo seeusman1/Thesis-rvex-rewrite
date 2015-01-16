@@ -12,9 +12,18 @@ EXECUTABLES = timer
 # Platform-specific object files to link.
 OBJECTS = rvex-standalone.o
 
+# Use timer_start.S instead of the usual default_start.S for timer.
+.PHONY: _start.o-timer
+_start.o-timer: timer_start.o
+	$(RM) _start.o
+	$(CP) timer_start.o _start.o
+
 # Platform specific targets for help.
 TARGETS = \
 "make upload-<program>    uploads program to platform using rvd"\
+"make start-<program>     upload + start program"\
+"make run-<program>       start + wait for completion"\
+"make run-all             run-<program> for all executables"\
 "make copy-<program>      registers program files for simulation"\
 "make copy-none           unregisters files for simulation"
 
@@ -31,10 +40,15 @@ upload-%: %.srec debug
 	$(RVD) -call -d"all:PRINT_STATE{1}" break
 	$(RVD) -c0 upload srec $< IMEM
 	$(RVD) -c0 upload srec $< DMEM
-	$(RVD) -call reset
-	$(RVD) -call c
+	$(RVD) -call -d"all:PRINT_STATE{1}" reset
 
-upload-all: $(patsubst %,upload-%,$(EXECUTABLES))
+start-%: upload-%
+	$(RVD) -c0 write CREG 0x80000000
+
+run-%: start-%
+	$(RVD) -c0 exec WAIT_COMPLETE
+
+run-all: $(patsubst %,run-%,$(EXECUTABLES))
 
 .PHONY: debug server stop monitor
 debug server stop monitor:
