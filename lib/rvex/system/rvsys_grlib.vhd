@@ -50,6 +50,11 @@ use IEEE.numeric_std.all;
 
 library rvex;
 use rvex.common_pkg.all;
+use rvex.utils_pkg.all;
+-- pragma translate_off
+use rvex.simUtils_pkg.all;
+use rvex.simUtils_mem_pkg.all;
+-- pragma translate_on
 use rvex.bus_pkg.all;
 use rvex.bus_addrConv_pkg.all;
 use rvex.core_pkg.all;
@@ -76,7 +81,16 @@ entity rvsys_grlib is
     
     -- AHB master starting index. There will be as many AHB masters as there
     -- are lane groups in the core.
-    AHB_MASTER_INDEX_START      : integer range 0 to NAHBMST-1 := 0
+    AHB_MASTER_INDEX_START      : integer range 0 to NAHBMST-1 := 0;
+    
+    -- When true, memory accesses made by the rvex will be checked for
+    -- consistency. When a memory access does not behave as if a basic
+    -- unlimited sized memory were connected to the bus, a warning is
+    -- reported.
+    CHECK_MEM                   : boolean := false;
+    
+    -- S-record initialization file for the memory checking code.
+    CHECK_MEM_FILE              : string := ""
     
   );
   port (
@@ -326,7 +340,126 @@ begin -- architecture
       rv2demux.readData <= rv2dbg_readData;
     end process;
     
+    -- Check memory accesses.
+    -- pragma translate_off
+    mem_check_gen: if CHECK_MEM generate
+      signal PCs_r                : rvex_address_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+      signal fetch_r              : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+      signal addr_r               : rvex_address_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+      signal readEnable_r         : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+      signal writeData_r          : rvex_data_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+      signal writeMask_r          : rvex_mask_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+      signal writeEnable_r        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+    begin
+      test_mem_regs: process (clk) is
+      begin
+        if rising_edge(clk) then
+          if resetCPU = '1' then
+            PCs_r         <= (others => (others => '0'));
+            fetch_r       <= (others => '0');
+            addr_r        <= (others => (others => '0'));
+            readEnable_r  <= (others => '0');
+            writeData_r   <= (others => (others => '0'));
+            writeMask_r   <= (others => (others => '0'));
+            writeEnable_r <= (others => '0');
+          elsif clkEnCPU = '1' then
+            for laneGroup in 0 to 2**CFG.core.numLaneGroupsLog2-1 loop
+              if rv2cache_stallOut(laneGroup) = '0' then
+                PCs_r(laneGroup)          <= rv2icache_PCs(laneGroup);
+                fetch_r(laneGroup)        <= rv2icache_fetch(laneGroup);
+                addr_r(laneGroup)         <= rv2dcache_addr(laneGroup);
+                readEnable_r(laneGroup)   <= rv2dcache_readEnable(laneGroup);
+                writeData_r(laneGroup)    <= rv2dcache_writeData(laneGroup);
+                writeMask_r(laneGroup)    <= rv2dcache_writeMask(laneGroup);
+                writeEnable_r(laneGroup)  <= rv2dcache_writeEnable(laneGroup);
+              end if;
+            end loop;
+          end if;
+        end if;
+      end process;
+      
+      mem_check_model: process is
+        variable mem      : rvmem_memoryState_type;
+        variable readData : rvex_data_type;
+        variable lane     : natural;
+        variable PC       : rvex_address_type;
+        variable aff      : std_logic_vector(CFG.core.numLaneGroupsLog2-1 downto 0);
+      begin
+        
+        -- Load the srec file into the memory.
+        rvmem_clear(mem, '0');
+        if CHECK_MEM_FILE /= "" then
+          rvmem_loadSRec(mem, CHECK_MEM_FILE);
+        end if;
+        
+        -- Check memory results as seen by the core.
+        loop
+          
+          -- Wait for the next clock.
+          wait until rising_edge(clk) and clkEnCPU = '1' and resetCPU = '0';
+          
+          -- Loop over all the lane groups.
+          for laneGroup in 0 to 2**CFG.core.numLaneGroupsLog2-1 loop
+            if rv2cache_stallOut(laneGroup) = '0' then
+              
+              -- Check data access.
+              if readEnable_r(laneGroup) = '1' then
+                rvmem_read(mem, addr_r(laneGroup), readData);
+                if not std_match(readData, dcache2rv_readData(laneGroup)) then
+                  report "*****ERROR***** Data read from address " & rvs_hex(addr_r(laneGroup))
+                      & " should have returned " & rvs_hex(readData)
+                      & " but returned " & rvs_hex(dcache2rv_readData(laneGroup))
+                    severity warning;
+                else
+                  --report "Data read from address " & rvs_hex(addr_r(laneGroup))
+                  --     & " correctly returned " & rvs_hex(dcache2rv_readData(laneGroup))
+                  --  severity note;
+                end if;
+              elsif writeEnable_r(laneGroup) = '1' then
+                rvmem_write(mem, addr_r(laneGroup), writeData_r(laneGroup), writeMask_r(laneGroup));
+                --report "Processed write to address " & rvs_hex(addr_r(laneGroup))
+                --     & ", value is " & rvs_hex(writeData_r(laneGroup))
+                --     & " with mask " & rvs_bin(writeMask_r(laneGroup))
+                --  severity note;
+              end if;
+              
+              -- Check instruction access.
+              if fetch_r(laneGroup) = '1' and rv2icache_cancel(laneGroup) = '0' then
+                aff := icache2rv_affinity(
+                  laneGroup*CFG.core.numLaneGroupsLog2 + CFG.core.numLaneGroupsLog2 - 1
+                  downto
+                  laneGroup*CFG.core.numLaneGroupsLog2
+                );
+                for laneIndex in 0 to 2**(CFG.core.numLanesLog2-CFG.core.numLaneGroupsLog2)-1 loop
+                  lane := group2firstLane(laneGroup, CFG.core) + laneIndex;
+                  PC := std_logic_vector(unsigned(PCs_r(laneGroup)) + laneIndex*4);
+                  rvmem_read(mem, PC, readData);
+                  if not std_match(readData, icache2rv_instr(lane)) then
+                    report "*****ERROR***** Instruction read from address " & rvs_hex(PC)
+                        & " should have returned " & rvs_hex(readData)
+                        & " but returned " & rvs_hex(icache2rv_instr(lane))
+                        & " from block " & rvs_uint(aff)
+                      severity warning;
+                  else
+                    --report "Instruction read from address " & rvs_hex(PC)
+                    --     & " correctly returned " & rvs_hex(icache2rv_instr(lane))
+                    --     & " from block " & rvs_uint(aff)
+                    --  severity note;
+                  end if;
+                end loop;
+              end if;
+              
+            end if;
+          end loop;
+          
+        end loop;
+        
+      end process;
+    end generate; -- mem_check_gen
+    -- pragma translate_on
+    
   end block;
+  
   -----------------------------------------------------------------------------
   -- Generate the bypass signals
   -----------------------------------------------------------------------------

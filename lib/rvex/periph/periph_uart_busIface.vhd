@@ -51,6 +51,14 @@ use IEEE.math_real.all;
 
 library rvex;
 use rvex.bus_pkg.all;
+-- pragma translate_off
+use rvex.simUtils_pkg.all;
+-- pragma translate_on
+
+-- pragma translate_off
+library std;
+use std.textio.all;
+-- pragma translate_on
 
 --=============================================================================
 -- This unit interfaces between a slave bus interface and a UART. It contains
@@ -414,5 +422,32 @@ begin -- architecture
     uart2bus.ack <= busAck;
   end process;
   
+  -- Simulation only: dump things transmitted by the application to the
+  -- simulation console.
+  -- pragma translate_off
+  sim_print: process is
+    variable c  : character;
+    variable l  : std.textio.line;
+  begin
+    l := null;
+    loop
+      wait until rising_edge(clk);
+      if reset = '0' and clkEn = '1' and txPushStrobe = '1' then
+        c := character'val(to_integer(unsigned(txPushData)));
+        if c = LF then
+          if l = null then
+            dumpStdOut("Application UART: ");
+          else
+            dumpStdOut("Application UART: " & l.all);
+            deallocate(l);
+            l := null;
+          end if;
+        else
+          write(l, c);
+        end if;
+      end if;
+    end loop;
+  end process;
+  -- pragma translate_on
   
 end Behavioral;

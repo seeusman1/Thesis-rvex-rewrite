@@ -37,10 +37,10 @@ debug server stop monitor:
 	cd $(DEBUGIFACE) && make $@
 
 # Copies the given program machine code and disassembly to init* indicating
-# which program was used for synthesis/simulation and creates the VHDL file
-# containing memory initialization information.
+# which program was used for synthesis/simulation. Subsequently copies the
+# srec to the file read by the ddr3 simulation model in the grlib project.
 .PHONY: copy-%
-copy-%: %.srec %.disas tools/b2v
+copy-%: %.srec %.disas
 	$(CP) $(patsubst copy-%,%,$@).srec init.srec
 	$(CP) $(patsubst copy-%,%,$@).disas init.disas
 	$(RM) ../work/ram.srec

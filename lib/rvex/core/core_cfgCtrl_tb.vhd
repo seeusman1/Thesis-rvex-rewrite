@@ -97,7 +97,8 @@ architecture Behavioral of core_cfgCtrl_tb is
   signal cfg2gbreg_busy              : std_logic;
   signal cfg2gbreg_error             : std_logic;
   signal cfg2gbreg_requesterID       : std_logic_vector(3 downto 0);
-  signal cfg2cxplif_run              : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cfg2cxplif_active           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cfg2cxplif_requestReconfig  : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cfg_blockReconfig    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal mem2cfg_blockReconfig       : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal cfg2any_coupled             : std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
@@ -134,7 +135,8 @@ begin
       cfg2gbreg_busy              => cfg2gbreg_busy,
       cfg2gbreg_error             => cfg2gbreg_error,
       cfg2gbreg_requesterID       => cfg2gbreg_requesterID,
-      cfg2cxplif_run              => cfg2cxplif_run,
+      cfg2cxplif_active           => cfg2cxplif_active,
+      cfg2cxplif_requestReconfig  => cfg2cxplif_requestReconfig,
       cxplif2cfg_blockReconfig    => cxplif2cfg_blockReconfig,
       mem2cfg_blockReconfig       => mem2cfg_blockReconfig,
       cfg2any_coupled             => cfg2any_coupled,
