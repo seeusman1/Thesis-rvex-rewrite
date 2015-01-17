@@ -60,6 +60,7 @@ use rvex.bus_pkg.all;
 use rvex.bus_addrConv_pkg.all;
 use rvex.rvsys_standalone_pkg.all;
 use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
 library work;
 use work.mem_init_pkg.all;
@@ -110,16 +111,33 @@ end ml605;
 architecture Behavioral of ml605 is
 --=============================================================================
   
-  -- Core and standalone system configuration.
-  constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg_c(
-    base => rvex_sa_cfg(
-      imemDepthLog2B            => 18, -- 256 kiB (0x00000..0x3FFFF)
-      dmemDepthLog2B            => 18
-    ), core => rvex_cfg(
+  -- Core and standalone system configuration WITHOUT cache.
+--  constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
+--    core => rvex_cfg(
+--      numLanesLog2              => 3,
+--      numLaneGroupsLog2         => 2,
+--      numContextsLog2           => 2
+--    ),
+--    core_valid                  => true,
+--    imemDepthLog2B              => 18, -- 256 kiB (0x00000..0x3FFFF)
+--    dmemDepthLog2B              => 18
+--  );
+  
+  -- Core and standalone system configuration WITH cache.
+  constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
+    core => rvex_cfg(
       numLanesLog2              => 3,
       numLaneGroupsLog2         => 2,
       numContextsLog2           => 2
-    )
+    ),
+    core_valid                  => true,
+    cache_enable                => 1,
+    cache_config => cache_cfg(
+      instrCacheLinesLog2       => 8, -- 256*32 = 8 kiB per block, 32 kiB total
+      dataCacheLinesLog2        => 8  -- 256*4 = 1 kiB per block, 4 kiB total
+    ),
+    cache_config_valid          => true,
+    dmemDepthLog2B              => 18 -- 256 kiB (0x00000..0x3FFFF)
   );
   
   -- S-rec file specifying the initial contents for the memories.
@@ -155,8 +173,9 @@ begin -- architecture
     constant DEBUG_ADDRESS_MAP    : addrRangeAndMapping_array(0 to 1) := (
       
       -- Standalone platform debug port.
-      --   0x00------ = IMEM
-      --   0x10------ = DMEM
+      --   0x10------ = IMEM
+      --   0x20------ = DMEM
+      --   0x30------ = write only DMEM + IMEM
       --   0xF0------ = core debug port
       0 => addrRangeAndMap(
         match => "----0000------------------------"

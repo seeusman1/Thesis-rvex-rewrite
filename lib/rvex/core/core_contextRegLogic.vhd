@@ -268,7 +268,8 @@ begin -- architecture
     cxplif2cxreg_brWriteData, cxplif2cxreg_brWriteEnable, cxplif2cxreg_nextPC,
     cxplif2cxreg_linkWriteData, cxplif2cxreg_linkWriteEnable,
     cxplif2cxreg_overridePC_ack, cxplif2cxreg_trapInfo, cxplif2cxreg_trapPoint,
-    cxplif2cxreg_rfi, cxplif2cxreg_exDbgTrapInfo, cxplif2cxreg_resuming_ack
+    cxplif2cxreg_rfi, cxplif2cxreg_exDbgTrapInfo, cxplif2cxreg_resuming_ack,
+    cxplif2cxreg_idle, cxplif2cxreg_sylCommit, cxplif2cxreg_sylNop
   ) is
     variable l2c  : cxreg2creg_type;
     variable c2l  : creg2cxreg_type;

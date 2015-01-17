@@ -91,7 +91,10 @@ entity bus_arbiter is
     
     -- Slave bus.
     arb2slv                     : out bus_mst2slv_type;
-    slv2arb                     : in  bus_slv2mst_type
+    slv2arb                     : in  bus_slv2mst_type;
+    
+    -- Index of the master which is making the current bus request.
+    arb2slv_source              : out rvex_data_type
     
   );
 end bus_arbiter;
@@ -245,9 +248,16 @@ begin -- architecture
     when locked = '0' and slv2arb.busy = '0'
     else resultSelect;
   
+  -- Forward requestSelect to arb2slv_source.
+  arb2slv_source_proc: process (requestSelect) is
+  begin
+    arb2slv_source <= (others => '0');
+    arb2slv_source(requestSelect'range) <= requestSelect;
+  end process;
+  
   -- Register the requestSelect signal when the slave is ready to accept a new
   -- command to get the resultSelect signal.
-  process (clk) is
+  result_select_proc: process (clk) is
   begin
     if rising_edge(clk) then
       if reset = '1' then

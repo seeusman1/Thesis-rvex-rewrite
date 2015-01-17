@@ -3,7 +3,16 @@
 all: _NUM_CONTEXTS           { 4 }
 
 # Memory map as seen from the debugging interface.
-all: IMEM                    { 0x00000000 }
-all: DMEM                    { 0x10000000 }
+all: IMEM                    { 0x10000000 }
+all: DMEM                    { 0x20000000 }
+all: IDMEM                   { 0x30000000 }
 all: CREG                    { 0xF0000000 }
+
+# Flushes the cache.
+all: FLUSH_CACHE {
+  write(AFF+2, 0xFFFFh);
+}
+
+# Cache bus latency register, write only, byte-sized.
+all: CACHE_BUS_LATENCY       { AFF }
 

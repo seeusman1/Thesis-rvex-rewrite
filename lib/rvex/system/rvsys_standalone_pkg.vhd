@@ -53,6 +53,7 @@ use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
 use rvex.bus_addrConv_pkg.all;
 use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
 --=============================================================================
 -- This package contains type definitions and constants relevant both in the
@@ -68,6 +69,22 @@ package rvsys_standalone_pkg is
     -- Configuration for the rvex core.
     core                        : rvex_generic_config_type;
     
+    -- This parameter drastically affects what the bus system looks like. Refer
+    -- to the diagrams in rvsys_standalone.vhd for the full documentation. In
+    -- short, when the cache is enabled, all bus accesses from the cache are
+    -- routed through the lowest indexed data memory bus. The instruction
+    -- memory is disabled and i.e., imemDepthLog2B and debugBusMap_imem are
+    -- ignored. When the cache is disabled, cache_cfg and cache_bypass are
+    -- ignored.
+    cache_enable                : boolean;
+    
+    -- Cache configuration, if enabled by cache_enable.
+    cache_config                : cache_generic_config_type;
+    
+    -- Address range for which the cache is bypassed for data accesses
+    -- (peripheral space).
+    cache_bypassRange           : addrRange_type;
+    
     -- Depth of the instruction memory, represented as log2(number_of_bytes).
     imemDepthLog2B              : natural;
     
@@ -79,6 +96,11 @@ package rvsys_standalone_pkg is
     debugBusMap_dmem            : addrRangeAndMapping_type;
     debugBusMap_rvex            : addrRangeAndMapping_type;
     
+    -- Specifies whether the debug bus memory map is mutually exclusive. When
+    -- set to false, bus commands can be routed to for instance both the data
+    -- memory and instruction memory at once.
+    debugBusMap_mutex           : boolean;
+    
     -- The following entries define the memory map as seen by the rvex.
     rvexDataMap_dmem            : addrRangeAndMapping_type;
     rvexDataMap_bus             : addrRangeAndMapping_type;
@@ -88,15 +110,20 @@ package rvsys_standalone_pkg is
   -- Default rvex core configuration.
   constant RVEX_SA_DEFAULT_CONFIG  : rvex_sa_generic_config_type := (
     core                        => RVEX_DEFAULT_CONFIG,
+    cache_enable                => false,
+    cache_config                => CACHE_DEFAULT_CONFIG,
+    cache_bypassRange           => addrRange(match => "1-------------------------------"),
     imemDepthLog2B              => 16,
     dmemDepthLog2B              => 16,
-    debugBusMap_imem            => addrRangeAndMap(match => "0000----------------------------"),
-    debugBusMap_dmem            => addrRangeAndMap(match => "0001----------------------------"),
+    debugBusMap_imem            => addrRangeAndMap(match => "00-1----------------------------"),
+    debugBusMap_dmem            => addrRangeAndMap(match => "001-----------------------------"),
     debugBusMap_rvex            => addrRangeAndMap(match => "1111----------------------------"),
+    debugBusMap_mutex           => false,
     rvexDataMap_dmem            => addrRangeAndMap(match => "0-------------------------------"),
     rvexDataMap_bus             => addrRangeAndMap(match => "1-------------------------------")
   );
   
+  constant ADDR_RANGE_UNDEF     : addrRange_type := addrRange(match => "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU");
   constant ADDR_MAPPING_UNDEF   : addrRangeAndMapping_type := addrRangeAndMap(match => "UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUU");
   
   -- Generates a configuration for the standalone system. None of the
@@ -107,20 +134,20 @@ package rvsys_standalone_pkg is
   -- detect when a parameter is not specified). By using this method to
   -- generate configurations, code instantiating the standalone system will be
   -- forward compatible when new configuration options are added.
-  --
-  -- If you want to set/modify the core configuration, use rvex_sa_cfg_c. If
-  -- you want to set any of the other parameters, use rvex_sa_cfg.
-  function rvex_sa_cfg_c(
-    base                        : rvex_sa_generic_config_type := RVEX_SA_DEFAULT_CONFIG;
-    core                        : rvex_generic_config_type
-  ) return rvex_sa_generic_config_type;
   function rvex_sa_cfg(
     base                        : rvex_sa_generic_config_type := RVEX_SA_DEFAULT_CONFIG;
+    core                        : rvex_generic_config_type := RVEX_DEFAULT_CONFIG;
+    core_valid                  : boolean := false;
+    cache_enable                : integer := -1;
+    cache_config                : cache_generic_config_type := CACHE_DEFAULT_CONFIG;
+    cache_config_valid          : boolean := false;
+    cache_bypassRange           : addrRange_type := ADDR_RANGE_UNDEF;
     imemDepthLog2B              : integer := -1;
     dmemDepthLog2B              : integer := -1;
     debugBusMap_imem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_rvex            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
+    debugBusMap_mutex           : integer := -1;
     rvexDataMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     rvexDataMap_bus             : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF
   ) return rvex_sa_generic_config_type;
@@ -131,38 +158,39 @@ end rvsys_standalone_pkg;
 package body rvsys_standalone_pkg is
 --=============================================================================
 
-  -- Generates a configuration for the rvex core.
-  function rvex_sa_cfg_c(
-    base                        : rvex_sa_generic_config_type := RVEX_SA_DEFAULT_CONFIG;
-    core                        : rvex_generic_config_type
-  ) return rvex_sa_generic_config_type is
-    variable cfg  : rvex_sa_generic_config_type;
-  begin
-    cfg := base;
-    cfg.core := core;
-    return cfg;
-  end rvex_sa_cfg_c;
-  
+  -- Generates a configuration for the standalone rvex system.
   function rvex_sa_cfg(
     base                        : rvex_sa_generic_config_type := RVEX_SA_DEFAULT_CONFIG;
+    core                        : rvex_generic_config_type := RVEX_DEFAULT_CONFIG;
+    core_valid                  : boolean := false;
+    cache_enable                : integer := -1;
+    cache_config                : cache_generic_config_type := CACHE_DEFAULT_CONFIG;
+    cache_config_valid          : boolean := false;
+    cache_bypassRange           : addrRange_type := ADDR_RANGE_UNDEF;
     imemDepthLog2B              : integer := -1;
     dmemDepthLog2B              : integer := -1;
     debugBusMap_imem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_rvex            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
+    debugBusMap_mutex           : integer := -1;
     rvexDataMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     rvexDataMap_bus             : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF
   ) return rvex_sa_generic_config_type is
     variable cfg  : rvex_sa_generic_config_type;
   begin
     cfg := base;
-    if imemDepthLog2B >= 0                    then cfg.imemDepthLog2B   := imemDepthLog2B;   end if;
-    if dmemDepthLog2B >= 0                    then cfg.dmemDepthLog2B   := dmemDepthLog2B;   end if;
-    if debugBusMap_imem /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_imem := debugBusMap_imem; end if;
-    if debugBusMap_dmem /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_dmem := debugBusMap_dmem; end if;
-    if debugBusMap_rvex /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_rvex := debugBusMap_rvex; end if;
-    if rvexDataMap_dmem /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_dmem := rvexDataMap_dmem; end if;
-    if rvexDataMap_bus  /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_bus  := rvexDataMap_bus;  end if;
+    if core_valid                             then cfg.core              := core;                           end if;
+    if cache_enable /= -1                     then cfg.cache_enable      := boolean'val(cache_enable);      end if;
+    if cache_config_valid                     then cfg.cache_config      := cache_config;                   end if;
+    if cache_bypassRange /= ADDR_RANGE_UNDEF  then cfg.cache_bypassRange := cache_bypassRange;              end if;
+    if imemDepthLog2B >= 0                    then cfg.imemDepthLog2B    := imemDepthLog2B;                 end if;
+    if dmemDepthLog2B >= 0                    then cfg.dmemDepthLog2B    := dmemDepthLog2B;                 end if;
+    if debugBusMap_imem /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_imem  := debugBusMap_imem;               end if;
+    if debugBusMap_dmem /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_dmem  := debugBusMap_dmem;               end if;
+    if debugBusMap_rvex /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_rvex  := debugBusMap_rvex;               end if;
+    if debugBusMap_mutex /= -1                then cfg.debugBusMap_mutex := boolean'val(debugBusMap_mutex); end if;
+    if rvexDataMap_dmem /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_dmem  := rvexDataMap_dmem;               end if;
+    if rvexDataMap_bus  /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_bus   := rvexDataMap_bus;                end if;
     return cfg;
   end rvex_sa_cfg;
     

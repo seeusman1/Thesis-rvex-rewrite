@@ -18,6 +18,13 @@ _start.o-timer: timer_start.o
 	$(RM) _start.o
 	$(CP) timer_start.o _start.o
 
+# Set default simulated bus latency to use when configuring the cache after
+# uploading. This can be overwritten to any value between 1 and 254 for an
+# additional latency of 2 to 255 cycles.
+ifndef BUSLAT
+BUSLAT = 0x40
+endif
+
 # Platform specific targets for help.
 TARGETS = \
 "make upload-<program>    uploads program to platform using rvd"\
@@ -38,9 +45,10 @@ include $(GEN_EXAMPLES)/Makefile
 upload-%: %.srec debug
 	-cd $(DEBUGIFACE) && make server
 	$(RVD) -call -d"all:PRINT_STATE{1}" break
-	$(RVD) -c0 upload srec $< IMEM
-	$(RVD) -c0 upload srec $< DMEM
+	$(RVD) -c0 upload srec $< IDMEM
 	$(RVD) -call -d"all:PRINT_STATE{1}" reset
+	$(RVD) -c0 exec FLUSH_CACHE
+	$(RVD) -c0 write CACHE_BUS_LATENCY $(BUSLAT)hh
 
 start-%: upload-%
 	$(RVD) -c0 write CREG 0x80000000

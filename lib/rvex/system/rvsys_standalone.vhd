@@ -140,7 +140,8 @@ end rvsys_standalone;
 architecture Behavioral of rvsys_standalone is
 --=============================================================================
   -- 
-  -- The diagram below shows the bus network instantiated by this unit.
+  -- The diagram below shows the bus network instantiated by this unit when
+  -- cache_enable is false.
   -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   -- 
@@ -158,6 +159,26 @@ architecture Behavioral of rvsys_standalone is
   --                  '-------'      '-------'      | arb |===L==| imem |
   --    rv2imem ==========C=========================|     |      '------'
   --                     *x                         '-----'
+  -- 
+  -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+  -- 
+  -- The following network is instantiated when cache_enable is true. Note
+  -- that there is absolutely no point performance-wise to instantiate a cache
+  -- in this system. The rationelle for adding it is purely that it allows
+  -- performance evaluation and testing of the cached system.
+  -- 
+  -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+  -- 
+  --                  .-------.                          
+  --                  |       |----------D---------(...)----K-- rvsa2bus
+  --     rv2mem ---A--| demux |      .-----.             
+  --                  |       |---E--|     |
+  --                  '-------'      | arb |      .------.
+  --                  .-------.      |     |---I--| dmem |
+  --                  |       |---F--|     |      '------'
+  -- debug2rvsa ---B--| demux |      '-----'
+  --                  |       |---G---------------------------- dbg2rv
+  --                  '-------'
   -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   -- 
@@ -222,64 +243,145 @@ begin -- architecture
   rvsa2debug  <= debug_res;
   
   -----------------------------------------------------------------------------
-  -- Instantiate the rvex core
+  -- Instantiate the rvex core and optionally the cache
   -----------------------------------------------------------------------------
-  core: entity rvex.rvsys_standalone_core
-    generic map (
-      CFG                       => CFG.core
-    )
-    port map (
-      
-      -- System control.
-      reset                     => reset,
-      clk                       => clk,
-      clkEn                     => clkEn,
-      
-      -- Run control interface.
-      rctrl2rvsa_irq            => rctrl2rvsa_irq,
-      rctrl2rvsa_irqID          => rctrl2rvsa_irqID,
-      rvsa2rctrl_irqAck         => rvsa2rctrl_irqAck,
-      rctrl2rvsa_run            => rctrl2rvsa_run,
-      rvsa2rctrl_idle           => rvsa2rctrl_idle,
-      rctrl2rvsa_reset          => rctrl2rvsa_reset,
-      rvsa2rctrl_done           => rvsa2rctrl_done,
-      
-      -- Instruction memory busses.
-      rv2imem                   => rvexInstr_req,
-      imem2rv                   => rvexInstr_res,
-      
-      -- Data memory busses.
-      rv2dmem                   => rvexData_req,
-      dmem2rv                   => rvexData_res,
-      
-      -- Debug bus.
-      dbg2rv                    => debugRvex_req,
-      rv2dbg                    => debugRvex_res
-      
-    );
+  core_gen: if not CFG.cache_enable generate
+    
+    -- Instantiate the standalone core.
+    core: entity rvex.rvsys_standalone_core
+      generic map (
+        CFG                     => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- Run control interface.
+        rctrl2rvsa_irq          => rctrl2rvsa_irq,
+        rctrl2rvsa_irqID        => rctrl2rvsa_irqID,
+        rvsa2rctrl_irqAck       => rvsa2rctrl_irqAck,
+        rctrl2rvsa_run          => rctrl2rvsa_run,
+        rvsa2rctrl_idle         => rvsa2rctrl_idle,
+        rctrl2rvsa_reset        => rctrl2rvsa_reset,
+        rvsa2rctrl_done         => rvsa2rctrl_done,
+        
+        -- Instruction memory busses.
+        rv2imem                 => rvexInstr_req,
+        imem2rv                 => rvexInstr_res,
+        
+        -- Data memory busses.
+        rv2dmem                 => rvexData_req,
+        dmem2rv                 => rvexData_res,
+        
+        -- Debug bus.
+        dbg2rv                  => debugRvex_req,
+        rv2dbg                  => debugRvex_res
+        
+      );
+    
+  end generate;
+  
+  cached_core_gen: if CFG.cache_enable generate
+    
+    -- Instantiate the cached system.
+    cached_core: entity rvex.rvsys_standalone_cachedCore
+      generic map (
+        CFG                     => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- Run control interface.
+        rctrl2rvsa_irq          => rctrl2rvsa_irq,
+        rctrl2rvsa_irqID        => rctrl2rvsa_irqID,
+        rvsa2rctrl_irqAck       => rvsa2rctrl_irqAck,
+        rctrl2rvsa_run          => rctrl2rvsa_run,
+        rvsa2rctrl_idle         => rvsa2rctrl_idle,
+        rctrl2rvsa_reset        => rctrl2rvsa_reset,
+        rvsa2rctrl_done         => rvsa2rctrl_done,
+        
+        -- Memory bus.
+        rv2mem                  => rvexData_req(0),
+        mem2rv                  => rvexData_res(0),
+        
+        -- Debug bus.
+        dbg2rv                  => debugRvex_req,
+        rv2dbg                  => debugRvex_res
+        
+      );
+    
+    -- Drive unused bus signals with idle requests.
+    rvexInstr_req(2**CFG.core.numLaneGroupsLog2-1 downto 0)
+      <= (others => BUS_MST2SLV_IDLE);
+    
+    rvexData_req(2**CFG.core.numLaneGroupsLog2-1 downto 1)
+      <= (others => BUS_MST2SLV_IDLE);
+    
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Instantiate the debug bus demux unit
   -----------------------------------------------------------------------------
-  debug_bus_demux_inst: entity rvex.bus_demux
-    generic map (
-      ADDRESS_MAP(0)            => CFG.debugBusMap_imem,
-      ADDRESS_MAP(1)            => CFG.debugBusMap_dmem,
-      ADDRESS_MAP(2)            => CFG.debugBusMap_rvex
-    )
-    port map (
-      reset                     => reset,
-      clk                       => clk,
-      clkEn                     => clkEn,
-      mst2demux                 => debug_req,
-      demux2mst                 => debug_res,
-      demux2slv(0)              => debugInstr_req,
-      demux2slv(1)              => debugDataMem_req,
-      demux2slv(2)              => debugRvex_req,
-      slv2demux(0)              => debugInstr_res,
-      slv2demux(1)              => debugDataMem_res,
-      slv2demux(2)              => debugRvex_res
-    );
+  debug_bus_demux_gen_sa: if not CFG.cache_enable generate
+    
+    -- Instantiate the debug bus demuxer for the case where the instruction
+    -- memory is enabled.
+    debug_bus_demux_inst: entity rvex.bus_demux
+      generic map (
+        ADDRESS_MAP(0)            => CFG.debugBusMap_imem,
+        ADDRESS_MAP(1)            => CFG.debugBusMap_dmem,
+        ADDRESS_MAP(2)            => CFG.debugBusMap_rvex,
+        MUTUALLY_EXCLUSIVE        => CFG.debugBusMap_mutex
+      )
+      port map (
+        reset                     => reset,
+        clk                       => clk,
+        clkEn                     => clkEn,
+        mst2demux                 => debug_req,
+        demux2mst                 => debug_res,
+        demux2slv(0)              => debugInstr_req,
+        demux2slv(1)              => debugDataMem_req,
+        demux2slv(2)              => debugRvex_req,
+        slv2demux(0)              => debugInstr_res,
+        slv2demux(1)              => debugDataMem_res,
+        slv2demux(2)              => debugRvex_res
+      );
+    
+  end generate;
+  
+  debug_bus_demux_gen_cache: if CFG.cache_enable generate
+    
+    -- Instantiate the debug bus demuxer for the case where the instruction
+    -- memory is disabled.
+    debug_bus_demux_inst: entity rvex.bus_demux
+      generic map (
+        ADDRESS_MAP(0)            => CFG.debugBusMap_dmem,
+        ADDRESS_MAP(1)            => CFG.debugBusMap_rvex,
+        MUTUALLY_EXCLUSIVE        => CFG.debugBusMap_mutex
+      )
+      port map (
+        reset                     => reset,
+        clk                       => clk,
+        clkEn                     => clkEn,
+        mst2demux                 => debug_req,
+        demux2mst                 => debug_res,
+        demux2slv(0)              => debugDataMem_req,
+        demux2slv(1)              => debugRvex_req,
+        slv2demux(0)              => debugDataMem_res,
+        slv2demux(1)              => debugRvex_res
+      );
+    
+    -- Connect unused bus to idle.
+    debugInstr_req <= BUS_MST2SLV_IDLE;
+    
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Instantiate connections between the rvex data memory ports and the
@@ -404,7 +506,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate instruction memory
   -----------------------------------------------------------------------------
-  imem_block: block is
+  imem_gen: if not CFG.cache_enable generate
     
     -- Because each memory block has two ports, we always need to instantiate
     -- one block for two lanes.
@@ -545,7 +647,18 @@ begin -- architecture
         );
     end generate;
     
-  end block;
+  end generate;
+  
+  -- Drive unused busses with idle signals when the instruction memory is
+  -- disabled.
+  no_imem_gen: if CFG.cache_enable generate
+    
+    rvexInstr_res   <= (others => BUS_SLV2MST_IDLE);
+    debugInstr_res  <= BUS_SLV2MST_IDLE;
+    instrMem_req    <= (others => BUS_MST2SLV_IDLE);
+    instrMem_res    <= (others => BUS_SLV2MST_IDLE);
+  
+  end generate;
   
 end Behavioral;
 

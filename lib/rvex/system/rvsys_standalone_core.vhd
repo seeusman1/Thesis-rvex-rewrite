@@ -54,6 +54,7 @@ use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
 use rvex.bus_pkg.all;
 use rvex.core_pkg.all;
+use rvex.rvsys_standalone_pkg.all;
 
 --=============================================================================
 -- This unit wraps the rvex core, bridging between the raw data/instruction
@@ -63,8 +64,8 @@ entity rvsys_standalone_core is
 --=============================================================================
   generic (
     
-    -- rvex core configuration.
-    CFG                         : rvex_generic_config_type := rvex_cfg
+    -- Standalone system configuration.
+    CFG                         : rvex_sa_generic_config_type
     
   );
   port (
@@ -85,33 +86,33 @@ entity rvsys_standalone_core is
     -- Run control interface
     ---------------------------------------------------------------------------
     -- External interrupt request signal, active high.
-    rctrl2rvsa_irq              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
+    rctrl2rvsa_irq              : in  std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0) := (others => '0');
     
     -- External interrupt identification. Guaranteed to be loaded in the trap
     -- argument register in the same clkEn'd cycle where irqAck is high.
-    rctrl2rvsa_irqID            : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0) := (others => (others => '0'));
+    rctrl2rvsa_irqID            : in  rvex_address_array(2**CFG.core.numContextsLog2-1 downto 0) := (others => (others => '0'));
     
     -- External interrupt acknowledge signal, active high. Goes high for one
     -- clkEn'abled cycle.
-    rvsa2rctrl_irqAck           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    rvsa2rctrl_irqAck           : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
     
     -- Active high run signal. When released, the context will stop running as
     -- soon as possible.
-    rctrl2rvsa_run              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '1');
+    rctrl2rvsa_run              : in  std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0) := (others => '1');
     
     -- Active high idle output. This is asserted when the core is no longer
     -- doing anything.
-    rvsa2rctrl_idle             : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    rvsa2rctrl_idle             : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
     
     -- Active high context reset input. When high, the context control
     -- registers (including PC, done and break flag) will be reset.
-    rctrl2rvsa_reset            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
+    rctrl2rvsa_reset            : in  std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0) := (others => '0');
     
     -- Active high done output. This is asserted when the context encounters
     -- a stop syllable. Processing a stop signal also sets the BRK control
     -- register, which stops the core. This bit can be reset by issuing a core
     -- reset or by means of the debug interface.
-    rvsa2rctrl_done             : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    rvsa2rctrl_done             : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Bus interfaces
@@ -120,12 +121,12 @@ entity rvsys_standalone_core is
     -- lanes in the rvex, since the bus width is 32 bits. The write requests
     -- are tied to no-op. The combined request of a lane group is always an
     -- aligned read of the width of the lanes in the group.
-    rv2imem                     : out bus_mst2slv_array(2**CFG.numLanesLog2-1 downto 0);
-    imem2rv                     : in  bus_slv2mst_array(2**CFG.numLanesLog2-1 downto 0);
+    rv2imem                     : out bus_mst2slv_array(2**CFG.core.numLanesLog2-1 downto 0);
+    imem2rv                     : in  bus_slv2mst_array(2**CFG.core.numLanesLog2-1 downto 0);
     
     -- Data memory busses.
-    rv2dmem                     : out bus_mst2slv_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-    dmem2rv                     : in  bus_slv2mst_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    rv2dmem                     : out bus_mst2slv_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+    dmem2rv                     : in  bus_slv2mst_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
     
     -- Debug bus.
     dbg2rv                      : in  bus_mst2slv_type;
@@ -139,28 +140,28 @@ architecture Behavioral of rvsys_standalone_core is
 --=============================================================================
   
   -- Common memory interface.
-  signal rv2mem_decouple        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal mem2rv_stallIn         : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2mem_stallOut        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2mem_decouple        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal mem2rv_stallIn         : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal rv2mem_stallOut        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   
   -- Instruction memory interface.
-  signal rv2imem_PCs            : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2imem_fetch          : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal imem2rv_instr          : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
-  signal imem2rv_fault          : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2imem_PCs            : rvex_address_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal rv2imem_fetch          : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal imem2rv_instr          : rvex_syllable_array(2**CFG.core.numLanesLog2-1 downto 0);
+  signal imem2rv_fault          : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   
   -- Fault signals from each instruction memory bus, before being merged for
   -- each group.
-  signal imemFault              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal imemFault              : std_logic_vector(2**CFG.core.numLanesLog2-1 downto 0);
   
   -- Data memory interface.
-  signal rv2dmem_addr           : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dmem_writeEnable    : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dmem_writeMask      : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dmem_writeData      : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dmem_readEnable     : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal dmem2rv_readData       : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal dmem2rv_fault          : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dmem_addr           : rvex_address_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal rv2dmem_writeEnable    : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal rv2dmem_writeMask      : rvex_mask_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal rv2dmem_writeData      : rvex_data_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal rv2dmem_readEnable     : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal dmem2rv_readData       : rvex_data_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal dmem2rv_fault          : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   
   -- Control/debug bus interface.
   signal dbg2rv_addr            : rvex_address_type;
@@ -175,12 +176,18 @@ architecture Behavioral of rvsys_standalone_core is
 begin -- architecture
 --=============================================================================
   
+  -- Check configuration.
+  assert not CFG.cache_enable
+    report "rvsys_standalone_core instantiated with cache_enable set; this is "
+         & "illegal. Use rvsys_standalone_cachedCore instead."
+    severity failure;
+  
   -----------------------------------------------------------------------------
   -- Instantiate the rvex core
   -----------------------------------------------------------------------------
   core: entity rvex.core
     generic map (
-      CFG                       => CFG
+      CFG                       => CFG.core
     )
     port map (
       
@@ -232,7 +239,7 @@ begin -- architecture
   -- Generate the stall signals
   -----------------------------------------------------------------------------
   gen_stall: process (imem2rv, dmem2rv, rv2mem_decouple) is
-    variable stall  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable stall  : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   begin
     
     -- Don't stall by default.
@@ -240,19 +247,19 @@ begin -- architecture
     
     -- Assert the appropriate stall signals while any of the instruction
     -- memory busses is busy.
-    for lane in 0 to 2**CFG.numLanesLog2-1 loop
-      stall(lane2group(lane, CFG))
-        := stall(lane2group(lane, CFG)) or imem2rv(lane).busy;
+    for lane in 0 to 2**CFG.core.numLanesLog2-1 loop
+      stall(lane2group(lane, CFG.core))
+        := stall(lane2group(lane, CFG.core)) or imem2rv(lane).busy;
     end loop;
     
     -- Same for the data memory busses.
-    for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+    for laneGroup in 0 to 2**CFG.core.numLaneGroupsLog2-1 loop
       stall(laneGroup)
         := stall(laneGroup) or dmem2rv(laneGroup).busy;
     end loop;
     
     -- Merge the stall signals when lane groups are coupled.
-    for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-2 loop
+    for laneGroup in 0 to 2**CFG.core.numLaneGroupsLog2-2 loop
       if rv2mem_decouple(laneGroup) = '0' then
         stall(laneGroup+1) := stall(laneGroup+1) or stall(laneGroup);
       end if;
@@ -276,7 +283,7 @@ begin -- architecture
   --    register the result as well.
   --  - We must ensure that the bus request is no-op when the core is waiting
   --    for other busses, or the request will be processed again.
-  imem_bus_connect_gen: for lane in 0 to 2**CFG.numLanesLog2-1 generate
+  imem_bus_connect_gen: for lane in 0 to 2**CFG.core.numLanesLog2-1 generate
     
     -- Bus request for the instruction fetch for this lane.
     signal combinatorialRequest : bus_mst2slv_type;
@@ -298,12 +305,12 @@ begin -- architecture
       
       -- Load the trivial values.
       req := BUS_MST2SLV_IDLE;
-      req.address := rv2imem_PCs(lane2group(lane, CFG));
-      req.readEnable := rv2imem_fetch(lane2group(lane, CFG));
+      req.address := rv2imem_PCs(lane2group(lane, CFG.core));
+      req.readEnable := rv2imem_fetch(lane2group(lane, CFG.core));
       
       -- Update the LSBs of the address to match the lane index.
-      req.address(2+(CFG.numLanesLog2-CFG.numLaneGroupsLog2)-1 downto 2)
-        := uint2vect(lane2indexInGroup(lane, CFG), CFG.numLanesLog2-CFG.numLaneGroupsLog2);
+      req.address(2+(CFG.core.numLanesLog2-CFG.core.numLaneGroupsLog2)-1 downto 2)
+        := uint2vect(lane2indexInGroup(lane, CFG.core), CFG.core.numLanesLog2-CFG.core.numLaneGroupsLog2);
       
       -- Drive the output signal.
       combinatorialRequest <= req;
@@ -316,7 +323,7 @@ begin -- architecture
       if rising_edge(clk) then
         if reset = '1' then
           registeredRequest <= BUS_MST2SLV_IDLE;
-        elsif rv2mem_stallOut(lane2group(lane, CFG)) = '0' and clkEn = '1' then
+        elsif rv2mem_stallOut(lane2group(lane, CFG.core)) = '0' and clkEn = '1' then
           registeredRequest <= combinatorialRequest;
         end if;
       end if;
@@ -328,7 +335,7 @@ begin -- architecture
     -- (i.e. stall is high). When our bus is done but the processor is still
     -- stalled, gate the request so the request is not made again.
     rv2imem(lane)
-      <= combinatorialRequest when rv2mem_stallOut(lane2group(lane, CFG)) = '0'
+      <= combinatorialRequest when rv2mem_stallOut(lane2group(lane, CFG.core)) = '0'
       else bus_gate(registeredRequest, imem2rv(lane).busy);
     
     -- Register the bus result when ack is high.
@@ -348,7 +355,7 @@ begin -- architecture
     -- Select between combinatorial and registered result based on the ack
     -- signal.
     imem2rv_instr(lane)
-      <=   X"00000000"            when imem2rv_fault(lane2group(lane, CFG)) = '1'
+      <=   X"00000000"            when imem2rv_fault(lane2group(lane, CFG.core)) = '1'
       else imem2rv(lane).readData when imem2rv(lane).ack = '1'
       else readData_r;
     
@@ -360,11 +367,11 @@ begin -- architecture
   
   -- Combine the fault signals from the lanes within each group.
   process (imemFault) is
-    variable f  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable f  : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   begin
     f := (others => '0');
-    for lane in 0 to 2**CFG.numLanesLog2-1 loop
-      f(lane2group(lane, CFG)) := f(lane2group(lane, CFG)) or imemFault(lane);
+    for lane in 0 to 2**CFG.core.numLanesLog2-1 loop
+      f(lane2group(lane, CFG.core)) := f(lane2group(lane, CFG.core)) or imemFault(lane);
     end loop;
     imem2rv_fault <= f;
   end process;
@@ -382,7 +389,7 @@ begin -- architecture
   --    register the result as well.
   --  - We must ensure that the bus request is no-op when the core is waiting
   --    for other busses, or the request will be processed again.
-  dmem_bus_connect_gen: for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 generate
+  dmem_bus_connect_gen: for laneGroup in 0 to 2**CFG.core.numLaneGroupsLog2-1 generate
     
     -- Bus request for the instruction fetch for this lane.
     signal combinatorialRequest : bus_mst2slv_type;

@@ -52,16 +52,31 @@ vcom -quiet -93 -work rvex "../../../lib/rvex/periph/periph_uart_packetBuffer.vh
 vcom -quiet -93 -work rvex "../../../lib/rvex/periph/periph_uart_fifo.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/core/core.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/bus/bus_addrConv_pkg.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/bus/bus_ramBlock.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/bus/bus_demux.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/bus/bus_arbiter.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/utils/utils_uart.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_pkg.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_data_blockData.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_data_blockTag.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_data_blockValid.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_data_mainCtrl.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_data_block.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_data.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_instr_blockData.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_instr_blockTag.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_instr_blockValid.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_instr_missCtrl.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_instr_block.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache_instr.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/cache/cache.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/system/rvsys_standalone_pkg.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/system/rvsys_standalone_core.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/system/rvsys_standalone_cachedCore.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/periph/periph_uart_switch.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/periph/periph_uart_packetHandler.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/periph/periph_uart_packetControl.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/periph/periph_uart_busIface.vhd"
-vcom -quiet -93 -work rvex "../../../lib/rvex/bus/bus_ramBlock.vhd"
-vcom -quiet -93 -work rvex "../../../lib/rvex/bus/bus_demux.vhd"
-vcom -quiet -93 -work rvex "../../../lib/rvex/bus/bus_arbiter.vhd"
 vcom -quiet -93 -work work "../design/mem_init_pkg.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/system/rvsys_standalone.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/periph/periph_uart.vhd"
@@ -77,37 +92,61 @@ onerror {resume}
 radix hex
 
 # Add core status strings to simulation.
-add wave                     -label rv2sim           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/rv2sim
+add wave                     -label rv2sim           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/rv2sim
+add wave                     -label rv2sim           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/rv2sim
 
 add wave -divider RIT        -label rit_timer        sim:/ml605_tb/uut/rvex_standalone/rit_block/rit_timer
 add wave                     -label rit_max          sim:/ml605_tb/uut/rvex_standalone/rit_block/rit_max 
 add wave                     -label rit_pend         sim:/ml605_tb/uut/rvex_standalone/rit_block/rit_pend 
 add wave                     -label rit_ack          sim:/ml605_tb/uut/rvex_standalone/rit_block/rit_ack 
 
-add wave -divider Context_0  -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cxreg_gen(0)/cxreg_inst/cxreg2cxplif_currentPC
-add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cfg2cxplif_active(0)
-add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cxreg_gen(0)/cxreg_inst/cxreg2cxplif_interruptEnable
-add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cfg2cxplif_requestReconfig(0)
-add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cxplif2cfg_blockReconfig(0)
+add wave -divider Context_0  -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cxreg_gen(0)/cxreg_inst/cxreg2cxplif_currentPC
+add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cfg2cxplif_active(0)
+add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cxreg_gen(0)/cxreg_inst/cxreg2cxplif_interruptEnable
+add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cfg2cxplif_requestReconfig(0)
+add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cxplif2cfg_blockReconfig(0)
 
-add wave -divider Context_1  -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cxreg_gen(1)/cxreg_inst/cxreg2cxplif_currentPC
-add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cfg2cxplif_active(1)
-add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cxreg_gen(1)/cxreg_inst/cxreg2cxplif_interruptEnable
-add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cfg2cxplif_requestReconfig(1)
-add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cxplif2cfg_blockReconfig(1)
+add wave                     -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cxreg_gen(0)/cxreg_inst/cxreg2cxplif_currentPC
+add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cfg2cxplif_active(0)
+add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cxreg_gen(0)/cxreg_inst/cxreg2cxplif_interruptEnable
+add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cfg2cxplif_requestReconfig(0)
+add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cxplif2cfg_blockReconfig(0)
 
-add wave -divider Context_2  -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cxreg_gen(2)/cxreg_inst/cxreg2cxplif_currentPC
-add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cfg2cxplif_active(2)
-add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cxreg_gen(2)/cxreg_inst/cxreg2cxplif_interruptEnable
-add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cfg2cxplif_requestReconfig(2)
-add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cxplif2cfg_blockReconfig(2)
+add wave -divider Context_1  -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cxreg_gen(1)/cxreg_inst/cxreg2cxplif_currentPC
+add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cfg2cxplif_active(1)
+add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cxreg_gen(1)/cxreg_inst/cxreg2cxplif_interruptEnable
+add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cfg2cxplif_requestReconfig(1)
+add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cxplif2cfg_blockReconfig(1)
 
-add wave -divider Context_3  -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cxreg_gen(3)/cxreg_inst/cxreg2cxplif_currentPC
-add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cfg2cxplif_active(3)
-add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cxreg_gen(3)/cxreg_inst/cxreg2cxplif_interruptEnable
-add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cfg2cxplif_requestReconfig(3)
-add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core/core/cfg_inst/cxplif2cfg_blockReconfig(3)
+add wave                     -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cxreg_gen(1)/cxreg_inst/cxreg2cxplif_currentPC
+add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cfg2cxplif_active(1)
+add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cxreg_gen(1)/cxreg_inst/cxreg2cxplif_interruptEnable
+add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cfg2cxplif_requestReconfig(1)
+add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cxplif2cfg_blockReconfig(1)
 
+add wave -divider Context_2  -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cxreg_gen(2)/cxreg_inst/cxreg2cxplif_currentPC
+add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cfg2cxplif_active(2)
+add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cxreg_gen(2)/cxreg_inst/cxreg2cxplif_interruptEnable
+add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cfg2cxplif_requestReconfig(2)
+add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cxplif2cfg_blockReconfig(2)
+
+add wave                     -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cxreg_gen(2)/cxreg_inst/cxreg2cxplif_currentPC
+add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cfg2cxplif_active(2)
+add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cxreg_gen(2)/cxreg_inst/cxreg2cxplif_interruptEnable
+add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cfg2cxplif_requestReconfig(2)
+add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cxplif2cfg_blockReconfig(2)
+
+add wave -divider Context_3  -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cxreg_gen(3)/cxreg_inst/cxreg2cxplif_currentPC
+add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cfg2cxplif_active(3)
+add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cxreg_gen(3)/cxreg_inst/cxreg2cxplif_interruptEnable
+add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cfg2cxplif_requestReconfig(3)
+add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/cfg_inst/cxplif2cfg_blockReconfig(3)
+
+add wave                     -label PC               sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cxreg_gen(3)/cxreg_inst/cxreg2cxplif_currentPC
+add wave                     -label active           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cfg2cxplif_active(3)
+add wave                     -label int_en           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cxreg_gen(3)/cxreg_inst/cxreg2cxplif_interruptEnable
+add wave                     -label reconf           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cfg2cxplif_requestReconfig(3)
+add wave                     -label blockReconf      sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/cfg_inst/cxplif2cfg_blockReconfig(3)
 
 # Supress spam.
 set NumericStdNoWarnings 1
