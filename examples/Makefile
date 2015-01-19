@@ -16,16 +16,38 @@ ISSUE_WIDTH = 8
 endif
 
 # Must be one of the following;
-#   false   - compile for the specified issue width only.
-#   true    - use the -u assembler flag to compile generic binaries.
-#   fix     - same as true, but run the vexparse script to attempt to fix
-#             scheduling first.
-#   resched - same as fix, with the addition of the --resched switch for
-#             vexparse.
-# Default = false.
+#   false     - compile for the specified issue width only.
+#   true      - alias for true-O1.
+#   true-O0   - run vexparse prior to assembly with --resched --O0
+#   true-O1   - run vexparse prior to assembly with --resched --O1
+#   true-O2   - run vexparse prior to assembly with --resched --O2
+#   true-noresched - run vexparse prior to assembly without --resched
+#   true-nofix - do not run vexparse prior to assembly.
+# Default = true-O1.
 ifndef DYNAMIC
-DYNAMIC = false
+DYNAMIC = true-O1
 endif
+ifeq ($(DYNAMIC), true)
+DYNAMIC = true-O1
+endif
+VEXPARSE_ENABLE = false
+VEXPARSE_FLAGS = 
+ifeq ($(DYNAMIC), true-O0)
+VEXPARSE_ENABLE = true
+VEXPARSE_FLAGS = --resched --O0
+else ifeq ($(DYNAMIC), true-O1)
+VEXPARSE_ENABLE = true
+VEXPARSE_FLAGS = --resched --O1
+else ifeq ($(DYNAMIC), true-O2)
+VEXPARSE_ENABLE = true
+VEXPARSE_FLAGS = --resched --O2
+else ifeq ($(DYNAMIC), true-noresched)
+VEXPARSE_ENABLE = true
+endif
+ifneq ($(DYNAMIC), false)
+DYNAMIC = true
+endif
+
 
 # Compiler to use, must be HP, GCC or ST200. Default = HP.
 ifndef COMPILER
@@ -38,13 +60,19 @@ ifndef LIMMH_PREV
 LIMMH_PREV = true
 endif
 
-# Trace settings for the simulator (seen cfgdefault.sim for more info)
+# Trace settings for the simulator (see cfgdefault.sim for more info)
 ifndef SIM_TRACE
 SIM_TRACE = 3
 endif
 
 ifndef SIM_TRACEREGS
 SIM_TRACEREGS = 3
+endif
+
+# When simulating generic binaries, this sets the configuration to use (number
+# of coupled lanes). Must be 2, 4 or 8. Default = 8
+ifndef SIM_GEN_CONFIG
+SIM_GEN_CONFIG = 8
 endif
 
 
@@ -84,6 +112,7 @@ else
 CC=st200-gcc
 CFLAGS = -O3 -mcore=st220 -EB -fshort-double #use with Open64 compiler
 endif
+HOSTCC = gcc
 OBJCOPY = $(BUILD)/rvex-elf32-objcopy
 OBJDUMP = $(BUILD)/rvex-elf32-objdump
 CP = cp
@@ -99,13 +128,13 @@ PLATFORM_SRC = src
 GENERIC_SRC = $(GEN_EXAMPLES)/src
 
 # Determine borrow configuration.
-BORROW01   = 1.0.
-ifeq ($(LIMMH_PREV), false)
-BORROW23   = 3.2.
-BORROW4567 = 5.4.7.6.
+BORROW01   = 1.0
+ifeq ($(LIMMH_PREV), true)
+BORROW23   = .3,0.2,1
+BORROW4567 = .5,2.4,3.7,4.6,5
 else
-BORROW23   = 3,0.2,1.
-BORROW4567 = 5,2.4,3.7,4.6,5.
+BORROW23   = .3.2
+BORROW4567 = .5.4.7.6
 endif
 ifeq ($(ISSUE_WIDTH), 2)
 BORROW = $(BORROW01)
@@ -139,7 +168,7 @@ endif
 
 # Make magic.
 .SUFFIXES:
-.PRECIOUS: %.o %.s *.s %.elf %.srec %.disas
+.PRECIOUS: %.o %.s *.s %.elf %.xst.elf %.srec %.disas
 
 .PHONY: help list-executables
 help:
@@ -157,10 +186,17 @@ help:
 	@echo " You can use the following modifies when building (be careful to spell them"
 	@echo " correctly!)"
 	@echo ""
-	@echo "  make <target> ISSUE_WIDTH=<2|4|8>     (default = 8)"
-	@echo "  make <target> DYNAMIC=<true|false>    (default = true)"
-	@echo "  make <target> COMPILER=<HP|GCC|ST200> (default = HP)"
-	@echo "  make <target> LIMMH_PREV=<true|false> (default = true)"
+	@echo "  make <target> ISSUE_WIDTH=<2|4|8>                (default = 8)"
+	@echo "  make <target> DYNAMIC=<(see Makefile)>           (default = true-O1)"
+	@echo "  make <target> COMPILER=<HP|GCC|ST200>            (default = HP)"
+	@echo "  make <target> LIMMH_PREV=<true|false>            (default = true)"
+	@echo "  make <target> DEFS=<list of preprocessor defs>   (default = <none>)"
+	@echo "  make <target> SIM_TRACE=<verbosity>              (default = 3)"
+	@echo "  make <target> SIM_TRACEREGS=<verbosity>          (default = 3)"
+	@echo "  make <target> SIM_GEN_CONFIG=<2|4|8>             (default = 8)"
+	@echo ""
+	@echo " NOTE: in general, you should clean before building a program using a different"
+	@echo " target or with different modifiers; dependency checking is not 100%."
 	@echo ""
 	@echo " The following programs are available:"
 	@echo ""
@@ -183,39 +219,35 @@ all: $(EXECUTABLES)
 
 # How to compile platform-specific sources;
 %.s: $(PLATFORM_SRC)/%.c
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -S $<
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
 
 # Where to get platform-specific assembly files and how to preprocess them;
 ifeq ($(COMPILER), HP)
 %.s: $(PLATFORM_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< > $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< > $@
 else
 %.s: $(PLATFORM_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< -o $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@
 endif
 
 # How to compile generic sources;
 %.s: $(GENERIC_SRC)/%.c
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -S $<
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
 
 # Where to get generic assembly files and how to preprocess them;
 ifeq ($(COMPILER), HP)
 %.s: $(GENERIC_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< > $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< > $@
 else
 %.s: $(GENERIC_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< -o $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@
 endif
 
 # How to assemble;
 %.o: %.s
-ifeq ($(DYNAMIC), fix)
+ifeq ($(VEXPARSE_ENABLE), true)
 	$(CP) $< $(patsubst %.s,%.orig.s,$<)
-	$(VEXPARSE) $(patsubst %.s,%.orig.s,$<) -o $<
-endif
-ifeq ($(DYNAMIC), resched)
-	$(CP) $< $(patsubst %.s,%.orig.s,$<)
-	$(VEXPARSE) $(patsubst %.s,%.orig.s,$<) --resched -o $<
+	$(VEXPARSE) $(patsubst %.s,%.orig.s,$<) $(VEXPARSE_FLAGS) --borrow $(BORROW) --config $(LANECONFIG) -o $<
 endif
 	$(AS) $(ASFLAGS) $< -o $@
 
@@ -243,8 +275,32 @@ _start.o-%: default_start.o
 $(EXECUTABLES):
 	$(MAKE) $@.srec $@.disas
 
-xstsim-% : %
-	$(SIM) $(SIMFLAGS) --c.target_exec='"$^.elf"'
+# How to run xSTsim;
+xstsim-%: export XSTSIM = XSTSIM
+xstsim-%: %.xst.elf
+ifneq ($(DYNAMIC), false)
+ifeq ($(LIMMH_PREV), true)
+ifneq ($(SIM_GEN_CONFIG), 8)
+	@echo "xSTsim does not support LIMMH from previous syllable pair when running in less"
+	@echo "than 8-way mode. Please set SIM_GEN_CONFIG to 8 or LIMMH_PREV to false."
+	@false
+endif
+endif
+endif
+	$(SIM) $(SIMFLAGS) --c.target_exec='"$<"'
+
+# How to convert from a (generic binary) r-VEX elf to an elf file which xSTsim
+# understands (this modifies the stop bits when assembly was done with the -u
+# flag);
+%.xst.elf: %.elf tools/sbitmod
+	$(CP) $< $@
+ifneq ($(DYNAMIC), false)
+	tools/sbitmod $@ $(SIM_GEN_CONFIG)
+endif
+
+# How to build the sbitmod tool;
+tools/sbitmod: tools/sbitmod.c
+	cd tools & $(HOSTCC) -o tools/sbitmod tools/sbitmod.c
 
 .PHONY: clean
 clean:
