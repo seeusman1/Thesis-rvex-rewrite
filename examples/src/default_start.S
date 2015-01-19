@@ -25,7 +25,7 @@ _start::
   c0  mpyl    $r0.12      = $r0.11, 0x1000
 ;;
   /* Skip BSS init if BSS size is 0 or if we're not context 0. */
-  c0  br                    $b0.0, 2
+  c0  br                    $b0.0, 2f
 ;;
 1:
   /* Write 0 to the current BSS pointer. */
@@ -38,7 +38,7 @@ _start::
   c0  add     $r0.21      = $r0.21, 0x4
   
   /* If this wasn't the last word yet, branch back. */
-  c0  brf                   $b0.0, 1
+  c0  brf                   $b0.0, 1b
 ;;
 2:
   /* Initialize the stack pointer. */

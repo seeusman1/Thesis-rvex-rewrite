@@ -246,8 +246,15 @@ endif
 # How to assemble;
 %.o: %.s
 ifeq ($(VEXPARSE_ENABLE), true)
-	$(CP) $< $(patsubst %.s,%.orig.s,$<)
-	$(VEXPARSE) $(patsubst %.s,%.orig.s,$<) $(VEXPARSE_FLAGS) --borrow $(BORROW) --config $(LANECONFIG) -o $<
+	@# This right here is really f'ing ugly, but for some reason the labels in
+	@# _start.s are treated differently from the labels in the other files, and
+	@# vexparse doesn't like it.
+	@if [ "$(findstring _start.s,$<)" != "_start.s" ]; then \
+		echo "$(CP) $< $(patsubst %.s,%.orig.s,$<)"; \
+		$(CP) $< $(patsubst %.s,%.orig.s,$<); \
+		echo "$(VEXPARSE) $(patsubst %.s,%.orig.s,$<) $(VEXPARSE_FLAGS) --borrow $(BORROW) --config $(LANECONFIG) -o $<"; \
+		$(VEXPARSE) $(patsubst %.s,%.orig.s,$<) $(VEXPARSE_FLAGS) --borrow $(BORROW) --config $(LANECONFIG) -o $<; \
+	fi
 endif
 	$(AS) $(ASFLAGS) $< -o $@
 
