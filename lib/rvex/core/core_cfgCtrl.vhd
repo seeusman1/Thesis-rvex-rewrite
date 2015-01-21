@@ -174,6 +174,9 @@ entity core_cfgCtrl is
     -- Specifies the context associated with the indexed pipelane group.
     cfg2any_context             : out rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
+    -- Specifies whether the indexed pipeline group is active.
+    cfg2any_active              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
     -- Last pipelane group associated with each context.
     cfg2any_lastGroupForCtxt    : out rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0)
     
@@ -594,11 +597,14 @@ begin -- architecture
   -- each lane group and extract the contexts from the configuration vector.
   num_groups_per_lane_gen: process (curConfiguration_r, curNumPipelaneGroupsLog2ForContext_r) is
     variable contextBits  : rvex_3bit_type;
+    variable activeBit    : std_logic;
     variable context      : natural;
   begin
     for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
       contextBits := curConfiguration_r(laneGroup*4+2 downto laneGroup*4);
+      activeBit := not curConfiguration_r(laneGroup*4+3);
       cfg2any_context(laneGroup) <= contextBits;
+      cfg2any_active(laneGroup) <= activeBit;
       context := vect2uint(contextBits(CFG.numContextsLog2-1 downto 0));
       cfg2any_numGroupsLog2(laneGroup) <= curNumPipelaneGroupsLog2ForContext_r(context);
     end loop;

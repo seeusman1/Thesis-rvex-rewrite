@@ -7,16 +7,10 @@ RVD = $(DEBUGIFACE)/bin/rvd.sh
 HOSTCC = gcc
 
 # Platform-specific executables.
-EXECUTABLES = timer
+EXECUTABLES = timer reconf
 
 # Platform-specific object files to link.
 OBJECTS = rvex-standalone.o
-
-# Use timer_start.S instead of the usual default_start.S for timer.
-.PHONY: _start.o-timer
-_start.o-timer: timer_start.o
-	$(RM) _start.o
-	$(CP) timer_start.o _start.o
 
 # Set default simulated bus latency to use when configuring the cache after
 # uploading. This can be overwritten to any value between 1 and 254 for an
