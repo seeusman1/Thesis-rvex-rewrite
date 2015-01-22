@@ -97,6 +97,9 @@ entity core_contextPipelaneIFace is
     -- Specifies the context associated with the indexed pipelane group.
     cfg2any_context             : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
+    -- Specifies whether the indexed pipeline group is active.
+    cfg2any_active              : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
     -- Last pipelane group associated with each context.
     cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
     
@@ -958,28 +961,32 @@ begin -- architecture
   -- Context to group muxing and logic
   -----------------------------------------------------------------------------
   context2group: for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 generate
-    signal ctxt: natural;
+    signal ctxt   : natural;
+    signal active : std_logic;
   begin
     
     -- Determine the context to use for this group.
     ctxt <= vect2uint(cfg2any_context(laneGroup));
     
+    -- Determine whether this group is enabled at all.
+    active <= cfg2any_active(laneGroup);
+    
     -- Generate all the muxes.
-    irq_mux(laneGroup)                <= irq_ctxt(ctxt);
+    irq_mux(laneGroup)                <= irq_ctxt(ctxt)                       when active = '1' else '0';
     irqID_mux(laneGroup)              <= rctrl2cxplif_irqID(ctxt);
-    run_mux(laneGroup)                <= run_ctxt(ctxt);
+    run_mux(laneGroup)                <= run_ctxt(ctxt)                       when active = '1' else '0';
     brReadData_mux(laneGroup)         <= cxreg2cxplif_brReadData(ctxt);
     linkReadData_mux(laneGroup)       <= cxreg2cxplif_linkReadData(ctxt);
     contextPC_mux(laneGroup)          <= cxreg2cxplif_currentPC(ctxt);
-    overridePC_mux(laneGroup)         <= cxreg2cxplif_overridePC(ctxt);
+    overridePC_mux(laneGroup)         <= cxreg2cxplif_overridePC(ctxt)        when active = '1' else '0';
     trapHandler_mux(laneGroup)        <= cxreg2cxplif_trapHandler(ctxt);
     trapReturn_mux(laneGroup)         <= cxreg2cxplif_trapReturn(ctxt);
-    extDebug_mux(laneGroup)           <= cxreg2cxplif_extDebug(ctxt);
-    handlingDebugTrap_mux(laneGroup)  <= cxreg2cxplif_handlingDebugTrap(ctxt);
-    debugTrapEnable_mux(laneGroup)    <= cxreg2cxplif_debugTrapEnable(ctxt);
+    extDebug_mux(laneGroup)           <= cxreg2cxplif_extDebug(ctxt)          when active = '1' else '0';
+    handlingDebugTrap_mux(laneGroup)  <= cxreg2cxplif_handlingDebugTrap(ctxt) when active = '1' else '0';
+    debugTrapEnable_mux(laneGroup)    <= cxreg2cxplif_debugTrapEnable(ctxt)   when active = '1' else '0';
     breakpoints_mux(laneGroup)        <= cxreg2cxplif_breakpoints(ctxt);
-    stepping_mux(laneGroup)           <= cxreg2cxplif_stepping(ctxt);
-    resuming_mux(laneGroup)           <= cxreg2cxplif_resuming(ctxt);
+    stepping_mux(laneGroup)           <= cxreg2cxplif_stepping(ctxt)          when active = '1' else '0';
+    resuming_mux(laneGroup)           <= cxreg2cxplif_resuming(ctxt)          when active = '1' else '0';
     
   end generate;
   

@@ -464,6 +464,9 @@ architecture Behavioral of core is
   -- Specifies the context associated with the indexed pipelane group.
   signal cfg2any_context              : rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
+  -- Specifies whether the indexed pipeline group is active.
+  signal cfg2any_active               : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  
   -- Last pipelane group associated with each context.
   signal cfg2any_lastGroupForCtxt     : rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
   
@@ -669,6 +672,7 @@ begin -- architecture
       cfg2any_decouple              => cfg2any_decouple,
       cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2,
       cfg2any_context               => cfg2any_context,
+      cfg2any_active                => cfg2any_active,
       cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
       
       -- Configuration signals.
@@ -973,6 +977,7 @@ begin -- architecture
       cfg2any_decouple              => cfg2any_decouple,
       cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2,
       cfg2any_context               => cfg2any_context,
+      cfg2any_active                => cfg2any_active,
       cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt
       
     );
