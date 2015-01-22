@@ -1069,7 +1069,9 @@ begin -- architecture
           -- Inject a line of whitespace if this isn't the first line.
           if line /= 1 then
             rvs_clear(sb);
-            rv2sim(line) <= rvs2sim(sb);
+            if line <= NUM_LINES then
+              rv2sim(line) <= rvs2sim(sb);
+            end if;
             line := line + 1;
           end if;
           
@@ -1081,7 +1083,9 @@ begin -- architecture
               vect2uint(cfg2any_lastGroupForCtxt(curContext)), CFG
             ) - CFG.branchLaneRevIndex
           ));
-          rv2sim(line) <= rvs2sim(sb);
+          if line <= NUM_LINES then
+            rv2sim(line) <= rvs2sim(sb);
+          end if;
           line := line + 1;
           
         end if;
@@ -1090,14 +1094,18 @@ begin -- architecture
         rvs_clear(sb);
         rvs_append(sb, " '- Ln" & integer'image(lane) & ": ");
         rvs_append(sb, pl2sim_instr(lane));
-        rv2sim(line) <= rvs2sim(sb);
+        if line <= NUM_LINES then
+          rv2sim(line) <= rvs2sim(sb);
+        end if;
         line := line + 1;
         
         -- Print lane operation information.
         rvs_clear(sb);
         rvs_append(sb, "      '- ");
         rvs_append(sb, pl2sim_op(lane));
-        rv2sim(line) <= rvs2sim(sb);
+        if line <= NUM_LINES then
+          rv2sim(line) <= rvs2sim(sb);
+        end if;
         line := line + 1;
         
         -- Store the fact that information for the context belonging to this
@@ -1113,7 +1121,9 @@ begin -- architecture
       -- Inject a line of whitespace.
       if line /= 1 then
         rvs_clear(sb);
-        rv2sim(line) <= rvs2sim(sb);
+        if line <= NUM_LINES then
+          rv2sim(line) <= rvs2sim(sb);
+        end if;
         line := line + 1;
       end if;
       
@@ -1125,7 +1135,9 @@ begin -- architecture
           rvs_clear(sb);
           rvs_append(sb, "Ctxt " & integer'image(ctxt) & ": halted at PC=");
           rvs_append(sb, rvs_hex(cxreg2cxplif_currentPC(ctxt), 8));
-          rv2sim(line) <= rvs2sim(sb);
+          if line <= NUM_LINES then
+            rv2sim(line) <= rvs2sim(sb);
+          end if;
           line := line + 1;
           
         end if;
