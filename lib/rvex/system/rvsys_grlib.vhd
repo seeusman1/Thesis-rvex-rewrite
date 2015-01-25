@@ -417,10 +417,10 @@ begin -- architecture
                 end if;
               elsif writeEnable_r(laneGroup) = '1' then
                 rvmem_write(mem, addr_r(laneGroup), writeData_r(laneGroup), writeMask_r(laneGroup));
-                --report "Processed write to address " & rvs_hex(addr_r(laneGroup))
-                --     & ", value is " & rvs_hex(writeData_r(laneGroup))
-                --     & " with mask " & rvs_bin(writeMask_r(laneGroup))
-                --  severity note;
+                report "Processed write to address " & rvs_hex(addr_r(laneGroup))
+                     & ", value is " & rvs_hex(writeData_r(laneGroup))
+                     & " with mask " & rvs_bin(writeMask_r(laneGroup))
+                  severity note;
               end if;
               
               -- Check instruction access.
@@ -667,7 +667,7 @@ begin -- architecture
         glob2demux.ack <= bus_requesting(demux2glob);
         
         -- Address 0x00 write: reset rvex system.
-        if bus_writing(demux2cache, "--------------------------000000") then
+        if bus_writing(demux2glob, "--------------------------000000") then
           dbg_reset <= '1';
         end if;
         

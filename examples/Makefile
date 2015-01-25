@@ -93,7 +93,7 @@ endif
 # List of platform-agnostic (generic) programs.
 EXECUTABLES += adpcm blit crc des fir pocsag \
 	ucbqsort bcnt compress engine g3fax jpeg qurt v42 \
-	adpcm1 dft itver2 itver2-repeat matrix memwrite soma x264 uart xstsimframebuffer#This line contains programs not from Powerstone
+	ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite soma x264 uart xstsimframebuffer#This line contains programs not from Powerstone
 
 # Toolchain setup.
 ifndef TOOLS

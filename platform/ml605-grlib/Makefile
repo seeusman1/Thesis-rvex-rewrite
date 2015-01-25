@@ -98,11 +98,12 @@ compile-%:
 sim-%: work compile-%
 	cd work && $(MAKE) \
 		distclean\
-		scripts-clean\
 		migclean\
+		scripts-clean\
 		mig39\
 		install-secureip\
 		compile_xilinx_verilog_lib\
+		compile.vsim\
 		vsim\
 		map_xilinx_verilog_lib\
 		vsim-launch

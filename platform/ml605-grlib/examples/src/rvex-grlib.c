@@ -12,8 +12,10 @@
 int putchar(int character) {
   unsigned char c = character;
   
+#ifndef SIM
   // Wait for the TX data FIFO ready flag.
   while (!(UART_STAT & (1 << 1)));
+#endif
   
   // Write to the UART.
   UART_DATA = c;
