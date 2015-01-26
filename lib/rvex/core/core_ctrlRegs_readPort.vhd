@@ -52,6 +52,7 @@ library rvex;
 use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
 use rvex.core_intIface_pkg.all;
+use rvex.core_ctrlRegs_pkg.all;
 
 --=============================================================================
 -- This instantiates an additional synchronous read port for an

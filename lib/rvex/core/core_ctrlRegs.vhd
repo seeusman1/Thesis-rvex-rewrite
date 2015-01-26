@@ -53,36 +53,14 @@ use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
 use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
+use rvex.core_ctrlRegs_pkg.all;
 
 --=============================================================================
 -- This entity contains the control registers as accessed from the debug bus
 -- or by the core. This is setup in a very generic way to make it easy to add,
--- remove or change registers or mappings; see rvex_ctrlRegs_pkg.vhd. The only
--- restrictions to the map are the following.
---  - There is room for 32 control register words, or 128 bytes.
---  - The first part of the control registers is common to all contexts. Only
---    the bus may write to these registers, the cores can only read.
---  - Conversely, the second part is context-specific. Only the debug bus and
---    the associated context can read/write from these registers.
---
--- The memory map as seen from the core is trivial; it's just those 32
--- registers mapped in a contiguous region. The start of the region is
--- determined by cregStartAddress in CFG.
--- 
--- The memory map as seen from the debug bus is more complicated. There are
--- two access modes. The first uses an address of the form 0x000000--. The
--- lower half of the memory space maps to the control registers for the
--- currently selected context; the upper half maps to either the lower or
--- upper half of the general purpose register file for that context. Bank
--- selection registers are used to select the context and which part of the
--- general purpose register file to access. This is inherently not thread safe,
--- but only uses 256 bytes of memory space.
--- 
--- Alternatively, addresses of the form 0x00001--- can be used to access all
--- control registers and general purpose registers within a single bus access.
--- In this case, address bit 8 overrides the general purpose register file
--- bank selection bit, and address bits 11..9 override the context to access.
--- 
+-- remove or change registers or mappings. Refer to core_ctrlRegs_pkg.vhd for
+-- more information. Please update the documentation in that file as well if
+-- things are changed here.
 -------------------------------------------------------------------------------
 entity core_ctrlRegs is
 --=============================================================================
@@ -123,7 +101,7 @@ entity core_ctrlRegs is
     -- Core bus interfaces
     ---------------------------------------------------------------------------
     -- Control register address from memory unit, shared between read and write
-    -- command. Only bit 6..0 are used.
+    -- command. Only bits 9..0 are used.
     dmsw2creg_addr              : in  rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Control register write command from memory unit.
@@ -139,7 +117,7 @@ entity core_ctrlRegs is
     -- Debug bus interface
     ---------------------------------------------------------------------------
     -- Control register address from debug bus, shared between read and write
-    -- command. Only bit 7..0 are used.
+    -- command. Only bits 12..0 are used.
     dbg2creg_addr               : in  rvex_address_type;
     
     -- Control register write command from debug bus.
@@ -178,13 +156,6 @@ entity core_ctrlRegs is
     -- Interface for the global register logic.
     gbreg2creg                  : in  gbreg2creg_type;
     creg2gbreg                  : out creg2gbreg_type;
-    
-    -- Context selection for the debug bus.
-    gbreg2creg_context          : in  std_logic_vector(CFG.numContextsLog2-1 downto 0);
-    
-    -- Bank selection bit for general purpose register access from the debug
-    -- bus.
-    gbreg2creg_gpregBank        : in  std_logic;
     
     ---------------------------------------------------------------------------
     -- Context register logic interface
@@ -254,7 +225,8 @@ architecture Behavioral of core_ctrlRegs is
   
   -- Busses between the global register read ports and the lane groups (through
   -- a bus switch). The *_nc signals are not used, because the contexts cannot
-  -- write to the global registers.
+  -- write to the global registers. Address bits 7..0 are from the memory unit,
+  -- the rest is zero.
   signal grpBus_glob_addr           : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_glob_addr_raw       : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_glob_writeEnable_nc : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -264,8 +236,9 @@ architecture Behavioral of core_ctrlRegs is
   signal grpBus_glob_readData       : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
   -- Busses between the context bus switching logic and the lane groups
-  -- (through a bus switch). Address bits 6..0 are from the memory unit of the
-  -- lane group, bits 9..7 are set to the current context.
+  -- (through a bus switch). Address bits 8..0 are from the memory unit of the
+  -- lane group, bit 9 is always 1, bits 12..10 are set to the current context,
+  -- the rest is zero.
   signal grpBus_ctxt_addr           : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_ctxt_addr_raw       : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_ctxt_writeEnable    : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -274,7 +247,8 @@ architecture Behavioral of core_ctrlRegs is
   signal grpBus_ctxt_readEnable     : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpBus_ctxt_readData       : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
-  -- Busses between the debug bus and the global registers.
+  -- Busses between the debug bus and the global registers. Address bits 7..0
+  -- are from the debug bus address, the rest is zero.
   signal dbgBus_glob_addr           : rvex_address_type;
   signal dbgBus_glob_addr_raw       : rvex_address_type;
   signal dbgBus_glob_writeEnable    : std_logic;
@@ -284,8 +258,8 @@ architecture Behavioral of core_ctrlRegs is
   signal dbgBus_glob_readData       : rvex_data_type;
   
   -- Busses between the debug bus and the context switching logic. Address bits
-  -- 6..0 are from the debug bus address, bits 9..7 are from the debug bus
-  -- context bank input.
+  -- 8..0 and 12..10 are from the debug bus address, bit 9 is always 1, the
+  -- rest is always zero.
   signal dbgBus_ctxt_addr           : rvex_address_type;
   signal dbgBus_ctxt_addr_raw       : rvex_address_type;
   signal dbgBus_ctxt_writeEnable    : std_logic;
@@ -295,9 +269,9 @@ architecture Behavioral of core_ctrlRegs is
   signal dbgBus_ctxt_readData       : rvex_data_type;
   
   -- Busses between the debug bus and the general purpose register file.
-  -- Address bits 6..0 are taken from the debug bus address, bit 7 is connected
-  -- to the general purpose register bank selection input, and bit 10..8 are
-  -- connected to the debug bus context bank input.
+  -- Address bits 7..0 are taken from the debug bus address straight, bits
+  -- 10..8 are taken from debug bus address bits 12..10 for the context, the
+  -- rest is zero.
   signal dbgBus_gpreg_addr          : rvex_address_type;
   signal dbgBus_gpreg_addr_raw      : rvex_address_type;
   signal dbgBus_gpreg_writeEnable   : std_logic;
@@ -313,8 +287,9 @@ architecture Behavioral of core_ctrlRegs is
   
   -- Busses between the context bus switching logic and the lane groups, with
   -- potential override from the debug bus (only for group 0, the rest is just
-  -- hardwired together). Address bits 6..0 are from the memory unit of the
-  -- lane group or the debug bus, bits 9..7 are set to the current context.
+  -- hardwired together). Address bits 8..0 and 12..10 are from the memory unit
+  -- of the lane group or the debug bus, bit 9 is always 1, the rest is always
+  -- zero.
   signal grpDbgBus_ctxt_addr        : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpDbgBus_ctxt_writeEnable : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal grpDbgBus_ctxt_writeMask   : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -323,7 +298,7 @@ architecture Behavioral of core_ctrlRegs is
   signal grpDbgBus_ctxt_readData    : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
   -- Busses between the context bus switching logic and the registers. Only
-  -- address bits 6..0 are used.
+  -- address bits 8..0 are used.
   signal ctxtBus_addr               : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
   signal ctxtBus_writeEnable        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal ctxtBus_writeMask          : rvex_mask_array(2**CFG.numContextsLog2-1 downto 0);
@@ -342,15 +317,22 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Check configuration
   -----------------------------------------------------------------------------
-  assert CTRL_REG_TOTAL_WORDS = 32 and CTRL_REG_SIZE_BLOG2 = 7
-    report "Size of the control register file is hardcoded to 32 words (not "
-         & "counting gp. reg access) in the control register code, but "
-         & "configuration specifies otherwise."
+  assert CRG_SIZE_WORDS = 256 and CRG_SIZE_BLOG2 = 10
+    report "The size of the control/debug register file is hardcoded to 1kiB "
+         & "in core_ctrlRegs.vhd, but the constants in core_ctrlRegs_pkg.vhd "
+         & "specify otherwise."
     severity failure;
   
-  assert CTRL_REG_GLOB_WORDS <= CTRL_REG_TOTAL_WORDS
-    report "Cannot have more words in the global portion of the control "
-         & "registers than there are in the whole file."
+  assert CRG_GLOB_WORD_OFFSET >= 0 and CRG_GLOB_WORD_OFFSET + CRG_GLOB_WORD_COUNT <= 64
+    report "The global control register count/range specified in "
+         & "core_ctrlRegs_pkg.vhd extends beyond the hardcoded values in "
+         & "in core_ctrlRegs.vhd."
+    severity failure;
+  
+  assert CRG_CTXT_WORD_OFFSET >= 128 and CRG_CTXT_WORD_OFFSET + CRG_CTXT_WORD_COUNT <= 256
+    report "The global control register count/range specified in "
+         & "core_ctrlRegs_pkg.vhd extends beyond the hardcoded values in "
+         & "in core_ctrlRegs.vhd."
     severity failure;
   
   -----------------------------------------------------------------------------
@@ -363,11 +345,8 @@ begin -- architecture
     glob_ctxt_bus_switch_inst: entity rvex.core_ctrlRegs_busSwitch
       generic map (
         NUM_SLAVES                    => 2,
-        BOUNDARIES                    => (
-          1 => uint2vect(CTRL_REG_GLOB_WORDS * 4, 32),
-          others => (others => RVEX_UNDEF)
-        ),
-        BOUND_MASK                    => X"0000007F"
+        BOUNDARIES                    => (1 => X"00000200"),
+        BOUND_MASK                    => X"00000200"
       )
       port map (
         
@@ -401,12 +380,15 @@ begin -- architecture
         
       );
     
-    -- Compile the different parts of the slave addresses.
-    grpBus_glob_addr(laneGroup)(6 downto 0)   <= grpBus_glob_addr_raw(laneGroup)(6 downto 0);
-    grpBus_glob_addr(laneGroup)(31 downto 7)  <= (others => '0');
-    grpBus_ctxt_addr(laneGroup)(6 downto 0)   <= grpBus_ctxt_addr_raw(laneGroup)(6 downto 0);
-    grpBus_ctxt_addr(laneGroup)(9 downto 7)   <= cfg2any_context(laneGroup);
-    grpBus_ctxt_addr(laneGroup)(31 downto 10) <= (others => '0');
+    -- Compile the address for the global control register file.
+    grpBus_glob_addr(laneGroup)(7 downto 0)   <= grpBus_glob_addr_raw(laneGroup)(7 downto 0);
+    grpBus_glob_addr(laneGroup)(31 downto 8)  <= (others => '0');
+    
+    -- Compile the address for the context control register file.
+    grpBus_ctxt_addr(laneGroup)(8 downto 0)   <= grpBus_ctxt_addr_raw(laneGroup)(8 downto 0);
+    grpBus_ctxt_addr(laneGroup)(9 downto 9)   <= (others => '1');
+    grpBus_ctxt_addr(laneGroup)(12 downto 10) <= cfg2any_context(laneGroup);
+    grpBus_ctxt_addr(laneGroup)(31 downto 13) <= (others => '0');
     
   end generate;
   
@@ -415,11 +397,10 @@ begin -- architecture
     generic map (
       NUM_SLAVES                    => 3,
       BOUNDARIES                    => (
-        1 => uint2vect(CTRL_REG_GLOB_WORDS * 4, 32),
-        2 => X"00000080",
-        others => (others => RVEX_UNDEF)
+        1 => X"00000100",
+        2 => X"00000200"
       ),
-      BOUND_MASK                    => X"000000FF"
+      BOUND_MASK                    => X"00000300"
     )
     port map (
       
@@ -439,60 +420,48 @@ begin -- architecture
       
       -- Slave busses.
       sw2slave_addr(0)              => dbgBus_glob_addr_raw,
-      sw2slave_addr(1)              => dbgBus_ctxt_addr_raw,
-      sw2slave_addr(2)              => dbgBus_gpreg_addr_raw,
+      sw2slave_addr(1)              => dbgBus_gpreg_addr_raw,
+      sw2slave_addr(2)              => dbgBus_ctxt_addr_raw,
       sw2slave_writeEnable(0)       => dbgBus_glob_writeEnable,
-      sw2slave_writeEnable(1)       => dbgBus_ctxt_writeEnable,
-      sw2slave_writeEnable(2)       => dbgBus_gpreg_writeEnable,
+      sw2slave_writeEnable(1)       => dbgBus_gpreg_writeEnable,
+      sw2slave_writeEnable(2)       => dbgBus_ctxt_writeEnable,
       sw2slave_writeMask(0)         => dbgBus_glob_writeMask,
-      sw2slave_writeMask(1)         => dbgBus_ctxt_writeMask,
-      sw2slave_writeMask(2)         => dbgBus_gpreg_writeMask,
+      sw2slave_writeMask(1)         => dbgBus_gpreg_writeMask,
+      sw2slave_writeMask(2)         => dbgBus_ctxt_writeMask,
       sw2slave_writeData(0)         => dbgBus_glob_writeData,
-      sw2slave_writeData(1)         => dbgBus_ctxt_writeData,
-      sw2slave_writeData(2)         => dbgBus_gpreg_writeData,
+      sw2slave_writeData(1)         => dbgBus_gpreg_writeData,
+      sw2slave_writeData(2)         => dbgBus_ctxt_writeData,
       sw2slave_readEnable(0)        => dbgBus_glob_readEnable,
-      sw2slave_readEnable(1)        => dbgBus_ctxt_readEnable,
-      sw2slave_readEnable(2)        => dbgBus_gpreg_readEnable,
+      sw2slave_readEnable(1)        => dbgBus_gpreg_readEnable,
+      sw2slave_readEnable(2)        => dbgBus_ctxt_readEnable,
       slave2sw_readData(0)          => dbgBus_glob_readData,
-      slave2sw_readData(1)          => dbgBus_ctxt_readData,
-      slave2sw_readData(2)          => dbgBus_gpreg_readData
+      slave2sw_readData(1)          => dbgBus_gpreg_readData,
+      slave2sw_readData(2)          => dbgBus_ctxt_readData
       
     );
   
   -- Compile the address for the global control register file.
-  dbgBus_glob_addr(6 downto 0)
-    <= dbgBus_glob_addr_raw(6 downto 0);
-  dbgBus_glob_addr(31 downto 7)
-    <= (others => '0');
+  dbgBus_glob_addr ( 7 downto  0) <= dbgBus_glob_addr_raw(7 downto 0);
+  dbgBus_glob_addr (31 downto  8) <= (others => '0');
   
   -- Compile the address for the context control register file.
-  dbgBus_ctxt_addr(6 downto 0)
-    <= dbgBus_ctxt_addr_raw(6 downto 0);
-  dbgBus_ctxt_addr(7+CFG.numContextsLog2-1 downto 7)
-    <= gbreg2creg_context when dbgBus_ctxt_addr_raw(12) = '0'
-    else dbgBus_ctxt_addr_raw(9+CFG.numContextsLog2-1 downto 9);
-  dbgBus_ctxt_addr(31 downto 7+CFG.numContextsLog2)
-    <= (others => '0');
+  dbgBus_ctxt_addr ( 8 downto  0) <= dbgBus_ctxt_addr_raw(8 downto 0);
+  dbgBus_ctxt_addr ( 9 downto  9) <= (others => '1');
+  dbgBus_ctxt_addr (12 downto 10) <= dbgBus_ctxt_addr_raw(12 downto 10);
+  dbgBus_ctxt_addr (31 downto 13) <= (others => '0');
   
   -- Compile the address for the general purpose register file.
-  dbgBus_gpreg_addr(6 downto 0)
-    <= dbgBus_gpreg_addr_raw(6 downto 0);
-  dbgBus_gpreg_addr(7)
-    <= gbreg2creg_gpregBank when dbgBus_ctxt_addr_raw(12) = '0'
-    else dbgBus_gpreg_addr_raw(8);
-  dbgBus_gpreg_addr(8+CFG.numContextsLog2-1 downto 8)
-    <= gbreg2creg_context when dbgBus_ctxt_addr_raw(12) = '0'
-    else dbgBus_ctxt_addr_raw(9+CFG.numContextsLog2-1 downto 9);
-  dbgBus_gpreg_addr(31 downto 8+CFG.numContextsLog2)
-    <= (others => '0');
+  dbgBus_gpreg_addr( 7 downto  0) <= dbgBus_gpreg_addr_raw(7 downto 0);
+  dbgBus_gpreg_addr(10 downto  8) <= dbgBus_gpreg_addr_raw(12 downto 10);
+  dbgBus_gpreg_addr(31 downto 11) <= (others => '0');
   
   -----------------------------------------------------------------------------
   -- Instantiate the global control registers
   -----------------------------------------------------------------------------
   global_reg_bank: entity rvex.core_ctrlRegs_bank
     generic map (
-      OFFSET                    => 0,
-      NUM_WORDS                 => CTRL_REG_GLOB_WORDS
+      OFFSET                    => CRG_GLOB_WORD_OFFSET,
+      NUM_WORDS                 => CRG_GLOB_WORD_COUNT
     )
     port map (
       
@@ -524,8 +493,8 @@ begin -- architecture
   global_reg_bank_port_gen: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
     global_reg_bank_port: entity rvex.core_ctrlRegs_readPort
       generic map (
-        OFFSET                  => 0,
-        NUM_WORDS               => CTRL_REG_GLOB_WORDS
+        OFFSET                  => CRG_GLOB_WORD_OFFSET,
+        NUM_WORDS               => CRG_GLOB_WORD_COUNT
       )
       port map (
         
@@ -667,8 +636,8 @@ begin -- architecture
   context_reg_bank_gen: for ctxt in 2**CFG.numContextsLog2-1 downto 0 generate
     context_reg_bank: entity rvex.core_ctrlRegs_bank
       generic map (
-        OFFSET                    => CTRL_REG_GLOB_WORDS,
-        NUM_WORDS                 => CTRL_REG_TOTAL_WORDS - CTRL_REG_GLOB_WORDS
+        OFFSET                    => CRG_CTXT_WORD_OFFSET,
+        NUM_WORDS                 => CRG_CTXT_WORD_COUNT
       )
       port map (
         

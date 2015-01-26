@@ -119,34 +119,67 @@ entity rvsys_grlib is
     -- Used to access debug control and status registers for the core, cache
     -- and any other support systems. The register map is as follows.
     --          _____________________________
-    --  0x1FFF | Context 7 GP reg 32-63      |
-    --  0x1F80 |_____________________________|
-    --         |_____________________________|
-    --  0x1EFF | Context 7 GP reg 0-31       |
-    --  0x1E80 |_____________________________|
-    --  0x1E7F | Context 7 ctrl regs         |
+    --  0x1FFF |                             |
+    --         | Context 7 ctrl regs         |
+    --         |                             |
     --  0x1E00 |_____________________________|
-    --  0x1DFF | (context 1..6 mapped here)  |
-    --  0x1200 |_____________________________|
-    --  0x11FF | Context 0 GP reg 32-63      |
-    --  0x1180 |_____________________________|
+    --  0x1DFF | Context 7 GP regs           |
+    --  0x1D00 |_____________________________|
     --         |_____________________________|
-    --  0x10FF | Context 0 GP reg 0-31       |
-    --  0x1080 |_____________________________|
-    --  0x107F | Context 0 ctrl regs         |
-    --  0x1000 |_____________________________|
-    --         |_____________________________| _
-    --  0x01FF | Context i GP reg 0-31/32-63 |  \
-    --  0x0180 |_____________________________|   \ Context and GP registers are
-    --  0x017F | Context i ctrl regs         |   / selected using bank register
-    --  0x0100 |_____________________________| _/
-    --  0x00FF | Reserved for MMU regs       |
-    --  0x0080 |_____________________________|
-    --  0x007F | Reserved for cache regs     |
-    --  0x0040 |_____________________________|
-    --  0x003F | Global regs                 |
+    --  0x1BFF |                             |
+    --         | Context 6 ctrl regs         |
+    --         |                             |
+    --  0x1A00 |_____________________________|
+    --  0x19FF | Context 6 GP regs           |
+    --  0x1900 |_____________________________|
+    --         |_____________________________|
+    --  0x17FF |                             |
+    --         | Context 5 ctrl regs         |
+    --         |                             |
+    --  0x1600 |_____________________________|
+    --  0x15FF | Context 5 GP regs           |
+    --  0x1500 |_____________________________|
+    --         |_____________________________|
+    --  0x13FF |                             |
+    --         | Context 4 ctrl regs         |
+    --         |                             |
+    --  0x1200 |_____________________________|
+    --  0x11FF | Context 4 GP regs           |
+    --  0x1100 |_____________________________|
+    --         |_____________________________|
+    --  0x0FFF |                             |
+    --         | Context 3 ctrl regs         |
+    --         |                             |
+    --  0x0E00 |_____________________________|
+    --  0x0DFF | Context 3 GP regs           |
+    --  0x0D00 |_____________________________|
+    --  0x0CFF | Reserved for MMU ctrl regs  |
+    --  0x0C00 |_____________________________|
+    --  0x0BFF |                             |
+    --         | Context 2 ctrl regs         |
+    --         |                             |
+    --  0x0A00 |_____________________________|
+    --  0x09FF | Context 2 GP regs           |
+    --  0x0900 |_____________________________|
+    --  0x08FF | Cache control regs          |
+    --  0x0800 |_____________________________|
+    --  0x07FF |                             |
+    --         | Context 1 ctrl regs         |
+    --         |                             |
+    --  0x0600 |_____________________________|
+    --  0x05FF | Context 1 GP regs           |
+    --  0x0500 |_____________________________|
+    --  0x04FF | Global control regs         |
+    --  0x0400 |_____________________________|
+    --  0x03FF |                             |
+    --         | Context 0 ctrl regs         |
+    --         |                             |
+    --  0x0200 |_____________________________|
+    --  0x01FF | Context 0 GP regs           |
+    --  0x0100 |_____________________________|
+    --  0x00FF | Core ctrl regs              |
     --  0x0000 |_____________________________|
-    --
+
     bus2dgb                     : in  bus_mst2slv_type;
     dbg2bus                     : out bus_slv2mst_type;
     
@@ -547,14 +580,14 @@ begin -- architecture
         cache2demux.ack <= bus_requesting(demux2cache);
         
         -- Address 0x00 write: instruction cache flush bits.
-        if bus_writing(demux2cache, "--------------------------000000") then
+        if bus_writing(demux2cache, "------------------------00000000") then
           sc2icache_flush <= demux2cache.writeData(
             2**CFG.core.numLaneGroupsLog2 + 23 downto 24
           );
         end if;
         
         -- Address 0x01 write: data cache flush bits.
-        if bus_writing(demux2cache, "--------------------------000001") then
+        if bus_writing(demux2cache, "------------------------00000001") then
           sc2dcache_flush <= demux2cache.writeData(
             2**CFG.core.numLaneGroupsLog2 + 23 downto 24
           );
@@ -667,7 +700,7 @@ begin -- architecture
         glob2demux.ack <= bus_requesting(demux2glob);
         
         -- Address 0x00 write: reset rvex system.
-        if bus_writing(demux2glob, "--------------------------000000") then
+        if bus_writing(demux2glob, "------------------------00000000") then
           dbg_reset <= '1';
         end if;
         
@@ -681,26 +714,18 @@ begin -- architecture
   debug_bus_demux_block: block is
     
     constant ADDR_MAP : addrRangeAndMapping_array(0 to 3) := (
-      0 => addrRangeAndMap( -- Global status/ctrl (64 bytes).
-        low   => "00000000000000000000000000000000",
-        high  => "00000000000000000000000000111111",
-        mask  => "00000000000000000001111111111111"
-      ),
-      1 => addrRangeAndMap( -- Cache status/ctrl (64 bytes).
-        low   => "00000000000000000000000001000000",
-        high  => "00000000000000000000000001111111",
-        mask  => "00000000000000000001111111111111"
-      ),
-      2 => addrRangeAndMap( -- MMU status/ctrl (128 bytes).
-        low   => "00000000000000000000000010000000",
-        high  => "00000000000000000000000011111111",
-        mask  => "00000000000000000001111111111111"
-      ),
-      3 => addrRangeAndMap( -- rvex debug interface (at least 256 bytes).
-        low   => "00000000000000000000000100000000",
-        high  => "00000000000000000001111111111111",
-        mask  => "00000000000000000001111111111111"
+      0 => addrRangeAndMap( -- rvex debug interface (default).
+        match => "--------------------------------"
       )
+      1 => addrRangeAndMap( -- Global status/ctrl (256 bytes), overrides rvex global reg mirror at context 1.
+        match => "-------------------00100--------"
+      ),
+      2 => addrRangeAndMap( -- Cache status/ctrl (256 bytes), overrides rvex global reg mirror at context 2.
+        match => "-------------------01000--------"
+      ),
+      3 => addrRangeAndMap( -- MMU status/ctrl (256 bytes), overrides rvex global reg mirror at context 3.
+        match => "-------------------01100--------"
+      ),
     );
     
   begin
@@ -720,14 +745,14 @@ begin -- architecture
         -- Busses.
         mst2demux         => bus2dgb,
         demux2mst         => dbg2bus,
-        demux2slv(0)      => demux2glob,
-        demux2slv(1)      => demux2cache,
-        demux2slv(2)      => demux2mmu,
-        demux2slv(3)      => demux2rv,
-        slv2demux(0)      => glob2demux,
-        slv2demux(1)      => cache2demux,
-        slv2demux(2)      => mmu2demux,
-        slv2demux(3)      => rv2demux
+        demux2slv(0)      => demux2rv,
+        demux2slv(1)      => demux2glob,
+        demux2slv(2)      => demux2cache,
+        demux2slv(3)      => demux2mmu,
+        slv2demux(0)      => rv2demux
+        slv2demux(1)      => glob2demux,
+        slv2demux(2)      => cache2demux,
+        slv2demux(3)      => mmu2demux,
         
       );
     

@@ -68,9 +68,6 @@ help:
 
 compile-%:
 	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
-	# Tries the thing below, but it's not enough. Modelsim doesn't seem to re-elaborate
-	# after dependent files change, I guess you need to recompile everything for that.
-	#-cd modelsim && vcom -quiet -93 -work work "../design/mem_init_pkg.vhd"
 
 # This was partially taken from the grlib makefile.
 modelsim/unisim_VITAL.vhd:

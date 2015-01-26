@@ -54,6 +54,7 @@ use rvex.utils_pkg.all;
 use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
 use rvex.core_pipeline_pkg.all;
+use rvex.core_ctrlRegs_pkg.all;
 use rvex.core_trap_pkg.all;
 
 --=============================================================================
@@ -167,9 +168,9 @@ begin -- architecture
          & "access latency."
     severity failure;
   
-  assert vect2unsigned(CFG.cregStartAddress(CTRL_REG_SIZE_BLOG2-1 downto 0)) = 0
+  assert vect2unsigned(CFG.cregStartAddress(CRG_SIZE_BLOG2-1 downto 0)) = 0
     report "Control register start address must be aligned to a "
-         & integer'image(2**CTRL_REG_SIZE_BLOG2) & " byte boundary boundary."
+         & integer'image(2**CRG_SIZE_BLOG2) & " byte boundary boundary."
     severity failure;
   
   -----------------------------------------------------------------------------
@@ -178,8 +179,8 @@ begin -- architecture
   -- Select control registers when the MSBs of the address matches the control
   -- register block selected in the core configuration.
   sel(S_MEM) <= '1'
-    when memu2dmsw_addr(S_MEM)(rvex_address_type'high downto CTRL_REG_SIZE_BLOG2)
-       = CFG.cregStartAddress(rvex_address_type'high downto CTRL_REG_SIZE_BLOG2)
+    when memu2dmsw_addr(S_MEM)(rvex_address_type'high downto CRG_SIZE_BLOG2)
+       = CFG.cregStartAddress(rvex_address_type'high downto CRG_SIZE_BLOG2)
     else '0';
   
   -----------------------------------------------------------------------------

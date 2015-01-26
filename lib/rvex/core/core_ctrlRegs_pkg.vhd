@@ -49,7 +49,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
-use rvex.core_intIface_pkg.all;
+use rvex.common_pkg.all;
 
 --=============================================================================
 -- This package contains constants specifying the word addresses of the control
@@ -61,6 +61,56 @@ package core_ctrlRegs_pkg is
 --=============================================================================
   
   -----------------------------------------------------------------------------
+  -- Control register geometry
+  -----------------------------------------------------------------------------
+  -- The control register memory map is coarsely hardcoded in core_ctrlRegs.vhd
+  -- as follows.
+  --                                    | Core  | Debug |
+  --         ___________________________|_______|_______|
+  --  0x3FF | Context registers         |  R/W  |  R/W  |
+  --  0x200 |___________________________|_______|_______|
+  --  0x1FF | General purpose registers |   -   |  R/W  |
+  --  0x100 |___________________________|_______|_______|
+  --  0x0FF | Global registers          |   R   |  R/W  |
+  --  0x000 |___________________________|_______|_______|
+  --
+  -- There are two ways to access these registers. The first is from the core
+  -- itself, by making memory accesses to a contiguous region of memory mapped
+  -- to the registers. The region is 1kiB in size and must be aligned to 1kiB
+  -- boundaries; other than that, the location is specified by cregStartAddress
+  -- in CFG. The second method is the debug bus. Because there is no context
+  -- associated with the debug bus, bits 12..10 of the address are used to
+  -- specify it. The global registers are mirrored for each context. For each
+  -- access method, the access level is specified in the table above.
+  --
+  -- The core can only access registers belonging to the context it is
+  -- currently running internally. If cross-context access is needed, the
+  -- memory bus of the rvex must be connected to the debug bus externally.
+  --
+  -- NOTE: the constants below should reflect the map specified above (or more
+  -- importantly, what's specified in core_ctrlRegs.vhd). They cannot be
+  -- changed unless otherwise specified.
+  
+  -- Size of the control register file accessible from the core through data
+  -- memory operations.
+  constant CRG_SIZE_BLOG2       : natural := 10;
+  
+  -- Total number of words in the control register file.
+  constant CRG_SIZE_WORDS       : natural := 2**(CRG_SIZE_BLOG2-2);
+  
+  -- Word offset and count for the global portion of the control register file.
+  -- The specified range must be identical to or a subset of 0..63 inclusive,
+  -- but may be changed otherwise.
+  constant CRG_GLOB_WORD_OFFSET : natural := 0;
+  constant CRG_GLOB_WORD_COUNT  : natural := 5;
+  
+  -- Word offset and count for the context-specific portion of the control
+  -- register file. The specified range must be identical to or a subset of
+  -- 128..255 inclusive, but may be changed otherwise.
+  constant CRG_CTXT_WORD_OFFSET : natural := 128;
+  constant CRG_CTXT_WORD_COUNT  : natural := 20;
+  
+  -----------------------------------------------------------------------------
   -- Control register map specification
   -----------------------------------------------------------------------------
   -- NOTE: these constants can be used in the core_tb.vhd test case when
@@ -68,36 +118,40 @@ package core_ctrlRegs_pkg is
   -- core_tb.vhd as well! Registry is done at the end of the file; just search
   -- for one of the constant names if you can't find it.
   
+  -- NOTE: make sure you make room first if you want to add registers. You can
+  -- change the sizes of the register files within hardcoded limits by changing
+  -- the constants in the previous section.
+  
   -- Global (shared) register word addresses. Refer to
   -- rvex_globalRegLogic.vhd for documentation about the registers.
-  constant CR_GSR     : natural := 0; -- Global status register.
-  constant CR_BCRR    : natural := 1; -- Bus configuration request register.
-  constant CR_CC      : natural := 2; -- Current configuration register.
-  constant CR_AFF     : natural := 3; -- Cache/memory block affinity register.
-  constant CR_CNT     : natural := 4; -- CPU cycle counter.
+  constant CR_GSR     : natural := CRG_GLOB_WORD_OFFSET +  0; -- Global status register.
+  constant CR_BCRR    : natural := CRG_GLOB_WORD_OFFSET +  1; -- Bus configuration request register.
+  constant CR_CC      : natural := CRG_GLOB_WORD_OFFSET +  2; -- Current configuration register.
+  constant CR_AFF     : natural := CRG_GLOB_WORD_OFFSET +  3; -- Cache/memory block affinity register.
+  constant CR_CNT     : natural := CRG_GLOB_WORD_OFFSET +  4; -- CPU cycle counter.
   
   -- Context-specific register word addresses. Refer to
   -- rvex_contextRegLogic.vhd for documentation about the registers.
-  constant CR_CCR     : natural := CTRL_REG_GLOB_WORDS +  0; -- Context control register.
-  constant CR_SCCR    : natural := CTRL_REG_GLOB_WORDS +  1; -- Saved context control register.
-  constant CR_LR      : natural := CTRL_REG_GLOB_WORDS +  2; -- Link register.
-  constant CR_PC      : natural := CTRL_REG_GLOB_WORDS +  3; -- PC register.
-  constant CR_TH      : natural := CTRL_REG_GLOB_WORDS +  4; -- Trap handler register.
-  constant CR_PH      : natural := CTRL_REG_GLOB_WORDS +  5; -- Panic handler register.
-  constant CR_TP      : natural := CTRL_REG_GLOB_WORDS +  6; -- Trap point/return register.
-  constant CR_TA      : natural := CTRL_REG_GLOB_WORDS +  7; -- Trap argument register.
-  constant CR_BRK0    : natural := CTRL_REG_GLOB_WORDS +  8; -- Breakpoint 0 register.
-  constant CR_BRK1    : natural := CR_BRK0 + 1;              -- Breakpoint 1 register.
-  constant CR_BRK2    : natural := CR_BRK0 + 2;              -- Breakpoint 2 register.
-  constant CR_BRK3    : natural := CR_BRK0 + 3;              -- Breakpoint 3 register.
-  constant CR_DCR     : natural := CTRL_REG_GLOB_WORDS + 12; -- Debug control register.
-  constant CR_CRR     : natural := CTRL_REG_GLOB_WORDS + 13; -- Configuration request register.
-  constant CR_SCRP    : natural := CTRL_REG_GLOB_WORDS + 14; -- Scratch-pad register.
-  constant CR_C_CYC   : natural := CTRL_REG_GLOB_WORDS + 15; -- Non-idle cycle counter.
-  constant CR_C_STALL : natural := CTRL_REG_GLOB_WORDS + 16; -- Non-idle stall counter.
-  constant CR_C_BUN   : natural := CTRL_REG_GLOB_WORDS + 17; -- Committed bundle counter.
-  constant CR_C_SYL   : natural := CTRL_REG_GLOB_WORDS + 18; -- Committed syllable counter.
-  constant CR_C_NOP   : natural := CTRL_REG_GLOB_WORDS + 19; -- Committed NOP counter.
+  constant CR_CCR     : natural := CRG_CTXT_WORD_OFFSET +  0; -- Context control register.
+  constant CR_SCCR    : natural := CRG_CTXT_WORD_OFFSET +  1; -- Saved context control register.
+  constant CR_LR      : natural := CRG_CTXT_WORD_OFFSET +  2; -- Link register.
+  constant CR_PC      : natural := CRG_CTXT_WORD_OFFSET +  3; -- PC register.
+  constant CR_TH      : natural := CRG_CTXT_WORD_OFFSET +  4; -- Trap handler register.
+  constant CR_PH      : natural := CRG_CTXT_WORD_OFFSET +  5; -- Panic handler register.
+  constant CR_TP      : natural := CRG_CTXT_WORD_OFFSET +  6; -- Trap point/return register.
+  constant CR_TA      : natural := CRG_CTXT_WORD_OFFSET +  7; -- Trap argument register.
+  constant CR_BRK0    : natural := CRG_CTXT_WORD_OFFSET +  8; -- Breakpoint 0 register.
+  constant CR_BRK1    : natural := CR_BRK0 + 1;               -- Breakpoint 1 register.
+  constant CR_BRK2    : natural := CR_BRK0 + 2;               -- Breakpoint 2 register.
+  constant CR_BRK3    : natural := CR_BRK0 + 3;               -- Breakpoint 3 register.
+  constant CR_DCR     : natural := CRG_CTXT_WORD_OFFSET + 12; -- Debug control register.
+  constant CR_CRR     : natural := CRG_CTXT_WORD_OFFSET + 13; -- Configuration request register.
+  constant CR_SCRP    : natural := CRG_CTXT_WORD_OFFSET + 14; -- Scratch-pad register.
+  constant CR_C_CYC   : natural := CRG_CTXT_WORD_OFFSET + 15; -- Non-idle cycle counter.
+  constant CR_C_STALL : natural := CRG_CTXT_WORD_OFFSET + 16; -- Non-idle stall counter.
+  constant CR_C_BUN   : natural := CRG_CTXT_WORD_OFFSET + 17; -- Committed bundle counter.
+  constant CR_C_SYL   : natural := CRG_CTXT_WORD_OFFSET + 18; -- Committed syllable counter.
+  constant CR_C_NOP   : natural := CRG_CTXT_WORD_OFFSET + 19; -- Committed NOP counter.
   
   -- Byte addresses for byte-aligned fields.
   constant CR_TC      : natural := 4*CR_CCR   + 0; -- Trap cause.
@@ -132,6 +186,85 @@ package core_ctrlRegs_pkg is
   constant CR_DCRC_RESET      : natural := 16#80#; -- Restart the context.
   constant CR_DCRC_RESET_DBG  : natural := 16#88#; -- Restart the context in external debug mode.
   constant CR_DCRC_RESET_BREAK: natural := 16#89#; -- Restart the context in external debug mode and break.
+  
+  -----------------------------------------------------------------------------
+  -- Interface between (generic) control register code and logic
+  -----------------------------------------------------------------------------
+  -- This record contains all the signals going to the generic control register
+  -- hardware, defining what the final instantiated register will look like.
+  type logic2creg_type is record
+    
+    -- Combinatorial register override. While overrideEnable is high, bus reads
+    -- and the hardware readData signals will always return overrideData. Note
+    -- that this can be used to remove a register by tying overrideEnable to
+    -- vcc; the optimizer will then remove the register because its output is
+    -- unused.
+    overrideEnable              : rvex_data_type;
+    overrideData                : rvex_data_type;
+    
+    -- Hardware write access to the register. This always takes precedence over
+    -- bus accesses.
+    writeEnable                 : rvex_data_type;
+    writeData                   : rvex_data_type;
+    
+    -- Write permissions for the debug bus and the core. When low, writes will
+    -- have no effect on the register value.
+    dbgBusCanWrite              : rvex_data_type;
+    coreCanWrite                : rvex_data_type;
+    
+    -- Reset value for the register.
+    resetValue                  : rvex_data_type;
+    
+  end record;
+  
+  -- This record contains all the signals going from a generic control register
+  -- to the register logic.
+  type creg2logic_type is record
+    
+    -- Current data as it would be read by the bus.
+    readData                    : rvex_data_type;
+    
+    -- Current data in the register, ignoring combinatorial override.
+    readDataRaw                 : rvex_data_type;
+    
+    -- High when a bus attempts to read the register.
+    busRead                     : std_logic;
+    
+    -- High when a bus attempts to write to the register and has permission to
+    -- do so.
+    busWrite                    : rvex_data_type;
+    
+    -- The data which the bus is writing when busWrite is high.
+    busWriteData                : rvex_data_type;
+    
+  end record;
+  
+  -- Default value for logic2creg_type. This overrides the output of the
+  -- register to 0 to completely optimize it away.
+  constant HW2REG_DEFAULT       : logic2creg_type := (
+    overrideEnable              => (others => '1'),
+    overrideData                => (others => '0'),
+    writeEnable                 => (others => '0'),
+    writeData                   => (others => '0'),
+    dbgBusCanWrite              => (others => '0'),
+    coreCanWrite                => (others => '0'),
+    resetValue                  => (others => '0')
+  );
+  
+  -- Array types for the above.
+  type logic2creg_array is array (natural range <>) of logic2creg_type;
+  type creg2logic_array is array (natural range <>) of creg2logic_type;
+  
+  -- Constrained array types for the above for the global and context-specific
+  -- parts of the control registers.
+  subtype gbreg2creg_type is logic2creg_array(CRG_GLOB_WORD_OFFSET to CRG_GLOB_WORD_OFFSET+CRG_GLOB_WORD_COUNT-1);
+  subtype creg2gbreg_type is creg2logic_array(CRG_GLOB_WORD_OFFSET to CRG_GLOB_WORD_OFFSET+CRG_GLOB_WORD_COUNT-1);
+  subtype cxreg2creg_type is logic2creg_array(CRG_CTXT_WORD_OFFSET to CRG_CTXT_WORD_OFFSET+CRG_CTXT_WORD_COUNT-1);
+  subtype creg2cxreg_type is creg2logic_array(CRG_CTXT_WORD_OFFSET to CRG_CTXT_WORD_OFFSET+CRG_CTXT_WORD_COUNT-1);
+  
+  -- Array types for the control register access records.
+  type cxreg2creg_array is array (natural range <>) of cxreg2creg_type;
+  type creg2cxreg_array is array (natural range <>) of creg2cxreg_type;
   
   -----------------------------------------------------------------------------
   -- Control register procedural generation

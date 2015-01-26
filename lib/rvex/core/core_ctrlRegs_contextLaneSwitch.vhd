@@ -86,8 +86,8 @@ entity core_ctrlRegs_contextLaneSwitch is
     -- Pipelane group bus interfaces
     ---------------------------------------------------------------------------
     -- Control register address from memory unit, shared between read and write
-    -- command. Address bits 6..0 are forwarded to the contexts, bits 9..7 are
-    -- used to select the context.
+    -- command. Address bits 9..0 are forwarded to the contexts, bits 12..10
+    -- are used to select the context.
     plgrp2sw_addr               : in  rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     plgrp2sw_writeEnable        : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     plgrp2sw_writeMask          : in  rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -99,8 +99,8 @@ entity core_ctrlRegs_contextLaneSwitch is
     -- Context interface
     ---------------------------------------------------------------------------
     -- Control register address from memory unit, shared between read and write
-    -- command. Address bits 6..0 are forwarded to the contexts, bits 9..7 are
-    -- used to select the context.
+    -- command. Address bits 9..0 are forwarded to the contexts, bits 12..10
+    -- are used to select the context.
     sw2ctxt_addr                : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
     sw2ctxt_writeEnable         : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     sw2ctxt_writeMask           : out rvex_mask_array(2**CFG.numContextsLog2-1 downto 0);
@@ -153,7 +153,7 @@ begin -- architecture
       -- Override lane group choice when a lane group tries to access ctxt.
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
         if CFG.numContextsLog2 = 0 or vect2uint(
-          plgrp2sw_addr(laneGroup)(7+CFG.numContextsLog2-1 downto 7)
+          plgrp2sw_addr(laneGroup)(10+CFG.numContextsLog2-1 downto 10)
         ) = ctxt then
           if plgrp2sw_readEnable(laneGroup) = '1'
             or plgrp2sw_writeEnable(laneGroup) = '1'
@@ -169,7 +169,7 @@ begin -- architecture
   
   -- Generate the command muxes.
   command_mux_gen: for ctxt in 2**CFG.numContextsLog2-1 downto 0 generate
-    sw2ctxt_addr(ctxt)        <= plgrp2sw_addr(vect2uint(contextMap(ctxt))) and X"0000007F";
+    sw2ctxt_addr(ctxt)        <= plgrp2sw_addr(vect2uint(contextMap(ctxt))) and X"000003FF";
     sw2ctxt_writeEnable(ctxt) <= plgrp2sw_writeEnable(vect2uint(contextMap(ctxt))) and contextEnable(ctxt);
     sw2ctxt_writeMask(ctxt)   <= plgrp2sw_writeMask(vect2uint(contextMap(ctxt)));
     sw2ctxt_writeData(ctxt)   <= plgrp2sw_writeData(vect2uint(contextMap(ctxt)));
@@ -188,7 +188,7 @@ begin -- architecture
         laneGroupMap_r <= (others => (others => '0'));
       elsif clkEn = '1' then
         for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 loop
-          laneGroupMap_r(laneGroup) <= plgrp2sw_addr(laneGroup)(7+CFG.numContextsLog2-1 downto 7);
+          laneGroupMap_r(laneGroup) <= plgrp2sw_addr(laneGroup)(10+CFG.numContextsLog2-1 downto 10);
         end loop;
       end if;
     end if;

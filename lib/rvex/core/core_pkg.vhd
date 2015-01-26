@@ -123,8 +123,8 @@ package core_pkg is
     -- link register.
     reg63isLink                 : boolean;
     
-    -- Start address in the data address space for the 128-byte control
-    -- register file. Must be aligned to a 128-byte boundary.
+    -- Start address in the data address space for the 1kiB control register
+    -- file. Must be aligned to a 1kiB boundary.
     cregStartAddress            : rvex_address_type;
     
     -- Configures the reset address for each context. When less than 8 contexts
@@ -154,7 +154,7 @@ package core_pkg is
     limmhFromNeighbor           => true,
     limmhFromPreviousPair       => true,
     reg63isLink                 => false,
-    cregStartAddress            => X"FFFFFF80",
+    cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
     unifiedStall                => false
   );

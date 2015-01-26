@@ -9,7 +9,7 @@ config  numLaneGroups         4
 config  forwarding            1
 config  limmhFromPreviousPair 1
 config  limmhFromNeighbor     1
-config  cregStartAddress      0xFFFFFF80
+config  cregStartAddress      0xFFFFFC00
 
 -- Initialize memories.
 init

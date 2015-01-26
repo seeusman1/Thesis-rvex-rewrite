@@ -1,4 +1,5 @@
 core_pipeline_pkg.vhd
+core_ctrlRegs_pkg.vhd
 core_intIface_pkg.vhd
 core_opcodeDatapath_pkg.vhd
 core_opcodeAlu_pkg.vhd
@@ -6,7 +7,6 @@ core_opcodeBranch_pkg.vhd
 core_opcodeMemory_pkg.vhd
 core_opcodeMultiplier_pkg.vhd
 core_opcode_pkg.vhd
-core_ctrlRegs_pkg.vhd
 core_trap_pkg.vhd
 core_asDisas_pkg.vhd
 core_pkg.vhd

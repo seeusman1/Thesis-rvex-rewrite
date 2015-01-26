@@ -64,20 +64,16 @@ entity core_ctrlRegs_busSwitch is
   generic (
     
     -- Number of slave busses.
-    NUM_SLAVES                  : positive := 3;
+    NUM_SLAVES                  : positive;
     
     -- Address range definitions. Addresses from 0 to BOUNDARIES(1)-1 go to
     -- slave 0, addresses from BOUNDARIES(i) to BOUNDARIES(i+1)-1 go to slave
     -- i, and the range from BOUNDARIES(N-1) to 0xFFFFFFFF go to slave N-1.
-    BOUNDARIES                  : rvex_address_array(1 to 3) := (
-        1 => uint2vect(CTRL_REG_GLOB_WORDS * 4, 32),
-        2 => X"00000080",
-        others => (others => RVEX_UNDEF)
-      );
+    BOUNDARIES                  : rvex_address_array;
     
     -- Mask for the address comparisons. Only bits which are set in this
     -- constant are taken into consideration.
-    BOUND_MASK                  : rvex_address_type := X"000000FF"
+    BOUND_MASK                  : rvex_address_type
     
   );
   port (

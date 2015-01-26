@@ -55,6 +55,7 @@ use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
 use rvex.core_trap_pkg.all;
 use rvex.core_pipeline_pkg.all;
+use rvex.core_ctrlRegs_pkg.all;
 
 -- pragma translate_off
 use rvex.simUtils_pkg.all;
@@ -226,6 +227,12 @@ entity core is
     -- Active high synchronous reset input.
     reset                       : in  std_logic;
     
+    -- This signal is asserted high when the debug bus writes a one to the
+    -- reset flag in the control registers. In this case, reset is already
+    -- asserted internally, so this signal may be ignored. For more complex
+    -- systems, the signal may be used to reset support systems as well.
+    resetOut                    : out std_logic;
+    
     -- Clock input, registers are rising edge triggered.
     clk                         : in  std_logic;
     
@@ -373,8 +380,8 @@ entity core is
     -- Data memory interface
     ---------------------------------------------------------------------------
     -- Data memory addresses from each pipelane group. Note that a section
-    -- of the address space 128 bytes in size must be mapped to the core
-    -- control registers, making that section of the data memory inaccessible.
+    -- of the address space 1kiB in size must be mapped to the core control
+    -- registers, making that section of the data memory inaccessible.
     -- The start address of this section is configurable with CFG.
     rv2dmem_addr                : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
@@ -413,9 +420,11 @@ entity core is
     ---------------------------------------------------------------------------
     -- The control/debug bus interface may be used to access the core control
     -- registers for debugging. All cores are forcibly stalled when a read or
-    -- write is requested here, such that addressing logic may be reused.
+    -- write is requested here, such that addressing logic may be reused. More
+    -- information about the memory map is available in core_ctrlRegs_pkg.vhd.
     
-    -- Address for the request. Only the 8 LSB are currently used.
+    -- Address for the request. Only the 13 LSB are currently used in the
+    -- largest configuration.
     dbg2rv_addr                 : in  rvex_address_type := (others => '0');
     
     -- Active high read enable signal.
@@ -530,8 +539,6 @@ architecture Behavioral of core is
   -- Control registers <-> global control register logic signals.
   signal gbreg2creg                   : gbreg2creg_type;
   signal creg2gbreg                   : creg2gbreg_type;
-  signal gbreg2creg_context           : std_logic_vector(CFG.numContextsLog2-1 downto 0);
-  signal gbreg2creg_gpregBank         : std_logic;
   
   -- Control registers <-> context control register logic signals.
   signal cxreg2creg                   : cxreg2creg_array(2**CFG.numContextsLog2-1 downto 0);
@@ -600,6 +607,9 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Combine the reset signals.
   reset_s <= reset or gbreg2rv_reset;
+  
+  -- Forward the reset output signal.
+  resetOut <= gbreg2rv_reset;
   
   -- Generate the stall signals.
   stall_gen: process (mem2rv_stallIn, debugBusStall) is
@@ -830,8 +840,6 @@ begin -- architecture
       -- Global register logic interface.
       gbreg2creg                    => gbreg2creg,
       creg2gbreg                    => creg2gbreg,
-      gbreg2creg_context            => gbreg2creg_context,
-      gbreg2creg_gpregBank          => gbreg2creg_gpregBank,
       
       -- Context register logic interface.
       cxreg2creg                    => cxreg2creg,
@@ -922,8 +930,6 @@ begin -- architecture
       -- Interface with the control registers and bus logic.
       gbreg2creg                    => gbreg2creg,
       creg2gbreg                    => creg2gbreg,
-      gbreg2creg_context            => gbreg2creg_context,
-      gbreg2creg_gpregBank          => gbreg2creg_gpregBank,
       
       -- Interface with configuration logic.
       gbreg2cfg_requestData_r       => gbreg2cfg_requestData_r,

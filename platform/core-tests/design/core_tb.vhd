@@ -285,7 +285,7 @@ architecture Behavioral of core_tb is
     
     -- Start address in the data address space for the 128-byte control
     -- register file. Must be aligned to a 128-byte boundary.
-    cregStartAddress            => X"FFFFFF80",
+    cregStartAddress            => X"FFFFFC00",
     
     -- Configures the reset address for each context. Should all be set to 0
     -- for the test cases to run correctly.

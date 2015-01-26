@@ -1,6 +1,6 @@
 
 #define BASE 0x12340000
-#define CREG 0xFFFFFF80
+#define CREG 0xFFFFFC00
 
 int main(void) {
   

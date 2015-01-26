@@ -92,13 +92,6 @@ entity core_globalRegLogic is
     gbreg2creg                  : out gbreg2creg_type;
     creg2gbreg                  : in  creg2gbreg_type;
     
-    -- Context selection for the debug bus.
-    gbreg2creg_context          : out std_logic_vector(CFG.numContextsLog2-1 downto 0);
-    
-    -- Bank selection bit for general purpose register access from the debug
-    -- bus.
-    gbreg2creg_gpregBank        : out std_logic;
-    
     ---------------------------------------------------------------------------
     -- Interface with configuration logic
     ---------------------------------------------------------------------------
@@ -165,21 +158,8 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- 
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- GSR   |R|                                 |E|B|  RID  |CTNUM|1|CTSEL|G|
+    -- GSR   |R|                                 |E|B|  RID  |               |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- 
-    -- G      = General purpose register bank select bit. This bit is writable
-    --          by the debug bus and determines which part of the general
-    --          purpose register map is connected to the high part of the debug
-    --          bus address space. When low, r0.0 through r0.31 are mapped;
-    --          when high, r0.32 through r0.63 are mapped.
-    -- 
-    -- CTSEL  = Context selection for debug bus access. Like G, this is
-    --          writable by the debug bus. It selects which context is accessed
-    --          when accessing any non-global register.
-    -- 
-    -- CTNUM  = Number of contexts - 1. This, along with the 1 next to it, can
-    --          be regarded as a mask for CTSEL and G.
     -- 
     -- RID    = Context ID for the last context which successfully passed
     --          through reconfiguration request arbitration, or 0xF in the last
@@ -195,16 +175,6 @@ begin -- architecture
     -- R      = When the debug bus writes a one to this bit, the entire rvex
     --          will be reset, as if the external reset input was asserted for
     --          one cycle.
-    
-    -- Make the context and gpreg bank selection register.
-    creg_makeNormalRegister(l2c, c2l, CR_GSR, CFG.numContextsLog2, 0,
-      permissions   => DEBUG_CAN_WRITE
-    );
-    gbreg2creg_gpregBank <= creg_readRegisterBit(l2c, c2l, CR_GSR, 0);
-    gbreg2creg_context <= creg_readRegisterVect(l2c, c2l, CR_GSR, CFG.numContextsLog2, 1);
-    
-    -- Make the CTNUM field.
-    creg_makeHardwiredField(l2c, c2l, CR_GSR, 7, 4, uint2vect(2**CFG.numContextsLog2-1, 3) & "1");
     
     -- Make the requester ID field.
     creg_makeHardwiredField(l2c, c2l, CR_GSR, 11, 8, cfg2gbreg_requesterID);
