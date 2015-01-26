@@ -107,6 +107,22 @@ entity core_memu is
     memu2pl_result              : out rvex_data_array(S_MEM+L_MEM to S_MEM+L_MEM);
     
     ---------------------------------------------------------------------------
+    -- Trace interface
+    ---------------------------------------------------------------------------
+    -- Whether a memory operation is being performed.
+    memu2pl_trace_enable        : out std_logic_vector(S_MEM to S_MEM);
+    
+    -- The address of the memory operation.
+    memu2pl_trace_addr          : out rvex_address_array(S_MEM to S_MEM);
+    
+    -- The write mask for the memory operation, or all zeros if the operation
+    -- is a read.
+    memu2pl_trace_writeMask     : out rvex_mask_array(S_MEM to S_MEM);
+    
+    -- The data written to the memory, masked by writeMask.
+    memu2pl_trace_writeData     : out rvex_data_array(S_MEM to S_MEM);
+  
+    ---------------------------------------------------------------------------
     -- Memory interface
     ---------------------------------------------------------------------------
     -- Data memory address, shared between read and write command.
@@ -133,6 +149,10 @@ architecture Behavioral of core_memu is
   
   -- This signal goes high when a misaligned memory access is attempted.
   signal misalignedAccess       : std_logic_vector(S_MEM to S_MEM);
+  
+  -- The data which is to be written to the memory and its byte mask.
+  signal writeMask              : rvex_mask_array(S_MEM to S_MEM);
+  signal writeData              : rvex_data_array(S_MEM to S_MEM);
   
   -- Pipeline stage type for controlling the read logic.
   type mem_stage_type is record
@@ -174,17 +194,17 @@ begin -- architecture
       when ACCESS_SIZE_BYTE =>
         
         -- Replicate the byte to write to all four positions.
-        memu2dmsw_writeData(S_MEM)( 7 downto  0) <= pl2memu_opData(S_MEM)(7 downto 0);
-        memu2dmsw_writeData(S_MEM)(15 downto  8) <= pl2memu_opData(S_MEM)(7 downto 0);
-        memu2dmsw_writeData(S_MEM)(23 downto 16) <= pl2memu_opData(S_MEM)(7 downto 0);
-        memu2dmsw_writeData(S_MEM)(31 downto 24) <= pl2memu_opData(S_MEM)(7 downto 0);
+        writeData(S_MEM)( 7 downto  0) <= pl2memu_opData(S_MEM)(7 downto 0);
+        writeData(S_MEM)(15 downto  8) <= pl2memu_opData(S_MEM)(7 downto 0);
+        writeData(S_MEM)(23 downto 16) <= pl2memu_opData(S_MEM)(7 downto 0);
+        writeData(S_MEM)(31 downto 24) <= pl2memu_opData(S_MEM)(7 downto 0);
         
         -- Setup write mask.
         case pl2memu_opAddr(S_MEM)(1 downto 0) is
-          when "00"   => memu2dmsw_writeMask(S_MEM) <= "1000";
-          when "01"   => memu2dmsw_writeMask(S_MEM) <= "0100";
-          when "10"   => memu2dmsw_writeMask(S_MEM) <= "0010";
-          when others => memu2dmsw_writeMask(S_MEM) <= "0001";
+          when "00"   => writeMask(S_MEM) <= "1000";
+          when "01"   => writeMask(S_MEM) <= "0100";
+          when "10"   => writeMask(S_MEM) <= "0010";
+          when others => writeMask(S_MEM) <= "0001";
         end case;
         
         -- Byte accesses have no alignment constraints.
@@ -193,13 +213,13 @@ begin -- architecture
       when ACCESS_SIZE_HALFWORD =>
         
         -- Replicate the halfword to write to both positions.
-        memu2dmsw_writeData(S_MEM)(15 downto  0) <= pl2memu_opData(S_MEM)(15 downto 0);
-        memu2dmsw_writeData(S_MEM)(31 downto 16) <= pl2memu_opData(S_MEM)(15 downto 0);
+        writeData(S_MEM)(15 downto  0) <= pl2memu_opData(S_MEM)(15 downto 0);
+        writeData(S_MEM)(31 downto 16) <= pl2memu_opData(S_MEM)(15 downto 0);
         
         -- Setup write mask.
         case pl2memu_opAddr(S_MEM)(1 downto 1) is
-          when "0"    => memu2dmsw_writeMask(S_MEM) <= "1100";
-          when others => memu2dmsw_writeMask(S_MEM) <= "0011";
+          when "0"    => writeMask(S_MEM) <= "1100";
+          when others => writeMask(S_MEM) <= "0011";
         end case;
         
         -- Halfword accesses need to be aligned to 16-bit boundaries.
@@ -208,10 +228,10 @@ begin -- architecture
       when others =>
         
         -- Setup the write data.
-        memu2dmsw_writeData(S_MEM) <= pl2memu_opData(S_MEM);
+        writeData(S_MEM) <= pl2memu_opData(S_MEM);
         
         -- Setup write mask.
-        memu2dmsw_writeMask(S_MEM) <= "1111";
+        writeMask(S_MEM) <= "1111";
         
         -- Word accesses need to be aligned to 32-bit boundaries.
         misalignedAccess(S_MEM) <= pl2memu_opAddr(S_MEM)(0) or pl2memu_opAddr(S_MEM)(1);
@@ -219,13 +239,36 @@ begin -- architecture
     end case;
   end process;
   
+  -- Forward the address to the trace system.
+  memu2pl_trace_addr(S_MEM) <= pl2memu_opAddr(S_MEM);
+  
   -- Setup write enable and read enable based on the control signals and
   -- alignment detection.
   memu2dmsw_readEnable(S_MEM)
-    <= ctrl(S_MEM).readEnable and pl2memu_valid(S_MEM) and not misalignedAccess(S_MEM);
+    <= ctrl(S_MEM).readEnable
+    and pl2memu_valid(S_MEM)
+    and not misalignedAccess(S_MEM);
     
   memu2dmsw_writeEnable(S_MEM)
-    <= ctrl(S_MEM).writeEnable and pl2memu_valid(S_MEM) and not misalignedAccess(S_MEM);
+    <= ctrl(S_MEM).writeEnable
+    and pl2memu_valid(S_MEM)
+    and not misalignedAccess(S_MEM);
+  
+  memu2pl_trace_enable(S_MEM)
+    <= (ctrl(S_MEM).readEnable or ctrl(S_MEM).writeEnable)
+    and pl2memu_valid(S_MEM)
+    and not misalignedAccess(S_MEM);
+  
+  -- Forward the write data signals.
+  memu2dmsw_writeData(S_MEM) <= writeData(S_MEM);
+  memu2pl_trace_writeData(S_MEM) <= writeData(S_MEM);
+  
+  -- Forward the write mask signals.
+  memu2dmsw_writeMask(S_MEM) <= writeMask(S_MEM);
+  memu2pl_trace_writeMask(S_MEM)
+    <= writeMask(S_MEM) 
+    when ctrl(S_MEM).writeEnable = '1'
+    else "0000";
   
   -- Setup the trap output to the pipeline. We shouldn't care about the valid
   -- signal here, because the valid signal is pulled low when the trap is

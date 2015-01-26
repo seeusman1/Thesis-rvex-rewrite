@@ -80,29 +80,33 @@ use rvex.simUtils_pkg.all;
   --          | |  | |br  |alu| |mulu  |memu  |brku  |<-+>||fwd|| |
   --          | |  |  - ' '---'  - - '  - - '  - - ' |  | |'==='| |
   --          | |  '================================='  | '-----' |
-  --          | |    ^           ^        ^       ^     |    ^    |
-  --          | |    v           |        |       |     |    |    |
-  --          | | .------.       v        v       v     |    |    |
-  --  imem <--+-+>|cxplif|     .====.   .----.  .----.  |    |    |
-  --          | | |.===. |     |dmsw|   |trap|  |limm|  |    |    |
-  --          | | ||fwd| |     '===='   '----'  '----'  |    |    |
-  -- rctrl <--+-+>|'===' |      ^  ^                    |    |    |
-  --          | | '------'      |  '--------------------+----+----+--> dmem
-  --          | |    ^          |                       |    |    |
-  --          | '----+----------+-----------------------'    |    |
-  --          |      |          |                            |    |
-  --          |      |          |  .-------------------------'    |
-  --          |      v          v  v                              |
-  -- rctrl    |   .=====.      .----.      .-----.      .-----.   |
-  -- reset <--+-->|cxreg|<---->|creg|<---->|gbreg|<---->|     |<--+--> mem
-  -- and done |   '====='      '----'      '-----'      | cfg |   |
-  --          |      |            ^           ^   ...<--|     |   |
-  --          |      '------------+-----------+-------->|     |   |
-  --          |                   |           |         '-----'   |--> sim
-  --          '-------------------+-----------+-------------------'
-  --                              |           |
-  --                              v           |
-  --                             dbg    imem affinity
+  --          | |    ^      |    ^        ^       ^     |    ^    |
+  --          | |    v      |    |        |       |     |    |    |
+  --          | | .------.  |    v        v       v     |    |    |
+  --  imem <--+-+>|cxplif|  |  .====.   .----.  .----.  |    |    |
+  --          | | |.===. |  |  |dmsw|   |trap|  |limm|  |    |    |
+  --          | | ||fwd| |  |  '===='   '----'  '----'  |    |    |
+  -- rctrl <--+-+>|'===' |  |   ^  ^                    |    |    |
+  --          | | '------'  |   |  '--------------------+----+----+--> dmem
+  --          | |    ^      |   |                       |    |    |
+  --          | '----+------+---+-----------------------'    |    |
+  --          |      |      |   |                            |    |
+  --          |      |      |   |  .-------------------------'    |
+  --          |      v      |   v  v                              |
+  -- rctrl    |   .=====.   |  .----.      .-----.      .-----.   |
+  -- reset <--+-->|cxreg|<--+->|creg|<---->|gbreg|<---->|     |<--+--> mem
+  -- and done |   '====='   |  '----'      '-----'      | cfg |   |
+  --          |    |   |    |     ^           ^   ...<--|     |   |
+  --          |    |   '----+-----+-----------+-------->|     |   |
+  --          |    v        |     |           |         '-----'   |--> sim
+  --          |    - - -    |     |           |                   |
+  --          |   |trace|<--'     |           |                   |
+  --          |    - - -          |           |                   |
+  --          |      |            |           |                   |
+  --          '------+------------+-----------+-------------------'
+  --                 |            |           |
+  --                 v            v           |
+  --               trsink        dbg    imem affinity
   --
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   --
@@ -126,12 +130,14 @@ use rvex.simUtils_pkg.all;
   --  - creg   = Control REGisters          @ core_ctrlRegs.vhd
   --  - gbreg  = GloBal REGister logic      @ core_globalRegLogic.vhd
   --  - cfg    = ConFiGuration control      @ core_cfgCtrl.vhd
+  --  - trace  = TRACE unit                 @ core_trace.vhd
   --  - mem    = interface common to instruction and data MEMory/cache
   --  - imem   = Instruction MEMory/cache
   --  - dmem   = Data MEMory/cache
   --  - dbg    = DeBuG bus interface
   --  - rctrl  = Run ConTRoL
   --  - sim    = vhdl SIMulation only
+  --  - trsink = TRace data SINK
   --
   -- The pipelane (pl), ALU and multiplier blocks are instantiated for each
   -- pipelane (although the multiplier can be disabled for selected pipelanes
@@ -201,8 +207,9 @@ use rvex.simUtils_pkg.all;
   --      -> Similar to core_opcode_pkg, this packages contains a decoding
   --         table for trap causes.
   --
-  --  - core_utils_pkg
-  --      -> Contains utility methods which are useful for logic generation.
+  --  - core_ctrlRegs_pkg
+  --      -> Contains constants defining the control register map at the word
+  --         level and some types and records used in the core.
   --
   --  - core_asDisas_pkg
   --      -> Contains simulation-only assembly and pretty-printing related
@@ -442,7 +449,28 @@ entity core is
     -- (one clock cycle delay with clkEn high)
     
     -- Read data.
-    rv2dbg_readData             : out rvex_data_type
+    rv2dbg_readData             : out rvex_data_type;
+    
+    ---------------------------------------------------------------------------
+    -- Trace output
+    ---------------------------------------------------------------------------
+    -- These signals connect to the optional trace unit. When the trace unit is
+    -- disabled in CFG, these signals are unused.
+    
+    -- When high, data is valid and should be registered in the next clkEn'd
+    -- cycle.
+    rv2trsink_push              : out std_logic;
+    
+    -- Trace data signal. Valid when push is high.
+    rv2trsink_data              : out rvex_byte_type;
+    
+    -- When high, this is the last byte of this trace packet. This has the same
+    -- timing as the data signal.
+    rv2trsink_end               : out std_logic;
+    
+    -- When high while push is high, the trace unit is stalled. While stalled,
+    -- push will stay high and data and end will remain stable.
+    trsink2rv_busy              : in  std_logic := '0'
     
   );
 end core;
@@ -497,6 +525,11 @@ architecture Behavioral of core is
   -- of the existing bus networks by claiming the bus from one of the
   -- pipelanes.
   signal debugBusStall                : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  
+  -- Trace unit stall signal. When the trace unit is busy outputting trace
+  -- data, this will be high, to prevent the core from overflowing the trace
+  -- unit with data.
+  signal traceStall                   : std_logic;
   
   -- Extended memory exception trap information. These are decoded from the
   -- fault flags coming from the memory into a trap information record which
@@ -589,6 +622,15 @@ architecture Behavioral of core is
   signal cfg2gbreg_error              : std_logic;
   signal cfg2gbreg_requesterID        : std_logic_vector(3 downto 0);
   
+  -- Pipelane <-> trace control unit signals.
+  signal pl2trace_data                : pl2trace_data_array(2**CFG.numLanesLog2-1 downto 0);
+  
+  -- Context register logic <-> trace control unit signals.
+  signal cxreg2trace_enable           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2trace_trapEn           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2trace_memEn            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2trace_regEn            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  
   -----------------------------------------------------------------------------
   -- Simulation-only signals
   -----------------------------------------------------------------------------
@@ -612,17 +654,21 @@ begin -- architecture
   resetOut <= gbreg2rv_reset;
   
   -- Generate the stall signals.
-  stall_gen: process (mem2rv_stallIn, debugBusStall) is
+  stall_gen: process (mem2rv_stallIn, debugBusStall, traceStall) is
     variable s : std_logic;
   begin
     if CFG.unifiedStall then
-      s := '0';
+      s := traceStall;
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
         s := s or mem2rv_stallIn(laneGroup) or debugBusStall(laneGroup);
       end loop;
       stall <= (others => s);
     else
-      stall <= mem2rv_stallIn or debugBusStall;
+      for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+        stall(laneGroup) <= mem2rv_stallIn(laneGroup)
+                         or debugBusStall(laneGroup)
+                         or traceStall;
+      end loop;
     end if;
   end process;
   
@@ -756,7 +802,10 @@ begin -- architecture
       cxreg2cxplif_brk              => cxreg2cxplif_brk,
       cxreg2cxplif_stepping         => cxreg2cxplif_stepping,
       cxreg2cxplif_resuming         => cxreg2cxplif_resuming,
-      cxplif2cxreg_resuming_ack     => cxplif2cxreg_resuming_ack
+      cxplif2cxreg_resuming_ack     => cxplif2cxreg_resuming_ack,
+      
+      -- Trace data.
+      pl2trace_data                 => pl2trace_data
       
     );
   
@@ -907,7 +956,13 @@ begin -- architecture
         
         -- Interface with configuration logic.
         cxreg2cfg_requestData_r     => cxreg2cfg_requestData_r(ctxt),
-        cxreg2cfg_requestEnable     => cxreg2cfg_requestEnable(ctxt)
+        cxreg2cfg_requestEnable     => cxreg2cfg_requestEnable(ctxt),
+        
+        -- Trace control unit interface.
+        cxreg2trace_enable          => cxreg2trace_enable(ctxt),
+        cxreg2trace_trapEn          => cxreg2trace_trapEn(ctxt),
+        cxreg2trace_memEn           => cxreg2trace_memEn(ctxt),
+        cxreg2trace_regEn           => cxreg2trace_regEn(ctxt)
         
       );
   end generate;
@@ -991,6 +1046,54 @@ begin -- architecture
   -- Connect the external decouple signal to the decouple signal from the
   -- configuration logic.
   rv2mem_decouple <= cfg2any_decouple;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate trace control unit
+  -----------------------------------------------------------------------------
+  trace_gen: if CFG.traceEnable generate
+    trace_inst: entity rvex.core_trace
+      generic map (
+        CFG                         => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                       => reset,
+        clk                         => clk,
+        clkEn                       => clkEn,
+        stallIn                     => stall,
+        stallOut                    => traceStall,
+        
+        -- Decoded configuration signals.
+        cfg2any_context             => cfg2any_context,
+        cfg2any_active              => cfg2any_active,
+        
+        -- Trace control.
+        cxreg2trace_enable          => cxreg2trace_enable,
+        cxreg2trace_trapEn          => cxreg2trace_trapEn,
+        cxreg2trace_memEn           => cxreg2trace_memEn,
+        cxreg2trace_regEn           => cxreg2trace_regEn,
+        
+        -- Trace raw data input.
+        pl2trace_data               => pl2trace_data,
+        
+        -- Trace output.
+        trace2trsink_push           => rv2trsink_push,
+        trace2trsink_data           => rv2trsink_data,
+        trace2trsink_end            => rv2trsink_end,
+        trsink2trace_busy           => trsink2rv_busy
+        
+      );
+  end generate;
+  
+  -- If the trace unit is disabled, connect its output signals to constant
+  -- values indicating idle.
+  no_trace_gen: if not CFG.traceEnable generate
+    traceStall      <= '0';
+    rv2trsink_push  <= '0';
+    rv2trsink_data  <= (others => '0');
+    rv2trsink_end   <= '0';
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Generate simulation information

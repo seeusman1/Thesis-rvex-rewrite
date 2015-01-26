@@ -280,7 +280,13 @@ entity core_pipelanes is
     cxreg2cxplif_brk            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_stepping       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_resuming       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    cxplif2cxreg_resuming_ack   : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0)
+    cxplif2cxreg_resuming_ack   : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Raw trace data
+    ---------------------------------------------------------------------------
+    -- Trace data from pipelane to trace control unit.
+    pl2trace_data               : out pl2trace_data_array(2**CFG.numLanesLog2-1 downto 0)
     
   );
 end core_pipelanes;
@@ -517,7 +523,10 @@ begin -- architecture
         trap2pl_trapToHandle(S_TRAP)      => trap2pl_trapToHandle(lane),
         trap2pl_trapPending(S_TRAP)       => trap2pl_trapPending(lane),
         trap2pl_disable                   => trap2pl_disable(lane),
-        trap2pl_flush                     => trap2pl_flush(lane)
+        trap2pl_flush                     => trap2pl_flush(lane),
+        
+        -- Trace unit interface.
+        pl2trace_data                     => pl2trace_data(lane)
         
       );
     

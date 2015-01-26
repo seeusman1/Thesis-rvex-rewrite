@@ -62,16 +62,6 @@ package core_trap_pkg is
 --=============================================================================
   
   -----------------------------------------------------------------------------
-  -- Basic types and constants
-  -----------------------------------------------------------------------------
-  -- Size of the trap cause in bits.
-  constant RVEX_TRAP_CAUSE_SIZE : natural := 8;
-  
-  -- Trap cause type.
-  subtype rvex_trap_type is std_logic_vector(RVEX_TRAP_CAUSE_SIZE-1 downto 0);
-  type rvex_trap_array is array (natural range <>) of rvex_trap_type;
-  
-  -----------------------------------------------------------------------------
   -- Trap information type
   -----------------------------------------------------------------------------
   -- This record contains all information needed to trigger or identify a trap.

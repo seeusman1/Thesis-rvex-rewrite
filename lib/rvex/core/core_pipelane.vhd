@@ -540,7 +540,13 @@ entity core_pipelane is
     -- Stage flushing inputs from the trap routing logic. When high, the
     -- instruction in the respective pipeline stage should no longer be
     -- committed/be deactivated.
-    trap2pl_flush               : in  std_logic_stages_type
+    trap2pl_flush               : in  std_logic_stages_type;
+    
+    ---------------------------------------------------------------------------
+    -- Trace unit interface
+    ---------------------------------------------------------------------------
+    -- Trace data from pipelane to trace control unit.
+    pl2trace_data               : out pl2trace_data_type
     
   );
 end core_pipelane;
@@ -720,6 +726,33 @@ architecture Behavioral of core_pipelane is
   );
   
   -----------------------------------------------------------------------------
+  -- Trace information state record
+  -----------------------------------------------------------------------------
+  type traceState_type is record
+    
+    -- High when this instruction performed a memory access.
+    mem_enable                  : std_logic;
+    
+    -- Address of the memory operation, if mem_enable is high.
+    mem_address                 : rvex_address_type;
+    
+    -- Write enable bits for the memory access, if mem_enable is high. When all
+    -- these are zero, a read operation is implied.
+    mem_writeMask               : rvex_mask_type;
+    
+    -- Data written to the memory, if mem_enable is high and mem_writeMask is
+    -- nonzero.
+    mem_writeData               : rvex_data_type;
+    
+  end record;
+  
+  -- Default/initialization value for trap state.
+  constant TRACE_STATE_DEFAULT : traceState_type := (
+    mem_enable                  => RVEX_UNDEF,
+    others                      => (others => RVEX_UNDEF)
+  );
+  
+  -----------------------------------------------------------------------------
   -- Combined syllable state record
   -----------------------------------------------------------------------------
   -- State variable for the execution of a single syllable. This is used for
@@ -759,6 +792,9 @@ architecture Behavioral of core_pipelane is
     -- Trap-related signals.
     tr                          : trapState_type;
     
+    -- Trace-related signals.
+    trace                       : traceState_type;
+    
     -- pragma translate_off
       -- Whether a memory access was requested or not.
       memRequested              : boolean;
@@ -785,6 +821,7 @@ architecture Behavioral of core_pipelane is
     dp                          => DATAPATH_STATE_DEFAULT,
     br                          => BRANCH_STATE_DEFAULT,
     tr                          => TRAP_STATE_DEFAULT,
+    trace                       => TRACE_STATE_DEFAULT,
     -- pragma translate_off
       memRequested              => false,
       memError                  => false,
@@ -851,6 +888,10 @@ architecture Behavioral of core_pipelane is
   signal pl2memu_opData         : rvex_data_array(S_MEM to S_MEM);
   signal memu2pl_trap           : trap_info_array(S_MEM to S_MEM);
   signal memu2pl_result         : rvex_data_array(S_MEM+L_MEM to S_MEM+L_MEM);
+  signal memu2pl_trace_enable   : std_logic_vector(S_MEM to S_MEM);
+  signal memu2pl_trace_addr     : rvex_address_array(S_MEM to S_MEM);
+  signal memu2pl_trace_writeMask: rvex_mask_array(S_MEM to S_MEM);
+  signal memu2pl_trace_writeData: rvex_data_array(S_MEM to S_MEM);
   
   -- Pipelane <-> breakpoint unit interconnect. Refer to the breakpoint unit
   -- entity for more information about the signals.
@@ -1200,6 +1241,12 @@ begin -- architecture
         memu2pl_trap(S_MEM)             => memu2pl_trap(S_MEM),
         memu2pl_result(S_MEM+L_MEM)     => memu2pl_result(S_MEM+L_MEM),
         
+        -- Trace interface.
+        memu2pl_trace_enable(S_MEM)     => memu2pl_trace_enable(S_MEM),
+        memu2pl_trace_addr(S_MEM)       => memu2pl_trace_addr(S_MEM),
+        memu2pl_trace_writeMask(S_MEM)  => memu2pl_trace_writeMask(S_MEM),
+        memu2pl_trace_writeData(S_MEM)  => memu2pl_trace_writeData(S_MEM),
+        
         -- Memory interface.
         memu2dmsw_addr(S_MEM)           => memu2dmsw_addr(S_MEM),
         memu2dmsw_writeData(S_MEM)      => memu2dmsw_writeData(S_MEM),
@@ -1216,6 +1263,12 @@ begin -- architecture
     -- the trap output to no trap.
     memu2pl_trap(S_MEM)           <= TRAP_INFO_NONE;
     memu2pl_result(S_MEM+L_MEM)   <= (others => RVEX_UNDEF);
+    
+    -- Set the trace data to no-operation.
+    memu2pl_trace_enable(S_MEM)   <= '0';
+    memu2pl_trace_addr(S_MEM)     <= (others => '0');
+    memu2pl_trace_writeMask(S_MEM)<= (others => '0');
+    memu2pl_trace_writeData(S_MEM)<= (others => '0');
     
     -- Set the outputs going to the rest of the processor to hi-Z, so they can
     -- be easily merged with the signals coming from the pipelane in the group
@@ -1327,7 +1380,8 @@ begin -- architecture
     mulu2pl_result,
     
     -- Signals from the memory unit.
-    memu2pl_result, memu2pl_trap,
+    memu2pl_result, memu2pl_trap, memu2pl_trace_enable, memu2pl_trace_addr,
+    memu2pl_trace_writeMask, memu2pl_trace_writeData,
     
     -- Signals from the breakpoint unit.
     brku2pl_trap
@@ -1802,6 +1856,12 @@ begin -- architecture
           := s(S_MEM+L_MEM).tr.trap & dmsw2pl_exception(S_MEM+L_MEM);
       end if;
       
+      -- Copy trace information into the pipelane.
+      s(S_MEM).trace.mem_enable     := memu2pl_trace_enable(S_MEM);
+      s(S_MEM).trace.mem_address    := memu2pl_trace_addr(S_MEM);
+      s(S_MEM).trace.mem_writeMask  := memu2pl_trace_writeMask(S_MEM);
+      s(S_MEM).trace.mem_writeData  := memu2pl_trace_writeData(S_MEM);
+      
     end if;
     
     ---------------------------------------------------------------------------
@@ -2022,9 +2082,57 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Generate performance counter signals
     ---------------------------------------------------------------------------
-    pl2cxplif2_sylCommit(S_LAST) <= s(S_LAST).valid;
-    pl2cxplif2_sylNop(S_LAST) <= s(S_LAST).dp.c.isNOP;
+    pl2cxplif2_sylCommit(S_LAST)    <= s(S_LAST).valid;
+    pl2cxplif2_sylNop(S_LAST)       <= s(S_LAST).dp.c.isNOP;
 
+    ---------------------------------------------------------------------------
+    -- Generate trace data
+    ---------------------------------------------------------------------------
+    if CFG.traceEnable then
+      
+      -- Forward validity information and (bundle) program counter.
+      pl2trace_data.valid           <= s(S_LAST).valid;
+      pl2trace_data.PC              <= s(S_LAST).PC;
+      
+      -- Forward handled trap information.
+      if HAS_BR then
+        pl2trace_data.trap_enable   <= s(S_LAST).br.trapInfo.active;
+        pl2trace_data.trap_cause    <= s(S_LAST).br.trapInfo.cause;
+        pl2trace_data.trap_arg      <= s(S_LAST).br.trapInfo.arg;
+      else
+        pl2trace_data.trap_enable   <= '0';
+        pl2trace_data.trap_cause    <= (others => '0');
+        pl2trace_data.trap_arg      <= (others => '0');
+      end if;
+      
+      -- Forward memory access information.
+      if HAS_MEM then
+        pl2trace_data.mem_enable    <= s(S_LAST).trace.mem_enable;
+        pl2trace_data.mem_address   <= s(S_LAST).trace.mem_address;
+        pl2trace_data.mem_writeMask <= s(S_LAST).trace.mem_writeMask;
+        pl2trace_data.mem_writeData <= s(S_LAST).trace.mem_writeData;
+      else
+        pl2trace_data.mem_enable    <= '0';
+        pl2trace_data.mem_address   <= (others => '0');
+        pl2trace_data.mem_writeMask <= (others => '0');
+        pl2trace_data.mem_writeData <= (others => '0');
+      end if;
+      
+      -- Forward general purpose/link register information.
+      pl2trace_data.gprl_enable     <= s(S_LAST).dp.resValid or s(S_LAST).dp.resLinkValid;
+      if s(S_LAST).dp.resLinkValid = '1' then
+        pl2trace_data.gprl_address  <= (others => '0');
+      else
+        pl2trace_data.gprl_address  <= s(S_LAST).dp.dest;
+      end if;
+      pl2trace_data.gprl_writeData  <= s(S_LAST).dp.res;
+      
+      -- Forward branch register information.
+      pl2trace_data.br_enable       <= s(S_LAST).dp.resBrValid;
+      pl2trace_data.br_writeData    <= s(S_LAST).dp.resBr;
+      
+    end if;
+    
     ---------------------------------------------------------------------------
     -- Generate VHDL simulation information
     ---------------------------------------------------------------------------

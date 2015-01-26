@@ -108,7 +108,7 @@ package core_ctrlRegs_pkg is
   -- register file. The specified range must be identical to or a subset of
   -- 128..255 inclusive, but may be changed otherwise.
   constant CRG_CTXT_WORD_OFFSET : natural := 128;
-  constant CRG_CTXT_WORD_COUNT  : natural := 20;
+  constant CRG_CTXT_WORD_COUNT  : natural := 24;
   
   -----------------------------------------------------------------------------
   -- Control register map specification
@@ -144,14 +144,18 @@ package core_ctrlRegs_pkg is
   constant CR_BRK1    : natural := CR_BRK0 + 1;               -- Breakpoint 1 register.
   constant CR_BRK2    : natural := CR_BRK0 + 2;               -- Breakpoint 2 register.
   constant CR_BRK3    : natural := CR_BRK0 + 3;               -- Breakpoint 3 register.
-  constant CR_DCR     : natural := CRG_CTXT_WORD_OFFSET + 12; -- Debug control register.
-  constant CR_CRR     : natural := CRG_CTXT_WORD_OFFSET + 13; -- Configuration request register.
-  constant CR_SCRP    : natural := CRG_CTXT_WORD_OFFSET + 14; -- Scratch-pad register.
+  constant CR_DCR     : natural := CRG_CTXT_WORD_OFFSET + 12; -- Debug control register 1.
+  constant CR_DCR2    : natural := CRG_CTXT_WORD_OFFSET + 13; -- Debug control register 2.
+  constant CR_CRR     : natural := CRG_CTXT_WORD_OFFSET + 14; -- Configuration request register.
   constant CR_C_CYC   : natural := CRG_CTXT_WORD_OFFSET + 15; -- Non-idle cycle counter.
   constant CR_C_STALL : natural := CRG_CTXT_WORD_OFFSET + 16; -- Non-idle stall counter.
   constant CR_C_BUN   : natural := CRG_CTXT_WORD_OFFSET + 17; -- Committed bundle counter.
   constant CR_C_SYL   : natural := CRG_CTXT_WORD_OFFSET + 18; -- Committed syllable counter.
   constant CR_C_NOP   : natural := CRG_CTXT_WORD_OFFSET + 19; -- Committed NOP counter.
+  constant CR_SCRP    : natural := CRG_CTXT_WORD_OFFSET + 20; -- Scratch-pad register 1.
+  constant CR_SCRP2   : natural := CRG_CTXT_WORD_OFFSET + 21; -- Scratch-pad register 2.
+  constant CR_SCRP3   : natural := CRG_CTXT_WORD_OFFSET + 22; -- Scratch-pad register 3.
+  constant CR_SCRP4   : natural := CRG_CTXT_WORD_OFFSET + 23; -- Scratch-pad register 4.
   
   -- Byte addresses for byte-aligned fields.
   constant CR_TC      : natural := 4*CR_CCR   + 0; -- Trap cause.
@@ -159,23 +163,30 @@ package core_ctrlRegs_pkg is
   constant CR_CID     : natural := 4*CR_SCCR  + 0; -- Context ID.
   constant CR_DCRF    : natural := 4*CR_DCR   + 0; -- Debug control flags.
   constant CR_DCRC    : natural := 4*CR_DCR   + 1; -- Debug breakpoint cause.
+  constant CR_RET     : natural := 4*CR_DCR2  + 0; -- main() return value.
   
   -- Bit indices for CCR.
-  constant CR_CCR_IEN     : natural := 0; -- Interrupt enable.
-  constant CR_CCR_IEN_C   : natural := 1; -- Interrupt disable.
-  constant CR_CCR_RFT     : natural := 2; -- Ready for trap.
-  constant CR_CCR_RFT_C   : natural := 3; -- Not ready for trap.
-  constant CR_CCR_BPE     : natural := 4; -- Breakpoint enable.
-  constant CR_CCR_BPE_C   : natural := 5; -- Breakpoint disable.
+  constant CR_CCR_IEN         : natural := 0; -- Interrupt enable.
+  constant CR_CCR_IEN_C       : natural := 1; -- Interrupt disable.
+  constant CR_CCR_RFT         : natural := 2; -- Ready for trap.
+  constant CR_CCR_RFT_C       : natural := 3; -- Not ready for trap.
+  constant CR_CCR_BPE         : natural := 4; -- Breakpoint enable.
+  constant CR_CCR_BPE_C       : natural := 5; -- Breakpoint disable.
   
   -- Bit indices for DCR.
-  constant CR_DCR_BREAK   : natural := 24; -- Break flag.
-  constant CR_DCR_STEP    : natural := 25; -- Step flag.
-  constant CR_DCR_RESUME  : natural := 26; -- Resume flag.
-  constant CR_DCR_EXT_DBG : natural := 27; -- External debug flag.
-  constant CR_DCR_INT_DBG : natural := 28; -- Internal debug flag.
-  constant CR_DCR_JUMP    : natural := 30; -- Jump flag (after bus write to PC).
-  constant CR_DCR_DONE    : natural := 31; -- Done flag and (when writing) reset bit.
+  constant CR_DCR_BREAK       : natural := 24; -- Break flag.
+  constant CR_DCR_STEP        : natural := 25; -- Step flag.
+  constant CR_DCR_RESUME      : natural := 26; -- Resume flag.
+  constant CR_DCR_EXT_DBG     : natural := 27; -- External debug flag.
+  constant CR_DCR_INT_DBG     : natural := 28; -- Internal debug flag.
+  constant CR_DCR_JUMP        : natural := 30; -- Jump flag (after bus write to PC).
+  constant CR_DCR_DONE        : natural := 31; -- Done flag and (when writing) reset bit.
+  
+  -- Bit indices for DCR2.
+  constant CR_DCR2_TR_ENA     : natural := 0; -- Trace unit enable flag.
+  constant CR_DCR2_TR_REG     : natural := 5; -- Trace register writes.
+  constant CR_DCR2_TR_MEM     : natural := 6; -- Trace memory accesses.
+  constant CR_DCR2_TR_TRAP    : natural := 7; -- Trace trap information.
   
   -- DCR flag command codes (byte-write these to CR_DCRC).
   constant CR_DCRC_DBG_EXT    : natural := 16#08#; -- Enter external debug mode.

@@ -34,4 +34,5 @@ core_mulu.vhd
 core_pipelane.vhd
 core_trapRouting.vhd
 core_pipelanes.vhd
+core_trace.vhd
 core.vhd

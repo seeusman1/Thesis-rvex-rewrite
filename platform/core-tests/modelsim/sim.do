@@ -41,6 +41,7 @@ vcom -quiet -93 -work rvex "../../../lib/rvex/core/core_contextRegLogic.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/core/core_globalRegLogic.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/core/core_cfgCtrl_decode.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/core/core_cfgCtrl.vhd"
+vcom -quiet -93 -work rvex "../../../lib/rvex/core/core_trace.vhd"
 vcom -quiet -93 -work rvex "../../../lib/rvex/core/core.vhd"
 
 vlib work

@@ -68,17 +68,22 @@ all:BRK0                    { CREG_CTXT + 0x20 } # Breakpoint 0.
 all:BRK1                    { CREG_CTXT + 0x24 } # Breakpoint 1.
 all:BRK2                    { CREG_CTXT + 0x28 } # Breakpoint 2.
 all:BRK3                    { CREG_CTXT + 0x2C } # Breakpoint 3.
-all:DCR                     { CREG_CTXT + 0x30 } # Debug control register.
+all:DCR                     { CREG_CTXT + 0x30 } # Debug control register 1.
 all:DCRF                    { CREG_CTXT + 0x30 } # Debug control flags (byte).
 all:DCRC                    { CREG_CTXT + 0x31 } # Break cause (byte).
 all:DCRB                    { CREG_CTXT + 0x32 } # Breakpoint configuration (half).
-all:CRR                     { CREG_CTXT + 0x34 } # Context reconfiguration request.
-all:SCRP                    { CREG_CTXT + 0x38 } # Scratch-pad register.
+all:DCR2                    { CREG_CTXT + 0x34 } # Debug control register 2.
+all:RET                     { CREG_CTXT + 0x34 } # Program return value (byte).
+all:CRR                     { CREG_CTXT + 0x38 } # Context reconfiguration request.
 all:C_CYC                   { CREG_CTXT + 0x3C } # Non-idle cycle counter.
 all:C_STALL                 { CREG_CTXT + 0x40 } # Non-idle stall counter.
 all:C_BUN                   { CREG_CTXT + 0x44 } # Committed bundle counter.
 all:C_SYL                   { CREG_CTXT + 0x48 } # Committed syllable counter.
 all:C_NOP                   { CREG_CTXT + 0x4C } # Committed NOP counter.
+all:SCRP                    { CREG_CTXT + 0x50 } # Scratch-pad register 1.
+all:SCRP2                   { CREG_CTXT + 0x54 } # Scratch-pad register 2.
+all:SCRP3                   { CREG_CTXT + 0x58 } # Scratch-pad register 3.
+all:SCRP4                   { CREG_CTXT + 0x5C } # Scratch-pad register 4.
 
 # This is called after a context change to set banking bits. Currently there
 # are no banking bits, so this does nothing.

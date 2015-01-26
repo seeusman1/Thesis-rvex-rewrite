@@ -248,7 +248,22 @@ entity core_contextRegLogic is
     -- the bus write enable signal for the register and the data is connected
     -- to the register output.
     cxreg2cfg_requestData_r     : out rvex_data_type;
-    cxreg2cfg_requestEnable     : out std_logic
+    cxreg2cfg_requestEnable     : out std_logic;
+    
+    ---------------------------------------------------------------------------
+    -- Trace control unit interface
+    ---------------------------------------------------------------------------
+    -- Whether tracing should be enabled or not for each context. Active high.
+    cxreg2trace_enable          : out std_logic;
+    
+    -- Whether trap information should be traced. Active high.
+    cxreg2trace_trapEn          : out std_logic;
+    
+    -- Whether memory operations should be traced. Active high.
+    cxreg2trace_memEn           : out std_logic;
+    
+    -- Whether register writes should be traced. Active high.
+    cxreg2trace_regEn           : out std_logic
     
   );
 end core_contextRegLogic;
@@ -567,7 +582,7 @@ begin -- architecture
     end loop;
     
     ---------------------------------------------------------------------------
-    -- Debug control register (DCR)
+    -- Debug control register 1 (DCR)
     ---------------------------------------------------------------------------
     -- 
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
@@ -744,6 +759,50 @@ begin -- architecture
                      or rctrl2cxreg_reset;
     
     ---------------------------------------------------------------------------
+    -- Debug control register 2 (DCR2)
+    ---------------------------------------------------------------------------
+    -- 
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- DCR2  |    Result     |               |t|m|r|   *   |e|T|M|R|   *   |E|
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    --
+    -- Result = scratch register, intended to be used for the return value of
+    --          main() to indicate success or failure of a test program.
+    --
+    -- Trace control flags. The uppercase characters represent the current
+    -- state, whereas the lowercase flags indicate the capabilities of the
+    -- processor.
+    -- 
+    -- T/t    = Trace trap information.
+    -- M/m    = Trace memory/control register operations.
+    -- R/r    = Trace register writes.
+    -- *      = Reserved bits for 
+    -- E/e    = Trace enable.
+    
+    if CFG.traceEnable then
+      
+      -- Make the trace control flags.
+      creg_makeNormalRegister(l2c, c2l, CR_DCR2, 7, 0,
+        permissions   => DEBUG_CAN_WRITE
+      );
+      
+      -- Connect the control signals.
+      cxreg2trace_enable  <= creg_readRegisterBit(l2c, c2l, CR_DCR2, CR_DCR2_TR_ENA);
+      cxreg2trace_trapEn  <= creg_readRegisterBit(l2c, c2l, CR_DCR2, CR_DCR2_TR_TRAP);
+      cxreg2trace_memEn   <= creg_readRegisterBit(l2c, c2l, CR_DCR2, CR_DCR2_TR_MEM);
+      cxreg2trace_regEn   <= creg_readRegisterBit(l2c, c2l, CR_DCR2, CR_DCR2_TR_REG);
+      
+      -- Make the trace capability field.
+      creg_makeHardwiredField(l2c, c2l, CR_DCR2, 15, 8, "11100001");
+      
+    end if;
+    
+    -- Make the result register.
+    creg_makeNormalRegister(l2c, c2l, CR_DCR2, 31, 24,
+      permissions   => READ_WRITE
+    );
+    
+    ---------------------------------------------------------------------------
     -- Context reconfiguration request register (CRR)
     ---------------------------------------------------------------------------
     -- 
@@ -774,21 +833,6 @@ begin -- architecture
     
     -- Drive requestEnable.
     cxreg2cfg_requestEnable <= creg_isBusWritingToBit(l2c, c2l, CR_CRR, 0);
-    
-    ---------------------------------------------------------------------------
-    -- Scratch-pad register (SCRP)
-    ---------------------------------------------------------------------------
-    -- 
-    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- SCRP  |                            scratch                            |
-    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    --
-    -- Regular register with no effect on processor behavior.
-    
-    -- Make the register.
-    creg_makeNormalRegister(l2c, c2l, CR_SCRP, 31, 0,
-      permissions   => READ_WRITE
-    );
     
     ---------------------------------------------------------------------------
     -- Performance counters (C_*)
@@ -870,6 +914,39 @@ begin -- architecture
       clear         => countClear,
       inc_vect      => cxplif2cxreg_sylCommit and cxplif2cxreg_sylNop,
       enable        => not cxplif2cxreg_stall,
+      permissions   => READ_WRITE
+    );
+    
+    ---------------------------------------------------------------------------
+    -- Scratch-pad registers (SCRP*)
+    ---------------------------------------------------------------------------
+    -- 
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- SCRP  |                           scratch 1                           |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- SCRP2 |                           scratch 2                           |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- SCRP3 |                           scratch 3                           |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- SCRP4 |                           scratch 4                           |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    --
+    -- Regular register with no effect on processor behavior.
+    
+    -- Make the registers.
+    creg_makeNormalRegister(l2c, c2l, CR_SCRP, 31, 0,
+      permissions   => READ_WRITE
+    );
+    
+    creg_makeNormalRegister(l2c, c2l, CR_SCRP2, 31, 0,
+      permissions   => READ_WRITE
+    );
+    
+    creg_makeNormalRegister(l2c, c2l, CR_SCRP3, 31, 0,
+      permissions   => READ_WRITE
+    );
+    
+    creg_makeNormalRegister(l2c, c2l, CR_SCRP4, 31, 0,
       permissions   => READ_WRITE
     );
     

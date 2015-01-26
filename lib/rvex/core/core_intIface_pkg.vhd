@@ -62,6 +62,9 @@ package core_intIface_pkg is
   -----------------------------------------------------------------------------
   -- Common datatypes
   -----------------------------------------------------------------------------
+  -- Size of the trap cause in bits.
+  constant RVEX_TRAP_CAUSE_SIZE : natural := 8;
+  
   -- Subtypes for some common datatypes used within the core. These are
   -- prefixed with rvex_ mostly for consistency with the basic types which are
   -- also used in the external interface.
@@ -73,6 +76,7 @@ package core_intIface_pkg is
   subtype rvex_3bit_type        is std_logic_vector( 2 downto  0); -- Any 3-bit word, used for configuration control.
   subtype rvex_sylStatus_type   is std_logic_vector(15 downto  0); -- One status bit per syllable for the maximum supported lane count.
   subtype rvex_limmh_type       is std_logic_vector(31 downto  9); -- The part of a long immediate which is borrowed from another syllable.
+  subtype rvex_trap_type        is std_logic_vector(RVEX_TRAP_CAUSE_SIZE-1 downto 0); -- Trap cause.
   
   -- Array types for the above subtypes.
   type rvex_opcode_array        is array (natural range <>) of rvex_opcode_type;
@@ -83,6 +87,7 @@ package core_intIface_pkg is
   type rvex_3bit_array          is array (natural range <>) of rvex_3bit_type;
   type rvex_sylStatus_array     is array (natural range <>) of rvex_sylStatus_type;
   type rvex_limmh_array         is array (natural range <>) of rvex_limmh_type;
+  type rvex_trap_array          is array (natural range <>) of rvex_trap_type;
   
   -----------------------------------------------------------------------------
   -- Constants which don't belong elsewhere
@@ -242,6 +247,67 @@ package core_intIface_pkg is
   
   -- Array type for the above.
   type cxreg2pl_breakpoint_info_array is array (natural range <>) of cxreg2pl_breakpoint_info_type;
+  
+  -----------------------------------------------------------------------------
+  -- Trace information records
+  -----------------------------------------------------------------------------
+  -- Raw trace information from pipelane to trace unit.
+  type pl2trace_data_type is record
+    
+    -- Whether the instruction being represented was committed or not.
+    valid                       : std_logic;
+    
+    -- PC of the bundle being executed in this pipelane.
+    PC                          : rvex_address_type;
+    
+    -- Whether the current instruction is the first in the trap handler, i.e. a
+    -- trap has been handled.
+    trap_enable                 : std_logic;
+    
+    -- Trap cause of the trap handled by this instruction, if trap_enable is
+    -- high.
+    trap_cause                  : rvex_trap_type;
+    
+    -- Trap argument of the trap handled by this instruction, if trap_enable is
+    -- high.
+    trap_arg                    : rvex_address_type;
+    
+    -- High when this instruction performed a memory access.
+    mem_enable                  : std_logic;
+    
+    -- Address of the memory operation, if mem_enable is high.
+    mem_address                 : rvex_address_type;
+    
+    -- Write enable bits for the memory access, if mem_enable is high. When all
+    -- these are zero, a read operation is implied.
+    mem_writeMask               : rvex_mask_type;
+    
+    -- Data written to the memory, if mem_enable is high and mem_writeMask is
+    -- nonzero.
+    mem_writeData               : rvex_data_type;
+    
+    -- High when a general purpose register or the link register was written by
+    -- this instruction.
+    gprl_enable                 : std_logic;
+    
+    -- Address of the general purpose register which was written or 0 for the
+    -- link register if gprl_enable is high.
+    gprl_address                : rvex_gpRegAddr_type;
+    
+    -- Data written to the general purpose or link register if gprl_enable is
+    -- high.
+    gprl_writeData              : rvex_data_type;
+    
+    -- High when the indexed branch register was written by this instruction.
+    br_enable                   : rvex_brRegData_type;
+    
+    -- Data written to the indexed branch register if br_enable is high.
+    br_writeData                : rvex_brRegData_type;
+    
+  end record;
+  
+  -- Array type for the above.
+  type pl2trace_data_array is array (natural range <>) of pl2trace_data_type;
   
 end core_intIface_pkg;
 

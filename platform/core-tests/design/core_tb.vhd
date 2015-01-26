@@ -220,7 +220,7 @@ architecture Behavioral of core_tb is
   -- Core configuration under test. Due to VHDL constraints, this cannot be
   -- changed by the test cases runtime. Instead, you select the configuration
   -- here and the test cases will check if they are compatible with it.
-  constant CFG                  : rvex_generic_config_type := (
+  constant CFG                  : rvex_generic_config_type := rvex_cfg(
 
     -- log2 of the number of lanes to instantiate.
     numLanesLog2                => 3,
@@ -267,21 +267,21 @@ architecture Behavioral of core_tb is
     -- forwarding disabled, the core will use less area and might run at higher
     -- frequencies, but much more NOPs are necessary between data-dependent
     -- instructions.
-    forwarding                  => true,
+    forwarding                  => 1,
     
     -- When true, syllables can borrow long immediates from the other syllable
     -- in a syllable pair.
-    limmhFromNeighbor           => true,
+    limmhFromNeighbor           => 1,
     
     -- When true, syllables can borrow long immediates from the previous
     -- syllable pair (with the same index within the pair) within a generic
     -- binary bundle.
-    limmhFromPreviousPair       => true,
+    limmhFromPreviousPair       => 1,
     
     -- When true, general purpose register 63 maps directly to the link
     -- register. When false, MTL, MFL, STL and LDL must be used to access the
     -- link register.
-    reg63isLink                 => false,
+    reg63isLink                 => 0,
     
     -- Start address in the data address space for the 128-byte control
     -- register file. Must be aligned to a 128-byte boundary.
@@ -296,7 +296,10 @@ architecture Behavioral of core_tb is
     -- memory architecture can be made simpler, but cannot make use of the
     -- possible performance gain due to being able to stall only part of the
     -- core.
-    unifiedStall                => false
+    unifiedStall                => 0,
+    
+    -- Whether the trace unit should be instantiated.
+    traceEnable                 => 1
     
   );
   
@@ -2538,13 +2541,17 @@ begin -- architecture
     registerCtrlReg("CR_BRK2",  4*CR_BRK2);
     registerCtrlReg("CR_BRK3",  4*CR_BRK3);
     registerCtrlReg("CR_DCR",   4*CR_DCR);
+    registerCtrlReg("CR_DCR2",  4*CR_DCR2);
     registerCtrlReg("CR_CRR",   4*CR_CRR);
-    registerCtrlReg("CR_SCRP",  4*CR_SCRP);
     registerCtrlReg("CR_C_CYC", 4*CR_C_CYC);
     registerCtrlReg("CR_C_STALL",4*CR_C_STALL);
     registerCtrlReg("CR_C_BUN", 4*CR_C_BUN);
     registerCtrlReg("CR_C_SYL", 4*CR_C_SYL);
     registerCtrlReg("CR_C_NOP", 4*CR_C_NOP);
+    registerCtrlReg("CR_SCRP",  4*CR_SCRP);
+    registerCtrlReg("CR_SCRP2", 4*CR_SCRP2);
+    registerCtrlReg("CR_SCRP3", 4*CR_SCRP3);
+    registerCtrlReg("CR_SCRP4", 4*CR_SCRP4);
     
     -- Register control register byte addresses.
     registerCtrlReg("CR_TC",    CR_TC);
@@ -2552,6 +2559,7 @@ begin -- architecture
     registerCtrlReg("CR_CID",   CR_CID);
     registerCtrlReg("CR_DCRF",  CR_DCRF);
     registerCtrlReg("CR_DCRC",  CR_DCRC);
+    registerCtrlReg("CR_RET",   CR_RET);
     
     -- Register control register values.
     registerCtrlRegVal("CR_CCR_IEN",          CR_CCR_IEN);
@@ -2567,6 +2575,10 @@ begin -- architecture
     registerCtrlRegVal("CR_DCR_INT_DBG",      CR_DCR_INT_DBG);
     registerCtrlRegVal("CR_DCR_JUMP",         CR_DCR_JUMP);
     registerCtrlRegVal("CR_DCR_DONE",         CR_DCR_DONE);
+    registerCtrlRegVal("CR_DCR2_TR_ENA",      CR_DCR2_TR_ENA);
+    registerCtrlRegVal("CR_DCR2_TR_REG",      CR_DCR2_TR_REG);
+    registerCtrlRegVal("CR_DCR2_TR_MEM",      CR_DCR2_TR_MEM);
+    registerCtrlRegVal("CR_DCR2_TR_TRAP",     CR_DCR2_TR_TRAP);
     registerCtrlRegVal("CR_DCRC_DBG_EXT",     CR_DCRC_DBG_EXT);
     registerCtrlRegVal("CR_DCRC_BREAK",       CR_DCRC_BREAK);
     registerCtrlRegVal("CR_DCRC_STEP",        CR_DCRC_STEP);

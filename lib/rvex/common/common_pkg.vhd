@@ -63,12 +63,14 @@ package common_pkg is
   subtype rvex_data_type        is std_logic_vector(31 downto  0); -- Any data word.
   subtype rvex_mask_type        is std_logic_vector( 3 downto  0); -- Byte mask for data words.
   subtype rvex_syllable_type    is std_logic_vector(31 downto  0); -- Any syllable.
+  subtype rvex_byte_type        is std_logic_vector( 7 downto  0); -- Any byte.
   
   -- Array types for the above subtypes.
   type rvex_address_array       is array (natural range <>) of rvex_address_type;
   type rvex_data_array          is array (natural range <>) of rvex_data_type;
   type rvex_mask_array          is array (natural range <>) of rvex_mask_type;
   type rvex_syllable_array      is array (natural range <>) of rvex_syllable_type;
+  type rvex_byte_array          is array (natural range <>) of rvex_byte_type;
   
   -- Null array constants.
   constant RVEX_DATA_ARRAY_NULL : rvex_data_array(0 to -1) := (others => (others => '0'));

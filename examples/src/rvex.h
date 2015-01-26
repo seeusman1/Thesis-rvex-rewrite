@@ -112,10 +112,12 @@
 #define CR_TA_ADDR              CREG_ADDR_CTXT(0x1C)
 #define CR_TA                   CREG_UINT32_R(CR_TA_ADDR)
 
-// Complete debug control register. Writable only when external debug is
+// Complete debug control registers. Writable only when external debug is
 // deactivated.
 #define CR_DCR_ADDR             CREG_ADDR_CTXT(0x30)
+#define CR_DCR2_ADDR            CREG_ADDR_CTXT(0x34)
 #define CR_DCR                  CREG_UINT32_RW(CR_DCR_ADDR)
+#define CR_DCR2                 CREG_UINT32_RW(CR_DCR2_ADDR)
 
 // Breakpoint addresses. Writable only when external debug is deactivated.
 #define CR_BRK_ADDR(i)          CREG_ADDR_CTXT(0x20 + i*4)
@@ -150,7 +152,7 @@
 #define CR_DCR_FLAGS_STEP       1
 
 // Reconfiguration request register.
-#define CR_CRR_ADDR             CREG_ADDR_CTXT(0x34)
+#define CR_CRR_ADDR             CREG_ADDR_CTXT(0x38)
 #define CR_CRR                  CREG_UINT32_RW(CR_CRR_ADDR)
 
 // Context ID register (returns the index starting from zero of the context
@@ -158,9 +160,19 @@
 #define CR_CID_ADDR             CREG_ADDR_CTXT(0x04)
 #define CR_CID                  CREG_UINT8_R(CR_CID_ADDR)
 
-// Scratch-pad register. No hardware function, just a place to store a word in.
-#define CR_SCRP_ADDR            CREG_ADDR_CTXT(0x38)
+// Scratch-pad registers. No hardware function, just places to store words in.
+// RET is intended to be used for the main() return value to test for success
+// or failure of a program.
+#define CR_SCRP_ADDR            CREG_ADDR_CTXT(0x50)
+#define CR_SCRP2_ADDR           CREG_ADDR_CTXT(0x54)
+#define CR_SCRP3_ADDR           CREG_ADDR_CTXT(0x58)
+#define CR_SCRP4_ADDR           CREG_ADDR_CTXT(0x5C)
+#define CR_RET_ADDR             CREG_ADDR_CTXT(0x34)
 #define CR_SCRP                 CREG_UINT32_RW(CR_SCRP_ADDR)
+#define CR_SCRP2                CREG_UINT32_RW(CR_SCRP2_ADDR)
+#define CR_SCRP3                CREG_UINT32_RW(CR_SCRP3_ADDR)
+#define CR_SCRP4                CREG_UINT32_RW(CR_SCRP4_ADDR)
+#define CR_RET                  CREG_INT8_RW(CR_RET_ADDR)
 
 // Context cycle counter. Increments whenever a context is non-idle. Writing 0
 // to it clears the counter, writing 1 clears all context counters
