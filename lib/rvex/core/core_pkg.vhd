@@ -75,13 +75,20 @@ package core_pkg is
     -- than 3 due to configuration register size limits.
     numContextsLog2             : natural;
     
-    -- log2 of the number of syllables in a generic binary bundle. All branch
-    -- targets are assumed to be aligned to this, but trap return addresses may
-    -- not be. When a trap return address is not aligned to this and
-    -- limmhFromPreviousPair is set, then special actions will be taken to
-    -- ensure that the relevant syllables preceding the trap point are fetched
-    -- before operation resumes.
+    -- log2 of the number of syllables in a generic binary bundle. When a
+    -- branch address is not aligned to this and limmhFromPreviousPair is set,
+    -- then special actions will be taken to ensure that the relevant syllables
+    -- preceding the trap point are fetched before operation resumes.
     genBundleSizeLog2           : natural;
+    
+    -- Assume (and enforce) that the start addresses of bundles are aligned to
+    -- the specified amount of syllables. When this is less than numLanesLog2,
+    -- additional logic is instantiated to handle aligning the memory accesses.
+    -- The advantage of this is that bundles can be shorter by specifying the
+    -- stop bit earlier when ILP is not sufficient to save on memory accesses.
+    -- Note that traps are generated when a stop bit is encountered in any
+    -- syllable not occuring just before an alignment point.
+    bundleAlignLog2             : natural;
     
     -- Defines which lanes have a multiplier. Bit 0 of this number maps to lane
     -- 0, bit 1 to lane 1, etc.
@@ -92,12 +99,6 @@ package core_pkg is
     -- the last lane in each group, memLaneRevIndex = 1 results in it being in
     -- the second to last lane, etc.
     memLaneRevIndex             : natural;
-    
-    -- Lane index for the branch unit, counting down from the last lane in each
-    -- lane group. So branchLaneRevIndex = 0 results in the branch unit being
-    -- in the last lane in each group, branchLaneRevIndex = 1 results in it
-    -- being in the second to last lane, etc.
-    branchLaneRevIndex          : natural;
     
     -- Defines how many hardware breakpoints are evaluated. Maximum is 4 due to
     -- the register map only having space for 4.
@@ -149,9 +150,9 @@ package core_pkg is
     numLaneGroupsLog2           => 2,
     numContextsLog2             => 2,
     genBundleSizeLog2           => 3,
+    bundleAlignLog2             => 3,
     multiplierLanes             => 2#11111111#,
     memLaneRevIndex             => 1,
-    branchLaneRevIndex          => 0,
     numBreakpoints              => 4,
     forwarding                  => true,
     limmhFromNeighbor           => true,
@@ -169,9 +170,9 @@ package core_pkg is
     numLaneGroupsLog2           => 0,
     numContextsLog2             => 0,
     genBundleSizeLog2           => 3,
+    bundleAlignLog2             => 3,
     multiplierLanes             => 2#00#,
     memLaneRevIndex             => 1,
-    branchLaneRevIndex          => 0,
     numBreakpoints              => 0,
     forwarding                  => false,
     limmhFromNeighbor           => true,
@@ -197,9 +198,10 @@ package core_pkg is
     numLaneGroupsLog2           : integer := -1;
     numContextsLog2             : integer := -1;
     genBundleSizeLog2           : integer := -1;
+    bundleAlignLog2             : integer := -1;
     multiplierLanes             : integer := -1;
     memLaneRevIndex             : integer := -1;
-    branchLaneRevIndex          : integer := -1;
+    branchLaneRevIndex          : integer := 0; -- No longer supported, must be zero.
     numBreakpoints              : integer := -1;
     forwarding                  : integer := -1;
     limmhFromNeighbor           : integer := -1;
@@ -256,6 +258,11 @@ package core_pkg is
     CFG       : rvex_generic_config_type
   ) return natural;
   
+  -- Returns the alignment requirement for the program counter.
+  function cfg2pcAlignLog2 (
+    CFG       : rvex_generic_config_type
+  ) return natural;
+  
 end core_pkg;
 
 package body core_pkg is
@@ -267,9 +274,10 @@ package body core_pkg is
     numLaneGroupsLog2           : integer := -1;
     numContextsLog2             : integer := -1;
     genBundleSizeLog2           : integer := -1;
+    bundleAlignLog2             : integer := -1;
     multiplierLanes             : integer := -1;
     memLaneRevIndex             : integer := -1;
-    branchLaneRevIndex          : integer := -1;
+    branchLaneRevIndex          : integer := 0; -- No longer supported, must be zero.
     numBreakpoints              : integer := -1;
     forwarding                  : integer := -1;
     limmhFromNeighbor           : integer := -1;
@@ -282,14 +290,24 @@ package body core_pkg is
   ) return rvex_generic_config_type is
     variable cfg  : rvex_generic_config_type;
   begin
+    
+    -- Fail if configurations which are *no longer* supported are requested.
+    assert branchLaneRevIndex = 0
+      report "CFG.branchLaneRevIndex is no longer supported in this version "
+           & "the core. The branch unit now needs to be in the last lane of "
+           & "a lane group, due to the way stop bits are handled. The branch "
+           & "unit for which the stop bit is set is active, thus it needs to "
+           & "be in the last lane."
+      severity failure;
+    
     cfg := base;
     if numLanesLog2           >= 0 then cfg.numLanesLog2          := numLanesLog2; end if;
     if numLaneGroupsLog2      >= 0 then cfg.numLaneGroupsLog2     := numLaneGroupsLog2; end if;
     if numContextsLog2        >= 0 then cfg.numContextsLog2       := numContextsLog2; end if;
     if genBundleSizeLog2      >= 0 then cfg.genBundleSizeLog2     := genBundleSizeLog2; end if;
+    if bundleAlignLog2        >= 0 then cfg.bundleAlignLog2       := bundleAlignLog2; end if;
     if multiplierLanes        >= 0 then cfg.multiplierLanes       := multiplierLanes; end if;
     if memLaneRevIndex        >= 0 then cfg.memLaneRevIndex       := memLaneRevIndex; end if;
-    if branchLaneRevIndex     >= 0 then cfg.branchLaneRevIndex    := branchLaneRevIndex; end if;
     if numBreakpoints         >= 0 then cfg.numBreakpoints        := numBreakpoints; end if;
     if forwarding             >= 0 then cfg.forwarding            := int2bool(forwarding); end if;
     if limmhFromNeighbor      >= 0 then cfg.limmhFromNeighbor     := int2bool(limmhFromNeighbor); end if;
@@ -371,5 +389,16 @@ package body core_pkg is
   begin
     return group2lastLane(lane2group(lane, CFG), CFG);
   end lane2lastLane;
+  
+  -- Returns the alignment requirement for the program counter.
+  function cfg2pcAlignLog2 (
+    CFG       : rvex_generic_config_type
+  ) return natural is
+  begin
+    return min_nat(
+      CFG.numLanesLog2 - CFG.numLaneGroupsLog2,
+      CFG.bundleAlignLog2
+    ) + SYLLABLE_SIZE_LOG2B;
+  end cfg2pcAlignLog2;
   
 end core_pkg;

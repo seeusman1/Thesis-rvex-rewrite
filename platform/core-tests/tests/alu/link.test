@@ -11,7 +11,7 @@ init
 -- Load a random value into r0.1, and load the link register from a zero memory
 -- location.
 load    limmh 1, 0x12345678
-load    add r0.1 = r0.0, 0x12345678 ;;
+load    add r0.1 = r0.0, 0x12345678 --;;
 load    add r0.2 = r0.0, 0
 load    nop
 load    nop
@@ -44,7 +44,7 @@ load    nop
 load    nop
 load    nop
 load    stl 0[r0.0] = l0.0
-load    nop ;;
+load    nop --;;
 
 -- Delay for a bit, in case forwarding is disabled.
 loadnops  64
@@ -57,7 +57,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.2
-load    nop ;;
+load    nop --;;
 
 -- Load a different value into the link register from the memory.
 load    nop
@@ -67,7 +67,7 @@ load    nop
 load    nop
 load    nop
 load    ldl l0.0 = 4[r0.0]
-load    nop ;;
+load    nop --;;
 
 -- Delay for a bit, in case forwarding is disabled.
 loadnops  64
@@ -80,7 +80,7 @@ load    nop
 load    nop
 load    nop
 load    stl 0[r0.0] = l0.0
-load    nop ;;
+load    nop --;;
 
 -- Delay for a bit, in case forwarding is disabled.
 loadnops  64
@@ -93,7 +93,7 @@ load    nop
 load    nop
 load    nop
 load    stw 8[r0.0] = r0.2
-load    stop ;;
+load    stop --;;
 
 -- Reset the processor.
 reset

@@ -12,7 +12,7 @@ init
 load    limmh 1, 0x12345678
 load    add r0.1 = r0.0, 0x12345678
 load    add r0.2 = r0.0, 16
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -24,7 +24,7 @@ inc     shift-kernel.inc
 load    limmh 1, 0xF000000F
 load    add r0.1 = r0.0, 0xF000000F
 load    add r0.2 = r0.0, 1
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -36,7 +36,7 @@ inc     shift-kernel.inc
 load    limmh 1, 0x000FF000
 load    add r0.1 = r0.0, 0x000FF000
 load    add r0.2 = r0.0, 5
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -48,7 +48,7 @@ inc     shift-kernel.inc
 load    limmh 1, 0x87654321
 load    add r0.1 = r0.0, 0x87654321
 load    add r0.2 = r0.0, 32
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -60,7 +60,7 @@ inc     shift-kernel.inc
 load    limmh 1, 0x12345678
 load    add r0.1 = r0.0, 0x12345678
 load    add r0.2 = r0.0, 240
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -76,7 +76,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stop ;;
+load    stop --;;
 
 -- Reset the processor.
 reset

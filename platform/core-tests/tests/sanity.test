@@ -11,7 +11,7 @@ init
 
 -- 0x00
 load    nop
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -27,7 +27,7 @@ load    nop
 load    nop
 load    nop
 load    stw 8[r0.0] = r0.0
-load    nop ;;
+load    nop --;;
 
 -- 0x40
 load    nop
@@ -37,7 +37,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stop ;;
+load    stop --;;
 
 -- 0x60
 load    nop
@@ -47,7 +47,7 @@ load    nop
 load    nop
 load    nop
 load    stw 4[r0.0] = r0.0
-load    nop ;;
+load    nop --;;
 
 -- Write a non-zero values to memory addresses 4 and 8 so we can make sure
 -- that the processor worked right (since we can only write zeroes without

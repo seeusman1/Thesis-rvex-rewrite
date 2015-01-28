@@ -15,7 +15,7 @@ load      nop
 load      nop
 load      nop
 load      nop
-load      nop ;;
+load      nop --;;
 
 -- Delay for a bit, in case forwarding is disabled.
 loadnops  64
@@ -28,7 +28,7 @@ load      nop
 load      nop
 load      nop
 load      stw 0[r0.0] = r0.10
-load      nop ;;
+load      nop --;;
 
 load      nop
 load      nop
@@ -37,7 +37,7 @@ load      nop
 load      nop
 load      nop
 load      stw 4[r0.0] = r0.11
-load      nop ;;
+load      nop --;;
 
 load      nop
 load      nop
@@ -46,5 +46,5 @@ load      nop
 load      nop
 load      nop
 load      stw 8[r0.0] = r0.12
-load      nop ;;
+load      nop --;;
 
