@@ -12,7 +12,7 @@ init
 load    add r0.1 = r0.0, 0
 load    add r0.2 = r0.0, -42
 load    cmpeq b0.0 = r0.0, 1
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -24,7 +24,7 @@ inc     selection-kernel.inc
 load    add r0.1 = r0.0, -42
 load    add r0.2 = r0.0, 0
 load    cmpeq b0.0 = r0.0, 1
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -36,7 +36,7 @@ inc     selection-kernel.inc
 load    add r0.1 = r0.0, 0
 load    add r0.2 = r0.0, 42
 load    cmpeq b0.0 = r0.0, 1
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -48,7 +48,7 @@ inc     selection-kernel.inc
 load    add r0.1 = r0.0, 42
 load    add r0.2 = r0.0, 0
 load    cmpeq b0.0 = r0.0, 1
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -60,7 +60,7 @@ inc     selection-kernel.inc
 load    add r0.1 = r0.0, 33
 load    add r0.2 = r0.0, 42
 load    cmpeq b0.0 = r0.0, 0
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -72,7 +72,7 @@ inc     selection-kernel.inc
 load    add r0.1 = r0.0, 42
 load    add r0.2 = r0.0, 33
 load    cmpeq b0.0 = r0.0, 0
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -88,7 +88,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stop ;;
+load    stop --;;
 
 -- Reset the processor.
 reset

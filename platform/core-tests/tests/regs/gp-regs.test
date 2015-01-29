@@ -9,7 +9,7 @@ init
 
 -- 0x000
 load    add r0.1 = r0.0, r0.0
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -28,7 +28,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.1 -- Should be 0, still
-load    add r0.1 = r0.0, 42 ;;
+load    add r0.1 = r0.0, 42 --;;
 
 -- Give the writes to r0.0..r0.2 time to commit.
 fillnops 0x200
@@ -41,7 +41,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.1 -- Should be 42
-load    nop ;;
+load    nop --;;
 
 -- 0x220
 load    nop
@@ -51,7 +51,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.2 -- Should be 33
-load    nop ;;
+load    nop --;;
 
 -- 0x240
 load    nop
@@ -61,7 +61,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.0 -- Should still be 0; writes to r0.0 should be ignored.
-load    stop ;;
+load    stop --;;
 
 -- Run the test.
 reset

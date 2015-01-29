@@ -74,6 +74,9 @@ package core_pipeline_pkg is
   --    :          :    .----.:          :    |BRK| :          :          :
   --    :          :    |limm|:          :    '---' :          :          :
   --    :          :    '----':          :          :          :          :
+  --    :          :    .----.:          :          :          :          :
+  --    :          :    |stop|:          :          :          :          :
+  --    :          :    '----':          :          :          :          :
   --    '----S1----'----S2----'----S3----'----S4----'----S5----'----S6----'
   --         ^      |          |    ^        |          |          |*
   --         |      v          v    |        v          v          v
@@ -132,9 +135,16 @@ package core_pipeline_pkg is
   --  - S_BTGT >= S_PCP1
   constant S_BTGT   : natural := 2;
   
+  -- Stage in which stop bit propagation is performed. This is the process in
+  -- which lanes following a lane with a syllable with stop bit set are
+  -- invalidated.
+  -- Requirements:
+  --  - S_STOP = S_IF + L_IF
+  constant S_STOP   : natural := 2;
+  
   -- Long immediate forwarding block stage.
   -- Requirements:
-  --  - S_LIMM >= S_IF + L_IF
+  --  - S_LIMM >= S_STOP
   constant S_LIMM   : natural := 2;
   
   -- Stage which trap information from the last stage is forwarded to.

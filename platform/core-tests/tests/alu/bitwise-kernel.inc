@@ -18,7 +18,7 @@ load      orc     r0.13 = r0.1, r0.2
 load      xor     r0.14 = r0.1, r0.2
 load      nop
 load      nop
-load      nop ;;
+load      nop --;;
 
 -- Delay for a bit, in case forwarding is disabled.
 loadnops  64
@@ -31,7 +31,7 @@ load      nop
 load      nop
 load      nop
 load      stw 0[r0.0] = r0.10
-load      nop ;;
+load      nop --;;
 
 load      nop
 load      nop
@@ -40,7 +40,7 @@ load      nop
 load      nop
 load      nop
 load      stw 4[r0.0] = r0.11
-load      nop ;;
+load      nop --;;
 
 load      nop
 load      nop
@@ -49,7 +49,7 @@ load      nop
 load      nop
 load      nop
 load      stw 8[r0.0] = r0.12
-load      nop ;;
+load      nop --;;
 
 load      nop
 load      nop
@@ -58,7 +58,7 @@ load      nop
 load      nop
 load      nop
 load      stw 12[r0.0] = r0.13
-load      nop ;;
+load      nop --;;
 
 load      nop
 load      nop
@@ -67,5 +67,5 @@ load      nop
 load      nop
 load      nop
 load      stw 16[r0.0] = r0.14
-load      nop ;;
+load      nop --;;
 

@@ -12,7 +12,7 @@ init
 
 -- 0x000
 load    nop
-load    nop ;;
+load    nop --;;
 load    nop
 load    nop
 load    nop
@@ -28,7 +28,7 @@ load    limmh 2, 0x5A22225A
 load    add r0.14 = r0.0, 0x5A44445A
 load    limmh 4, 0x5A44445A
 load    add r0.16 = r0.0, 0x5A66665A
-load    limmh 6, 0x5A66665A ;;
+load    limmh 6, 0x5A66665A --;;
 
 -- 0x040
 load    limmh 1, 0x5A11115A
@@ -38,7 +38,7 @@ load    add r0.13 = r0.0, 0x5A33335A
 load    limmh 5, 0x5A55555A
 load    add r0.15 = r0.0, 0x5A55555A
 load    limmh 7, 0x5A77775A
-load    add r0.17 = r0.0, 0x5A77775A ;;
+load    add r0.17 = r0.0, 0x5A77775A --;;
 
 -- 0x060
 load    nop
@@ -48,7 +48,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.10
-load    nop ;;
+load    nop --;;
 
 -- 0x080
 load    nop
@@ -58,7 +58,7 @@ load    nop
 load    nop
 load    nop
 load    stw 4[r0.0] = r0.11
-load    nop ;;
+load    nop --;;
 
 -- 0x0A0
 load    nop
@@ -68,7 +68,7 @@ load    nop
 load    nop
 load    nop
 load    stw 8[r0.0] = r0.12
-load    nop ;;
+load    nop --;;
 
 -- 0x0C0
 load    nop
@@ -78,7 +78,7 @@ load    nop
 load    nop
 load    nop
 load    stw 12[r0.0] = r0.13
-load    nop ;;
+load    nop --;;
 
 -- 0x0E0
 load    nop
@@ -88,7 +88,7 @@ load    nop
 load    nop
 load    nop
 load    stw 16[r0.0] = r0.14
-load    nop ;;
+load    nop --;;
 
 -- 0x100
 load    nop
@@ -98,7 +98,7 @@ load    nop
 load    nop
 load    nop
 load    stw 20[r0.0] = r0.15
-load    nop ;;
+load    nop --;;
 
 -- 0x120
 load    nop
@@ -108,7 +108,7 @@ load    nop
 load    nop
 load    nop
 load    stw 24[r0.0] = r0.16
-load    nop ;;
+load    nop --;;
 
 -- 0x140
 load    nop
@@ -118,7 +118,7 @@ load    nop
 load    nop
 load    nop
 load    stw 28[r0.0] = r0.17
-load    stop ;;
+load    stop --;;
 
 -- Run the test.
 reset

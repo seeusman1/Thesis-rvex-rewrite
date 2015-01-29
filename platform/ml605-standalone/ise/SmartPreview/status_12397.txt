@@ -1,0 +1,12 @@
+
+STATUS:
+	+------------------------------------+--------------------------------+
+	| Most recent SmartPreview on disk:  |                      ml605.ncd |
+	| Fully placed:                      |                            YES |
+	| Fully routed:                      |                            YES |
+	| SmartPreview status:               |               ready for bitgen |
+	| Timing score:                      |                          12397 |
+	| Timing errors:                     |                             83 |
+	| Number of failing constraints:     |                              1 |
+	+------------------------------------+--------------------------------+
+
