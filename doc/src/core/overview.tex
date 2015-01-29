@@ -24,7 +24,7 @@ A block diagram of the rvex core is shown in Figure \ref{fig:block-diagram}. The
 \newcommand{\entitylbl}[4]{\hypertarget{entity:#2}{}\entity{#1}{#2}{#3}{#4}}
 
 \entitylbl{\rvex{} processor}{rv}{core.vhd}{
-  This is the toplevel file for the rvex processor.
+  This is the toplevel file for the \rvex{} processor.
 }
 
 \entity{External \rvex{} package}{-}{core_pkg.vhd}{
@@ -171,6 +171,10 @@ A block diagram of the rvex core is shown in Figure \ref{fig:block-diagram}. The
   This entity error-checks and decodes the configuration words as presented by the core or the debug bus when they request reconfiguration.
 }
 
+\entitylbl{Trace unit}{trace}{core_trace.vhd}{
+  This optional unit (enabled through \code{CFG.traceEnable}) configurably selects and compresses trace information into a byte stream. While the byte stream is being written to the memory system or peripheral connected to the trace interface of the core, this unit ensures that the core is properly stalled.
+}
+
 \entitylbl{Memory}{mem}{-}{
   Abbreviation for the memory or cache connected to the \rvex{}.
 }
@@ -193,6 +197,10 @@ A block diagram of the rvex core is shown in Figure \ref{fig:block-diagram}. The
 
 \entitylbl{Simulation}{sim}{-}{
   Abbreviation for the behavioral VHDL simulator, used as destination for simulation-only debug output signals.
+}
+
+\entitylbl{Trace data sink}{trsink}{-}{
+  Abbreviation for the external system which the trace output data is sent to.
 }
 
 \end{document}

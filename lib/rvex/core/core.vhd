@@ -452,7 +452,7 @@ entity core is
     rv2dbg_readData             : out rvex_data_type;
     
     ---------------------------------------------------------------------------
-    -- Trace output
+    -- Trace interface
     ---------------------------------------------------------------------------
     -- These signals connect to the optional trace unit. When the trace unit is
     -- disabled in CFG, these signals are unused.

@@ -6,7 +6,7 @@
 
 The following listing serves as an instantiation template for the core. The code is documented in the following sections.
 
-\begin{lstlisting}[numbers=none]
+\begin{lstlisting}[numbers=none, basicstyle=\tiny]
 library rvex;
 use rvex.common_pkg.all;
 use rvex.core_pkg.all;
@@ -29,6 +29,7 @@ rvex_inst: entity rvex.core
     
     -- System control.
     reset                       => reset,
+    resetOut                    => resetOut,
     clk                         => clk,
     clkEn                       => clkEn,
     
@@ -70,7 +71,13 @@ rvex_inst: entity rvex.core
     dbg2rv_writeEnable          => dbg2rv_writeEnable,
     dbg2rv_writeMask            => dbg2rv_writeMask,
     dbg2rv_writeData            => dbg2rv_writeData,
-    rv2dbg_readData             => rv2dbg_readData
+    rv2dbg_readData             => rv2dbg_readData,
+    
+    -- Trace interface.
+    rv2trsink_push              => rv2trsink_push,
+    rv2trsink_data              => rv2trsink_data,
+    rv2trsink_end               => rv2trsink_end,
+    trsink2rv_busy              => trsink2rv_busy
     
   );
 
@@ -92,11 +99,13 @@ subtype rvex_address_type     is std_logic_vector(31 downto  0);
 subtype rvex_data_type        is std_logic_vector(31 downto  0);
 subtype rvex_mask_type        is std_logic_vector( 3 downto  0);
 subtype rvex_syllable_type    is std_logic_vector(31 downto  0);
+subtype rvex_byte_type        is std_logic_vector( 7 downto  0);
 
 type rvex_address_array       is array (natural range <>) of rvex_address_type;
 type rvex_data_array          is array (natural range <>) of rvex_data_type;
 type rvex_mask_array          is array (natural range <>) of rvex_mask_type;
 type rvex_syllable_array      is array (natural range <>) of rvex_syllable_type;
+type rvex_byte_array          is array (natural range <>) of rvex_byte_type;
 \end{lstlisting}
 
 The \code{address}, \code{data} and \code{mask} types are used for the data bus interfaces, wherein \code{mask} is used for a per-byte write mask. The \code{syllable} types represent a syllable, i.e., an instruction word for a single lane.
@@ -106,6 +115,8 @@ The \code{address}, \code{data} and \code{mask} types are used for the data bus 
 The system control signals include the clock source for the core, a synchronous reset signal and a global clock enable signal. \code{clk} and \code{reset} are required \code{std_logic} input signals. \code{clkEn} is an optional \code{std_logic} input signal.
 
 The core is clocked on the rising edge of \code{clk} while \code{clkEn} is high. When a rising edge on \code{clk} occurs while \code{reset} is high, all resettable components of the core will be reset, regardless of the state of \code{clkEn}. Only block and distributed RAM resources are not reset, because this is not possible on Xilinx FPGAs without reconfiguration. In particular, this means that the general purpose registers are not reset to 0 by asserting \code{reset}, thus their contents should be considered to be undefined when a program starts. \code{r0.0} is an exception to this rule, as it is always zero.
+
+The \code{resetOut} signal is asserted high for one cycle when the debug bus writes a one to the reset bit in \code{GSR}. This signal may be used to reset support systems as well as the core, or it may be ignored.
 
 \subsection{Run control}
 
@@ -280,6 +291,33 @@ The debug bus provides an optional slave bus interface capable of accessing most
   \item \code{rv2dbg_readData : out rvex_data_type}
   
   Debug interface bus. \code{dbg2rv_readEnable} and \code{dbg2rv_writeEnable} are active high and should not be active at the same time. \code{rv2dbg_readData} is valid one cycle after \code{dbg2rv_readEnable} is asserted and contains the data read from \code{dbg2rv_addr} as it was while \code{dbg2rv_readEnable} was asserted. \code{dbg2rv_writeMask}, \code{dbg2rv_writeData} and \code{dbg2rv_addr} define the write request when \code{dbg2rv_writeEnable} is asserted. All input signals are tied to \code{'0'} when not specified.
+  
+\end{itemize}
+
+\subsection{Trace interface}
+
+The trace interface provides an optional write-only bus to some memory system or peripheral, which the core may send trace information to. The trace system is disabled by default and must be enabled in the \code{DCR2} control register. In addition, the trace unit hardware is only instantiated when \code{traceEnable} is set in the \code{CFG} vector.
+
+\begin{itemize}
+  
+  \item \code{rv2trsink_push : out std_logic}
+  
+  When high, \code{rv2trsink_data} and \code{rv2trsink_end} are valid and should be registered in the next cycle where \code{clkEn} is high.
+  
+  \vspace{1em}
+  \item \code{rv2trsink_data : out rvex_byte_type}
+  
+  Trace data signal. Valid when \code{rv2trsink_push} is high.
+  
+  \vspace{1em}
+  \item \code{rv2trsink_end : out std_logic}
+  
+  When high, this is the last byte of this trace packet. May be used to flush buffers downstream, or may be ignored.
+  
+  \vspace{1em}
+  \item \code{trsink2rv_busy : in  std_logic}
+  
+  When high while \code{rv2trsink_push} is high, the trace unit is stalled. While stalled, \code{rv2trsink_push} will stay high and \code{rv2trsink_data} and \code{rv2trsink_end} will remain stable.
   
 \end{itemize}
 

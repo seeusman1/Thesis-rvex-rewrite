@@ -716,7 +716,7 @@ begin -- architecture
     constant ADDR_MAP : addrRangeAndMapping_array(0 to 3) := (
       0 => addrRangeAndMap( -- rvex debug interface (default).
         match => "--------------------------------"
-      )
+      ),
       1 => addrRangeAndMap( -- Global status/ctrl (256 bytes), overrides rvex global reg mirror at context 1.
         match => "-------------------00100--------"
       ),
@@ -725,7 +725,7 @@ begin -- architecture
       ),
       3 => addrRangeAndMap( -- MMU status/ctrl (256 bytes), overrides rvex global reg mirror at context 3.
         match => "-------------------01100--------"
-      ),
+      )
     );
     
   begin
@@ -749,10 +749,10 @@ begin -- architecture
         demux2slv(1)      => demux2glob,
         demux2slv(2)      => demux2cache,
         demux2slv(3)      => demux2mmu,
-        slv2demux(0)      => rv2demux
+        slv2demux(0)      => rv2demux,
         slv2demux(1)      => glob2demux,
         slv2demux(2)      => cache2demux,
-        slv2demux(3)      => mmu2demux,
+        slv2demux(3)      => mmu2demux
         
       );
     
