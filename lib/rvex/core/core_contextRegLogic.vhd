@@ -257,9 +257,34 @@ end core_contextRegLogic;
 architecture Behavioral of core_contextRegLogic is
 --=============================================================================
   
+  -- Delayed status signals for the performance counters.
+  signal cxplif2cxreg_stall_r     : std_logic;
+  signal cxplif2cxreg_idle_r      : std_logic;
+  signal cxplif2cxreg_sylCommit_r : rvex_sylStatus_type;
+  signal cxplif2cxreg_sylNop_r    : rvex_sylStatus_type;
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -- Delay the performance counter increment signals by a cycle to take them
+  -- out of the critical paths.
+  perf_counter_delay: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        cxplif2cxreg_stall_r      <= '1';
+        cxplif2cxreg_idle_r       <= '1';
+        cxplif2cxreg_sylCommit_r  <= (others => '0');
+        cxplif2cxreg_sylNop_r     <= (others => '0');
+      elsif clkEn = '1' then
+        cxplif2cxreg_stall_r      <= cxplif2cxreg_stall;
+        cxplif2cxreg_idle_r       <= cxplif2cxreg_idle;
+        cxplif2cxreg_sylCommit_r  <= cxplif2cxreg_sylCommit;
+        cxplif2cxreg_sylNop_r     <= cxplif2cxreg_sylNop;
+      end if;
+    end if;
+  end process;
   
   -- Single process which handles all combinatorial logic for the context
   -- control registers.
@@ -269,7 +294,8 @@ begin -- architecture
     cxplif2cxreg_linkWriteData, cxplif2cxreg_linkWriteEnable,
     cxplif2cxreg_overridePC_ack, cxplif2cxreg_trapInfo, cxplif2cxreg_trapPoint,
     cxplif2cxreg_rfi, cxplif2cxreg_exDbgTrapInfo, cxplif2cxreg_resuming_ack,
-    cxplif2cxreg_idle, cxplif2cxreg_sylCommit, cxplif2cxreg_sylNop
+    cxplif2cxreg_idle_r, cxplif2cxreg_sylCommit_r, cxplif2cxreg_sylNop_r,
+    cxplif2cxreg_stall_r
   ) is
     variable l2c  : cxreg2creg_type;
     variable c2l  : creg2cxreg_type;
@@ -832,46 +858,47 @@ begin -- architecture
     -- Make the cycle counter.
     creg_makeCounter(l2c, c2l, CR_C_CYC, 31, 0,
       clear         => countClear,
-      inc           => not cxplif2cxreg_idle,
+      inc           => not cxplif2cxreg_idle_r,
       permissions   => READ_WRITE
     );
     
     -- Make the stall counter.
     creg_makeCounter(l2c, c2l, CR_C_STALL, 31, 0,
       clear         => countClear,
-      inc           => cxplif2cxreg_stall and not cxplif2cxreg_idle,
+      inc           => cxplif2cxreg_stall_r and not cxplif2cxreg_idle_r,
       permissions   => READ_WRITE
     );
     
     -- Make the committed bundle counter.
     bundleCommit := '0';
-    for i in cxplif2cxreg_sylCommit'range loop
-      if cxplif2cxreg_sylCommit(i) = '1' then
+    for i in cxplif2cxreg_sylCommit_r'range loop
+      if cxplif2cxreg_sylCommit_r(i) = '1' then
         bundleCommit := '1';
       end if;
     end loop;
     creg_makeCounter(l2c, c2l, CR_C_BUN, 31, 0,
       clear         => countClear,
       inc           => bundleCommit,
-      enable        => not cxplif2cxreg_stall,
+      enable        => not cxplif2cxreg_stall_r,
       permissions   => READ_WRITE
     );
     
     -- Make the committed syllable counter.
     creg_makeCounter(l2c, c2l, CR_C_SYL, 31, 0,
       clear         => countClear,
-      inc_vect      => cxplif2cxreg_sylCommit,
-      enable        => not cxplif2cxreg_stall,
+      inc_vect      => cxplif2cxreg_sylCommit_r,
+      enable        => not cxplif2cxreg_stall_r,
       permissions   => READ_WRITE
     );
     
     -- Make the committed NOP syllable counter.
     creg_makeCounter(l2c, c2l, CR_C_NOP, 31, 0,
       clear         => countClear,
-      inc_vect      => cxplif2cxreg_sylCommit and cxplif2cxreg_sylNop,
-      enable        => not cxplif2cxreg_stall,
+      inc_vect      => cxplif2cxreg_sylCommit_r and cxplif2cxreg_sylNop_r,
+      enable        => not cxplif2cxreg_stall_r,
       permissions   => READ_WRITE
     );
+	 
     
     ---------------------------------------------------------------------------
     -- Forward control signals
