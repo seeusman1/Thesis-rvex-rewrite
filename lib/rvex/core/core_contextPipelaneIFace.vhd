@@ -103,6 +103,9 @@ entity core_contextPipelaneIFace is
     -- Last pipelane group associated with each context.
     cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
     
+    -- The lane index within the coupled groups for each lane.
+    cfg2any_laneIndex           : in  rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0);
+    
     ---------------------------------------------------------------------------
     -- Pipelane interface: configuration and run control
     ---------------------------------------------------------------------------
@@ -145,11 +148,6 @@ entity core_contextPipelaneIFace is
     -- interface block so all coupled pipelanes have it.
     br2cxplif_PC                : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     cxplif2pl_PC                : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-    
-    -- Same as PC, but with the index of the lane within the group of coupled
-    -- lanes added to it, to get the exact address of the syllable which is
-    -- processed by this lane. This should only be used by the VHDL simulation.
-    cxplif2pl_lanePC            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
     -- Whether an instruction fetch is being initiated or not.
     br2cxplif_limmValid         : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -291,17 +289,17 @@ entity core_contextPipelaneIFace is
     ---------------------------------------------------------------------------
     -- Instruction memory interface
     ---------------------------------------------------------------------------
-    -- Addresses of the syllables to fetch for each group.
-    cxplif2imem_PCs             : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    -- Addresses of the bundles to fetch for each group.
+    cxplif2ibuf_PCs             : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high fetch enable signal for each group.
-    cxplif2imem_fetch           : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    cxplif2ibuf_fetch           : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high cancel signal for the previous fetch. This is a hint to the
     -- memory/cache that, if it would need to stall the core to fetch the
     -- previously requested opcode, it can stop the fetch and allow the core to
     -- continue.
-    cxplif2imem_cancel          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    cxplif2ibuf_cancel          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Configuration control interface
@@ -500,7 +498,6 @@ architecture Behavioral of core_contextPipelaneIFace is
   signal irqAck_arb             : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal idle_arb               : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal PC_arb                 : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-  signal lanePC_arb             : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal limmValid_arb          : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal valid_arb              : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal brkValid_arb           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -565,10 +562,6 @@ begin -- architecture
     
   ) is
     
-    -- Log2 of the number of bytes in a full instruction for a pipelane group.
-    constant GROUP_INSTR_SIZE_LOG2B : natural
-      := (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + SYLLABLE_SIZE_LOG2B;
-    
     -- Variables for all the signals we need to route.
     variable blockReconfig_v    : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable irqAck_v           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -630,7 +623,6 @@ begin -- architecture
       -- only valid for those lanes.
       irqAck_v(laneGroup)           := br2cxplif_irqAck(selectedLane);
       PC_v(laneGroup)               := br2cxplif_PC(selectedLane);
-      lanePC_v(laneGroup)           := br2cxplif_PC(selectedLane);
       limmValid_v(laneGroup)        := br2cxplif_limmValid(selectedLane);
       valid_v(laneGroup)            := br2cxplif_valid(selectedLane);
       brkValid_v(laneGroup)         := br2cxplif_brkValid(selectedLane);
@@ -757,7 +749,6 @@ begin -- architecture
           if brActive_v(groupA) = '1' then
             irqAck_v(groupB)       := irqAck_v(groupA);
             PC_v(groupB)           := PC_v(groupA);
-            lanePC_v(groupB)       := lanePC_v(groupA);
             limmValid_v(groupB)    := limmValid_v(groupA);
             valid_v(groupB)        := valid_v(groupA);
             brkValid_v(groupB)     := brkValid_v(groupA);
@@ -771,7 +762,6 @@ begin -- architecture
           else
             irqAck_v(groupA)       := irqAck_v(groupB);
             PC_v(groupA)           := PC_v(groupB);
-            lanePC_v(groupA)       := lanePC_v(groupB);
             limmValid_v(groupA)    := limmValid_v(groupB);
             valid_v(groupA)        := valid_v(groupB);
             brkValid_v(groupA)     := brkValid_v(groupB);
@@ -783,11 +773,6 @@ begin -- architecture
             exDbgTrapInfo_v(groupA):= exDbgTrapInfo_v(groupB);
             stop_v(groupA)         := stop_v(groupB);
           end if;
-          
-          -- Override the PC bits for this level appropriately.
-          index := level + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + SYLLABLE_SIZE_LOG2B;
-          lanePC_v(groupA)(index) := '0';
-          lanePC_v(groupB)(index) := '1';
           
           -- Handle wired-and/or signals.
           brActive_v(groupA)
@@ -860,14 +845,16 @@ begin -- architecture
       end loop;
     end loop;
     
-    -- Invalidate lane groups for which lanePC is less than PC to handle trap
-    -- return from the middle of a bundle (which can happen when the processor
-    -- is trapped in a configuration which uses less lanes than what it returns
-    -- in). We only look at the reconfigurable section here.
+    -- Invalidate lane groups which would be executing syllables coming before
+    -- the PC. This can happen when the PC is misaligned (with respect to
+    -- CFG.bundleAlignLog2) after returning from a trap, which can happen when
+    -- a trap occurs somewhere in the middle of an instruction in a mode with
+    -- a small issue width, and the configuration changes while the trap
+    -- handler is executed.
     if CFG.numLaneGroupsLog2 > 0 then
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-        if vect2unsigned(lanePC_v(laneGroup)(GROUP_INSTR_SIZE_LOG2B + CFG.numLaneGroupsLog2 - 1 downto GROUP_INSTR_SIZE_LOG2B))
-         < vect2unsigned(    PC_v(laneGroup)(GROUP_INSTR_SIZE_LOG2B + CFG.numLaneGroupsLog2 - 1 downto GROUP_INSTR_SIZE_LOG2B))
+        if vect2uint(cfg2any_laneIndex(group2firstLane(laneGroup, CFG)))
+         < vect2uint(PC_v(laneGroup)(SYLLABLE_SIZE_LOG2B + CFG.bundleAlignLog2 - 1 downto SYLLABLE_SIZE_LOG2B))
         then
           valid_v(laneGroup) := '0';
         end if;
@@ -879,7 +866,6 @@ begin -- architecture
     irqAck_arb          <= irqAck_v;
     idle_arb            <= idle_v;
     PC_arb              <= PC_v;
-    lanePC_arb          <= lanePC_v;
     limmValid_arb       <= limmValid_v;
     valid_arb           <= valid_v;
     brkValid_arb        <= brkValid_v;
@@ -892,9 +878,9 @@ begin -- architecture
     rfi_arb             <= rfi_v;
     
     -- Drive instruction memory output signals.
-    cxplif2imem_PCs     <= lanePC_v;
-    cxplif2imem_fetch   <= imemFetch_v;
-    cxplif2imem_cancel  <= imemCancel_v;
+    cxplif2ibuf_PCs     <= PC_v;
+    cxplif2ibuf_fetch   <= imemFetch_v;
+    cxplif2ibuf_cancel  <= imemCancel_v;
     
   end process;
   
@@ -938,15 +924,6 @@ begin -- architecture
                                       or extDebug_mux(laneGroup); -- Always enable debug traps in external debug mode.
     cxplif2brku_breakpoints(lane)     <= breakpoints_mux(laneGroup);
     cxplif2brku_stepping(lane)        <= stepping_mux(laneGroup);
-    
-    -- Handle the special lanePC signal, which is different for every pipelane.
-    cxplif2pl_lanePC(lane)(rvex_address_type'high downto fixedPCBits)
-      <= lanePC_arb(laneGroup)(rvex_address_type'high downto fixedPCBits);
-    
-    cxplif2pl_lanePC(lane)(fixedPCBits-1 downto 0)
-      <= uint2vect(
-        laneIndex * 2**SYLLABLE_SIZE_LOG2B, fixedPCBits
-      );
     
   end generate;
   

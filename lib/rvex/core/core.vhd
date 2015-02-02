@@ -62,158 +62,159 @@ use rvex.simUtils_pkg.all;
 -- pragma translate_on
 
 
-  -----------------------------------------------------------------------------
-  -- Processor overview and naming conventions
-  -----------------------------------------------------------------------------
-  -- The figure below shows how the rvex core is organized. The abbreviations
-  -- used are keyed below.
-  -- 
-  -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-  --
-  --          .---------------------------------------------------.
-  --          | rv                                                |
-  --          | .---------------------------------------.         |
-  --          | | pls (pipelanes)                       |         |
-  --          | |  .=================================.  | .-----. |
-  --          | |  | pl (pipelane)                   |  | |gpreg| |
-  --          | |  |  - . .---.  - - .  - - .  - - . |  | |.===.| |
-  --          | |  | |br  |alu| |mulu  |memu  |brku  |<-+>||fwd|| |
-  --          | |  |  - ' '---'  - - '  - - '  - - ' |  | |'==='| |
-  --          | |  '================================='  | '-----' |
-  --          | |    ^      |    ^        ^       ^     |    ^    |
-  --          | |    v      |    |        |       |     |    |    |
-  --          | | .------.  |    v        v       v     |    |    |
-  --  imem <--+-+>|cxplif|  |  .====.   .----.  .----.  |    |    |
-  --          | | |.===. |  |  |dmsw|   |trap|  |limm|  |    |    |
-  --          | | ||fwd| |  |  '===='   '----'  '----'  |    |    |
-  -- rctrl <--+-+>|'===' |  |   ^  ^                    |    |    |
-  --          | | '------'  |   |  '--------------------+----+----+--> dmem
-  --          | |    ^      |   |                       |    |    |
-  --          | '----+------+---+-----------------------'    |    |
-  --          |      |      |   |                            |    |
-  --          |      |      |   |  .-------------------------'    |
-  --          |      v      |   v  v                              |
-  -- rctrl    |   .=====.   |  .----.      .-----.      .-----.   |
-  -- reset <--+-->|cxreg|<--+->|creg|<---->|gbreg|<---->|     |<--+--> mem
-  -- and done |   '====='   |  '----'      '-----'      | cfg |   |
-  --          |    |   |    |     ^           ^   ...<--|     |   |
-  --          |    |   '----+-----+-----------+-------->|     |   |
-  --          |    v        |     |           |         '-----'   |--> sim
-  --          |    - - -    |     |           |                   |
-  --          |   |trace|<--'     |           |                   |
-  --          |    - - -          |           |                   |
-  --          |      |            |           |                   |
-  --          '------+------------+-----------+-------------------'
-  --                 |            |           |
-  --                 v            v           |
-  --               trsink        dbg    imem affinity
-  --
-  -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
-  --
-  -- The abbreviations for the blocks used in the diagram are the following.
-  -- 
-  --  - rv     = RVex processor             @ core.vhd
-  --  - pls    = PipeLaneS                  @ core_pipelanes.vhd
-  --  - pl     = PipeLane                   @ core_pipelane.vhd
-  --  - br     = BRanch unit                @ core_branch.vhd
-  --  - alu    = Arith. Logic Unit          @ core_alu.vhd
-  --  - memu   = MEMory Unit                @ core_memu.vhd
-  --  - mulu   = MULtiply Unit              @ core_mulu.vhd
-  --  - brku   = BReaKpoint Unit            @ core_breakpoint.vhd
-  --  - gpreg  = General Purpose REGisters  @ core_gpRegs.vhd
-  --  - fwd    = ForWarDing logic           @ core_forward.vhd
-  --  - cxplif = ConteXt-PipeLane InterFace @ core_contextPipelaneIFace.vhd
-  --  - dmsw   = Data Memory SWitch         @ core_dmemSwitch.vhd
-  --  - trap   = TRAP routing               @ core_trapRouting.vhd
-  --  - limm   = Long IMMediate routing     @ core_limmRouting.vhd
-  --  - cxreg  = ConteXt REGister logic     @ core_contextRegLogic.vhd
-  --  - creg   = Control REGisters          @ core_ctrlRegs.vhd
-  --  - gbreg  = GloBal REGister logic      @ core_globalRegLogic.vhd
-  --  - cfg    = ConFiGuration control      @ core_cfgCtrl.vhd
-  --  - trace  = TRACE unit                 @ core_trace.vhd
-  --  - mem    = interface common to instruction and data MEMory/cache
-  --  - imem   = Instruction MEMory/cache
-  --  - dmem   = Data MEMory/cache
-  --  - dbg    = DeBuG bus interface
-  --  - rctrl  = Run ConTRoL
-  --  - sim    = vhdl SIMulation only
-  --  - trsink = TRace data SINK
-  --
-  -- The pipelane (pl), ALU and multiplier blocks are instantiated for each
-  -- pipelane (although the multiplier can be disabled for selected pipelanes
-  -- through design-time configuration). The memory unit (memu), breakpoint
-  -- unit (brku), branch unit (br) and data memory switch blocks are
-  -- instantiated for each pipelane *group*. The context register logic (cxreg)
-  -- block is instantiated for each context. Blocks which are instantiated
-  -- multiple times are shown with double (=====) lines in the block diagram,
-  -- blocks which are instantiated optionally are shown with dashed ( - - )
-  -- lines.
-  --
-  -- Some blocks have subblocks which are not shown in this block diagram.
-  -- The entity names and filenames for these blocks are of the form
-  -- core_<block>_<subblock>.vhd. In general, _ is used as a hierarchy
-  -- separator in the code, whereas camelCase is used to indicate word
-  -- boundaries.
-  --
-  -- Most signal names have the form <source>2<dest>_<name>, where source and
-  -- dest are the block abbreviations of the source and destination blocks
-  -- respectively. In addition, "any" is used as destination for the
-  -- configuration control signals shared between a large number of blocks, as
-  -- indicated by the ellipsis in the block diagram.
-  --
-  -- Pipeline related signals are array-indexed by their pipeline stage index
-  -- using increasing ranges wherever possible. Also, in the pipelines
-  -- themselves, every state signal which passes through a pipeline register is
-  -- generally duplicated for every pipeline stage. This simplifies the
-  -- pipeline register code, makes things more readable, and makes debugging
-  -- the core in VHDL simulation much simpler. A downside is that it is not
-  -- trivial to see just how many registers are actually used. Also, it is of
-  -- vital importance for the area usage of the processor that the synthesizer
-  -- properly culls unused registers.
-  --
-  -----------------------------------------------------------------------------
-  -- VHDL packages
-  -----------------------------------------------------------------------------
-  -- The following VHDL packages are used within the processor. Only core_pkg
-  -- and the generic common_pkg is necessary to instantiate the core.
-  --
-  --  - core_pkg
-  --      -> Contains data types used in the toplevel interface description of
-  --         the rvex processor and the component specification for the
-  --         toplevel block.
-  --
-  --  - core_intIface_pkg
-  --      -> Contains data types and constants used throughout the core, in
-  --         addition to those in core_pkg.
-  --
-  --  - core_pipeline_pkg
-  --      -> Contains constants which specify what should happen in which
-  --         pipeline stage. In theory, it should be possible to change this
-  --         without modifying code to change timing characteristics, but not
-  --         everything is tested and it's relatively easy to break things
-  --         here.
-  --
-  --  - core_opcode_pkg, core_opcodeAlu_pkg, core_opcodeMultiplier_pkg,
-  --    core_opcodeDatapath_pkg, core_opcodeBranch_pkg, core_opcodeMemory_pkg
-  --      -> Contains a constant table of all decoding signals based on the
-  --         opcode field of a syllable, as well as disassembly information for
-  --         simulation. In theory, there should be no other mappings from
-  --         opcode to functionality elsewhere in the code. Control signals for
-  --         the various functional units are specified in core_opcode_pkg as
-  --         constants, which are defined in the core_opcode*_pkg packages, in
-  --         order to keep the line count sane.
-  --
-  --  - core_trap_pkg
-  --      -> Similar to core_opcode_pkg, this packages contains a decoding
-  --         table for trap causes.
-  --
-  --  - core_ctrlRegs_pkg
-  --      -> Contains constants defining the control register map at the word
-  --         level and some types and records used in the core.
-  --
-  --  - core_asDisas_pkg
-  --      -> Contains simulation-only assembly and pretty-printing related
-  --         methods.
+-------------------------------------------------------------------------------
+-- Processor overview and naming conventions
+-------------------------------------------------------------------------------
+-- The figure below shows how the rvex core is organized. The abbreviations
+-- used are keyed below.
+-- 
+-- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+--
+--          .--------------------------------------------------------.
+--          | rv  .----------------------------------------.         |
+--          |     | pls (pipelanes)                        |         |
+--          |     |  .==================================.  | .-----. |
+--          |     |  | pl (pipelane)                    |  | |gpreg| |
+--          |     |  |  - . .---.  - - .  - - .  - - .  |  | |.===.| |
+--          |     |  | |br  |alu| |mulu  |memu  |brku   |<-+>||fwd|| |
+--          |     |  |  - ' '---'  - - '  - - '  - - '  |  | |'==='| |
+--          |     |  '=================================='  | '-----' |
+--          |     |    ^     |   ^      ^      ^      ^    |    ^    |
+--          |     |    v     |   |      |      |      |    |    |    |
+--          |     | .------. |   v      v      v      v    |    |    |
+--          |     | |cxplif| | .====. .----. .----. .----. |    |    |
+-- rctrl <--+-----+>|.===. | | |dmsw| |sbit| |trap| |limm| |    |    |
+--          |     | ||fwd| | | '====' '----' '----' '----' |    |    |
+--          |     | |'===' | |  ^  ^                       |    |    |
+--          |     | '------' |  |  '-----------------------+----+----+--> dmem
+--          |     |   ^  ^   |  |                          |    |    |
+--          |     '---+--+---+--+--------------------------'    |    |
+--          | .----.  |  |   |  |                               |    |
+--  imem <--+>|ibuf|<-'  |   |  '-.  .--------------------------'    |
+--          | '----'     v   |    v  v                               |
+-- rctrl    |       .=====.  |   .----.      .-----.      .-----.    |
+-- reset <--+------>|cxreg|<-+-->|creg|<---->|gbreg|<---->|     |<---+--> mem
+-- and done |       '====='  |   '----'      '-----'      | cfg |    |
+--          |        |   |   |      ^           ^   ...<--|     |    |
+--          |        |   '---+------+-----------+-------->|     |    |
+--          |        v       |      |           |         '-----'    |--> sim
+--          |        - - -   |      |           |                    |
+--          |       |trace|<-'      |           |                    |
+--          |        - - -          |           |                    |
+--          |          |            |           |                    |
+--          '----------+------------+-----------+--------------------'
+--                     |            |           |
+--                     v            v           |
+--                   trsink        dbg    imem affinity
+--
+-- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+--
+-- The abbreviations for the blocks used in the diagram are the following.
+-- 
+--  - rv     = RVex processor             @ core.vhd
+--  - pls    = PipeLaneS                  @ core_pipelanes.vhd
+--  - pl     = PipeLane                   @ core_pipelane.vhd
+--  - br     = BRanch unit                @ core_branch.vhd
+--  - alu    = Arith. Logic Unit          @ core_alu.vhd
+--  - memu   = MEMory Unit                @ core_memu.vhd
+--  - mulu   = MULtiply Unit              @ core_mulu.vhd
+--  - brku   = BReaKpoint Unit            @ core_breakpoint.vhd
+--  - gpreg  = General Purpose REGisters  @ core_gpRegs.vhd
+--  - fwd    = ForWarDing logic           @ core_forward.vhd
+--  - cxplif = ConteXt-PipeLane InterFace @ core_contextPipelaneIFace.vhd
+--  - dmsw   = Data Memory SWitch         @ core_dmemSwitch.vhd
+--  - sbit   = Stop BIT related routing   @ core_stopBitRouting.vhd
+--  - trap   = TRAP routing               @ core_trapRouting.vhd
+--  - limm   = Long IMMediate routing     @ core_limmRouting.vhd
+--  - ibuf   = Instruction BUFfer         @ core_instructionBuffer.vhd
+--  - cxreg  = ConteXt REGister logic     @ core_contextRegLogic.vhd
+--  - creg   = Control REGisters          @ core_ctrlRegs.vhd
+--  - gbreg  = GloBal REGister logic      @ core_globalRegLogic.vhd
+--  - cfg    = ConFiGuration control      @ core_cfgCtrl.vhd
+--  - trace  = TRACE unit                 @ core_trace.vhd
+--  - mem    = interface common to instruction and data MEMory/cache
+--  - imem   = Instruction MEMory/cache
+--  - dmem   = Data MEMory/cache
+--  - dbg    = DeBuG bus interface
+--  - rctrl  = Run ConTRoL
+--  - sim    = vhdl SIMulation only
+--  - trsink = TRace data SINK
+--
+-- The pipelane (pl), ALU and multiplier blocks are instantiated for each
+-- pipelane (although the multiplier can be disabled for selected pipelanes
+-- through design-time configuration). The memory unit (memu), breakpoint
+-- unit (brku), branch unit (br) and data memory switch blocks are
+-- instantiated for each pipelane *group*. The context register logic (cxreg)
+-- block is instantiated for each context. Blocks which are instantiated
+-- multiple times are shown with double (=====) lines in the block diagram,
+-- blocks which are instantiated optionally are shown with dashed ( - - )
+-- lines.
+--
+-- Some blocks have subblocks which are not shown in this block diagram.
+-- The entity names and filenames for these blocks are of the form
+-- core_<block>_<subblock>.vhd. In general, _ is used as a hierarchy
+-- separator in the code, whereas camelCase is used to indicate word
+-- boundaries.
+--
+-- Most signal names have the form <source>2<dest>_<name>, where source and
+-- dest are the block abbreviations of the source and destination blocks
+-- respectively. In addition, "any" is used as destination for the
+-- configuration control signals shared between a large number of blocks, as
+-- indicated by the ellipsis in the block diagram.
+--
+-- Pipeline related signals are array-indexed by their pipeline stage index
+-- using increasing ranges wherever possible. Also, in the pipelines
+-- themselves, every state signal which passes through a pipeline register is
+-- generally duplicated for every pipeline stage. This simplifies the
+-- pipeline register code, makes things more readable, and makes debugging
+-- the core in VHDL simulation much simpler. A downside is that it is not
+-- trivial to see just how many registers are actually used. Also, it is of
+-- vital importance for the area usage of the processor that the synthesizer
+-- properly culls unused registers.
+--
+-----------------------------------------------------------------------------
+-- VHDL packages
+-----------------------------------------------------------------------------
+-- The following VHDL packages are used within the processor. Only core_pkg
+-- and the generic common_pkg is necessary to instantiate the core.
+--
+--  - core_pkg
+--      -> Contains data types used in the toplevel interface description of
+--         the rvex processor and the component specification for the
+--         toplevel block.
+--
+--  - core_intIface_pkg
+--      -> Contains data types and constants used throughout the core, in
+--         addition to those in core_pkg.
+--
+--  - core_pipeline_pkg
+--      -> Contains constants which specify what should happen in which
+--         pipeline stage. In theory, it should be possible to change this
+--         without modifying code to change timing characteristics, but not
+--         everything is tested and it's relatively easy to break things
+--         here.
+--
+--  - core_opcode_pkg, core_opcodeAlu_pkg, core_opcodeMultiplier_pkg,
+--    core_opcodeDatapath_pkg, core_opcodeBranch_pkg, core_opcodeMemory_pkg
+--      -> Contains a constant table of all decoding signals based on the
+--         opcode field of a syllable, as well as disassembly information for
+--         simulation. In theory, there should be no other mappings from
+--         opcode to functionality elsewhere in the code. Control signals for
+--         the various functional units are specified in core_opcode_pkg as
+--         constants, which are defined in the core_opcode*_pkg packages, in
+--         order to keep the line count sane.
+--
+--  - core_trap_pkg
+--      -> Similar to core_opcode_pkg, this packages contains a decoding
+--         table for trap causes.
+--
+--  - core_ctrlRegs_pkg
+--      -> Contains constants defining the control register map at the word
+--         level and some types and records used in the core.
+--
+--  - core_asDisas_pkg
+--      -> Contains simulation-only assembly and pretty-printing related
+--         methods.
 
 --=============================================================================
 -- This is the toplevel entity for the rvex core.
@@ -366,8 +367,8 @@ entity core is
     -- be used to speed things up.
     rv2imem_cancel              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- (L_IF clock cycles delay with clkEn high and stallOut low; L_IF is set
-    -- in rvex_pipeline_pkg.vhd)
+    -- (L_IF_MEM clock cycles delay with clkEn high and stallOut low; L_IF_MEM
+    -- is set in core_pipeline_pkg.vhd)
     
     -- Fetched instruction, from instruction memory to the rvex.
     imem2rv_instr               : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
@@ -507,6 +508,9 @@ architecture Behavioral of core is
   -- Last pipelane group associated with each context.
   signal cfg2any_lastGroupForCtxt     : rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
   
+  -- The lane index within the coupled groups for each lane.
+  signal cfg2any_laneIndex            : rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0);
+  
   -- The amount which the branch unit residing in the indexed lane should
   -- add to the current PC to get PC_plusOne, should it be the active branch
   -- unit.
@@ -539,7 +543,7 @@ architecture Behavioral of core is
   -- Extended memory exception trap information. These are decoded from the
   -- fault flags coming from the memory into a trap information record which
   -- the processor knows how to deal with.
-  signal imem2pl_exception            : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal imem2ibuf_exception          : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal dmem2dmsw_exception          : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
   -----------------------------------------------------------------------------
@@ -547,6 +551,13 @@ architecture Behavioral of core is
   -----------------------------------------------------------------------------
   -- For all the signals below: refer to the entity description of their source
   -- or destination block for documentation.
+  
+  -- Instruction buffer <-> pipelane (interface) signals.
+  signal cxplif2ibuf_PCs              : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal cxplif2ibuf_fetch            : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal cxplif2ibuf_cancel           : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal ibuf2pl_instr                : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+  signal ibuf2pl_exception            : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
   -- Pipelane <-> configuration control signals.
   signal cfg2cxplif_active            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
@@ -691,7 +702,7 @@ begin -- architecture
     -- There is only one instruction memory fault. Note that the arg parameter
     -- will be overwritten by the PC of the bundle which was being fetched in
     -- the pipelane.
-    imem2pl_exception(laneGroup) <= (
+    imem2ibuf_exception(laneGroup) <= (
       active => imem2rv_fault(laneGroup),
       cause  => rvex_trap(RVEX_TRAP_FETCH_FAULT),
       arg    => (others => '0')
@@ -737,6 +748,7 @@ begin -- architecture
       cfg2any_context               => cfg2any_context,
       cfg2any_active                => cfg2any_active,
       cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
+      cfg2any_laneIndex             => cfg2any_laneIndex,
       cfg2any_pcAddVal              => cfg2any_pcAddVal,
       
       -- Configuration signals.
@@ -752,11 +764,11 @@ begin -- architecture
       cxplif2rctrl_idle             => rv2rctrl_idle,
       
       -- Instruction memory interface.
-      cxplif2imem_PCs               => rv2imem_PCs,
-      cxplif2imem_fetch             => rv2imem_fetch,
-      cxplif2imem_cancel            => rv2imem_cancel,
-      imem2pl_instr                 => imem2rv_instr,
-      imem2pl_exception             => imem2pl_exception,
+      cxplif2ibuf_PCs               => cxplif2ibuf_PCs,
+      cxplif2ibuf_fetch             => cxplif2ibuf_fetch,
+      cxplif2ibuf_cancel            => cxplif2ibuf_cancel,
+      ibuf2pl_instr                 => ibuf2pl_instr,
+      ibuf2pl_exception             => ibuf2pl_exception,
       
       -- Data memory interface.
       dmsw2dmem_addr                => rv2dmem_addr,
@@ -848,6 +860,41 @@ begin -- architecture
       creg2gpreg_writeEnable        => creg2gpreg_writeEnable,
       creg2gpreg_writeData          => creg2gpreg_writeData,
       gpreg2creg_readData           => gpreg2creg_readData
+      
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the instruction buffer
+  -----------------------------------------------------------------------------
+  ibuf_inst: entity rvex.core_instructionBuffer
+    generic map (
+      CFG                           => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                         => reset,
+      clk                           => clk,
+      clkEn                         => clkEn,
+      stall                         => stall,
+      
+      -- Decoded configuration signals.
+      cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2,
+      cfg2any_laneIndex             => cfg2any_laneIndex,
+      
+      -- Instruction memory interface.
+      ibuf2imem_PCs                 => rv2imem_PCs,
+      ibuf2imem_fetch               => rv2imem_fetch,
+      ibuf2imem_cancel              => rv2imem_cancel,
+      imem2ibuf_instr               => imem2rv_instr,
+      imem2ibuf_exception           => imem2ibuf_exception,
+      
+      -- Pipelane interface.
+      cxplif2ibuf_PCs               => cxplif2ibuf_PCs,
+      cxplif2ibuf_fetch             => cxplif2ibuf_fetch,
+      cxplif2ibuf_cancel            => cxplif2ibuf_cancel,
+      ibuf2pl_instr                 => ibuf2pl_instr,
+      ibuf2pl_exception             => ibuf2pl_exception
       
     );
   
@@ -1048,6 +1095,7 @@ begin -- architecture
       cfg2any_context               => cfg2any_context,
       cfg2any_active                => cfg2any_active,
       cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
+      cfg2any_laneIndex             => cfg2any_laneIndex,
       cfg2any_pcAddVal              => cfg2any_pcAddVal
       
     );

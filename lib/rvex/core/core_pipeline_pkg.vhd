@@ -71,18 +71,18 @@ package core_pipeline_pkg is
   --    :    |PC+1|:       |Reg. |   |   :   MUL    :   |      :          :
   --    :    '----':       |read |   '------------------'      :          :
   --    :          :       '-----'       :    .---. :          :          :
-  --    :          :    .----.:          :    |BRK| :          :          :
-  --    :          :    |limm|:          :    '---' :          :          :
-  --    :          :    '----':          :          :          :          :
-  --    :          :    .----.:          :          :          :          :
-  --    :          :    |stop|:          :          :          :          :
-  --    :          :    '----':          :          :          :          :
+  --    :          :    .-..-.:          :    |BRK| :          :          :
+  --    :          :    |s||l|:          :    '---' :          :          :
+  --    :          :    |t||i|:          :          :          :          :
+  --    :          :    |o||m|:          :          :          :          :
+  --    :          :    |p||m|:          :          :          :          :
+  --    :          :    '-''-':          :          :          :          :
   --    '----S1----'----S2----'----S3----'----S4----'----S5----'----S6----'
-  --         ^      |          |    ^        |          |          |*
-  --         |      v          v    |        v          v          v
-  --        .-------------------.  .--------------------------------.
-  --        |    Branch unit    |  |General purpose reg. forwarding |
-  --        '-------------------'  '--------------------------------'
+  --         ^           |      |   ^        |          |          |*
+  --         |           v      v   |        v          v          v
+  --        .--------------------. .--------------------------------.
+  --        |    Branch unit     | |General purpose reg. forwarding |
+  --        '--------------------' '--------------------------------'
   --     ----S1---- ----S2---- ----S3---- ----S4---- ----S5---- ----S6----
   --                         ^    ^         |          |      |
   --                         |    |         v          v      |
@@ -115,12 +115,17 @@ package core_pipeline_pkg is
   --  - S_FIRST = 1
   constant S_FIRST  : natural := 1;
   
-  -- Instruction fetch block stage and latency. The latency should be set to
-  -- the latency of the memory.
+  -- Instruction fetch block stage and latency. The latency should be set to 1,
+  -- as the instruction buffer will hide the fetch latency from the pipelanes.
   -- Requirements:
   --  - S_IF >= 1
+  --  - L_IF = 1
   constant S_IF     : natural := 1;
   constant L_IF     : natural := 1;
+  
+  -- Actual instruction memory latency, used by the instruction buffer.
+  --  - L_IF_MEM >= 1
+  constant L_IF_MEM : natural := 1;
   
   -- PC+1 block stage. This is a combinatorial block built into
   -- rvex_pipelane.vhd, so there is no latency.
@@ -133,11 +138,12 @@ package core_pipeline_pkg is
   -- rvex_pipelane.vhd, so there is no latency.
   -- Requirements:
   --  - S_BTGT >= S_PCP1
+  --  - S_BTGT >= S_IF + L_IF
   constant S_BTGT   : natural := 2;
   
   -- Stage in which stop bit propagation is performed. This is the process in
   -- which lanes following a lane with a syllable with stop bit set are
-  -- invalidated.
+  -- invalidated, and 
   -- Requirements:
   --  - S_STOP = S_IF + L_IF
   constant S_STOP   : natural := 2;

@@ -140,6 +140,9 @@ entity core_pipelanes is
     -- Last pipelane group associated with each context.
     cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
     
+    -- The lane index within the coupled groups for each lane.
+    cfg2any_laneIndex           : in  rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0);
+    
     -- The amount which the branch unit residing in the indexed lane should
     -- add to the current PC to get PC_plusOne, should it be the active branch
     -- unit.
@@ -186,23 +189,23 @@ entity core_pipelanes is
     ---------------------------------------------------------------------------
     -- Instruction memory interface
     ---------------------------------------------------------------------------
-    -- Addresses of the syllables to fetch for each group.
-    cxplif2imem_PCs             : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    -- Addresses of the bundles to fetch for each group.
+    cxplif2ibuf_PCs             : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high fetch enable signal for each group.
-    cxplif2imem_fetch           : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    cxplif2ibuf_fetch           : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high cancel signal for the previous fetch. This is a hint to the
     -- memory/cache that, if it would need to stall the core to fetch the
     -- previously requested opcode, it can stop the fetch and allow the core to
     -- continue.
-    cxplif2imem_cancel          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    cxplif2ibuf_cancel          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Instruction bundle(s) from the instruction memory.
-    imem2pl_instr               : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+    ibuf2pl_instr               : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
     
     -- Exception input from instruction memory.
-    imem2pl_exception           : in  trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    ibuf2pl_exception           : in  trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Data memory interface
@@ -313,7 +316,6 @@ architecture Behavioral of core_pipelanes is
   signal br2cxplif_active           : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-  signal cxplif2pl_lanePC           : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_limmValid        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_limmValid        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_valid            : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -463,6 +465,7 @@ begin -- architecture
         -- Configuration and run control.
         cfg2pl_decouple                   => cfg2any_decouple(laneGroup),
         cfg2pl_numGroupsLog2              => cfg2any_numGroupsLog2(laneGroup),
+        cfg2pl_laneIndex                  => cfg2any_laneIndex(lane),
         cfg2pl_pcAddVal                   => cfg2any_pcAddVal(lane),
         pl2cxplif_blockReconfig           => pl2cxplif_blockReconfig(lane),
         cxplif2pl_irq(S_MEM)              => cxplif2pl_irq(lane),
@@ -475,7 +478,6 @@ begin -- architecture
         br2cxplif_active                  => br2cxplif_active(lane),
         br2cxplif_PC(S_IF)                => br2cxplif_PC(lane),
         cxplif2pl_PC(S_IF)                => cxplif2pl_PC(lane),
-        cxplif2pl_lanePC(S_IF)            => cxplif2pl_lanePC(lane),
         br2cxplif_limmValid(S_IF)         => br2cxplif_limmValid(lane),
         cxplif2pl_limmValid(S_IF)         => cxplif2pl_limmValid(lane),
         br2cxplif_valid(S_IF)             => br2cxplif_valid(lane),
@@ -488,8 +490,8 @@ begin -- architecture
         -- Instruction memory interface.
         br2cxplif_imemFetch(S_IF)         => br2cxplif_imemFetch(lane),
         br2cxplif_imemCancel(S_IF+L_IF)   => br2cxplif_imemCancel(lane),
-        imem2pl_syllable(S_IF+L_IF)       => imem2pl_instr(lane),
-        imem2pl_exception(S_IF+L_IF)      => imem2pl_exception(laneGroup),
+        ibuf2pl_syllable(S_IF+L_IF)       => ibuf2pl_instr(lane),
+        ibuf2pl_exception(S_IF+L_IF)      => ibuf2pl_exception(laneGroup),
         
         -- Data memory interface.
         memu2dmsw_addr(S_MEM)             => memu2dmsw_addr(laneGroup),
@@ -576,6 +578,7 @@ begin -- architecture
       cfg2any_context                   => cfg2any_context,
       cfg2any_active                    => cfg2any_active,
       cfg2any_lastGroupForCtxt          => cfg2any_lastGroupForCtxt,
+      cfg2any_laneIndex                 => cfg2any_laneIndex,
       
       -- Pipelane interface: configuration and run control.
       pl2cxplif_blockReconfig           => pl2cxplif_blockReconfig,
@@ -589,7 +592,6 @@ begin -- architecture
       br2cxplif_active                  => br2cxplif_active,
       br2cxplif_PC                      => br2cxplif_PC,
       cxplif2pl_PC                      => cxplif2pl_PC,
-      cxplif2pl_lanePC                  => cxplif2pl_lanePC,
       br2cxplif_limmValid               => br2cxplif_limmValid,
       cxplif2pl_limmValid               => cxplif2pl_limmValid,
       br2cxplif_valid                   => br2cxplif_valid,
@@ -635,9 +637,9 @@ begin -- architecture
       cxplif2rctrl_idle                 => cxplif2rctrl_idle,
       
       -- Instruction memory interface.
-      cxplif2imem_PCs                   => cxplif2imem_PCs,
-      cxplif2imem_fetch                 => cxplif2imem_fetch,
-      cxplif2imem_cancel                => cxplif2imem_cancel,
+      cxplif2ibuf_PCs                   => cxplif2ibuf_PCs,
+      cxplif2ibuf_fetch                 => cxplif2ibuf_fetch,
+      cxplif2ibuf_cancel                => cxplif2ibuf_cancel,
       
       -- Configuration control interface.
       cfg2cxplif_active                 => cfg2cxplif_active,

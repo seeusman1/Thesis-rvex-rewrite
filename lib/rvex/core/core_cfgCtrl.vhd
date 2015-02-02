@@ -180,6 +180,9 @@ entity core_cfgCtrl is
     -- Last pipelane group associated with each context.
     cfg2any_lastGroupForCtxt    : out rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
     
+    -- The lane index within the coupled groups for each lane.
+    cfg2any_laneIndex           : out rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0);
+    
     -- The amount which the branch unit residing in the indexed lane should
     -- add to the current PC to get PC_plusOne, should it be the active branch
     -- unit.
@@ -274,6 +277,7 @@ architecture Behavioral of core_cfgCtrl is
   signal newLastPipelaneGroupForContext_r : rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
   signal newNumPipelaneGroupsLog2ForContext_r : rvex_2bit_array(2**CFG.numContextsLog2-1 downto 0);
   signal newCoupleMatrix_r      : std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
+  signal newLaneIndex_r         : rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0);
   signal newPcAddVal_r          : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   
   -- Current configuration registers.
@@ -282,6 +286,7 @@ architecture Behavioral of core_cfgCtrl is
   signal curLastPipelaneGroupForContext_r : rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
   signal curNumPipelaneGroupsLog2ForContext_r : rvex_2bit_array(2**CFG.numContextsLog2-1 downto 0);
   signal curCoupleMatrix_r      : std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
+  signal curLaneIndex_r         : rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0);
   signal curPcAddVal_r          : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   
 --=============================================================================
@@ -453,19 +458,24 @@ begin -- architecture
       
     );
   
-  -- Determine newPcAddVal_r. We can trivially determine newPcAddVal_r-1 from
-  -- the couple matrix, because that's essentially just the lane index with
-  -- some alignment based on CFG. Only the (small) +1 adder here is
-  -- significant.
-  pc_add_val_decoder: process (newCoupleMatrix_r) is
+  -- Determine newLaneIndex_r and newPcAddVal_r. We can trivially determine
+  -- newPcAddVal_r-1 from the couple matrix, because that's essentially just
+  -- the lane index with some alignment based on CFG. Only the (small) +1 adder
+  -- here is significant.
+  pc_add_val_decoder: process (
+    newCoupleMatrix_r, newConfiguration_r, newNumPipelaneGroupsLog2ForContext_r
+  ) is
     
     -- Log2 of the size in bytes of an instruction for a lane group.
     constant GRP_SIZE_LOG2B : natural
       := CFG.numLanesLog2 - CFG.numLaneGroupsLog2 + SYLLABLE_SIZE_LOG2B;
     
+    -- Number of groups working together for the current group.
+    variable numGroupsLog2  : natural;
+    
     -- Number of LSBs of the PC which should always be zero (i.e. PC
     -- alignment).
-    constant ALIGN          : natural := cfg2pcAlignLog2(CFG);
+    variable align          : natural;
     
     -- Computed value to add minus one.
     variable addValMinusOne : unsigned(31 downto 0);
@@ -485,9 +495,6 @@ begin -- architecture
       -- be coupled and there are no alignment constraints. Note that this is
       -- simply the lane index, so that's all we need to compute.
       addValMinusOne := to_unsigned(lane * 2**SYLLABLE_SIZE_LOG2B, 32);
-      
-      -- Enforce alignment.
-      addValMinusOne(ALIGN-1 downto 0) := (others => '0');
       
       -- Handle runtime configuration. We can do this by just clearing bits
       -- when lanes are not coupled by noticing the following addValMinusOne
@@ -513,9 +520,27 @@ begin -- architecture
         end if;
       end loop;
       
-      -- Perform the +1 addition.
+      -- Extract the lane index to get newLaneIndex_r.
+      newLaneIndex_r(lane) <= std_logic_vector(addValMinusOne(
+        SYLLABLE_SIZE_LOG2B + 3 downto SYLLABLE_SIZE_LOG2B
+      ));
+      
+      -- Determine how the PC addition value should be aligned.
+      numGroupsLog2 := vect2uint(newNumPipelaneGroupsLog2ForContext_r(
+        vect2uint(newConfiguration_r(laneGroup*4+2 downto laneGroup*4))
+      ));
+      
+      align := min_nat(
+        (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + numGroupsLog2,
+        CFG.bundleAlignLog2
+      ) + SYLLABLE_SIZE_LOG2B;
+      
+      -- Enforce alignment.
+      addValMinusOne(align-1 downto 0) := (others => '0');
+      
+      -- Perform the +1 addition to get newPcAddVal_r.
       newPcAddVal_r(lane) <= std_logic_vector(
-        addValMinusOne + to_unsigned(2**ALIGN, 32)
+        addValMinusOne + to_unsigned(2**align, 32)
       );
       
     end loop;
@@ -635,6 +660,7 @@ begin -- architecture
   
   -- Generate the current configuration registers.
   cur_config_regs: process (clk) is
+    variable align          : natural;
     variable addValMinusOne : unsigned(31 downto 0);
   begin
     if rising_edge(clk) then
@@ -649,13 +675,19 @@ begin -- architecture
           uint2vect(CFG.numLaneGroupsLog2, 2));
         curCoupleMatrix_r <= (others => '1');
         
-        -- Determine the default PC add values.
         for lane in 0 to 2**CFG.numLanesLog2-1 loop
+          
+          -- Determine the default lane indices.
+          curLaneIndex_r(lane) <= uint2vect(lane, 4);
+          
+          -- Determine the default PC add values.
           addValMinusOne := to_unsigned(lane * 2**SYLLABLE_SIZE_LOG2B, 32);
-          addValMinusOne(cfg2pcAlignLog2(CFG)-1 downto 0) := (others => '0');
+          align := min_nat(CFG.numLanesLog2, CFG.bundleAlignLog2) + SYLLABLE_SIZE_LOG2B;
+          addValMinusOne(align-1 downto 0) := (others => '0');
           curPcAddVal_r(lane) <= std_logic_vector(
-            addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32)
+            addValMinusOne + to_unsigned(2**align, 32)
           );
+          
         end loop;
         
       elsif clkEn = '1' and commit = '1' then
@@ -666,6 +698,7 @@ begin -- architecture
         curLastPipelaneGroupForContext_r <= newLastPipelaneGroupForContext_r;
         curNumPipelaneGroupsLog2ForContext_r <= newNumPipelaneGroupsLog2ForContext_r;
         curCoupleMatrix_r <= newCoupleMatrix_r;
+        curLaneIndex_r <= newLaneIndex_r;
         curPcAddVal_r <= newPcAddVal_r;
         
       end if;
@@ -679,6 +712,7 @@ begin -- architecture
   cfg2gbreg_currentCfg <= curConfiguration_r;
   cfg2any_lastGroupForCtxt <= curLastPipelaneGroupForContext_r;
   cfg2any_coupled <= curCoupleMatrix_r;
+  cfg2any_laneIndex <= curLaneIndex_r;
   cfg2any_pcAddVal <= curPcAddVal_r;
   
   -- Construct the vector containing the number of groups working together for

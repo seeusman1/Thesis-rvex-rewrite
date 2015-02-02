@@ -108,6 +108,7 @@ architecture Behavioral of core_cfgCtrl_tb is
   signal cfg2any_context             : rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal cfg2any_active              : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal cfg2any_lastGroupForCtxt    : rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cfg2any_laneIndex           : rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0);
   signal cfg2any_pcAddVal            : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   
   -- Synchronization signal. This has a rising edge at every 10ns mark. It is
@@ -148,6 +149,7 @@ begin
       cfg2any_context             => cfg2any_context,
       cfg2any_active              => cfg2any_active,
       cfg2any_lastGroupForCtxt    => cfg2any_lastGroupForCtxt,
+      cfg2any_laneIndex           => cfg2any_laneIndex,
       cfg2any_pcAddVal            => cfg2any_pcAddVal
     );
   

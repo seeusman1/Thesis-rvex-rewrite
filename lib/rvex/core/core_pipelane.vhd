@@ -311,8 +311,11 @@ entity core_pipelane is
     -- Number of coupled lane groups.
     cfg2pl_numGroupsLog2        : in  rvex_2bit_type;
     
+    -- Our lane index within the coupled groups.
+    cfg2pl_laneIndex            : in  rvex_4bit_type;
+    
     -- The amount which should be added to the current PC to get PC_plusOne.
-    cfg2pl_pcAddVal            : in  rvex_address_type;
+    cfg2pl_pcAddVal             : in  rvex_address_type;
     
     -- Active high reconfiguration block bit. When high, reconfiguration is
     -- not permitted. This is essentially an active low idle flag.
@@ -355,11 +358,6 @@ entity core_pipelane is
     br2cxplif_PC                : out rvex_address_array(S_IF to S_IF);
     cxplif2pl_PC                : in  rvex_address_array(S_IF to S_IF);
     
-    -- Same as PC, but with the index of the lane within the group of coupled
-    -- lanes added to it, to get the exact address of the syllable which is
-    -- processed by this lane. This should only be used by the VHDL simulation.
-    cxplif2pl_lanePC            : in  rvex_address_array(S_IF to S_IF);
-    
     -- Whether an instruction fetch is being initiated or not.
     br2cxplif_limmValid         : out std_logic_vector(S_IF to S_IF);
     cxplif2pl_limmValid         : in  std_logic_vector(S_IF to S_IF);
@@ -391,10 +389,10 @@ entity core_pipelane is
     br2cxplif_imemCancel        : out std_logic_vector(S_IF+L_IF to S_IF+L_IF);
     
     -- Syllable from the instruction memory.
-    imem2pl_syllable            : in  rvex_syllable_array(S_IF+L_IF to S_IF+L_IF);
+    ibuf2pl_syllable            : in  rvex_syllable_array(S_IF+L_IF to S_IF+L_IF);
     
     -- Exception input from instruction memory.
-    imem2pl_exception           : in  trap_info_array(S_IF+L_IF to S_IF+L_IF);
+    ibuf2pl_exception           : in  trap_info_array(S_IF+L_IF to S_IF+L_IF);
     
     ---------------------------------------------------------------------------
     -- Data memory interface
@@ -511,6 +509,21 @@ entity core_pipelane is
     pl2cxplif2_sylNop           : out std_logic_vector(S_LAST to S_LAST);
     
     ---------------------------------------------------------------------------
+    -- Stop bit/PC+1 routing interface
+    ---------------------------------------------------------------------------
+    -- Stop bit output to the next pipelane. This will go high when the
+    -- syllable currently being executed has the stop bit set or if stopIn is
+    -- set, unless this is the last pipelane in a lane group with the decouple
+    -- bit set (i.e., the next pipelane is not coupled with this one).
+    pl2pl_stopOut               : out std_logic_vector(S_STOP to S_STOP);
+    
+    -- Stop bit input from the previous pipelane. When high, the syllable in
+    -- this pipelane is invalidated, because it belongs to the next bundle.
+    -- stopOut is also asserted in this case if additional connected pipelanes
+    -- follow. This should be held low for the first pipelane.
+    pl2pl_stopIn                : in  std_logic_vector(S_STOP to S_STOP);
+    
+    ---------------------------------------------------------------------------
     -- Long immediate routing interface
     ---------------------------------------------------------------------------
     -- LIMMH outputs. Enable is high when this pipelane is executing a LIMMH
@@ -558,21 +571,6 @@ entity core_pipelane is
     -- instruction in the respective pipeline stage should no longer be
     -- committed/be deactivated.
     trap2pl_flush               : in  std_logic_stages_type;
-    
-    ---------------------------------------------------------------------------
-    -- Stop-bit propagation interface
-    ---------------------------------------------------------------------------
-    -- Stop bit output to the next pipelane. This will go high when the
-    -- syllable currently being executed has the stop bit set or if stopIn is
-    -- set, unless this is the last pipelane in a lane group with the decouple
-    -- bit set (i.e., the next pipelane is not coupled with this one).
-    pl2pl_stopOut               : out std_logic_vector(S_STOP to S_STOP);
-    
-    -- Stop bit input from the previous pipelane. When high, the syllable in
-    -- this pipelane is invalidated, because it belongs to the next bundle.
-    -- stopOut is also asserted in this case if additional connected pipelanes
-    -- follow. This should be held low for the first pipelane.
-    pl2pl_stopIn                : in  std_logic_vector(S_STOP to S_STOP);
     
     ---------------------------------------------------------------------------
     -- Trace unit interface
@@ -795,9 +793,8 @@ architecture Behavioral of core_pipelane is
   -- the pipeline registers.
   type syllableState_type is record
     
-    -- Syllable from instruction memory and its address.
+    -- Syllable from instruction memory.
     syllable                    : rvex_syllable_type;
-    lanePC                      : rvex_address_type;
     
     -- Current PC for the bundle which is being executed.
     PC                          : rvex_address_type;
@@ -1399,14 +1396,15 @@ begin -- architecture
     -- Signals from external blocks
     -------------------------------
     -- Configuration and run control.
-    cfg2pl_decouple, cfg2pl_numGroupsLog2, cfg2pl_pcAddVal, cxplif2pl_irq,
+    cfg2pl_decouple, cfg2pl_numGroupsLog2, cfg2pl_laneIndex, cfg2pl_pcAddVal,
+    cxplif2pl_irq,
     
     -- Next operation routing interface.
-    cxplif2pl_PC, cxplif2pl_lanePC, cxplif2pl_limmValid, cxplif2pl_valid,
-    cxplif2pl_brkValid, cxplif2pl_invalUntilBR,
+    cxplif2pl_PC, cxplif2pl_limmValid, cxplif2pl_valid, cxplif2pl_brkValid,
+    cxplif2pl_invalUntilBR,
     
     -- Memory interface.
-    imem2pl_syllable, imem2pl_exception, dmsw2pl_exception,
+    ibuf2pl_syllable, ibuf2pl_exception, dmsw2pl_exception,
     
     -- Register file interface.
     gpreg2pl_readPortA, gpreg2pl_readPortB, cxplif2pl_brLinkReadPort,
@@ -1414,14 +1412,14 @@ begin -- architecture
     -- Special register interface.
     cxplif2pl_trapHandler, cxplif2pl_debugTrapEnable,
     
+    -- Stop bit routing interface.
+    sbit2pl_invalidate, sbit2pl_PC_plusOne, sbit2pl_relativeTarget,
+      
     -- Long immediate routing interface.
     limm2pl_enable, limm2pl_data, limm2pl_error,
     
     -- Trap routing interface.
     trap2pl_trapToHandle, trap2pl_trapPending, trap2pl_disable, trap2pl_flush,
-    
-    -- Stop bit propagation.
-    pl2pl_stopIn,
     
     
     -- Signals from functional units
@@ -1473,15 +1471,14 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Copy the signals broadcast by the active branch unit into the pipeline.
     s(S_IF).PC        := cxplif2pl_PC(S_IF);
-    s(S_IF).lanePC    := cxplif2pl_lanePC(S_IF);
     s(S_IF).valid     := cxplif2pl_valid(S_IF);
     s(S_IF).limmValid := cxplif2pl_limmValid(S_IF);
     s(S_IF).brkValid  := cxplif2pl_brkValid(S_IF);
     
     -- Copy the instruction fetch result into the pipeline.
-    s(S_IF+L_IF).syllable := imem2pl_syllable(S_IF+L_IF);
+    s(S_IF+L_IF).syllable := ibuf2pl_syllable(S_IF+L_IF);
     if s(S_IF+L_IF).valid = '1' then
-      s(S_IF+L_IF).tr.trap  := s(S_IF+L_IF).tr.trap & imem2pl_exception(S_IF+L_IF);
+      s(S_IF+L_IF).tr.trap  := s(S_IF+L_IF).tr.trap & ibuf2pl_exception(S_IF+L_IF);
     end if;
     
     ---------------------------------------------------------------------------
@@ -1607,27 +1604,78 @@ begin -- architecture
       s(S_IF+L_IF).tr.trap := s(S_IF+L_IF).tr.trap & (
         active => '1',
         cause  => rvex_trap(RVEX_TRAP_INVALID_OP),
-        arg    => s(S_IF+L_IF).lanePC
+        arg    => X"0000000" & cfg2pl_laneIndex
       );
     end if;
     
     ---------------------------------------------------------------------------
-    -- Perform stop bit propagation
+    -- Determine PC + 1 and the PC-relative branch target in case our lane has
+    -- a stop bit
     ---------------------------------------------------------------------------
-    -- Connect the stop output.
-    if cfg2pl_decouple = '0' or lane2indexInGroupRev(LANE_INDEX, CFG) /= 0 then
-      pl2pl_stopOut(S_STOP) <= s(S_STOP).syllable(1) or pl2pl_stopIn(S_STOP);
-    else
-      pl2pl_stopOut(S_STOP) <= '0';
+    if HAS_BR then
+      
+      -- Perform the addition.
+      s(S_PCP1).br.PC_plusOne := std_logic_vector(
+        vect2unsigned(s(S_PCP1).PC)
+        + vect2unsigned(cfg2pl_pcAddVal)
+      );
+      
+      -- Determine what the PC needs to be aligned to.
+      i := min_nat(
+        (
+          SYLLABLE_SIZE_LOG2B                           -- Instr. size per lane.
+          + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)  -- Lanes per group.
+          + vect2uint(cfg2pl_numGroupsLog2)             -- Number of coupled groups.
+        ), (
+          SYLLABLE_SIZE_LOG2B                           -- Instr. size per lane.
+          + CFG.bundleAlignLog2                         -- Bundle start alignment.
+        )
+      );
+      
+      -- Align the new PC.
+      s(S_PCP1).br.PC_plusOne(i-1 downto 0) := (others => '0');
+      
+      -- Add branch offset to PC + 1 to get the relative branch target.
+      s(S_BTGT).br.relativeTarget := std_logic_vector(
+        vect2unsigned(s(S_BTGT).br.PC_plusOne)
+        + unsigned(s(S_BTGT).br.branchOffset)
+      );
+      
     end if;
     
-    -- Connect the stop bit input.
-    if pl2pl_stopIn(S_STOP) = '1' then
-      s(S_STOP).valid := '0';
-      s(S_STOP).limmValid := '0';
-      -- pragma translate_off
-      s(S_STOP).invalidDueToStop := '1';
-      -- pragma translate_on
+    ---------------------------------------------------------------------------
+    -- Perform stop bit propagation and mux between PC+1s and relative branch
+    -- targets
+    ---------------------------------------------------------------------------
+    -- Forward the PC+1 and relative branch targets computed in this lane to
+    -- the .
+    pl2sbit_PC_plusOne(S_STOP) <= s(S_STOP).br.PC_plusOne;
+    pl2sbit_relativeTarget(S_STOP) <= s(S_STOP).br.relativeTarget;
+    
+    if CFG.genBundleSizeLog2 /= CFG.bundleAlignLog2 then
+    
+      -- Forward the stop bit to stop bit routing.
+      pl2sbit_stop(S_STOP) <= s(S_STOP).syllable(1);
+      
+      -- Handle stop-bit based lane invalidation.
+      if sbit2pl_invalidate(S_STOP) = '1' then
+        s(S_STOP).valid := '0';
+        s(S_STOP).limmValid := '0';
+        -- pragma translate_off
+        s(S_STOP).invalidDueToStop := '1';
+        -- pragma translate_on
+      end if;
+      
+      -- Override the computed PC+1 and branch target with the stop bit mux
+      -- output.
+      s(S_STOP).br.PC_plusOne := sbit2pl_PC_plusOne(S_STOP);
+      s(S_STOP).br.relativeTarget := sbit2pl_relativeTarget(S_STOP);
+      
+    else
+      
+      -- Ignore stop bits to save area because we don't need them.
+      pl2sbit_stop(S_STOP) <= '0';
+      
     end if;
     
     ---------------------------------------------------------------------------
@@ -1659,7 +1707,7 @@ begin -- architecture
       s(S_LIMM).tr.trap := s(S_LIMM).tr.trap & (
         active => '1',
         cause  => rvex_trap(RVEX_TRAP_LIMMH_FAULT),
-        arg    => s(S_LIMM).lanePC
+        arg    => X"0000000" & cfg2pl_laneIndex
       );
     end if;
     
@@ -1773,40 +1821,6 @@ begin -- architecture
       );
       
     end loop;
-    
-    ---------------------------------------------------------------------------
-    -- Determine PC + 1 and PC-relative branch target.
-    ---------------------------------------------------------------------------
-    if HAS_BR then
-      
-      -- Perform the addition.
-      s(S_PCP1).br.PC_plusOne := std_logic_vector(
-        vect2unsigned(s(S_PCP1).PC)
-        + vect2unsigned(cfg2pl_pcAddVal)
-      );
-      
-      -- Determine what the PC needs to be aligned to.
-      i := min_nat(
-        (
-          SYLLABLE_SIZE_LOG2B                           -- Instr. size per lane.
-          + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)  -- Lanes per group.
-          + vect2uint(cfg2pl_numGroupsLog2)             -- Number of coupled groups.
-        ), (
-          SYLLABLE_SIZE_LOG2B                           -- Instr. size per lane.
-          + CFG.bundleAlignLog2                         -- Bundle start alignment.
-        )
-      );
-      
-      -- Align the new PC.
-      s(S_PCP1).br.PC_plusOne(i-1 downto 0) := (others => '0');
-      
-      -- Add branch offset to PC + 1 to get the relative branch target.
-      s(S_BTGT).br.relativeTarget := std_logic_vector(
-        vect2unsigned(s(S_BTGT).br.PC_plusOne)
-        + unsigned(s(S_BTGT).br.branchOffset)
-      );
-      
-    end if;
     
     ---------------------------------------------------------------------------
     -- Handle trap forwarding
@@ -2264,7 +2278,10 @@ begin -- architecture
       if s(S_LAST).invalidDueToStop = '0' then
         
         -- Display PC for the current syllable.
-        rvs_append(debug, rvs_hex(s(S_LAST).lanePC, 8));
+        rvs_append(debug, rvs_hex(std_logic_vector(
+          unsigned(s(S_LAST).PC)
+          + unsigned(cfg2pl_laneIndex) * 4
+        ), 8));
         rvs_append(debug, " => ");
         
         -- Append disassembly.

@@ -188,7 +188,7 @@ package core_trap_pkg is
     
     -- Invalid operation. Triggered when an unknown opcode or an opcode using
     -- a functional unit which does not exist in the lane is encountered.
-    -- Argument: exact PC for the lane with the invalid opcode.
+    -- Argument: lane index causing the trap, starting at 1.
     RVEX_TRAP_INVALID_OP => (
       name => "trap %c: invalid opcode@                          ",
       isDebugTrap => '0',
@@ -234,7 +234,8 @@ package core_trap_pkg is
     --    (triggered in destination lane);
     --  - the destination lane is not using the immediate value (triggered in
     --    destination lane).
-    -- Argument: exact PC for the source or destination lane (see above).
+    -- Argument: lane index for the source or destination lane (see above),
+    -- starting at 1.
     RVEX_TRAP_LIMMH_FAULT => (
       name => "trap %c: LIMMH forwarding fault@                  ",
       isDebugTrap => '0',
