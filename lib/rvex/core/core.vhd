@@ -654,7 +654,6 @@ architecture Behavioral of core is
   signal pl2sim_instr                 : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
   signal pl2sim_op                    : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
   signal br2sim                       : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
-  signal br2sim_active                : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   -- pragma translate_on
     
 --=============================================================================
@@ -738,7 +737,6 @@ begin -- architecture
       pl2sim_instr                  => pl2sim_instr,
       pl2sim_op                     => pl2sim_op,
       br2sim                        => br2sim,
-      br2sim_active                 => br2sim_active,
       -- pragma translate_on
       
       -- Decoded configuration signals.
@@ -1199,7 +1197,7 @@ begin -- architecture
     end process;
     
     sim_info: process (
-      pl2sim_instr, pl2sim_op, br2sim, br2sim_active, currentCfg(S_LAST),
+      pl2sim_instr, pl2sim_op, br2sim, currentCfg(S_LAST),
       ctxt(S_LAST), cxreg2cxplif_currentPC
     ) is
       
@@ -1258,7 +1256,6 @@ begin -- architecture
           for lane2 in 0 to 2**CFG.numLanesLog2-1 loop
             if curContext = vect2uint(ctxt(S_LAST)(lane2group(lane2, CFG))) then
               branchUnitLane := lane2;
-              exit when br2sim_active(lane2) = '1';
             end if;
           end loop;
           rvs_append(sb, br2sim(branchUnitLane));

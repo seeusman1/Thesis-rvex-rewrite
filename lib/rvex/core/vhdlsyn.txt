@@ -32,7 +32,9 @@ core_limmRouting.vhd
 core_memu.vhd
 core_mulu.vhd
 core_pipelane.vhd
+core_stopBitRouting.vhd
 core_trapRouting.vhd
 core_pipelanes.vhd
+core_instructionBuffer.vhd
 core_trace.vhd
 core.vhd

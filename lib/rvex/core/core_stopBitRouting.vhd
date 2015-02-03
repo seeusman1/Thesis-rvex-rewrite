@@ -52,11 +52,14 @@ library rvex;
 use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
 use rvex.core_pkg.all;
-use rvex.core_trap_pkg.all;
+use rvex.core_intIface_pkg.all;
 use rvex.core_pipeline_pkg.all;
+use rvex.core_opcode_pkg.all;
 
 --=============================================================================
--- This entity controls stop bit based lane invalidation and PC+1 selection.
+-- This entity controls stop bit based lane invalidation, and forwards the last
+-- syllable in the compressed bundle to the last lane if its a branch
+-- operation.
 -------------------------------------------------------------------------------
 entity core_stopBitRouting is
 --=============================================================================
@@ -79,6 +82,24 @@ entity core_stopBitRouting is
     ---------------------------------------------------------------------------
     -- Pipelane interface
     ---------------------------------------------------------------------------
+    -- Stop bit inputs from the pipelanes.
+    pl2sbit_stop                : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Branch unit information from each pipelane.
+    pl2sbit_valid               : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    pl2sbit_syllable            : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+    pl2sbit_PC_plusOne          : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Invalidation output for each pipelane. When high, the pipelane should
+    -- not execute/commit its syllable.
+    sbit2pl_invalidate          : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Information for the branch unit. This is all forwarded from the pipelane
+    -- with the stop bit to the last lane, which contains the active branch
+    -- unit.
+    sbit2pl_valid               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    sbit2pl_syllable            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    sbit2pl_PC_plusOne          : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0)
     
   );
 end core_stopBitRouting;
@@ -90,6 +111,91 @@ architecture Behavioral of core_stopBitRouting is
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  routing: process (
+    cfg2any_coupled, pl2sbit_stop, pl2sbit_valid, pl2sbit_syllable,
+    pl2sbit_PC_plusOne
+  ) is
+    
+    -- This is set to true when the current pipelane is the last in the set of
+    -- coupled pipelane groups.
+    variable endsGroup          : boolean;
+    
+    -- Temporary variable, high when the incoming syllable for the current
+    -- pipelane is a branch syllable.
+    variable isBranch           : std_logic;
+    
+    -- Routing network (when loop-unrolled) for the stop bit.
+    variable invalidate         : std_logic;
+    
+    -- Routing networks (when loop-unrolled) for the branch units.
+    variable branchValid        : std_logic;
+    variable syllable           : rvex_address_type;
+    variable PC_plusOne         : rvex_address_type;
+    
+  begin
+    
+    -- Initialize the routing network variables.
+    invalidate      := '0';
+    branchValid     := '0';
+    syllable        := pl2sbit_syllable(0);       -- Don't care.
+    PC_plusOne      := pl2sbit_PC_plusOne(0);     -- Don't care.
+    
+    for lane in 0 to 2**CFG.numLanesLog2-1 loop
+      
+      -- Determine endsGroup.
+      endsGroup := true;
+      if lane < 2**CFG.numLanesLog2-1 then
+        if cfg2any_coupled(lane2group(lane+1, CFG) + lane2group(lane, CFG)*2**CFG.numLaneGroupsLog2) /= '1' then
+          endsGroup := false;
+        end if;
+      end if;
+      
+      -- Set defaults for all the outputs.
+      sbit2pl_invalidate(lane)      <= invalidate;
+      sbit2pl_valid(lane)           <= '0';
+      sbit2pl_syllable(lane)        <= syllable;
+      sbit2pl_PC_plusOne(lane)      <= PC_plusOne;
+      
+      -- If there is a branch operation pending in the network, revalidate the
+      -- last lane using that operation.
+      if endsGroup and branchValid = '1' then
+        sbit2pl_valid(lane) <= '1';
+        sbit2pl_invalidate(lane) <= '0';
+      end if;
+      
+      -- Update the network signals.
+      if pl2sbit_stop(lane) = '1' and invalidate = '0' then
+        invalidate  := '1';
+        
+        -- Determine whether the incoming syllable is a branch operation.
+        isBranch    := OPCODE_TABLE(vect2uint(pl2sbit_syllable(lane)(rvex_opcode_type'range))).branchCtrl.isBranchInstruction;
+        
+        -- If stop is set and syllable marks a valid branch operation,
+        -- forward the branch operation to the last coupled pipelane, which
+        -- contains the branch unit.
+        branchValid := pl2sbit_valid(lane) and isBranch;
+        syllable    := pl2sbit_syllable(lane);
+        PC_plusOne  := pl2sbit_PC_plusOne(lane);
+        
+        -- If we're forwarding the branch operation to the last lane,
+        -- invalidate this lane so we don't execute the syllable twice.
+        -- Unless, of course, this already is the last lane.
+        if not endsGroup and branchValid = '1' then
+          sbit2pl_invalidate(lane) <= '1';
+        end if;
+        
+      end if;
+      
+      -- Reset the network when we're at the end of a group.
+      if endsGroup then
+        invalidate := '0';
+        branchValid := '0';
+      end if;
+      
+    end loop;
+    
+  end process;
   
 end Behavioral;
 

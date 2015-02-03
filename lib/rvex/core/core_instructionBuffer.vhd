@@ -203,8 +203,9 @@ begin -- architecture
       imem2ibuf_instr, imem2ibuf_exception,
       error_r
     ) is
-      variable error_v    : std_logic;
-      variable fixedBits  : natural;
+      variable error_v      : std_logic;
+      variable fixedBits    : natural;
+      variable ignoredBits  : natural;
     begin
       
       -- Forward trivially.
@@ -237,11 +238,13 @@ begin -- architecture
                      + CFG.bundleAlignLog2;
         
         -- Check for alignment.
-        if fixedBits > ignoredBits then
-          if vect2uint(cxplif2ibuf_PCs(laneGroup)(fixedBits-1 downto ignoredBits)) /= 0 then
-            error_v := '1';
+        for i in 0 to SYLLABLE_SIZE_LOG2B + CFG.numLanesLog2-1 loop
+          if i < fixedBits and i >= ignoredBits then
+            if cxplif2ibuf_PCs(laneGroup)(i) /= '0' then
+              error_v := '1';
+            end if;
           end if;
-        end if;
+        end loop;
         
         -- Override the fixed bits of the output PC according to its
         -- specification.

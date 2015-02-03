@@ -527,7 +527,7 @@ begin -- architecture
       
       -- Determine how the PC addition value should be aligned.
       numGroupsLog2 := vect2uint(newNumPipelaneGroupsLog2ForContext_r(
-        vect2uint(newConfiguration_r(laneGroup*4+2 downto laneGroup*4))
+        vect2uint(newConfiguration_r(laneGroup*4+CFG.numLaneGroupsLog2-1 downto laneGroup*4))
       ));
       
       align := min_nat(
@@ -536,7 +536,11 @@ begin -- architecture
       ) + SYLLABLE_SIZE_LOG2B;
       
       -- Enforce alignment.
-      addValMinusOne(align-1 downto 0) := (others => '0');
+      for i in 0 to 2**CFG.numLanesLog2-1 loop
+        if i < align then
+          addValMinusOne(i) := '0';
+        end if;
+      end loop;
       
       -- Perform the +1 addition to get newPcAddVal_r.
       newPcAddVal_r(lane) <= std_logic_vector(

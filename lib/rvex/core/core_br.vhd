@@ -95,7 +95,6 @@ entity core_br is
     ---------------------------------------------------------------------------
     -- pragma translate_off
     br2pl_sim                   : out rvex_string_builder_array(S_IF to S_IF);
-    br2pl_simActive             : out std_logic_vector(S_IF to S_IF);
     -- pragma translate_on
     
     ---------------------------------------------------------------------------
@@ -107,14 +106,6 @@ entity core_br is
     ---------------------------------------------------------------------------
     -- Next operation outputs
     ---------------------------------------------------------------------------
-    -- This signal is used to determine which branch unit result should be
-    -- used, when multiple branch units are eligible at the same time. It is
-    -- based on the stop bit of a syllable - when the stop bit is high, this is
-    -- high. When any branch unit is outputting a high active signal, the
-    -- lowest indexed branch unit should win arbitration. Otherwise, the
-    -- highest indexed branch unit should win.
-    br2cxplif_active            : out std_logic;
-    
     -- The PC for the instruction in S_IF (i.e. the next PC).
     br2cxplif_PC                : out rvex_address_array(S_IF to S_IF);
     
@@ -154,9 +145,6 @@ entity core_br is
     ---------------------------------------------------------------------------
     -- Opcode for the branch unit.
     pl2br_opcode                : in  rvex_opcode_array(S_BR to S_BR);
-    
-    -- Stop bit of the syllable corrosponding to opcode.
-    pl2br_stopBit               : in  std_logic_vector(S_BR to S_BR);
     
     -- Whether the opcode is valid.
     pl2br_valid                 : in  std_logic_vector(S_BR to S_BR);
@@ -346,11 +334,6 @@ begin -- architecture
       end if;
     end if;
   end process;
-  
-  -----------------------------------------------------------------------------
-  -- Generate the active control signal for cxplif
-  -----------------------------------------------------------------------------
-  br2cxplif_active <= pl2br_stopBit(S_BR);
   
   -----------------------------------------------------------------------------
   -- Determine next PC source and control signal states
@@ -757,7 +740,6 @@ begin -- architecture
   -- pragma translate_off
   sim_info_gen: if GEN_VHDL_SIM_INFO generate
     br2pl_sim(S_IF) <= simAction & simReason;
-    br2pl_simActive(S_IF) <= pl2br_stopBit(S_BR);
   end generate;
   -- pragma translate_on
   

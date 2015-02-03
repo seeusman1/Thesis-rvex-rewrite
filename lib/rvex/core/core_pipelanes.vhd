@@ -107,9 +107,6 @@ entity core_pipelanes is
     -- unit is active.
     br2sim                      : out rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
     
-    -- High when the indexed branch unit is the active branch unit.
-    br2sim_active               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
-    
     -- pragma translate_on
     
     -----------------------------------------------------------------------------
@@ -313,7 +310,6 @@ architecture Behavioral of core_pipelanes is
   signal br2cxplif_irqAck           : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2br_run              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal pl2cxplif_idle             : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
-  signal br2cxplif_active           : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_limmValid        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -354,6 +350,16 @@ architecture Behavioral of core_pipelanes is
   signal dmsw2memu_readData         : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal dmsw2pl_exception          : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   
+  -- Stop bit/branch operation routing <-> pipelane interconnect signals.
+  signal pl2sbit_stop               : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2sbit_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2sbit_syllable           : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2sbit_PC_plusOne         : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal sbit2pl_invalidate         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal sbit2pl_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal sbit2pl_syllable           : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal sbit2pl_PC_plusOne         : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  
   -- Long immediate routing <-> pipelane interconnect signals.
   signal pl2limm_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal pl2limm_enable             : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -369,9 +375,6 @@ architecture Behavioral of core_pipelanes is
   signal trap2pl_trapPending        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_disable            : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_flush              : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
-  
-  -- Stop bit carry network.
-  signal pl2pl_stopIn               : std_logic_vector(2**CFG.numLanesLog2 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -396,8 +399,6 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the pipelanes
   -----------------------------------------------------------------------------
-  pl2pl_stopIn(0) <= '0';
-  
   pl_gen: for lane in 2**CFG.numLanesLog2-1 downto 0 generate
     
     -- Lane group which lane belongs to.
@@ -421,14 +422,13 @@ begin -- architecture
     -- to support data memory breakpoints for each runtime configuration.
     constant brk: boolean := mem;
     
-    -- Whether lane should have a branch unit.
-    constant br: boolean :=
+    -- The last lane in each lane group needs a branch unit.
+    constant br: boolean := laneIndexRev = 0;
       
-      -- The last lane in each lane group needs a branch unit.
-      laneIndexRev = 0
-      
-      -- The lane before each possible bundle border needs a branch unit.
-      or ((lane mod 2**CFG.bundleAlignLog2) = 2**CFG.bundleAlignLog2-1);
+    -- The lane before each possible bundle border needs to support stop bits.
+    -- In addition, the last lane in every group needs this is well when
+    -- finer-grained configurations are used.
+    constant stop: boolean := br or ((lane+1) mod 2**CFG.bundleAlignLog2) = 0;
     
   begin
     
@@ -443,7 +443,8 @@ begin -- architecture
         HAS_MUL                           => mul,
         HAS_MEM                           => mem,
         HAS_BRK                           => brk,
-        HAS_BR                            => br
+        HAS_BR                            => br,
+        HAS_STOP                          => stop
         
       )
       port map (
@@ -459,7 +460,6 @@ begin -- architecture
         pl2sim_instr                      => pl2sim_instr(lane),
         pl2sim_op                         => pl2sim_op(lane),
         br2sim                            => br2sim(lane),
-        br2sim_active                     => br2sim_active(lane),
         -- pragma translate_on
         
         -- Configuration and run control.
@@ -475,7 +475,6 @@ begin -- architecture
         pl2cxplif_idle                    => pl2cxplif_idle(lane),
         
         -- Next operation routing interface.
-        br2cxplif_active                  => br2cxplif_active(lane),
         br2cxplif_PC(S_IF)                => br2cxplif_PC(lane),
         cxplif2pl_PC(S_IF)                => cxplif2pl_PC(lane),
         br2cxplif_limmValid(S_IF)         => br2cxplif_limmValid(lane),
@@ -531,6 +530,16 @@ begin -- architecture
         pl2cxplif2_sylCommit(S_LAST)      => pl2cxplif2_sylCommit(lane),
         pl2cxplif2_sylNop(S_LAST)         => pl2cxplif2_sylNop(lane),
       
+        -- Stop bit/PC+1 routing interface
+        pl2sbit_stop(S_STOP)              => pl2sbit_stop(lane),
+        pl2sbit_valid(S_STOP)             => pl2sbit_valid(lane),
+        pl2sbit_syllable(S_STOP)          => pl2sbit_syllable(lane),
+        pl2sbit_PC_plusOne(S_STOP)        => pl2sbit_PC_plusOne(lane),
+        sbit2pl_invalidate(S_STOP)        => sbit2pl_invalidate(lane),
+        sbit2pl_valid(S_STOP)             => sbit2pl_valid(lane),
+        sbit2pl_syllable(S_STOP)          => sbit2pl_syllable(lane),
+        sbit2pl_PC_plusOne(S_STOP)        => sbit2pl_PC_plusOne(lane),
+        
         -- Long immediate routing interface.
         pl2limm_valid(S_LIMM)             => pl2limm_valid(lane),
         pl2limm_enable(S_LIMM)            => pl2limm_enable(lane),
@@ -546,10 +555,6 @@ begin -- architecture
         trap2pl_trapPending(S_TRAP)       => trap2pl_trapPending(lane),
         trap2pl_disable                   => trap2pl_disable(lane),
         trap2pl_flush                     => trap2pl_flush(lane),
-        
-        -- Stop-bit propagation interface.
-        pl2pl_stopOut(S_STOP)             => pl2pl_stopIn(lane+1),
-        pl2pl_stopIn(S_STOP)              => pl2pl_stopIn(lane),
         
         -- Trace unit interface.
         pl2trace_data                     => pl2trace_data(lane)
@@ -575,6 +580,7 @@ begin -- architecture
       
       -- Decoded configuration signals.
       cfg2any_coupled                   => cfg2any_coupled,
+      cfg2any_numGroupsLog2             => cfg2any_numGroupsLog2,
       cfg2any_context                   => cfg2any_context,
       cfg2any_active                    => cfg2any_active,
       cfg2any_lastGroupForCtxt          => cfg2any_lastGroupForCtxt,
@@ -589,7 +595,6 @@ begin -- architecture
       pl2cxplif_idle                    => pl2cxplif_idle,
       
       -- Pipelane interface: next operation routing.
-      br2cxplif_active                  => br2cxplif_active,
       br2cxplif_PC                      => br2cxplif_PC,
       cxplif2pl_PC                      => cxplif2pl_PC,
       br2cxplif_limmValid               => br2cxplif_limmValid,
@@ -734,6 +739,30 @@ begin -- architecture
       );
     
   end generate; -- for each lane group
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate stop bit and branch operation routing
+  -----------------------------------------------------------------------------
+  sbit_inst: entity rvex.core_stopBitRouting
+    generic map (
+      CFG                       => CFG
+    )
+    port map (
+      
+      -- Decoded configuration signals.
+      cfg2any_coupled           => cfg2any_coupled,
+      
+      -- Pipelane interface.
+      pl2sbit_stop              => pl2sbit_stop,
+      pl2sbit_valid             => pl2sbit_valid,
+      pl2sbit_syllable          => pl2sbit_syllable,
+      pl2sbit_PC_plusOne        => pl2sbit_PC_plusOne,
+      sbit2pl_invalidate        => sbit2pl_invalidate,
+      sbit2pl_valid             => sbit2pl_valid,
+      sbit2pl_syllable          => sbit2pl_syllable,
+      sbit2pl_PC_plusOne        => sbit2pl_PC_plusOne
+      
+    );
   
   -----------------------------------------------------------------------------
   -- Instantiate LIMM routing network

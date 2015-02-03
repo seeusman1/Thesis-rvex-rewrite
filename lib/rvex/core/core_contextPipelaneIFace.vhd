@@ -94,6 +94,9 @@ entity core_contextPipelaneIFace is
     -- context, or low when they don't.
     cfg2any_coupled             : in  std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
     
+    -- log2 of the number of coupled pipelane groups for each pipelane group.
+    cfg2any_numGroupsLog2       : in  rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
     -- Specifies the context associated with the indexed pipelane group.
     cfg2any_context             : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
@@ -135,14 +138,6 @@ entity core_contextPipelaneIFace is
     ---------------------------------------------------------------------------
     -- Pipelane interface: next operation routing
     ---------------------------------------------------------------------------
-    -- This signal is used to determine which branch unit result should be
-    -- used, when multiple branch units are eligible at the same time. It is
-    -- based on the stop bit of a syllable - when the stop bit is high, this is
-    -- high. When any branch unit is outputting a high active signal, the
-    -- lowest indexed branch unit should win arbitration. Otherwise, the
-    -- highest indexed branch unit should win.
-    br2cxplif_active            : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
-    
     -- The PC for the current instruction, as chosen by the active branch unit
     -- within the group. The PC is distributed by the context-pipelane
     -- interface block so all coupled pipelanes have it.
@@ -551,11 +546,11 @@ begin -- architecture
   arbitrator: process (
     
     -- Configuration signal.
-    cfg2any_coupled,
+    cfg2any_coupled, cfg2any_numGroupsLog2, cfg2any_laneIndex,
     
     -- Signals from pipelanes.
     br2cxplif_irqAck, pl2cxplif_idle, pl2cxplif_blockReconfig,
-    br2cxplif_active, br2cxplif_PC, br2cxplif_limmValid, br2cxplif_valid,
+    br2cxplif_PC, br2cxplif_limmValid, br2cxplif_valid,
     br2cxplif_brkValid, br2cxplif_invalUntilBR, pl2cxplif_brLinkWritePort,
     br2cxplif_trapInfo, br2cxplif_trapPoint, br2cxplif_exDbgTrapInfo,
     br2cxplif_stop, pl2cxplif_rfi, br2cxplif_imemFetch, br2cxplif_imemCancel
@@ -566,7 +561,6 @@ begin -- architecture
     variable blockReconfig_v    : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable irqAck_v           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable idle_v             : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
-    variable brActive_v         : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable PC_v               : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     variable lanePC_v           : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     variable limmValid_v        : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -589,6 +583,7 @@ begin -- architecture
     variable groupB             : natural;
     variable index              : natural;
     variable coupled            : std_logic;
+    variable pcIndex            : std_logic_vector(3 downto 0);
     
     -- Bitwise or operator for a branch register data array, so we can keep the
     -- code below sane.
@@ -613,11 +608,6 @@ begin -- architecture
       
       -- Figure out which branch unit to use.
       selectedLane := group2lastLane(laneGroup, CFG);
-      for lane in group2lastLane(laneGroup, CFG) downto group2firstLane(laneGroup, CFG) loop
-        if br2cxplif_active(lane) = '1' then
-          selectedLane := lane;
-        end if;
-      end loop;
       
       -- Select the incoming values from the branch units for signals which are
       -- only valid for those lanes.
@@ -633,11 +623,10 @@ begin -- architecture
       trapPoint_v(laneGroup)        := br2cxplif_trapPoint(selectedLane);
       exDbgTrapInfo_v(laneGroup)    := br2cxplif_exDbgTrapInfo(selectedLane);
       stop_v(laneGroup)             := br2cxplif_stop(selectedLane);
+      rfi_v(laneGroup)              := pl2cxplif_rfi(selectedLane);
       
-      -- Load default values into rfi_v, brActive_v, blockReconfig_v, idle_v
-      -- and brLinkWritePort_v.
-      rfi_v(laneGroup)              := '0';
-      brActive_v(laneGroup)         := '0';
+      -- Load default values into blockReconfig_v, idle_v and
+      -- brLinkWritePort_v.
       blockReconfig_v(laneGroup)    := '0';
       idle_v(laneGroup)             := '1';
       brLinkWritePort_v(laneGroup)  := (
@@ -657,16 +646,6 @@ begin -- architecture
       -- cases.
       for groupIndex in 0 to 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2)-1 loop
         currentLane := group2firstLane(laneGroup, CFG) + groupIndex;
-        
-        -- RFI signal is wired-or.
-        rfi_v(laneGroup)
-          := rfi_v(laneGroup)
-          or pl2cxplif_rfi(currentLane);
-        
-        -- Branch active signal is wired-or.
-        brActive_v(laneGroup)
-          := brActive_v(laneGroup)
-          or br2cxplif_active(currentLane);
         
         -- BlockReconfig signal is wired-or.
         blockReconfig_v(laneGroup)
@@ -742,51 +721,22 @@ begin -- architecture
         if cfg2any_coupled(groupA + groupB * 2**CFG.numLaneGroupsLog2) = '1' then
           
           -- Copy the signals coming from the branch units in the higher
-          -- indexed lane group to the lower indexed lane group, because the
-          -- higher indexed branch group takes priority by default, unless
-          -- active is high for the lower group, in which case that takes
-          -- priority.
-          if brActive_v(groupA) = '1' then
-            irqAck_v(groupB)       := irqAck_v(groupA);
-            PC_v(groupB)           := PC_v(groupA);
-            limmValid_v(groupB)    := limmValid_v(groupA);
-            valid_v(groupB)        := valid_v(groupA);
-            brkValid_v(groupB)     := brkValid_v(groupA);
-            invalUntilBR_v(groupB) := invalUntilBR_v(groupA);
-            imemFetch_v(groupB)    := imemFetch_v(groupA);
-            imemCancel_v(groupB)   := imemCancel_v(groupA);
-            trapInfo_v(groupB)     := trapInfo_v(groupA);
-            trapPoint_v(groupB)    := trapPoint_v(groupA);
-            exDbgTrapInfo_v(groupB):= exDbgTrapInfo_v(groupA);
-            stop_v(groupB)         := stop_v(groupA);
-          else
-            irqAck_v(groupA)       := irqAck_v(groupB);
-            PC_v(groupA)           := PC_v(groupB);
-            limmValid_v(groupA)    := limmValid_v(groupB);
-            valid_v(groupA)        := valid_v(groupB);
-            brkValid_v(groupA)     := brkValid_v(groupB);
-            invalUntilBR_v(groupA) := invalUntilBR_v(groupB);
-            imemFetch_v(groupA)    := imemFetch_v(groupB);
-            imemCancel_v(groupA)   := imemCancel_v(groupB);
-            trapInfo_v(groupA)     := trapInfo_v(groupB);
-            trapPoint_v(groupA)    := trapPoint_v(groupB);
-            exDbgTrapInfo_v(groupA):= exDbgTrapInfo_v(groupB);
-            stop_v(groupA)         := stop_v(groupB);
-          end if;
+          -- indexed lane group to the lower indexed lane group.
+          irqAck_v(groupA)       := irqAck_v(groupB);
+          PC_v(groupA)           := PC_v(groupB);
+          limmValid_v(groupA)    := limmValid_v(groupB);
+          valid_v(groupA)        := valid_v(groupB);
+          brkValid_v(groupA)     := brkValid_v(groupB);
+          invalUntilBR_v(groupA) := invalUntilBR_v(groupB);
+          imemFetch_v(groupA)    := imemFetch_v(groupB);
+          imemCancel_v(groupA)   := imemCancel_v(groupB);
+          trapInfo_v(groupA)     := trapInfo_v(groupB);
+          trapPoint_v(groupA)    := trapPoint_v(groupB);
+          exDbgTrapInfo_v(groupA):= exDbgTrapInfo_v(groupB);
+          stop_v(groupA)         := stop_v(groupB);
+          rfi_v(groupA)          := rfi_v(groupB);
           
           -- Handle wired-and/or signals.
-          brActive_v(groupA)
-            := brActive_v(groupA)
-            or brActive_v(groupB);
-          brActive_v(groupB)
-            := brActive_v(groupA);
-            
-          rfi_v(groupA)
-            := rfi_v(groupA)
-            or rfi_v(groupB);
-          rfi_v(groupB)
-            := rfi_v(groupA);
-            
           blockReconfig_v(groupA)
             := blockReconfig_v(groupA)
             or blockReconfig_v(groupB);
@@ -853,8 +803,20 @@ begin -- architecture
     -- handler is executed.
     if CFG.numLaneGroupsLog2 > 0 then
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+        
+        -- Determine the lane index part of the PC.
+        for i in 0 to 3 loop
+          pcIndex(i) := PC_v(laneGroup)(SYLLABLE_SIZE_LOG2B + i);
+          if i >= CFG.bundleAlignLog2 then
+            pcIndex(i) := '0';
+          end if;
+          if i >= (CFG.numLanesLog2-CFG.numLaneGroupsLog2) + vect2uint(cfg2any_numGroupsLog2(laneGroup)) then
+            pcIndex(i) := '0';
+          end if;
+        end loop;
+        
         if vect2uint(cfg2any_laneIndex(group2firstLane(laneGroup, CFG)))
-         < vect2uint(PC_v(laneGroup)(SYLLABLE_SIZE_LOG2B + CFG.bundleAlignLog2 - 1 downto SYLLABLE_SIZE_LOG2B))
+         < vect2uint(pcIndex)
         then
           valid_v(laneGroup) := '0';
         end if;
