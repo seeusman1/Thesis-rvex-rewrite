@@ -39,15 +39,7 @@
          <ClosedNode>/cache - Behavioral |home|jeroen|rvex|standalone|vhdl|cache|cache.vhd</ClosedNode>
          <ClosedNode>/cache_tb_mockAtom - Behavioral |home|jeroen|rvex|standalone|vhdl|cache|cache_tb_mockAtom.vhd</ClosedNode>
          <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/core_asDisas_pkg</ClosedNode>
-         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/cached_core - rvsys_standalone_cachedCore - Behavioral</ClosedNode>
-         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/cached_core - rvsys_standalone_cachedCore - Behavioral/core - core - Behavioral/creg_inst - core_ctrlRegs - Behavioral</ClosedNode>
-         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/cached_core - rvsys_standalone_cachedCore - Behavioral/core - core - Behavioral/gpreg_inst - core_gpRegs - Behavioral</ClosedNode>
-         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/cached_core - rvsys_standalone_cachedCore - Behavioral/core - core - Behavioral/pls_inst - core_pipelanes - Behavioral/cxplif_inst - core_contextPipelaneIFace - Behavioral</ClosedNode>
-         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/cached_core - rvsys_standalone_cachedCore - Behavioral/core - core - Behavioral/pls_inst - core_pipelanes - Behavioral/pl_inst - core_pipelane - Behavioral</ClosedNode>
-         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/cfg_inst - core_cfgCtrl - Behavioral</ClosedNode>
-         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/creg_inst - core_ctrlRegs - Behavioral</ClosedNode>
-         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/gpreg_inst - core_gpRegs - Behavioral</ClosedNode>
-         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/pls_inst - core_pipelanes - Behavioral</ClosedNode>
+         <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral</ClosedNode>
          <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/pls_inst - core_pipelanes - Behavioral/cxplif_inst - core_contextPipelaneIFace - Behavioral</ClosedNode>
          <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/pls_inst - core_pipelanes - Behavioral/pl_inst - core_pipelane - Behavioral</ClosedNode>
          <ClosedNode>/ml605 - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605.vhd/simUtils_mem_pkg</ClosedNode>
@@ -100,7 +92,7 @@
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000020200000001000000010000006400000278000000020000000000000000000000000200000064ffffffff000000810000000300000002000002780000000100000003000000000000000100000003</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002fa000000020000000000000000000000000200000064ffffffff000000810000000300000002000002fa0000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
       <CurrentItem>ml605 - Behavioral (/home/jeroen/rvex/rvex-rewrite/platform/ml605-standalone/design/ml605.vhd)</CurrentItem>
    </ItemView>
@@ -123,13 +115,13 @@
          <ClosedNodesVersion>1</ClosedNodesVersion>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>core_contextRegLogic.vhd</SelectedItem>
+         <SelectedItem>core_globalRegLogic.vhd</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >3</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >12</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff0000000000000001000000000000000001000000000000000000000000000000000000038c000000040101000100000000000000000000000064ffffffff000000810000000000000004000000f600000001000000000000002400000001000000000000006600000001000000000000020c0000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem>core_contextRegLogic.vhd</CurrentItem>
+      <CurrentItem>core_globalRegLogic.vhd</CurrentItem>
    </ItemView>
    <ItemView guiview="Library" >
       <ClosedNodes>
@@ -139,7 +131,7 @@
          <SelectedItem>work</SelectedItem>
          <SelectedItem>ml605.vhd</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >74</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >73</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000000000000010000000000000000000000000000000000000101000000010001000100000000000000000000000064ffffffff000000810000000000000001000001010000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
@@ -151,7 +143,6 @@
          <ClosedNode>Configure Target Device</ClosedNode>
          <ClosedNode>Design Utilities</ClosedNode>
          <ClosedNode>Implement Design/Map</ClosedNode>
-         <ClosedNode>Implement Design/Place &amp; Route</ClosedNode>
          <ClosedNode>Implement Design/Place &amp; Route/Back-annotate Pin Locations</ClosedNode>
          <ClosedNode>Implement Design/Place &amp; Route/Generate IBIS Model</ClosedNode>
          <ClosedNode>Implement Design/Translate</ClosedNode>
@@ -159,13 +150,13 @@
          <ClosedNode>User Constraints</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>Design Summary/Reports</SelectedItem>
+         <SelectedItem>Implement Design</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000204000000010000000100000000000000000000000064ffffffff000000810000000000000001000002040000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem>Design Summary/Reports</CurrentItem>
+      <CurrentItem>Implement Design</CurrentItem>
    </ItemView>
    <SourceProcessView>000000ff0000000000000002000001080000009b01000000040100000002</SourceProcessView>
    <CurrentView>Implementation</CurrentView>
@@ -223,10 +214,7 @@
          <ClosedNode>/ml605_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605_tb.vhd/uart_inst - utils_uart - Behavioral</ClosedNode>
          <ClosedNode>/ml605_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605_tb.vhd/uut - ml605 - Behavioral/rvex_inst - rvsys_standalone - Behavioral/cached_core - rvsys_standalone_cachedCore - Behavioral/cache - cache - Behavioral</ClosedNode>
          <ClosedNode>/ml605_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605_tb.vhd/uut - ml605 - Behavioral/rvex_inst - rvsys_standalone - Behavioral/cached_core - rvsys_standalone_cachedCore - Behavioral/core - core - Behavioral</ClosedNode>
-         <ClosedNode>/ml605_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605_tb.vhd/uut - ml605 - Behavioral/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/cfg_inst - core_cfgCtrl - Behavioral</ClosedNode>
-         <ClosedNode>/ml605_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605_tb.vhd/uut - ml605 - Behavioral/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/creg_inst - core_ctrlRegs - Behavioral</ClosedNode>
-         <ClosedNode>/ml605_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605_tb.vhd/uut - ml605 - Behavioral/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/gpreg_inst - core_gpRegs - Behavioral</ClosedNode>
-         <ClosedNode>/ml605_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605_tb.vhd/uut - ml605 - Behavioral/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral/core - core - Behavioral/pls_inst - core_pipelanes - Behavioral/cxplif_inst - core_contextPipelaneIFace - Behavioral</ClosedNode>
+         <ClosedNode>/ml605_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605_tb.vhd/uut - ml605 - Behavioral/rvex_inst - rvsys_standalone - Behavioral/core - rvsys_standalone_core - Behavioral</ClosedNode>
          <ClosedNode>/ml605_tb - Behavioral |home|jeroen|rvex|rvex-rewrite|platform|ml605-standalone|design|ml605_tb.vhd/uut - ml605 - Behavioral/uart - periph_uart - Behavioral</ClosedNode>
          <ClosedNode>/mul_cmp_tb - behavioural |home|jeroen|rvex|standalone|test|mul_cmp_tb.vhd</ClosedNode>
          <ClosedNode>/rvex - Behavioral E:|GIT|standalone|vhdl|rvex.vhd/pls_inst - rvex_pipelanes - Behavioral</ClosedNode>
@@ -259,13 +247,13 @@
          <ClosedNode>/uart_tb - behavioral |home|jeroen|rvex|standalone|vhdl|temp|uart_tb.vhd/uut - periph_UART - Behavioral/uart_inst - utils_uart - Behavioral</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>ml605_tb - Behavioral (/home/jeroen/rvex/rvex-rewrite/platform/ml605-standalone/design/ml605_tb.vhd)</SelectedItem>
+         <SelectedItem>uut - ml605 - Behavioral (/home/jeroen/rvex/rvex-rewrite/platform/ml605-standalone/design/ml605.vhd)</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >1</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
       <ViewHeaderState orientation="horizontal" >000000ff0000000000000001000000010000000000000000000000000000000002020000000100000001000000640000028c000000020000000000000000000000000200000064ffffffff0000008100000003000000020000028c0000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
-      <CurrentItem>ml605_tb - Behavioral (/home/jeroen/rvex/rvex-rewrite/platform/ml605-standalone/design/ml605_tb.vhd)</CurrentItem>
+      <CurrentItem>uut - ml605 - Behavioral (/home/jeroen/rvex/rvex-rewrite/platform/ml605-standalone/design/ml605.vhd)</CurrentItem>
    </ItemView>
    <ItemView engineview="BehavioralSim" sourcetype="" guiview="Process" >
       <ClosedNodes>

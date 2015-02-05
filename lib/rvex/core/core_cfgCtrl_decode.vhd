@@ -395,7 +395,7 @@ begin -- architecture
       -- group ID.
       anyMatch    : std_logic;
       
-      -- High when all pipelanes in this group is associated with the current
+      -- High when all pipelane in this group is associated with the current
       -- group ID.
       allMatch    : std_logic;
       

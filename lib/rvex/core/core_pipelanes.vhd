@@ -107,9 +107,6 @@ entity core_pipelanes is
     -- unit is active.
     br2sim                      : out rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
     
-    -- High when the indexed branch unit is the active branch unit.
-    br2sim_active               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
-    
     -- pragma translate_on
     
     -----------------------------------------------------------------------------
@@ -139,11 +136,6 @@ entity core_pipelanes is
     
     -- Last pipelane group associated with each context.
     cfg2any_lastGroupForCtxt    : in  rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
-    
-    -- The amount which the branch unit residing in the indexed lane should
-    -- add to the current PC to get PC_plusOne, should it be the active branch
-    -- unit.
-    cfg2any_pcAddVal            : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Configuration and run control
@@ -310,7 +302,6 @@ architecture Behavioral of core_pipelanes is
   signal br2cxplif_irqAck           : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2br_run              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal pl2cxplif_idle             : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
-  signal br2cxplif_active           : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_lanePC           : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
@@ -368,9 +359,6 @@ architecture Behavioral of core_pipelanes is
   signal trap2pl_disable            : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_flush              : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
   
-  -- Stop bit carry network.
-  signal pl2pl_stopIn               : std_logic_vector(2**CFG.numLanesLog2 downto 0);
-  
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -391,11 +379,13 @@ begin -- architecture
     report "Memory lane index out of group range."
     severity failure;
   
+  assert CFG.branchLaneRevIndex < 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
+    report "Branch unit lane index out of group range."
+    severity failure;
+  
   -----------------------------------------------------------------------------
   -- Instantiate the pipelanes
   -----------------------------------------------------------------------------
-  pl2pl_stopIn(0) <= '0';
-  
   pl_gen: for lane in 2**CFG.numLanesLog2-1 downto 0 generate
     
     -- Lane group which lane belongs to.
@@ -420,13 +410,7 @@ begin -- architecture
     constant brk: boolean := mem;
     
     -- Whether lane should have a branch unit.
-    constant br: boolean :=
-      
-      -- The last lane in each lane group needs a branch unit.
-      laneIndexRev = 0
-      
-      -- The lane before each possible bundle border needs a branch unit.
-      or ((lane mod 2**CFG.bundleAlignLog2) = 2**CFG.bundleAlignLog2-1);
+    constant br: boolean := laneIndexRev = CFG.branchLaneRevIndex;
     
   begin
     
@@ -437,7 +421,6 @@ begin -- architecture
         CFG                               => CFG,
         
         -- Lane configuration.
-        LANE_INDEX                        => lane,
         HAS_MUL                           => mul,
         HAS_MEM                           => mem,
         HAS_BRK                           => brk,
@@ -457,13 +440,11 @@ begin -- architecture
         pl2sim_instr                      => pl2sim_instr(lane),
         pl2sim_op                         => pl2sim_op(lane),
         br2sim                            => br2sim(lane),
-        br2sim_active                     => br2sim_active(lane),
         -- pragma translate_on
         
         -- Configuration and run control.
         cfg2pl_decouple                   => cfg2any_decouple(laneGroup),
         cfg2pl_numGroupsLog2              => cfg2any_numGroupsLog2(laneGroup),
-        cfg2pl_pcAddVal                   => cfg2any_pcAddVal(lane),
         pl2cxplif_blockReconfig           => pl2cxplif_blockReconfig(lane),
         cxplif2pl_irq(S_MEM)              => cxplif2pl_irq(lane),
         cxplif2br_irqID(S_BR)             => cxplif2br_irqID(lane),
@@ -472,7 +453,6 @@ begin -- architecture
         pl2cxplif_idle                    => pl2cxplif_idle(lane),
         
         -- Next operation routing interface.
-        br2cxplif_active                  => br2cxplif_active(lane),
         br2cxplif_PC(S_IF)                => br2cxplif_PC(lane),
         cxplif2pl_PC(S_IF)                => cxplif2pl_PC(lane),
         cxplif2pl_lanePC(S_IF)            => cxplif2pl_lanePC(lane),
@@ -545,10 +525,6 @@ begin -- architecture
         trap2pl_disable                   => trap2pl_disable(lane),
         trap2pl_flush                     => trap2pl_flush(lane),
         
-        -- Stop-bit propagation interface.
-        pl2pl_stopOut(S_STOP)             => pl2pl_stopIn(lane+1),
-        pl2pl_stopIn(S_STOP)              => pl2pl_stopIn(lane),
-        
         -- Trace unit interface.
         pl2trace_data                     => pl2trace_data(lane)
         
@@ -586,7 +562,6 @@ begin -- architecture
       pl2cxplif_idle                    => pl2cxplif_idle,
       
       -- Pipelane interface: next operation routing.
-      br2cxplif_active                  => br2cxplif_active,
       br2cxplif_PC                      => br2cxplif_PC,
       cxplif2pl_PC                      => cxplif2pl_PC,
       cxplif2pl_lanePC                  => cxplif2pl_lanePC,

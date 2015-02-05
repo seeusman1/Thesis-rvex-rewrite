@@ -951,7 +951,7 @@ begin -- architecture
       elsif matchStr(token.all, "memLaneRevIndex") then
         actVal := to_signed(CFG.memLaneRevIndex, 33);
       elsif matchStr(token.all, "branchLaneRevIndex") then
-        actVal := to_signed(0, 33);
+        actVal := to_signed(CFG.branchLaneRevIndex, 33);
       elsif matchStr(token.all, "numBreakpoints") then
         actVal := to_signed(CFG.numBreakpoints, 33);
       elsif matchStr(token.all, "forwarding") then

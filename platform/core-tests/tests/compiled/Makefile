@@ -9,10 +9,11 @@ TOOLS = ../../../../tools
 BUILD = $(TOOLS)/build/bin
 AS = $(BUILD)/rvex-elf32-as
 LD = $(BUILD)/rvex-elf32-ld
-OBJCOPY = $(BUILD)/rvex-elf32-objcopy
 CC = $(TOOLS)/vex-3.43/bin/cc
 CFLAGS = -O2 -fno-xnop -fexpand-div -fmm=$(MODEL)
+OBJCOPY = objcopy
 CP = cp
+
 
 # Make magic.
 
@@ -40,16 +41,11 @@ all: $(EXECUTABLES)
 	$(AS) $(ASFLAGS) $< -o $@
 
 # How to link and generate srec;
-$(EXECUTABLES) : % : %.o _start.o tools/sbitmod
-	$(LD) $< _start.o -o $@
-	tools/sbitmod $@ 8
+$(EXECUTABLES) : % : %.o _start.o
+	$(LD) $^ -o $@
 	$(OBJCOPY) -O srec $@ $(SREC)/$@.srec
-
-# This is temporary; the assembler should just generate the stop bits properly.
-tools/sbitmod: tools/sbitmod.c
-	gcc -o $@ $^
 
 .PHONY: clean
 clean:
-	$(RM) $(EXECUTABLES) *.o *.s tools/sbitmod
+	$(RM) $(EXECUTABLES) *.o *.s
 

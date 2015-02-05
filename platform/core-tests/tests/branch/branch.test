@@ -35,7 +35,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0x00[r0.0] = r0.0
-load    nop --;;
+load    nop ;;
 
 -- 0x020: clear b0.1
 load    cmpeq b0.1 = r0.0, 1
@@ -45,7 +45,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0x04[r0.0] = r0.0
-load    nop --;;
+load    nop ;;
 
 -- 0x040: skip next bundle if b0.2 cleared
 load    nop
@@ -55,7 +55,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0x08[r0.0] = r0.0
-load    brf b0.2, 0x20 --;;
+load    brf b0.2, 0x20 ;;
 
 -- 0x060: set b0.1
 load    cmpeq b0.1 = r0.0, 0
@@ -65,7 +65,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0x0C[r0.0] = r0.0
-load    nop --;;
+load    nop ;;
 
 -- 0x080: clear b0.2, branch back to 0x020 is b0.1 set
 load    cmpeq b0.2 = r0.0, 1
@@ -75,7 +75,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0x10[r0.0] = r0.0
-load    br b0.1, -0x080 --;;
+load    br b0.1, -0x080 ;;
 
 -- 0x100: stop
 load    nop
@@ -85,7 +85,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0x14[r0.0] = r0.0
-load    stop --;;
+load    stop ;;
 
 -- Run the test. Verify that the instructions are executed in the right order
 -- using the STW addresses.

@@ -507,11 +507,6 @@ architecture Behavioral of core is
   -- Last pipelane group associated with each context.
   signal cfg2any_lastGroupForCtxt     : rvex_3bit_array(2**CFG.numContextsLog2-1 downto 0);
   
-  -- The amount which the branch unit residing in the indexed lane should
-  -- add to the current PC to get PC_plusOne, should it be the active branch
-  -- unit.
-  signal cfg2any_pcAddVal             : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-  
   -----------------------------------------------------------------------------
   -- Internal signals
   -----------------------------------------------------------------------------
@@ -643,7 +638,6 @@ architecture Behavioral of core is
   signal pl2sim_instr                 : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
   signal pl2sim_op                    : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
   signal br2sim                       : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
-  signal br2sim_active                : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   -- pragma translate_on
     
 --=============================================================================
@@ -727,7 +721,6 @@ begin -- architecture
       pl2sim_instr                  => pl2sim_instr,
       pl2sim_op                     => pl2sim_op,
       br2sim                        => br2sim,
-      br2sim_active                 => br2sim_active,
       -- pragma translate_on
       
       -- Decoded configuration signals.
@@ -737,7 +730,6 @@ begin -- architecture
       cfg2any_context               => cfg2any_context,
       cfg2any_active                => cfg2any_active,
       cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
-      cfg2any_pcAddVal              => cfg2any_pcAddVal,
       
       -- Configuration signals.
       cfg2cxplif_active             => cfg2cxplif_active,
@@ -1047,8 +1039,7 @@ begin -- architecture
       cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2,
       cfg2any_context               => cfg2any_context,
       cfg2any_active                => cfg2any_active,
-      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
-      cfg2any_pcAddVal              => cfg2any_pcAddVal
+      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt
       
     );
   
@@ -1151,8 +1142,8 @@ begin -- architecture
     end process;
     
     sim_info: process (
-      pl2sim_instr, pl2sim_op, br2sim, br2sim_active, currentCfg(S_LAST),
-      ctxt(S_LAST), cxreg2cxplif_currentPC
+      pl2sim_instr, pl2sim_op, br2sim, currentCfg(S_LAST), ctxt(S_LAST),
+      cxreg2cxplif_currentPC
     ) is
       
       -- Number of lines in the string list shown in simulation.
@@ -1166,7 +1157,6 @@ begin -- architecture
       variable curContext         : integer;
       variable prevContext        : integer;
       variable processedContexts  : bool_array(2**CFG.numContextsLog2-1 downto 0);
-      variable branchUnitLane     : natural;
       
     begin
       
@@ -1202,18 +1192,11 @@ begin -- architecture
           -- Pretty-print context information.
           rvs_clear(sb);
           rvs_append(sb, "Ctxt " & integer'image(curContext) & ": ");
-          
-          -- Determine which branch unit is active this cycle. That's either
-          -- the first branch unit encountered running in the same context with
-          -- the active bit set, or the last lane in the group.
-          branchUnitLane := lane;
-          for lane2 in 0 to 2**CFG.numLanesLog2-1 loop
-            if curContext = vect2uint(ctxt(S_LAST)(lane2group(lane2, CFG))) then
-              branchUnitLane := lane2;
-              exit when br2sim_active(lane2) = '1';
-            end if;
-          end loop;
-          rvs_append(sb, br2sim(branchUnitLane));
+          rvs_append(sb, br2sim(
+            group2lastLane(
+              vect2uint(cfg2any_lastGroupForCtxt(curContext)), CFG
+            ) - CFG.branchLaneRevIndex
+          ));
           if line <= NUM_LINES then
             rv2sim(line) <= rvs2sim(sb);
           end if;

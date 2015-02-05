@@ -43,7 +43,7 @@ load      cmpeq   r0.13 = r0.1, r0.2
 load      cmple   r0.14 = r0.1, r0.2
 load      cmplt   r0.15 = r0.1, r0.2
 load      nop
-load      nop --;;
+load      nop ;;
 
 -- Perform the signed operations with branch results.
 load      cmpne   b0.0 = r0.1, r0.2
@@ -53,7 +53,7 @@ load      cmpeq   b0.3 = r0.1, r0.2
 load      cmple   b0.4 = r0.1, r0.2
 load      cmplt   b0.5 = r0.1, r0.2
 load      nop
-load      nop --;;
+load      nop ;;
 
 -- Delay for a bit, in case forwarding is disabled.
 loadnops  64
@@ -66,7 +66,7 @@ load      nop
 load      nop
 load      nop
 load      stbr 0[r0.0] = b0
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -75,7 +75,7 @@ load      nop
 load      nop
 load      nop
 load      stw 4[r0.0] = r0.10
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -84,7 +84,7 @@ load      nop
 load      nop
 load      nop
 load      stw 8[r0.0] = r0.11
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -93,7 +93,7 @@ load      nop
 load      nop
 load      nop
 load      stw 12[r0.0] = r0.12
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -102,7 +102,7 @@ load      nop
 load      nop
 load      nop
 load      stw 16[r0.0] = r0.13
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -111,7 +111,7 @@ load      nop
 load      nop
 load      nop
 load      stw 20[r0.0] = r0.14
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -120,7 +120,7 @@ load      nop
 load      nop
 load      nop
 load      stw 24[r0.0] = r0.15
-load      nop --;;
+load      nop ;;
 
 -- Perform the unsigned operations with integer results.
 load      cmpne   r0.10 = r0.1, r0.2
@@ -130,7 +130,7 @@ load      cmpeq   r0.13 = r0.1, r0.2
 load      cmpleu  r0.14 = r0.1, r0.2
 load      cmpltu  r0.15 = r0.1, r0.2
 load      nop
-load      nop --;;
+load      nop ;;
 
 -- Perform the unsigned operations with branch results.
 load      cmpne   b0.0 = r0.1, r0.2
@@ -140,7 +140,7 @@ load      cmpeq   b0.3 = r0.1, r0.2
 load      cmpleu  b0.4 = r0.1, r0.2
 load      cmpltu  b0.5 = r0.1, r0.2
 load      nop
-load      nop --;;
+load      nop ;;
 
 -- Delay for a bit, in case forwarding is disabled.
 loadnops  64
@@ -153,7 +153,7 @@ load      nop
 load      nop
 load      nop
 load      stbr 0[r0.0] = b0
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -162,7 +162,7 @@ load      nop
 load      nop
 load      nop
 load      stw 4[r0.0] = r0.10
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -171,7 +171,7 @@ load      nop
 load      nop
 load      nop
 load      stw 8[r0.0] = r0.11
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -180,7 +180,7 @@ load      nop
 load      nop
 load      nop
 load      stw 12[r0.0] = r0.12
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -189,7 +189,7 @@ load      nop
 load      nop
 load      nop
 load      stw 16[r0.0] = r0.13
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -198,7 +198,7 @@ load      nop
 load      nop
 load      nop
 load      stw 20[r0.0] = r0.14
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -207,4 +207,4 @@ load      nop
 load      nop
 load      nop
 load      stw 24[r0.0] = r0.15
-load      nop --;;
+load      nop ;;

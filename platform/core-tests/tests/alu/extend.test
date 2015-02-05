@@ -10,7 +10,7 @@ init
 
 -- Test 0x12345678.
 load    limmh 1, 0x12345678
-load    add r0.1 = r0.0, 0x12345678 --;;
+load    add r0.1 = r0.0, 0x12345678 ;;
 load    nop
 load    nop
 load    nop
@@ -22,7 +22,7 @@ inc     extend-kernel.inc
 
 -- Test 0x123456F8.
 load    limmh 1, 0x123456F8
-load    add r0.1 = r0.0, 0x123456F8 --;;
+load    add r0.1 = r0.0, 0x123456F8 ;;
 load    nop
 load    nop
 load    nop
@@ -34,7 +34,7 @@ inc     extend-kernel.inc
 
 -- Test 0x1234D678.
 load    limmh 1, 0x1234D678
-load    add r0.1 = r0.0, 0x1234D678 --;;
+load    add r0.1 = r0.0, 0x1234D678 ;;
 load    nop
 load    nop
 load    nop

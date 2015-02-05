@@ -244,9 +244,6 @@ entity core_pipelane is
     -- Global configuration.
     CFG                         : rvex_generic_config_type;
     
-    -- Pipelane index.
-    LANE_INDEX                  : natural;
-    
     -- Determines whether this pipelane has a multiplier or not.
     HAS_MUL                     : boolean;
     
@@ -294,9 +291,6 @@ entity core_pipelane is
     -- unit is active.
     br2sim                      : out rvex_string_builder_type;
     
-    -- High when the indexed branch unit is the active branch unit.
-    br2sim_active               : out std_logic;
-    
     -- pragma translate_on
     
     ---------------------------------------------------------------------------
@@ -310,9 +304,6 @@ entity core_pipelane is
     
     -- Number of coupled lane groups.
     cfg2pl_numGroupsLog2        : in  rvex_2bit_type;
-    
-    -- The amount which should be added to the current PC to get PC_plusOne.
-    cfg2pl_pcAddVal            : in  rvex_address_type;
     
     -- Active high reconfiguration block bit. When high, reconfiguration is
     -- not permitted. This is essentially an active low idle flag.
@@ -341,14 +332,6 @@ entity core_pipelane is
     ---------------------------------------------------------------------------
     -- Next operation routing interface
     ---------------------------------------------------------------------------
-    -- This signal is used to determine which branch unit result should be
-    -- used, when multiple branch units are eligible at the same time. It is
-    -- based on the stop bit of a syllable - when the stop bit is high, this is
-    -- high. When any branch unit is outputting a high active signal, the
-    -- lowest indexed branch unit should win arbitration. Otherwise, the
-    -- highest indexed branch unit should win.
-    br2cxplif_active            : out std_logic;
-    
     -- The PC for the current instruction, as chosen by the active branch unit
     -- within the group. The PC is distributed by the context-pipelane
     -- interface block so all coupled pipelanes have it.
@@ -560,21 +543,6 @@ entity core_pipelane is
     trap2pl_flush               : in  std_logic_stages_type;
     
     ---------------------------------------------------------------------------
-    -- Stop-bit propagation interface
-    ---------------------------------------------------------------------------
-    -- Stop bit output to the next pipelane. This will go high when the
-    -- syllable currently being executed has the stop bit set or if stopIn is
-    -- set, unless this is the last pipelane in a lane group with the decouple
-    -- bit set (i.e., the next pipelane is not coupled with this one).
-    pl2pl_stopOut               : out std_logic_vector(S_STOP to S_STOP);
-    
-    -- Stop bit input from the previous pipelane. When high, the syllable in
-    -- this pipelane is invalidated, because it belongs to the next bundle.
-    -- stopOut is also asserted in this case if additional connected pipelanes
-    -- follow. This should be held low for the first pipelane.
-    pl2pl_stopIn                : in  std_logic_vector(S_STOP to S_STOP);
-    
-    ---------------------------------------------------------------------------
     -- Trace unit interface
     ---------------------------------------------------------------------------
     -- Trace data from pipelane to trace control unit.
@@ -716,9 +684,6 @@ architecture Behavioral of core_pipelane is
     -- pragma translate_off
       -- Simulation information from branch unit.
       br2sim                    : rvex_string_builder_type;
-      
-      -- High when the indexed branch unit is the active branch unit.
-      br2sim_active             : std_logic;
     -- pragma translate_on
     
   end record;
@@ -730,7 +695,6 @@ architecture Behavioral of core_pipelane is
     RFI                         => RVEX_UNDEF,
     -- pragma translate_off
       br2sim                    => to_rvs("no info"),
-      br2sim_active             => '0',
     -- pragma translate_on
     others                      => (others => RVEX_UNDEF)
   );
@@ -843,11 +807,6 @@ architecture Behavioral of core_pipelane is
       gpRegWriteRequested       : std_logic;
       brRegWriteRequested       : rvex_brRegData_type;
       linkRegWriteRequested     : std_logic;
-      
-      -- Whether this syllable was invalidated due to it belonging to the stop
-      -- bit logic or for some other reason.
-      invalidDueToStop          : std_logic;
-      
     -- pragma translate_on
     
   end record;
@@ -869,7 +828,6 @@ architecture Behavioral of core_pipelane is
       gpRegWriteRequested       => '0',
       brRegWriteRequested       => (others => '0'),
       linkRegWriteRequested     => '0',
-      invalidDueToStop          => '0',
     -- pragma translate_on
     others                      => (others => RVEX_UNDEF)
   );
@@ -889,7 +847,6 @@ architecture Behavioral of core_pipelane is
   -- Pipelane <-> branch unit interconnect. Refer to branch unit entity for
   -- more information about the signals.
   signal pl2br_opcode           : rvex_opcode_array(S_BR to S_BR);
-  signal pl2br_stopBit          : std_logic_vector(S_BR to S_BR);
   signal pl2br_valid            : std_logic_vector(S_BR to S_BR);
   signal pl2br_PC_plusOne_IFP1  : rvex_address_array(S_IF+1 to S_IF+1);
   signal pl2br_PC_plusOne_BR    : rvex_address_array(S_BR to S_BR);
@@ -904,7 +861,6 @@ architecture Behavioral of core_pipelane is
   signal br2pl_trap             : trap_info_array(S_BR to S_BR);
   -- pragma translate_off
   signal br2pl_sim              : rvex_string_builder_array(S_IF to S_IF);
-  signal br2pl_simActive        : std_logic_vector(S_IF to S_IF);
   -- pragma translate_on
   
   -- Pipelane <-> ALU interconnect. Refer to ALU entity for more information
@@ -961,14 +917,9 @@ begin -- architecture
     report "Instruction fetch cannot be scheduled before the first stage."
     severity failure;
   
-  assert S_STOP >= S_IF + L_IF
-    report "Stop bit propagation cannot be scheduled before the instruction "
+  assert S_LIMM >= S_IF + L_IF
+    report "Immediate forwarding cannot be scheduled before the instruction "
          & "fetch result is valid."
-    severity failure;
-  
-  assert S_LIMM >= S_STOP
-    report "Immediate forwarding cannot be scheduled before the stop bit "
-         & "propagation has been performed."
     severity failure;
   
   -- Check general purpose register file read access and forwarding
@@ -1138,7 +1089,6 @@ begin -- architecture
         -- Simulation output.
         -- pragma translate_off
         br2pl_sim(S_IF)                 => br2pl_sim(S_IF),
-        br2pl_simActive(S_IF)           => br2pl_simActive(S_IF),
         -- pragma translate_on
         
         -- Configuration inputs.
@@ -1150,7 +1100,6 @@ begin -- architecture
         
         -- Next operation outputs to coupled pipelanes and the context
         -- registers.
-        br2cxplif_active                => br2cxplif_active,
         br2cxplif_PC(S_IF)              => br2cxplif_PC(S_IF),
         br2cxplif_limmValid(S_IF)       => br2cxplif_limmValid(S_IF),
         br2cxplif_valid(S_IF)           => br2cxplif_valid(S_IF),
@@ -1164,7 +1113,6 @@ begin -- architecture
         
         -- Branch control signals from and to pipelane.
         pl2br_opcode(S_BR)              => pl2br_opcode(S_BR),
-        pl2br_stopBit(S_BR)             => pl2br_stopBit(S_BR),
         pl2br_valid(S_BR)               => pl2br_valid(S_BR),
         pl2br_PC_plusOne_IFP1(S_IF+1)   => pl2br_PC_plusOne_IFP1(S_IF+1),
         pl2br_PC_plusOne_BR(S_BR)       => pl2br_PC_plusOne_BR(S_BR),
@@ -1199,7 +1147,6 @@ begin -- architecture
     br2pl_trap(S_BR) <= TRAP_INFO_NONE;
     
     -- Set the signals going to the context-pipelane interface to undefined.
-    br2cxplif_active                    <= '0';
     br2cxplif_PC(S_IF)                  <= (others => RVEX_UNDEF);
     br2cxplif_limmValid(S_IF)           <= RVEX_UNDEF;
     br2cxplif_valid(S_IF)               <= RVEX_UNDEF;
@@ -1399,7 +1346,7 @@ begin -- architecture
     -- Signals from external blocks
     -------------------------------
     -- Configuration and run control.
-    cfg2pl_decouple, cfg2pl_numGroupsLog2, cfg2pl_pcAddVal, cxplif2pl_irq,
+    cfg2pl_decouple, cfg2pl_numGroupsLog2, cxplif2pl_irq,
     
     -- Next operation routing interface.
     cxplif2pl_PC, cxplif2pl_lanePC, cxplif2pl_limmValid, cxplif2pl_valid,
@@ -1419,9 +1366,6 @@ begin -- architecture
     
     -- Trap routing interface.
     trap2pl_trapToHandle, trap2pl_trapPending, trap2pl_disable, trap2pl_flush,
-    
-    -- Stop bit propagation.
-    pl2pl_stopIn,
     
     
     -- Signals from functional units
@@ -1572,22 +1516,17 @@ begin -- architecture
       flag := not OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).valid(0);
     end if;
     
-    -- If we don't have a branch unit which may be used, make sure this is not
-    -- a branch operation and that the stop bit is not set.
-    if (not HAS_BR) or (
-      cfg2pl_decouple = '0' and (LANE_INDEX mod 2**CFG.bundleAlignLog2 /= 2**CFG.bundleAlignLog2-1)
-    ) then
+    -- If we don't have a branch unit, make sure this is not a branch
+    -- operation.
+    if (not HAS_BR) or cfg2pl_decouple = '0' then
       if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).branchCtrl.isBranchInstruction = '1' then
-        flag := '1';
-      end if;
-      if s(S_IF+L_IF).syllable(1) = '1' then
         flag := '1';
       end if;
     end if;
     
-    -- If we don't have a memory unit which may be used, make sure this is not
-    -- a memory operation.
-    if (not HAS_MEM) or (cfg2pl_decouple = '0') then
+    -- If we don't have a memory unit, make sure this is not a memory
+    -- operation.
+    if (not HAS_MEM) or cfg2pl_decouple = '0' then
       if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).memoryCtrl.isMemoryInstruction = '1' then
         flag := '1';
       end if;
@@ -1609,25 +1548,6 @@ begin -- architecture
         cause  => rvex_trap(RVEX_TRAP_INVALID_OP),
         arg    => s(S_IF+L_IF).lanePC
       );
-    end if;
-    
-    ---------------------------------------------------------------------------
-    -- Perform stop bit propagation
-    ---------------------------------------------------------------------------
-    -- Connect the stop output.
-    if cfg2pl_decouple = '0' or lane2indexInGroupRev(LANE_INDEX, CFG) /= 0 then
-      pl2pl_stopOut(S_STOP) <= s(S_STOP).syllable(1) or pl2pl_stopIn(S_STOP);
-    else
-      pl2pl_stopOut(S_STOP) <= '0';
-    end if;
-    
-    -- Connect the stop bit input.
-    if pl2pl_stopIn(S_STOP) = '1' then
-      s(S_STOP).valid := '0';
-      s(S_STOP).limmValid := '0';
-      -- pragma translate_off
-      s(S_STOP).invalidDueToStop := '1';
-      -- pragma translate_on
     end if;
     
     ---------------------------------------------------------------------------
@@ -1779,22 +1699,16 @@ begin -- architecture
     ---------------------------------------------------------------------------
     if HAS_BR then
       
+      -- Determine the logarithm of what needs to be added to the PC and what
+      -- the PC needs to be aligned to.
+      i := SYLLABLE_SIZE_LOG2B                         -- Instr. size per lane.
+         + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)  -- Lanes per group.
+         + vect2uint(cfg2pl_numGroupsLog2);            -- Number of coupled groups.
+      
       -- Perform the addition.
       s(S_PCP1).br.PC_plusOne := std_logic_vector(
         vect2unsigned(s(S_PCP1).PC)
-        + vect2unsigned(cfg2pl_pcAddVal)
-      );
-      
-      -- Determine what the PC needs to be aligned to.
-      i := min_nat(
-        (
-          SYLLABLE_SIZE_LOG2B                           -- Instr. size per lane.
-          + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)  -- Lanes per group.
-          + vect2uint(cfg2pl_numGroupsLog2)             -- Number of coupled groups.
-        ), (
-          SYLLABLE_SIZE_LOG2B                           -- Instr. size per lane.
-          + CFG.bundleAlignLog2                         -- Bundle start alignment.
-        )
+        + to_unsigned(2**i, rvex_address_type'length)
       );
       
       -- Align the new PC.
@@ -1834,7 +1748,6 @@ begin -- architecture
       
       -- Drive branch unit data and control signals.
       pl2br_opcode(S_BR)              <= s(S_BR).opcode;
-      pl2br_stopBit(S_BR)             <= s(S_BR).syllable(1);
       pl2br_valid(S_BR)               <= s(S_BR).valid;
       pl2br_PC_plusOne_IFP1(S_IF+1)   <= s(S_IF+1).br.PC_plusOne;
       pl2br_PC_plusOne_BR(S_BR)       <= s(S_BR).br.PC_plusOne;
@@ -1851,10 +1764,10 @@ begin -- architecture
       -- forwarded after trap invalidation has been evaluated.
       s(S_BR).br.RFI := br2pl_rfi(S_BR);
       
-      -- Copy the trap output from the branch unit into the pipeline. Validity
-      -- checking is already performed in the branch unit because there's a
-      -- special case for the stop trap (it's delayed by one cycle).
-      s(S_BR).tr.trap := s(S_BR).tr.trap & br2pl_trap(S_BR);
+      -- Copy the trap output from the branch unit into the pipeline.
+      if s(S_BR).valid = '1' then
+        s(S_BR).tr.trap := s(S_BR).tr.trap & br2pl_trap(S_BR);
+      end if;
       
     end if;
     
@@ -2079,8 +1992,6 @@ begin -- architecture
     -- not be done when a trap is detected in this stage.
     if HAS_BR then
       pl2cxplif_rfi(S_MEM) <= s(S_MEM).br.RFI and s(S_MEM).valid;
-    else
-      pl2cxplif_rfi(S_MEM) <= '0';
     end if;
       
     ---------------------------------------------------------------------------
@@ -2232,7 +2143,6 @@ begin -- architecture
       -- pipeline stage.
       if HAS_BR then
         s(S_IF).br.br2sim := br2pl_sim(S_IF);
-        s(S_IF).br.br2sim_active := br2pl_simActive(S_IF);
       end if;
       br2sim <= s(S_LAST).br.br2sim;
       
@@ -2255,32 +2165,26 @@ begin -- architecture
         if s(S_LAST).brkValid = '0' then
           rvs_append(debug, "(no brkpts) ");
         end if;
-      elsif s(S_LAST).invalidDueToStop = '0' then
+      else
         rvs_append(debug, "ignoring ");
       end if;
       
-      -- Don't show PC and disassembly if this syllable does not belong to the
-      -- bundle anymore.
-      if s(S_LAST).invalidDueToStop = '0' then
-        
-        -- Display PC for the current syllable.
-        rvs_append(debug, rvs_hex(s(S_LAST).lanePC, 8));
-        rvs_append(debug, " => ");
-        
-        -- Append disassembly.
-        if HAS_BR then
-          rvs_append(debug, disassemble(
-            syllable    => s(S_LAST).syllable,
-            limmh       => s(S_LAST).dp.imm,
-            PC_plusOne  => s(S_LAST).br.PC_plusOne
-          ));
-        else
-          rvs_append(debug, disassemble(
-            syllable    => s(S_LAST).syllable,
-            limmh       => s(S_LAST).dp.imm
-          ));
-        end if;
-        
+      -- Display PC for the current syllable.
+      rvs_append(debug, rvs_hex(s(S_LAST).lanePC, 8));
+      rvs_append(debug, " => ");
+      
+      -- Append disassembly.
+      if HAS_BR then
+        rvs_append(debug, disassemble(
+          syllable    => s(S_LAST).syllable,
+          limmh       => s(S_LAST).dp.imm,
+          PC_plusOne  => s(S_LAST).br.PC_plusOne
+        ));
+      else
+        rvs_append(debug, disassemble(
+          syllable    => s(S_LAST).syllable,
+          limmh       => s(S_LAST).dp.imm
+        ));
       end if;
       
       -- Forward debug information.
@@ -2411,10 +2315,8 @@ begin -- architecture
         
       end loop;
       
-      -- Make sure we display something if we haven't done so already, unless
-      -- this syllable is invalid due to the stop bit logic, in which case we
-      -- don't want unnecessary clutter.
-      if flag = '0' and s(S_LAST).invalidDueToStop = '0' then
+      -- Make sure we display something if we haven't done so already.
+      if flag = '0' then
         rvs_append(debug, "no ops performed");
       end if;
       
