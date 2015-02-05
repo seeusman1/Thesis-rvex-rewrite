@@ -38,7 +38,22 @@ help:
 	@echo "  make clean           : removes intermediate files."
 	@echo ""
 
-sim:
+RVEX_LIB = ../../lib/rvex
+RVEX_LIBS  = $(RVEX_LIB)/common/compile.do
+RVEX_LIBS += $(RVEX_LIB)/utils/compile.do
+RVEX_LIBS += $(RVEX_LIB)/core/compile.do
+
+%/compile.do: %/vhdlsyn.txt %/vhdlsim.txt
+	cat $^ | sed -r 's/(.*)/vcom -quiet -93 -work rvex "..\/$(subst /,\/,$(dir $@))\1"/' > $@
+
+modelsim/compile.do: $(RVEX_LIBS)
+	echo 'vlib rvex' > modelsim/compile.do
+	cat $^ >> modelsim/compile.do
+	rm -f $^
+	echo 'vlib work' >> modelsim/compile.do
+	echo 'vcom -quiet -93 -work work "../design/core_tb.vhd"' >> modelsim/compile.do
+
+sim: modelsim/compile.do
 	cd tests/compiled && $(MAKE) all
 	cd modelsim && vsim -do sim.do
 
@@ -46,3 +61,4 @@ clean:
 	cd tests/compiled && $(MAKE) clean
 	find modelsim/* ! -name 'sim.do' ! -name '.gitignore' -type f -exec rm -f {} +
 	find modelsim/* ! -name 'sim.do' ! -name '.gitignore' -type d -exec rm -rf {} +
+
