@@ -95,6 +95,7 @@ package rvsys_standalone_pkg is
     debugBusMap_imem            : addrRangeAndMapping_type;
     debugBusMap_dmem            : addrRangeAndMapping_type;
     debugBusMap_rvex            : addrRangeAndMapping_type;
+    debugBusMap_trace           : addrRangeAndMapping_type;
     
     -- Specifies whether the debug bus memory map is mutually exclusive. When
     -- set to false, bus commands can be routed to for instance both the data
@@ -118,6 +119,7 @@ package rvsys_standalone_pkg is
     debugBusMap_imem            => addrRangeAndMap(match => "00-1----------------------------"),
     debugBusMap_dmem            => addrRangeAndMap(match => "001-----------------------------"),
     debugBusMap_rvex            => addrRangeAndMap(match => "1111----------------------------"),
+    debugBusMap_trace           => addrRangeAndMap(match => "1110----------------------------"),
     debugBusMap_mutex           => false,
     rvexDataMap_dmem            => addrRangeAndMap(match => "0-------------------------------"),
     rvexDataMap_bus             => addrRangeAndMap(match => "1-------------------------------")

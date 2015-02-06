@@ -809,7 +809,7 @@ begin -- architecture
       
       -- Make the trace control flags.
       creg_makeNormalRegister(l2c, c2l, CR_DCR2, 7, 0,
-        resetState    => X"E1",
+        resetState    => X"00",
         permissions   => DEBUG_CAN_WRITE
       );
       

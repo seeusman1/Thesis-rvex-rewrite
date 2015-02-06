@@ -5,3 +5,4 @@ periph_uart_fifo.vhd
 periph_uart_busIface.vhd
 periph_uart_switch.vhd
 periph_uart.vhd
+periph_trace.vhd

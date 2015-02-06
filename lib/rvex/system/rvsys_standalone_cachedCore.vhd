@@ -142,7 +142,28 @@ entity rvsys_standalone_cachedCore is
     -- Instr. flush: same as data flush, but for the instruction memory blocks.
     --
     dbg2rv                      : in  bus_mst2slv_type;
-    rv2dbg                      : out bus_slv2mst_type
+    rv2dbg                      : out bus_slv2mst_type;
+    
+    ---------------------------------------------------------------------------
+    -- Trace interface
+    ---------------------------------------------------------------------------
+    -- These signals connect to the optional trace unit. When the trace unit is
+    -- disabled in CFG, these signals are unused.
+    
+    -- When high, data is valid and should be registered in the next clkEn'd
+    -- cycle.
+    rv2trsink_push              : out std_logic;
+    
+    -- Trace data signal. Valid when push is high.
+    rv2trsink_data              : out rvex_byte_type;
+    
+    -- When high, this is the last byte of this trace packet. This has the same
+    -- timing as the data signal.
+    rv2trsink_end               : out std_logic;
+    
+    -- When high while push is high, the trace unit is stalled. While stalled,
+    -- push will stay high and data and end will remain stable.
+    trsink2rv_busy              : in  std_logic := '0'
     
   );
 end rvsys_standalone_cachedCore;
@@ -262,7 +283,13 @@ begin -- architecture
       dbg2rv_writeEnable        => dbg2rv_writeEnable,
       dbg2rv_writeMask          => dbg2rv_writeMask,
       dbg2rv_writeData          => dbg2rv_writeData,
-      rv2dbg_readData           => rv2dbg_readData
+      rv2dbg_readData           => rv2dbg_readData,
+      
+      -- Trace interface.
+      rv2trsink_push            => rv2trsink_push,
+      rv2trsink_data            => rv2trsink_data,
+      rv2trsink_end             => rv2trsink_end,
+      trsink2rv_busy            => trsink2rv_busy
       
     );
   

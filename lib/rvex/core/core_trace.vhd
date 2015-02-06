@@ -856,7 +856,5 @@ begin -- architecture
     
   end block;
   
-  -- TODO
-  
 end Behavioral;
 
