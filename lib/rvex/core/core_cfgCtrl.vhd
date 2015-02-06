@@ -105,9 +105,6 @@ entity core_cfgCtrl is
     ---------------------------------------------------------------------------
     -- Configuration status outputs
     ---------------------------------------------------------------------------
-    -- Current configuration, using the same encoding as the request data.
-    cfg2gbreg_currentCfg        : out rvex_data_type;
-    
     -- Configuration busy signal. When set, new configuration requests are not
     -- accepted.
     cfg2gbreg_busy              : out std_logic;
@@ -147,9 +144,12 @@ entity core_cfgCtrl is
     mem2cfg_blockReconfig       : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
-    -- Decoded configuration control signals
+    -- Configuration control signals
     ---------------------------------------------------------------------------
-    -- None of these signals hold more information than the currentConfig
+    -- Current configuration, using the same encoding as the request data.
+    cfg2any_configWord          : out rvex_data_type;
+    
+    -- None of the following signals hold more information than the configWord
     -- output; instead they are different representations of the configuration
     -- for different blocks. Predetermining these control signals instead of
     -- doing it in the pipeline essentially every cycle saves a lot of time in
@@ -589,7 +589,7 @@ begin -- architecture
   -- Forward current configuration
   -----------------------------------------------------------------------------
   -- Forward the trivial signals.
-  cfg2gbreg_currentCfg <= curConfiguration_r;
+  cfg2any_configWord <= curConfiguration_r;
   cfg2any_lastGroupForCtxt <= curLastPipelaneGroupForContext_r;
   cfg2any_coupled <= curCoupleMatrix_r;
   

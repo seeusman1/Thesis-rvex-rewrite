@@ -480,8 +480,11 @@ architecture Behavioral of core is
 --=============================================================================
   
   -----------------------------------------------------------------------------
-  -- Decoded configuration signals
+  -- Configuration signals
   -----------------------------------------------------------------------------
+  -- Current encoded configuration word.
+  signal cfg2any_configWord           : rvex_data_type;
+  
   -- Diagonal block matrix of n*n size, where n is the number of pipelane
   -- groups. C_i,j is high when pipelane groups i and j are coupled/share a
   -- context, or low when they don't.
@@ -617,7 +620,6 @@ architecture Behavioral of core is
   -- Global register logic <-> configuration control signals.
   signal gbreg2cfg_requestData_r      : rvex_data_type;
   signal gbreg2cfg_requestEnable      : std_logic;
-  signal cfg2gbreg_currentCfg         : rvex_data_type;
   signal cfg2gbreg_busy               : std_logic;
   signal cfg2gbreg_error              : std_logic;
   signal cfg2gbreg_requesterID        : std_logic_vector(3 downto 0);
@@ -989,7 +991,7 @@ begin -- architecture
       -- Interface with configuration logic.
       gbreg2cfg_requestData_r       => gbreg2cfg_requestData_r,
       gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
-      cfg2gbreg_currentCfg          => cfg2gbreg_currentCfg,
+      cfg2gbreg_currentCfg          => cfg2any_configWord,
       cfg2gbreg_busy                => cfg2gbreg_busy,
       cfg2gbreg_error               => cfg2gbreg_error,
       cfg2gbreg_requesterID         => cfg2gbreg_requesterID,
@@ -1020,7 +1022,6 @@ begin -- architecture
       gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
       
       -- Configuration status outputs.
-      cfg2gbreg_currentCfg          => cfg2gbreg_currentCfg,
       cfg2gbreg_busy                => cfg2gbreg_busy,
       cfg2gbreg_error               => cfg2gbreg_error,
       cfg2gbreg_requesterID         => cfg2gbreg_requesterID,
@@ -1033,7 +1034,8 @@ begin -- architecture
       -- Memory interface.
       mem2cfg_blockReconfig         => mem2rv_blockReconfig,
       
-      -- Decoded configuration control signals
+      -- Configuration control signals.
+      cfg2any_configWord            => cfg2any_configWord,
       cfg2any_coupled               => cfg2any_coupled,
       cfg2any_decouple              => cfg2any_decouple,
       cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2,
@@ -1065,6 +1067,7 @@ begin -- architecture
         stallOut                    => traceStall,
         
         -- Decoded configuration signals.
+        cfg2any_configWord          => cfg2any_configWord,
         cfg2any_context             => cfg2any_context,
         cfg2any_active              => cfg2any_active,
         
@@ -1125,7 +1128,7 @@ begin -- architecture
               ctxt(S_FIRST+1)(laneGroup)
                 <= cfg2any_context(laneGroup);
               currentCfg(S_FIRST+1)(4*laneGroup+3 downto 4*laneGroup)
-                <= cfg2gbreg_currentCfg(4*laneGroup+3 downto 4*laneGroup);
+                <= cfg2any_configWord(4*laneGroup+3 downto 4*laneGroup);
               
               for s in S_FIRST+2 to S_LAST loop
                 ctxt(s)(laneGroup)

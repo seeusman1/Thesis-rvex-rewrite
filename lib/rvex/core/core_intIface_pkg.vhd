@@ -257,20 +257,19 @@ package core_intIface_pkg is
     -- Whether the instruction being represented was committed or not.
     valid                       : std_logic;
     
+    -- High when this lane contains an active branch unit.
+    pc_enable                   : std_logic;
+    
     -- PC of the bundle being executed in this pipelane.
-    PC                          : rvex_address_type;
+    pc_PC                       : rvex_address_type;
     
-    -- Whether the current instruction is the first in the trap handler, i.e. a
-    -- trap has been handled.
-    trap_enable                 : std_logic;
+    -- High when the given PC is not sequential w.r.t. the previous PC and
+    -- should thus always be traced.
+    pc_isBranch                 : std_logic;
     
-    -- Trap cause of the trap handled by this instruction, if trap_enable is
-    -- high.
-    trap_cause                  : rvex_trap_type;
-    
-    -- Trap argument of the trap handled by this instruction, if trap_enable is
-    -- high.
-    trap_arg                    : rvex_address_type;
+    -- High when the next PC will not be sequential w.r.t. the current PC and
+    -- should thus always be traced.
+    pc_isBranching              : std_logic;
     
     -- High when this instruction performed a memory access.
     mem_enable                  : std_logic;
@@ -286,23 +285,40 @@ package core_intIface_pkg is
     -- nonzero.
     mem_writeData               : rvex_data_type;
     
-    -- High when a general purpose register or the link register was written by
-    -- this instruction.
-    gprl_enable                 : std_logic;
+    -- High when a general purpose register was written.
+    reg_gpEnable                : std_logic;
     
-    -- Address of the general purpose register which was written or 0 for the
-    -- link register if gprl_enable is high.
-    gprl_address                : rvex_gpRegAddr_type;
+    -- Address of the general purpose register which was written, if any.
+    reg_gpAddress               : rvex_gpRegAddr_type;
+    
+    -- Whether the link register was written.
+    reg_linkEnable              : std_logic;
     
     -- Data written to the general purpose or link register if gprl_enable is
     -- high.
-    gprl_writeData              : rvex_data_type;
+    reg_intData                 : rvex_data_type;
     
     -- High when the indexed branch register was written by this instruction.
-    br_enable                   : rvex_brRegData_type;
+    reg_brEnable                : rvex_brRegData_type;
     
     -- Data written to the indexed branch register if br_enable is high.
-    br_writeData                : rvex_brRegData_type;
+    reg_brData                  : rvex_brRegData_type;
+    
+    -- Whether the current instruction is the first in the trap handler, i.e. a
+    -- trap has been handled.
+    trap_enable                 : std_logic;
+    
+    -- Trap cause of the trap handled by this instruction, if trap_enable is
+    -- high.
+    trap_cause                  : rvex_trap_type;
+    
+    -- Trap point of the trap handled by this instruction, if trap_enable is
+    -- high.
+    trap_point                  : rvex_address_type;
+    
+    -- Trap argument of the trap handled by this instruction, if trap_enable is
+    -- high.
+    trap_arg                    : rvex_address_type;
     
   end record;
   

@@ -184,6 +184,10 @@ entity core_br is
     -- the control registers synchronized with most other register accesses.
     br2pl_rfi                   : out std_logic_vector(S_BR to S_BR);
     
+    -- High when the PC is a branch target (or anything other than PC+1).
+    br2pl_isBranch              : out std_logic_vector(S_IF to S_IF);
+    br2pl_isBranching           : out std_logic_vector(S_BR to S_BR);
+    
     -- Trap output for unaligned branches.
     br2pl_trap                  : out trap_info_array(S_BR to S_BR);
     
@@ -721,6 +725,8 @@ begin -- architecture
     -- Drive cancel/invalidate signals.
     br2cxplif_imemCancel(S_IF+L_IF)   <= branching(S_BR);
     br2cxplif_invalUntilBR(S_BR)      <= branching(S_BR);
+    br2pl_isBranch(S_IF)              <= branching(S_BR);
+    br2pl_isBranching(S_BR)           <= branching(S_BR);
     
     -- Generate simulation information.
     -- pragma translate_off

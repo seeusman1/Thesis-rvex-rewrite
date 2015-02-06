@@ -681,6 +681,12 @@ architecture Behavioral of core_pipelane is
     -- control registers in the S_MEM stage.
     RFI                         : std_logic;
     
+    -- High when the current PC is not sequential w.r.t. the previous PC.
+    isBranch                    : std_logic;
+    
+    -- High when the next PC selected is not PC+1.
+    isBranching                 : std_logic;
+    
     -- pragma translate_off
       -- Simulation information from branch unit.
       br2sim                    : rvex_string_builder_type;
@@ -693,6 +699,8 @@ architecture Behavioral of core_pipelane is
     trapPending                 => RVEX_UNDEF,
     trapInfo                    => TRAP_INFO_UNDEF,
     RFI                         => RVEX_UNDEF,
+    isBranch                    => RVEX_UNDEF,
+    isBranching                 => RVEX_UNDEF,
     -- pragma translate_off
       br2sim                    => to_rvs("no info"),
     -- pragma translate_on
@@ -858,6 +866,8 @@ architecture Behavioral of core_pipelane is
   signal pl2br_trapToHandlePoint: rvex_address_array(S_BR to S_BR);
   signal pl2br_trapToHandleHandler:rvex_address_array(S_BR to S_BR);
   signal br2pl_rfi              : std_logic_vector(S_BR to S_BR);
+  signal br2pl_isBranch         : std_logic_vector(S_IF to S_IF);
+  signal br2pl_isBranching      : std_logic_vector(S_BR to S_BR);
   signal br2pl_trap             : trap_info_array(S_BR to S_BR);
   -- pragma translate_off
   signal br2pl_sim              : rvex_string_builder_array(S_IF to S_IF);
@@ -1124,6 +1134,8 @@ begin -- architecture
         pl2br_trapToHandlePoint(S_BR)   => pl2br_trapToHandlePoint(S_BR),
         pl2br_trapToHandleHandler(S_BR) => pl2br_trapToHandleHandler(S_BR),
         br2pl_rfi(S_BR)                 => br2pl_rfi(S_BR),
+        br2pl_isBranch(S_IF)            => br2pl_isBranch(S_IF),
+        br2pl_isBranching(S_BR)         => br2pl_isBranching(S_BR),
         br2pl_trap(S_BR)                => br2pl_trap(S_BR),
         
         -- Branch control signals from and to context registers.
@@ -1144,6 +1156,8 @@ begin -- architecture
     -- Set the branch unit outputs which are going to this pipelane to
     -- undefined.
     br2pl_rfi(S_BR) <= RVEX_UNDEF;
+    br2pl_isBranch(S_IF) <= RVEX_UNDEF;
+    br2pl_isBranching(S_BR) <= RVEX_UNDEF;
     br2pl_trap(S_BR) <= TRAP_INFO_NONE;
     
     -- Set the signals going to the context-pipelane interface to undefined.
@@ -1371,7 +1385,7 @@ begin -- architecture
     -- Signals from functional units
     --------------------------------
     -- Signals from the branch unit.
-    br2pl_rfi, br2pl_trap,
+    br2pl_rfi, br2pl_isBranch, br2pl_isBranching, br2pl_trap,
     
     -- Signals from the ALU.
     alu2pl_resultAdd, alu2pl_result, alu2pl_resultBr,
@@ -1764,6 +1778,11 @@ begin -- architecture
       -- forwarded after trap invalidation has been evaluated.
       s(S_BR).br.RFI := br2pl_rfi(S_BR);
       
+      -- Copy the isBranch and isBranching flags into the pipelane. These
+      -- are used by the trace unit.
+      s(S_IF).br.isBranch := br2pl_isBranch(S_IF);
+      s(S_BR).br.isBranching := br2pl_isBranching(S_BR);
+      
       -- Copy the trap output from the branch unit into the pipeline.
       if s(S_BR).valid = '1' then
         s(S_BR).tr.trap := s(S_BR).tr.trap & br2pl_trap(S_BR);
@@ -2090,18 +2109,32 @@ begin -- architecture
     ---------------------------------------------------------------------------
     if CFG.traceEnable then
       
-      -- Forward validity information and (bundle) program counter.
+      -- Forward validity information.
       pl2trace_data.valid           <= s(S_LAST).valid;
-      pl2trace_data.PC              <= s(S_LAST).PC;
+      
+      -- Forward bundle program counter.
+      if HAS_BR and cfg2pl_decouple = '1' then
+        pl2trace_data.pc_enable     <= '1';
+        pl2trace_data.pc_PC         <= s(S_LAST).PC;
+        pl2trace_data.pc_isBranch   <= s(S_LAST).br.isBranch;
+        pl2trace_data.pc_isBranching<= s(S_LAST).br.isBranching;
+      else
+        pl2trace_data.pc_enable     <= '0';
+        pl2trace_data.pc_PC         <= (others => '0');
+        pl2trace_data.pc_isBranch   <= '0';
+        pl2trace_data.pc_isBranching<= '0';
+      end if;
       
       -- Forward handled trap information.
-      if HAS_BR then
+      if HAS_BR and cfg2pl_decouple = '1' then
         pl2trace_data.trap_enable   <= s(S_LAST).br.trapInfo.active;
         pl2trace_data.trap_cause    <= s(S_LAST).br.trapInfo.cause;
+        pl2trace_data.trap_point    <= s(S_LAST).br.trapPoint;
         pl2trace_data.trap_arg      <= s(S_LAST).br.trapInfo.arg;
       else
         pl2trace_data.trap_enable   <= '0';
         pl2trace_data.trap_cause    <= (others => '0');
+        pl2trace_data.trap_point    <= (others => '0');
         pl2trace_data.trap_arg      <= (others => '0');
       end if;
       
@@ -2118,18 +2151,13 @@ begin -- architecture
         pl2trace_data.mem_writeData <= (others => '0');
       end if;
       
-      -- Forward general purpose/link register information.
-      pl2trace_data.gprl_enable     <= s(S_LAST).dp.resValid or s(S_LAST).dp.resLinkValid;
-      if s(S_LAST).dp.resLinkValid = '1' then
-        pl2trace_data.gprl_address  <= (others => '0');
-      else
-        pl2trace_data.gprl_address  <= s(S_LAST).dp.dest;
-      end if;
-      pl2trace_data.gprl_writeData  <= s(S_LAST).dp.res;
-      
-      -- Forward branch register information.
-      pl2trace_data.br_enable       <= s(S_LAST).dp.resBrValid;
-      pl2trace_data.br_writeData    <= s(S_LAST).dp.resBr;
+      -- Forward register write information.
+      pl2trace_data.reg_gpEnable    <= s(S_LAST).dp.resValid;
+      pl2trace_data.reg_gpAddress   <= s(S_LAST).dp.dest;
+      pl2trace_data.reg_linkEnable  <= s(S_LAST).dp.resLinkValid;
+      pl2trace_data.reg_intData     <= s(S_LAST).dp.res;
+      pl2trace_data.reg_brEnable    <= s(S_LAST).dp.resBrValid;
+      pl2trace_data.reg_brData      <= s(S_LAST).dp.resBr;
       
     end if;
     

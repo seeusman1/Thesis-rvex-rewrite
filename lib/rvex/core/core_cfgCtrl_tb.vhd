@@ -93,7 +93,6 @@ architecture Behavioral of core_cfgCtrl_tb is
   signal cxreg2cfg_requestEnable     : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal gbreg2cfg_requestData_r     : rvex_data_type;
   signal gbreg2cfg_requestEnable     : std_logic;
-  signal cfg2gbreg_currentCfg        : rvex_data_type;
   signal cfg2gbreg_busy              : std_logic;
   signal cfg2gbreg_error             : std_logic;
   signal cfg2gbreg_requesterID       : std_logic_vector(3 downto 0);
@@ -101,6 +100,7 @@ architecture Behavioral of core_cfgCtrl_tb is
   signal cfg2cxplif_requestReconfig  : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cfg_blockReconfig    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal mem2cfg_blockReconfig       : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal cfg2any_configWord          : rvex_data_type;
   signal cfg2any_coupled             : std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
   signal cfg2any_decouple            : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal cfg2any_numGroupsLog2       : rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -131,7 +131,6 @@ begin
       cxreg2cfg_requestEnable     => cxreg2cfg_requestEnable,
       gbreg2cfg_requestData_r     => gbreg2cfg_requestData_r,
       gbreg2cfg_requestEnable     => gbreg2cfg_requestEnable,
-      cfg2gbreg_currentCfg        => cfg2gbreg_currentCfg,
       cfg2gbreg_busy              => cfg2gbreg_busy,
       cfg2gbreg_error             => cfg2gbreg_error,
       cfg2gbreg_requesterID       => cfg2gbreg_requesterID,
@@ -139,6 +138,7 @@ begin
       cfg2cxplif_requestReconfig  => cfg2cxplif_requestReconfig,
       cxplif2cfg_blockReconfig    => cxplif2cfg_blockReconfig,
       mem2cfg_blockReconfig       => mem2cfg_blockReconfig,
+      cfg2any_configWord          => cfg2any_configWord,
       cfg2any_coupled             => cfg2any_coupled,
       cfg2any_decouple            => cfg2any_decouple,
       cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
