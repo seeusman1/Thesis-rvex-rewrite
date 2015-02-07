@@ -4,3 +4,4 @@
 *.disas
 *.srec
 *.bin
+*.trace

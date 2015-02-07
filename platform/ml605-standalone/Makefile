@@ -1,5 +1,5 @@
 
-.PHONY: help compile-% vsim-% ise-% upload-% server stop debug monitor clean
+.PHONY: help compile-% vsim-% ise-% upload-% start-% run-% trace-% server stop debug monitor clean
 
 UNISIM = $(XILINX)/vhdl/src/unisims
 
@@ -37,6 +37,9 @@ help:
 	@echo "                         core. Leaves the core reset at PC 0."
 	@echo ""
 	@echo "  make start-<prog>    : same as upload-<prog>, but also starts the program."
+	@echo ""
+	@echo "  make trace-<prog>    : uploads and traces a program using the hardware trace"
+	@echo "                         unit."
 	@echo ""
 	@echo "  make run-<prog>      : same as start-<prog>, but also waits for completion."
 	@echo "                         Completion is detected when none of the context cycle"
@@ -93,6 +96,9 @@ start-%:
 	cd examples && $(MAKE) $@
 
 run-%:
+	cd examples && $(MAKE) $@
+
+trace-%:
 	cd examples && $(MAKE) $@
 
 server stop monitor:

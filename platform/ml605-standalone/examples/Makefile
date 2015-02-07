@@ -24,6 +24,7 @@ TARGETS = \
 "make upload-<program>    uploads program to platform using rvd"\
 "make start-<program>     upload + start program"\
 "make run-<program>       start + wait for completion"\
+"make trace-<program>     upload + trace program (requires hardware trace unit)"\
 "make run-all             run-<program> for all executables"\
 "make copy-<program>      registers program files for simulation"\
 "make copy-none           unregisters files for simulation"
@@ -35,7 +36,7 @@ CLEAN = *.bin tools/b2v ../design/mem_init_pkg.vhd
 include $(GEN_EXAMPLES)/Makefile
 
 # How to upload;
-.PHONY: upload-% upload-all
+.PHONY: upload-%
 upload-%: %.srec debug
 	-cd $(DEBUGIFACE) && make server
 	$(RVD) -call -d"all:PRINT_STATE{1}" break
@@ -44,11 +45,17 @@ upload-%: %.srec debug
 	$(RVD) -c0 exec FLUSH_CACHE
 	$(RVD) -c0 write CACHE_BUS_LATENCY $(BUSLAT)hh
 
+.PHONY: start-%
 start-%: upload-%
 	$(RVD) -c0 write CREG 0x80000000
 
+.PHONY: run-%
 run-%: start-%
 	$(RVD) -c0 exec WAIT_COMPLETE
+
+.PHONY: trace-%
+trace-%: upload-% %.disas
+	$(RVD) -call -d"all:PRINT_STATE{1}" trace $(patsubst trace-%,%,$@).trace
 
 run-all: $(patsubst %,run-%,$(EXECUTABLES))
 
