@@ -254,7 +254,7 @@ begin -- architecture
   -- Trace interface
   -----------------------------------------------------------------------------
   trace_iface_proc: process (
-    rv2trace_data, rv2trace_push, bcnt_trace, bcnt_full
+    rv2trace_data, rv2trace_push, bcnt_trace, bcnt_full, ownership
   ) is
   begin
     
@@ -345,7 +345,7 @@ begin -- architecture
     end process;
     
     -- Comnbinatorial FSM process.
-    comb_proc: process (state, ownership, bus2trace) is
+    comb_proc: process (state, ownership, bus2trace, dataMux) is
     begin
       
       -- Set defaults.
@@ -354,18 +354,18 @@ begin -- architecture
       clear_next      <= '0';
       ack_next        <= '0';
       busy_next       <= '0';
-      dataMux_next    <= '0';
-      
-      -- Select the byte counter when the lowest word of a bank is addressed.
-      if unsigned(bus2trace.address(DEPTH_LOG2B-2 downto 2)) = 0 then
-        dataMux_next  <= '1';
-      end if;
+      dataMux_next    <= dataMux;
       
       -- Handle states.
       case state is
         
         when S_IDLE =>
           if bus_requesting(bus2trace) = '1' then
+            if unsigned(bus2trace.address(DEPTH_LOG2B-2 downto 2)) = 0 then
+              dataMux_next <= '1';
+            else
+              dataMux_next <= '0';
+            end if;
             if bus2trace.address(DEPTH_LOG2B-1) = ownership then
               ack_next <= '1';
             else
