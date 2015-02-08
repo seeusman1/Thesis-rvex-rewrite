@@ -46,97 +46,16 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <string.h>
-
-#include "readFile.h"
+#ifndef _READ_FILE_H_
+#define _READ_FILE_H_
 
 /**
- * Reads a whole file into memory. If size is set to null, the resuling buffer
- * will be a null terminated string; otherwise, *size will be set to the number
- * of bytes in the buffer. Returns null if some error occurs. If silent is
- * zero, an error message will be printed in this case. The resulting buffer
- * should be freed by the caller.
+ * Reads a whole file into memory. The resulting buffer will be a
+ * null-terminated string. If size is specified, it will be set to the number
+ * of used bytes in the buffer, exluding the trailing null. Returns null if
+ * some error occurs. If silent is zero, an error message will be printed in
+ * this case. The resulting buffer should be freed by the caller.
  */
-char *readFile(const char *filename, int *size, int silent) {
-  int f;
-  off_t fileSize;
-  char *buffer;
-  char *ptr;
-  int remain;
-  
-  // Open the file.
-  f = open(filename, O_RDONLY);
-  if (f < 0) {
-    if (!silent) {
-      perror("Failed to open file for reading");
-      fprintf(stderr, "The filename was %s\n", filename);
-    }
-    return 0;
-  }
-  
-  // Determine the filesize by seeking.
-  fileSize = lseek(f, 0, SEEK_END);
-  if (fileSize == (off_t)-1) {
-    if (!silent) {
-      perror("Could not seek to end of file to determine size");
-      fprintf(stderr, "The filename was %s\n", filename);
-    }
-    close(f);
-    return 0;
-  }
-  if (lseek(f, 0, SEEK_SET) == (off_t)-1) {
-    if (!silent) {
-      perror("Could not seek to start of file");
-      fprintf(stderr, "The filename was %s\n", filename);
-    }
-    close(f);
-    return 0;
-  }
-  
-  // Allocate a buffer the size of the file, or the size of the file plus one
-  // if a null-terminated string was requested.
-  buffer = (char*)malloc(fileSize + (size ? 0 : 1));
-  if (!buffer) {
-    if (!silent) {
-      perror("Failed to allocate memory to read file");
-      fprintf(stderr, "The filename was %s\n", filename);
-    }
-    close(f);
-    return 0;
-  }
-  
-  // Read the file into the buffer.
-  ptr = buffer;
-  remain = fileSize;
-  while (remain) {
-    int count = read(f, ptr, remain);
-    if (count < 1) {
-      if (!silent) {
-        perror("Failed to read from file");
-        fprintf(stderr, "The filename was %s\n", filename);
-      }
-      close(f);
-      free(buffer);
-      return 0;
-    }
-    remain -= count;
-    ptr += count;
-  }
-  
-  // Close the file.
-  close(f);
-  
-  // Null terminate/return size and return the buffer.
-  if (!size) {
-    buffer[fileSize] = 0;
-  } else {
-    *size = fileSize;
-  }
-  return buffer;
-}
+char *readFile(const char *filename, int *size, int silent);
 
+#endif

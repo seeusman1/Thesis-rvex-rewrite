@@ -46,16 +46,14 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef _READ_FILE_H_
-#define _READ_FILE_H_
+#ifndef _MAIN_H_
+#define _MAIN_H_
+
+#include "entry.h"
 
 /**
- * Reads a whole file into memory. If size is set to null, the resuling buffer
- * will be a null terminated string; otherwise, *size will be set to the number
- * of bytes in the buffer. Returns null if some error occurs. If silent is
- * zero, an error message will be printed in this case. The resulting buffer
- * should be freed by the caller.
+ * Runs the application.
  */
-char *readFile(const char *filename, int *size, int silent);
+int run(const commandLineArgs_t *args);
 
 #endif

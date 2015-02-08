@@ -40,7 +40,7 @@ catlog:
 monitor: copyconf
 	@echo "Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running."; $(NETCAT) localhost $(TCP_PORT_APP)
 
-debug: copyconf $(BINDIR)/rvd
+debug: copyconf $(BINDIR)/rvd $(BINDIR)/rvtrace
 	@echo "#!/bin/bash" > $(BINDIR)/rvd.sh
 	@echo "$(shell pwd)/bin/rvd -p$(TCP_PORT_DEBUG) -m$(shell pwd)/memory.map \$$RVD_OPT \"\$$@\"" >> $(BINDIR)/rvd.sh
 	@chmod +x $(BINDIR)/rvd.sh
@@ -68,15 +68,19 @@ TOOLS = rvsrv rvd
 
 .PHONY: all clean
 
-all: $(BINDIR)/rvsrv $(BINDIR)/rvd
+all: $(BINDIR)/rvsrv $(BINDIR)/rvd $(BINDIR)/rvtrace
 
-$(BINDIR)/rvsrv: $(SRCDIR)/rvsrv/*.c
+$(BINDIR)/rvsrv: $(SRCDIR)/rvsrv/*.c $(SRCDIR)/common/*.c
 	mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) -o $@ $(SRCDIR)/rvsrv/*.c
+	$(CC) $(CFLAGS) -I $(SRCDIR)/common -o $@ $^
 
-$(BINDIR)/rvd: $(SRCDIR)/rvd/*.c
+$(BINDIR)/rvd: $(SRCDIR)/rvd/*.c $(SRCDIR)/common/*.c
 	mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) -o $@ $(SRCDIR)/rvd/*.c
+	$(CC) $(CFLAGS) -I $(SRCDIR)/common -o $@ $^
+
+$(BINDIR)/rvtrace: $(SRCDIR)/rvtrace/*.c $(SRCDIR)/common/*.c
+	mkdir -p $(BINDIR)
+	$(CC) $(CFLAGS) -I $(SRCDIR)/common -o $@ $^
 
 clean:
 	rm -rf $(BINDIR)
