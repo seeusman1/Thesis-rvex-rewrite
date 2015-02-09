@@ -56,6 +56,8 @@
 #include "disasParse.h"
 #include "traceParse.h"
 
+#define FORMAT_LIKE_XSTSIM
+
 /**
  * Dumps symbol entries, PC and disassembly in an objdump-ish way.
  */
@@ -67,6 +69,13 @@ static void dumpPC(int fd, uint32_t pc, trace_packet_t *extraData) {
   
   // Get disassembly information.
   disasGet(pc, &disas, &symbols);
+  
+#ifdef FORMAT_LIKE_XSTSIM
+  
+  // Print disassembly information.
+  dprintf(fd, "PC %08X: %s \n", pc, disas + 13);
+  
+#else
   
   // Print symbol information.
   if (symbols) {
@@ -130,6 +139,8 @@ static void dumpPC(int fd, uint32_t pc, trace_packet_t *extraData) {
     }
   }
   
+#endif
+  
 }
 
 /**
@@ -142,6 +153,10 @@ int run(const commandLineArgs_t *args) {
   int first = 1;
   uint32_t pc;
   cycle_data_t d;
+  
+#ifdef FORMAT_LIKE_XSTSIM
+  dprintf(args->outputFile, "Hardware trace\n");
+#endif
   
   pc = 0;
   d.pc = 0;
@@ -171,10 +186,14 @@ int run(const commandLineArgs_t *args) {
           pc += 4;
         }
       } else {
+#ifndef FORMAT_LIKE_XSTSIM
         dprintf(args->outputFile, "\n");
+#endif
         pc = d.pc;
       }
       first = 0;
+      
+#ifndef FORMAT_LIKE_XSTSIM
       
       // Dump trap information.
       if (d.hasTrapped) {
@@ -188,6 +207,8 @@ int run(const commandLineArgs_t *args) {
         );
       }
       
+#endif
+      
       // Dump the explicitely executed instructions.
       for (slot = 0; slot < d.usedSlots; slot++) {
         dumpPC(args->outputFile, pc, &(d.slot[slot]));
@@ -196,6 +217,8 @@ int run(const commandLineArgs_t *args) {
       
     }
     
+#ifndef FORMAT_LIKE_XSTSIM
+      
     // Dump reconfiguration information.
     if (d.hasNewConfiguration) {
       dprintf(
@@ -204,6 +227,8 @@ int run(const commandLineArgs_t *args) {
         d.config
       );
     }
+    
+#endif
     
   }
   
