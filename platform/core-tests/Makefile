@@ -38,11 +38,10 @@ help:
 	@echo "  make clean           : removes intermediate files."
 	@echo ""
 
-sim:
+sim vsim:
 	cd tests/compiled && $(MAKE) all
-	cd modelsim && vsim -do sim.do
+	cd modelsim && $(MAKE) vsim
 
 clean:
 	cd tests/compiled && $(MAKE) clean
-	find modelsim/* ! -name 'sim.do' ! -name '.gitignore' -type f -exec rm -f {} +
-	find modelsim/* ! -name 'sim.do' ! -name '.gitignore' -type d -exec rm -rf {} +
+	cd modelsim && $(MAKE) clean

@@ -27,13 +27,12 @@ compile-%:
 	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
 
 vsim-%: compile-%
-	cd modelsim && vsim -do sim.do
+	cd modelsim && $(MAKE) vsim
 
 ise-%: compile-%
 	cd ise && ise cache-test.xise
 
 clean:
-	find modelsim/* ! -name 'sim.do' ! -name '.gitignore' -type f -exec rm -f {} +
-	find modelsim/* ! -name 'sim.do' ! -name '.gitignore' -type d -exec rm -rf {} +
 	cd examples && $(MAKE) clean
+	cd modelsim && $(MAKE) clean
 
