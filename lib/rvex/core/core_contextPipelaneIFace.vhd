@@ -144,6 +144,13 @@ entity core_contextPipelaneIFace is
     br2cxplif_PC                : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     cxplif2pl_PC                : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
+    -- The PC which needs to be fetched next. This is PC rounded up to the next
+    -- address which is aligned to the current issue width during normal
+    -- operation or rounded down when branch is high. They are needed by the
+    -- instruction buffer.
+    br2cxplif_fetchPC           : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    br2cxplif_branch            : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
     -- Whether an instruction fetch is being initiated or not.
     br2cxplif_limmValid         : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     cxplif2pl_limmValid         : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -284,8 +291,17 @@ entity core_contextPipelaneIFace is
     ---------------------------------------------------------------------------
     -- Instruction memory interface
     ---------------------------------------------------------------------------
-    -- Addresses of the bundles to fetch for each group.
+    -- Potentially misaligned PC addresses for each group, to be accounted for
+    -- by the instruction buffer.
     cxplif2ibuf_PCs             : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Properly aligned addresses for each group which need to be fetched. This
+    -- is the value of PCs rounded down when branch is high or rounded up when
+    -- branch is low.
+    cxplif2ibuf_fetchPCs        : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Whether the current fetch is nonconsequitive w.r.t. the previous fetch.
+    cxplif2ibuf_branch          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high fetch enable signal for each group.
     cxplif2ibuf_fetch           : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -550,10 +566,11 @@ begin -- architecture
     
     -- Signals from pipelanes.
     br2cxplif_irqAck, pl2cxplif_idle, pl2cxplif_blockReconfig,
-    br2cxplif_PC, br2cxplif_limmValid, br2cxplif_valid,
-    br2cxplif_brkValid, br2cxplif_invalUntilBR, pl2cxplif_brLinkWritePort,
-    br2cxplif_trapInfo, br2cxplif_trapPoint, br2cxplif_exDbgTrapInfo,
-    br2cxplif_stop, pl2cxplif_rfi, br2cxplif_imemFetch, br2cxplif_imemCancel
+    br2cxplif_PC, br2cxplif_fetchPC, br2cxplif_branch, br2cxplif_limmValid,
+    br2cxplif_valid, br2cxplif_brkValid, br2cxplif_invalUntilBR, 
+    pl2cxplif_brLinkWritePort, br2cxplif_trapInfo, br2cxplif_trapPoint, 
+    br2cxplif_exDbgTrapInfo, br2cxplif_stop, pl2cxplif_rfi,
+    br2cxplif_imemFetch, br2cxplif_imemCancel
     
   ) is
     
@@ -562,6 +579,8 @@ begin -- architecture
     variable irqAck_v           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable idle_v             : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable PC_v               : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable fetchPC_v          : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable branch_v           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable limmValid_v        : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable valid_v            : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable brkValid_v         : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -612,6 +631,8 @@ begin -- architecture
       -- only valid for those lanes.
       irqAck_v(laneGroup)           := br2cxplif_irqAck(selectedLane);
       PC_v(laneGroup)               := br2cxplif_PC(selectedLane);
+      fetchPC_v(laneGroup)          := br2cxplif_fetchPC(selectedLane);
+      branch_v(laneGroup)           := br2cxplif_branch(selectedLane);
       limmValid_v(laneGroup)        := br2cxplif_limmValid(selectedLane);
       valid_v(laneGroup)            := br2cxplif_valid(selectedLane);
       brkValid_v(laneGroup)         := br2cxplif_brkValid(selectedLane);
@@ -622,6 +643,13 @@ begin -- architecture
       trapPoint_v(laneGroup)        := br2cxplif_trapPoint(selectedLane);
       exDbgTrapInfo_v(laneGroup)    := br2cxplif_exDbgTrapInfo(selectedLane);
       stop_v(laneGroup)             := br2cxplif_stop(selectedLane);
+      
+      -- Override the fetchPC bits which we don't need to zero.
+      fetchPC_v(laneGroup)(
+        (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
+        + SYLLABLE_SIZE_LOG2B - 1
+        downto 0
+      ) := (others => '0');
       
       -- Load default values into rfi_v, blockReconfig_v, idle_v and
       -- brLinkWritePort_v.
@@ -728,6 +756,8 @@ begin -- architecture
           -- indexed lane group to the lower indexed lane group.
           irqAck_v(groupA)       := irqAck_v(groupB);
           PC_v(groupA)           := PC_v(groupB);
+          fetchPC_v(groupA)      := fetchPC_v(groupB);
+          branch_v(groupA)       := branch_v(groupB);
           limmValid_v(groupA)    := limmValid_v(groupB);
           valid_v(groupA)        := valid_v(groupB);
           brkValid_v(groupA)     := brkValid_v(groupB);
@@ -739,6 +769,11 @@ begin -- architecture
           exDbgTrapInfo_v(groupA):= exDbgTrapInfo_v(groupB);
           stop_v(groupA)         := stop_v(groupB);
           rfi_v(groupA)          := rfi_v(groupB);
+          
+          -- Override the fetchPC bits for this level appropriately.
+          index := level + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2) + SYLLABLE_SIZE_LOG2B;
+          fetchPC_v(groupA)(index) := '0';
+          fetchPC_v(groupB)(index) := '1';
           
           -- Handle wired-and/or signals.
           rfi_v(groupA)
@@ -834,25 +869,27 @@ begin -- architecture
     end if;
     
     -- Drive *_arb output signals.
-    blockReconfig_arb   <= blockReconfig_v;
-    irqAck_arb          <= irqAck_v;
-    idle_arb            <= idle_v;
-    PC_arb              <= PC_v;
-    limmValid_arb       <= limmValid_v;
-    valid_arb           <= valid_v;
-    brkValid_arb        <= brkValid_v;
-    invalUntilBR_arb    <= invalUntilBR_v;
-    brLinkWritePort_arb <= brLinkWritePort_v;
-    trapInfo_arb        <= trapInfo_v;
-    trapPoint_arb       <= trapPoint_v;
-    exDbgTrapInfo_arb   <= exDbgTrapInfo_v;
-    stop_arb            <= stop_v;
-    rfi_arb             <= rfi_v;
+    blockReconfig_arb     <= blockReconfig_v;
+    irqAck_arb            <= irqAck_v;
+    idle_arb              <= idle_v;
+    PC_arb                <= PC_v;
+    limmValid_arb         <= limmValid_v;
+    valid_arb             <= valid_v;
+    brkValid_arb          <= brkValid_v;
+    invalUntilBR_arb      <= invalUntilBR_v;
+    brLinkWritePort_arb   <= brLinkWritePort_v;
+    trapInfo_arb          <= trapInfo_v;
+    trapPoint_arb         <= trapPoint_v;
+    exDbgTrapInfo_arb     <= exDbgTrapInfo_v;
+    stop_arb              <= stop_v;
+    rfi_arb               <= rfi_v;
     
     -- Drive instruction memory output signals.
-    cxplif2ibuf_PCs     <= PC_v;
-    cxplif2ibuf_fetch   <= imemFetch_v;
-    cxplif2ibuf_cancel  <= imemCancel_v;
+    cxplif2ibuf_PCs       <= PC_v;
+    cxplif2ibuf_fetchPCs  <= fetchPC_v;
+    cxplif2ibuf_branch    <= branch_v;
+    cxplif2ibuf_fetch     <= imemFetch_v;
+    cxplif2ibuf_cancel    <= imemCancel_v;
     
   end process;
   

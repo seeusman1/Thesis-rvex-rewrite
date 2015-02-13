@@ -88,7 +88,7 @@ entity core_stopBitRouting is
     -- Branch unit information from each pipelane.
     pl2sbit_valid               : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     pl2sbit_syllable            : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
-    pl2sbit_PC_plusOne          : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    pl2sbit_PC_plusIndexLSB     : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
     -- Invalidation output for each pipelane. When high, the pipelane should
     -- not execute/commit its syllable.
@@ -99,7 +99,7 @@ entity core_stopBitRouting is
     -- unit.
     sbit2pl_valid               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     sbit2pl_syllable            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-    sbit2pl_PC_plusOne          : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0)
+    sbit2pl_PC_plusIndexLSB     : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0)
     
   );
 end core_stopBitRouting;
@@ -114,7 +114,7 @@ begin -- architecture
   
   routing: process (
     cfg2any_coupled, pl2sbit_stop, pl2sbit_valid, pl2sbit_syllable,
-    pl2sbit_PC_plusOne
+    pl2sbit_PC_plusIndexLSB
   ) is
     
     -- This is set to true when the current pipelane is the last in the set of
@@ -131,31 +131,30 @@ begin -- architecture
     -- Routing networks (when loop-unrolled) for the branch units.
     variable branchValid        : std_logic;
     variable syllable           : rvex_address_type;
-    variable PC_plusOne         : rvex_address_type;
+    variable PC_plusIndexLSB    : rvex_address_type;
     
   begin
     
     -- Initialize the routing network variables.
     invalidate      := '0';
     branchValid     := '0';
-    syllable        := pl2sbit_syllable(0);       -- Don't care.
-    PC_plusOne      := pl2sbit_PC_plusOne(0);     -- Don't care.
+    syllable        := pl2sbit_syllable(0);         -- Don't care.
+    PC_plusIndexLSB := pl2sbit_PC_plusIndexLSB(0);  -- Don't care.
     
     for lane in 0 to 2**CFG.numLanesLog2-1 loop
       
       -- Determine endsGroup.
       endsGroup := true;
       if lane < 2**CFG.numLanesLog2-1 then
-        if cfg2any_coupled(lane2group(lane+1, CFG) + lane2group(lane, CFG)*2**CFG.numLaneGroupsLog2) /= '1' then
+        if cfg2any_coupled(lane2group(lane+1, CFG) + lane2group(lane, CFG)*2**CFG.numLaneGroupsLog2) = '1' then
           endsGroup := false;
         end if;
       end if;
       
-      -- Set defaults for all the outputs.
+      -- Set defaults for the syllable related outputs.
       sbit2pl_invalidate(lane)      <= invalidate;
       sbit2pl_valid(lane)           <= '0';
       sbit2pl_syllable(lane)        <= syllable;
-      sbit2pl_PC_plusOne(lane)      <= PC_plusOne;
       
       -- If there is a branch operation pending in the network, revalidate the
       -- last lane using that operation.
@@ -165,7 +164,7 @@ begin -- architecture
       end if;
       
       -- Update the network signals.
-      if pl2sbit_stop(lane) = '1' and invalidate = '0' then
+      if (endsGroup or pl2sbit_stop(lane) = '1') and invalidate = '0' then
         invalidate  := '1';
         
         -- Determine whether the incoming syllable is a branch operation.
@@ -174,9 +173,9 @@ begin -- architecture
         -- If stop is set and syllable marks a valid branch operation,
         -- forward the branch operation to the last coupled pipelane, which
         -- contains the branch unit.
-        branchValid := pl2sbit_valid(lane) and isBranch;
-        syllable    := pl2sbit_syllable(lane);
-        PC_plusOne  := pl2sbit_PC_plusOne(lane);
+        branchValid     := pl2sbit_valid(lane) and isBranch;
+        syllable        := pl2sbit_syllable(lane);
+        PC_plusIndexLSB := pl2sbit_PC_plusIndexLSB(lane);
         
         -- If we're forwarding the branch operation to the last lane,
         -- invalidate this lane so we don't execute the syllable twice.
@@ -186,6 +185,9 @@ begin -- architecture
         end if;
         
       end if;
+      
+      -- Output the PC.
+      sbit2pl_PC_plusIndexLSB(lane) <= PC_plusIndexLSB;
       
       -- Reset the network when we're at the end of a group.
       if endsGroup then

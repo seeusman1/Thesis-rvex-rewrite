@@ -126,8 +126,17 @@ entity core_instructionBuffer is
     ---------------------------------------------------------------------------
     -- Pipelane interface
     ---------------------------------------------------------------------------
-    -- Bundle program counters from each pipelane group.
+    -- Potentially misaligned PC addresses for each group, to be accounted for
+    -- by the instruction buffer.
     cxplif2ibuf_PCs             : in  rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Properly aligned addresses for each group which need to be fetched. This
+    -- is the value of PCs rounded down when branch is high or rounded up when
+    -- branch is low.
+    cxplif2ibuf_fetchPCs        : in  rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Whether the current fetch is nonconsequitive w.r.t. the previous fetch.
+    cxplif2ibuf_branch          : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Fetch enable signal from the pipelane groups.
     cxplif2ibuf_fetch           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);

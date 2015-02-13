@@ -243,6 +243,15 @@ architecture Behavioral of core_tb is
     -- before operation resumes.
     genBundleSizeLog2           => 3,
     
+    -- Assume (and enforce) that the start addresses of bundles are aligned to
+    -- the specified amount of syllables. When this is less than numLanesLog2,
+    -- additional logic is instantiated to handle aligning the memory accesses.
+    -- The advantage of this is that bundles can be shorter by specifying the
+    -- stop bit earlier when ILP is not sufficient to save on memory accesses.
+    -- Note that traps are generated when a stop bit is encountered in any
+    -- syllable not occuring just before an alignment point.
+    bundleAlignLog2             => 0,
+    
     -- Defines which lanes have a multiplier. Bit 0 of this number maps to lane
     -- 0, bit 1 to lane 1, etc.
     multiplierLanes             => 2#11111111#,
@@ -276,7 +285,7 @@ architecture Behavioral of core_tb is
     -- When true, syllables can borrow long immediates from the previous
     -- syllable pair (with the same index within the pair) within a generic
     -- binary bundle.
-    limmhFromPreviousPair       => 1,
+    limmhFromPreviousPair       => 0,
     
     -- When true, general purpose register 63 maps directly to the link
     -- register. When false, MTL, MFL, STL and LDL must be used to access the

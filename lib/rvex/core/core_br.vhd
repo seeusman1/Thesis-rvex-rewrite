@@ -110,6 +110,13 @@ entity core_br is
     -- The PC for the instruction in S_IF (i.e. the next PC).
     br2cxplif_PC                : out rvex_address_array(S_IF to S_IF);
     
+    -- The PC which needs to be fetched next. This is PC rounded up to the next
+    -- address which is aligned to the current issue width during normal
+    -- operation or rounded down when branch is high. They are needed by the
+    -- instruction buffer.
+    br2cxplif_fetchPC           : out rvex_address_array(S_IF to S_IF);
+    br2cxplif_branch            : out std_logic_vector(S_IF to S_IF);
+    
     -- Whether an instruction fetch is being initiated or not.
     br2cxplif_imemFetch         : out std_logic_vector(S_IF to S_IF);
     br2cxplif_limmValid         : out std_logic_vector(S_IF to S_IF);
@@ -153,13 +160,16 @@ entity core_br is
     -- Whether the opcode is valid.
     pl2br_valid                 : in  std_logic_vector(S_BR to S_BR);
     
+    -- Aligned PC + issue width input, used as instruction fetch address.
+    pl2br_PC_plusIssueWidth     : in  rvex_address_array(S_IF+1 to S_IF+1);
+    
     -- PC+1 input for normal program flow.
-    pl2br_PC_plusOne_IFP1       : in  rvex_address_array(S_IF+1 to S_IF+1);
+    pl2br_PC_plusSbit_IFP1      : in  rvex_address_array(S_IF+1 to S_IF+1);
     
     -- PC+1 input from branch stage for STOP instruction, which should stop
     -- execution and set the resumption PC to the instruction following the
     -- stop.
-    pl2br_PC_plusOne_BR         : in  rvex_address_array(S_BR to S_BR);
+    pl2br_PC_plusSbit_BR        : in  rvex_address_array(S_BR to S_BR);
     
     -- Link register branch target for RETURN, ICALL and IGOTO.
     pl2br_brTgtLink             : in  rvex_address_array(S_BR to S_BR);
@@ -284,6 +294,10 @@ architecture Behavioral of core_br is
   
   -- Computed PC for IF stage.
   signal nextPC                 : rvex_address_array(S_IF to S_IF);
+  
+  -- PC which needs to be fetched next. Not necessarily aligned, but the
+  -- misaligned bits are ignored in the instruction buffer.
+  signal fetchPC                : rvex_address_array(S_IF to S_IF);
   
   -- This goes high when the next PC is not aligned to the syllable size for a
   -- single group.
@@ -576,9 +590,9 @@ begin -- architecture
   -- Instantiate mux for the next PC
   -----------------------------------------------------------------------------
   next_pc_mux: process (
-    pl2br_PC_plusOne_BR, pl2br_brTgtLink, pl2br_brTgtRel, cxplif2br_trapReturn,
-    pl2br_trapToHandlePoint, pl2br_trapToHandleHandler, cxplif2br_contextPC,
-    pl2br_PC_plusOne_IFP1, nextPCsrc
+    pl2br_PC_plusSbit_BR, pl2br_brTgtLink, pl2br_brTgtRel,
+    cxplif2br_trapReturn, pl2br_trapToHandlePoint, pl2br_trapToHandleHandler,
+    cxplif2br_contextPC, pl2br_PC_plusSbit_IFP1, nextPCsrc
   ) is
   begin
     case nextPCsrc(S_BR) is
@@ -588,12 +602,24 @@ begin -- architecture
       when NEXT_PC_TRAP_RETURN  => nextPC(S_IF) <= cxplif2br_trapReturn(S_BR);
       when NEXT_PC_BR_RELATIVE  => nextPC(S_IF) <= pl2br_brTgtRel(S_BR);
       when NEXT_PC_BR_LINK      => nextPC(S_IF) <= pl2br_brTgtLink(S_BR);
-      when others               => nextPC(S_IF) <= pl2br_PC_plusOne_IFP1(S_IF+1);
+      when others               => nextPC(S_IF) <= pl2br_PC_plusSbit_IFP1(S_IF+1);
     end case;
   end process;
   
   -- Determine whether we're branching or not.
   branching(S_BR) <= '1' when nextPCsrc(S_BR) /= NEXT_PC_NORMAL else '0';
+  
+  -- Determine the PC which is to be fetched.
+  fetch_pc_mux: process (
+    branching, nextPC, pl2br_PC_plusIssueWidth
+  ) is
+  begin
+    if branching(S_BR) = '1' then
+      fetchPC(S_IF) <= nextPC(S_IF);
+    else
+      fetchPC(S_IF) <= pl2br_PC_plusIssueWidth(S_IF+1);
+    end if;
+  end process;
   
   -----------------------------------------------------------------------------
   -- Test next PC alignment
@@ -635,10 +661,11 @@ begin -- architecture
   -- Determine which operation to perform next
   -----------------------------------------------------------------------------
   det_next_op: process (
-    nextPC, branching, noLimmPrefetch, cfg2br_numGroupsLog2, run, run_r,
-    pl2br_trapPending, brkptEnable, nextPCMisaligned, stop, stop_r
+    nextPC, fetchPC, branching, noLimmPrefetch, cfg2br_numGroupsLog2, run,
+    run_r, pl2br_trapPending, brkptEnable, nextPCMisaligned, stop, stop_r
   ) is
     variable nextPC_v           : rvex_address_array(S_IF to S_IF);
+    variable fetchPC_v          : rvex_address_array(S_IF to S_IF);
     variable fetch              : std_logic_vector(S_IF to S_IF);
     variable fetchOnly          : std_logic_vector(S_IF to S_IF);
     variable numCoupledLanesLog2: natural;
@@ -647,55 +674,87 @@ begin -- architecture
     -- pragma translate_on
   begin
     
+    -- Load default values into the variables.
+    fetchOnly(S_IF) := '0';
+    nextPC_v(S_IF)  := nextPC(S_IF);
+    fetchPC_v(S_IF) := fetchPC(S_IF);
+    
     -- Determine log2(number of coupled lanes).
     numCoupledLanesLog2 :=
       vect2uint(cfg2br_numGroupsLog2)             -- Number of coupled groups.
       + (CFG.numLanesLog2-CFG.numLaneGroupsLog2); -- Number of lanes per group.
     
-    -- Check if we need to fetch the previous instruction first for the
-    -- long-immediate-from-previous-pair logic.
-    fetchOnly(S_IF) := '0';
-    if CFG.limmhFromPreviousPair and noLimmPrefetch(S_BR) = '0' then
+    -- Handle special cases in the limmhFromPreviousPair logic. These may occur
+    -- when (for example):
+    --  - Interrupt occurs halfway through a bundle when running in 4x2 mode.
+    --  - Reconfigure to 2x4 mode.
+    --  - RFI occurs, setting the PC back to the trap point.
+    --  - If there were long immediates in the syllable pair immediately
+    --    before the trap point, these will not be valid anymore when branching
+    --    back like this.
+    -- So, in these cases, we need to fetch the previous instruction first.
+    if CFG.limmhFromPreviousPair then
       
-      -- Fetch the previous instruction first if:
-      --  - the next PC is aligned to the current number of lanes operating
-      --    (i.e., in 4-way mode, the PC is aligned to 4 syllables), and
-      --  - the next PC is NOT aligned to the generic binary bunble size.
+      -- We're making alignment assumptions in this block, so fail if these
+      -- assumptions are incorrect.
+      assert CFG.bundleAlignLog2 >= CFG.numLanesLog2
+        report "Bundle alignment is set to less than the issue width (i.e. "
+             & "stop bits are enabled) while limmhFromPreviousPair is also "
+             & "enabled. These settings are mutually exclusive, because the "
+             & "LIMMH from previous logic assumes alignment."
+        severity failure;
       
-      -- Test alignment to number of coupled lanes.
-      if vect2uint(nextPC(S_IF)(
-        numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B-1 downto
-        (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
-      )) = 0 then
+      -- Check if we need to fetch the previous instruction first due to a
+      -- misaligned RFI.
+      if noLimmPrefetch(S_BR) = '0' then
+      
+        -- Fetch the previous instruction first if:
+        --  - the next PC is aligned to the current number of lanes operating
+        --    (i.e., in 4-way mode, the PC is aligned to 4 syllables), and
+        --  - the next PC is NOT aligned to the generic binary bunble size.
         
-        -- Test misalignment to generic bundle size.
+        -- Test alignment to number of coupled lanes.
         if vect2uint(nextPC(S_IF)(
-          CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto
+          numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B-1 downto
           (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
-        )) /= 0 then
+        )) = 0 then
           
-          fetchOnly(S_IF) := '1';
+          -- Test misalignment to generic bundle size.
+          if vect2uint(nextPC(S_IF)(
+            CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto
+            (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
+          )) /= 0 then
+            
+            fetchOnly(S_IF) := '1';
+            
+          end if;
           
         end if;
+      
+      end if;
+    
+      -- Subtract 1 from the PC when we need to fetch the previous instruction
+      -- first.
+      if fetchOnly(S_IF) = '1' then
+        
+        -- This does not need to be a full subtractor, because we never
+        -- subtract beyond addresses aligned by the generic bundle size
+        -- (because there will never be relevant long immediate instructions
+        -- in the previous generic binary bundle). That WOULD be the case when
+        -- stop bits are used/bundle alignment is less than the bundle size,
+        -- which is one of the reasons why limmhFromPreviousPair is not allowed
+        -- in this case.
+        nextPC_v(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B)
+          := std_logic_vector(
+            vect2unsigned(nextPC(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B))
+            - to_unsigned(2**(numCoupledLanesLog2), CFG.genBundleSizeLog2)
+          );
         
       end if;
       
-    end if;
-    
-    -- Subtract 1 from the PC when we need to fetch the previous instruction
-    -- first.
-    nextPC_v(S_IF) := nextPC(S_IF);
-    if fetchOnly(S_IF) = '1' then
-      
-      -- This does not need to be a full subtractor, because we never
-      -- subtract beyond addresses aligned by the generic bundle size
-      -- (because there will never be relevant long immediate instructions
-      -- in the previous generic binary bundle).
-      nextPC_v(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B)
-        := std_logic_vector(
-          vect2unsigned(nextPC(S_IF)(CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B))
-          - to_unsigned(2**(numCoupledLanesLog2), CFG.genBundleSizeLog2)
-        );
+      -- The PC which we're going to fetch always equals the actual PC, because
+      -- we don't have fancy stop bit support.
+      fetchPC_v(S_IF) := nextPC_v(S_IF);
       
     end if;
     
@@ -707,8 +766,9 @@ begin -- architecture
       and (not stop(S_BR))
       and (not stop_r(S_BR));
     
-    -- Drive PC output signals.
+    -- Drive PC outputs.
     br2cxplif_PC(S_IF)                <= nextPC_v(S_IF);
+    br2cxplif_fetchPC(S_IF)           <= fetchPC_v(S_IF);
     
     -- Drive fetch output signals.
     br2cxplif_imemFetch(S_IF)         <= fetch(S_IF);
@@ -724,6 +784,7 @@ begin -- architecture
     -- Drive cancel/invalidate signals.
     br2cxplif_imemCancel(S_IF+L_IF)   <= branching(S_BR);
     br2cxplif_invalUntilBR(S_BR)      <= branching(S_BR);
+    br2cxplif_branch(S_IF)            <= branching(S_BR);
     br2pl_isBranch(S_IF)              <= branching(S_BR);
     br2pl_isBranching(S_BR)           <= branching(S_BR);
     

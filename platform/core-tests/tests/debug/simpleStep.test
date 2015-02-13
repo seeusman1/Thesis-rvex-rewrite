@@ -9,8 +9,40 @@ config  genBundleSize         8
 init
 
 -- Load some program. Just nops are fine here, we just want to check if we can
--- step properly.
-fillnops 0x1000
+-- step properly. We do need a stop bit every 8 syllables though, or the core
+-- with stop bit support will not realign itself properly in the last test.
+fillnops 0x01C
+load    nop ;;
+fillnops 0x03C
+load    nop ;;
+fillnops 0x05C
+load    nop ;;
+fillnops 0x07C
+load    nop ;;
+fillnops 0x09C
+load    nop ;;
+fillnops 0x0BC
+load    nop ;;
+fillnops 0x0DC
+load    nop ;;
+fillnops 0x0FC
+load    nop ;;
+fillnops 0x11C
+load    nop ;;
+fillnops 0x13C
+load    nop ;;
+fillnops 0x15C
+load    nop ;;
+fillnops 0x17C
+load    nop ;;
+fillnops 0x19C
+load    nop ;;
+fillnops 0x1BC
+load    nop ;;
+fillnops 0x1DC
+load    nop ;;
+fillnops 0x1FC
+load    nop ;;
 
 -- Reset the processor.
 reset

@@ -189,8 +189,17 @@ entity core_pipelanes is
     ---------------------------------------------------------------------------
     -- Instruction memory interface
     ---------------------------------------------------------------------------
-    -- Addresses of the bundles to fetch for each group.
+    -- Potentially misaligned PC addresses for each group, to be accounted for
+    -- by the instruction buffer.
     cxplif2ibuf_PCs             : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Properly aligned addresses for each group which need to be fetched. This
+    -- is the value of PCs rounded down when branch is high or rounded up when
+    -- branch is low.
+    cxplif2ibuf_fetchPCs        : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Whether the current fetch is nonconsequitive w.r.t. the previous fetch.
+    cxplif2ibuf_branch          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high fetch enable signal for each group.
     cxplif2ibuf_fetch           : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -315,6 +324,8 @@ architecture Behavioral of core_pipelanes is
   signal pl2cxplif_idle             : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_PC               : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_fetchPC          : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal br2cxplif_branch           : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_limmValid        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_limmValid        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal br2cxplif_valid            : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -357,11 +368,11 @@ architecture Behavioral of core_pipelanes is
   signal pl2sbit_stop               : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal pl2sbit_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal pl2sbit_syllable           : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
-  signal pl2sbit_PC_plusOne         : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2sbit_PC_plusIndexLSB    : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal sbit2pl_invalidate         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal sbit2pl_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal sbit2pl_syllable           : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-  signal sbit2pl_PC_plusOne         : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal sbit2pl_PC_plusIndexLSB    : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   
   -- Long immediate routing <-> pipelane interconnect signals.
   signal pl2limm_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -378,9 +389,6 @@ architecture Behavioral of core_pipelanes is
   signal trap2pl_trapPending        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_disable            : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_flush              : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
-  
-  -- Stop bit carry network.
-  signal pl2pl_stopIn               : std_logic_vector(2**CFG.numLanesLog2 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -405,8 +413,6 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the pipelanes
   -----------------------------------------------------------------------------
-  pl2pl_stopIn(0) <= '0';
-  
   pl_gen: for lane in 2**CFG.numLanesLog2-1 downto 0 generate
     
     -- Lane group which lane belongs to.
@@ -486,6 +492,8 @@ begin -- architecture
         -- Next operation routing interface.
         br2cxplif_PC(S_IF)                => br2cxplif_PC(lane),
         cxplif2pl_PC(S_IF)                => cxplif2pl_PC(lane),
+        br2cxplif_fetchPC(S_IF)           => br2cxplif_fetchPC(lane),
+        br2cxplif_branch(S_IF)            => br2cxplif_branch(lane),
         br2cxplif_limmValid(S_IF)         => br2cxplif_limmValid(lane),
         cxplif2pl_limmValid(S_IF)         => cxplif2pl_limmValid(lane),
         br2cxplif_valid(S_IF)             => br2cxplif_valid(lane),
@@ -543,11 +551,11 @@ begin -- architecture
         pl2sbit_stop(S_STOP)              => pl2sbit_stop(lane),
         pl2sbit_valid(S_STOP)             => pl2sbit_valid(lane),
         pl2sbit_syllable(S_STOP)          => pl2sbit_syllable(lane),
-        pl2sbit_PC_plusOne(S_STOP)        => pl2sbit_PC_plusOne(lane),
+        pl2sbit_PC_plusIndexLSB(S_STOP)   => pl2sbit_PC_plusIndexLSB(lane),
         sbit2pl_invalidate(S_STOP)        => sbit2pl_invalidate(lane),
         sbit2pl_valid(S_STOP)             => sbit2pl_valid(lane),
         sbit2pl_syllable(S_STOP)          => sbit2pl_syllable(lane),
-        sbit2pl_PC_plusOne(S_STOP)        => sbit2pl_PC_plusOne(lane),
+        sbit2pl_PC_plusIndexLSB(S_STOP)   => sbit2pl_PC_plusIndexLSB(lane),
         
         -- Long immediate routing interface.
         pl2limm_valid(S_LIMM)             => pl2limm_valid(lane),
@@ -564,10 +572,6 @@ begin -- architecture
         trap2pl_trapPending(S_TRAP)       => trap2pl_trapPending(lane),
         trap2pl_disable                   => trap2pl_disable(lane),
         trap2pl_flush                     => trap2pl_flush(lane),
-        
-        -- Stop-bit propagation interface.
-        pl2pl_stopOut(S_STOP)             => pl2pl_stopIn(lane+1),
-        pl2pl_stopIn(S_STOP)              => pl2pl_stopIn(lane),
         
         -- Trace unit interface.
         pl2trace_data                     => pl2trace_data(lane)
@@ -610,6 +614,8 @@ begin -- architecture
       -- Pipelane interface: next operation routing.
       br2cxplif_PC                      => br2cxplif_PC,
       cxplif2pl_PC                      => cxplif2pl_PC,
+      br2cxplif_fetchPC                 => br2cxplif_fetchPC,
+      br2cxplif_branch                  => br2cxplif_branch,
       br2cxplif_limmValid               => br2cxplif_limmValid,
       cxplif2pl_limmValid               => cxplif2pl_limmValid,
       br2cxplif_valid                   => br2cxplif_valid,
@@ -656,6 +662,8 @@ begin -- architecture
       
       -- Instruction memory interface.
       cxplif2ibuf_PCs                   => cxplif2ibuf_PCs,
+      cxplif2ibuf_fetchPCs              => cxplif2ibuf_fetchPCs,
+      cxplif2ibuf_branch                => cxplif2ibuf_branch,
       cxplif2ibuf_fetch                 => cxplif2ibuf_fetch,
       cxplif2ibuf_cancel                => cxplif2ibuf_cancel,
       
@@ -769,11 +777,11 @@ begin -- architecture
       pl2sbit_stop              => pl2sbit_stop,
       pl2sbit_valid             => pl2sbit_valid,
       pl2sbit_syllable          => pl2sbit_syllable,
-      pl2sbit_PC_plusOne        => pl2sbit_PC_plusOne,
+      pl2sbit_PC_plusIndexLSB   => pl2sbit_PC_plusIndexLSB,
       sbit2pl_invalidate        => sbit2pl_invalidate,
       sbit2pl_valid             => sbit2pl_valid,
       sbit2pl_syllable          => sbit2pl_syllable,
-      sbit2pl_PC_plusOne        => sbit2pl_PC_plusOne
+      sbit2pl_PC_plusIndexLSB   => sbit2pl_PC_plusIndexLSB
       
     );
   
