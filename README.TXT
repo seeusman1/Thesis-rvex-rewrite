@@ -20,6 +20,8 @@ Aside from all that, you should have Xilinx ISE 14.7 and Modelsim SE 10.2a.
 DO NOT USE OLDER ISE VERSIONS: ISE 13.4 at least synthesizes the rvex core
 incorrectly for some reason, causing it to behave erratically when stalls
 occur.
+DO NOT USE OLDER MODELSIM VERSIONS: Modelsim 6.5g will not simulate the core due 
+to some incompatibility issues.
 
 
 --=============================================================================

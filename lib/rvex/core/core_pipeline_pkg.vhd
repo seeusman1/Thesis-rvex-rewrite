@@ -143,7 +143,7 @@ package core_pipeline_pkg is
   
   -- Stage in which stop bit propagation is performed. This is the process in
   -- which lanes following a lane with a syllable with stop bit set are
-  -- invalidated, and 
+  -- invalidated.
   -- Requirements:
   --  - S_STOP = S_IF + L_IF
   constant S_STOP   : natural := 2;

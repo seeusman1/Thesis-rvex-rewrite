@@ -562,7 +562,6 @@ begin -- architecture
     variable irqAck_v           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable idle_v             : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable PC_v               : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-    variable lanePC_v           : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     variable limmValid_v        : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable valid_v            : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
     variable brkValid_v         : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -623,10 +622,10 @@ begin -- architecture
       trapPoint_v(laneGroup)        := br2cxplif_trapPoint(selectedLane);
       exDbgTrapInfo_v(laneGroup)    := br2cxplif_exDbgTrapInfo(selectedLane);
       stop_v(laneGroup)             := br2cxplif_stop(selectedLane);
-      rfi_v(laneGroup)              := pl2cxplif_rfi(selectedLane);
       
-      -- Load default values into blockReconfig_v, idle_v and
+      -- Load default values into rfi_v, blockReconfig_v, idle_v and
       -- brLinkWritePort_v.
+      rfi_v(laneGroup)              := '0';
       blockReconfig_v(laneGroup)    := '0';
       idle_v(laneGroup)             := '1';
       brLinkWritePort_v(laneGroup)  := (
@@ -646,6 +645,11 @@ begin -- architecture
       -- cases.
       for groupIndex in 0 to 2**(CFG.numLanesLog2 - CFG.numLaneGroupsLog2)-1 loop
         currentLane := group2firstLane(laneGroup, CFG) + groupIndex;
+        
+        -- RFI signal is wired-or.
+        rfi_v(laneGroup)
+          := rfi_v(laneGroup)
+          or pl2cxplif_rfi(currentLane);
         
         -- BlockReconfig signal is wired-or.
         blockReconfig_v(laneGroup)
@@ -737,6 +741,12 @@ begin -- architecture
           rfi_v(groupA)          := rfi_v(groupB);
           
           -- Handle wired-and/or signals.
+          rfi_v(groupA)
+            := rfi_v(groupA)
+            or rfi_v(groupB);
+          rfi_v(groupB)
+            := rfi_v(groupA);
+            
           blockReconfig_v(groupA)
             := blockReconfig_v(groupA)
             or blockReconfig_v(groupB);

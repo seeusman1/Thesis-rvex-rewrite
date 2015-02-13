@@ -154,6 +154,7 @@ architecture Behavioral of rvsys_standalone is
   --                  |       |---F--|     |      '------'
   --                  |       |      '-----'
   -- debug2rvsa ---B--| demux |---G---------------------------- dbg2rv
+  --                  | demux |---M---------------------------- dbg2trace
   --                  |       |      .-------.      .-----.
   --                  |       |---H--| demux |===J==| *x  |  *x  .------.
   --                  '-------'      '-------'      | arb |===L==| imem |
@@ -178,6 +179,7 @@ architecture Behavioral of rvsys_standalone is
   --                  |       |---F--|     |      '------'
   -- debug2rvsa ---B--| demux |      '-----'
   --                  |       |---G---------------------------- dbg2rv
+  --                  |       |---M---------------------------- dbg2trace
   --                  '-------'
   -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
@@ -228,6 +230,15 @@ architecture Behavioral of rvsys_standalone is
   -- Bus L:
   signal instrMem_req           : bus_mst2slv_array(2**CFG.core.numLanesLog2-1 downto 0);
   signal instrMem_res           : bus_slv2mst_array(2**CFG.core.numLanesLog2-1 downto 0);
+  --
+  -- Bus M:
+  signal debugTrace_req         : bus_mst2slv_type;
+  signal debugTrace_res         : bus_slv2mst_type;
+  
+  -- Trace data interconnect signals between the core and the trace buffer.
+  signal rv2trsink_push         : std_logic;
+  signal rv2trsink_data         : rvex_byte_type;
+  signal trsink2rv_busy         : std_logic;
   
 --=============================================================================
 begin -- architecture
@@ -278,7 +289,12 @@ begin -- architecture
         
         -- Debug bus.
         dbg2rv                  => debugRvex_req,
-        rv2dbg                  => debugRvex_res
+        rv2dbg                  => debugRvex_res,
+        
+        -- Trace interface.
+        rv2trsink_push          => rv2trsink_push,
+        rv2trsink_data          => rv2trsink_data,
+        trsink2rv_busy          => trsink2rv_busy
         
       );
     
@@ -313,7 +329,12 @@ begin -- architecture
         
         -- Debug bus.
         dbg2rv                  => debugRvex_req,
-        rv2dbg                  => debugRvex_res
+        rv2dbg                  => debugRvex_res,
+        
+        -- Trace interface.
+        rv2trsink_push          => rv2trsink_push,
+        rv2trsink_data          => rv2trsink_data,
+        trsink2rv_busy          => trsink2rv_busy
         
       );
     
@@ -327,6 +348,31 @@ begin -- architecture
   end generate;
   
   -----------------------------------------------------------------------------
+  -- Instantiate the trace buffer
+  -----------------------------------------------------------------------------
+  -- This will be completely optimized away when the trace system is disabled
+  -- in the core, because the bus cannot write to it, so nothing would be able
+  -- to affect the state of the buffers.
+  trace_buffer: entity rvex.periph_trace
+    port map (
+      
+      -- System control.
+      reset                     => reset,
+      clk                       => clk,
+      clkEn                     => clkEn,
+      
+      -- Slave bus.
+      bus2trace                 => debugTrace_req,
+      trace2bus                 => debugTrace_res,
+      
+      -- Trace bytestream input.
+      rv2trace_push             => rv2trsink_push,
+      rv2trace_data             => rv2trsink_data,
+      trace2rv_busy             => trsink2rv_busy
+      
+    );
+  
+  -----------------------------------------------------------------------------
   -- Instantiate the debug bus demux unit
   -----------------------------------------------------------------------------
   debug_bus_demux_gen_sa: if not CFG.cache_enable generate
@@ -338,6 +384,7 @@ begin -- architecture
         ADDRESS_MAP(0)            => CFG.debugBusMap_imem,
         ADDRESS_MAP(1)            => CFG.debugBusMap_dmem,
         ADDRESS_MAP(2)            => CFG.debugBusMap_rvex,
+        ADDRESS_MAP(3)            => CFG.debugBusMap_trace,
         MUTUALLY_EXCLUSIVE        => CFG.debugBusMap_mutex
       )
       port map (
@@ -349,9 +396,11 @@ begin -- architecture
         demux2slv(0)              => debugInstr_req,
         demux2slv(1)              => debugDataMem_req,
         demux2slv(2)              => debugRvex_req,
+        demux2slv(3)              => debugTrace_req,
         slv2demux(0)              => debugInstr_res,
         slv2demux(1)              => debugDataMem_res,
-        slv2demux(2)              => debugRvex_res
+        slv2demux(2)              => debugRvex_res,
+        slv2demux(3)              => debugTrace_res
       );
     
   end generate;
@@ -364,6 +413,7 @@ begin -- architecture
       generic map (
         ADDRESS_MAP(0)            => CFG.debugBusMap_dmem,
         ADDRESS_MAP(1)            => CFG.debugBusMap_rvex,
+        ADDRESS_MAP(2)            => CFG.debugBusMap_trace,
         MUTUALLY_EXCLUSIVE        => CFG.debugBusMap_mutex
       )
       port map (
@@ -374,8 +424,10 @@ begin -- architecture
         demux2mst                 => debug_res,
         demux2slv(0)              => debugDataMem_req,
         demux2slv(1)              => debugRvex_req,
+        demux2slv(2)              => debugTrace_req,
         slv2demux(0)              => debugDataMem_res,
-        slv2demux(1)              => debugRvex_res
+        slv2demux(1)              => debugRvex_res,
+        slv2demux(2)              => debugTrace_res
       );
     
     -- Connect unused bus to idle.

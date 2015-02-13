@@ -4,6 +4,7 @@ TOOLS = ../../../tools
 GEN_EXAMPLES = ../../../examples
 DEBUGIFACE = $(TOOLS)/debug-interface
 RVD = $(DEBUGIFACE)/bin/rvd.sh
+RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 HOSTCC = gcc
 
 # Platform-specific executables.
@@ -24,18 +25,19 @@ TARGETS = \
 "make upload-<program>    uploads program to platform using rvd"\
 "make start-<program>     upload + start program"\
 "make run-<program>       start + wait for completion"\
+"make trace-<program>     upload + trace program (requires hardware trace unit)"\
 "make run-all             run-<program> for all executables"\
 "make copy-<program>      registers program files for simulation"\
 "make copy-none           unregisters files for simulation"
 
 # Additional things to clean.
-CLEAN = *.bin tools/b2v ../design/mem_init_pkg.vhd
+CLEAN = *.bin tools/b2v ../design/mem_init_pkg.vhd *.rawtrace *.trace
 
 # Include generic examples makefile.
 include $(GEN_EXAMPLES)/Makefile
 
 # How to upload;
-.PHONY: upload-% upload-all
+.PHONY: upload-%
 upload-%: %.srec debug
 	-cd $(DEBUGIFACE) && make server
 	$(RVD) -call -d"all:PRINT_STATE{1}" break
@@ -44,11 +46,21 @@ upload-%: %.srec debug
 	$(RVD) -c0 exec FLUSH_CACHE
 	$(RVD) -c0 write CACHE_BUS_LATENCY $(BUSLAT)hh
 
+.PHONY: start-%
 start-%: upload-%
 	$(RVD) -c0 write CREG 0x80000000
 
+.PHONY: run-%
 run-%: start-%
 	$(RVD) -c0 exec WAIT_COMPLETE
+
+.PHONY: trace-%
+trace-%: upload-% %.disas
+	$(RVD) -call -d"all:PRINT_STATE{1}" trace $(patsubst trace-%,%,$@).rawtrace
+	$(RVTRACE) -c0 $(patsubst trace-%,%,$@).rawtrace $(patsubst trace-%,%,$@).disas | cat > $(patsubst trace-%,%,$@).0.trace
+	$(RVTRACE) -c1 $(patsubst trace-%,%,$@).rawtrace $(patsubst trace-%,%,$@).disas | cat > $(patsubst trace-%,%,$@).1.trace
+	$(RVTRACE) -c2 $(patsubst trace-%,%,$@).rawtrace $(patsubst trace-%,%,$@).disas | cat > $(patsubst trace-%,%,$@).2.trace
+	$(RVTRACE) -c3 $(patsubst trace-%,%,$@).rawtrace $(patsubst trace-%,%,$@).disas | cat > $(patsubst trace-%,%,$@).3.trace
 
 run-all: $(patsubst %,run-%,$(EXECUTABLES))
 

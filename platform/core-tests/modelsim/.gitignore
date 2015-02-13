@@ -3,4 +3,6 @@ wlft*
 transcript
 work
 rvex
-compile.do
+unisim
+compile*.do
+unisim_*.vhd

@@ -312,6 +312,7 @@ static void usage(char *progName, int verbose) {
     "  release              Releases debugging control.\n"
     "  reset, rst           Soft-resets the selected contexts.\n"
     "  state, ?             Dumps context state.\n"
+    "  trace                Traces program execution (requires HW trace unit).\n"
     "\n"
     "Run \"%s help <command>\" for more information about a command, if available.\n"
     "Also, \"%s help expressions\" prints information on how you can express things\n"

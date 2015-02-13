@@ -1,5 +1,5 @@
 
-.PHONY: help compile-% vsim-% ise-% upload-% server stop debug monitor clean
+.PHONY: help compile-% vsim-% ise-% upload-% start-% run-% trace-% server stop debug monitor clean
 
 UNISIM = $(XILINX)/vhdl/src/unisims
 
@@ -38,6 +38,9 @@ help:
 	@echo ""
 	@echo "  make start-<prog>    : same as upload-<prog>, but also starts the program."
 	@echo ""
+	@echo "  make trace-<prog>    : uploads and traces a program using the hardware trace"
+	@echo "                         unit."
+	@echo ""
 	@echo "  make run-<prog>      : same as start-<prog>, but also waits for completion."
 	@echo "                         Completion is detected when none of the context cycle"
 	@echo "                         counters increment between two reads."
@@ -69,19 +72,8 @@ help:
 compile-%:
 	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
 
-# This was partially taken from the grlib makefile.
-modelsim/unisim_VITAL.vhd:
-	@echo "" >  modelsim/unisim_VITAL.vhd; \
-	for j in `cat $(UNISIM)/primitive/vhdl_analyze_order`; do \
-		cat $(UNISIM)/primitive/$$j >> modelsim/unisim_VITAL.vhd; \
-	done ;
-
-vsim-%: compile-% modelsim/unisim_VITAL.vhd
-	cd modelsim && vlib unisim
-	cd modelsim && vcom -quiet -93 -work unisim $(UNISIM)/unisim_VPKG.vhd
-	cd modelsim && vcom -quiet -93 -work unisim $(UNISIM)/unisim_VCOMP.vhd
-	cd modelsim && vcom -quiet -93 -work unisim unisim_VITAL.vhd
-	cd modelsim && vsim -do sim.do
+vsim-%: compile-%
+	cd modelsim && $(MAKE) vsim
 
 ise-%: compile-%
 	cd ise && ise standalone.xise
@@ -93,6 +85,9 @@ start-%:
 	cd examples && $(MAKE) $@
 
 run-%:
+	cd examples && $(MAKE) $@
+
+trace-%:
 	cd examples && $(MAKE) $@
 
 server stop monitor:
@@ -107,7 +102,6 @@ debug:
 	@echo ""
 
 clean:
-	find modelsim/* ! -name 'sim.do' ! -name '.gitignore' -type f -exec rm -f {} +
-	find modelsim/* ! -name 'sim.do' ! -name '.gitignore' -type d -exec rm -rf {} +
 	cd examples && $(MAKE) clean
+	cd modelsim && $(MAKE) clean
 

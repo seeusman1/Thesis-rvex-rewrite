@@ -74,6 +74,7 @@ all:DCRC                    { CREG_CTXT + 0x31 } # Break cause (byte).
 all:DCRB                    { CREG_CTXT + 0x32 } # Breakpoint configuration (half).
 all:DCR2                    { CREG_CTXT + 0x34 } # Debug control register 2.
 all:RET                     { CREG_CTXT + 0x34 } # Program return value (byte).
+all:_TRACE_CTRL             { CREG_CTXT + 0x37 } # Trace control register (byte).
 all:CRR                     { CREG_CTXT + 0x38 } # Context reconfiguration request.
 all:C_CYC                   { CREG_CTXT + 0x3C } # Non-idle cycle counter.
 all:C_STALL                 { CREG_CTXT + 0x40 } # Non-idle stall counter.

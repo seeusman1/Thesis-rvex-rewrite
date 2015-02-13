@@ -1,4 +1,5 @@
 
+# Compile the VHDL files.
 do compile.do
 
 # Give simulate command.

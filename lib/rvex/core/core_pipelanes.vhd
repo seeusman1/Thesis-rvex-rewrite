@@ -107,6 +107,9 @@ entity core_pipelanes is
     -- unit is active.
     br2sim                      : out rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
     
+    -- High when the indexed branch unit is the active branch unit.
+    br2sim_active               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
     -- pragma translate_on
     
     -----------------------------------------------------------------------------
@@ -376,6 +379,9 @@ architecture Behavioral of core_pipelanes is
   signal trap2pl_disable            : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_flush              : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
   
+  -- Stop bit carry network.
+  signal pl2pl_stopIn               : std_logic_vector(2**CFG.numLanesLog2 downto 0);
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -399,6 +405,8 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the pipelanes
   -----------------------------------------------------------------------------
+  pl2pl_stopIn(0) <= '0';
+  
   pl_gen: for lane in 2**CFG.numLanesLog2-1 downto 0 generate
     
     -- Lane group which lane belongs to.
@@ -460,6 +468,7 @@ begin -- architecture
         pl2sim_instr                      => pl2sim_instr(lane),
         pl2sim_op                         => pl2sim_op(lane),
         br2sim                            => br2sim(lane),
+        br2sim_active                     => br2sim_active(lane),
         -- pragma translate_on
         
         -- Configuration and run control.
@@ -555,6 +564,10 @@ begin -- architecture
         trap2pl_trapPending(S_TRAP)       => trap2pl_trapPending(lane),
         trap2pl_disable                   => trap2pl_disable(lane),
         trap2pl_flush                     => trap2pl_flush(lane),
+        
+        -- Stop-bit propagation interface.
+        pl2pl_stopOut(S_STOP)             => pl2pl_stopIn(lane+1),
+        pl2pl_stopIn(S_STOP)              => pl2pl_stopIn(lane),
         
         -- Trace unit interface.
         pl2trace_data                     => pl2trace_data(lane)

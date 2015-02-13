@@ -233,17 +233,6 @@ begin -- architecture
       -- final xor = 00
       -- no reverse options
       
-      transmit(X"FD");
-      transmit(X"C0");
-      transmit(X"F0");
-      transmit(X"00");
-      transmit(X"00");
-      transmit(X"00");
-      transmit(X"08");
-      transmit(X"AB"); -- %C0%F0%00%00%00%08
-      transmit(X"FE");
-      
-      
 --      -- Transmit some random user stuff.
 --      transmit(X"03");
 --      transmit(X"55");

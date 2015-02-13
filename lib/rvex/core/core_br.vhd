@@ -95,6 +95,7 @@ entity core_br is
     ---------------------------------------------------------------------------
     -- pragma translate_off
     br2pl_sim                   : out rvex_string_builder_array(S_IF to S_IF);
+    br2pl_simActive             : out std_logic_vector(S_IF to S_IF);
     -- pragma translate_on
     
     ---------------------------------------------------------------------------
@@ -146,6 +147,9 @@ entity core_br is
     -- Opcode for the branch unit.
     pl2br_opcode                : in  rvex_opcode_array(S_BR to S_BR);
     
+    -- Stop bit of the syllable corrosponding to opcode.
+    pl2br_stopBit               : in  std_logic_vector(S_BR to S_BR);
+    
     -- Whether the opcode is valid.
     pl2br_valid                 : in  std_logic_vector(S_BR to S_BR);
     
@@ -181,6 +185,10 @@ entity core_br is
     -- the pipelane first to delay it until S_MEM to keep the RFI command for
     -- the control registers synchronized with most other register accesses.
     br2pl_rfi                   : out std_logic_vector(S_BR to S_BR);
+    
+    -- High when the PC is a branch target (or anything other than PC+1).
+    br2pl_isBranch              : out std_logic_vector(S_IF to S_IF);
+    br2pl_isBranching           : out std_logic_vector(S_BR to S_BR);
     
     -- Trap output for unaligned branches.
     br2pl_trap                  : out trap_info_array(S_BR to S_BR);
@@ -716,6 +724,8 @@ begin -- architecture
     -- Drive cancel/invalidate signals.
     br2cxplif_imemCancel(S_IF+L_IF)   <= branching(S_BR);
     br2cxplif_invalUntilBR(S_BR)      <= branching(S_BR);
+    br2pl_isBranch(S_IF)              <= branching(S_BR);
+    br2pl_isBranching(S_BR)           <= branching(S_BR);
     
     -- Generate simulation information.
     -- pragma translate_off
@@ -740,6 +750,7 @@ begin -- architecture
   -- pragma translate_off
   sim_info_gen: if GEN_VHDL_SIM_INFO generate
     br2pl_sim(S_IF) <= simAction & simReason;
+    br2pl_simActive(S_IF) <= pl2br_stopBit(S_BR);
   end generate;
   -- pragma translate_on
   

@@ -4,3 +4,5 @@
 *.disas
 *.srec
 *.bin
+*.rawtrace
+*.trace

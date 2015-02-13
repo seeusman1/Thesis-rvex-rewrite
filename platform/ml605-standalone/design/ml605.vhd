@@ -116,7 +116,8 @@ architecture Behavioral of ml605 is
 --    core => rvex_cfg(
 --      numLanesLog2              => 3,
 --      numLaneGroupsLog2         => 2,
---      numContextsLog2           => 2
+--      numContextsLog2           => 2,
+--      traceEnable               => 1
 --    ),
 --    core_valid                  => true,
 --    imemDepthLog2B              => 18, -- 256 kiB (0x00000..0x3FFFF)
@@ -128,7 +129,8 @@ architecture Behavioral of ml605 is
     core => rvex_cfg(
       numLanesLog2              => 3,
       numLaneGroupsLog2         => 2,
-      numContextsLog2           => 2
+      numContextsLog2           => 2,
+      traceEnable               => 1
     ),
     core_valid                  => true,
     cache_enable                => 1,
