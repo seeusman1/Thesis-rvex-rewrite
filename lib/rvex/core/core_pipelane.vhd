@@ -522,8 +522,9 @@ entity core_pipelane is
     pl2sbit_valid               : out std_logic_vector(S_STOP to S_STOP);
     pl2sbit_syllable            : out rvex_syllable_array(S_STOP to S_STOP);
     
-    -- LSB of the PC+1 signal should the stop bit end up in this lane.
-    pl2sbit_PC_plusIndexLSB     : out rvex_address_array(S_STOP to S_STOP);
+    -- Precomputed PC indices for the next PC and the next fetch address.
+    pl2sbit_PC_ind              : out rvex_address_array(S_STOP to S_STOP);
+    pl2sbit_PC_fetchInd         : out rvex_address_array(S_STOP to S_STOP);
     
     -- Syllable invalidation input.
     sbit2pl_invalidate          : in  std_logic_vector(S_STOP to S_STOP);
@@ -534,9 +535,10 @@ entity core_pipelane is
     sbit2pl_valid               : in  std_logic_vector(S_STOP to S_STOP);
     sbit2pl_syllable            : in  rvex_address_array(S_STOP to S_STOP);
     
-    -- PC+1 LSB muxed based on the stop bit location. This is used to determine
-    -- the complete PC+1 signal.
-    sbit2pl_PC_plusIndexLSB     : in  rvex_address_array(S_STOP to S_STOP);
+    -- Muxed PC indices for the next PC and the next fetch address, based on
+    -- the stop bit position.
+    sbit2pl_PC_ind              : in  rvex_address_array(S_STOP to S_STOP);
+    sbit2pl_PC_fetchInd         : in  rvex_address_array(S_STOP to S_STOP);
     
     ---------------------------------------------------------------------------
     -- Long immediate routing interface
@@ -701,21 +703,25 @@ architecture Behavioral of core_pipelane is
   -- Most signals in here are only valid for lanes with a branch unit.
   type branchState_type is record
     
-    -- PC for the next bundle.
+    -- Exact PC for the next bundle, if there is no branch.
     PC_plusSbit                 : rvex_address_type;
     
-    -- LSBs of the PC should the stop bit end up in this lane:
-    -- PC(numLanesLog2+1 downto 2) + lane index + 1. This is computed in every
-    -- lane which supports a stop bit, rather than just in every branch lane.
-    -- PC_plusSbit bits numLanesLog2+1 downto 2 are assigned to PC_plusIndexLSB
-    -- without modification in the branch lane, PC_plusIndexLSB(numLanesLog2+2)
-    -- is used to select between the current PC and PC_plusIssueWidth for the
-    -- rest of PC_plusSbit.
-    PC_plusIndexLSB             : rvex_address_type;
+    -- PC to fetch for the next bundle, if there is no branch. This is
+    -- PC_plusSbit rounded up to the nearest alignment point.
+    PC_plusSbitFetch            : rvex_address_type;
     
-    -- Aligned PC for the next instruction fetch:
-    -- align(PC_plusSbit + issueWidth).
-    PC_plusIssueWidth           : rvex_address_type;
+    -- Lower bits for PC_plusSbit and PC_plusSbitFetch in case this lane ends
+    -- up being the one with a stop bit. The first 3 + numLanesLog2 bits are
+    -- valid for the PC (of which at least the 2 LSBs are always zero); the bit
+    -- immediately following is a carry bit, which determines whether the rest
+    -- of the signals should be taken from PC or PC + numLanes*2. The latter is
+    -- only computed once in lanes with branch units (PC_plusNumLanesX2).
+    PC_plusSbitInd              : rvex_address_type;
+    PC_plusSbitFetchInd         : rvex_address_type;
+    
+    -- Current PC plus the number of lanes times two. Used in the computation
+    -- of PC_plusSbit and PC_plusSbitFetch.
+    PC_plusNumLanesX2           : rvex_address_type;
     
     -- Immediate branch offset from the syllable.
     branchOffset                : rvex_address_type;
@@ -924,9 +930,9 @@ architecture Behavioral of core_pipelane is
   signal pl2br_opcode           : rvex_opcode_array(S_BR to S_BR);
   signal pl2br_stopBit          : std_logic_vector(S_BR to S_BR);
   signal pl2br_valid            : std_logic_vector(S_BR to S_BR);
-  signal pl2br_PC_plusIssueWidth: rvex_address_array(S_IF+1 to S_IF+1);
   signal pl2br_PC_plusSbit_IFP1 : rvex_address_array(S_IF+1 to S_IF+1);
   signal pl2br_PC_plusSbit_BR   : rvex_address_array(S_BR to S_BR);
+  signal pl2br_PC_plusSbitFetch : rvex_address_array(S_IF+1 to S_IF+1);
   signal pl2br_brTgtLink        : rvex_address_array(S_BR to S_BR);
   signal pl2br_brTgtRel         : rvex_address_array(S_BR to S_BR);
   signal pl2br_opBr             : std_logic_vector(S_BR to S_BR);
@@ -1203,9 +1209,9 @@ begin -- architecture
         pl2br_opcode(S_BR)              => pl2br_opcode(S_BR),
         pl2br_stopBit(S_BR)             => pl2br_stopBit(S_BR),
         pl2br_valid(S_BR)               => pl2br_valid(S_BR),
-        pl2br_PC_plusIssueWidth(S_IF+1) => pl2br_PC_plusIssueWidth(S_IF+1),
         pl2br_PC_plusSbit_IFP1(S_IF+1)  => pl2br_PC_plusSbit_IFP1(S_IF+1),
         pl2br_PC_plusSbit_BR(S_BR)      => pl2br_PC_plusSbit_BR(S_BR),
+        pl2br_PC_plusSbitFetch(S_IF+1)  => pl2br_PC_plusSbitFetch(S_IF+1),
         pl2br_brTgtLink(S_BR)           => pl2br_brTgtLink(S_BR),
         pl2br_brTgtRel(S_BR)            => pl2br_brTgtRel(S_BR),
         pl2br_opBr(S_BR)                => pl2br_opBr(S_BR),
@@ -1459,8 +1465,8 @@ begin -- architecture
     cxplif2pl_trapHandler, cxplif2pl_debugTrapEnable,
     
     -- Stop bit routing interface.
-    sbit2pl_invalidate, sbit2pl_valid, sbit2pl_syllable,
-    sbit2pl_PC_plusIndexLSB,
+    sbit2pl_invalidate, sbit2pl_valid, sbit2pl_syllable, sbit2pl_PC_ind,
+    sbit2pl_PC_fetchInd,
       
     -- Long immediate routing interface.
     limm2pl_enable, limm2pl_data, limm2pl_error,
@@ -1510,6 +1516,34 @@ begin -- architecture
     variable debug              : rvex_string_builder_type;
     -- pragma translate_on
     
+    -- Finishes PC computation using the precomputed index and the larger adder
+    -- for the rest of the bits.
+    function combinePC(
+      PC                        : rvex_address_type;
+      PC_plusNumLanesX2         : rvex_address_type;
+      PC_ind                    : rvex_address_type
+    ) return rvex_address_type is
+      variable ret              : rvex_address_type;
+    begin
+      
+      -- Start out with the index.
+      ret := PC_ind;
+      
+      -- Copy either PC or PC_plusNumLanesX2 into ret, depending on the carry
+      -- bit of the index.
+      if PC_ind(1 + CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B) = '1' then
+        ret(31 downto 1 + CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B)
+          := PC_plusNumLanesX2(31 downto 1 + CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B);
+      else
+        ret(31 downto 1 + CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B)
+          := PC(31 downto 1 + CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B);
+      end if;
+      
+      -- Return the PC.
+      return ret;
+      
+    end combinePC;
+    
   begin
     
     ---------------------------------------------------------------------------
@@ -1533,47 +1567,127 @@ begin -- architecture
     end if;
     
     ---------------------------------------------------------------------------
-    -- Determine the LSB of PC + 1 for the case where our lane has a stop bit
+    -- Compute PC+1 related signals
     ---------------------------------------------------------------------------
-    if HAS_STOP then
-      
-      -- Load only the relevant part of the current PC into a1.
-      a1 := (others => '0');
-      a1(CFG.numLanesLog2+1 downto SYLLABLE_SIZE_LOG2B)
-        := s(S_PCP1).PC(CFG.numLanesLog2+1 downto SYLLABLE_SIZE_LOG2B);
-      
-      -- Perform the addition.
-      s(S_PCP1).br.PC_plusIndexLSB := std_logic_vector(
-        vect2unsigned(a1)
-        + vect2unsigned(cfg2pl_pcAddVal)
-      );
-      
-    end if;
+    -- We want to precompute the next program counter as much as possible,
+    -- because it depends on the stop bit (thus, the previous fetch) and
+    -- directly determines the next fetch address. However, we need two
+    -- addresses (the actual PC and the one which is going to be fetched; these
+    -- are different if the instruction buffer is used to handle misaligned
+    -- accesses for code compression), and in the case where a bundle can start
+    -- at every 32-bit aligned address and an issue width of 8 lanes we would
+    -- need to precompute 8 of those, which would result in 16 adders without
+    -- trickery, plus something in the order of two 32-bit wide 8:1 muxes for
+    -- every lane group. Lots of optimization can be done though.
+    --
+    -- We can express the two PCs we need as follows (using 32-bit word
+    -- addresses):
+    --
+    --   PC_plusSbit := PC + numSyl
+    --   PC_plusSbitFetch := align(PC + numSyl + numCoupledLanes - 1)
+    --
+    -- PC_plusSbit is simply the next PC, PC_plusSbitFetch is that PC rounded
+    -- up to the next memory alignment point. numSyl represents the number of
+    -- syllables active in the current instruction (determined by the location
+    -- of the stop bit), numCoupledLanes is the number of lanes working
+    -- together (determined by the runtime configuration). Let numLanes be the
+    -- total number of lanes.
+    --
+    -- Observe that both numSyl and numSyl + numCoupledLanes - 1 are always
+    -- within the range (0 to 2*numLanes). This means that all bits more
+    -- significant than bit log2(2*numLanes) can only ever be the same as PC or
+    -- as PC + 2*numLanes. In addition, observe that the choice for this
+    -- depends only on the carry output of a modulo 2*numLanes adder. Thus, we
+    -- only need 16 adders and 8:1 muxes of that relatively small size, after
+    -- which we can use a 2:1 mux to select the rest of the address bits.
+    --
+    -- Finally, note that numCoupledLanes-1 can be determined trivially from
+    -- the current configuration, that the align operation is also trivial
+    -- (this is done in cxplif, by the way), and that we can use the
+    -- PC_plusSbit signal in the computation of PC_plusSbitFetch without
+    -- penalty because these computations are not in the critical path.
+    --
+    -- PC_plusSbitInd and PC_plusSbitFetchInd are the variables used for the
+    -- results of these smaller sized adders. PC_plusNumLanesX2 is set to
+    -- PC + 2*numLanes. The final muxing is performed in the stop bit section.
     
-    ---------------------------------------------------------------------------
-    -- Determine the PC + issue width if this is a lane with a branch unit
-    ---------------------------------------------------------------------------
-    if HAS_BR then
+    -- Only do all the fancy stuff described above if compression is enabled -
+    -- we only need a single 30-bit adder for the PC for each lane group if
+    -- they're disabled.
+    if CFG.genBundleSizeLog2 /= CFG.bundleAlignLog2 then
       
-      -- Determine what the current alignment is (this depends on the runtime
-      -- configuration).
-      i := SYLLABLE_SIZE_LOG2B                         -- Instr. size per lane.
-         + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)  -- Lanes per group.
-         + vect2uint(cfg2pl_numGroupsLog2);            -- Number of coupled groups.
-      
-      -- Disable the adder from a dynamic power perspective by overriding PC
-      -- with 0 (cfg2pl_pcAddVal only changes during reconfigurations, so we
-      -- don't need to freeze that one).
-      a1 := (others => '0');
-      if cfg2pl_decouple = '1' then
-        a1(31 downto i) := s(S_PCP1).PC(31 downto i);
+      -- Compute PC_plusSbitInd and PC_plusSbitFetchInd for each lane supporting
+      -- a stop bit.
+      if HAS_STOP then
+        
+        -- Load only the relevant part of the current PC into a1.
+        a1 := (others => '0');
+        a1(CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B downto SYLLABLE_SIZE_LOG2B)
+          := s(S_PCP1).PC(CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B downto SYLLABLE_SIZE_LOG2B);
+        
+        -- Perform the addition for PC_plusSbitInd.
+        s(S_PCP1).br.PC_plusSbitInd := std_logic_vector(
+          vect2unsigned(a1) + vect2unsigned(cfg2pl_pcAddVal)
+        );
+        
+        -- Determine numCoupledLanes - 1.
+        i := SYLLABLE_SIZE_LOG2B + (CFG.numLanesLog2-CFG.numLaneGroupsLog2);
+        case cfg2pl_numGroupsLog2 is
+          when "00"   => a1 := (i-1 downto SYLLABLE_SIZE_LOG2B => '1', others => '0');
+          when "01"   => a1 := (i   downto SYLLABLE_SIZE_LOG2B => '1', others => '0');
+          when "10"   => a1 := (i+1 downto SYLLABLE_SIZE_LOG2B => '1', others => '0');
+          when others => a1 := (i+2 downto SYLLABLE_SIZE_LOG2B => '1', others => '0');
+        end case;
+        
+        -- Perform the addition for PC_plusSbitFetchInd.
+        s(S_PCP1).br.PC_plusSbitFetchInd := std_logic_vector(
+          vect2unsigned(s(S_PCP1).br.PC_plusSbitInd) + vect2unsigned(a1)
+        );
+        
       end if;
       
+      -- Compute PC_plusNumLanesX2 for each lane which has a branch unit.
+      if HAS_BR then
+        
+        -- Load the program counter.
+        a1 := s(S_PCP1).PC;
+        
+        -- Disable the adder from a dynamic power perspective by overriding PC
+        -- with 0 if the branch unit is not active.
+        if cfg2pl_decouple = '0' then
+          a1 := (others => '0');
+        end if;
+        
+        -- Determine how much to add to it.
+        a2 := (
+          1 + CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B => '1',
+          others => '0'
+        );
+        
+        -- Perform the addition.
+        s(S_PCP1).br.PC_plusNumLanesX2 := std_logic_vector(
+          vect2unsigned(a1) + vect2unsigned(a2)
+        );
+        
+      end if;
+      
+    else
+      
+      -- Stop bits are disabled, compute the next PC directly.
+      
+      -- Load the relevant part of the PC.
+      a1 := (others => '0');
+      a1(31 downto SYLLABLE_SIZE_LOG2B)
+        := s(S_PCP1).PC(31 downto SYLLABLE_SIZE_LOG2B);
+      
       -- Perform the addition.
-      s(S_PCP1).br.PC_plusIssueWidth := std_logic_vector(
-        vect2unsigned(a1)
-        + vect2unsigned(cfg2pl_pcAddVal)
+      a2 := std_logic_vector(
+        vect2unsigned(a1) + vect2unsigned(cfg2pl_pcAddVal)
       );
+      
+      -- Store the value in both the next PC as well as the fetch address.
+      s(S_STOP).br.PC_plusSbit := a2;
+      s(S_STOP).br.PC_plusSbitFetch := a2;
       
     end if;
     
@@ -1586,7 +1700,8 @@ begin -- architecture
       pl2sbit_stop(S_STOP)            <= s(S_STOP).syllable(1);
       pl2sbit_valid(S_STOP)           <= s(S_STOP).valid;
       pl2sbit_syllable(S_STOP)        <= s(S_STOP).syllable;
-      pl2sbit_PC_plusIndexLSB(S_STOP) <= s(S_STOP).br.PC_plusIndexLSB;
+      pl2sbit_PC_ind(S_STOP)          <= s(S_STOP).br.PC_plusSbitInd;
+      pl2sbit_PC_fetchInd(S_STOP)     <= s(S_STOP).br.PC_plusSbitFetchInd;
       
       -- Handle stop-bit based lane invalidation.
       if sbit2pl_invalidate(S_STOP) = '1' then
@@ -1603,38 +1718,24 @@ begin -- architecture
         s(S_STOP).syllable        := sbit2pl_syllable(S_STOP);
       end if;
       
-      -- Derive the PC from the LSBs forwarded by the stop bit logic and the
-      -- locally computed PC + issue width and PC.
+      -- Combine the precomputed PC indices forwarded by the stop bit logic
+      -- with the current PC/PC+2*numLanes to get the next PC and the next
+      -- fetch address.
       if HAS_BR then
         
-        -- PC is always syllable aligned.
-        s(S_STOP).br.PC_plusSbit(SYLLABLE_SIZE_LOG2B-1 downto 0)
-          := "00";
-        
-        -- The numLanesLog2 bits following are fully dependent on the stop bit
-        -- location and are thus taken from the stop-bit-logic-forwarded bits.
-        s(S_STOP).br.PC_plusSbit(
-          CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B
-        ) := sbit2pl_PC_plusIndexLSB(S_STOP)(
-          CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B-1 downto SYLLABLE_SIZE_LOG2B
+        -- Next PC.
+        s(S_STOP).br.PC_plusSbit := combinePC(
+          PC                => s(S_STOP).PC,
+          PC_plusNumLanesX2 => s(S_STOP).br.PC_plusNumLanesX2,
+          PC_ind            => sbit2pl_PC_ind(S_STOP)
         );
         
-        -- The rest of the PC will either be the current value or that value
-        -- plus one, which we select based on the carry bit as forwarded by the
-        -- stop bit logic.
-        if sbit2pl_PC_plusIndexLSB(S_STOP)(CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B) = '1' then
-          s(S_STOP).br.PC_plusSbit(
-            31 downto CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B
-          ) := s(S_STOP).br.PC_plusIssueWidth(
-            31 downto CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B
-          );
-        else
-          s(S_STOP).br.PC_plusSbit(
-            31 downto CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B
-          ) := s(S_STOP).PC(
-            31 downto CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B
-          );
-        end if;
+        -- Next fetch address.
+        s(S_STOP).br.PC_plusSbitFetch := combinePC(
+          PC                => s(S_STOP).PC,
+          PC_plusNumLanesX2 => s(S_STOP).br.PC_plusNumLanesX2,
+          PC_ind            => sbit2pl_PC_fetchInd(S_STOP)
+        );
         
       end if;
       
@@ -1642,14 +1743,11 @@ begin -- architecture
       
       -- Drive the stop bit network with constants if we don't support or
       -- need stop bits in this lane, to save area.
-      pl2sbit_stop(S_STOP)            <= '0';
-      pl2sbit_valid(S_STOP)           <= '0';
-      pl2sbit_syllable(S_STOP)        <= (others => '0');
-      pl2sbit_PC_plusIndexLSB(S_STOP) <= (others => '0');
-      
-      -- Set PC_plusSbit to PC_plusIssueWidth, because this is always the case
-      -- and PC_plusSbit is otherwise not set to anything.
-      s(S_STOP).br.PC_plusSbit := s(S_STOP).br.PC_plusIssueWidth;
+      pl2sbit_stop(S_STOP)        <= '0';
+      pl2sbit_valid(S_STOP)       <= '0';
+      pl2sbit_syllable(S_STOP)    <= (others => '0');
+      pl2sbit_PC_ind(S_STOP)      <= (others => '0');
+      pl2sbit_PC_fetchInd(S_STOP) <= (others => '0');
       
     end if;
     
@@ -1978,7 +2076,7 @@ begin -- architecture
       pl2br_opcode(S_BR)              <= s(S_BR).opcode;
       pl2br_stopBit(S_BR)             <= s(S_BR).syllable(1);
       pl2br_valid(S_BR)               <= s(S_BR).valid;
-      pl2br_PC_plusIssueWidth(S_IF+1) <= s(S_IF+1).br.PC_plusIssueWidth;
+      pl2br_PC_plusSbitFetch(S_IF+1)  <= s(S_IF+1).br.PC_plusSbitFetch;
       pl2br_PC_plusSbit_IFP1(S_IF+1)  <= s(S_IF+1).br.PC_plusSbit;
       pl2br_PC_plusSbit_BR(S_BR)      <= s(S_BR).br.PC_plusSbit;
       pl2br_brTgtLink(S_BR)           <= s(S_BR).br.linkTarget;

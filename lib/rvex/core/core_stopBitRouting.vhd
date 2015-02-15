@@ -88,7 +88,8 @@ entity core_stopBitRouting is
     -- Branch unit information from each pipelane.
     pl2sbit_valid               : in  std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     pl2sbit_syllable            : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
-    pl2sbit_PC_plusIndexLSB     : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    pl2sbit_PC_ind              : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    pl2sbit_PC_fetchInd         : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
     -- Invalidation output for each pipelane. When high, the pipelane should
     -- not execute/commit its syllable.
@@ -99,7 +100,8 @@ entity core_stopBitRouting is
     -- unit.
     sbit2pl_valid               : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     sbit2pl_syllable            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-    sbit2pl_PC_plusIndexLSB     : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0)
+    sbit2pl_PC_ind              : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    sbit2pl_PC_fetchInd         : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0)
     
   );
 end core_stopBitRouting;
@@ -114,7 +116,7 @@ begin -- architecture
   
   routing: process (
     cfg2any_coupled, pl2sbit_stop, pl2sbit_valid, pl2sbit_syllable,
-    pl2sbit_PC_plusIndexLSB
+    pl2sbit_PC_ind, pl2sbit_PC_fetchInd
   ) is
     
     -- This is set to true when the current pipelane is the last in the set of
@@ -131,15 +133,17 @@ begin -- architecture
     -- Routing networks (when loop-unrolled) for the branch units.
     variable branchValid        : std_logic;
     variable syllable           : rvex_address_type;
-    variable PC_plusIndexLSB    : rvex_address_type;
+    variable PC_ind             : rvex_address_type;
+    variable PC_fetchInd        : rvex_address_type;
     
   begin
     
     -- Initialize the routing network variables.
-    invalidate      := '0';
-    branchValid     := '0';
-    syllable        := pl2sbit_syllable(0);         -- Don't care.
-    PC_plusIndexLSB := pl2sbit_PC_plusIndexLSB(0);  -- Don't care.
+    invalidate  := '0';
+    branchValid := '0';
+    syllable    := pl2sbit_syllable(0);     -- Don't care.
+    PC_ind      := pl2sbit_PC_ind(0);       -- Don't care.
+    PC_fetchInd := pl2sbit_PC_fetchInd(0);  -- Don't care.
     
     for lane in 0 to 2**CFG.numLanesLog2-1 loop
       
@@ -175,7 +179,8 @@ begin -- architecture
         -- contains the branch unit.
         branchValid     := pl2sbit_valid(lane) and isBranch;
         syllable        := pl2sbit_syllable(lane);
-        PC_plusIndexLSB := pl2sbit_PC_plusIndexLSB(lane);
+        PC_ind          := pl2sbit_PC_ind(lane);
+        PC_fetchInd     := pl2sbit_PC_fetchInd(lane);
         
         -- If we're forwarding the branch operation to the last lane,
         -- invalidate this lane so we don't execute the syllable twice.
@@ -187,7 +192,8 @@ begin -- architecture
       end if;
       
       -- Output the PC.
-      sbit2pl_PC_plusIndexLSB(lane) <= PC_plusIndexLSB;
+      sbit2pl_PC_ind(lane)      <= PC_ind;
+      sbit2pl_PC_fetchInd(lane) <= PC_fetchInd;
       
       -- Reset the network when we're at the end of a group.
       if endsGroup then

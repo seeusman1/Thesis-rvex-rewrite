@@ -870,51 +870,51 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the instruction buffer
   -----------------------------------------------------------------------------
---  ibuf_gen: if CFG.bundleAlignLog2 < CFG.numLanesLog2 generate
---    ibuf_inst: entity rvex.core_instructionBuffer
---      generic map (
---        CFG                         => CFG
---      )
---      port map (
---        
---        -- System control.
---        reset                       => reset,
---        clk                         => clk,
---        clkEn                       => clkEn,
---        stall                       => stall,
---        
---        -- Decoded configuration signals.
---        cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
---        cfg2any_laneIndex           => cfg2any_laneIndex,
---        
---        -- Instruction memory interface.
---        ibuf2imem_PCs               => rv2imem_PCs,
---        ibuf2imem_fetch             => rv2imem_fetch,
---        ibuf2imem_cancel            => rv2imem_cancel,
---        imem2ibuf_instr             => imem2rv_instr,
---        imem2ibuf_exception         => imem2ibuf_exception,
---        
---        -- Pipelane interface.
---        cxplif2ibuf_PCs             => cxplif2ibuf_PCs,
---        cxplif2ibuf_fetchPCs        => cxplif2ibuf_fetchPCs,
---        cxplif2ibuf_branch          => cxplif2ibuf_branch,
---        cxplif2ibuf_fetch           => cxplif2ibuf_fetch,
---        cxplif2ibuf_cancel          => cxplif2ibuf_cancel,
---        ibuf2pl_instr               => ibuf2pl_instr,
---        ibuf2pl_exception           => ibuf2pl_exception
---        
---      );
---  end generate;
---  
---  -- Connect the ibuf signals directly to the memory if we don't need an
---  -- instruction buffer.
---  no_ibuf_gen: if CFG.bundleAlignLog2 >= CFG.numLanesLog2 generate
+  ibuf_gen: if CFG.bundleAlignLog2 < CFG.numLanesLog2 generate
+    ibuf_inst: entity rvex.core_instructionBuffer
+      generic map (
+        CFG                         => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                       => reset,
+        clk                         => clk,
+        clkEn                       => clkEn,
+        stall                       => stall,
+        
+        -- Decoded configuration signals.
+        cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
+        cfg2any_laneIndex           => cfg2any_laneIndex,
+        
+        -- Instruction memory interface.
+        ibuf2imem_PCs               => rv2imem_PCs,
+        ibuf2imem_fetch             => rv2imem_fetch,
+        ibuf2imem_cancel            => rv2imem_cancel,
+        imem2ibuf_instr             => imem2rv_instr,
+        imem2ibuf_exception         => imem2ibuf_exception,
+        
+        -- Pipelane interface.
+        cxplif2ibuf_PCs             => cxplif2ibuf_PCs,
+        cxplif2ibuf_fetchPCs        => cxplif2ibuf_fetchPCs,
+        cxplif2ibuf_branch          => cxplif2ibuf_branch,
+        cxplif2ibuf_fetch           => cxplif2ibuf_fetch,
+        cxplif2ibuf_cancel          => cxplif2ibuf_cancel,
+        ibuf2pl_instr               => ibuf2pl_instr,
+        ibuf2pl_exception           => ibuf2pl_exception
+        
+      );
+  end generate;
+  
+  -- Connect the ibuf signals directly to the memory if we don't need an
+  -- instruction buffer.
+  no_ibuf_gen: if CFG.bundleAlignLog2 >= CFG.numLanesLog2 generate
     rv2imem_PCs       <= cxplif2ibuf_fetchPCs;
     rv2imem_fetch     <= cxplif2ibuf_fetch;
     rv2imem_cancel    <= cxplif2ibuf_cancel;
     ibuf2pl_instr     <= imem2rv_instr;
     ibuf2pl_exception <= imem2ibuf_exception;
---  end generate;
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Instantiate the control registers

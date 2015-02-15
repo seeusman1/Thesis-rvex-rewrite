@@ -368,11 +368,13 @@ architecture Behavioral of core_pipelanes is
   signal pl2sbit_stop               : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal pl2sbit_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal pl2sbit_syllable           : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
-  signal pl2sbit_PC_plusIndexLSB    : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2sbit_PC_ind             : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal pl2sbit_PC_fetchInd        : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   signal sbit2pl_invalidate         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal sbit2pl_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal sbit2pl_syllable           : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
-  signal sbit2pl_PC_plusIndexLSB    : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal sbit2pl_PC_ind             : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal sbit2pl_PC_fetchInd        : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
   
   -- Long immediate routing <-> pipelane interconnect signals.
   signal pl2limm_valid              : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -551,11 +553,13 @@ begin -- architecture
         pl2sbit_stop(S_STOP)              => pl2sbit_stop(lane),
         pl2sbit_valid(S_STOP)             => pl2sbit_valid(lane),
         pl2sbit_syllable(S_STOP)          => pl2sbit_syllable(lane),
-        pl2sbit_PC_plusIndexLSB(S_STOP)   => pl2sbit_PC_plusIndexLSB(lane),
+        pl2sbit_PC_ind(S_STOP)            => pl2sbit_PC_ind(lane),
+        pl2sbit_PC_fetchInd(S_STOP)       => pl2sbit_PC_fetchInd(lane),
         sbit2pl_invalidate(S_STOP)        => sbit2pl_invalidate(lane),
         sbit2pl_valid(S_STOP)             => sbit2pl_valid(lane),
         sbit2pl_syllable(S_STOP)          => sbit2pl_syllable(lane),
-        sbit2pl_PC_plusIndexLSB(S_STOP)   => sbit2pl_PC_plusIndexLSB(lane),
+        sbit2pl_PC_ind(S_STOP)            => sbit2pl_PC_ind(lane),
+        sbit2pl_PC_fetchInd(S_STOP)       => sbit2pl_PC_fetchInd(lane),
         
         -- Long immediate routing interface.
         pl2limm_valid(S_LIMM)             => pl2limm_valid(lane),
@@ -777,11 +781,13 @@ begin -- architecture
       pl2sbit_stop              => pl2sbit_stop,
       pl2sbit_valid             => pl2sbit_valid,
       pl2sbit_syllable          => pl2sbit_syllable,
-      pl2sbit_PC_plusIndexLSB   => pl2sbit_PC_plusIndexLSB,
+      pl2sbit_PC_ind            => pl2sbit_PC_ind,
+      pl2sbit_PC_fetchInd       => pl2sbit_PC_fetchInd,
       sbit2pl_invalidate        => sbit2pl_invalidate,
       sbit2pl_valid             => sbit2pl_valid,
       sbit2pl_syllable          => sbit2pl_syllable,
-      sbit2pl_PC_plusIndexLSB   => sbit2pl_PC_plusIndexLSB
+      sbit2pl_PC_ind            => sbit2pl_PC_ind,
+      sbit2pl_PC_fetchInd       => sbit2pl_PC_fetchInd
       
     );
   

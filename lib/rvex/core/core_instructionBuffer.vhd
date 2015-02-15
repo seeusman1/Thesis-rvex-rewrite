@@ -165,6 +165,22 @@ end core_instructionBuffer;
 architecture Behavioral of core_instructionBuffer is
 --=============================================================================
   
+  -- Size if the instruction mux.
+  constant MUX_SIZE_LOG2        : natural := CFG.numLanesLog2 - CFG.bundleAlignLog2;
+  
+  -- Mux selection signal type.
+  subtype mux_type is std_logic_vector(MUX_SIZE_LOG2-1 downto 0);
+  type mux_array is array (natural range <>) of mux_type;
+  
+  -- Mux selection control signal for each lane.
+  signal mux                    : mux_array(2**CFG.numLanesLog2-1 downto 0);
+  
+  -- Instruction buffer load enable control signal for each lane group.
+  signal instrBufEna            : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  
+  -- Instruction buffer register.
+  signal instrBuf               : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -177,109 +193,82 @@ begin -- architecture
          & "instruction buffer is used."
     severity failure;
   
-  
-  --***************************************************************************
-  -- THIS UNIT IS TODO: PLACEHOLDER IMPLEMENTATION FOLLOWS.
-  --***************************************************************************
-  placeholder: block is
-    signal error, error_r       : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  -----------------------------------------------------------------------------
+  -- Instruction buffer register
+  -----------------------------------------------------------------------------
+  -- This register holds the previously fetched instruction.
+  instr_buf_proc: process (clk) is
+    variable laneGroup: natural;
   begin
-  
-    -- We don't support non-unit instruction fetch latency yet.
-    assert L_IF_MEM = 1
-      report "Instruction memory with non-unit latency is not yet supported "
-           & "by the instruction buffer."
-      severity failure;
-    
-    placeholder_regs: process (clk) is
-    begin
-      if rising_edge(clk) then
-        if reset = '1' then
-          error_r <= (others => '0');
-        elsif clkEn = '1' then
-          for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-            if stall(laneGroup) = '0' then
-              error_r(laneGroup) <= error(laneGroup);
-            end if;
-          end loop;
-        end if;
-      end if;
-    end process;
-    
-    placeholder_comb: process (
-      cfg2any_numGroupsLog2, cfg2any_laneIndex,
-      cxplif2ibuf_PCs, cxplif2ibuf_fetch, cxplif2ibuf_cancel,
-      imem2ibuf_instr, imem2ibuf_exception,
-      error_r
-    ) is
-      variable error_v      : std_logic;
-      variable fixedBits    : natural;
-      variable ignoredBits  : natural;
-    begin
-      
-      -- Forward trivially.
-      ibuf2imem_PCs     <= cxplif2ibuf_PCs;
-      ibuf2imem_fetch   <= cxplif2ibuf_fetch;
-      ibuf2imem_cancel  <= cxplif2ibuf_cancel;
-      ibuf2pl_instr     <= imem2ibuf_instr;
-      ibuf2pl_exception <= imem2ibuf_exception;
-      
-      -- The cancel signal is broken (see entity description), so disable it.
-      ibuf2imem_cancel  <= (others => '0');
-      
-      -- Check for alignment and fix PCs for all groups.
-      for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-      
-        -- Check for fetched PC alignment constraints and ensure they're met;
-        -- if not, we can't service the request, being but a placeholder.
-        error_v := '0';
-        
-        -- Determine the number of bits of the bundle PC which should be zero
-        -- if we're to be able to handle it.
-        fixedBits := SYLLABLE_SIZE_LOG2B
-                   + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
-                   + vect2uint(cfg2any_numGroupsLog2(laneGroup));
-        
-        -- Determine the number of PC bits which should be ignored in the
-        -- check, because they're only used internally for RFI branches,
-        -- which may be misaligned, but are handled in the pipelanes.
-        ignoredBits := SYLLABLE_SIZE_LOG2B
-                     + CFG.bundleAlignLog2;
-        
-        -- Check for alignment.
-        for i in 0 to SYLLABLE_SIZE_LOG2B + CFG.numLanesLog2-1 loop
-          if i < fixedBits and i >= ignoredBits then
-            if cxplif2ibuf_PCs(laneGroup)(i) /= '0' then
-              error_v := '1';
-            end if;
+    if rising_edge(clk) then
+      if clkEn = '1' then
+        for lane in 0 to 2**CFG.numLanesLog2-1 loop
+          laneGroup := lane2group(lane, CFG);
+          if stall(laneGroup) = '0' and instrBufEna(laneGroup) = '1' then
+            instrBuf(lane) <= imem2ibuf_instr(lane);
           end if;
         end loop;
-        
-        -- Override the fixed bits of the output PC according to its
-        -- specification.
-        ibuf2imem_PCs(laneGroup)(SYLLABLE_SIZE_LOG2B-1 downto 0) <= (others => '0');
-        ibuf2imem_PCs(laneGroup)(fixedBits-1 downto SYLLABLE_SIZE_LOG2B)
-          <= cfg2any_laneIndex(group2firstLane(laneGroup, CFG))(
-            fixedBits-SYLLABLE_SIZE_LOG2B-1 downto 0
-          );
-        
-        -- Output the error state for the register.
-        error(laneGroup) <= error_v;
-        
-        -- Issue a trap if there was a request fault in the previous cycle.
-        if error_r(laneGroup) = '1' then
-          ibuf2pl_exception(laneGroup) <= (
-            active => '1',
-            cause  => rvex_trap(RVEX_TRAP_FETCH_FAULT),
-            arg    => X"00000000"
-          );
-        end if;
-        
-      end loop;
+      end if;
       
-    end process;
-    
-  end block;
+      -- Not having a reset here might make the register a bit smaller. We'll
+      -- want to ensure that its value is never used after a reset before the
+      -- register is loaded however. So in simulation, reset it with undefined.
+      -- pragma translate_off
+      if reset = '1' then
+        instrBuf <= (others => (others => RVEX_UNDEF));
+      end if;
+      -- pragma translate_on
+      
+    end if;
+  end process;
+  
+  -----------------------------------------------------------------------------
+  -- Instruction mux
+  -----------------------------------------------------------------------------
+  -- The instruction mux behaves somewhat like a shifter. As an example, for
+  -- the finest granularity in 8-way mode, the mux options look like this:
+  --
+  -- mux    | 001     010     011     100     101     110     111     000
+  -- -------+----------------------------------------------------------------
+  -- Lane 0 | buf(1)  buf(2)  buf(3)  buf(4)  buf(5)  buf(6)  buf(7)  mem(0)
+  -- Lane 1 | buf(2)  buf(3)  buf(4)  buf(5)  buf(6)  buf(7)  mem(0)  mem(1)
+  -- Lane 2 | buf(3)  buf(4)  buf(5)  buf(6)  buf(7)  mem(0)  mem(1)  mem(2)
+  -- Lane 3 | buf(4)  buf(5)  buf(6)  buf(7)  mem(0)  mem(1)  mem(2)  mem(3)
+  -- Lane 4 | buf(5)  buf(6)  buf(7)  mem(0)  mem(1)  mem(2)  mem(3)  mem(4)
+  -- Lane 5 | buf(6)  buf(7)  mem(0)  mem(1)  mem(2)  mem(3)  mem(4)  mem(5)
+  -- Lane 6 | buf(7)  mem(0)  mem(1)  mem(2)  mem(3)  mem(4)  mem(5)  mem(6)
+  -- Lane 7 | mem(0)  mem(1)  mem(2)  mem(3)  mem(4)  mem(5)  mem(6)  mem(7)
+  --
+  instr_mux_proc: process (mux, instrBuf, imem2ibuf_instr) is
+    variable index  : unsigned(CFG.numLanesLog2 downto 0);
+  begin
+    for lane in 0 to 2**CFG.numLanesLog2-1 loop
+      
+      -- Determine the index from the lane index and mux signal.
+      index(CFG.numLanesLog2-1 downto CFG.bundleAlignLog2)
+        := unsigned(mux(lane));
+      if unsigned(mux(lane)) = 0 then
+        index(CFG.numLanesLog2) := '1';
+      else
+        index(CFG.numLanesLog2) := '1';
+      end if;
+      index := index + to_unsigned(lane, CFG.numLanesLog2+1);
+      
+      -- Perform the muxing.
+      if index(CFG.numLanesLog2) = '1' then
+        ibuf2pl_instr(lane) <= imem2ibuf_instr(
+          to_integer(index(CFG.numLanesLog2-1 downto 0))
+        );
+      else
+        instrBuf(lane) <= imem2ibuf_instr(
+          to_integer(index(CFG.numLanesLog2-1 downto 0))
+        );
+      end if;
+      
+    end loop;
+  end process;
+  
+  
   
 end Behavioral;
 

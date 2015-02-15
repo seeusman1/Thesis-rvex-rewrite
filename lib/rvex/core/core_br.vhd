@@ -160,9 +160,6 @@ entity core_br is
     -- Whether the opcode is valid.
     pl2br_valid                 : in  std_logic_vector(S_BR to S_BR);
     
-    -- Aligned PC + issue width input, used as instruction fetch address.
-    pl2br_PC_plusIssueWidth     : in  rvex_address_array(S_IF+1 to S_IF+1);
-    
     -- PC+1 input for normal program flow.
     pl2br_PC_plusSbit_IFP1      : in  rvex_address_array(S_IF+1 to S_IF+1);
     
@@ -170,6 +167,9 @@ entity core_br is
     -- execution and set the resumption PC to the instruction following the
     -- stop.
     pl2br_PC_plusSbit_BR        : in  rvex_address_array(S_BR to S_BR);
+    
+    -- Next fetch address for normal program flow.
+    pl2br_PC_plusSbitFetch      : in  rvex_address_array(S_IF+1 to S_IF+1);
     
     -- Link register branch target for RETURN, ICALL and IGOTO.
     pl2br_brTgtLink             : in  rvex_address_array(S_BR to S_BR);
@@ -611,13 +611,13 @@ begin -- architecture
   
   -- Determine the PC which is to be fetched.
   fetch_pc_mux: process (
-    branching, nextPC, pl2br_PC_plusIssueWidth
+    branching, nextPC, pl2br_PC_plusSbitFetch
   ) is
   begin
     if branching(S_BR) = '1' then
       fetchPC(S_IF) <= nextPC(S_IF);
     else
-      fetchPC(S_IF) <= pl2br_PC_plusIssueWidth(S_IF+1);
+      fetchPC(S_IF) <= pl2br_PC_plusSbitFetch(S_IF+1);
     end if;
   end process;
   
@@ -660,6 +660,15 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Determine which operation to perform next
   -----------------------------------------------------------------------------
+  -- We're making alignment assumptions in this block if limmhFromPreviousPair
+  -- is enable, so fail if these assumptions are incorrect.
+  assert not CFG.limmhFromPreviousPair or (CFG.bundleAlignLog2 >= CFG.numLanesLog2)
+    report "Bundle alignment is set to less than the issue width (i.e. "
+         & "stop bits are enabled) while limmhFromPreviousPair is also "
+         & "enabled. These settings are mutually exclusive, because the "
+         & "LIMMH from previous logic assumes alignment."
+    severity failure;
+  
   det_next_op: process (
     nextPC, fetchPC, branching, noLimmPrefetch, cfg2br_numGroupsLog2, run,
     run_r, pl2br_trapPending, brkptEnable, nextPCMisaligned, stop, stop_r
@@ -694,15 +703,6 @@ begin -- architecture
     --    back like this.
     -- So, in these cases, we need to fetch the previous instruction first.
     if CFG.limmhFromPreviousPair then
-      
-      -- We're making alignment assumptions in this block, so fail if these
-      -- assumptions are incorrect.
-      assert CFG.bundleAlignLog2 >= CFG.numLanesLog2
-        report "Bundle alignment is set to less than the issue width (i.e. "
-             & "stop bits are enabled) while limmhFromPreviousPair is also "
-             & "enabled. These settings are mutually exclusive, because the "
-             & "LIMMH from previous logic assumes alignment."
-        severity failure;
       
       -- Check if we need to fetch the previous instruction first due to a
       -- misaligned RFI.
