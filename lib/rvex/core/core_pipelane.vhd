@@ -1616,8 +1616,8 @@ begin -- architecture
     -- they're disabled.
     if CFG.genBundleSizeLog2 /= CFG.bundleAlignLog2 then
       
-      -- Compute PC_plusSbitInd and PC_plusSbitFetchInd for each lane supporting
-      -- a stop bit.
+      -- Compute PC_plusSbitInd and PC_plusSbitFetchInd for each lane
+      -- supporting a stop bit.
       if HAS_STOP then
         
         -- Load only the relevant part of the current PC into a1.
@@ -1625,9 +1625,20 @@ begin -- architecture
         a1(CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B downto SYLLABLE_SIZE_LOG2B)
           := s(S_PCP1).PC(CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B downto SYLLABLE_SIZE_LOG2B);
         
+        -- Load the value to add. This is computed by the configuration control
+        -- unit. However, if no valid instruction fetch is going to be
+        -- performed (limmValid is low), there's no point in doing the
+        -- additions because we won'thave a valid stop bit to base the next PC
+        -- on anyway. Instead, we override the add value with 0, so the PC is
+        -- not modified, regardless of where the stop bit ends up being.
+        a2 := cfg2pl_pcAddVal;
+        if s(S_PCP1).limmValid = '0' then
+          a2 := (others => '0');
+        end if;
+        
         -- Perform the addition for PC_plusSbitInd.
         s(S_PCP1).br.PC_plusSbitInd := std_logic_vector(
-          vect2unsigned(a1) + vect2unsigned(cfg2pl_pcAddVal)
+          vect2unsigned(a1) + vect2unsigned(a2)
         );
         
         -- Determine numCoupledLanes - 1.

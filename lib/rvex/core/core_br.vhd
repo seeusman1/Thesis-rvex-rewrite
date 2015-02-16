@@ -299,6 +299,12 @@ architecture Behavioral of core_br is
   -- misaligned bits are ignored in the instruction buffer.
   signal fetchPC                : rvex_address_array(S_IF to S_IF);
   
+  -- This is pulled high when the next requested instruction cannot be fetched
+  -- in a single cycle. This happens when a branch occurs to a misaligned
+  -- address for as far as the memory system is concerned. When high, the
+  -- associated instruction should be invalidated.
+  signal doubleFetch            : std_logic_vector(S_IF to S_IF);
+  
   -- This goes high when the next PC is not aligned to the syllable size for a
   -- single group.
   signal nextPCMisaligned       : std_logic_vector(S_IF to S_IF);
@@ -629,8 +635,48 @@ begin -- architecture
     '0' when vect2uint(nextPC(S_IF)(cfg2pcAlignLog2(CFG)-1 downto 0)) = 0
     else '1';
   
+  -- Determine if the instruction at the requested PC can be fetched in a
+  -- single cycle or if it needs two. The latter happens when the requested
+  -- instruction is a branch and the branch target is not aligned to the
+  -- current memory alignment.
+  two_cycle_fetch_proc: process (branching, nextPC, cfg2br_numGroupsLog2) is
+    
+    -- log2 of the size of an instruction for a lane group.
+    constant groupSizeLog2 : natural
+      := (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
+      + SYLLABLE_SIZE_LOG2B;
+    
+  begin
+    
+    -- Normally, we only need one cycle for a fetch.
+    doubleFetch(S_IF) <= '0';
+    
+    -- Handle branches.
+    if branching(S_BR) = '1' then
+      
+      -- If the branch target is not even aligned to a lane group, we
+      -- definitely need two cycles.
+      if unsigned(nextPC(S_IF)(groupSizeLog2-1 downto 0)) /= 0 then
+        doubleFetch(S_IF) <= '1';
+      end if;
+      
+      -- Handle reconfiguration.
+      if (vect2uint(cfg2br_numGroupsLog2) >= 1) and (nextPC(S_IF)(groupSizeLog2) = '1') then
+        doubleFetch(S_IF) <= '1';
+      end if;
+      if (vect2uint(cfg2br_numGroupsLog2) >= 2) and (nextPC(S_IF)(groupSizeLog2+1) = '1') then
+        doubleFetch(S_IF) <= '1';
+      end if;
+      if (vect2uint(cfg2br_numGroupsLog2) >= 3) and (nextPC(S_IF)(groupSizeLog2+2) = '1') then
+        doubleFetch(S_IF) <= '1';
+      end if;
+      
+    end if;
+    
+  end process;
+  
   -----------------------------------------------------------------------------
-  -- Drive trap output.
+  -- Drive trap output
   -----------------------------------------------------------------------------
   trap_output: process (
     nextPCMisaligned, nextPC, stop_r, pl2br_valid
@@ -670,8 +716,9 @@ begin -- architecture
     severity failure;
   
   det_next_op: process (
-    nextPC, fetchPC, branching, noLimmPrefetch, cfg2br_numGroupsLog2, run,
-    run_r, pl2br_trapPending, brkptEnable, nextPCMisaligned, stop, stop_r
+    nextPC, fetchPC, branching, doubleFetch, noLimmPrefetch,
+    cfg2br_numGroupsLog2, run, run_r, pl2br_trapPending, brkptEnable,
+    nextPCMisaligned, stop, stop_r
   ) is
     variable nextPC_v           : rvex_address_array(S_IF to S_IF);
     variable fetchPC_v          : rvex_address_array(S_IF to S_IF);
@@ -758,7 +805,10 @@ begin -- architecture
       
     end if;
     
-    -- Determine if we want to fetch the next instruction.
+    -- Determine if we want to fetch the next instruction. Care should be taken
+    -- to ensure that this signal will only ever go high after being low for at
+    -- least a cycle when branching, otherwise the instruction buffer might not
+    -- have a valid previous fetch value.
     fetch(S_IF)
       := run(S_BR)
       and (not pl2br_trapPending(S_BR))
@@ -772,11 +822,11 @@ begin -- architecture
     
     -- Drive fetch output signals.
     br2cxplif_imemFetch(S_IF)         <= fetch(S_IF);
-    br2cxplif_limmValid(S_IF)         <= fetch(S_IF);
+    br2cxplif_limmValid(S_IF)         <= fetch(S_IF) and not doubleFetch(S_IF);
     
     -- Drive valid output signals.
-    br2cxplif_valid(S_IF)             <= fetch(S_IF) and not fetchOnly(S_IF);
-    brkptEnableSet(S_IF)              <= fetch(S_IF) and not fetchOnly(S_IF);
+    br2cxplif_valid(S_IF)             <= fetch(S_IF) and not (fetchOnly(S_IF) or doubleFetch(S_IF));
+    brkptEnableSet(S_IF)              <= fetch(S_IF) and not (fetchOnly(S_IF) or doubleFetch(S_IF));
     
     -- Drive breakpoint enable signals.
     br2cxplif_brkValid(S_IF)          <= brkptEnable(S_IF);

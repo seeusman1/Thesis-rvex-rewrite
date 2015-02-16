@@ -239,6 +239,77 @@ begin -- architecture
   -- Lane 6 | buf(7)  mem(0)  mem(1)  mem(2)  mem(3)  mem(4)  mem(5)  mem(6)
   -- Lane 7 | mem(0)  mem(1)  mem(2)  mem(3)  mem(4)  mem(5)  mem(6)  mem(7)
   --
+  -- When lane groups are decoupled, we still only need those options. However,
+  -- decoding becomes a little tricky. For example, in 2x4 way, the following
+  -- options are needed.
+  --
+  -- mux    | 001     010     011     100     101     110     111     000
+  -- -------+----------------------------------------------------------------
+  -- Lane 0 | buf(1)  buf(2)  buf(3)                                  mem(0)
+  -- Lane 1 | buf(2)  buf(3)                                  mem(0)  mem(1)
+  -- Lane 2 | buf(3)                                  mem(0)  mem(1)  mem(2)
+  -- Lane 3 |                                 mem(0)  mem(1)  mem(2)  mem(3)
+  -- Lane 4 | buf(5)  buf(6)  buf(7)                                  mem(4)
+  -- Lane 5 | buf(6)  buf(7)                                  mem(4)  mem(5)
+  -- Lane 6 | buf(7)                                  mem(4)  mem(5)  mem(6)
+  -- Lane 7 |                                 mem(4)  mem(5)  mem(6)  mem(7)
+  --
+  -- The LSBs are still dependent on the PC just like in 8-way mode, but the
+  -- MSBs cannot just be tied to zero or something else convenient. They are
+  -- magic, to get the above diagram. In stead of trying to explain this
+  -- constructively (which I can't because I was just applying trial and error)
+  -- observe that a useful pattern emerges when comparing with the one's
+  -- complement of the relevant PC bits:
+  --
+  -- mux    | 001     010     011     100     101     110     111     000
+  -- -------+----------------------------------------------------------------
+  -- Lane 0 | ~PC=10  ~PC=01  ~PC=00                                  ~PC=11
+  -- Lane 1 | ~PC=10  ~PC=01                                  ~PC=01  ~PC=11
+  -- Lane 2 | ~PC=10                                  ~PC=10  ~PC=01  ~PC=11
+  -- Lane 3 |                                 ~PC=11  ~PC=10  ~PC=01  ~PC=11
+  -- Lane 4 | ~PC=11  ~PC=01  ~PC=00                                  ~PC=11
+  -- Lane 5 | ~PC=11  ~PC=01                                  ~PC=01  ~PC=11
+  -- Lane 6 | ~PC=11                                  ~PC=10  ~PC=01  ~PC=11
+  -- Lane 7 |                                 ~PC=11  ~PC=10  ~PC=01  ~PC=11
+  --
+  --
+  --
+  -- lane >= PC
+  
+  -- Instantiate the control logic for the mux.
+  instr_mux_ctrl_proc: process (
+    cfg2any_laneIndex, cfg2any_numGroupsLog2, ibuf2imem_PCs
+  ) is
+    variable PC                 : mux_type;
+    variable index              : mux_type;
+    variable conf               : mux_type;
+    variable mux                : mux_type;
+  begin
+    for lane in 0 to 2**CFG.numLanesLog2-1 loop
+      
+      -- Load the lane index in terms of bundle alignment points.
+      index := cfg2any_laneIndex(lane)(
+        CFG.numLanesLog2 - 1 downto CFG.bundleAlignLog2
+      );
+      
+      -- Load the relevant part of the PC.
+      PC := ibuf2imem_PCs(lane2group(lane, CFG))(
+        CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B - 1 downto
+        CFG.bundleAlignLog2 + SYLLABLE_SIZE_LOG2B
+      );
+      
+      -- Determine which part of the final mux value should be taken directly
+      -- from the PC and which part needs to be magic to get the mux
+      -- connections right. This depends on the runtime configuration.
+      -- TODO
+      
+      -- Compare the program counter with the lane index. If the lane index is
+      -- greater than or equal to the program counter, the magic bits need to 
+      
+    end loop;
+  end process;
+  
+  -- Instantiate the actual mux.
   instr_mux_proc: process (mux, instrBuf, imem2ibuf_instr) is
     variable index  : unsigned(CFG.numLanesLog2 downto 0);
   begin
@@ -267,8 +338,6 @@ begin -- architecture
       
     end loop;
   end process;
-  
-  
   
 end Behavioral;
 
