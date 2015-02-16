@@ -885,7 +885,6 @@ begin -- architecture
         
         -- Decoded configuration signals.
         cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
-        cfg2any_laneIndex           => cfg2any_laneIndex,
         
         -- Instruction memory interface.
         ibuf2imem_PCs               => rv2imem_PCs,

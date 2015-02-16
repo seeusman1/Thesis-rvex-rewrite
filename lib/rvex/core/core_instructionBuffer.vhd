@@ -91,9 +91,6 @@ entity core_instructionBuffer is
     -- log2 of the number of coupled pipelane groups for each pipelane group.
     cfg2any_numGroupsLog2       : in  rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- The lane index within the coupled groups for each lane.
-    cfg2any_laneIndex           : in  rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0);
-    
     ---------------------------------------------------------------------------
     -- Instruction memory interface
     ---------------------------------------------------------------------------
@@ -165,19 +162,6 @@ end core_instructionBuffer;
 architecture Behavioral of core_instructionBuffer is
 --=============================================================================
   
-  -- Size if the instruction mux.
-  constant MUX_SIZE_LOG2        : natural := CFG.numLanesLog2 - CFG.bundleAlignLog2;
-  
-  -- Mux selection signal type.
-  subtype mux_type is std_logic_vector(MUX_SIZE_LOG2-1 downto 0);
-  type mux_array is array (natural range <>) of mux_type;
-  
-  -- Mux selection control signal for each lane.
-  signal mux                    : mux_array(2**CFG.numLanesLog2-1 downto 0);
-  
-  -- Instruction buffer load enable control signal for each lane group.
-  signal instrBufEna            : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-  
   -- Instruction buffer register.
   signal instrBuf               : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
   
@@ -193,34 +177,77 @@ begin -- architecture
          & "instruction buffer is used."
     severity failure;
   
+  -- Forward the signals which we don't have to do anything with.
+  ibuf2imem_PCs     <= cxplif2ibuf_fetchPCs;
+  ibuf2imem_fetch   <= cxplif2ibuf_fetch;
+  ibuf2imem_cancel  <= cxplif2ibuf_cancel;
+  ibuf2pl_exception <= imem2ibuf_exception;
+  
   -----------------------------------------------------------------------------
   -- Instruction buffer register
   -----------------------------------------------------------------------------
-  -- This register holds the previously fetched instruction.
-  instr_buf_proc: process (clk) is
-    variable laneGroup: natural;
+  -- The instruction buffer register holds the previously fetched instruction.
+  -- Storing this previous fetch result only has to work correctly in normal
+  -- operation without branches or cycles without a fetch, because the branch
+  -- unit will ensure that instructions fetched where these requirements are
+  -- not met and the buffer is actually used (it's not for aligned accesses,
+  -- even if a branch is involved) are properly invalidated. Because of these
+  -- assumptions, we can detect when the fetch address changes (and thus need
+  -- to assert the register write enable) by just looking at the LSB of the
+  -- aligned fetch address. This will toggle for every new access, because it
+  -- always has one added to it.
+  ibuf_block: block is
+    
+    -- Relevant bits from the PC, used to determine when to load the registers.
+    signal PC_LSB               : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    signal PC_LSB_r             : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
   begin
-    if rising_edge(clk) then
-      if clkEn = '1' then
-        for lane in 0 to 2**CFG.numLanesLog2-1 loop
-          laneGroup := lane2group(lane, CFG);
-          if stall(laneGroup) = '0' and instrBufEna(laneGroup) = '1' then
-            instrBuf(lane) <= imem2ibuf_instr(lane);
-          end if;
-        end loop;
+    
+    -- Determine which PC bit to use to detect when to load the registers. This
+    -- depends on the configuration.
+    instr_buf_ctrl_proc: process (cxplif2ibuf_fetchPCs, cfg2any_numGroupsLog2) is
+    begin
+      for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+        PC_LSB(laneGroup) <= cxplif2ibuf_fetchPCs(laneGroup)(
+          SYLLABLE_SIZE_LOG2B + CFG.numLanesLog2 - CFG.numLaneGroupsLog2
+          + vect2uint(cfg2any_numGroupsLog2(laneGroup))
+        );
+      end loop;
+    end process;
+    
+    -- Instantiate the registers.
+    instr_buf_proc: process (clk) is
+      variable laneGroup: natural;
+    begin
+      if rising_edge(clk) then
+        if clkEn = '1' then
+          for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+            if stall(laneGroup) = '0' then
+              PC_LSB_r(laneGroup) <= PC_LSB(laneGroup);
+              if PC_LSB_r(laneGroup) /= PC_LSB(laneGroup) then
+                for lane in group2firstLane(laneGroup, CFG) to group2lastLane(laneGroup, CFG) loop
+                  instrBuf(lane) <= imem2ibuf_instr(lane);
+                end loop;
+              end if;
+            end if;
+          end loop;
+        end if;
+        
+        -- Not having a reset here might make the register a bit smaller. We'll
+        -- want to ensure that its value is never used after a reset before the
+        -- register is loaded however. So in simulation, reset it with undefined.
+        -- pragma translate_off
+        if reset = '1' then
+          instrBuf <= (others => (others => RVEX_UNDEF));
+          PC_LSB_r <= (others => '0');
+        end if;
+        -- pragma translate_on
+        
       end if;
-      
-      -- Not having a reset here might make the register a bit smaller. We'll
-      -- want to ensure that its value is never used after a reset before the
-      -- register is loaded however. So in simulation, reset it with undefined.
-      -- pragma translate_off
-      if reset = '1' then
-        instrBuf <= (others => (others => RVEX_UNDEF));
-      end if;
-      -- pragma translate_on
-      
-    end if;
-  end process;
+    end process;
+    
+  end block;
   
   -----------------------------------------------------------------------------
   -- Instruction mux
@@ -239,105 +266,168 @@ begin -- architecture
   -- Lane 6 | buf(7)  mem(0)  mem(1)  mem(2)  mem(3)  mem(4)  mem(5)  mem(6)
   -- Lane 7 | mem(0)  mem(1)  mem(2)  mem(3)  mem(4)  mem(5)  mem(6)  mem(7)
   --
+  -- Note that 000 is drawn in the last column instead of the first, because
+  -- it represents 1000 in terms of shift amount.
+  --
   -- When lane groups are decoupled, we still only need those options. However,
   -- decoding becomes a little tricky. For example, in 2x4 way, the following
   -- options are needed.
   --
-  -- mux    | 001     010     011     100     101     110     111     000
+  -- mux    | 000     001     010     011     100     101     110     111
   -- -------+----------------------------------------------------------------
-  -- Lane 0 | buf(1)  buf(2)  buf(3)                                  mem(0)
-  -- Lane 1 | buf(2)  buf(3)                                  mem(0)  mem(1)
-  -- Lane 2 | buf(3)                                  mem(0)  mem(1)  mem(2)
-  -- Lane 3 |                                 mem(0)  mem(1)  mem(2)  mem(3)
-  -- Lane 4 | buf(5)  buf(6)  buf(7)                                  mem(4)
-  -- Lane 5 | buf(6)  buf(7)                                  mem(4)  mem(5)
-  -- Lane 6 | buf(7)                                  mem(4)  mem(5)  mem(6)
-  -- Lane 7 |                                 mem(4)  mem(5)  mem(6)  mem(7)
+  -- Lane 0 | mem(0)  buf(1)  buf(2)  buf(3)
+  -- Lane 1 | mem(1)  buf(2)  buf(3)                                  mem(0)
+  -- Lane 2 | mem(2)  buf(3)                                  mem(0)  mem(1)
+  -- Lane 3 | mem(3)                                  mem(0)  mem(1)  mem(2)
+  -- Lane 4 | mem(4)  buf(5)  buf(6)  buf(7)
+  -- Lane 5 | mem(5)  buf(6)  buf(7)                                  mem(4)
+  -- Lane 6 | mem(6)  buf(7)                                  mem(4)  mem(5)
+  -- Lane 7 | mem(7)                                  mem(4)  mem(5)  mem(6)
   --
   -- The LSBs are still dependent on the PC just like in 8-way mode, but the
   -- MSBs cannot just be tied to zero or something else convenient. They are
   -- magic, to get the above diagram. In stead of trying to explain this
   -- constructively (which I can't because I was just applying trial and error)
   -- observe that a useful pattern emerges when comparing with the one's
-  -- complement of the relevant PC bits:
+  -- complement of the relevant PC bits.
   --
-  -- mux    | 001     010     011     100     101     110     111     000
+  -- mux    | 000     001     010     011     100     101     110     111
   -- -------+----------------------------------------------------------------
-  -- Lane 0 | ~PC=10  ~PC=01  ~PC=00                                  ~PC=11
-  -- Lane 1 | ~PC=10  ~PC=01                                  ~PC=01  ~PC=11
-  -- Lane 2 | ~PC=10                                  ~PC=10  ~PC=01  ~PC=11
-  -- Lane 3 |                                 ~PC=11  ~PC=10  ~PC=01  ~PC=11
-  -- Lane 4 | ~PC=11  ~PC=01  ~PC=00                                  ~PC=11
-  -- Lane 5 | ~PC=11  ~PC=01                                  ~PC=01  ~PC=11
-  -- Lane 6 | ~PC=11                                  ~PC=10  ~PC=01  ~PC=11
-  -- Lane 7 |                                 ~PC=11  ~PC=10  ~PC=01  ~PC=11
-  --
-  --
-  --
-  -- lane >= PC
-  
-  -- Instantiate the control logic for the mux.
-  instr_mux_ctrl_proc: process (
-    cfg2any_laneIndex, cfg2any_numGroupsLog2, ibuf2imem_PCs
-  ) is
-    variable PC                 : mux_type;
-    variable index              : mux_type;
-    variable conf               : mux_type;
-    variable mux                : mux_type;
+  -- Lane 0 | ~PC=11  ~PC=10  ~PC=01  ~PC=00
+  -- Lane 1 | ~PC=11  ~PC=10  ~PC=01                                  ~PC=00
+  -- Lane 2 | ~PC=11  ~PC=10                                  ~PC=01  ~PC=00
+  -- Lane 3 | ~PC=11                                  ~PC=10  ~PC=01  ~PC=00
+  -- Lane 4 | ~PC=11  ~PC=10  ~PC=01  ~PC=00
+  -- Lane 5 | ~PC=11  ~PC=10  ~PC=01                                  ~PC=00
+  -- Lane 6 | ~PC=11  ~PC=10                                  ~PC=01  ~PC=00
+  -- Lane 7 | ~PC=11                                  ~PC=10  ~PC=01  ~PC=00
+  -- 
+  -- As we can see, the MSB of the mux signal can be tied to ~PC < lane index.
+  -- 
+  -- It's also worth noting that, while this is difficult to describe
+  -- algorithmically, it easily fits in a single LUT for each bit. In the most
+  -- fine-grained version 5:1 LUTs suffice (2 bits for cfg2any_numGroupsLog2
+  -- and the 3 relevant PC bits). To make sure that the synthesis tools
+  -- recognize this, we just model it as a ROM.
+  mux_block: block is
+    
+    -- Size if the instruction mux.
+    constant MUX_SIZE_LOG2      : natural := CFG.numLanesLog2 - CFG.bundleAlignLog2;
+    
+    -- Mux selection signal type.
+    subtype mux_type is std_logic_vector(MUX_SIZE_LOG2-1 downto 0);
+    type mux_array is array (natural range <>) of mux_type;
+    
+    -- Mux selection control signal for each lane.
+    signal mux                  : mux_array(2**CFG.numLanesLog2-1 downto 0);
+    
   begin
-    for lane in 0 to 2**CFG.numLanesLog2-1 loop
+    
+    -- Instantiate the control logic for the mux. Because the muxing is done
+    -- one cycle after the PCs are valid (because the fetch takes one cycle)
+    -- we need a cycle delay in the mux signal. We can do this by just making
+    -- this process sequential.
+    instr_mux_ctrl_proc: process (clk) is
       
-      -- Load the lane index in terms of bundle alignment points.
-      index := cfg2any_laneIndex(lane)(
-        CFG.numLanesLog2 - 1 downto CFG.bundleAlignLog2
-      );
+      -- Lookup table type.
+      subtype lookupTable_type is mux_array(0 to 2**(MUX_SIZE_LOG2+2)-1);
+      type lookupTable_array is array (natural range <>) of lookupTable_type;
+      subtype lookupTables_type is lookupTable_array(0 to 2**CFG.numLanesLog2-1);
       
-      -- Load the relevant part of the PC.
-      PC := ibuf2imem_PCs(lane2group(lane, CFG))(
-        CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B - 1 downto
-        CFG.bundleAlignLog2 + SYLLABLE_SIZE_LOG2B
-      );
+      -- Generates the values for the lookup tables. The configuration
+      -- (cfg2any_numGroupsLog2) makes up the two MSBs of the index; the rest
+      -- is assumed to be the PC bits.
+      function constructTables return lookupTables_type is
+        variable ret            : lookupTables_type;
+        variable addr           : natural;
+        variable i              : integer;
+      begin
+        for lane in 0 to 2**CFG.numLanesLog2-1 loop
+          for numGroupsLog2 in 0 to 3 loop
+            i := numGroupsLog2
+               + (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
+               - CFG.bundleAlignLog2;
+            if i < 0 then
+              i := 0;
+            elsif i >= MUX_SIZE_LOG2 then
+              i := MUX_SIZE_LOG2;
+            end if;
+            for PC in 0 to 2**MUX_SIZE_LOG2-1 loop
+              addr := numGroupsLog2*2**MUX_SIZE_LOG2 + PC;
+              ret(lane)(addr) := uint2vect(PC, MUX_SIZE_LOG2);
+              if (((2**MUX_SIZE_LOG2-1) - PC) mod 2**i) < (lane mod 2**i) then
+                ret(lane)(addr)(MUX_SIZE_LOG2-1 downto i) := (others => '1');
+              else
+                ret(lane)(addr)(MUX_SIZE_LOG2-1 downto i) := (others => '0');
+              end if;
+            end loop;
+          end loop;
+        end loop;
+        return ret;
+      end constructTables;
       
-      -- Determine which part of the final mux value should be taken directly
-      -- from the PC and which part needs to be magic to get the mux
-      -- connections right. This depends on the runtime configuration.
-      -- TODO
+      -- Lookup table constant.
+      constant lookupTable      : lookupTables_type := constructTables;
       
-      -- Compare the program counter with the lane index. If the lane index is
-      -- greater than or equal to the program counter, the magic bits need to 
+      -- Lookup table address.
+      variable addr             : std_logic_vector(MUX_SIZE_LOG2+1 downto 0);
       
-    end loop;
-  end process;
-  
-  -- Instantiate the actual mux.
-  instr_mux_proc: process (mux, instrBuf, imem2ibuf_instr) is
-    variable index  : unsigned(CFG.numLanesLog2 downto 0);
-  begin
-    for lane in 0 to 2**CFG.numLanesLog2-1 loop
-      
-      -- Determine the index from the lane index and mux signal.
-      index(CFG.numLanesLog2-1 downto CFG.bundleAlignLog2)
-        := unsigned(mux(lane));
-      if unsigned(mux(lane)) = 0 then
-        index(CFG.numLanesLog2) := '1';
-      else
-        index(CFG.numLanesLog2) := '1';
+    begin
+      if rising_edge(clk) then
+        if clkEn = '1' then
+          for lane in 0 to 2**CFG.numLanesLog2-1 loop
+            if stall(lane2group(lane, CFG)) = '0' then
+              
+              -- Load the relevant part of the PC.
+              addr(MUX_SIZE_LOG2-1 downto 0) := cxplif2ibuf_PCs(lane2group(lane, CFG))(
+                CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B - 1 downto
+                CFG.bundleAlignLog2 + SYLLABLE_SIZE_LOG2B
+              );
+              
+              -- Load the configuration.
+              addr(MUX_SIZE_LOG2+1 downto MUX_SIZE_LOG2)
+                := cfg2any_numGroupsLog2(lane2group(lane, CFG));
+              
+              -- Perform the table lookup.
+              mux(lane) <= lookupTable(lane)(vect2uint(addr));
+              
+            end if;
+          end loop;
+        end if;
       end if;
-      index := index + to_unsigned(lane, CFG.numLanesLog2+1);
-      
-      -- Perform the muxing.
-      if index(CFG.numLanesLog2) = '1' then
-        ibuf2pl_instr(lane) <= imem2ibuf_instr(
-          to_integer(index(CFG.numLanesLog2-1 downto 0))
-        );
-      else
-        instrBuf(lane) <= imem2ibuf_instr(
-          to_integer(index(CFG.numLanesLog2-1 downto 0))
-        );
-      end if;
-      
-    end loop;
-  end process;
+    end process;
+    
+    -- Instantiate the actual mux.
+    instr_mux_proc: process (mux, instrBuf, imem2ibuf_instr) is
+      variable index  : unsigned(CFG.numLanesLog2 downto 0);
+    begin
+      for lane in 0 to 2**CFG.numLanesLog2-1 loop
+        
+        -- Determine the index from the lane index and mux signal.
+        index(CFG.numLanesLog2-1 downto CFG.bundleAlignLog2)
+          := unsigned(mux(lane));
+        if unsigned(mux(lane)) = 0 then
+          index(CFG.numLanesLog2) := '1';
+        else
+          index(CFG.numLanesLog2) := '0';
+        end if;
+        index := index + to_unsigned(lane, CFG.numLanesLog2+1);
+        
+        -- Perform the muxing.
+        if index(CFG.numLanesLog2) = '1' then
+          ibuf2pl_instr(lane) <= imem2ibuf_instr(
+            to_integer(index(CFG.numLanesLog2-1 downto 0))
+          );
+        else
+          ibuf2pl_instr(lane) <= instrBuf(
+            to_integer(index(CFG.numLanesLog2-1 downto 0))
+          );
+        end if;
+        
+      end loop;
+    end process;
+    
+  end block;
   
 end Behavioral;
 

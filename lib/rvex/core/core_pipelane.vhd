@@ -1871,9 +1871,6 @@ begin -- architecture
       if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).branchCtrl.isBranchInstruction = '1' then
         flag := '1';
       end if;
-      if s(S_IF+L_IF).syllable(1) = '1' then
-        flag := '1';
-      end if;
     end if;
     
     -- If we don't have a memory unit which may be used, make sure this is not
