@@ -701,14 +701,32 @@ begin -- architecture
     dcache2rv_blockReconfig(i) <=
       outNetwork(RCFG.numLaneGroupsLog2)(i).blockReconfig;
     
-    -- Fault outputs.
-    dcache2rv_ifaceFault(i) <=
-      inNetwork(RCFG.numLaneGroupsLog2)(i).ifaceFault;
-    
+    -- Bus fault output.
     dcache2rv_busFault(i) <=
       outNetwork(RCFG.numLaneGroupsLog2)(i).busFault;
     
   end generate;
+  
+  -- The interfacing fault output needs to be delayed by one CPU cycle,
+  -- because it is generated based on the request from the CPU instead of a
+  -- bus result.
+  iface_fault_reg: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        dcache2rv_ifaceFault <= (others => '0');
+      elsif clkEnCPU = '1' then
+        for i in 0 to 2**RCFG.numLaneGroupsLog2-1 loop
+          if inNetwork(RCFG.numLaneGroupsLog2)(i).stall = '0' then
+            dcache2rv_ifaceFault(i)
+              <= inNetwork(RCFG.numLaneGroupsLog2)(i).ifaceFault
+              and (rv2dcache_readEnable(i) or rv2dcache_writeEnable(i));
+          end if;
+        end loop;
+      end if;
+    end if;
+    
+  end process;
   
 end Behavioral;
 

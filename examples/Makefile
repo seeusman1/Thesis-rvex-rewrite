@@ -95,10 +95,16 @@ ifndef START
 START = default_start
 endif
 
-# List of platform-agnostic (generic) programs.
-EXECUTABLES += adpcm blit crc des fir pocsag \
-	ucbqsort bcnt compress engine g3fax jpeg qurt v42 \
-	ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite soma x264 uart xstsimframebuffer#This line contains programs not from Powerstone
+# Empty program.
+EXECUTABLES += nothing
+
+# Powerstone benchmarks.
+EXECUTABLES += adpcm blit crc des fir pocsag ucbqsort bcnt compress engine\
+	g3fax jpeg qurt v42
+
+# Random other applications.
+EXECUTABLES += ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite\
+	soma x264 uart xstsimframebuffer
 
 # Toolchain setup.
 ifndef TOOLS

@@ -887,6 +887,9 @@ architecture Behavioral of core_pipelane is
       -- bit logic or for some other reason.
       invalidDueToStop          : std_logic;
       
+      -- Whether the pipelane is idle or not.
+      idle                      : std_logic;
+      
     -- pragma translate_on
     
   end record;
@@ -909,6 +912,7 @@ architecture Behavioral of core_pipelane is
       brRegWriteRequested       => (others => '0'),
       linkRegWriteRequested     => '0',
       invalidDueToStop          => '0',
+      idle                      => '1',
     -- pragma translate_on
     others                      => (others => RVEX_UNDEF)
   );
@@ -1697,8 +1701,8 @@ begin -- architecture
       );
       
       -- Store the value in both the next PC as well as the fetch address.
-      s(S_STOP).br.PC_plusSbit := a2;
-      s(S_STOP).br.PC_plusSbitFetch := a2;
+      s(S_PCP1).br.PC_plusSbit := a2;
+      s(S_PCP1).br.PC_plusSbitFetch := a2;
       
     end if;
     
@@ -2322,6 +2326,12 @@ begin -- architecture
       end if;
     end loop;
     
+    -- Store the idle signal in the pipeline for VHDL simulation, to align it
+    -- with the rest of the lane information.
+    -- pragma translate_off
+    s(S_IF).idle := idle;
+    -- pragma translate_on
+    
     -- Drive idle output signals.
     pl2cxplif_blockReconfig <= not idle;
     pl2cxplif_idle          <= idle;
@@ -2505,7 +2515,7 @@ begin -- architecture
       rvs_clear(debug);
       
       -- Display commit/trap information.
-      if idle = '1' then
+      if s(S_LAST).idle = '1' then
         rvs_append(debug, "idle; ");
       end if;
       if s(S_LAST).tr.trap.active = '1' then

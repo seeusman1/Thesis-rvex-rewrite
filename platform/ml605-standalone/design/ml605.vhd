@@ -132,7 +132,7 @@ architecture Behavioral of ml605 is
       numContextsLog2           => 2,
       bundleAlignLog2           => 0,
       limmhFromPreviousPair     => 0,
-      traceEnable               => 0
+      traceEnable               => 1
     ),
     core_valid                  => true,
     cache_enable                => 1,
