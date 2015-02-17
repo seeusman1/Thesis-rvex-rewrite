@@ -15,6 +15,11 @@ ifndef ISSUE_WIDTH
 ISSUE_WIDTH = 8
 endif
 
+# Bundle alignment requirement. Must be 1, 2, 4 or 8 (and at most ISSUE_WIDTH).
+ifndef BUNDLE_ALIGN
+BUNDLE_ALIGN = $(ISSUE_WIDTH)
+endif
+
 # Must be one of the following;
 #   false     - compile for the specified issue width only.
 #   true      - alias for true-O1.
@@ -149,6 +154,7 @@ endif
 #   Bit 1 = MUL
 #   Bit 2 = MEM
 #   Bit 3 = BR
+ifndef LANECONFIG
 ifeq ($(ISSUE_WIDTH), 2)
 LANECONFIG = 7B
 else ifeq ($(ISSUE_WIDTH), 4)
@@ -156,12 +162,12 @@ LANECONFIG = 337B
 else
 LANECONFIG = 3333337B
 endif
+endif
 
 # Determine assembler flags.
-ifeq ($(DYNAMIC), false)
-ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG)
-else
-ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG) -u
+ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG) --padding $(BUNDLE_ALIGN)
+ifneq ($(DYNAMIC), false)
+ASFLAGS += -u
 endif
 
 

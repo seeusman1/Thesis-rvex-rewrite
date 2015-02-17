@@ -130,7 +130,9 @@ architecture Behavioral of ml605 is
       numLanesLog2              => 3,
       numLaneGroupsLog2         => 2,
       numContextsLog2           => 2,
-      traceEnable               => 1
+      bundleAlignLog2           => 0,
+      limmhFromPreviousPair     => 0,
+      traceEnable               => 0
     ),
     core_valid                  => true,
     cache_enable                => 1,
