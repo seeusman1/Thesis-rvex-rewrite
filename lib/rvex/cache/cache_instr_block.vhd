@@ -123,6 +123,10 @@ entity cache_instr_block is
     -- Block reconfiguration signal. This is asserted when any block is busy.
     block2route_blockReconfig   : out std_logic;    
     
+    -- Bus fault signal. This is asserted when a bus fault occured while
+    -- validating the cache.
+    block2route_busFault        : out std_logic;
+    
     ---------------------------------------------------------------------------
     -- Bus master interface
     ---------------------------------------------------------------------------
@@ -352,11 +356,13 @@ begin
       reset                     => reset,
       clkEnCPU                  => clkEnCPU,
       clkEnBus                  => clkEnBus,
+      stall                     => route2block_stall,
       cpuAddr                   => cpuAddr_r,
       updateEnable              => route2block_updateEnable,
       done                      => update,
       line                      => updateData,
       blockReconfig             => block2route_blockReconfig,
+      busFault                  => block2route_busFault,
       cacheToBus                => icache2bus_bus,
       busToCache                => bus2icache_bus
     );

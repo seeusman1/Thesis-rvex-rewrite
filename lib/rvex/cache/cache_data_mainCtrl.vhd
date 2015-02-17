@@ -122,6 +122,9 @@ entity cache_data_mainCtrl is
     -- computed in the mux/demux network.
     writeOrBypassStall          : out std_logic;
     
+    -- Bus fault output. This is asserted when a bus fault occurs.
+    busFault                    : out std_logic;
+    
     ---------------------------------------------------------------------------
     -- Mux control signals
     ---------------------------------------------------------------------------
@@ -193,6 +196,7 @@ architecture Behavioral of cache_data_mainCtrl is
   -- Read data synchronization register signals.
   signal memSyncRegEna          : std_logic;
   signal memSyncRegData         : rvex_data_type;
+  signal memSyncRegFault        : std_logic;
   
   -- Write accepted register. This is set when a write is started and reset
   -- only when the CPU moves on to the next command.
@@ -233,6 +237,7 @@ begin -- architecture
       -- stores the data in case clkEnCPU was not active in that cycle.
       if memSyncRegEna = '1' then
         memSyncRegData <= busToCache.readData;
+        memSyncRegFault <= busToCache.fault;
       end if;
       
       -- Instantiate write accepted register.
@@ -277,7 +282,7 @@ begin -- architecture
     writeBufAddr, writeBufData, writeBufMask,
     
     -- Inputs from synchronization register.
-    memSyncRegData,
+    memSyncRegData, memSyncRegFault,
     
     -- Inputs from write accepted register.
     writeAccepted,
@@ -318,6 +323,7 @@ begin -- architecture
     acceptWrite <= '0';
     resumeAfterWrite_next <= '0';
     blockReconfig <= '1';
+    busFault <= '0';
     
     -- Handle state machine states.
     case state is
@@ -430,16 +436,28 @@ begin -- architecture
         
         if clkEnBus = '1' and busToCache.ack = '1' then
           
-          -- Update the cache line. Note that this only works if clkEnCPU is
-          -- high and that the data from the bus might not stay valid that
-          -- long. In this case, the synchronization data register will buffer
-          -- the data from the memory.
-          update <= '1';
-          memSyncRegEna <= '1';
-          if clkEnCPU = '1' then
-            nextState <= STATE_IDLE;
+          if busToCache.fault = '1' then
+            
+            -- Report a bus fault to the CPU. We can do this easily by just
+            -- enabling the synchronization register (which also stores the
+            -- fault flag) and going to the STATE_WAIT_FOR_CPU state.
+            memSyncRegEna <= '1';
+            nextState <= STATE_WAIT_FOR_CPU;
+            
           else
-            nextState <= STATE_UPDATE_2;
+            
+            -- Update the cache line. Note that this only works if clkEnCPU is
+            -- high and that the data from the bus might not stay valid that
+            -- long. In this case, the synchronization data register will buffer
+            -- the data from the memory.
+            update <= '1';
+            memSyncRegEna <= '1';
+            if clkEnCPU = '1' then
+              nextState <= STATE_IDLE;
+            else
+              nextState <= STATE_UPDATE_2;
+            end if;
+            
           end if;
           
         else
@@ -486,6 +504,7 @@ begin -- architecture
         -- Return the data read from the memory as stored in the
         -- synchronization register.
         readData <= memSyncRegData;
+        busFault <= memSyncRegFault;
         writeOrBypassStall <= '0';
         if clkEnCPU = '1' and stall = '0' then
           nextState <= STATE_IDLE;

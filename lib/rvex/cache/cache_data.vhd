@@ -153,6 +153,8 @@ entity cache_data is
     rv2dcache_writeEnable       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_bypass            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     dcache2rv_readData          : out rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_ifaceFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Bus master interface
@@ -234,6 +236,10 @@ architecture Behavioral of cache_data is
     -- Combined pipeline stall signal from the lane groups.
     stall                       : std_logic;
     
+    -- This signal goes high when multiple lanes within a coupled group try to
+    -- make requests at the same time; this is not supported.
+    ifaceFault                  : std_logic;
+    
   end record;
   
   -- Input routing network array types.
@@ -293,6 +299,11 @@ architecture Behavioral of cache_data is
     -- previous cycle.
     data                        : rvex_data_type;
     
+    -- This goes high when a bus fault occurs while reading from the bus or
+    -- while writing in bypass mode (writing without bypass mode cannot
+    -- generate bus faults at this time because of the write buffer, TODO?).
+    busFault                    : std_logic;
+    
   end record;
   
   -- Output routing network array types.
@@ -323,7 +334,11 @@ begin -- architecture
     -- Determine whether the cache must be updated due to a miss.
     inNetwork(0)(i).updateEnable <=
       outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r
-      and not outNetwork(RCFG.numLaneGroupsLog2)(i).hit;
+      and not (
+        outNetwork(RCFG.numLaneGroupsLog2)(i).hit
+        or outNetwork(RCFG.numLaneGroupsLog2)(i).busFault
+        or inNetwork(RCFG.numLaneGroupsLog2)(i).ifaceFault
+      );
     
     -- Data for write accesses.
     inNetwork(0)(i).writeData <= rv2dcache_writeData(i);
@@ -342,6 +357,9 @@ begin -- architecture
     
     -- Stall network input.
     inNetwork(0)(i).stall <= rv2dcache_stallOut(i);
+    
+    -- Interfacing fault input.
+    inNetwork(0)(i).ifaceFault <= '0';
     
   end generate;
   
@@ -420,19 +438,37 @@ begin -- architecture
           -- blocks work together.
           if inLo.decouple = '0' then
             
-            -- Hi input is always the master, so ignore the slave inputs and
-            -- forward the master inputs to both cache blocks.
-            outLo.addr        := inHi.addr;
-            outLo.readEnable  := inHi.readEnable;
-            outLo.writeData   := inHi.writeData;
-            outLo.writeMask   := inHi.writeMask;
-            outLo.writeEnable := inHi.writeEnable;
-            outLo.bypass      := inHi.bypass;
+            -- Select the request signals from the lane which is making the
+            -- request. If both are requesting, assert the ifaceFault signal
+            -- and disable both requests.
+            if inLo.readEnable = '1' or inLo.writeEnable = '1' then
+              outHi.addr        := inLo.addr;
+              outHi.readEnable  := inLo.readEnable;
+              outHi.writeData   := inLo.writeData;
+              outHi.writeMask   := inLo.writeMask;
+              outHi.writeEnable := inLo.writeEnable;
+              outHi.bypass      := inLo.bypass;
+              if inHi.readEnable = '1' or inHi.writeEnable = '1' then
+                outHi.readEnable  := '0';
+                outHi.writeEnable := '0';
+                outHi.ifaceFault  := '1';
+                outLo.readEnable  := '0';
+                outLo.writeEnable := '0';
+                outLo.ifaceFault  := '1';
+              end if;
+            else
+              outLo.addr        := inHi.addr;
+              outLo.readEnable  := inHi.readEnable;
+              outLo.writeData   := inHi.writeData;
+              outLo.writeMask   := inHi.writeMask;
+              outLo.writeEnable := inHi.writeEnable;
+              outLo.bypass      := inHi.bypass;
+            end if;
             
             -- If bypass is active, set the lo output request signals to idle,
             -- so only the highest indexed block will service the bypass
             -- access.
-            if inHi.bypass = '1' then
+            if inHi.bypass = '1' or inLo.bypass = '1' then
               outLo.readEnable  := '0';
               outLo.writeEnable := '0';
               outLo.bypass      := '0';
@@ -503,6 +539,7 @@ begin -- architecture
         route2block_stall         => inNetwork(RCFG.numLaneGroupsLog2)(i).stall,
         block2route_data          => outNetwork(0)(i).data,
         block2route_blockReconfig => outNetwork(0)(i).blockReconfig,
+        block2route_busFault      => outNetwork(0)(i).busFault,
         
         -- Bus master interface.
         dcache2bus_bus            => dcache2bus_bus(i),
@@ -612,6 +649,10 @@ begin -- architecture
             outLo.blockReconfig := inLo.blockReconfig or inHi.blockReconfig;
             outHi.blockReconfig := inLo.blockReconfig or inHi.blockReconfig;
             
+            -- Merge the bus fault signals.
+            outLo.busFault := inLo.busFault or inHi.busFault;
+            outHi.busFault := inLo.busFault or inHi.busFault;
+            
           end if;
           
           -- Assign the output signals.
@@ -637,19 +678,35 @@ begin -- architecture
     -- Stall output.
     dcache2rv_stallIn(i) <=
       
-      -- Stall due to read miss.
-      (outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r
-        and not outNetwork(RCFG.numLaneGroupsLog2)(i).hit
-        and not outNetwork(RCFG.numLaneGroupsLog2)(i).bypass_r)
-      
-      -- Write stall (either due to a miss for a sub-word write or due to the
-      -- write buffer being full).
-      or outNetwork(RCFG.numLaneGroupsLog2)(i).writeOrBypassStall;
+      -- Normal operation...
+      (
+        
+        -- Stall due to read miss.
+        (outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r
+          and not outNetwork(RCFG.numLaneGroupsLog2)(i).hit
+          and not outNetwork(RCFG.numLaneGroupsLog2)(i).bypass_r)
+        
+        -- Write stall (either due to a miss for a sub-word write or due to the
+        -- write buffer being full).
+        or outNetwork(RCFG.numLaneGroupsLog2)(i).writeOrBypassStall
+       
+      -- Faults.
+      ) and not (
+        outNetwork(RCFG.numLaneGroupsLog2)(i).busFault
+        or inNetwork(RCFG.numLaneGroupsLog2)(i).ifaceFault
+      );
     
     -- Block reconfiguration output. This is asserted when any of the coupled
     -- cache blocks are busy.
     dcache2rv_blockReconfig(i) <=
       outNetwork(RCFG.numLaneGroupsLog2)(i).blockReconfig;
+    
+    -- Fault outputs.
+    dcache2rv_ifaceFault(i) <=
+      inNetwork(RCFG.numLaneGroupsLog2)(i).ifaceFault;
+    
+    dcache2rv_busFault(i) <=
+      outNetwork(RCFG.numLaneGroupsLog2)(i).busFault;
     
   end generate;
   

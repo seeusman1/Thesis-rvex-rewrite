@@ -184,6 +184,7 @@ architecture Behavioral of rvsys_standalone_cachedCore is
   signal rv2icache_cancel       : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_instr        : rvex_syllable_array(2**CFG.core.numLanesLog2-1 downto 0);
   signal icache2rv_affinity     : std_logic_vector(2**CFG.core.numLaneGroupsLog2*CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_busFault     : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   
   -- Core data memory interface <-> cache.
   signal rv2dcache_addr         : rvex_address_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
@@ -193,6 +194,8 @@ architecture Behavioral of rvsys_standalone_cachedCore is
   signal rv2dcache_writeEnable  : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal rv2dcache_bypass       : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_readData     : rvex_data_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_ifaceFault   : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_busFault     : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   
   -- Cache to bus interface, before the arbiter.
   signal cache2bus_bus          : bus_mst2slv_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
@@ -268,6 +271,7 @@ begin -- architecture
       rv2imem_cancel            => rv2icache_cancel,
       imem2rv_instr             => icache2rv_instr,
       imem2rv_affinity          => icache2rv_affinity,
+      imem2rv_busFault          => icache2rv_busFault,
       
       -- Data memory interface.
       rv2dmem_addr              => rv2dcache_addr,
@@ -276,6 +280,8 @@ begin -- architecture
       rv2dmem_writeMask         => rv2dcache_writeMask,
       rv2dmem_writeEnable       => rv2dcache_writeEnable,
       dmem2rv_readData          => dcache2rv_readData,
+      dmem2rv_busFault          => dcache2rv_busFault,
+      dmem2rv_ifaceFault        => dcache2rv_ifaceFault,
       
       -- Control/debug bus interface.
       dbg2rv_addr               => dbg2rv_addr,
@@ -330,6 +336,7 @@ begin -- architecture
       rv2icache_cancel          => rv2icache_cancel,
       icache2rv_instr           => icache2rv_instr,
       icache2rv_affinity        => icache2rv_affinity,
+      icache2rv_busFault        => icache2rv_busFault,
       
       -- Data memory interface.
       rv2dcache_addr            => rv2dcache_addr,
@@ -339,6 +346,8 @@ begin -- architecture
       rv2dcache_writeEnable     => rv2dcache_writeEnable,
       rv2dcache_bypass          => rv2dcache_bypass,
       dcache2rv_readData        => dcache2rv_readData,
+      dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
+      dcache2rv_busFault        => dcache2rv_busFault,
       
       -- Bus master interface.
       cache2bus_bus             => cache2bus_bus,

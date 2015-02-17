@@ -1873,9 +1873,9 @@ begin -- architecture
       end if;
     end if;
     
-    -- If we don't have a memory unit which may be used, make sure this is not
-    -- a memory operation.
-    if (not HAS_MEM) or (cfg2pl_decouple = '0') then
+    -- If we don't have a memory unit, make sure this is not a memory
+    -- operation.
+    if not HAS_MEM then
       if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).memoryCtrl.isMemoryInstruction = '1' then
         flag := '1';
       end if;

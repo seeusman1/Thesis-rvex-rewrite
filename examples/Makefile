@@ -60,9 +60,9 @@ COMPILER = HP
 endif
 
 # Whether LIMMH from previous syllable pair is supported by the core
-# (limmhFromPreviousPair in the rvex CFG vector). Default = true.
+# (limmhFromPreviousPair in the rvex CFG vector). Default = false.
 ifndef LIMMH_PREV
-LIMMH_PREV = true
+LIMMH_PREV = false
 endif
 
 # Trace settings for the simulator (see cfgdefault.sim for more info)
@@ -156,11 +156,14 @@ endif
 #   Bit 3 = BR
 ifndef LANECONFIG
 ifeq ($(ISSUE_WIDTH), 2)
-LANECONFIG = 7B
+# LANECONFIG = 7B
+LANECONFIG = FB
 else ifeq ($(ISSUE_WIDTH), 4)
-LANECONFIG = 337B
+# LANECONFIG = 337B
+LANECONFIG = FBFB
 else
-LANECONFIG = 3333337B
+# LANECONFIG = 3333337B
+LANECONFIG = FBFBFBFB
 endif
 endif
 

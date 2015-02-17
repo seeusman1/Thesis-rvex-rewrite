@@ -156,6 +156,9 @@ entity cache_data_block is
     -- block is busy.
     block2route_blockReconfig   : out std_logic;
     
+    -- Bus fault output. This is asserted when a bus fault occurs.
+    block2route_busFault        : out std_logic;
+    
     ---------------------------------------------------------------------------
     -- Bus master interface
     ---------------------------------------------------------------------------
@@ -435,6 +438,7 @@ begin -- architecture
       stall                   => route2block_stall,
       blockReconfig           => block2route_blockReconfig,
       writeOrBypassStall      => block2route_writeOrBypassStall,
+      busFault                => block2route_busFault,
       
       -- Mux control signals.
       updateEnable            => route2block_updateEnable,

@@ -235,7 +235,7 @@ begin -- architecture
       rv2imem_PCs               => rv2imem_PCs,
       rv2imem_fetch             => rv2imem_fetch,
       imem2rv_instr             => imem2rv_instr,
-      imem2rv_fault             => imem2rv_fault,
+      imem2rv_busFault          => imem2rv_fault,
       
       -- Data memory interface.
       rv2dmem_addr              => rv2dmem_addr,
@@ -244,7 +244,7 @@ begin -- architecture
       rv2dmem_writeData         => rv2dmem_writeData,
       rv2dmem_readEnable        => rv2dmem_readEnable,
       dmem2rv_readData          => dmem2rv_readData,
-      dmem2rv_fault             => dmem2rv_fault,
+      dmem2rv_busFault          => dmem2rv_fault,
       
       -- Control/debug bus interface.
       dbg2rv_addr               => dbg2rv_addr,

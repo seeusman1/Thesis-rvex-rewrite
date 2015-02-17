@@ -84,6 +84,9 @@ entity cache_instr_missCtrl is
     -- Active high clock enable input for the bus domain.
     clkEnBus                    : in  std_logic;
     
+    -- CPU stall output.
+    stall                       : in  std_logic;
+    
     -- CPU address/PC input.
     cpuAddr                     : in  rvex_address_type;
     
@@ -104,6 +107,10 @@ entity cache_instr_missCtrl is
     -- This signal is high when the controller is busy, signalling that
     -- reconfiguration is not possible at this time.
     blockReconfig               : out std_logic;
+    
+    -- Bus fault output. This is asserted when a bus fault occurs while
+    -- handling a miss.
+    busFault                    : out std_logic;
     
     -- Connections to the memory bus. Governed by clkEnBus.
     cacheToBus                  : out bus_mst2slv_type;
@@ -128,6 +135,9 @@ architecture Behavioral of cache_instr_missCtrl is
   -- When set, returns to idle state.
   signal resetState             : std_logic;
   
+  -- When set, the fault state is selected next.
+  signal fault                  : std_logic;
+  
   -- Next state.
   signal state_next             : natural range 0 to ACCESSES_PER_LINE+1;
   
@@ -135,6 +145,7 @@ architecture Behavioral of cache_instr_missCtrl is
   constant IDLE_STATE           : natural := 0;
   constant REQ_N_STATE          : natural := ACCESSES_PER_LINE;
   constant WAIT_STATE           : natural := ACCESSES_PER_LINE+1;
+  constant FAULT_STATE          : natural := ACCESSES_PER_LINE+2;
   
   -- Line buffer registers.
   signal line_buffer            : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
@@ -207,6 +218,7 @@ begin -- architecture
     -- Do nothing by default.
     advance <= '0';
     resetState <= '0';
+    fault <= '0';
     
     -- Figure out what to do next.
     if state = IDLE_STATE then
@@ -217,20 +229,29 @@ begin -- architecture
       if clkEnCPU = '1' then
         resetState <= '1';
       end if;
+    elsif state = FAULT_STATE then
+      if (clkEnCPU = '1') and (stall = '0') then
+        resetState <= '1';
+      end if;
     else
       if clkEnBus = '1' and busToCache.ack = '1' then
-        if clkEnCPU = '1' and state = REQ_N_STATE then
-          resetState <= '1';
+        if busToCache.fault = '1' then
+          fault <= '1';
         else
-          advance <= '1';
+          if clkEnCPU = '1' and state = REQ_N_STATE then
+            resetState <= '1';
+          else
+            advance <= '1';
+          end if;
         end if;
       end if;
     end if;
   end process;
   
   -- Determine the next state based on the advance and resetState signals.
-  state_next <= IDLE_STATE when resetState = '1' else
-                state + 1  when advance = '1' else
+  state_next <= IDLE_STATE  when resetState = '1' else
+                state + 1   when advance = '1' else
+                FAULT_STATE when fault = '1' else
                 state;
   
   -- Determine the memory bus address and whether we should request a read.
@@ -270,6 +291,9 @@ begin -- architecture
   
   -- Generate the done signal.
   done <= '1' when state_next = WAIT_STATE or resetState = '1' else '0';
+  
+  -- Generate the bus fault signal.
+  busFault <= '1' when state = FAULT_STATE else '0';
   
   -- Generate the blockReconfig signal.
   blockReconfig <= '1' when state /= IDLE_STATE else updateEnable;

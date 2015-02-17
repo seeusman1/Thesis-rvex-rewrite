@@ -104,6 +104,7 @@ entity cache_instr is
     rv2icache_fetch             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2icache_cancel            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+    icache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_affinity          : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
@@ -210,6 +211,10 @@ architecture Behavioral of cache_instr is
     -- valid.
     affinity                    : std_logic_vector(RCFG.numLaneGroupsLog2-1 downto 0);
     
+    -- Bus fault signal. This goes high when a bus fault occured while the
+    -- cache line was being validated.
+    busFault                    : std_logic;
+    
   end record;
   
   -- Output routing network array types.
@@ -239,8 +244,10 @@ begin -- architecture
     
     -- Determine whether the cache must be updated due to a miss.
     inNetwork(0)(i).updateEnable <=
-      outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r
-      and not outNetwork(RCFG.numLaneGroupsLog2)(i).hit;
+      outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r and not (
+        outNetwork(RCFG.numLaneGroupsLog2)(i).hit
+        or outNetwork(RCFG.numLaneGroupsLog2)(i).busFault
+      );
     
     -- Decouple bit network input.
     inNetwork(0)(i).decouple <= rv2icache_decouple(i);
@@ -388,6 +395,7 @@ begin -- architecture
         route2block_stall         => inNetwork(RCFG.numLaneGroupsLog2)(i).stall,
         block2route_line          => outNetwork(0)(i).line,
         block2route_blockReconfig => outNetwork(0)(i).blockReconfig,
+        block2route_busFault      => outNetwork(0)(i).busFault,
         
         -- Bus master interface.
         icache2bus_bus            => icache2bus_bus(i),
@@ -482,6 +490,10 @@ begin -- architecture
             outLo.blockReconfig := inLo.blockReconfig or inHi.blockReconfig;
             outHi.blockReconfig := inLo.blockReconfig or inHi.blockReconfig;
             
+            -- Merge the bus fault signals.
+            outLo.busFault := inLo.busFault or inHi.busFault;
+            outHi.busFault := inLo.busFault or inHi.busFault;
+            
           end if;
           
           -- Assign the output signals.
@@ -540,8 +552,10 @@ begin -- architecture
     -- Stall output. If readEnable from the highest indexed coupled lane group
     -- is low, this is always low.
     icache2rv_stallIn(i)
-      <= outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r
-      and not outNetwork(RCFG.numLaneGroupsLog2)(i).hit;
+      <= outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r and not (
+        outNetwork(RCFG.numLaneGroupsLog2)(i).hit
+        or outNetwork(RCFG.numLaneGroupsLog2)(i).busFault
+      );
     
     -- Block reconfiguration output. This is asserted when any of the coupled
     -- cache blocks is busy.
@@ -554,6 +568,10 @@ begin -- architecture
       i*RCFG.numLaneGroupsLog2+RCFG.numLaneGroupsLog2-1
       downto i*RCFG.numLaneGroupsLog2
     ) <= outNetwork(RCFG.numLaneGroupsLog2)(i).affinity;
+    
+    -- Bus fault output.
+    icache2rv_busFault(i)
+      <= outNetwork(RCFG.numLaneGroupsLog2)(i).busFault;
     
   end generate;
   

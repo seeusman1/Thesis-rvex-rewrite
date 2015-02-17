@@ -107,6 +107,7 @@ entity cache is
     rv2icache_fetch             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2icache_cancel            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+    icache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_affinity          : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Data memory interface.
@@ -117,6 +118,8 @@ entity cache is
     rv2dcache_writeEnable       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_bypass            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     dcache2rv_readData          : out rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_ifaceFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Bus master interface
@@ -202,6 +205,7 @@ begin -- architecture
       rv2icache_cancel          => rv2icache_cancel,
       icache2rv_instr           => icache2rv_instr,
       icache2rv_affinity        => icache2rv_affinity,
+      icache2rv_busFault        => icache2rv_busFault,
       
       -- Bus master interface.
       icache2bus_bus            => icache2bus_bus,
@@ -244,6 +248,8 @@ begin -- architecture
       rv2dcache_writeEnable     => rv2dcache_writeEnable,
       rv2dcache_bypass          => rv2dcache_bypass,
       dcache2rv_readData        => dcache2rv_readData,
+      dcache2rv_busFault        => dcache2rv_busFault,
+      dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
       
       -- Bus master interface.
       dcache2bus_bus            => dcache2bus_bus,

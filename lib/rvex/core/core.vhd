@@ -302,9 +302,6 @@ entity core is
     -- bit is low, the pipelane group is a slave to the first higher-indexed
     -- group which has a high decouple bit. In such a case, the following
     -- interfacing rules apply:
-    --  - The signals from the rvex to the data memory from all groups with
-    --    decouple set low may be ignored; only the highest indexed pipelane
-    --    group in a core issues commands to the data memory.
     --  - All groups will issue instruction memory read commands regardless of
     --    decouple state. However, coupled groups will always make aligned
     --    accesses. In other words, you could for example only use the PC from
@@ -380,9 +377,9 @@ entity core is
     -- locality).
     imem2rv_affinity            : in  std_logic_vector(2**CFG.numLaneGroupsLog2*CFG.numLaneGroupsLog2-1 downto 0) := (others => '1');
     
-    -- Active high fault signal from the instruction memory. When high,
+    -- Active high fault signals from the instruction memory. When high,
     -- imem2rv_instr is assumed to be invalid and an exception will be thrown.
-    imem2rv_fault               : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    imem2rv_busFault            : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     ---------------------------------------------------------------------------
     -- Data memory interface
@@ -418,10 +415,11 @@ entity core is
     -- Data output from data memory to rvex.
     dmem2rv_readData            : in  rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Active high fault signal from the data memory. When high,
+    -- Active high fault signals from the data memory. When high,
     -- dmem2rv_readData is assumed to be invalid and an exception will be
     -- thrown.
-    dmem2rv_fault               : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    dmem2rv_ifaceFault          : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    dmem2rv_busFault            : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     ---------------------------------------------------------------------------
     -- Control/debug bus interface
@@ -706,7 +704,7 @@ begin -- architecture
     -- will be overwritten by the PC of the bundle which was being fetched in
     -- the pipelane.
     imem2ibuf_exception(laneGroup) <= (
-      active => imem2rv_fault(laneGroup),
+      active => imem2rv_busFault(laneGroup),
       cause  => rvex_trap(RVEX_TRAP_FETCH_FAULT),
       arg    => (others => '0')
     );
@@ -714,7 +712,7 @@ begin -- architecture
     -- There is only one data memory fault. Note that the arg parameter will be
     -- overwritten by the address which was being accessed in the pipelane.
     dmem2dmsw_exception(laneGroup) <= (
-      active => dmem2rv_fault(laneGroup),
+      active => dmem2rv_ifaceFault(laneGroup) or dmem2rv_busFault(laneGroup),
       cause  => rvex_trap(RVEX_TRAP_DMEM_FAULT),
       arg    => (others => '0')
     );
