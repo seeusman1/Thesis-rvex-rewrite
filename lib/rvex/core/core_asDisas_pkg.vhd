@@ -53,6 +53,7 @@ use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
 use rvex.simUtils_pkg.all;
 use rvex.simUtils_scanner_pkg.all;
+use rvex.core_intIface_pkg.all;
 use rvex.core_opcode_pkg.all;
 use rvex.core_trap_pkg.all;
 
@@ -312,15 +313,30 @@ package body core_asDisas_pkg is
           error := to_rvs("failed to parse stack offset numeric");
           return;
         end if;
-        if resolved(std_ulogic_vector(val(32 downto 21))) = 'X' then
-          error := to_rvs("branch offset out of range");
-          return;
+        if BRANCH_OFFS_SHIFT = 2 then
+          if resolved(std_ulogic_vector(val(32 downto 20))) = 'X' then
+            error := to_rvs("branch offset out of range");
+            return;
+          end if;
+          if to_integer(val(1 downto 0)) /= 0 then
+            error := to_rvs("branch offset not aligned to syllable");
+            return;
+          end if;
+          syllable(23 downto 5) := std_logic_vector(val(20 downto 2));
+        elsif BRANCH_OFFS_SHIFT = 3 then
+          if resolved(std_ulogic_vector(val(32 downto 21))) = 'X' then
+            error := to_rvs("branch offset out of range");
+            return;
+          end if;
+          if to_integer(val(2 downto 0)) /= 0 then
+            error := to_rvs("branch offset not aligned to syllable pair");
+            return;
+          end if;
+          syllable(23 downto 5) := std_logic_vector(val(21 downto 3));
+        else
+          report "BRANCH_OFFS_SHIFT (core_intIface_pkg.vhd) must be either 2 "
+               & "or 3." severity failure;
         end if;
-        if to_integer(val(2 downto 0)) /= 0 then
-          error := to_rvs("branch offset not aligned to syllable pair");
-          return;
-        end if;
-        syllable(23 downto 5) := std_logic_vector(val(21 downto 3));
         
       elsif matchAt(pattern, patternPos, "r#")
          or matchAt(pattern, patternPos, "b#")
@@ -675,9 +691,18 @@ package body core_asDisas_pkg is
           
           -- "%bt" --> Next PC + bit 23..5 in hex (branch target).
           pos := pos + 3;
-          branchOff(31 downto 22) := (others => syllable(23));
-          branchOff(21 downto 3) := syllable(23 downto 5);
-          branchOff(2 downto 0) := (others => '0');
+          if BRANCH_OFFS_SHIFT = 2 then
+            branchOff(31 downto 21) := (others => syllable(23));
+            branchOff(20 downto 2) := syllable(23 downto 5);
+            branchOff(1 downto 0) := (others => '0');
+          elsif BRANCH_OFFS_SHIFT = 3 then
+            branchOff(31 downto 22) := (others => syllable(23));
+            branchOff(21 downto 3) := syllable(23 downto 5);
+            branchOff(2 downto 0) := (others => '0');
+          else
+            report "BRANCH_OFFS_SHIFT (core_intIface_pkg.vhd) must be either 2 "
+                 & "or 3." severity failure;
+          end if;
           if PC_plusOne(31) /= 'U' then
             rvs_append(disassembly, '=');
             rvs_append(disassembly, rvs_hex(std_logic_vector(

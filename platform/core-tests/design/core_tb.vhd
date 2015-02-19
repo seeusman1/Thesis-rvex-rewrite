@@ -483,7 +483,7 @@ begin -- architecture
       rv2imem_cancel            => rv2imem_cancel,
       imem2rv_instr             => imem2rv_instr,
       imem2rv_affinity          => imem2rv_affinity,
-      imem2rv_fault             => imem2rv_fault,
+      imem2rv_busFault          => imem2rv_fault,
       
       -- Data memory interface.
       rv2dmem_addr              => rv2dmem_addr,
@@ -492,7 +492,7 @@ begin -- architecture
       rv2dmem_writeMask         => rv2dmem_writeMask,
       rv2dmem_writeEnable       => rv2dmem_writeEnable,
       dmem2rv_readData          => dmem2rv_readData,
-      dmem2rv_fault             => dmem2rv_fault,
+      dmem2rv_busFault          => dmem2rv_fault,
       
       -- Control/debug bus interface.
       dbg2rv_addr               => dbg2rv_addr,

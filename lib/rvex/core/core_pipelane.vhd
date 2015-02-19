@@ -1780,12 +1780,26 @@ begin -- architecture
     s(S_IF+L_IF).opcode := s(S_IF+L_IF).syllable(rvex_opcode_type'range);
     
     -- Decode branch offset immediate.
-    s(S_IF+L_IF).br.branchOffset := (
-      31 downto 22 => s(S_IF+L_IF).syllable(23), -- Replicate sign bit.
-      others       => '0'                        -- Zeros appended after value.
-    );
-    s(S_IF+L_IF).br.branchOffset(21 downto 3)
-      := s(S_IF+L_IF).syllable(23 downto 5);     -- Actual value.
+    if BRANCH_OFFS_SHIFT = 2 then
+      s(S_IF+L_IF).br.branchOffset := (
+        31 downto 21 => s(S_IF+L_IF).syllable(23), -- Replicate sign bit.
+        others       => '0'                        -- Zeros appended after value.
+      );
+      s(S_IF+L_IF).br.branchOffset(20 downto 2)
+        := s(S_IF+L_IF).syllable(23 downto 5);     -- Actual value.
+    elsif BRANCH_OFFS_SHIFT = 3 then
+      s(S_IF+L_IF).br.branchOffset := (
+        31 downto 22 => s(S_IF+L_IF).syllable(23), -- Replicate sign bit.
+        others       => '0'                        -- Zeros appended after value.
+      );
+      s(S_IF+L_IF).br.branchOffset(21 downto 3)
+        := s(S_IF+L_IF).syllable(23 downto 5);     -- Actual value.
+    else
+      assert false
+        report "BRANCH_OFFS_SHIFT (core_intIface_pkg.vhd) must be either 2 or "
+             & "3."
+        severity failure;
+    end if;
     
     -- Decode use-immediate control flag.
     s(S_IF+L_IF).dp.useImm
