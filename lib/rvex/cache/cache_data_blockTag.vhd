@@ -166,8 +166,8 @@ begin -- architecture
     if rising_edge(clk) then
       if enableCPU = '1' then
         if writeCpuTag = '1' then
-          ram_tag(to_integer(unsigned(cpuOffset))) <= cpuTag;
-          cpuTag_mem <= cpuTag;
+          ram_tag(to_integer(unsigned(cpuOffset))) <= cpuTag_r;
+          cpuTag_mem <= cpuTag_r;
         else
           cpuTag_mem <= ram_tag(to_integer(unsigned(cpuOffset)));
         end if;
