@@ -684,7 +684,7 @@ package body core_asDisas_pkg is
           
           -- "%bi" --> Bit 23..5 in signed decimal (rfi/return stack offset).
           pos := pos + 3;
-          rvs_append(disassembly, rvs_uint(syllable(23 downto 5)));
+          rvs_append(disassembly, rvs_int(syllable(23 downto 5)));
           next;
           
         elsif matchAt(syntax, pos+1, "bt") then

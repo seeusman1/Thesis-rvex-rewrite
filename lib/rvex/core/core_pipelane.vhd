@@ -2040,12 +2040,22 @@ begin -- architecture
         s(stage).dp.op1 := s(stage).dp.read1lo;
       end if;
       
-      -- Select operand 2. When using the branch offset, shift right by 3
-      -- because the 3 LSB of the branch offset are tied to 0 and we want to
+      -- Select operand 2. When using the branch offset, shift right by 2/3
+      -- because the 2/3 LSB of the branch offset are tied to 0 and we want to
       -- be able to update the stack pointer byte-oriented.
       if s(stage).dp.c.stackOp = '1' then
-        s(stage).dp.op2(28 downto 0) := s(stage).br.branchOffset(31 downto 3);
-        s(stage).dp.op2(31 downto 29) := (others => s(stage).br.branchOffset(31));
+        if BRANCH_OFFS_SHIFT = 2 then
+          s(stage).dp.op2(29 downto 0) := s(stage).br.branchOffset(31 downto 2);
+          s(stage).dp.op2(31 downto 30) := (others => s(stage).br.branchOffset(31));
+        elsif BRANCH_OFFS_SHIFT = 3 then
+          s(stage).dp.op2(28 downto 0) := s(stage).br.branchOffset(31 downto 3);
+          s(stage).dp.op2(31 downto 29) := (others => s(stage).br.branchOffset(31));
+        else
+          assert false
+            report "BRANCH_OFFS_SHIFT (core_intIface_pkg.vhd) must be either 2 or "
+                 & "3."
+            severity failure;
+        end if;
       elsif s(stage).dp.useImm = '1' then
         s(stage).dp.op2 := s(stage).dp.imm;
       else
