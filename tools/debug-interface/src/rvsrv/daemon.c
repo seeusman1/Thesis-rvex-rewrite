@@ -116,7 +116,7 @@ int daemonize(void) {
       return -1;
     }
   }
-  logfile = open(LOG_FILE, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP);
+  logfile = open(LOG_FILE, O_RDWR | O_CREAT, 00666);
   if (logfile == -1) {
     perror("Failed to open log file");
     return -1;

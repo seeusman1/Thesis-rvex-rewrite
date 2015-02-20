@@ -206,7 +206,7 @@ int run(commandLineArgs_t *args) {
     
     // Write to the .rvd-context file.
     unlink(".rvd-context");
-    f = open(".rvd-context", O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    f = open(".rvd-context", O_WRONLY | O_CREAT, 00644);
     if (f < 0) {
       perror("Could not open .rvd-context for writing");
       return -1;
@@ -1032,7 +1032,7 @@ int run(commandLineArgs_t *args) {
     
     // Open the file.
     unlink(args->params[1]);
-    f = open(args->params[1], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    f = open(args->params[1], O_WRONLY | O_CREAT, 00644);
     if (f < 0) {
       perror("Failed to open file for writing");
       return -1;
@@ -1334,7 +1334,7 @@ int run(commandLineArgs_t *args) {
     
     // Open the file.
     unlink(args->params[0]);
-    f = open(args->params[0], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    f = open(args->params[0], O_WRONLY | O_CREAT, 00644);
     if (f < 0) {
       perror("Failed to open file for writing");
       return -1;
