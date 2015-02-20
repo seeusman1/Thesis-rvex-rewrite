@@ -2334,11 +2334,13 @@ begin -- architecture
     end loop;
     
     -- The pipeline is also not idle when a trap is pending.
-    for stage in S_TRAP to S_BR loop
-      if (s(stage).br.trapPending = '1') or (s(stage).br.trapInfo.active = '1') then
-        idle := '0';
-      end if;
-    end loop;
+    if HAS_BR then
+      for stage in S_TRAP to S_BR loop
+        if (s(stage).br.trapPending = '1') or (s(stage).br.trapInfo.active = '1') then
+          idle := '0';
+        end if;
+      end loop;
+    end if;
     
     -- Store the idle signal in the pipeline for VHDL simulation, to align it
     -- with the rest of the lane information.
