@@ -182,7 +182,7 @@ int main(int argc, char **argv) {
   // Open output file for writing.
   if (ok && outputFile) {
     unlink(outputFile);
-    args.outputFile = open(outputFile, O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH);
+    args.outputFile = open(outputFile, O_WRONLY | O_CREAT, 00644);
     if (args.outputFile < 0) {
       perror("Failed to open output file for writing");
       ok = 0;

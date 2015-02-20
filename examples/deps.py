@@ -21,7 +21,7 @@ def scanDeps(obj):
     try:
       with open(path + "/" + obj + ".dep", "r") as myfile:
         deps += myfile.read().split()
-    except FileNotFoundError:
+    except (OSError, IOError):
       pass
   for obj in deps:
     if obj not in curObjs:
