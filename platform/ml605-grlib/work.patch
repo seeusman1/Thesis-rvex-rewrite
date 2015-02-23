@@ -1,6 +1,6 @@
 diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/config.vhd	2015-01-25 14:36:33.574656842 +0100
++++ work/config.vhd	2015-02-20 18:44:53.206526654 +0100
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -102,7 +102,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  end;
 diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf work/leon3mp.ucf
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf	2014-04-16 16:50:08.000000000 +0200
-+++ work/leon3mp.ucf	2015-01-25 14:36:33.575656842 +0100
++++ work/leon3mp.ucf	2015-02-20 18:44:53.206526654 +0100
 @@ -386,8 +386,8 @@ INST "ddr3ctrl/u_infrastructure/u_mmcm_a
  
  #NET  "heartbeat"                LOC = "AC24";   # ML605 GPIO LED 1
@@ -281,8 +281,8 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +
 diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/leon3mp.vhd	2015-01-25 14:36:33.576656842 +0100
-@@ -49,6 +49,13 @@ use work.pcie.all;
++++ work/leon3mp.vhd	2015-02-20 19:19:04.017428390 +0100
+@@ -49,6 +49,15 @@ use work.pcie.all;
  -- pragma translate_off
  use gaisler.sim.all;
  -- pragma translate_on
@@ -293,10 +293,12 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +use rvex.core_pkg.all;
 +use rvex.cache_pkg.all;
 +use rvex.rvsys_grlib_pkg.all;
++library unisim;
++use unisim.vcomponents.all;
  
  entity leon3mp is
    generic (
-@@ -67,12 +74,12 @@ entity leon3mp is
+@@ -67,12 +76,12 @@ entity leon3mp is
      clk_ref_n     : in    std_logic;
  
      -- PROM interface
@@ -315,7 +317,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  
      -- DDR3 memory
      ddr3_dq       : inout std_logic_vector(DQ_WIDTH-1 downto 0);
-@@ -92,7 +99,9 @@ entity leon3mp is
+@@ -92,7 +101,9 @@ entity leon3mp is
      ddr3_ck_n     : out   std_logic_vector(CK_WIDTH-1 downto 0);
  
      -- Debug support unit
@@ -326,7 +328,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  
      -- AHB Uart
      dsurx     : in    std_ulogic;
-@@ -150,7 +159,7 @@ entity leon3mp is
+@@ -150,7 +161,7 @@ entity leon3mp is
  
  
      -- Output signals to LEDs
@@ -335,7 +337,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
      );
  end;
  
-@@ -179,8 +188,8 @@ architecture rtl of leon3mp is
+@@ -179,8 +190,8 @@ architecture rtl of leon3mp is
    signal irqi : irq_in_vector(0 to CFG_NCPU-1);
    signal irqo : irq_out_vector(0 to CFG_NCPU-1);
  
@@ -346,7 +348,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  
    signal dsui : dsu_in_type;
    signal dsuo : dsu_out_type;
-@@ -245,9 +254,18 @@ architecture rtl of leon3mp is
+@@ -245,9 +256,18 @@ architecture rtl of leon3mp is
    constant VCO_FREQ  : integer := 1200000;                               -- MMCM VCO frequency in KHz
    constant CPU_FREQ   : integer := VCO_FREQ / CFG_MIG_CLK4;  -- cpu frequency in KHz
    constant I2C_FILTER : integer := (CPU_FREQ*5+50000)/100000+1;
@@ -367,7 +369,75 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  ----------------------------------------------------------------------
  ---  Reset and Clock generation  -------------------------------------
  ----------------------------------------------------------------------
-@@ -270,7 +288,7 @@ begin
+@@ -258,9 +278,64 @@ begin
+   erstn <= rstn;
+ 
+   -- Glitch free reset that can be used for the Eth Phy and flash memory
+-
+-  rst0 : rstgen generic map (acthigh => 1)
+-    port map (reset, clkm, lock, rstn, rstraw);
++  reset_block: block is
++    
++    signal lockTimeoutRst  : std_logic;
++    signal lockTimeoutA    : unsigned(12 downto 0) := (others => '0');
++    signal lockTimeoutB    : unsigned(13 downto 0) := (others => '0');
++    signal lockTimeout     : std_logic;
++    signal resetOrTimeout  : std_logic;
++    
++  begin
++    
++    -- Generate reset signal for the clock lock/PHY init timeout.
++    lockTimeoutRst <= reset or lock;
++    
++    -- Generate the lock/PHY timeout counters. Use the clkace 33 MHz clock
++    -- signal for this instead of clkm, because clkace always runs, whereas
++    -- clkm comes from an MMCM in the MIG, which is reset when we generate
++    -- a timeout.
++    lock_timeout_proc: process (clkace) is
++    begin
++      if rising_edge(clkace) then
++        if lockTimeoutRst = '1' then
++          lockTimeoutA  <= (others => '0');
++          lockTimeoutB  <= (others => '0');
++          lockTimeout   <= '0';
++        else
++          if lockTimeoutA(12) = '0' then
++            lockTimeoutA <= lockTimeoutA + 1;
++          else
++            lockTimeoutA <= (others => '0');
++            if lockTimeoutB(13) = '0' then
++              lockTimeoutB <= lockTimeoutB + 1;
++            else
++              lockTimeoutB <= (others => '0');
++            end if;
++          end if;
++          lockTimeout <= lockTimeoutB(12) and lockTimeoutB(11)
++                     and lockTimeoutB(10) and lockTimeoutB(9);
++        end if;
++      end if;
++    end process;
++    
++    -- Combine the incoming reset signal with the lock timeout.
++    resetOrTimeout <= reset or lockTimeout;
++    
++    -- Original reset generator.
++    rst0 : rstgen
++      generic map (
++        acthigh   => 1
++      )
++      port map (
++        rstin     => resetOrTimeout,
++        clk       => clkm,
++        clklock   => lock,
++        rstout    => rstn,
++        rstoutraw => rstraw
++      );
++    
++  end block;
+ 
+ ----------------------------------------------------------------------
+ ---  AHB CONTROLLER --------------------------------------------------
+@@ -270,7 +345,7 @@ begin
      generic map (defmast => CFG_DEFMST, split => CFG_SPLIT,
                   rrobin  => CFG_RROBIN, ioaddr => CFG_AHBIO, ioen => 1,
                   nahbm => CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE+CFG_PCIEXP,
@@ -376,7 +446,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
      port map (rstn, clkm, ahbmi, ahbmo, ahbsi, ahbso);
  
  ----------------------------------------------------------------------
-@@ -279,7 +297,7 @@ begin
+@@ -279,7 +354,7 @@ begin
  
    -- LEON3 processor
    nosh : if CFG_GRFPUSH = 0 generate
@@ -385,7 +455,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
        l3ft : if CFG_LEON3FT_EN /= 0 generate
          leon3ft0 : leon3ft		-- LEON3 processor
          generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU*(1-CFG_GRFPUSH), CFG_V8,
-@@ -287,7 +305,7 @@ begin
+@@ -287,7 +362,7 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -394,7 +464,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
  	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
          port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
-@@ -301,7 +319,7 @@ begin
+@@ -301,7 +376,7 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -403,7 +473,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  	  CFG_DFIXED, CFG_SCAN, CFG_MMU_PAGE)
          port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
      		irqi(i), irqo(i), dbgi(i), dbgo(i));
-@@ -310,7 +328,7 @@ begin
+@@ -310,7 +385,7 @@ begin
    end generate;
  
    sh : if CFG_GRFPUSH = 1 generate
@@ -412,7 +482,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
        l3ft : if CFG_LEON3FT_EN /= 0 generate
          leon3ft0 : leon3ftsh		-- LEON3 processor
          generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU, CFG_V8,
-@@ -318,7 +336,7 @@ begin
+@@ -318,7 +393,7 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -421,7 +491,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
  	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
          port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
-@@ -332,30 +350,36 @@ begin
+@@ -332,30 +407,36 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -464,7 +534,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  
        dsui.enable <= '1';
        led(2) <= dsuo.active;
-@@ -366,10 +390,66 @@ begin
+@@ -366,10 +447,66 @@ begin
    end generate;
  
    -- Debug UART
@@ -532,7 +602,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
      dsurx_pad : inpad generic map (level => cmos, voltage => x25v, tech  => padtech) port map (dsurx, dui.rxd);
      dsutx_pad : outpad generic map (level => cmos, voltage => x25v, tech => padtech) port map (dsutx, duo.txd);
      led(0) <= not dui.rxd;
-@@ -384,6 +464,113 @@ begin
+@@ -384,6 +521,113 @@ begin
    end generate;
  
  ----------------------------------------------------------------------
@@ -646,7 +716,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  ---  Memory controllers ----------------------------------------------
  ----------------------------------------------------------------------
  
-@@ -429,7 +616,7 @@ begin
+@@ -429,7 +673,7 @@ begin
  --  mig_gen : if (CFG_MIG_DDR2 = 1) generate
  
      ahb2mig0 : ahb2mig_ml605
@@ -657,7 +727,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
      rst => rstn, clk_ahb => clkm, clk_ddr => clk_ddr,
 diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile work/Makefile
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile	2014-04-16 16:50:08.000000000 +0200
-+++ work/Makefile	2015-01-25 14:36:33.576656842 +0100
++++ work/Makefile	2015-02-20 18:44:53.207526654 +0100
 @@ -1,5 +1,5 @@
  include .config
 -GRLIB=../..
@@ -784,7 +854,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  	coregen -b mig.xco -p mig.cgp
 diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd work/testbench.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/testbench.vhd	2015-01-25 14:36:33.576656842 +0100
++++ work/testbench.vhd	2015-02-20 18:44:53.207526654 +0100
 @@ -210,7 +210,7 @@ begin
        ddr3_ck_n     => ddr3_ck_n,
        
