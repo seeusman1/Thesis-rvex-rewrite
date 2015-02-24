@@ -52,7 +52,7 @@
 
 #include "traceParse.h"
 
-//#define DEBUG
+#define DEBUG
 
 /**
  * Scans count characters.
@@ -96,7 +96,7 @@ int getTracePacket(
   
   // Scan beyond zero padding.
   while ((*rawDataRemain) && !(**rawDataPtr)) {
-    (*rawDataRemain)++;
+    (*rawDataRemain)--;
     (*rawDataPtr)++;
   }
   
@@ -285,7 +285,7 @@ int getTracePacket(
   
   // Scan optional zero-padding at the end of a cycle.
   while ((*rawDataRemain) && !(**rawDataPtr)) {
-    (*rawDataRemain)++;
+    (*rawDataRemain)--;
     (*rawDataPtr)++;
     endOfCycle = 1;
   }
