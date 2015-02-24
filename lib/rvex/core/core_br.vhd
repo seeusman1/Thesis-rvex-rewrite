@@ -285,6 +285,10 @@ architecture Behavioral of core_br is
   -- than the "expected" normal PC+1 case.
   signal branching              : std_logic_vector(S_BR to S_BR);
   
+  -- Branch signal for the instruction fetch stage. This is high in both fetch
+  -- cycles after a branch if a double fetch was required due to misalignment.
+  signal branch                 : std_logic_vector(S_IF to S_IF);
+  
   -- This is an output of the next PC decoding logic. When high, the next PC
   -- should NOT be post-decremented by 1 in the case that a necessary LIMMH
   -- operation might be present in the previous pair. This is the case when the
@@ -704,6 +708,31 @@ begin -- architecture
   end process;
   
   -----------------------------------------------------------------------------
+  -- Register the branching signal in case of a double fetch
+  -----------------------------------------------------------------------------
+  -- We want to have a branching signal within the pipelane in the first VALID
+  -- fetch after a branch, which case branching on its own won't do in the case
+  -- of a double fetch. That's what this register is for.
+  branching_double_fetch_block: block is
+    signal branching_r  : std_logic;
+  begin
+    branching_double_fetch_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          branching_r <= '0';
+        elsif clkEn = '1' and stall = '0' then
+          branching_r <= branching(S_BR) and doubleFetch(S_IF);
+        end if;
+      end if;
+    end process;
+    
+    -- Determine whether the current instruction fetch is due to a branch.
+    branch(S_IF) <= branching(S_BR) or branching_r;
+    
+  end block;
+  
+  -----------------------------------------------------------------------------
   -- Determine which operation to perform next
   -----------------------------------------------------------------------------
   -- We're making alignment assumptions in this block if limmhFromPreviousPair
@@ -716,7 +745,7 @@ begin -- architecture
     severity failure;
   
   det_next_op: process (
-    nextPC, fetchPC, branching, doubleFetch, noLimmPrefetch,
+    nextPC, fetchPC, branching, branch, doubleFetch, noLimmPrefetch,
     cfg2br_numGroupsLog2, run, run_r, pl2br_trapPending, brkptEnable,
     nextPCMisaligned, stop, stop_r
   ) is
@@ -834,8 +863,12 @@ begin -- architecture
     -- Drive cancel/invalidate signals.
     br2cxplif_imemCancel(S_IF+L_IF)   <= branching(S_BR);
     br2cxplif_invalUntilBR(S_BR)      <= branching(S_BR);
+    
+    -- Drive branch signalling signal for the instruction buffer.
     br2cxplif_branch(S_IF)            <= branching(S_BR);
-    br2pl_isBranch(S_IF)              <= branching(S_BR);
+    
+    -- Drive branch signalling signals for the pipelane.
+    br2pl_isBranch(S_IF)              <= branch(S_IF);
     br2pl_isBranching(S_BR)           <= branching(S_BR);
     
     -- Generate simulation information.

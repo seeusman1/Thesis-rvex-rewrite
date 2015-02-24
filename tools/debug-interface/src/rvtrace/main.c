@@ -56,7 +56,7 @@
 #include "disasParse.h"
 #include "traceParse.h"
 
-#define FORMAT_LIKE_XSTSIM
+//#define FORMAT_LIKE_XSTSIM
 
 /**
  * Dumps symbol entries, PC and disassembly in an objdump-ish way.

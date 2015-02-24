@@ -526,6 +526,10 @@ entity core_pipelane is
     pl2sbit_PC_ind              : out rvex_address_array(S_STOP to S_STOP);
     pl2sbit_PC_fetchInd         : out rvex_address_array(S_STOP to S_STOP);
     
+    -- Stop bit input. Processed such that exactly one lane within a coupled
+    -- group has this bit set.
+    sbit2pl_stop                : in  std_logic_vector(S_STOP to S_STOP);
+    
     -- Syllable invalidation input.
     sbit2pl_invalidate          : in  std_logic_vector(S_STOP to S_STOP);
     
@@ -806,6 +810,9 @@ architecture Behavioral of core_pipelane is
   -----------------------------------------------------------------------------
   type traceState_type is record
     
+    -- High when this lane fetched the last valid syllable.
+    stop                        : std_logic;
+    
     -- High when this instruction performed a memory access.
     mem_enable                  : std_logic;
     
@@ -824,6 +831,7 @@ architecture Behavioral of core_pipelane is
   
   -- Default/initialization value for trap state.
   constant TRACE_STATE_DEFAULT : traceState_type := (
+    stop                        => '0',
     mem_enable                  => RVEX_UNDEF,
     others                      => (others => RVEX_UNDEF)
   );
@@ -1469,8 +1477,8 @@ begin -- architecture
     cxplif2pl_trapHandler, cxplif2pl_debugTrapEnable,
     
     -- Stop bit routing interface.
-    sbit2pl_invalidate, sbit2pl_valid, sbit2pl_syllable, sbit2pl_PC_ind,
-    sbit2pl_PC_fetchInd,
+    sbit2pl_stop, sbit2pl_invalidate, sbit2pl_valid, sbit2pl_syllable,
+    sbit2pl_PC_ind, sbit2pl_PC_fetchInd,
       
     -- Long immediate routing interface.
     limm2pl_enable, limm2pl_data, limm2pl_error,
@@ -2476,6 +2484,22 @@ begin -- architecture
       
       -- Forward validity information.
       pl2trace_data.valid           <= s(S_LAST).valid;
+      
+      -- Forward last-syllable-in-bundle information.
+      if CFG.genBundleSizeLog2 /= CFG.bundleAlignLog2 then
+        s(S_STOP).trace.stop := sbit2pl_stop(S_STOP);
+        pl2trace_data.stop <= s(S_LAST).trace.stop;
+      else
+        
+        -- If there is no stop bit information because stop bits are not
+        -- supported, generate the appropriate signal here.
+        if HAS_BR and cfg2pl_decouple = '1' then
+          pl2trace_data.stop <= '1';
+        else
+          pl2trace_data.stop <= '0';
+        end if;
+        
+      end if;
       
       -- Forward bundle program counter.
       if HAS_BR and cfg2pl_decouple = '1' then

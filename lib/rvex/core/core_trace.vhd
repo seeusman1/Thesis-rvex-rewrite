@@ -94,6 +94,11 @@ entity core_trace is
     -- Current encoded configuration word.
     cfg2any_configWord          : in  rvex_data_type;
     
+    -- Diagonal block matrix of n*n size, where n is the number of pipelane
+    -- groups. C_i,j is high when pipelane groups i and j are coupled/share a
+    -- context, or low when they don't.
+    cfg2any_coupled             : in  std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
+    
     -- Specifies the context associated with the indexed pipelane group.
     cfg2any_context             : in  rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
@@ -131,7 +136,9 @@ entity core_trace is
     trace2trsink_data           : out rvex_byte_type;
     
     -- When high, this is the last byte of this trace packet. This has the same
-    -- timing as the data signal.
+    -- timing as the data signal. FIXME: this signal doesn't work correctly
+    -- right now; if things are being traced for the last pipelane the last
+    -- byte pushed will not have this signal asserted.
     trace2trsink_end            : out std_logic;
     
     -- When high while push is high, the trace unit is stalled. While stalled,
@@ -267,18 +274,15 @@ architecture Behavioral of core_trace is
   --
   -- *** Reconfiguration fields ***
   --
-  constant I_CFG0               : natural := I_TA3 + 1;
-  constant I_CFG1               : natural := I_CFG0 + 1;
-  constant I_CFG2               : natural := I_CFG1 + 1;
-  constant I_CFG3               : natural := I_CFG2 + 1;
-  -- Only if FLAGS(0) = 1 and EXFLAGS(6) = 1. Only ever used in the highest
-  -- indexed lane.
-  --  - Bit 7..0: current configuration word.
+  constant I_CFG                : natural := I_TA3 + 1;
+  -- Only if FLAGS(0) = 1 and EXFLAGS(6) = 1. 
+  --  - Bit 2..0: context associated with the associated lane group.
+  --  - Bit 3: run flag (0 if running, 1 if halted).
   --
   -- *** (end) ***
   
   -- Total number of bytes in a completely filled packet.
-  constant PACKET_SIZE          : natural := I_CFG3 + 1;
+  constant PACKET_SIZE          : natural := I_CFG + 1;
   
   -- Packet type declarations.
   subtype packet_type is rvex_byte_array(0 to PACKET_SIZE-1);
@@ -315,7 +319,7 @@ begin -- architecture
     signal currentPC_valid      : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
     
     -- Runtime configuration word as currently reported.
-    signal currentConfig        : rvex_data_type;
+    signal currentConfig        : rvex_4bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace configuration type.
     type traceConfig_type is record
@@ -375,9 +379,31 @@ begin -- architecture
     
     -- Instantiate the packet buffer.
     packet_buffer_reg: process (clk) is
+      
+      -- Field validity flags for the trace packet for each lane.
+      variable traceMem         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+      variable traceReg         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+      variable traceTrap        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+      variable traceCfg         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+      
+      -- Whether there is any nonempty trace packet within the coupled lane
+      -- group, excluding PC information. This is used to determine whether PC
+      -- information should be logged regardless of branch(ing) state.
+      variable traceAnyInGroup  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+      
+      -- Whether any lane within the coupled lane groups committed an
+      -- instruction.
+      variable anyValid         : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+      
+      -- PC information from the previously computed lane (i.e. the next lane).
+      variable p_prev           : rvex_byte_array(0 to I_PC3);
+      
+      -- Scratch variables/temporaries.
+      variable n                : rvex_4bit_type;
       variable d                : pl2trace_data_type;
       variable p                : packet_type;
       variable c                : traceConfig_type;
+      
     begin
       if rising_edge(clk) then
         if reset = '1' then
@@ -386,7 +412,7 @@ begin -- architecture
           packetPending <= (others => '0');
           currentPC <= (others => (others => '0'));
           currentPC_valid <= (others => '0');
-          currentConfig <= (others => '0');
+          currentConfig <= (others => (others => '0'));
           
         elsif clkEn = '1' then
           
@@ -396,31 +422,115 @@ begin -- architecture
             packetPending <= (others => '0');
           end if;
           
-          -- Update the packet buffer contents if stall is low.
+          -- Determine whether there's memory, register or trap information to
+          -- trace.
+          traceMem := (others => '0');
+          traceReg := (others => '0');
+          traceTrap := (others => '0');
           for lane in 0 to 2**CFG.numLanesLog2-1 loop
-            if stallIn(lane2group(lane, CFG)) = '0' then
-              
-              -- Initialize the packet we're going to construct with the reset
-              -- state and load the trace configuration and incoming data for
-              -- this lane into c and d for shorthand notation.
-              p := (others => X"00");
-              c := traceConfig(lane2group(lane, CFG));
-              d := pl2trace_data(lane);
-              
-              ------------------
-              -- Trace the PC --
-              ------------------
+            c := traceConfig(lane2group(lane, CFG));
+            d := pl2trace_data(lane);
+            
+            -- Determine whether we need to trace memory in this lane.
+            traceMem(lane)  := c.enable
+                           and c.memEn
+                           and d.valid
+                           and d.mem_enable;
+            
+            -- Determine whether we need to trace register operations in this
+            -- lane.
+            traceReg(lane)  := c.enable
+                           and c.regEn
+                           and d.valid 
+                           and (d.reg_gpEnable
+                            or d.reg_linkEnable
+                            or d.reg_brEnable(0)
+                            or d.reg_brEnable(1)
+                            or d.reg_brEnable(2)
+                            or d.reg_brEnable(3)
+                            or d.reg_brEnable(4)
+                            or d.reg_brEnable(5)
+                            or d.reg_brEnable(6)
+                            or d.reg_brEnable(7));
+            
+            -- Determine whether we need to trace traps in this lane.
+            traceTrap(lane) := c.enable
+                           and c.trapEn
+                           and d.valid
+                           and d.trap_enable;
+            
+          end loop;
+          
+          -- Determine whether there's reconfiguration data to trace.
+          traceCfg := (others => '0');
+          for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+            n := cfg2any_configWord(laneGroup*4+3 downto laneGroup*4);
+            if traceEnable = '1' then
+              if n /= currentConfig(laneGroup) then
+                traceCfg(group2lastLane(laneGroup, CFG)) := '1';
+                if stallIn(laneGroup) = '0' then
+                  currentConfig(laneGroup) <= n;
+                end if;
+              end if;
+            else
+              if stallIn(laneGroup) = '0' then
+                currentConfig(laneGroup) <= (others => '0');
+              end if;
+            end if;
+          end loop;
+          
+          -- Determine traceAnyInGroup and anyValid, which are needed to
+          -- determine whether we should trace the PC (we want to always trace
+          -- the PC when anything else is traced).
+          traceAnyInGroup := (others => '0');
+          anyValid := (others => '0');
+          for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+            for lane in 0 to 2**CFG.numLanesLog2-1 loop
+              if cfg2any_coupled(lane2group(lane, CFG)*2**CFG.numLaneGroupsLog2 + laneGroup) = '1' then
+                
+                traceAnyInGroup(laneGroup)
+                  := traceAnyInGroup(laneGroup)
+                  or traceMem(lane)
+                  or traceReg(lane)
+                  or traceTrap(lane)
+                  or traceCfg(lane);
+                
+                anyValid(laneGroup)
+                  := anyValid(laneGroup)
+                  or pl2trace_data(lane).valid;
+                
+              end if;
+            end loop;
+          end loop;
+          
+          -- Update the packet buffer contents if stall is low.
+          p_prev := (others => X"00");
+          for lane in 2**CFG.numLanesLog2-1 downto 0 loop
+            
+            -- Initialize the packet we're going to construct with the reset
+            -- state and load the trace configuration and incoming data for
+            -- this lane into c and d for shorthand notation.
+            p := (others => X"00");
+            c := traceConfig(lane2group(lane, CFG));
+            d := pl2trace_data(lane);
+            
+            ------------------
+            -- Trace the PC --
+            ------------------
+            
+            -- If this lane has an active branch unit, determine whether its
+            -- state is worth tracing. If it does not, copy the state from
+            -- the coupled lane which does.
+            if d.pc_enable = '1' then
               
               -- Determine whether we need to trace the PC.
-              p(I_FLAGS)(7) := d.valid and c.enable and d.pc_enable and (
+              p(I_FLAGS)(7) := anyValid(lane2group(lane, CFG)) and c.enable and (
                 
                 -- Always need to trace if we're branching or have branched.
                 d.pc_isBranch or d.pc_isBranching
                 
-                -- Always trace when memory or register tracing is enabled,
-                -- because in this case the other lanes may be committing
-                -- stuff, and we'll want to know at which PC that happened.
-                or c.memEn or c.regEn
+                -- Always trace PC when something else is being traced.
+                or traceAnyInGroup(lane2group(lane, CFG))
                 
               );
               
@@ -444,138 +554,141 @@ begin -- architecture
               p(I_PC3)(7 downto 0) := d.pc_PC(31 downto 24);
               
               -- Update the currentPC register.
-              if p(I_FLAGS)(7) = '1' then
-                currentPC(lane)(1 downto 0) <= "00";
-                currentPC(lane)(31 downto 2) <= d.pc_PC(31 downto 2);
-                currentPC_valid(lane) <= '1';
-              end if;
-              
-              -----------------------------
-              -- Trace memory operations --
-              -----------------------------
-              
-              -- Determine whether we need to trace a memory operation.
-              p(I_FLAGS)(6) := d.valid
-                           and c.enable
-                           and d.mem_enable
-                           and c.memEn;
-              
-              -- Write the write mask into the packet.
-              p(I_MEMFLAGS)(3 downto 0) := d.mem_writeMask;
-              
-              -- Write the address to the packet.
-              p(I_MEMADDR0)(7 downto 0) := d.mem_address(7  downto  0);
-              p(I_MEMADDR1)(7 downto 0) := d.mem_address(15 downto  8);
-              p(I_MEMADDR2)(7 downto 0) := d.mem_address(23 downto 16);
-              p(I_MEMADDR3)(7 downto 0) := d.mem_address(31 downto 24);
-              
-              -- Write the data to the packet.
-              p(I_MEMDATA0)(7 downto 0) := d.mem_writeData(7  downto  0);
-              p(I_MEMDATA1)(7 downto 0) := d.mem_writeData(15 downto  8);
-              p(I_MEMDATA2)(7 downto 0) := d.mem_writeData(23 downto 16);
-              p(I_MEMDATA3)(7 downto 0) := d.mem_writeData(31 downto 24);
-              
-              -------------------------------
-              -- Trace register operations --
-              -------------------------------
-              
-              -- Determine the register update flags.
-              if d.reg_brEnable /= X"00" then
-                p(I_REGWFLAGS)(7) := '1';
-              else
-                p(I_REGWFLAGS)(7) := '0';
-              end if;
-              p(I_REGWFLAGS)(6) := d.reg_linkEnable;
-              if d.reg_gpEnable = '1' then
-                p(I_REGWFLAGS)(5 downto 0) := d.reg_gpAddress;
-              else
-                p(I_REGWFLAGS)(5 downto 0) := (others => '0');
-              end if;
-              
-              -- Determine whether we need to trace a register operation.
-              if (d.valid and c.enable and c.regEn) = '1' and p(I_REGWFLAGS) /= X"00" then
-                p(I_FLAGS)(5) := '1';
-              else
-                p(I_FLAGS)(5) := '0';
-              end if;
-              
-              -- Write the written integer to the packet.
-              p(I_REGWDATA0)(7 downto 0) := d.reg_intData(7  downto  0);
-              p(I_REGWDATA1)(7 downto 0) := d.reg_intData(15 downto  8);
-              p(I_REGWDATA2)(7 downto 0) := d.reg_intData(23 downto 16);
-              p(I_REGWDATA3)(7 downto 0) := d.reg_intData(31 downto 24);
-              
-              -- Write branch register update information to the packet.
-              p(I_REGWBRMASK)(7 downto 0) := d.reg_brEnable;
-              p(I_REGWBRDATA)(7 downto 0) := d.reg_brData;
-              
-              -----------------
-              -- Trace traps --
-              -----------------
-              
-              -- Determine whether we need to trace a trap.
-              p(I_EXFLAGS)(7) := d.valid
-                             and c.enable
-                             and d.trap_enable
-                             and c.trapEn;
-              
-              -- Write the trap cause to the packet.
-              p(I_TC)(7 downto 0) := d.trap_cause;
-              
-              -- Write the trap point to the packet.
-              p(I_TP0)(7 downto 0) := d.trap_point(7  downto  0);
-              p(I_TP1)(7 downto 0) := d.trap_point(15 downto  8);
-              p(I_TP2)(7 downto 0) := d.trap_point(23 downto 16);
-              p(I_TP3)(7 downto 0) := d.trap_point(31 downto 24);
-              
-              -- Write the trap argument to the packet.
-              p(I_TA0)(7 downto 0) := d.trap_arg(7  downto  0);
-              p(I_TA1)(7 downto 0) := d.trap_arg(15 downto  8);
-              p(I_TA2)(7 downto 0) := d.trap_arg(23 downto 16);
-              p(I_TA3)(7 downto 0) := d.trap_arg(31 downto 24);
-              
-              ---------------------------
-              -- Trace reconfiguration --
-              ---------------------------
-              
-              -- Only trace reconfiguration in the last lane.
-              if lane = 2**CFG.numLanesLog2-1 then
-                
-                -- Determine whether we need to trace reconfiguration and if so,
-                -- update the currentConfig register.
-                if traceEnable = '1' and currentConfig /= cfg2any_configWord then
-                  p(I_EXFLAGS)(6) := '1';
-                  currentConfig <= cfg2any_configWord;
-                else
-                  p(I_EXFLAGS)(6) := '0';
+              if stallIn(lane2group(lane, CFG)) = '0' then
+                if p(I_FLAGS)(7) = '1' then
+                  currentPC(lane)(1 downto 0) <= "00";
+                  currentPC(lane)(31 downto 2) <= d.pc_PC(31 downto 2);
+                  currentPC_valid(lane) <= '1';
                 end if;
-                
-                -- Write the trap argument to the packet.
-                p(I_CFG0)(7 downto 0) := cfg2any_configWord(7  downto  0);
-                p(I_CFG1)(7 downto 0) := cfg2any_configWord(15 downto  8);
-                p(I_CFG2)(7 downto 0) := cfg2any_configWord(23 downto 16);
-                p(I_CFG3)(7 downto 0) := cfg2any_configWord(31 downto 24);
-                
               end if;
               
-              -----------------------------------
-              -- Update packet buffer register --
-              -----------------------------------
+              -- Store the PC trace information for the next loop iteration;
+              -- the PC information will not necessarily be traced as being
+              -- part of the lane with the branch unit. Instead, it is
+              -- associated with the lane which has the stop bit set, so the
+              -- trace data interpreter implicitely knows how large the bundle
+              -- was.
+              p_prev := p(0 to I_PC3);
               
-              -- Enable the valid flag for EXFLAGS in FLAGS if EXFLAGS is
-              -- nonzero.
-              if p(I_EXFLAGS) /= X"00" then
-                p(I_FLAGS)(0) := '1';
-              end if;
+            else
               
-              -- Set the pending flag if any of the valid flags in FLAGS are
-              -- nonzero and buffer the constructed packet.
+              -- Take the PC information from the active branch unit lane.
+              p(0 to I_PC3) := p_prev;
+              
+            end if;
+            
+            -- Disable PC tracing in this lane if this lane does not have a
+            -- stop bit.
+            if d.stop = '0' then
+              p(I_FLAGS)(7) := '0';
+            end if;
+            
+            -----------------------------
+            -- Trace memory operations --
+            -----------------------------
+            
+            -- Set the field valid flag.
+            p(I_FLAGS)(6) := traceMem(lane);
+            
+            -- Write the write mask into the packet.
+            p(I_MEMFLAGS)(3 downto 0) := d.mem_writeMask;
+            
+            -- Write the address to the packet.
+            p(I_MEMADDR0)(7 downto 0) := d.mem_address(7  downto  0);
+            p(I_MEMADDR1)(7 downto 0) := d.mem_address(15 downto  8);
+            p(I_MEMADDR2)(7 downto 0) := d.mem_address(23 downto 16);
+            p(I_MEMADDR3)(7 downto 0) := d.mem_address(31 downto 24);
+            
+            -- Write the data to the packet.
+            p(I_MEMDATA0)(7 downto 0) := d.mem_writeData(7  downto  0);
+            p(I_MEMDATA1)(7 downto 0) := d.mem_writeData(15 downto  8);
+            p(I_MEMDATA2)(7 downto 0) := d.mem_writeData(23 downto 16);
+            p(I_MEMDATA3)(7 downto 0) := d.mem_writeData(31 downto 24);
+            
+            -------------------------------
+            -- Trace register operations --
+            -------------------------------
+            
+            -- Set the field valid flag.
+            p(I_FLAGS)(5) := traceReg(lane);
+            
+            -- Determine the register update flags.
+            if d.reg_brEnable /= X"00" then
+              p(I_REGWFLAGS)(7) := '1';
+            else
+              p(I_REGWFLAGS)(7) := '0';
+            end if;
+            p(I_REGWFLAGS)(6) := d.reg_linkEnable;
+            if d.reg_gpEnable = '1' then
+              p(I_REGWFLAGS)(5 downto 0) := d.reg_gpAddress;
+            else
+              p(I_REGWFLAGS)(5 downto 0) := (others => '0');
+            end if;
+            
+            -- Write the written integer to the packet.
+            p(I_REGWDATA0)(7 downto 0) := d.reg_intData(7  downto  0);
+            p(I_REGWDATA1)(7 downto 0) := d.reg_intData(15 downto  8);
+            p(I_REGWDATA2)(7 downto 0) := d.reg_intData(23 downto 16);
+            p(I_REGWDATA3)(7 downto 0) := d.reg_intData(31 downto 24);
+            
+            -- Write branch register update information to the packet.
+            p(I_REGWBRMASK)(7 downto 0) := d.reg_brEnable;
+            p(I_REGWBRDATA)(7 downto 0) := d.reg_brData;
+            
+            -----------------
+            -- Trace traps --
+            -----------------
+            
+            -- Set the field valid flag.
+            p(I_EXFLAGS)(7) := traceTrap(lane);
+            
+            -- Write the trap cause to the packet.
+            p(I_TC)(7 downto 0) := d.trap_cause;
+            
+            -- Write the trap point to the packet.
+            p(I_TP0)(7 downto 0) := d.trap_point(7  downto  0);
+            p(I_TP1)(7 downto 0) := d.trap_point(15 downto  8);
+            p(I_TP2)(7 downto 0) := d.trap_point(23 downto 16);
+            p(I_TP3)(7 downto 0) := d.trap_point(31 downto 24);
+            
+            -- Write the trap argument to the packet.
+            p(I_TA0)(7 downto 0) := d.trap_arg(7  downto  0);
+            p(I_TA1)(7 downto 0) := d.trap_arg(15 downto  8);
+            p(I_TA2)(7 downto 0) := d.trap_arg(23 downto 16);
+            p(I_TA3)(7 downto 0) := d.trap_arg(31 downto 24);
+            
+            ---------------------------
+            -- Trace reconfiguration --
+            ---------------------------
+            
+            -- Set the field valid flag.
+            p(I_EXFLAGS)(6) := traceCfg(lane);
+            
+            -- Write the configuration into the packet.
+            p(I_CFG)(7 downto 4) := (others => '0');
+            p(I_CFG)(3 downto 0) := cfg2any_configWord(
+              lane2group(lane, CFG)*4+3 downto lane2group(lane, CFG)*4
+            );
+            
+            -----------------------------------
+            -- Update packet buffer register --
+            -----------------------------------
+            
+            -- Enable the valid flag for EXFLAGS in FLAGS if EXFLAGS is
+            -- nonzero.
+            if p(I_EXFLAGS) /= X"00" then
+              p(I_FLAGS)(0) := '1';
+            end if;
+            
+            -- Set the pending flag if any of the valid flags in FLAGS are
+            -- nonzero and buffer the constructed packet.
+            if stallIn(lane2group(lane, CFG)) = '0' then
               if p(I_FLAGS) /= X"00" then
                 packetPending(lane) <= '1';
               end if;
               packetBuffers(lane) <= p;
-              
             end if;
+            
           end loop;
         end if;
         
@@ -831,11 +944,11 @@ begin -- architecture
                 
                 -- Trap information does not need to be traced. Skip to
                 -- reconfiguration data.
-                skip(nextByte => I_CFG0);
+                skip(nextByte => I_CFG);
                 
               end if;
               
-            when I_CFG0 =>
+            when I_CFG =>
               
               if currentPacket(I_EXFLAGS)(6) = '0' then
                 

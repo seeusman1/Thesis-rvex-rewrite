@@ -91,6 +91,10 @@ entity core_stopBitRouting is
     pl2sbit_PC_ind              : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     pl2sbit_PC_fetchInd         : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
+    -- Stop bit output. Processed such that exactly one lane within a coupled
+    -- group has this bit set.
+    sbit2pl_stop                : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
     -- Invalidation output for each pipelane. When high, the pipelane should
     -- not execute/commit its syllable.
     sbit2pl_invalidate          : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -139,11 +143,11 @@ begin -- architecture
   begin
     
     -- Initialize the routing network variables.
-    invalidate  := '0';
-    branchValid := '0';
-    syllable    := pl2sbit_syllable(0);     -- Don't care.
-    PC_ind      := pl2sbit_PC_ind(0);       -- Don't care.
-    PC_fetchInd := pl2sbit_PC_fetchInd(0);  -- Don't care.
+    invalidate    := '0';
+    branchValid   := '0';
+    syllable      := pl2sbit_syllable(0);     -- Don't care.
+    PC_ind        := pl2sbit_PC_ind(0);       -- Don't care.
+    PC_fetchInd   := pl2sbit_PC_fetchInd(0);  -- Don't care.
     
     for lane in 0 to 2**CFG.numLanesLog2-1 loop
       
@@ -155,7 +159,8 @@ begin -- architecture
         end if;
       end if;
       
-      -- Set defaults for the syllable related outputs.
+      -- Set defaults for the outputs.
+      sbit2pl_stop(lane)            <= '0';
       sbit2pl_invalidate(lane)      <= invalidate;
       sbit2pl_valid(lane)           <= '0';
       sbit2pl_syllable(lane)        <= syllable;
@@ -170,6 +175,9 @@ begin -- architecture
       -- Update the network signals.
       if (endsGroup or pl2sbit_stop(lane) = '1') and invalidate = '0' then
         invalidate  := '1';
+        
+        -- Report that this is the last valid syllable in the bundle.
+        sbit2pl_stop(lane) <= '1';
         
         -- Determine whether the incoming syllable is a branch operation.
         isBranch    := OPCODE_TABLE(vect2uint(pl2sbit_syllable(lane)(rvex_opcode_type'range))).branchCtrl.isBranchInstruction;

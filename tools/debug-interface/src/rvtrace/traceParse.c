@@ -52,14 +52,29 @@
 
 #include "traceParse.h"
 
+//#define DEBUG
+
 /**
  * Scans count characters.
  */
+#ifdef DEBUG
+#define SCAN(count) \
+  if (*rawDataRemain < count) return 0; \
+  d = *rawDataPtr; \
+  (*rawDataPtr) += count; \
+  (*rawDataRemain) -= count \
+  ; {int ii; for (ii = 0; ii < count; ii++) fprintf(stderr, "Scanned 0x%02X\n", d[ii]);}
+#define REPORT(s) fprintf(stderr, s)
+#define REPORT2(s, d) fprintf(stderr, s, d)
+#else
 #define SCAN(count) \
   if (*rawDataRemain < count) return 0; \
   d = *rawDataPtr; \
   *rawDataPtr += count; \
-  *rawDataRemain -= count \
+  *rawDataRemain -= count
+#define REPORT(s) ;
+#define REPORT2(s, d) ;
+#endif
 
 /**
  * Decodes the next trace packet. Returns 1 if a normal packet was encountered,
@@ -81,9 +96,11 @@ int getTracePacket(
   
   // Scan beyond zero padding.
   while ((*rawDataRemain) && !(**rawDataPtr)) {
-    *rawDataRemain++;
-    *rawDataPtr++;
+    (*rawDataRemain)++;
+    (*rawDataPtr)++;
   }
+  
+  REPORT("Scanning new trace packet...\n");
   
   // If we're out of data, return 0.
   if (!(*rawDataRemain)) {
@@ -114,8 +131,11 @@ int getTracePacket(
     endOfCycle = 1;
   }
   
+  REPORT2("This is a packet for lane %d.\n", packet->lane);
+  
   // Scan PC information.
   if (packet->hasPC) {
+    REPORT("Scanning PC info...\n");
     SCAN(1);
     packet->hasBranched = 0;
     packet->pc = d[0] & 0xFC;
@@ -143,6 +163,7 @@ int getTracePacket(
   
   // Scan memory information.
   if (packet->hasMem) {
+    REPORT("Scanning memory info...\n");
     SCAN(1);
     switch (d[0]) {
       case 0x0: // Read word.
@@ -205,6 +226,7 @@ int getTracePacket(
   
   // Scan register information.
   if (hasRegs) {
+    REPORT("Scanning register info...\n");
     SCAN(1);
     packet->hasWrittenBranch = (d[0] & (1 << 7)) != 0;
     packet->hasWrittenLink   = (d[0] & (1 << 6)) != 0;
@@ -241,6 +263,7 @@ int getTracePacket(
   
   // Scan trap data.
   if (packet->hasTrapped) {
+    REPORT("Scanning trap info...\n");
     SCAN(9);
     packet->trapCause  = d[0];
     packet->trapPoint  = d[1];
@@ -255,18 +278,22 @@ int getTracePacket(
   
   // Scan reconfiguration data.
   if (packet->hasNewConfiguration) {
-    SCAN(4);
-    packet->newConfiguration  = d[0];
-    packet->newConfiguration |= ((uint32_t)d[1]) << 8;
-    packet->newConfiguration |= ((uint32_t)d[2]) << 16;
-    packet->newConfiguration |= ((uint32_t)d[3]) << 24;
+    REPORT("Scanning reconfiguration info...\n");
+    SCAN(1);
+    packet->newConfiguration = d[0] & 0x0F;
   }
   
   // Scan optional zero-padding at the end of a cycle.
   while ((*rawDataRemain) && !(**rawDataPtr)) {
-    *rawDataRemain++;
-    *rawDataPtr++;
+    (*rawDataRemain)++;
+    (*rawDataPtr)++;
     endOfCycle = 1;
+  }
+  
+  if (endOfCycle) {
+    REPORT("End of packet, end of cycle.\n");
+  } else {
+    REPORT("End of packet.\n");
   }
   
   return endOfCycle ? 2 : 1;
@@ -333,7 +360,7 @@ int getCycleInfo(
       }
       
       // If there already is a packet for this lane, something went wrong.
-      if (lanesValid && (1 << packet.lane)) {
+      if (lanesValid & (1 << packet.lane)) {
         fprintf(stderr, "Error: multiple packets designated for the same lane encountered in the same\n");
         fprintf(stderr, "cycle. This could indicate that the number of lanes are not configured properly\n");
         fprintf(stderr, "on the command line.\n");
@@ -348,7 +375,50 @@ int getCycleInfo(
         int c = (currentCfg >> ((i / (numLanes / numGroups)) * 4)) & 0xF;
         if (i == packet.lane) {
           if (c == contextToTrace) {
-            data->slot[slot] = packet;
+            
+            // Copy the data from each lane to the associated slot. Anything
+            // traced from lanes after the stop bit lane should be merged into
+            // the stop bit lane slot, because the hardware may move the last
+            // syllable in a bundle to the last physical lane instead of the
+            // lane which got the stop bit (because that's where the branch
+            // unit is).
+            if (!data->usedSlots) {
+              data->slot[slot] = packet;
+            } else {
+              if (packet.hasMem) {
+                if (data->slot[data->usedSlots-1].hasMem) {
+                  fprintf(stderr, "Error: multiple memory accesses recorded for the last syllable.\n");
+                  return -1;
+                }
+                data->slot[data->usedSlots-1].hasMem = packet.hasMem;
+                data->slot[data->usedSlots-1].memAddr = packet.memAddr;
+                data->slot[data->usedSlots-1].memWriteData = packet.memWriteData;
+              }
+              if (packet.hasWrittenGP) {
+                if (data->slot[data->usedSlots-1].hasWrittenGP) {
+                  fprintf(stderr, "Error: multiple GP register writes recorded for the last syllable.\n");
+                  return -1;
+                }
+                data->slot[data->usedSlots-1].hasWrittenGP = packet.hasWrittenGP;
+                data->slot[data->usedSlots-1].gpWriteData = packet.gpWriteData;
+              }
+              if (packet.hasWrittenLink) {
+                if (data->slot[data->usedSlots-1].hasWrittenLink) {
+                  fprintf(stderr, "Error: multiple link register writes recorded for the last syllable.\n");
+                  return -1;
+                }
+                data->slot[data->usedSlots-1].hasWrittenLink = packet.hasWrittenLink;
+                data->slot[data->usedSlots-1].linkWriteData = packet.linkWriteData;
+              }
+              if (packet.hasWrittenBranch) {
+                data->slot[data->usedSlots-1].linkWriteData &= ~data->slot[data->usedSlots-1].hasWrittenBranch;
+                data->slot[data->usedSlots-1].hasWrittenBranch |= packet.hasWrittenBranch;
+                data->slot[data->usedSlots-1].linkWriteData |= (packet.linkWriteData & packet.hasWrittenBranch);
+              }
+            }
+            
+            // Handle PC/branch information. The lane in which this resides
+            // indicates how many syllables were executed.
             if (packet.hasPC) {
               if (data->usedSlots) {
                 fprintf(stderr, "Error: PC was reported for multiple lanes within the same context.\n");
@@ -358,15 +428,20 @@ int getCycleInfo(
               data->pc = (packet.pc & packet.hasPC) | (data->pc & ~packet.hasPC);
               data->hasBranched = packet.hasBranched;
             }
+            
+            // Handle trap information.
             if (packet.hasTrapped) {
               data->hasTrapped = packet.hasTrapped;
               data->trapPoint = packet.trapPoint;
               data->trapCause = packet.trapCause;
               data->trapArg = packet.trapArg;
             }
+            
+            // Handle reconfiguration.
             if (packet.hasNewConfiguration) {
+              int shift = (i / (numLanes / numGroups)) * 4;
               data->hasNewConfiguration = 1;
-              data->config = packet.newConfiguration;
+              data->config = (data->config & ~(0xF << shift)) | (packet.newConfiguration << shift);
             }
           }
           break;
@@ -377,7 +452,7 @@ int getCycleInfo(
       }
       
       // Break if the cycle end marker has been scanned.
-      if (endOfCycle = 1) {
+      if (endOfCycle) {
         break;
       }
       

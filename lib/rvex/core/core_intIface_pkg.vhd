@@ -265,6 +265,12 @@ package core_intIface_pkg is
     -- Whether the instruction being represented was committed or not.
     valid                       : std_logic;
     
+    -- Whether this is the last syllable in the bundle. This is not simply the
+    -- stop bit from the raw syllables; it is processed by the stop bit routing
+    -- in such a way that exactly one lane within a coupled group has this bit
+    -- set.
+    stop                        : std_logic;
+    
     -- High when this lane contains an active branch unit.
     pc_enable                   : std_logic;
     

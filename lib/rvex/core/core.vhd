@@ -1138,6 +1138,7 @@ begin -- architecture
         
         -- Decoded configuration signals.
         cfg2any_configWord          => cfg2any_configWord,
+        cfg2any_coupled             => cfg2any_coupled,
         cfg2any_context             => cfg2any_context,
         cfg2any_active              => cfg2any_active,
         

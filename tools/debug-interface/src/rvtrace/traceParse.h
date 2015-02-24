@@ -110,7 +110,7 @@ typedef struct {
    * Reconfiguration information.
    */
   int hasNewConfiguration;
-  uint32_t newConfiguration;
+  uint8_t newConfiguration;
   
 } trace_packet_t;
 
