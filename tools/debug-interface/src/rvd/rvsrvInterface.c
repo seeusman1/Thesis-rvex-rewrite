@@ -48,6 +48,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <ctype.h>
 #include <string.h>
 #include <sys/types.h>
@@ -83,11 +84,9 @@ static char packetBuffer[MAX_PACKET_LEN+1];
  * 0 to indicate success.
  */
 static int rvsrv_connect(void) {
-  int sockfd; 
   struct addrinfo hints;
   struct addrinfo *addrInfo;
   struct addrinfo *curAddrInfo;
-  struct sockaddr_in *h;
   int retval;
   
   // Return success if we're already connected.
@@ -231,7 +230,6 @@ static char *transfer(void) {
         
         // There is space left in the buffer, handle the byte.
         if (d == ';') {
-          int retval;
           
           // Delimiter character: we've received the full reply.
           // Null-terminate the reply.
@@ -390,6 +388,7 @@ int rvsrv_stopServer(void) {
     return -1;
   }
   printf("Successfully requested rvsrv to close.\n");
+  return 0;
 }
 
 /**
@@ -402,7 +401,8 @@ int rvsrv_stopServer(void) {
  * will be set to this size. *readBuf must be freed by the caller.
  */
 static int executeReadWrite(int isWrite, int *fault, unsigned char **readBuf, int *readBufSize) {
-  char *ptr, *bufPtr;
+  char *ptr;
+  unsigned char *bufPtr;
   
   // Indicate that no buffer has been allocated yet and that no bus fault has
   // occured.
@@ -611,7 +611,7 @@ int rvsrv_readSingle(
  */
 int rvsrv_readBulk(
   uint32_t address,
-  uint32_t *buffer,
+  unsigned char *buffer,
   int size,
   uint32_t *faultCode
 ) {

@@ -170,7 +170,7 @@ static ringBuffer_t debugTxBuf;
  * to identify the last error. Positive return values are a file descriptor for
  * the open port. The port is opened in blocking mode.
  */
-int serial_open(const unsigned char *name, const int baud) {
+int serial_open(const char *name, const int baud) {
   int f;
   struct termios cfg;
   speed_t speed;
@@ -277,7 +277,6 @@ void serial_close(int *f) {
  * port into our buffer.
  */
 int serial_update(int f) {
-  int i;
 
   // Raw receive buffer. This is used in the raw read() call, after which all
   // data is pushed into the app and debug receive buffers. It may take more

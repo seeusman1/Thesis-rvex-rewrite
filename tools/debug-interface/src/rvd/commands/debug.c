@@ -47,88 +47,92 @@
  */
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <sys/stat.h>
+#include <string.h>
 
-#include "daemon.h"
-
-/**
- * Log file to use.
- */
-static const char *LOG_FILE = "/var/tmp/rvsrv.log";
+#include "commands.h"
+#include "entry.h"
+#include "types.h"
+#include "main.h"
+#include "definitions.h"
+#include "parser.h"
 
 /**
- * Turns the process into a daemon. stdout and stderr are redirected to
- * /var/tmp/rvsrv.log.
+ * Executes the debug commands (break, step, continue, etc.).
  */
-int daemonize(void) {
-  pid_t pid;
-  int logfile;
+int runDebug(commandLineArgs_t *args) {
+  const char *expr;
   
-  // Fork, allowing the parent process to terminate.
-  pid = fork();
-  if (pid == -1) {
-    perror("Failed to fork while daemonizing");
-    return -1;
-  } else if (pid) {
-    exit(EXIT_SUCCESS);
-    return 1;
+  if (isHelp(args) || (args->paramCount != 0)) {
+    printf(
+      "\n"
+      "Command usage:\n"
+      "  rvd break      rvd b        rvd execute \"_BREAK\"\n"
+      "  rvd step       rvd s        rvd execute \"_STEP\"\n"
+      "  rvd resume                  rvd execute \"_RESUME\"\n"
+      "  rvd continue   rvd c        rvd execute \"_RESUME\"\n"
+      "  rvd release                 rvd execute \"_RELEASE\"\n"
+      "  rvd reset      rvd rst      rvd execute \"_RESET\"\n"
+      "  rvd state      rvd ?        rvd execute \"_STATE\"\n"
+      "\n"
+      "The commands listed above can be used for debugging. They're just shorthand\n"
+      "notations for calling certain execute commands, as shown in the list above: all\n"
+      "the commands in each line are synonyms. To make use of these debugging commands,\n"
+      "the definitions used must be defined in a loaded memory map file.\n"
+      "\n"
+    );
+    return 0;
   }
   
-  // Start a new session for the daemon.
-  if (setsid() < 0) {
-    perror("Failed to become session leader while daemonizing");
+  // Decode the expression to execute.
+  if (
+    (!strcmp(args->command, "break")) ||
+    (!strcmp(args->command, "b"))
+  ) {
+    expr = "_BREAK";
+  } else if (
+    (!strcmp(args->command, "step")) ||
+    (!strcmp(args->command, "s"))
+  ) {
+    expr = "_STEP";
+  } else if (
+    (!strcmp(args->command, "resume")) ||
+    (!strcmp(args->command, "continue")) ||
+    (!strcmp(args->command, "c"))
+  ) {
+    expr = "_RESUME";
+  } else if (
+    (!strcmp(args->command, "release"))
+  ) {
+    expr = "_RELEASE";
+  } else if (
+    (!strcmp(args->command, "reset")) ||
+    (!strcmp(args->command, "rst"))
+  ) {
+    expr = "_RESET";
+  } else if (
+    (!strcmp(args->command, "state")) ||
+    (!strcmp(args->command, "?"))
+  ) {
+    expr = "_STATE";
+  } else {
+    fprintf(stderr, "An unknown error occured.\n");
     return -1;
   }
   
-  // Fork again, allowing the parent process to terminate.
-  signal(SIGHUP, SIG_IGN);
-  pid = fork();
-  if (pid == -1) {
-    perror("Failed to fork while daemonizing");
-    return -1;
-  } else if (pid) {
-    exit(EXIT_SUCCESS);
-    return 1;
-  }
-  
-  // Set the current working directory to the root directory.
-  if (chdir("/") == -1) {
-    perror("Failed to change working directory to /");
-    return -1;
-  }
-  
-  // Set the user file creation mask to zero.
-  umask(0);
-  
-  // Close and reopen standard file descriptors.
-  close(STDIN_FILENO);
-  if (open("/dev/null",O_RDONLY) == -1) {
-    perror("Failed to reopen stdin while daemonizing");
-    return -1;
-  }
-  if (unlink(LOG_FILE)) {
-    if (errno != ENOENT) {
-      perror("Failed to remove previous log file");
+  // Execute the expression.
+  FOR_EACH_CONTEXT(
+    value_t dummyValue;
+    
+    if (evaluate("_ALWAYS", &dummyValue, "") < 1) {
       return -1;
     }
-  }
-  logfile = open(LOG_FILE, O_RDWR | O_CREAT, 00666);
-  if (logfile == -1) {
-    perror("Failed to open log file");
-    return -1;
-  }
-  printf("Daemon process running now, moving log output to %s.\n", LOG_FILE);
-  dup2(logfile, STDOUT_FILENO);
-  dup2(logfile, STDERR_FILENO);
-  close(logfile);
+    
+    if (evaluate(expr, &dummyValue, "") < 1) {
+      return -1;
+    }
+    
+  );
   
-  // Success.
-  printf("rvsrv daemon started successfully.\n");
   return 0;
   
 }

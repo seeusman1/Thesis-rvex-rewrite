@@ -67,7 +67,7 @@ static int getBin(const unsigned char *str) {
   uint32_t hash = 0;
   int c;
   
-  while (c = *str++) {
+  while ((c = *str++)) {
     hash = c + (hash << 6) + (hash << 16) - hash;
   }
   
@@ -132,7 +132,7 @@ char *copyString(const char *str) {
  * if a new expansion was registered or -1 if a fatal error occured.
  */
 int defs_register(contextMask_t mask, const char *def, const char *expansion) {
-  int bin = getBin(def);
+  int bin = getBin((const unsigned char *)def);
   tableEntry_t *ptr;
   
   // See if there is a perfect match for this definition somewhere already; if
@@ -192,7 +192,7 @@ int defs_registerLocal(const char *def, const char *expansion) {
  * known.
  */
 const char *defs_expand(const char *def) {
-  int bin = getBin(def);
+  int bin = getBin((const unsigned char *)def);
   tableEntry_t *ptr;
   
   ptr = bins[bin];

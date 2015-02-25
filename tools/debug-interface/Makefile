@@ -72,15 +72,15 @@ all: $(BINDIR)/rvsrv $(BINDIR)/rvd $(BINDIR)/rvtrace
 
 $(BINDIR)/rvsrv: $(SRCDIR)/rvsrv/*.c $(SRCDIR)/common/*.c
 	mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) -I $(SRCDIR)/common -o $@ $^
+	$(CC) $(CFLAGS) -Wall -I $(SRCDIR)/common -o $@ $^
 
-$(BINDIR)/rvd: $(SRCDIR)/rvd/*.c $(SRCDIR)/common/*.c
+$(BINDIR)/rvd: $(SRCDIR)/rvd/*.c $(SRCDIR)/rvd/commands/*.c $(SRCDIR)/common/*.c
 	mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) -I $(SRCDIR)/common -o $@ $^
+	$(CC) $(CFLAGS) -Wall -I $(SRCDIR)/rvd -I $(SRCDIR)/rvd/commands -I $(SRCDIR)/common -o $@ $^
 
 $(BINDIR)/rvtrace: $(SRCDIR)/rvtrace/*.c $(SRCDIR)/common/*.c
 	mkdir -p $(BINDIR)
-	$(CC) $(CFLAGS) -I $(SRCDIR)/common -o $@ $^
+	$(CC) $(CFLAGS) -Wall -I $(SRCDIR)/common -o $@ $^
 
 clean:
 	rm -rf $(BINDIR)

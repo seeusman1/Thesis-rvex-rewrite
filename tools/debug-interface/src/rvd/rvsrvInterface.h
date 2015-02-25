@@ -52,6 +52,13 @@
 #include "types.h"
 
 /**
+ * Size of an rvsrv page: the maximum amount of bytes which can be transferred
+ * in a single operation.
+ */
+#define RVSRV_PAGE_SIZE_LOG2 12
+#define RVSRV_PAGE_SIZE (1 << (RVSRV_PAGE_SIZE_LOG2))
+
+/**
  * Stores the hostname and port to connect to internally. The connection is not
  * made until the first call to one of the read or write methods.
  */
@@ -89,7 +96,7 @@ int rvsrv_readSingle(
  */
 int rvsrv_readBulk(
   uint32_t address,
-  uint32_t *buffer,
+  unsigned char *buffer,
   int size,
   uint32_t *faultCode
 );

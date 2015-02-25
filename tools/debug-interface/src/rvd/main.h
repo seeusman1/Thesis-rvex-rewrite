@@ -53,7 +53,25 @@
 #include "entry.h"
 
 /**
- * Performs the command specified by args.
+ * Enumeration for the supported binary file types.
+ */
+typedef enum {
+  FT_UNKNOWN, FT_STRAIGHT, FT_SREC
+} filetype_t;
+
+/**
+ * Converts a filetype mnemonic into a filetype_t.
+ */
+filetype_t interpretFiletype(const char *filetype);
+
+/**
+ * Returns nonzero if the args specify a help command.
+ */
+int isHelp(const commandLineArgs_t *args);
+
+/**
+ * Performs the command specified by args, muxing between the com_[command]
+ * methods based on the command name.
  */
 int run(commandLineArgs_t *args);
 

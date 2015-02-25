@@ -65,7 +65,6 @@ static void dumpPC(int fd, uint32_t pc, trace_packet_t *extraData) {
   
   const char *disas;
   const char *symbols;
-  int b;
   
   // Get disassembly information.
   disasGet(pc, &disas, &symbols);

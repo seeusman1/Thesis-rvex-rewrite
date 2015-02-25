@@ -130,7 +130,7 @@ static int charVal(unsigned char c) {
  */
 static int syntaxError(unsigned char *command, int clientID, int scanPos) {
   
-  if (tcpServer_sendStr(debugServer, clientID, "Error, ") < 0) {
+  if (tcpServer_sendStr(debugServer, clientID, (const unsigned char *)"Error, ") < 0) {
     return -1;
   }
   while ((*command) && (*command != ',')) {
@@ -138,7 +138,7 @@ static int syntaxError(unsigned char *command, int clientID, int scanPos) {
       return -1;
     }
   }
-  if (tcpServer_sendStr(debugServer, clientID, ", Syntax;\n") < 0) {
+  if (tcpServer_sendStr(debugServer, clientID, (const unsigned char *)", Syntax;\n") < 0) {
     return -1;
   }
   
@@ -265,7 +265,7 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
   
   // Return a communication error if success is 0.
   if (!success) {
-    if (tcpServer_sendStr(debugServer, cbData->clientID, cbData->buffer ? "Error, Read, CommunicationError;\n" : "Error, Write, CommunicationError;\n") < 0) {
+    if (tcpServer_sendStr(debugServer, cbData->clientID, (const unsigned char *)(cbData->buffer ? "Error, Read, CommunicationError;\n" : "Error, Write, CommunicationError;\n")) < 0) {
       if (cbData->buffer) free(cbData->buffer);
       free(cbData);
       return 0;
@@ -276,17 +276,17 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
   }
   
   // Write the result tokens which are always present.
-  if (tcpServer_sendStr(debugServer, cbData->clientID, cbData->buffer ? "OK, Read, " : "OK, Write, ") < 0) {
+  if (tcpServer_sendStr(debugServer, cbData->clientID, (const unsigned char *)(cbData->buffer ? "OK, Read, " : "OK, Write, ")) < 0) {
     if (cbData->buffer) free(cbData->buffer);
     free(cbData);
     return 0;
   }
-  if (tcpServer_sendStr(debugServer, cbData->clientID, cbData->lastFault ? "Fault, " : "OK, ") < 0) {
+  if (tcpServer_sendStr(debugServer, cbData->clientID, (const unsigned char *)(cbData->lastFault ? "Fault, " : "OK, ")) < 0) {
     if (cbData->buffer) free(cbData->buffer);
     free(cbData);
     return 0;
   }
-  sprintf(str, "%08X, %d", cbData->address, cbData->bufSize);
+  sprintf((char *)str, "%08X, %d", cbData->address, cbData->bufSize);
   if (tcpServer_sendStr(debugServer, cbData->clientID, str) < 0) {
     if (cbData->buffer) free(cbData->buffer);
     free(cbData);
@@ -297,7 +297,7 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
   if (cbData->lastFault) {
     
     // Write fault code.
-    sprintf(str, ", %08X;\n", cbData->lastFaultCode);
+    sprintf((char *)str, ", %08X;\n", cbData->lastFaultCode);
     if (tcpServer_sendStr(debugServer, cbData->clientID, str) < 0) {
       if (cbData->buffer) free(cbData->buffer);
       free(cbData);
@@ -307,20 +307,20 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
   } else if (cbData->buffer) {
     
     // Dump the data buffer.
-    if (tcpServer_sendStr(debugServer, cbData->clientID, ", ") < 0) {
+    if (tcpServer_sendStr(debugServer, cbData->clientID, (const unsigned char *)", ") < 0) {
       free(cbData->buffer);
       free(cbData);
       return 0;
     }
     for (i = 0; i < cbData->bufSize; i++) {
-      sprintf(str, "%02hhX", cbData->buffer[i]);
+      sprintf((char *)str, "%02hhX", cbData->buffer[i]);
       if (tcpServer_sendStr(debugServer, cbData->clientID, str) < 0) {
         free(cbData->buffer);
         free(cbData);
         return 0;
       }
     }
-    if (tcpServer_sendStr(debugServer, cbData->clientID, ";\n") < 0) {
+    if (tcpServer_sendStr(debugServer, cbData->clientID, (const unsigned char *)";\n") < 0) {
       free(cbData->buffer);
       free(cbData);
       return 0;
@@ -329,7 +329,7 @@ static int onReadWriteComplete(int success, packet_t *tx, packet_t *rx, void *da
   } else {
     
     // No special token for writes.
-    if (tcpServer_sendStr(debugServer, cbData->clientID, ";\n") < 0) {
+    if (tcpServer_sendStr(debugServer, cbData->clientID, (const unsigned char *)";\n") < 0) {
       free(cbData);
       return 0;
     }
@@ -448,14 +448,14 @@ int handleReadWrite(unsigned char *command, int clientID) {
   
   // Make sure there's a comma in here somewhere. If not, we should return a
   // syntax error instead of dying in the next test.
-  if (!strchr(command, ',')) {
+  if (!strchr((char *)command, ',')) {
     return syntaxError(command, clientID, scanPos);
   }
   
   // Scan the "Read," or "Write,".
-  if (matchAt(command, "Read,", &scanPos)) {
+  if (matchAt(command, (const unsigned char *)"Read,", &scanPos)) {
     isWrite = 0;
-  } else if (matchAt(command, "Write,", &scanPos)) {
+  } else if (matchAt(command, (const unsigned char *)"Write,", &scanPos)) {
     isWrite = 1;
   } else {
     free(cbData);
@@ -517,7 +517,7 @@ int handleReadWrite(unsigned char *command, int clientID) {
   // Make sure the count is within range.
   if ((cbData->bufSize < 1) || (cbData->bufSize > 4096)) {
     free(cbData);
-    return tcpServer_sendStr(debugServer, clientID, isWrite ? "Error, Write, InvalidBufSize;\n" : "Error, Read, InvalidBufSize;\n");
+    return tcpServer_sendStr(debugServer, clientID, (const unsigned char *)(isWrite ? "Error, Write, InvalidBufSize;\n" : "Error, Read, InvalidBufSize;\n"));
   }
   
   // We should be at the end of the string for read commands, or we should have
@@ -759,7 +759,6 @@ int handleReadWrite(unsigned char *command, int clientID) {
         // somewhat valid.
         
         int numWords;
-        int page;
         
         // We can do a bulk read.
         

@@ -74,7 +74,6 @@ static void license(void);
 int main(int argc, char **argv) {
   
   commandLineArgs_t args;
-  int retval;
   
   // Set command line option defaults.
   args.port = "/dev/ttyS0";
@@ -175,7 +174,7 @@ int main(int argc, char **argv) {
   }
   
   // Exit gracefully.
-  printf("Shut down gracefully.\n", argv[0]);
+  printf("Shut down gracefully.\n");
   exit(EXIT_SUCCESS);
   
 }

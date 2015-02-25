@@ -50,23 +50,20 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 
 #include "tcpserv.h"
-
-/**
- * Temporary buffer used by update.
- */
-static unsigned char readBuffer[TCP_BUFFER_SIZE];
+#include "select.h"
 
 /**
  * Tries to open a TCP server socket at the given port. Returns null if
  * something goes wrong. Otherwise, returns a pointer to the newly allocated
  * server state structure.
  */
-tcpServer_t *tcpServer_open(int port, const unsigned char *access, tcpServer_extraData onAlloc, tcpServer_extraData onFree) {
+tcpServer_t *tcpServer_open(int port, const char *access, tcpServer_extraData onAlloc, tcpServer_extraData onFree) {
   tcpServer_t *server;
   struct sockaddr_in addr;
   int i;
@@ -189,7 +186,7 @@ int tcpServer_update(tcpServer_t *server) {
   // Accept new connections if necessary.
   if (select_isReady(server->listenDesc)) {
     struct sockaddr_in addr;
-    int addrSize = sizeof(addr);
+    unsigned int addrSize = sizeof(addr);
     int clientDesc;
     int f;
     uint32_t haddr;
@@ -437,7 +434,7 @@ int tcpServer_broadcast(tcpServer_t *server, int b) {
 /**
  * Sends null-terminated string s to the connection at index clientID.
  */
-int tcpServer_sendStr(tcpServer_t *server, int clientID, unsigned char *s) {
+int tcpServer_sendStr(tcpServer_t *server, int clientID, const unsigned char *s) {
   
   // Make sure this client exists and is connected.
   if ((clientID >= server->capacity) || (clientID < 0)) {
@@ -467,7 +464,7 @@ int tcpServer_sendStr(tcpServer_t *server, int clientID, unsigned char *s) {
 /**
  * Broadcasts null-terminated string s to all connected clients.
  */
-int tcpServer_broadcastStr(tcpServer_t *server, unsigned char *s) {
+int tcpServer_broadcastStr(tcpServer_t *server, const unsigned char *s) {
   int clientID;
   
   for (clientID = tcpServer_nextClient(server, -1); clientID >= 0; clientID = tcpServer_nextClient(server, clientID)) {

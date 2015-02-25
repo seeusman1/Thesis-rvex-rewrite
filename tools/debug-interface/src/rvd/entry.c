@@ -50,12 +50,14 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <signal.h>
+#include <string.h>
 
 #include "entry.h"
 #include "main.h"
 #include "parser.h"
 #include "definitions.h"
 #include "readFile.h"
+#include "rvsrvInterface.h"
 
 /**
  * Prints usage information.
@@ -94,7 +96,6 @@ static void sigTermHandler(int signum) {
 int main(int argc, char **argv) {
   
   commandLineArgs_t args;
-  int i;
   int contextSpecified = 0;
   char errorPrefix[1024];
   char *buf;
@@ -195,7 +196,7 @@ int main(int argc, char **argv) {
           *ptr = 0;
           break;
         }
-        *ptr++;
+        ptr++;
       }
       if (parseMask(buf, &(args.contextMask), " in .rvd-context") != 1) {
         fprintf(stderr,
@@ -247,6 +248,7 @@ int main(int argc, char **argv) {
   // Done.
   cleanupAndExit(EXIT_SUCCESS);
   
+  return EXIT_SUCCESS;
 }
 
 /**
@@ -318,7 +320,7 @@ static void usage(char *progName, int verbose) {
     "Also, \"%s help expressions\" prints information on how you can express things\n"
     "in rvd.\n"
     "\n",
-    progName
+    progName, progName
   );
 }
 

@@ -73,7 +73,6 @@ static void license(void);
 int main(int argc, char **argv) {
   
   commandLineArgs_t args;
-  int retval;
   char *progName = argv[0];
   char *outputFile = 0;
   char *traceFile = 0;

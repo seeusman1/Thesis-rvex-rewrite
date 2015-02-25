@@ -124,7 +124,7 @@ typedef struct {
    * Name for the server, should be either "debug" or "application". Used in
    * log messages.
    */
-  const unsigned char *access;
+  const char *access;
   
   /**
    * When not null, this is called when a client state structure is allocated.
@@ -144,7 +144,7 @@ typedef struct {
  * server state structure. access should be "debug" or "application". onAlloc
  * and onFree are called when a client state structure is allocated or freed.
  */
-tcpServer_t *tcpServer_open(int port, const unsigned char *access, tcpServer_extraData onAlloc, tcpServer_extraData onFree);
+tcpServer_t *tcpServer_open(int port, const char *access, tcpServer_extraData onAlloc, tcpServer_extraData onFree);
 
 /**
  * Tries to close the server specified by server, deallocates all memory, and
@@ -190,12 +190,12 @@ int tcpServer_broadcast(tcpServer_t *server, int b);
 /**
  * Sends null-terminated string s to the connection at index clientID.
  */
-int tcpServer_sendStr(tcpServer_t *server, int clientID, unsigned char *s);
+int tcpServer_sendStr(tcpServer_t *server, int clientID, const unsigned char *s);
 
 /**
  * Broadcasts null-terminated string s to all connected clients.
  */
-int tcpServer_broadcastStr(tcpServer_t *server, unsigned char *s);
+int tcpServer_broadcastStr(tcpServer_t *server, const unsigned char *s);
 
 /**
  * Flushes the write buffer for the specified client.

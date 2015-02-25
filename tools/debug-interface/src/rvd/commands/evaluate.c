@@ -48,87 +48,86 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
-#include <signal.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <string.h>
 
-#include "daemon.h"
+#include "main.h"
+#include "parser.h"
+#include "types.h"
+#include "utils.h"
+#include "srec.h"
+#include "rvsrvInterface.h"
+#include "commands.h"
+#include "definitions.h"
 
 /**
- * Log file to use.
+ * Executes "rvd evaluate" and "rvd execute" commands.
  */
-static const char *LOG_FILE = "/var/tmp/rvsrv.log";
-
-/**
- * Turns the process into a daemon. stdout and stderr are redirected to
- * /var/tmp/rvsrv.log.
- */
-int daemonize(void) {
-  pid_t pid;
-  int logfile;
+int runEvaluate(commandLineArgs_t *args) {
   
-  // Fork, allowing the parent process to terminate.
-  pid = fork();
-  if (pid == -1) {
-    perror("Failed to fork while daemonizing");
-    return -1;
-  } else if (pid) {
-    exit(EXIT_SUCCESS);
-    return 1;
+  if (isHelp(args) || (args->paramCount != 1)) {
+    printf(
+      "\n"
+      "Command usage:\n"
+      "  rvd evaluate <expression>\n"
+      "  rvd eval <expression>\n"
+      "  rvd execute <expression>\n"
+      "  rvd exec <expression>\n"
+      "\n"
+      "This command will evaluate the given expression for the context(s) selected\n"
+      "using \"rvd context\" or the -c or --context command line parameters. The\n"
+      "difference between evaluate and execute is that evaluate prints the resulting\n"
+      "value to stdout, whereas execute runs silently and relies solely on printf()\n"
+      "calls in the evaluated expression for output.\n"
+      "\n"
+      "Call \"rvd help expressions\" for more information on how expressions work.\n"
+      "\n"
+    );
+    return 0;
   }
   
-  // Start a new session for the daemon.
-  if (setsid() < 0) {
-    perror("Failed to become session leader while daemonizing");
-    return -1;
-  }
-  
-  // Fork again, allowing the parent process to terminate.
-  signal(SIGHUP, SIG_IGN);
-  pid = fork();
-  if (pid == -1) {
-    perror("Failed to fork while daemonizing");
-    return -1;
-  } else if (pid) {
-    exit(EXIT_SUCCESS);
-    return 1;
-  }
-  
-  // Set the current working directory to the root directory.
-  if (chdir("/") == -1) {
-    perror("Failed to change working directory to /");
-    return -1;
-  }
-  
-  // Set the user file creation mask to zero.
-  umask(0);
-  
-  // Close and reopen standard file descriptors.
-  close(STDIN_FILENO);
-  if (open("/dev/null",O_RDONLY) == -1) {
-    perror("Failed to reopen stdin while daemonizing");
-    return -1;
-  }
-  if (unlink(LOG_FILE)) {
-    if (errno != ENOENT) {
-      perror("Failed to remove previous log file");
+  FOR_EACH_CONTEXT(
+    
+    value_t value;
+    value_t dummyValue;
+    
+    // Execute the _ALWAYS definition.
+    if (evaluate("_ALWAYS", &dummyValue, "") < 1) {
       return -1;
     }
-  }
-  logfile = open(LOG_FILE, O_RDWR | O_CREAT, 00666);
-  if (logfile == -1) {
-    perror("Failed to open log file");
-    return -1;
-  }
-  printf("Daemon process running now, moving log output to %s.\n", LOG_FILE);
-  dup2(logfile, STDOUT_FILENO);
-  dup2(logfile, STDERR_FILENO);
-  close(logfile);
+    
+    // Evaluate the given command.
+    if (evaluate(args->params[0], &value, "") < 1) {
+      return -1;
+    }
+    
+    // Display the result for the evaluate command only.
+    if (
+      (!strcmp(args->command, "eval")) ||
+      (!strcmp(args->command, "evaluate"))
+    ) {
+      printf("Context %d: ", ctxt);
+      switch (value.size) {
+        case AS_BYTE:
+          printf("0x%02X = %u\n", value.value & 0xFF, value.value & 0xFF);
+          break;
+          
+        case AS_HALF:
+          printf("0x%04X = %u\n", value.value & 0xFFFF, value.value & 0xFFFF);
+          break;
+          
+        default:
+          printf("0x%08X = %u\n", value.value, value.value);
+          break;
+          
+      }
+      
+    }
+    
+  );
   
-  // Success.
-  printf("rvsrv daemon started successfully.\n");
   return 0;
   
 }

@@ -81,8 +81,8 @@ int getTracePacket(
   
   // Scan beyond zero padding.
   while ((*rawDataRemain) && !(**rawDataPtr)) {
-    *rawDataRemain++;
-    *rawDataPtr++;
+    (*rawDataRemain)--;
+    (*rawDataPtr)++;
   }
   
   // If we're out of data, return 0.
@@ -264,8 +264,8 @@ int getTracePacket(
   
   // Scan optional zero-padding at the end of a cycle.
   while ((*rawDataRemain) && !(**rawDataPtr)) {
-    *rawDataRemain++;
-    *rawDataPtr++;
+    (*rawDataRemain)--;
+    (*rawDataPtr)++;
     endOfCycle = 1;
   }
   
@@ -377,7 +377,7 @@ int getCycleInfo(
       }
       
       // Break if the cycle end marker has been scanned.
-      if (endOfCycle = 1) {
+      if (endOfCycle == 1) {
         break;
       }
       

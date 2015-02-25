@@ -46,55 +46,115 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef _SERIAL_H_
-#define _SERIAL_H_
+#ifndef _COMMANDS_H_
+#define _COMMANDS_H_
+
+#include "types.h"
+#include "entry.h"
 
 /**
- * Opens a serial port. Negative return values indicate failure as specified
- * by the documentation for open(), positive return values are a file
- * descriptor for the open port. The port is opened in blocking mode.
+ * This macro runs the code specified by contents for each selected context.
+ * Magic. Should be used only in functions which return -1 when an error
+ * occurs.
  */
-int serial_open(const char *name, const int baud);
+#define FOR_EACH_CONTEXT(contents) \
+{ \
+  value_t value; \
+  int ctxt, numContexts; \
+  int didAnything = 0; \
+  \
+  defs_setContext(0); \
+  if (evaluate("_NUM_CONTEXTS", &value, "") < 1) { \
+    fprintf(stderr, \
+      "Error: failed to expand or evaluate _NUM_CONTEXTS. Please define this value\n" \
+      "on the command line or by using \"-dall:_NUM_CONTEXTS:<count>\", or specify the\n" \
+      "value in a memory map file.\n" \
+    ); \
+    return -1; \
+  } \
+  numContexts = value.value; \
+  if ((numContexts < 1) || (numContexts > 32)) { \
+    fprintf(stderr, \
+      "Error: _NUM_CONTEXTS evaluates to %d, which is out of range. rvd supports up\n" \
+      "to 32 contexts.\n", \
+      numContexts \
+    ); \
+    return -1; \
+  } \
+  \
+  for (ctxt = 0; ctxt < numContexts; ctxt++) { \
+    \
+    if (args->contextMask & (1 << ctxt)) { \
+      \
+      defs_setContext(ctxt); \
+      \
+      { \
+        contents \
+      } \
+      \
+      didAnything = 1; \
+      \
+    } \
+    \
+  } \
+  \
+  if (!didAnything) { \
+    fprintf(stderr, \
+      "Error: none of the contexts which you have selected are within 0.._NUM_CONTEXTS.\n" \
+      "Use \"rvd select\" or the command line to select a different range of contexts.\n" \
+    ); \
+    return -1; \
+  } \
+}
 
 /**
- * Closes a previously opened serial port.
+ * Executes the "rvd select" command.
  */
-void serial_close(int *port);
+int runSelect(commandLineArgs_t *args);
 
 /**
- * Updates the serial port after a call to select_wait(). Reads data from the
- * port into our buffer.
+ * Executes "rvd evaluate" and "rvd execute" commands.
  */
-int serial_update(int f);
+int runEvaluate(commandLineArgs_t *args);
 
 /**
- * Writes all pending data in the transmit buffers to the serial port.
+ * Executes the "rvd stop" command.
  */
-int serial_flush(int f);
+int runStop(commandLineArgs_t *args);
 
 /**
- * Returns a byte from the application receive FIFO, or -1 if the FIFO is empty.
+ * Executes the "rvd write" command.
  */
-int serial_appReceive(int f);
+int runWrite(commandLineArgs_t *args);
 
 /**
- * Pushes a byte onto the application transmit buffer.
+ * Executes the "rvd read" command.
  */
-int serial_appSend(int f, int data);
+int runRead(commandLineArgs_t *args);
 
 /**
- * Returns a byte from the debug receive FIFO, or -1 if the FIFO is empty. 256
- * is returned as a packet delimiter.
+ * Executes the "rvd fill" command.
  */
-int serial_debugReceive(int f);
+int runFill(commandLineArgs_t *args);
 
 /**
- * Pushes a byte onto the debug transmit buffer when data lies between 0 and
- * 255, or pushes a packet delimiter when data is greater than or equal to
- * 256. In the latter case, the serial unit will ensure that at least
- * data-256 bytes are sent before the next packet completes, to give the
- * hardware time to send the reply.
+ * Executes the "rvd upload" command.
  */
-int serial_debugSend(int f, int data);
+int runUpload(commandLineArgs_t *args);
+
+/**
+ * Executes the "rvd download" command.
+ */
+int runDownload(commandLineArgs_t *args);
+
+/**
+ * Executes the "rvd trace" command.
+ */
+int runTrace(commandLineArgs_t *args);
+
+/**
+ * Executes the debug commands (break, step, continue, etc.).
+ */
+int runDebug(commandLineArgs_t *args);
 
 #endif

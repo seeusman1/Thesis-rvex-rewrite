@@ -228,7 +228,6 @@ static int scanOperator(const char **str, operator_t *op) {
   
   const char *ptr = *str;
   operator_t o;
-  int retval;
   
   if (!strncmp(ptr, "+",  1)) { o = OP_ADD;  ptr += 1; } else
   if (!strncmp(ptr, "-",  1)) { o = OP_SUB;  ptr += 1; } else
@@ -1727,7 +1726,7 @@ int parseDefs(char *str, const char *errorPrefix) {
     if (inComment) {
       *ptr = ' ';
     }
-    *ptr++;
+    ptr++;
   }
   
   // Scan all the definitions.
