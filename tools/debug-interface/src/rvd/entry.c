@@ -58,6 +58,7 @@
 #include "definitions.h"
 #include "readFile.h"
 #include "rvsrvInterface.h"
+#include "preload.h"
 
 /**
  * Prints usage information.
@@ -79,6 +80,9 @@ static void cleanupAndExit(int code) {
   
   // Clean up the definition hash map.
   defs_free();
+  
+  // Clean up the preload buffer.
+  preload_free();
   
   exit(code);
 }
@@ -308,13 +312,14 @@ static void usage(char *progName, int verbose) {
     "  download, dl         Downloads an S-record or binary file.\n"
     "\n"
     "Debugging:\n"
+    "  gdb                  Uses GDB for debugging.\n"
+    "  trace                Traces program execution (requires HW trace unit).\n"
     "  break, b             Stops execution on the selected contexts.\n"
     "  step, s              Executes the next bundle and stops again.\n"
     "  resume, continue, c  Resumes execution on the selected contexts.\n"
     "  release              Releases debugging control.\n"
     "  reset, rst           Soft-resets the selected contexts.\n"
     "  state, ?             Dumps context state.\n"
-    "  trace                Traces program execution (requires HW trace unit).\n"
     "\n"
     "Run \"%s help <command>\" for more information about a command, if available.\n"
     "Also, \"%s help expressions\" prints information on how you can express things\n"

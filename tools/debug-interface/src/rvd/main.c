@@ -59,7 +59,7 @@
 #include "utils.h"
 #include "srec.h"
 #include "rvsrvInterface.h"
-#include "commands.h"
+#include "commands/commands.h"
 
 /**
  * Converts a filetype mnemonic into a filetype_t.
@@ -155,6 +155,11 @@ int run(commandLineArgs_t *args) {
     (!strcmp(args->command, "?"))
   ) {
     return runDebug(args);
+    
+  } else if (
+    (!strcmp(args->command, "gdb"))
+  ) {
+    return runGdb(args);
     
   } else if (
     (!strcmp(args->command, "expressions"))
@@ -315,6 +320,24 @@ int run(commandLineArgs_t *args) {
         "    written. If any kind of error or a bus fault occurs, evaluation is\n"
         "    terminated. write() will choose its access size based upon the type attached\n"
         "    to value.\n"
+        "\n"
+        "  preload(address, byteCount)\n"
+        "    Preloads the specified block of memory using bulk read commands. byteCount\n"
+        "    may be at most 4096. The preloaded memory can be read using the read*Preload\n"
+        "    commands. Using a bulk read is a lot faster than issuing many volatile reads\n"
+        "    in a sequence, so the preload() function can be used to increase performance\n"
+        "    when many consequitive addresses are read at the same time. Only one block\n"
+        "    of memory can be preloaded at a time, so calling preload() will delete the\n"
+        "    previous buffer. This can be used to invalidate the preload buffer, by\n"
+        "    \"preloading\" a zero-byte block of memory.\n"
+        "\n"
+        "  readPreload(address)\n"
+        "  readBytePreload(address)\n"
+        "  readHalfPreload(address)\n"
+        "  readWordPreload(address)\n"
+        "    These functions behave the same as their non-preload counterparts, unless\n"
+        "    the requested value exists in the preload buffer, in which case that value\n"
+        "    is used in favor of querying the hardware.\n"
         "\n"
         "  printf(format, ...)\n"
         "    This method wraps part of the C printf method. Refer to C documentation on\n"

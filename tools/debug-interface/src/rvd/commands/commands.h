@@ -157,4 +157,9 @@ int runTrace(commandLineArgs_t *args);
  */
 int runDebug(commandLineArgs_t *args);
 
+/**
+ * Executes the "rvd gdb" command.
+ */
+int runGdb(commandLineArgs_t *args);
+
 #endif

@@ -55,6 +55,7 @@
 #include "parser.h"
 #include "definitions.h"
 #include "rvsrvInterface.h"
+#include "preload.h"
 
 /**
  * This is set to an error name when an error occurs within one of the scan*()
@@ -565,15 +566,21 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         (!strcmp(name, "read")) ||
         (!strcmp(name, "readByte")) ||
         (!strcmp(name, "readHalf")) ||
-        (!strcmp(name, "readWord"))
+        (!strcmp(name, "readWord")) ||
+        (!strcmp(name, "readPreload")) ||
+        (!strcmp(name, "readBytePreload")) ||
+        (!strcmp(name, "readHalfPreload")) ||
+        (!strcmp(name, "readWordPreload"))
       ) {
         int size;
         uint32_t readVal;
         char id;
+        int enablePreload;
         
         // Store an identifying character of the command name, then free the
         // command.
         id = name[4];
+        enablePreload = strlen(name) > 8;
         free(name);
         name = 0;
         
@@ -602,19 +609,38 @@ static int scanOperand(const char **str, value_t *value, int depth) {
             default : size = 4; v.size = AS_WORD; break;
           }
           
-          // Perform the access.
-          switch (rvsrv_readSingle(v.value, &readVal, size)) {
-            case 0:
-              sprintf(scanError, "failed to read from address 0x%08X; bus fault 0x%08X", v.value, readVal);
-              scanErrorPos = ptr;
-              return 0;
-              
-            case 1:
-              break;
-              
-            default:
-              return -1;
-              
+          // If this is a preload-enabled read, first see if the preload buffer
+          // contains the requested data. If it does, we don't need to query
+          // the rvex for the value.
+          if (enablePreload) {
+            switch (preload_read(v.value, &readVal, size)) {
+              case 0:
+                // Not preloaded.
+                enablePreload = 0;
+              case 1:
+                break;
+                
+              default:
+                return -1;
+                
+            }
+          }
+          
+          // Perform the access if the value was not preloaded.
+          if (!enablePreload) {
+            switch (rvsrv_readSingle(v.value, &readVal, size)) {
+              case 0:
+                sprintf(scanError, "failed to read from address 0x%08X; bus fault 0x%08X", v.value, readVal);
+                scanErrorPos = ptr;
+                return 0;
+                
+              case 1:
+                break;
+                
+              default:
+                return -1;
+                
+            }
           }
           
           // Return the read value.
@@ -698,6 +724,75 @@ static int scanOperand(const char **str, value_t *value, int depth) {
               return -1;
               
           }
+          
+        }
+        
+      // ----------------------------------------------------------------------
+      } else if (
+        (!strcmp(name, "preload"))
+      ) {
+        value_t address;
+        value_t count;
+        uint32_t fault;
+        
+        // We don't need the name anymore.
+        free(name);
+        name = 0;
+        
+        // Scan the start address.
+        if ((retval = scanExpression(&ptr, &address, depth)) < 1) {
+          return retval;
+        }
+        
+        // Scan the comma.
+        if (*ptr != ',') {
+          sprintf(scanError, "expected ','");
+          scanErrorPos = ptr;
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+        // Scan the number of bytes to preload.
+        if ((retval = scanExpression(&ptr, &count, depth)) < 1) {
+          return retval;
+        }
+        
+        // Scan the close parenthesis.
+        if (*ptr != ')') {
+          sprintf(scanError, "expected ')'");
+          scanErrorPos = ptr;
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+        // Don't do anything when depth is -1. This is used to just check for
+        // syntax errors.
+        if (depth != -1) {
+          
+          // Execute the preload command.
+          switch (preload_load(address.value, count.value, &fault)) {
+            case 0:
+              sprintf(
+                scanError,
+                "failed to preload address 0x%08X..0x%08X; bus fault 0x%08X",
+                address.value, address.value + count.value - 1, fault
+              );
+              scanErrorPos = ptr;
+              return 0;
+              
+            case 1:
+              break;
+              
+            default:
+              return -1;
+              
+          }
+          
+          // Always return 0.
+          v.value = 0;
+          v.size = AS_UNDEFINED;
           
         }
         

@@ -90,60 +90,7 @@ all:SCRP4                   { CREG_CTXT + 0x5C } # Scratch-pad register 4.
 # are no banking bits, so this does nothing.
 all:SET_BANK                { 0 }
 
-all:PRINT_STATE {
-  printf("Dumping state for context %d...\n\n", _CUR_CONTEXT);
-  
-  SET_BANK;
-  
-  # Special registers
-  printf("\033[1mSpecial regs:\033[0m\n");
-  printf("   PC = 0x%08X\n", readWord(PC));
-  printf(" l0.0 = 0x%08X\n\n", readWord(LR));
-  
-  # General purpose registers
-  printf("\033[1mGeneral purpose regs:\033[0m\n");
-  set(reg, 0);
-  while (reg < 64, (
-    set(val, readWord(CREG_GPREG + (reg*4)));
-    if (val, (
-      printf("\033[1;32m");
-    ));
-    printf("r0.%.2d = 0x%08X  \033[0m", reg, val);
-    set(reg, reg + 1);
-    if (!(reg & 3), (
-      printf("\n");
-    ));
-  ));
-  printf("\n");
-  
-  # Branch registers
-  printf("\033[1mBranch regs:\033[0m\n");
-  set(val, readByte(BR));
-  set(reg, 0);
-  while (reg < 8, (
-    if (val & (1 << reg), (
-      printf("\033[1;32m b0.%d = true        \033[0m", reg);
-    ), (
-      printf(" b0.%d = false       \033[0m", reg);
-    ));
-    
-    set(reg, reg + 1);
-    if (!(reg & 3), (
-      printf("\n");
-    ));
-  ));
-  printf("\n");
-  
-  # Performance counters
-  printf("\033[1mPerformance counters:\033[0m\n");
-  printf("            Active cycles = %u\n", readWord(C_CYC));
-  printf("           Stalled cycles = %u\n", readWord(C_STALL));
-  printf("   Committed bundle count = %u\n", readWord(C_BUN));
-  printf(" Committed syllable count = %u\n", readWord(C_SYL));
-  printf("      Committed NOP count = %u\n", readWord(C_NOP));
-  printf("\n");
-  
-}
+all:PRINT_STATE { _STATE }
 
 # Waits for completion of a program and then prints statistics. Should only be
 # called using a single context.
@@ -281,6 +228,59 @@ all:_RESET_BREAK {
   
 # This is evaluated when "rvd state" is called.
 all:_STATE {
-  PRINT_STATE;
+  
+  printf("Dumping state for context %d...\n\n", _CUR_CONTEXT);
+  
+  SET_BANK;
+  
+  # Special registers
+  printf("\033[1mSpecial regs:\033[0m\n");
+  printf("   PC = 0x%08X\n", readWord(PC));
+  printf(" l0.0 = 0x%08X\n\n", readWord(LR));
+  
+  # General purpose registers
+  printf("\033[1mGeneral purpose regs:\033[0m\n");
+  preload(CREG_GPREG, 256);
+  set(reg, 0);
+  while (reg < 64, (
+    set(val, readWordPreload(CREG_GPREG + (reg*4)));
+    if (val, (
+      printf("\033[1;32m");
+    ));
+    printf("r0.%.2d = 0x%08X  \033[0m", reg, val);
+    set(reg, reg + 1);
+    if (!(reg & 3), (
+      printf("\n");
+    ));
+  ));
+  printf("\n");
+  
+  # Branch registers
+  printf("\033[1mBranch regs:\033[0m\n");
+  set(val, readByte(BR));
+  set(reg, 0);
+  while (reg < 8, (
+    if (val & (1 << reg), (
+      printf("\033[1;32m b0.%d = true        \033[0m", reg);
+    ), (
+      printf(" b0.%d = false       \033[0m", reg);
+    ));
+    
+    set(reg, reg + 1);
+    if (!(reg & 3), (
+      printf("\n");
+    ));
+  ));
+  printf("\n");
+  
+  # Performance counters
+  printf("\033[1mPerformance counters:\033[0m\n");
+  printf("            Active cycles = %u\n", readWord(C_CYC));
+  printf("           Stalled cycles = %u\n", readWord(C_STALL));
+  printf("   Committed bundle count = %u\n", readWord(C_BUN));
+  printf(" Committed syllable count = %u\n", readWord(C_SYL));
+  printf("      Committed NOP count = %u\n", readWord(C_NOP));
+  printf("\n");
+  
 }
 
