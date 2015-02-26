@@ -46,17 +46,14 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef _GDB_MAIN_H_
-#define _GDB_MAIN_H_
+#ifndef _RSP_H_
+#define _RSP_H_
 
 /**
- * Main method for the gdb RSP server.
+ * Processes incoming RSP packets from gdb. conn should be set to the file
+ * descriptor for the socket, so replies can be sent. Returns 0 on success or
+ * -1 on failure; in the latter case an error is printed to stderr.
  */
-int gdb_main(const char **params, int paramCount);
-
-/**
- * Cleans up the resources which are used here.
- */
-void gdb_cleanup(void);
+int rsp_receiveBuf(char *buf, int bufLen, int conn);
 
 #endif

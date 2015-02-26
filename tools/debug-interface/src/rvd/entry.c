@@ -59,6 +59,7 @@
 #include "readFile.h"
 #include "rvsrvInterface.h"
 #include "preload.h"
+#include "gdb/gdb-main.h"
 
 /**
  * Prints usage information.
@@ -74,6 +75,9 @@ static void license(void);
  * Calls cleanup methods and exits with the specified code.
  */
 static void cleanupAndExit(int code) {
+  
+  // Clean up gdb stuff for the gdb command.
+  gdb_cleanup();
   
   // Close the connection to rvsrv if it is open.
   rvsrv_close();
