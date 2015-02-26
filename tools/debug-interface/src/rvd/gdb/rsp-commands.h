@@ -46,15 +46,16 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#include <stdio.h>
-
-#include "rsp.h"
+#ifndef _RSP_COMMANDS_H_
+#define _RSP_COMMANDS_H_
 
 /**
- * Processes incoming RSP packets from gdb. conn should be set to the file
- * descriptor for the socket, so replies can be sent. Returns 0 on success or
- * -1 on failure; in the latter case an error is printed to stderr.
+ * Processes incoming RSP packets from gdb. buf should be null terminated and
+ * bufLen should be the number of bytes in the buffer without the trailing
+ * null. However, bufLen may not be strlen(buf), because the buffer itself may
+ * contain nulls as well. Returns 0 on success or -1 on failure; in the latter
+ * case an error is printed to stderr.
  */
-int rsp_receiveBuf(char *buf, int bufLen, int conn) {
-  return 0;
-}
+int rsp_handlePacket(char *buf, int bufLen);
+
+#endif

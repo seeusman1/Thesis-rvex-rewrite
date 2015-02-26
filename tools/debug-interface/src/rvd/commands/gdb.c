@@ -51,6 +51,7 @@
 #include <string.h>
 
 #include "main.h"
+#include "types.h"
 #include "commands.h"
 #include "parser.h"
 #include "definitions.h"
@@ -61,6 +62,7 @@
  */
 int runGdb(commandLineArgs_t *args) {
   int selectedContext = -1;
+  value_t v;
   
   if (isHelp(args) || (args->paramCount < 1)) {
     printf(
@@ -80,10 +82,9 @@ int runGdb(commandLineArgs_t *args) {
       "The following definitions must be set from the command line or a memory map file\n"
       "for this command to function:\n"
       "\n"
-      "  _IMEM        - Should evaluate to the start address of the instruction memory.\n"
-      "  _DMEM        - Should evaluate to the start address of the data memory.\n"
       "  _BREAK       - Stop execution.\n"
       "  _RESUME      - Resume execution.\n"
+      "  _RESET       - Reset processor in stopped state.\n"
       "  _STEP        - Resume execution in single-stepping mode.\n"
       "  _WAIT        - Should wait for the target to be halted. The value returned must\n"
       "                 identify the reason for halting:\n"
@@ -93,6 +94,9 @@ int runGdb(commandLineArgs_t *args) {
       "                   0x201 - single step trap\n"
       "                   0x202 - no trap (_BREAK set manually)\n"
       "  _RELEASE     - Relinquish debugging control over the target.\n"
+      "  _GDB_ADDR_R  - Should transform an address as seen from the core to a debug bus\n"
+      "                 address for reading. The address to transform is _GDB_ADDR.\n"
+      "  _GDB_ADDR_W  - Same as _GDB_ADDR_W, but for writing memory.\n"
       "  _GDB_REG_R   - Should return the size and current value of register\n"
       "                 _GDB_REG_INDEX, which is defined internally prior to executing\n"
       "                 _GDB_REG_R. The register index specified must correspond with the\n"
@@ -100,6 +104,7 @@ int runGdb(commandLineArgs_t *args) {
       "  _GDB_REG_W   - Same as _GDB_REG_R, but should write instead. _GDB_REG_VALUE is\n"
       "                 set to the value which is to be written prior to executing\n"
       "                 _GDB_REG_W along with the register index (_GDB_REG_INDEX).\n"
+      "  _GDB_REG_JMP - Set the program counter to _GDB_REG_VALUE.\n"
       "  _GDB_REG_NUM - Should return the number of registers known to gdb.\n"
       "  _GDB_REG_PRE - This is executed before all the registers gdb is aware of are\n"
       "                 read in bulk. This should be a preload command for performance.\n"
@@ -140,6 +145,16 @@ int runGdb(commandLineArgs_t *args) {
     }
     selectedContext = ctxt;
   );
+  
+  // Overwrite _STATE to null to prevent unwanted status information dumps.
+  if (defs_register(0xFFFFFFFF, "_STATE", "0") < 0) {
+    return -1;
+  }
+  
+  // Evaluate the _BREAK command to stop execution.
+  if (evaluate("_BREAK", &v, "") < 1) {
+    return -1;
+  }
   
   // Defer the complicated stuff to the C sources in ../gdb/.
   return gdb_main(args->params, args->paramCount);

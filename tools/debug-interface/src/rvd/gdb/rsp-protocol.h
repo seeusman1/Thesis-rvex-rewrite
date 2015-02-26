@@ -46,14 +46,30 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef _RSP_H_
-#define _RSP_H_
+#ifndef _RSP_PROTOCOL_H_
+#define _RSP_PROTOCOL_H_
 
 /**
- * Processes incoming RSP packets from gdb. conn should be set to the file
- * descriptor for the socket, so replies can be sent. Returns 0 on success or
+ * Processes incoming RSP packets from gdb. Returns 0 on success or
  * -1 on failure; in the latter case an error is printed to stderr.
  */
-int rsp_receiveBuf(char *buf, int bufLen, int conn);
+int rsp_receiveBuf(char *buf, int bufLen);
+
+/**
+ * Sends an RSP packet to gdb, presented as a binary safe buffer. Returns -1 on
+ * failure, in which case an error message will be printed.
+ */
+int rsp_sendPacketBuf(const char *buf, int bufLen);
+
+/**
+ * Sends an RSP packet to gdb, presented as a null terminated string. Returns
+ * -1 on failure, in which case an error message will be printed.
+ */
+int rsp_sendPacketStr(const char *packet);
+
+/**
+ * Flushes the transmit buffer.
+ */
+int rsp_flushTx(void);
 
 #endif

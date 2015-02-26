@@ -225,7 +225,38 @@ all:_RESET {
 all:_RESET_BREAK {
   write(DCRF, 0x89hh);
 }
+
+# This is evaluated when "rvd gdb" waits for a breakpoint.
+all:_WAIT {
+  set(retval, 0x202);
+  set(d, readWord(DCR));
+  while (!(d & 0x01000000), (
+    delay_ms(250);
+    set(d, readWord(DCR));
+  ));
   
+  if (d & 0x80000000, (
+    # STOP instruction.
+    set(retval, readByte(RET));
+  ), (
+    # Debug trap.
+    set(d, (d >> 16) & 0xFF);
+    if (d == 0xFA, (
+      # Software breakpoint.
+      set(retval, 0x200);
+    ));
+    if (d == 0xFB, (
+      # Single step.
+      set(retval, 0x201);
+    ));
+    if (d >= 0xFC, (
+      # Hardware breakpoint.
+      set(retval, 0x100 + (d - 0xFC));
+    ));
+  ));
+  retval
+}
+
 # This is evaluated when "rvd state" is called.
 all:_STATE {
   
@@ -284,3 +315,31 @@ all:_STATE {
   
 }
 
+# Convert a core/gdb address to a debug bus address.
+all:_GDB_ADDR_R { _GDB_ADDR }
+all:_GDB_ADDR_W { _GDB_ADDR }
+
+# Return the number of registers which gdb is aware of.
+all:_GDB_REG_NUM { 76 }
+
+# Read gdb registers.
+all:_GDB_REG_PRE { preload(CREG_GPREG, 0x120) }
+all:_GDB_REG_R {
+  if (_GDB_REG_INDEX < 64, (
+    readWordPreload(CREG_GPREG + (_GDB_REG_INDEX*4))
+  ), (
+    if (_GDB_REG_INDEX < 72, (
+      (readBytePreload(BR) & (1w << (_GDB_REG_INDEX - 64))) != 0
+    ), (
+      if (_GDB_REG_INDEX == 72, (
+        readWordPreload(LR)
+      ), (
+        if (_GDB_REG_INDEX == 75, (
+          readWordPreload(PC)
+        ), (
+          0w
+        ))
+      ))
+    ))
+  ))
+}

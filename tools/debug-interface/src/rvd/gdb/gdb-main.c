@@ -60,7 +60,7 @@
 #include <netinet/in.h>
 
 #include "gdb-main.h"
-#include "rsp.h"
+#include "rsp-protocol.h"
 
 /**
  * Pipe used to detect gdb process termination through a select call.
@@ -80,7 +80,7 @@ static int rspSocket = 0;
 /**
  * RSP server-client connection.
  */
-static int rspConn = 0;
+int rspConn = 0;
 
 /**
  * Process ID for the gdb child process.
@@ -134,7 +134,7 @@ static char **makeArgv(const char **params, int paramCount, int portNum) {
   for (p = 0; p < paramCount; p++) {
     size += strlen(params[p]) + 1;
   }
-  size += 36; // For the --eval-command=target remote :ddddd parameter.
+  size += 45; // For the --eval-command=target remote :ddddd parameter.
   
   // Allocate the memory.
   argv = (char **)malloc(size);
@@ -150,7 +150,7 @@ static char **makeArgv(const char **params, int paramCount, int portNum) {
   strPtr += strlen(strPtr) + 1;
   
   // Add the connection parameter.
-  sprintf(strPtr, "--eval-command=target remote :%d", portNum);
+  sprintf(strPtr, "--eval-command=target extended-remote :%d", portNum);
   *argvPtr++ = strPtr;
   strPtr += strlen(strPtr) + 1;
   
@@ -318,13 +318,18 @@ int gdb_main(const char **params, int paramCount) {
       int rspDataLen;
       
       // Read from the socket.
-      rspDataLen = read(rspConn, rspData, 256);
-      if (rspDataLen < 0) {
-        perror("Failed to read from RSP socket");
-        return -1;
-      }
-      if (rsp_receiveBuf(rspData, rspDataLen, rspConn) < 0) {
-        return -1;
+      while (1) {
+        rspDataLen = read(rspConn, rspData, 256);
+        if (rspDataLen < 0) {
+          perror("Failed to read from RSP socket");
+          return -1;
+        } else if (rspDataLen == 0) {
+          break;
+        } else {
+          if (rsp_receiveBuf(rspData, rspDataLen) < 0) {
+            return -1;
+          }
+        }
       }
       
     }
@@ -358,6 +363,7 @@ void gdb_cleanup(void) {
   // Kill the gdb child process and reap it if it hasn't exited yet.
   if (gdbPid) {
     kill(gdbPid, SIGTERM);
+    kill(gdbPid, SIGKILL);
     waitpid(gdbPid, 0, 0);
   }
   

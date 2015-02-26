@@ -50,6 +50,11 @@
 #define _GDB_MAIN_H_
 
 /**
+ * RSP server-client connection file descriptor.
+ */
+extern int rspConn;
+
+/**
  * Main method for the gdb RSP server.
  */
 int gdb_main(const char **params, int paramCount);

@@ -775,7 +775,8 @@ begin -- architecture
       resetState  => '0',
       set         => (cxplif2cxreg_stop and not cxplif2cxreg_stall),
       clear       => creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_STEP)
-                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME),
+                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME)
+                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_DONE),
       permissions => DEBUG_CAN_WRITE
     );
     cxreg2rctrl_done <= creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_DONE);
