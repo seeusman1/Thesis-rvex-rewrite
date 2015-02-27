@@ -1140,6 +1140,78 @@ static int scanOperand(const char **str, value_t *value, int depth) {
         
       // ----------------------------------------------------------------------
       } else if (
+        (!strcmp(name, "prioritize"))
+      ) {
+        value_t dummyVal;
+        value_t condition;
+        int done;
+        
+        // We don't need the command name anymore.
+        free(name);
+        name = 0;
+        
+        // Set default output.
+        v.value = 0;
+        v.size = AS_UNDEFINED;
+        
+        // We can have any number of condition-action pairs.
+        done = 0;
+        while (1) {
+          
+          // Scan and evaluate the condition.
+          if ((retval = scanExpression(&ptr, done ? (&dummyVal) : (&condition), done ? -1 : depth)) < 1) {
+            return retval;
+          }
+          
+          // Scan the comma.
+          if (*ptr != ',') {
+            sprintf(scanError, "expected ','");
+            scanErrorPos = ptr;
+            return 0;
+          }
+          ptr++;
+          scanWhitespace(&ptr);
+          
+          // Scan the action.
+          if ((retval = scanExpression(&ptr, condition.value ? (&v) : (&dummyVal), condition.value ? depth : -1)) < 1) {
+            return retval;
+          }
+          
+          // If we've performed this action, don't do anything else. Setting
+          // done to 1 stops further conditions from evaluating; setting
+          // condition to 0 prevents further actions from evaluating. Because
+          // the condition is no longer evaluated, condition remains 0.
+          if (condition.value) {
+            done = 1;
+            condition.value = 0;
+          }
+          
+          // Scan the next comma, or stop iterating when a close-parenthesis
+          // is found.
+          if (*ptr == ')') {
+            break;
+          } else if (*ptr == ',') {
+            ptr++;
+            scanWhitespace(&ptr);
+          } else {
+            sprintf(scanError, "expected ',' or ')'");
+            scanErrorPos = ptr;
+            return 0;
+          }
+          
+        }
+          
+        // Scan the close parenthesis.
+        if (*ptr != ')') {
+          sprintf(scanError, "expected ')'");
+          scanErrorPos = ptr;
+          return 0;
+        }
+        ptr++;
+        scanWhitespace(&ptr);
+        
+      // ----------------------------------------------------------------------
+      } else if (
         (!strcmp(name, "while"))
       ) {
         const char *conditionPtr;

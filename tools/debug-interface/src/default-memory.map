@@ -57,7 +57,9 @@ all:CNT                     { CREG_GLOB + 0x10 } # Cycle counter.
 all:CCR                     { CREG_CTXT + 0x00 } # Context control register.
 all:TC                      { CREG_CTXT + 0x00 } # Trap cause (byte).
 all:BR                      { CREG_CTXT + 0x01 } # Branch registers (byte).
+all:CCRF                    { CREG_CTXT + 0x02 } # Context control register flags (short).
 all:SCCR                    { CREG_CTXT + 0x04 } # Saved context control register.
+all:SCCRF                   { CREG_CTXT + 0x06 } # Saved context control register flags (short).
 all:LR                      { CREG_CTXT + 0x08 } # Link register.
 all:PC                      { CREG_CTXT + 0x0C } # PC register.
 all:TH                      { CREG_CTXT + 0x10 } # Trap handler.
@@ -320,26 +322,54 @@ all:_GDB_ADDR_R { _GDB_ADDR }
 all:_GDB_ADDR_W { _GDB_ADDR }
 
 # Return the number of registers which gdb is aware of.
-all:_GDB_REG_NUM { 76 }
+all:_GDB_REG_NUM { 81 }
 
 # Read gdb registers.
 all:_GDB_REG_PRE { preload(CREG_GPREG, 0x120) }
 all:_GDB_REG_R {
-  if (_GDB_REG_INDEX < 64, (
-    readWordPreload(CREG_GPREG + (_GDB_REG_INDEX*4))
-  ), (
-    if (_GDB_REG_INDEX < 72, (
-      (readBytePreload(BR) & (1w << (_GDB_REG_INDEX - 64))) != 0
-    ), (
-      if (_GDB_REG_INDEX == 72, (
-        readWordPreload(LR)
-      ), (
-        if (_GDB_REG_INDEX == 75, (
-          readWordPreload(PC)
-        ), (
-          0w
-        ))
-      ))
-    ))
-  ))
+  prioritize (
+    _GDB_REG_INDEX < 64,  readWordPreload(CREG_GPREG + (_GDB_REG_INDEX*4)),
+    _GDB_REG_INDEX < 72,  (readBytePreload(BR) & (1hh << (_GDB_REG_INDEX - 64))) != 0,
+    _GDB_REG_INDEX == 72, readWordPreload(LR),
+    _GDB_REG_INDEX == 73, readWordPreload(PC),
+    _GDB_REG_INDEX == 74, readHalfPreload(CCRF),
+    _GDB_REG_INDEX == 75, readHalfPreload(SCCRF),
+    _GDB_REG_INDEX == 76, readBytePreload(TC),
+    _GDB_REG_INDEX == 77, readWordPreload(TP),
+    _GDB_REG_INDEX == 78, readWordPreload(TA),
+    _GDB_REG_INDEX == 79, readWordPreload(TH),
+    _GDB_REG_INDEX == 80, readWordPreload(PH)
+  )
 }
+
+# Write gdb registers.
+all:_GDB_REG_W {
+  prioritize (
+    _GDB_REG_INDEX < 64,  writeWord(CREG_GPREG + (_GDB_REG_INDEX*4), _GDB_REG_VALUE),
+    _GDB_REG_INDEX < 72,  (
+      set(brVal, readByte(BR));
+      set(brMask, 1 << (_GDB_REG_INDEX - 64));
+      set(brVal, (brVal & (~brMask)));
+      if (_GDB_REG_VALUE, (
+        set(brVal, brVal | brMask);
+      ));
+      writeByte(BR, brVal);
+    ),
+    _GDB_REG_INDEX == 72, writeWord(LR, _GDB_REG_VALUE),
+    _GDB_REG_INDEX == 73, writeWord(PC, _GDB_REG_VALUE),
+    _GDB_REG_INDEX == 74, writeHalf(CCRF, _GDB_REG_VALUE),
+    _GDB_REG_INDEX == 75, writeHalf(SCCRF, _GDB_REG_VALUE),
+    _GDB_REG_INDEX == 76, writeByte(TC, _GDB_REG_VALUE),
+    _GDB_REG_INDEX == 77, writeWord(TP, _GDB_REG_VALUE),
+    _GDB_REG_INDEX == 78, writeWord(TA, _GDB_REG_VALUE),
+    _GDB_REG_INDEX == 79, writeWord(TH, _GDB_REG_VALUE),
+    _GDB_REG_INDEX == 80, writeWord(PH, _GDB_REG_VALUE)
+  )
+}
+
+# Soft breakpoint instruction: trap r0.0, 0xFA. Copy the stop bit from the
+# syllable which is being replaced.
+all:_GDB_SOFTBRK {
+  0x908003E8w | (_GDB_SOFTBRK_SYL & 0x00000002w)
+}
+

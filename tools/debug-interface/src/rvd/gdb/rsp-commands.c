@@ -51,6 +51,7 @@
 
 #include "rsp-protocol.h"
 #include "rsp-commands.h"
+#include "rsp-breakpoints.h"
 #include "../types.h"
 #include "../parser.h"
 #include "../definitions.h"
@@ -402,8 +403,83 @@ int rsp_handlePacket(char *buf, int bufLen) {
   
   // Write register.
   if (matchCommand(buf, bufLen, "P")) {
-    // TODO
-    return rsp_sendPacketStr("E01");
+    uint32_t reg, value;
+    int numRegs;
+    
+    // Determine how many registers we have.
+    if (evaluate("_GDB_REG_NUM", &v, "") < 1) {
+      return -1;
+    }
+    numRegs = v.value;
+    if ((numRegs < 0) || (numRegs > RVSRV_PAGE_SIZE/4)) {
+      fprintf(stderr, "Error: _GDB_REG_NUM returned a value greater than 1024, which is the max.\n");
+      return -1;
+    }
+    
+    // Read register number and write value.
+    if (sscanf(buf + 1, "%x=%x", &reg, &value) != 2) {
+      return rsp_sendPacketStr("E01");
+    }
+    if (reg >= numRegs) {
+      return rsp_sendPacketStr("E02");
+    }
+    
+    // Define the register index and value for the memory map script.
+    sprintf(strBuf, "0x%08X", reg);
+    if (defs_register(0xFFFFFFFF, "_GDB_REG_INDEX", strBuf) < 0) {
+      return -1;
+    }
+    sprintf(strBuf, "0x%08X", value);
+    if (defs_register(0xFFFFFFFF, "_GDB_REG_VALUE", strBuf) < 0) {
+      return -1;
+    }
+    
+    // Execute the write.
+    if (evaluate("_GDB_REG_W", &v, "") < 1) {
+      return -1;
+    }
+    
+    return rsp_sendPacketStr("OK");
+  }
+  
+  // Set/remove breakpoint/watchpoint.
+  if (matchCommand(buf, bufLen, "Z") || matchCommand(buf, bufLen, "z")) {
+    uint32_t type, addr, kind;
+    
+    // Parse the breakpoint type, address and kind.
+    if (sscanf(buf + 1, "%x,%x,%x", &type, &addr, &kind) != 3) {
+      return rsp_sendPacketStr("E01");
+    }
+    if (type > 4) {
+      return rsp_sendPacketStr("E02");
+    }
+    
+    // Make sure there's no complicated condition/action stuff, which we don't
+    // support.
+    if (strstr(buf, ";")) {
+      return rsp_sendPacketStr("E03");
+    }
+    
+    // See if the value for kind is supported.
+    if (type < 2) {
+      if (kind != 4) {
+        return rsp_sendPacketStr("E04");
+      }
+    } else {
+      if ((kind != 4) && (kind != 2) && (kind != 1)) {
+        return rsp_sendPacketStr("E05");
+      }
+    }
+    
+    // Update the breakpoint.
+    switch (gdb_breakpoint((int)type, addr, buf[0] == 'Z')) {
+      case 0:
+        return rsp_sendPacketStr("E06");
+      case 1:
+        return rsp_sendPacketStr("OK");
+      default:
+        return -1;
+    }
   }
   
   // Unsupported command, send empty packet in reply.

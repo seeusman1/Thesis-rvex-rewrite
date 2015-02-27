@@ -2,3 +2,7 @@
 
 -- Test stepping through a NOP-only program in different core configurations.
 simpleStep.test
+
+-- Test stepping over a soft breakpoint and running into one during normal
+-- execution.
+softBreak.test

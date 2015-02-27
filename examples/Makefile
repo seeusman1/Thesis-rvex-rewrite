@@ -15,7 +15,7 @@ ifndef ISSUE_WIDTH
 ISSUE_WIDTH = 8
 endif
 
-# Must be one of the following;
+# Generic binary behavior. Must be one of the following;
 #   false     - compile for the specified issue width only.
 #   true      - alias for true-O1.
 #   true-O0   - run vexparse prior to assembly with --resched --O0
@@ -48,6 +48,11 @@ ifneq ($(DYNAMIC), false)
 DYNAMIC = true
 endif
 
+# Anything other than false enables debugging symbols and disables
+# optimizations.
+ifndef DEBUG
+DEBUG = false
+endif
 
 # Compiler to use, must be HP, GCC or ST200. Default = HP.
 ifndef COMPILER
@@ -90,43 +95,6 @@ ifndef START
 START = default_start
 endif
 
-# List of platform-agnostic (generic) programs.
-EXECUTABLES += adpcm blit crc des fir pocsag \
-	ucbqsort bcnt compress engine g3fax jpeg qurt v42 \
-	ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite soma x264 uart xstsimframebuffer#This line contains programs not from Powerstone
-
-# Toolchain setup.
-ifndef TOOLS
-TOOLS = ../tools
-endif
-BUILD = $(TOOLS)/build/bin
-AS = $(BUILD)/rvex-elf32-as
-LD = $(BUILD)/rvex-elf32-ld
-ifeq ($(COMPILER), HP)
-CC = $(TOOLS)/vex-3.43/bin/cc
-CFLAGS = -I$(GEN_EXAMPLES)/src -O2 -fno-xnop -fexpand-div -fmm=$(GEN_EXAMPLES)/pipe_1_$(ISSUE_WIDTH)_fw.mm
-else ifeq ($(COMPILER), GCC)
-CC = $(TOOLS)/build/bin/vex-gcc
-CFLAGS = -O3 #use with GCC compiler
-else
-CC=st200-gcc
-CFLAGS = -O3 -mcore=st220 -EB -fshort-double #use with Open64 compiler
-endif
-HOSTCC = gcc
-OBJCOPY = $(BUILD)/rvex-elf32-objcopy
-OBJDUMP = $(BUILD)/rvex-elf32-objdump
-CP = cp
-MV = mv
-RM = rm -f
-MKDIR = mkdir
-PYTHON = python3
-VEXPARSE = $(PYTHON) $(TOOLS)/vexparse/main.py
-SIM = $(TOOLS)/sim/xstsim-r-VEX-1.1.2
-SIMFLAGS = --ips='"[r-VEX c]"' --c.core.issue_width=$(ISSUE_WIDTH) \
-	-w --config-file=cfg.sim --c.trace=$(SIM_TRACE) --c.trace_regs=$(SIM_TRACEREGS)
-PLATFORM_SRC = src
-GENERIC_SRC = $(GEN_EXAMPLES)/src
-
 # Determine borrow configuration.
 BORROW01   = 1.0
 ifeq ($(LIMMH_PREV), true)
@@ -157,14 +125,76 @@ else
 LANECONFIG = 3333337B
 endif
 
-# Determine assembler flags.
-ifeq ($(DYNAMIC), false)
-ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG) -g
-else
-ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG) -g -u
+# List of platform-agnostic (generic) programs.
+EXECUTABLES += adpcm blit crc des fir pocsag \
+  ucbqsort bcnt compress engine g3fax jpeg qurt v42 \
+  ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite soma x264 uart xstsimframebuffer#This line contains programs not from Powerstone
+
+# Toolchain setup.
+ifndef TOOLS
+TOOLS = ../tools
+endif
+BUILD = $(TOOLS)/build/bin
+HOSTCC = gcc
+OBJCOPY = $(BUILD)/rvex-elf32-objcopy
+OBJDUMP = $(BUILD)/rvex-elf32-objdump
+SED = sed
+CP = cp
+MV = mv
+RM = rm -f
+MKDIR = mkdir
+PYTHON = python3
+VEXPARSE = $(PYTHON) $(TOOLS)/vexparse/main.py
+SIM = $(TOOLS)/sim/xstsim-r-VEX-1.1.2
+SIMFLAGS = --ips='"[r-VEX c]"' --c.core.issue_width=$(ISSUE_WIDTH) \
+  -w --config-file=cfg.sim --c.trace=$(SIM_TRACE) --c.trace_regs=$(SIM_TRACEREGS)
+PLATFORM_SRC = src
+GENERIC_SRC = $(GEN_EXAMPLES)/src
+
+# Assembler setup.
+AS = $(BUILD)/rvex-elf32-as
+ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG)
+ifneq ($(DYNAMIC), false)
+ASFLAGS += -u
+endif
+ifneq ($(DEBUG), false)
+ASFLAGS += -g
 endif
 
+# Linker setup.
+LD = $(BUILD)/rvex-elf32-ld
+ifneq ($(DEBUG), false)
+ASFLAGS += -g
+endif
 
+# Compiler setup.
+ifeq ($(COMPILER), HP)
+CC = $(TOOLS)/vex-3.43/bin/cc
+CFLAGS = -I$(GEN_EXAMPLES)/src -fno-xnop -fexpand-div -fmm=$(GEN_EXAMPLES)/pipe_1_$(ISSUE_WIDTH)_fw.mm
+ifeq ($(DEBUG), false)
+CFLAGS += -O2
+else
+CFLAGS += -g
+endif
+
+else ifeq ($(COMPILER), GCC)
+CC = $(TOOLS)/build/bin/vex-gcc
+CFLAGS = -I$(GEN_EXAMPLES)/src
+ifeq ($(DEBUG), false)
+CFLAGS += -O3
+else
+CFLAGS += -g
+endif
+
+else
+CC=st200-gcc
+CFLAGS = -I$(GEN_EXAMPLES)/src -mcore=st220 -EB -fshort-double #use with Open64 compiler
+ifeq ($(DEBUG), false)
+CFLAGS += -O3
+else
+CFLAGS += -g
+endif
+endif
 
 # Make magic.
 .SUFFIXES:
@@ -220,11 +250,15 @@ all: $(EXECUTABLES)
 # How to compile platform-specific sources;
 %.s: $(PLATFORM_SRC)/%.c
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
+ifeq ($(COMPILER), HP)
+	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
+endif
 
 # Where to get platform-specific assembly files and how to preprocess them;
 ifeq ($(COMPILER), HP)
 %.s: $(PLATFORM_SRC)/%.S
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< > $@
+	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 else
 %.s: $(PLATFORM_SRC)/%.S
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@
@@ -233,11 +267,15 @@ endif
 # How to compile generic sources;
 %.s: $(GENERIC_SRC)/%.c
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
+ifeq ($(COMPILER), HP)
+	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
+endif
 
 # Where to get generic assembly files and how to preprocess them;
 ifeq ($(COMPILER), HP)
 %.s: $(GENERIC_SRC)/%.S
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< > $@
+	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 else
 %.s: $(GENERIC_SRC)/%.S
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@

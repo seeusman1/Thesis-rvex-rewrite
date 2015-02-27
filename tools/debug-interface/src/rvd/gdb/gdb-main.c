@@ -179,6 +179,7 @@ int gdb_main(const char **params, int paramCount) {
   fd_set selectFileDescs;
   int maxSelectFileDesc;
   struct timeval timeout;
+  sigset_t sigSet;
   
   // Create RSP server socket.
   rspSocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -232,7 +233,7 @@ int gdb_main(const char **params, int paramCount) {
   sa.sa_handler = &sigchld;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART;
-  if (sigaction(SIGCHLD, &sa, 0) == -1) {
+  if (sigaction(SIGCHLD, &sa, 0) < 0) {
     perror("Failed to attach SIGCHLD handler");
     return -1;
   }
@@ -246,6 +247,14 @@ int gdb_main(const char **params, int paramCount) {
     execvp(gdbArgv[0], gdbArgv);
     perror("Failed to launch gdb");
     exit(EXIT_FAILURE);
+  }
+  
+  // Block the SIGINT interrupt so gdb handles it instead.
+  sigemptyset(&sigSet);
+  sigaddset(&sigSet, SIGINT);
+  if (sigprocmask(SIG_BLOCK, &sigSet, 0) < 0) {
+    perror("Failed to block SIGINT");
+    return -1;
   }
   
   // Accept the RSP connection which gdb should request. This is kinda
@@ -345,8 +354,16 @@ int gdb_main(const char **params, int paramCount) {
 void gdb_cleanup(void) {
   int i;
   struct sigaction sa;
+  sigset_t sigSet;
   
-  // Remove the SIGCHLD signal handler.
+  // Unblock SIGINT.
+  sigemptyset(&sigSet);
+  sigaddset(&sigSet, SIGINT);
+  if (sigprocmask(SIG_UNBLOCK, &sigSet, 0) < 0) {
+    perror("Failed to unblock SIGINT");
+  }
+  
+  // Remove the SIGINT and SIGCHLD signal handlers.
   sa.sa_handler = SIG_DFL;
   sigemptyset(&sa.sa_mask);
   sa.sa_flags = SA_RESTART;
