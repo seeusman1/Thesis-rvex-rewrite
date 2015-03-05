@@ -157,7 +157,8 @@ int run(commandLineArgs_t *args) {
     return runDebug(args);
     
   } else if (
-    (!strcmp(args->command, "gdb"))
+    (!strcmp(args->command, "gdb")) ||
+    (!strcmp(args->command, "gdb-debug"))
   ) {
     return runGdb(args);
     

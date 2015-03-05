@@ -58,7 +58,7 @@
 #include "../gdb/gdb-main.h"
 
 /**
- * Executes the "rvd gdb" command.
+ * Executes the "rvd gdb" or "rvd gdb-debug" command.
  */
 int runGdb(commandLineArgs_t *args) {
   int selectedContext = -1;
@@ -158,7 +158,7 @@ int runGdb(commandLineArgs_t *args) {
   }
   
   // Defer the complicated stuff to the C sources in ../gdb/.
-  return gdb_main(args->params, args->paramCount);
+  return gdb_main(args->params, args->paramCount, !strcmp(args->command, "gdb-debug"));
   
 }
 

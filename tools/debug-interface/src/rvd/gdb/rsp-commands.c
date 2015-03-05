@@ -152,7 +152,7 @@ int rsp_handlePacket(char *buf, int bufLen) {
   
   // Query supported features.
   if (matchCommand(buf, bufLen, "qSupported")) {
-    return rsp_sendPacketStr("PacketSize=400");
+    return rsp_sendPacketStr("PacketSize=2000");
   }
   
   // Query whether we're attached to a process.

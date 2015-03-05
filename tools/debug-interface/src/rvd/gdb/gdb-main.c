@@ -63,6 +63,11 @@
 #include "rsp-protocol.h"
 
 /**
+ * Whether RSP packets should be dumped to stdout.
+ */
+int gdb_rspDebug = 0;
+
+/**
  * Pipe used to detect gdb process termination through a select call.
  */
 static int gdbTermPipe[2] = {0, 0};
@@ -170,7 +175,7 @@ static char **makeArgv(const char **params, int paramCount, int portNum) {
 /**
  * Main method for the gdb RSP server.
  */
-int gdb_main(const char **params, int paramCount) {
+int gdb_main(const char **params, int paramCount, int debug) {
   struct sockaddr_in addr;
   socklen_t addrLen = sizeof(addr);
   struct sigaction sa;
@@ -180,6 +185,9 @@ int gdb_main(const char **params, int paramCount) {
   int maxSelectFileDesc;
   struct timeval timeout;
   sigset_t sigSet;
+  
+  // Load the debug enable global.
+  gdb_rspDebug = debug;
   
   // Create RSP server socket.
   rspSocket = socket(AF_INET, SOCK_STREAM, 0);

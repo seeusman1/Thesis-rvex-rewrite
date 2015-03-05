@@ -53,19 +53,17 @@
 #include "rsp-commands.h"
 #include "gdb-main.h"
 
-static const int debug = 1;
-
 /**
  * Packet receive buffer.
  */
-#define RX_BUF_SIZE 2048
+#define RX_BUF_SIZE 16384
 static char rxBuf[RX_BUF_SIZE];
 static int rxBufLen = 0;
 
 /**
  * Raw transmit buffer.
  */
-#define TX_BUF_SIZE 2048
+#define TX_BUF_SIZE 16384
 static char txBuf[TX_BUF_SIZE];
 static int txBufLen = 0;
 
@@ -107,7 +105,7 @@ int rsp_flushTx(void) {
   char *ptr = txBuf;
   
   // Print the outgoing data if debugging is enabled.
-  if (debug && txBufLen) {
+  if (gdb_rspDebug && txBufLen) {
     int i;
     printf("rvd -> gdb: ");
     for (i = 0; i < txBufLen; i++) {
@@ -170,7 +168,7 @@ static int tx(char c, char *checksum) {
 int rsp_receiveBuf(char *buf, int bufLen) {
   
   // Print the incoming data if debugging is enabled.
-  if (debug) {
+  if (gdb_rspDebug) {
     int i;
     printf("rvd <- gdb: ");
     for (i = 0; i < bufLen; i++) {

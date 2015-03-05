@@ -373,3 +373,43 @@ all:_GDB_SOFTBRK {
   0x908003E8w | (_GDB_SOFTBRK_SYL & 0x00000002w)
 }
 
+# Sets or deletes a breakpoint or watchpoint.
+all:_GDB_HARDBRK {
+  prioritize (
+    
+    # Fail if index >= 4.
+    _GDB_HARDBRK_INDEX >= 4, 0,
+    
+    # Read-only watchpoints are not supported.
+    _GDB_HARDBRK_TYPE == 3, 0,
+    
+    # Otherwise:
+    1, (
+      
+      # Write the breakpoint address register.
+      prioritize(
+        _GDB_HARDBRK_INDEX == 0, writeWord(BRK0, _GDB_HARDBRK_ADDR),
+        _GDB_HARDBRK_INDEX == 1, writeWord(BRK1, _GDB_HARDBRK_ADDR),
+        _GDB_HARDBRK_INDEX == 2, writeWord(BRK2, _GDB_HARDBRK_ADDR),
+        _GDB_HARDBRK_INDEX == 3, writeWord(BRK3, _GDB_HARDBRK_ADDR)
+      );
+      
+      # Read the current breakpoint configuration register.
+      set(cfg, readHalf(DCRB));
+      
+      # Clear the configuration nibble for the selected breakpoint.
+      set(cfg, cfg & (~(0xF << (4 * _GDB_HARDBRK_INDEX))));
+      
+      # Load the new configuration for the selected breakpoint. The gdb
+      # convention for this happens to match ours, except for that type 4 is
+      # type 3 for us and that gdb type 3 is not supported.
+      set(cfg, cfg | (if(_GDB_HARDBRK_TYPE==4,3,_GDB_HARDBRK_TYPE) << (4 * _GDB_HARDBRK_INDEX)));
+      
+      # Write the new configuration.
+      writeHalf(DCRB, cfg);
+      
+      # Return success.
+      1
+    )
+  )
+}

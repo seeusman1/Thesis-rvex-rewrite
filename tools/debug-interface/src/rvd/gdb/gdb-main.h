@@ -55,9 +55,14 @@
 extern int rspConn;
 
 /**
+ * Whether RSP packets should be dumped to stdout.
+ */
+extern int gdb_rspDebug;
+
+/**
  * Main method for the gdb RSP server.
  */
-int gdb_main(const char **params, int paramCount);
+int gdb_main(const char **params, int paramCount, int debug);
 
 /**
  * Cleans up the resources which are used here.
