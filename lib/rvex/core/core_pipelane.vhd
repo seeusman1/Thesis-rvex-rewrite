@@ -696,7 +696,7 @@ architecture Behavioral of core_pipelane is
   
   -- Default/initialization value for branch state.
   constant BRANCH_STATE_DEFAULT : branchState_type := (
-    trapPending                 => RVEX_UNDEF,
+    trapPending                 => '0',
     trapInfo                    => TRAP_INFO_UNDEF,
     RFI                         => RVEX_UNDEF,
     isBranch                    => RVEX_UNDEF,
@@ -1783,10 +1783,10 @@ begin -- architecture
       s(S_IF).br.isBranch := br2pl_isBranch(S_IF);
       s(S_BR).br.isBranching := br2pl_isBranching(S_BR);
       
-      -- Copy the trap output from the branch unit into the pipeline.
-      if s(S_BR).valid = '1' then
-        s(S_BR).tr.trap := s(S_BR).tr.trap & br2pl_trap(S_BR);
-      end if;
+      -- Copy the trap output from the branch unit into the pipeline. Validity
+      -- checking is already performed in the branch unit because there's a
+      -- special case for the stop trap (it's delayed by one cycle).
+      s(S_BR).tr.trap := s(S_BR).tr.trap & br2pl_trap(S_BR);
       
     end if;
     
@@ -1884,23 +1884,6 @@ begin -- architecture
     end if;
     
     ---------------------------------------------------------------------------
-    -- Connect pipeline to breakpoint unit
-    ---------------------------------------------------------------------------
-    if HAS_BRK then
-      
-      -- Drive breakpoint unit inputs.
-      pl2brku_ignoreBreakpoint(S_BRK) <= not s(S_BRK).brkValid;
-      pl2brku_opcode(S_BRK)           <= s(S_BRK).opcode;
-      pl2brku_opAddr(S_BRK)           <= s(S_BRK).dp.resAdd;
-      pl2brku_PC_bundle(S_BRK)        <= s(S_BRK).PC;
-      
-      -- Copy the debug trap into the pipeline.
-      s(S_BRK+L_BRK).tr.debugTrap :=
-        s(S_BRK+L_BRK).tr.debugTrap & brku2pl_trap(S_BRK+L_BRK);
-      
-    end if;
-    
-    ---------------------------------------------------------------------------
     -- Handle soft trap instruction
     ---------------------------------------------------------------------------
     if s(S_BRK).dp.c.isTrap = '1' then
@@ -1909,7 +1892,7 @@ begin -- architecture
       if TRAP_TABLE(vect2uint(s(S_BRK).dp.op2(rvex_trap_type'range))).isDebugTrap = '1' then
         
         s(S_BRK).tr.debugTrap := s(S_BRK).tr.debugTrap & (
-          active => '1',
+          active => s(S_BRK).brkValid,
           cause  => s(S_BRK).dp.op2(rvex_trap_type'range),
           arg    => s(S_BRK).dp.op1
         );
@@ -1925,6 +1908,23 @@ begin -- architecture
         end if;
         
       end if;
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Connect pipeline to breakpoint unit
+    ---------------------------------------------------------------------------
+    if HAS_BRK then
+      
+      -- Drive breakpoint unit inputs.
+      pl2brku_ignoreBreakpoint(S_BRK) <= not s(S_BRK).brkValid;
+      pl2brku_opcode(S_BRK)           <= s(S_BRK).opcode;
+      pl2brku_opAddr(S_BRK)           <= s(S_BRK).dp.resAdd;
+      pl2brku_PC_bundle(S_BRK)        <= s(S_BRK).PC;
+      
+      -- Copy the debug trap into the pipeline.
+      s(S_BRK+L_BRK).tr.debugTrap :=
+        s(S_BRK+L_BRK).tr.debugTrap & brku2pl_trap(S_BRK+L_BRK);
       
     end if;
     
@@ -2016,6 +2016,8 @@ begin -- architecture
     -- not be done when a trap is detected in this stage.
     if HAS_BR then
       pl2cxplif_rfi(S_MEM) <= s(S_MEM).br.RFI and s(S_MEM).valid;
+    else
+      pl2cxplif_rfi(S_MEM) <= '0';
     end if;
       
     ---------------------------------------------------------------------------

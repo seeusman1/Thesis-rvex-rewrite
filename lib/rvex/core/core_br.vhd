@@ -605,17 +605,17 @@ begin -- architecture
     else '1';
   
   -----------------------------------------------------------------------------
-  -- Drive trap output.
+  -- Drive trap output
   -----------------------------------------------------------------------------
   trap_output: process (
-    nextPCMisaligned, nextPC, stop_r
+    nextPCMisaligned, nextPC, stop_r, pl2br_valid
   ) is
     variable ti : trap_info_type;
   begin
     
     -- Cause misaligned branch traps.
     ti := (
-      active => nextPCMisaligned(S_IF),
+      active => nextPCMisaligned(S_IF) and pl2br_valid(S_BR),
       cause  => rvex_trap(RVEX_TRAP_MISALIGNED_BRANCH),
       arg    => nextPC(S_IF)
     );
