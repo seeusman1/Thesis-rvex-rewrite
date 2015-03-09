@@ -51,6 +51,7 @@
 #include <errno.h>
 #include <string.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include "main.h"
 #include "serial.h"
@@ -58,6 +59,7 @@
 #include "select.h"
 #include "tcpserv.h"
 #include "debugCommands.h"
+#include "debugReadWrite.h"
 
 /**
  * File descriptor for the serial port.
@@ -178,16 +180,16 @@ static int checkCommand(const unsigned char *command, const unsigned char *text)
 static int handleCommand(unsigned char *command, int clientID, int firstTime) {
   unsigned char *ptr;
   
-  if (checkCommand(command, "Stop")) {
+  if (checkCommand(command, (const unsigned char *)"Stop")) {
     
     // Stop server command.
-    if (tcpServer_sendStr(debugServer, clientID, "OK, Stop;\n") < 0) {
+    if (tcpServer_sendStr(debugServer, clientID, (const unsigned char *)"OK, Stop;\n") < 0) {
       return -1;
     }
     printf("Client ID %d (debug access) requested the server to stop.\n", clientID);
     return 1;
     
-  } else if (checkCommand(command, "Read") || checkCommand(command, "Write")) {
+  } else if (checkCommand(command, (const unsigned char *)"Read") || checkCommand(command, (const unsigned char *)"Write")) {
     
     // Handle read/write command.
     if (handleReadWrite(command, clientID) < 0) {
@@ -199,7 +201,7 @@ static int handleCommand(unsigned char *command, int clientID, int firstTime) {
   }
   
   // Unknown command.
-  if (tcpServer_sendStr(debugServer, clientID, "Error, ") < 0) {
+  if (tcpServer_sendStr(debugServer, clientID, (const unsigned char *)"Error, ") < 0) {
     return -1;
   }
   ptr = command;
@@ -208,7 +210,7 @@ static int handleCommand(unsigned char *command, int clientID, int firstTime) {
       return -1;
     }
   }
-  if (tcpServer_sendStr(debugServer, clientID, ", UnknownCommand;\n") < 0) {
+  if (tcpServer_sendStr(debugServer, clientID, (const unsigned char *)", UnknownCommand;\n") < 0) {
     return -1;
   }
   return 2;
@@ -280,7 +282,7 @@ static int handleDebugServer(void) {
           if (d == ';') {
             
             // Send an error message.
-            tcpServer_sendStr(debugServer, clientID, "Error, PacketBufferOverrun;\n");
+            tcpServer_sendStr(debugServer, clientID, (const unsigned char *)"Error, PacketBufferOverrun;\n");
             
             // Reset the buffer.
             extra->numBytes = 0;

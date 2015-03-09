@@ -106,6 +106,8 @@ entity cache_instr is
     icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
     icache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_affinity          : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_status_access     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_status_miss       : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Bus master interface
@@ -509,6 +511,8 @@ begin -- architecture
   -- Connect the outputs from the output network to the lane groups
   -----------------------------------------------------------------------------
   out_network_output_gen : for i in 0 to 2**RCFG.numLaneGroupsLog2-1 generate
+    signal miss : std_logic;
+  begin
     
     -- Instruction output to the lane group. Valid when stall is low and
     -- readEnable from the highest indexed coupled lane group was high in the
@@ -562,8 +566,7 @@ begin -- architecture
     icache2rv_blockReconfig(i)
       <= outNetwork(RCFG.numLaneGroupsLog2)(i).blockReconfig;
     
-    -- Block reconfiguration output. This is asserted when any of the coupled
-    -- cache blocks is busy.
+    -- Affinity output.
     icache2rv_affinity(
       i*RCFG.numLaneGroupsLog2+RCFG.numLaneGroupsLog2-1
       downto i*RCFG.numLaneGroupsLog2
@@ -572,6 +575,42 @@ begin -- architecture
     -- Bus fault output.
     icache2rv_busFault(i)
       <= outNetwork(RCFG.numLaneGroupsLog2)(i).busFault;
+    
+    -- Generate cache miss status register.
+    miss_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          miss <= '0';
+        elsif clkEnCPU = '1' then
+          if rv2icache_stallOut(i) = '0' then
+            miss <= '0';
+          elsif (
+            (outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r = '1')
+            and (outNetwork(RCFG.numLaneGroupsLog2)(i).hit = '0')
+          ) then
+            miss <= '1';
+          end if;
+        end if;
+      end if;
+    end process;
+    
+    -- Drive the miss and access status outputs.
+    icache2rv_status_access(i)
+      <= outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r
+      when (
+        outNetwork(RCFG.numLaneGroupsLog2)(i).affinity
+        = std_logic_vector(to_unsigned(i, RCFG.numLaneGroupsLog2))
+      )
+      else '0';
+    
+    icache2rv_status_miss(i)
+      <= miss
+      when (
+        outNetwork(RCFG.numLaneGroupsLog2)(i).affinity
+        = std_logic_vector(to_unsigned(i, RCFG.numLaneGroupsLog2))
+      )
+      else '0';
     
   end generate;
   

@@ -156,6 +156,30 @@ package cache_pkg is
     CCFG                        : cache_generic_config_type
   ) return natural;
   
+  -- Data cache block status record for performance counters/tracing.
+  type dcache_status_type is record
+    
+    -- Type of data memory access:
+    --   00 - No access.
+    --   01 - Read access.
+    --   10 - Write access, complete cache line.
+    --   11 - Write access, only part of a cache line (update first).
+    accessType                  : std_logic_vector(1 downto 0);
+    
+    -- Whether the memory access bypassed the cache.
+    bypass                      : std_logic;
+    
+    -- Whether the requested memory address was initially in the cache.
+    miss                        : std_logic;
+    
+    -- This is set when the write buffer was filled when the request was made.
+    -- If the request would result in some kind of bus access, this means an
+    -- extra penalty would be paid.
+    writePending                : std_logic;
+    
+  end record;
+  type dcache_status_array is array (natural range <>) of dcache_status_type;
+  
 end cache_pkg;
 
 package body cache_pkg is

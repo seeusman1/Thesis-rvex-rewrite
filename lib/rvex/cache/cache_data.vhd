@@ -144,6 +144,7 @@ entity cache_data is
     dcache2rv_blockReconfig     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     dcache2rv_stallIn           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_stallOut          : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_status            : out dcache_status_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Data memory interface.
     rv2dcache_addr              : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -551,7 +552,8 @@ begin -- architecture
         bus2dcache_invalEnable    => bus2dcache_invalEnable,
         
         -- Status and control signals.
-        sc2dcache_flush           => sc2dcache_flush(i)
+        sc2dcache_flush           => sc2dcache_flush(i),
+        dcache2rv_status          => dcache2rv_status(i)
         
       );
     

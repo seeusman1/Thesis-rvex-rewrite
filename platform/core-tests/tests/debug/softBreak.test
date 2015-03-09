@@ -1,0 +1,102 @@
+name    Soft breakpoint
+
+-- Check configuration.
+config  numLanes              8
+config  numLaneGroups         4
+config  genBundleSize         8
+
+-- Initialize memories.
+init
+
+-- 0x000
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+-- 0x020
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+-- 0x040
+load    nop
+load    nop
+load    trap r0.0, 0xFA
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+-- 0x060
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+-- Reset the processor.
+reset
+wait    50
+
+-- Reset/break the processor.
+write   dbg byte CR_DCRF CR_DCRC_RESET_BREAK
+wait    50
+
+-- Verify that the PC is set to 0.
+read    dbg word CR_PC 0x00000000
+
+-- Step the processor.
+write   dbg byte CR_DCRF CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000020
+
+-- Step the processor.
+write   dbg byte CR_DCRF CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000040
+
+-- Verify that this is due to the soft breakpoint.
+read    dbg byte CR_DCRC 0xFA
+
+-- Step the processor.
+write   dbg byte CR_DCRF CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000060
+
+
+-- Reset/break the processor.
+write   dbg byte CR_DCRF CR_DCRC_RESET_BREAK
+wait    50
+
+-- Verify that the PC is set to 0.
+read    dbg word CR_PC 0x00000000
+
+-- Resume execution.
+write   dbg byte CR_DCRF CR_DCRC_RESUME
+wait    50
+
+-- Verify that we stopped at 0x40.
+read    dbg word CR_PC 0x00000040
+
+-- Verify that this is due to the soft breakpoint.
+read    dbg byte CR_DCRC 0xFA

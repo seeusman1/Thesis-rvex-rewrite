@@ -52,13 +52,14 @@
 #include <signal.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 #include "daemon.h"
 
 /**
  * Log file to use.
  */
-static const unsigned char *LOG_FILE = "/var/tmp/rvsrv.log";
+static const char *LOG_FILE = "/var/tmp/rvsrv.log";
 
 /**
  * Turns the process into a daemon. stdout and stderr are redirected to

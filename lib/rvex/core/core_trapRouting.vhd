@@ -115,6 +115,7 @@ begin -- architecture
   trap_routing: process (cfg2any_coupled, pl2trap_trap) is
     variable combinedTraps      : trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0);
     variable combined           : trap_info_type;
+    variable choice             : std_logic;
     variable laneA, laneB       : natural;
     variable coupled            : std_logic;
     variable firstLane          : natural;
@@ -138,12 +139,39 @@ begin -- architecture
         end if;
         
         -- Merge the trap signals for each stage, giving priority to the lower
-        -- indexed pipelane.
+        -- indexed pipelane, unless the lower indexed pipelane trap is a step
+        -- trap, which is always recessive.
         if coupled = '1' then
           for stage in S_FIRST to S_LTRP loop
-            combined := combinedTraps(laneA)(stage) & combinedTraps(laneB)(stage);
+            
+            -- Determine whether we should use the trap information from the
+            -- lower of higher indexed pipelane. Choose the upper if the
+            -- lower is not active.
+            choice := not combinedTraps(laneA)(stage).active;
+            
+            -- If the upper is active and the lower is a step trap, override
+            -- the default and choose the upper.
+            if combinedTraps(laneB)(stage).active = '1' then
+              if combinedTraps(laneA)(stage).cause = rvex_trap(RVEX_TRAP_STEP_COMPLETE) then
+                choice := '1';
+              end if;
+            end if;
+            
+            -- Mux between the lower and higher indexed traps.
+            if choice = '1' then
+              combined := combinedTraps(laneB)(stage);
+            else
+              combined := combinedTraps(laneA)(stage);
+            end if;
+            
+            -- Shortcut for the active signal, which is always just an or
+            -- function regardless of the complicated choice logic above.
+            combined.active := combinedTraps(laneA)(stage).active
+                            or combinedTraps(laneB)(stage).active;
+            
             combinedTraps(laneA)(stage) := combined;
             combinedTraps(laneB)(stage) := combined;
+            
           end loop;
         end if;
         

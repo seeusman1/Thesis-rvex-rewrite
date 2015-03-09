@@ -101,6 +101,7 @@ entity cache is
     cache2rv_blockReconfig      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     cache2rv_stallIn            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2cache_stallOut           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    cache2rv_status             : out rvex_cacheStatus_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Instruction memory interface.
     rv2icache_PCs               : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -168,12 +169,15 @@ architecture Behavioral of cache is
   signal bus2icache_bus         : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_status_access: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_status_miss  : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
   -- Data cache signals.
   signal dcache2bus_bus         : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal bus2dcache_bus         : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_status       : dcache_status_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -206,6 +210,8 @@ begin -- architecture
       icache2rv_instr           => icache2rv_instr,
       icache2rv_affinity        => icache2rv_affinity,
       icache2rv_busFault        => icache2rv_busFault,
+      icache2rv_status_access   => icache2rv_status_access,
+      icache2rv_status_miss     => icache2rv_status_miss,
       
       -- Bus master interface.
       icache2bus_bus            => icache2bus_bus,
@@ -250,6 +256,7 @@ begin -- architecture
       dcache2rv_readData        => dcache2rv_readData,
       dcache2rv_busFault        => dcache2rv_busFault,
       dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
+      dcache2rv_status          => dcache2rv_status,
       
       -- Bus master interface.
       dcache2bus_bus            => dcache2bus_bus,
@@ -270,6 +277,21 @@ begin -- architecture
   -----------------------------------------------------------------------------
   cache2rv_blockReconfig  <= icache2rv_blockReconfig or dcache2rv_blockReconfig;
   cache2rv_stallIn        <= icache2rv_stallIn       or dcache2rv_stallIn;
+  
+  -----------------------------------------------------------------------------
+  -- Generate the status output signal
+  -----------------------------------------------------------------------------
+  status_output_gen: for laneGroup in 2**RCFG.numLaneGroupsLog2-1 downto 0 generate
+    cache2rv_status(laneGroup)
+      <= RVEX_CACHE_STATUS_IDLE when rv2cache_stallOut(laneGroup) = '1' else (
+        instr_access                => icache2rv_status_access(laneGroup),
+        instr_miss                  => icache2rv_status_miss(laneGroup),
+        data_accessType             => dcache2rv_status(laneGroup).accessType,
+        data_bypass                 => dcache2rv_status(laneGroup).bypass,
+        data_miss                   => dcache2rv_status(laneGroup).miss,
+        data_writePending           => dcache2rv_status(laneGroup).writePending
+      );
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Instantiate the data/instruction update bus arbiters

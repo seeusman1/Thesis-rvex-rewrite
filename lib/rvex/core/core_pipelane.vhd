@@ -416,6 +416,14 @@ entity core_pipelane is
     dmsw2pl_exception           : in  trap_info_array(S_MEM+L_MEM to S_MEM+L_MEM);
     
     ---------------------------------------------------------------------------
+    -- Common memory interface
+    ---------------------------------------------------------------------------
+    -- Cache performance information from the cache. The instruction cache
+    -- related signals are part of the S_IF+L_IF stage, the data cache related
+    -- signals are part of the S_MEM+L_MEM stage.
+    mem2pl_cacheStatus          : in  rvex_cacheStatus_type;
+    
+    ---------------------------------------------------------------------------
     -- Register file interface
     ---------------------------------------------------------------------------
     -- These signals are array'd outside this entity and contain pipeline
@@ -827,12 +835,23 @@ architecture Behavioral of core_pipelane is
     -- nonzero.
     mem_writeData               : rvex_data_type;
     
+    -- Cache status flags from the cache block associated with this lane.
+    cache_status                : rvex_cacheStatus_type;
+    
+    -- Whether an instruction fetch was performed or not.
+    instr_enable                : std_logic;
+    
+    -- The syllable as it was fetched, valid when instr_enable is high.
+    instr_syllable              : rvex_syllable_type;
+    
   end record;
   
   -- Default/initialization value for trap state.
   constant TRACE_STATE_DEFAULT : traceState_type := (
     stop                        => '0',
     mem_enable                  => RVEX_UNDEF,
+    cache_status                => (data_accessType => (others => RVEX_UNDEF), others => RVEX_UNDEF),
+    instr_enable                => '0',
     others                      => (others => RVEX_UNDEF)
   );
   
@@ -1468,7 +1487,7 @@ begin -- architecture
     cxplif2pl_invalUntilBR,
     
     -- Memory interface.
-    ibuf2pl_syllable, ibuf2pl_exception, dmsw2pl_exception,
+    ibuf2pl_syllable, ibuf2pl_exception, dmsw2pl_exception, mem2pl_cacheStatus,
     
     -- Register file interface.
     gpreg2pl_readPortA, gpreg2pl_readPortB, cxplif2pl_brLinkReadPort,
@@ -1577,6 +1596,15 @@ begin -- architecture
     if s(S_IF+L_IF).valid = '1' then
       s(S_IF+L_IF).tr.trap  := s(S_IF+L_IF).tr.trap & ibuf2pl_exception(S_IF+L_IF);
     end if;
+    
+    -- Copy the instruction fetch data into the trace record as well, before it
+    -- is maybe modified further on in the pipeline.
+    s(S_IF).trace.instr_enable := cxplif2pl_limmValid(S_IF);
+    s(S_IF+L_IF).trace.instr_syllable := ibuf2pl_syllable(S_IF+L_IF);
+    
+    -- Copy instruction cache performance data into the trace records.
+    s(S_IF+L_IF).trace.cache_status.instr_access := mem2pl_cacheStatus.instr_access;
+    s(S_IF+L_IF).trace.cache_status.instr_miss   := mem2pl_cacheStatus.instr_miss;
     
     ---------------------------------------------------------------------------
     -- Compute PC+1 related signals
@@ -2241,22 +2269,11 @@ begin -- architecture
       
     end if;
     
-    ---------------------------------------------------------------------------
-    -- Connect pipeline to breakpoint unit
-    ---------------------------------------------------------------------------
-    if HAS_BRK then
-      
-      -- Drive breakpoint unit inputs.
-      pl2brku_ignoreBreakpoint(S_BRK) <= not s(S_BRK).brkValid;
-      pl2brku_opcode(S_BRK)           <= s(S_BRK).opcode;
-      pl2brku_opAddr(S_BRK)           <= s(S_BRK).dp.resAdd;
-      pl2brku_PC_bundle(S_BRK)        <= s(S_BRK).PC;
-      
-      -- Copy the debug trap into the pipeline.
-      s(S_BRK+L_BRK).tr.debugTrap :=
-        s(S_BRK+L_BRK).tr.debugTrap & brku2pl_trap(S_BRK+L_BRK);
-      
-    end if;
+    -- Copy data cache performance data into the trace records.
+    s(S_MEM+L_MEM).trace.cache_status.data_accessType   := mem2pl_cacheStatus.data_accessType;
+    s(S_MEM+L_MEM).trace.cache_status.data_bypass       := mem2pl_cacheStatus.data_bypass;
+    s(S_MEM+L_MEM).trace.cache_status.data_miss         := mem2pl_cacheStatus.data_miss;
+    s(S_MEM+L_MEM).trace.cache_status.data_writePending := mem2pl_cacheStatus.data_writePending;
     
     ---------------------------------------------------------------------------
     -- Handle soft trap instruction
@@ -2267,7 +2284,7 @@ begin -- architecture
       if TRAP_TABLE(vect2uint(s(S_BRK).dp.op2(rvex_trap_type'range))).isDebugTrap = '1' then
         
         s(S_BRK).tr.debugTrap := s(S_BRK).tr.debugTrap & (
-          active => '1',
+          active => s(S_BRK).brkValid,
           cause  => s(S_BRK).dp.op2(rvex_trap_type'range),
           arg    => s(S_BRK).dp.op1
         );
@@ -2283,6 +2300,23 @@ begin -- architecture
         end if;
         
       end if;
+      
+    end if;
+    
+    ---------------------------------------------------------------------------
+    -- Connect pipeline to breakpoint unit
+    ---------------------------------------------------------------------------
+    if HAS_BRK then
+      
+      -- Drive breakpoint unit inputs.
+      pl2brku_ignoreBreakpoint(S_BRK) <= not s(S_BRK).brkValid;
+      pl2brku_opcode(S_BRK)           <= s(S_BRK).opcode;
+      pl2brku_opAddr(S_BRK)           <= s(S_BRK).dp.resAdd;
+      pl2brku_PC_bundle(S_BRK)        <= s(S_BRK).PC;
+      
+      -- Copy the debug trap into the pipeline.
+      s(S_BRK+L_BRK).tr.debugTrap :=
+        s(S_BRK+L_BRK).tr.debugTrap & brku2pl_trap(S_BRK+L_BRK);
       
     end if;
     
@@ -2547,6 +2581,13 @@ begin -- architecture
       pl2trace_data.reg_intData     <= s(S_LAST).dp.res;
       pl2trace_data.reg_brEnable    <= s(S_LAST).dp.resBrValid;
       pl2trace_data.reg_brData      <= s(S_LAST).dp.resBr;
+      
+      -- Forward cache performance information.
+      pl2trace_data.cache_status    <= s(S_LAST).trace.cache_status;
+      
+      -- Forward instruction information.
+      pl2trace_data.instr_enable    <= s(S_LAST).trace.instr_enable;
+      pl2trace_data.instr_syllable  <= s(S_LAST).trace.instr_syllable;
       
     end if;
     

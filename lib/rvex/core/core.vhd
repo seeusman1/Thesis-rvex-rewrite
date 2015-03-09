@@ -341,6 +341,10 @@ entity core is
     -- reasons other than memory stalls as well.
     rv2mem_stallOut             : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
+    -- Cache performance information signals. Optional. Refer to core_pkg.vhd
+    -- for more information about this signal (look for rvex_cacheStatus_type).
+    mem2rv_cacheStatus          : in  rvex_cacheStatus_array(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => RVEX_CACHE_STATUS_IDLE);
+    
     ---------------------------------------------------------------------------
     -- Instruction memory interface
     ---------------------------------------------------------------------------
@@ -648,6 +652,8 @@ architecture Behavioral of core is
   signal cxreg2trace_trapEn           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2trace_memEn            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2trace_regEn            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2trace_cacheEn          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2trace_instrEn          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
   -----------------------------------------------------------------------------
   -- Simulation-only signals
@@ -788,6 +794,9 @@ begin -- architecture
       dmsw2creg_writeEnable         => dmsw2creg_writeEnable,
       dmsw2creg_readEnable          => dmsw2creg_readEnable,
       creg2dmsw_readData            => creg2dmsw_readData,
+      
+      -- Common memory interface.
+      mem2pl_cacheStatus            => mem2rv_cacheStatus,
       
       -- Register file interface.
       pl2gpreg_readPorts            => pl2gpreg_readPorts,
@@ -1032,7 +1041,9 @@ begin -- architecture
         cxreg2trace_enable          => cxreg2trace_enable(ctxt),
         cxreg2trace_trapEn          => cxreg2trace_trapEn(ctxt),
         cxreg2trace_memEn           => cxreg2trace_memEn(ctxt),
-        cxreg2trace_regEn           => cxreg2trace_regEn(ctxt)
+        cxreg2trace_regEn           => cxreg2trace_regEn(ctxt),
+        cxreg2trace_cacheEn         => cxreg2trace_cacheEn(ctxt),
+        cxreg2trace_instrEn         => cxreg2trace_instrEn(ctxt)
         
       );
   end generate;
@@ -1147,6 +1158,8 @@ begin -- architecture
         cxreg2trace_trapEn          => cxreg2trace_trapEn,
         cxreg2trace_memEn           => cxreg2trace_memEn,
         cxreg2trace_regEn           => cxreg2trace_regEn,
+        cxreg2trace_cacheEn         => cxreg2trace_cacheEn,
+        cxreg2trace_instrEn         => cxreg2trace_instrEn,
         
         -- Trace raw data input.
         pl2trace_data               => pl2trace_data,

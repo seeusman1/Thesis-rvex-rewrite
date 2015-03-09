@@ -263,6 +263,48 @@ package core_pkg is
     CFG       : rvex_generic_config_type
   ) return natural;
   
+  -- Cache status output signal record, used when tracing and to drive
+  -- cache performance counters. All these signals are replicated for each lane
+  -- group. They are assumed to only be active in cycles where the CPU is not
+  -- stalled, so they can be tied into the performance counters directly.
+  type rvex_cacheStatus_type is record
+    
+    -- This is high when a fetch was performed.
+    instr_access                : std_logic;
+    
+    -- This is high when a fetch was performed which required the cache to be
+    -- updated.
+    instr_miss                  : std_logic;
+    
+    -- Type of data memory access:
+    --   00 - No access.
+    --   01 - Read access.
+    --   10 - Write access, complete cache line.
+    --   11 - Write access, only part of a cache line (update first).
+    data_accessType             : std_logic_vector(1 downto 0);
+    
+    -- Whether the data memory access bypassed the cache.
+    data_bypass                 : std_logic;
+    
+    -- Whether the requested memory address was initially in the data cache.
+    data_miss                   : std_logic;
+    
+    -- This is set when the data cache write buffer was filled when the request
+    -- was made. If the request would result in some kind of bus access, this
+    -- means an extra penalty would be paid.
+    data_writePending           : std_logic;
+    
+  end record;
+  type rvex_cacheStatus_array is array (natural range <>) of rvex_cacheStatus_type;
+  constant RVEX_CACHE_STATUS_IDLE : rvex_cacheStatus_type := (
+    instr_access                => '0',
+    instr_miss                  => '0',
+    data_accessType             => "00",
+    data_bypass                 => '0',
+    data_miss                   => '0',
+    data_writePending           => '0'
+  );
+  
 end core_pkg;
 
 package body core_pkg is

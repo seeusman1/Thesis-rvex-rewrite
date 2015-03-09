@@ -48,6 +48,7 @@
 
 #define _GNU_SOURCE
 #include <stdio.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
@@ -295,6 +296,8 @@ int srecRead(void *state, int f, unsigned char *buffer, int count, uint32_t addr
             s->state = SRS_EOL;
             break;
             
+          default: ;
+            
         }
         
         // Update the checksum.
@@ -359,7 +362,7 @@ void srecReadFree(void *state) {
  * Writes the given string to a file.
  */
 static int writeStr(int f, unsigned char *buf) {
-  int remain = strlen(buf);
+  int remain = strlen((const char *)buf);
   while (remain) {
     int count = write(f, buf, remain);
     if (count < 0) {
@@ -383,7 +386,7 @@ static int numDataRecordsWritten;
 /**
  * Writes a single S-record to a file.
  */
-static int srecWriteRecord(int f, char recType, uint32_t address, unsigned char *data, int count) {
+static int srecWriteRecord(int f, char recType, uint32_t address, const unsigned char *data, int count) {
   
   static unsigned char buf[32];
   int addrSize = 2;
@@ -414,7 +417,7 @@ static int srecWriteRecord(int f, char recType, uint32_t address, unsigned char 
   }
   
   // Write s-record header.
-  sprintf(buf, "S%c%02X%0*X", recType, count+addrSize+1, addrSize*2, address);
+  sprintf((char *)buf, "S%c%02X%0*X", recType, count+addrSize+1, addrSize*2, address);
   if (writeStr(f, buf) < 0) {
     return -1;
   }
@@ -429,7 +432,7 @@ static int srecWriteRecord(int f, char recType, uint32_t address, unsigned char 
   
   // Write the data.
   while (count) {
-    sprintf(buf, "%02hhX", *data);
+    sprintf((char *)buf, "%02hhX", *data);
     if (writeStr(f, buf) < 0) {
       return -1;
     }
@@ -440,7 +443,7 @@ static int srecWriteRecord(int f, char recType, uint32_t address, unsigned char 
   
   // Write the checksum and newline.
   checksum = ~checksum;
-  sprintf(buf, "%02hhX\r\n", checksum);
+  sprintf((char *)buf, "%02hhX\r\n", checksum);
   if (writeStr(f, buf) < 0) {
     return -1;
   }
@@ -457,7 +460,7 @@ int srecWriteHeader(int f) {
   numDataRecordsWritten = 0;
   
   // Write header record.
-  if (srecWriteRecord(f, '0', 0, "rvex dump", 10) < 0) {
+  if (srecWriteRecord(f, '0', 0, (const unsigned char*)"rvex dump", 10) < 0) {
     return -1;
   }
   

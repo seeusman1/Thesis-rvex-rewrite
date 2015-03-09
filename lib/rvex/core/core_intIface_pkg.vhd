@@ -49,6 +49,7 @@ use IEEE.std_logic_1164.all;
 
 library rvex;
 use rvex.common_pkg.all;
+use rvex.core_pkg.all;
 use rvex.core_pipeline_pkg.all;
 
 --=============================================================================
@@ -333,6 +334,15 @@ package core_intIface_pkg is
     -- Trap argument of the trap handled by this instruction, if trap_enable is
     -- high.
     trap_arg                    : rvex_address_type;
+    
+    -- Cache status flags from the cache block associated with this lane.
+    cache_status                : rvex_cacheStatus_type;
+    
+    -- Whether an instruction fetch was performed or not.
+    instr_enable                : std_logic;
+    
+    -- The syllable as it was fetched, valid when instr_enable is high.
+    instr_syllable              : rvex_syllable_type;
     
   end record;
   

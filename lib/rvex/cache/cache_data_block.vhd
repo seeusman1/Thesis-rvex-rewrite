@@ -189,7 +189,10 @@ entity cache_data_block is
     -- The timing of these signals is governed by clkEnBus.
     
     -- Cache flush request signals for each instruction cache block.
-    sc2dcache_flush             : in  std_logic
+    sc2dcache_flush             : in  std_logic;
+    
+    -- Performance counter/trace status output.
+    dcache2rv_status            : out dcache_status_type
     
   );
 end cache_data_block;
@@ -236,6 +239,21 @@ architecture Behavioral of cache_data_block is
   
   -- Whether the memory addressed by the CPU is valid.
   signal cpuHitValid          : std_logic;
+  
+  -- Performance counter/trace status register.
+  signal status_r             : dcache_status_type;
+  
+  -- This register is set when updateEnable is high and reset when stall is
+  -- low, in order to detect whether status_r is valid due to a read miss being
+  -- serviced by this block.
+  signal readMiss_r           : std_logic;
+  
+  -- This signal is high when this block is servicing or has serviced a write.
+  -- It is reset when stall is low.
+  signal servicedWrite        : std_logic;
+  
+  -- This signal is high when a write is currently buffered.
+  signal writeBuffered        : std_logic;
   
   -----------------------------------------------------------------------------
   -- Invalidation network signals
@@ -324,6 +342,59 @@ begin -- architecture
   -- Compute whether we have a hit and forward it up the hierarchy.
   cpuHitValid <= cpuHit and cpuValid;
   block2route_hit <= cpuHitValid;
+  
+  -- Instantiate performance counter/trace status registers.
+  status_regs: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        status_r.accessType <= "00";
+        status_r.bypass <= '0';
+        status_r.miss <= '0';
+        status_r.writePending <= '0';
+      elsif clkEnCPU = '1' then
+        if route2block_stall = '0' then
+          status_r.accessType(1) <= route2block_writeEnable;
+          if route2block_writeEnable = '1' then
+            if route2block_writeMask = "1111" then
+              status_r.accessType(0) <= '0';
+            else
+              status_r.accessType(0) <= '1';
+            end if;
+          else
+            status_r.accessType(0) <= route2block_readEnable;
+          end if;
+          status_r.bypass <= route2block_bypass;
+          status_r.miss <= '0';
+          status_r.writePending <= writeBuffered;
+          readMiss_r <= '0';
+        else
+          if cpuHitValid = '0' then
+            status_r.miss <= '1';
+          end if;
+          if route2block_updateEnable = '1' then
+            readMiss_r <= '1';
+          end if;
+        end if;
+      end if;
+    end if;
+  end process;
+  
+  -- Drive the status output signal.
+  status_comb: process (
+    status_r, readEnable_r, cpuHitValid, readMiss_r, servicedWrite, bypass_r
+  ) is
+  begin
+    dcache2rv_status <= status_r;
+    if not (
+      ((readEnable_r and cpuHitValid) = '1')  -- Serviced a cached read (hit).
+      or (readMiss_r = '1')                   -- Serviced a cached read (miss).
+      or (servicedWrite = '1')                -- Serviced a cached write.
+      or (bypass_r = '1')                     -- Serviced a bypass read/write.
+    ) then
+      dcache2rv_status.accessType <= "00";
+    end if;
+  end process;
   
   -----------------------------------------------------------------------------
   -- Line invalidation (pipeline) logic
@@ -454,7 +525,11 @@ begin -- architecture
       
       -- Main memory interface signals.
       cacheToBus              => dcache2bus_bus,
-      busToCache              => bus2dcache_bus
+      busToCache              => bus2dcache_bus,
+      
+      -- Status signals.
+      servicedWrite           => servicedWrite,
+      writeBuffered           => writeBuffered
       
     );
   

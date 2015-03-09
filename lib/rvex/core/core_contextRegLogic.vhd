@@ -263,7 +263,13 @@ entity core_contextRegLogic is
     cxreg2trace_memEn           : out std_logic;
     
     -- Whether register writes should be traced. Active high.
-    cxreg2trace_regEn           : out std_logic
+    cxreg2trace_regEn           : out std_logic;
+    
+    -- Whether cache performance information should be traced. Active high.
+    cxreg2trace_cacheEn         : out std_logic;
+    
+    -- Whether instructions (the raw syllables) should be traced. Active high.
+    cxreg2trace_instrEn         : out std_logic
     
   );
 end core_contextRegLogic;
@@ -775,7 +781,8 @@ begin -- architecture
       resetState  => '0',
       set         => (cxplif2cxreg_stop and not cxplif2cxreg_stall),
       clear       => creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_STEP)
-                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME),
+                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_RESUME)
+                  or creg_isBusWritingOneToBit(l2c, c2l, CR_DCR, CR_DCR_DONE),
       permissions => DEBUG_CAN_WRITE
     );
     cxreg2rctrl_done <= creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_DONE);
@@ -789,7 +796,7 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- 
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- DCR2  |    Result     |               |t|m|r|   *   |e|T|M|R|   *   |E|
+    -- DCR2  |    Result     |               |t|m|r|c|i| * |e|T|M|R|C|I| * |E|
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     --
     -- Result = scratch register, intended to be used for the return value of
@@ -802,6 +809,8 @@ begin -- architecture
     -- T/t    = Trace trap information.
     -- M/m    = Trace memory/control register operations.
     -- R/r    = Trace register writes.
+    -- C/c    = Trace cache performance information.
+    -- I/i    = Trace fetched instructions.
     -- *      = Reserved bits for 
     -- E/e    = Trace enable.
     
@@ -818,9 +827,11 @@ begin -- architecture
       cxreg2trace_trapEn  <= creg_readRegisterBit(l2c, c2l, CR_DCR2, CR_DCR2_TR_TRAP);
       cxreg2trace_memEn   <= creg_readRegisterBit(l2c, c2l, CR_DCR2, CR_DCR2_TR_MEM);
       cxreg2trace_regEn   <= creg_readRegisterBit(l2c, c2l, CR_DCR2, CR_DCR2_TR_REG);
+      cxreg2trace_cacheEn <= creg_readRegisterBit(l2c, c2l, CR_DCR2, CR_DCR2_TR_CACHE);
+      cxreg2trace_instrEn <= creg_readRegisterBit(l2c, c2l, CR_DCR2, CR_DCR2_TR_INSTR);
       
       -- Make the trace capability field.
-      creg_makeHardwiredField(l2c, c2l, CR_DCR2, 15, 8, "11100001");
+      creg_makeHardwiredField(l2c, c2l, CR_DCR2, 15, 8, "11111001");
       
     end if;
     

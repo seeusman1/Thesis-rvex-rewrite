@@ -54,7 +54,7 @@
  * by the documentation for open(), positive return values are a file
  * descriptor for the open port. The port is opened in blocking mode.
  */
-int serial_open(const unsigned char *name, const int baud);
+int serial_open(const char *name, const int baud);
 
 /**
  * Closes a previously opened serial port.

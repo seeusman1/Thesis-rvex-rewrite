@@ -50,12 +50,16 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <signal.h>
+#include <string.h>
 
 #include "entry.h"
 #include "main.h"
 #include "parser.h"
 #include "definitions.h"
 #include "readFile.h"
+#include "rvsrvInterface.h"
+#include "preload.h"
+#include "gdb/gdb-main.h"
 
 /**
  * Prints usage information.
@@ -72,11 +76,17 @@ static void license(void);
  */
 static void cleanupAndExit(int code) {
   
+  // Clean up gdb stuff for the gdb command.
+  gdb_cleanup();
+  
   // Close the connection to rvsrv if it is open.
   rvsrv_close();
   
   // Clean up the definition hash map.
   defs_free();
+  
+  // Clean up the preload buffer.
+  preload_free();
   
   exit(code);
 }
@@ -94,7 +104,6 @@ static void sigTermHandler(int signum) {
 int main(int argc, char **argv) {
   
   commandLineArgs_t args;
-  int i;
   int contextSpecified = 0;
   char errorPrefix[1024];
   char *buf;
@@ -195,7 +204,7 @@ int main(int argc, char **argv) {
           *ptr = 0;
           break;
         }
-        *ptr++;
+        ptr++;
       }
       if (parseMask(buf, &(args.contextMask), " in .rvd-context") != 1) {
         fprintf(stderr,
@@ -247,6 +256,7 @@ int main(int argc, char **argv) {
   // Done.
   cleanupAndExit(EXIT_SUCCESS);
   
+  return EXIT_SUCCESS;
 }
 
 /**
@@ -306,19 +316,20 @@ static void usage(char *progName, int verbose) {
     "  download, dl         Downloads an S-record or binary file.\n"
     "\n"
     "Debugging:\n"
+    "  gdb                  Uses GDB for debugging.\n"
+    "  trace                Traces program execution (requires HW trace unit).\n"
     "  break, b             Stops execution on the selected contexts.\n"
     "  step, s              Executes the next bundle and stops again.\n"
     "  resume, continue, c  Resumes execution on the selected contexts.\n"
     "  release              Releases debugging control.\n"
     "  reset, rst           Soft-resets the selected contexts.\n"
     "  state, ?             Dumps context state.\n"
-    "  trace                Traces program execution (requires HW trace unit).\n"
     "\n"
     "Run \"%s help <command>\" for more information about a command, if available.\n"
     "Also, \"%s help expressions\" prints information on how you can express things\n"
     "in rvd.\n"
     "\n",
-    progName
+    progName, progName
   );
 }
 

@@ -112,6 +112,17 @@ typedef struct {
   int hasNewConfiguration;
   uint8_t newConfiguration;
   
+  /**
+   * Cache trace information.
+   */
+  uint8_t cacheStatus;
+  
+  /**
+   * Syllable trace information.
+   */
+  uint8_t hasSyllable;
+  uint32_t syllable;
+  
 } trace_packet_t;
 
 /**

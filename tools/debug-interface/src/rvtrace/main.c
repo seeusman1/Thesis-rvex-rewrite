@@ -65,7 +65,6 @@ static void dumpPC(int fd, uint32_t pc, trace_packet_t *extraData) {
   
   const char *disas;
   const char *symbols;
-  int b;
   
   // Get disassembly information.
   disasGet(pc, &disas, &symbols);
@@ -87,6 +86,8 @@ static void dumpPC(int fd, uint32_t pc, trace_packet_t *extraData) {
   
   // Print additional information as comments.
   if (extraData) {
+    int b;
+    
     if (extraData->hasMem == -1) {
       dprintf(
         fd,
@@ -136,6 +137,13 @@ static void dumpPC(int fd, uint32_t pc, trace_packet_t *extraData) {
           );
         }
       }
+    }
+    if (extraData->hasSyllable) {
+      dprintf(
+        fd,
+        "                      \t#\tFetched syllable was 0x%08X\n",
+        extraData->syllable
+      );
     }
   }
   

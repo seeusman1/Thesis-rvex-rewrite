@@ -54,6 +54,7 @@
 #include "debugCommands.h"
 #include "serial.h"
 #include "main.h"
+#include "timeout.h"
 
 // Define this to have this unit dump received and transmitted packets to
 // stdout/the log file.
@@ -291,6 +292,7 @@ static int opQueuePush(operationQueue_t *queue, const operation_t *op) {
     
   }
   
+  return 0;
 }
 
 /**
@@ -424,8 +426,6 @@ static int timeoutCount = 0;
  * sequence number (exclusive) in the reissue queue, so they get resent.
  */
 static void requeueUntil(int sequence) {
-  operation_t operation;
-  
   while (rxSeqCounter != sequence) {
     if (slotsValid[rxSeqCounter]) {
       slotsValid[rxSeqCounter] = 0;
@@ -449,7 +449,7 @@ static int receivePackets(void) {
   int receivedAnything = 0;
   
   // Handle received packets.
-  while (retval = receivePacket(&receivedPacket)) {
+  while ((retval = receivePacket(&receivedPacket))) {
     if (retval < 0) {
       return -1;
     }
@@ -536,7 +536,7 @@ static int transmitPackets(void) {
   int retval;
   
   // Try to re-issue commands which failed before.
-  while (op = opQueuePeek(&reissueQueue)) {
+  while ((op = opQueuePeek(&reissueQueue))) {
     
     // Try to issue the packet.
     retval = issueCommandOperation(op);
@@ -552,7 +552,7 @@ static int transmitPackets(void) {
   }
   
   // Try to issue new commands.
-  while (op = opQueuePeek(&opQueue)) {
+  while ((op = opQueuePeek(&opQueue))) {
     
     // Try to execute the operation.
     switch (op->t) {
@@ -617,7 +617,7 @@ static int resetQueue(void) {
   
   // Clear the operation queue, while calling the callback functions with
   // failure specified.
-  while (op = opQueuePeek(&opQueue)) {
+  while ((op = opQueuePeek(&opQueue))) {
     
     // Call the callback function.
     if (op->cb) {
