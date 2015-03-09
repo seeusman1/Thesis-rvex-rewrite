@@ -391,7 +391,8 @@ begin -- architecture
     -- Decode trace configuration.
     trace_config_decode: process (
       cfg2any_context, cfg2any_active, cxreg2trace_enable, cxreg2trace_trapEn,
-      cxreg2trace_memEn, cxreg2trace_regEn
+      cxreg2trace_memEn, cxreg2trace_regEn, cxreg2trace_cacheEn,
+      cxreg2trace_instrEn
     ) is
       variable ctxt             : natural range 0 to 7;
     begin
