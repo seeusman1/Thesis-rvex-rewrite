@@ -56,7 +56,7 @@
 #include "disasParse.h"
 #include "traceParse.h"
 
-#define FORMAT_LIKE_XSTSIM
+//#define FORMAT_LIKE_XSTSIM
 
 /**
  * Dumps symbol entries, PC and disassembly in an objdump-ish way.
@@ -86,6 +86,8 @@ static void dumpPC(int fd, uint32_t pc, trace_packet_t *extraData) {
   
   // Print additional information as comments.
   if (extraData) {
+    int b;
+    
     if (extraData->hasMem == -1) {
       dprintf(
         fd,

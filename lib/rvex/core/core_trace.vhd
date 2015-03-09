@@ -643,10 +643,10 @@ begin -- architecture
                              and d.instr_enable;
               
               -- Write the cache performance flags to the packet.
-              p(I_CFG0)(7 downto 0) := d.instr_syllable(7  downto  0);
-              p(I_CFG1)(7 downto 0) := d.instr_syllable(15 downto  8);
-              p(I_CFG2)(7 downto 0) := d.instr_syllable(23 downto 16);
-              p(I_CFG3)(7 downto 0) := d.instr_syllable(31 downto 24);
+              p(I_INSTR0)(7 downto 0) := d.instr_syllable(7  downto  0);
+              p(I_INSTR1)(7 downto 0) := d.instr_syllable(15 downto  8);
+              p(I_INSTR2)(7 downto 0) := d.instr_syllable(23 downto 16);
+              p(I_INSTR3)(7 downto 0) := d.instr_syllable(31 downto 24);
               
               -----------------------------------
               -- Update packet buffer register --
