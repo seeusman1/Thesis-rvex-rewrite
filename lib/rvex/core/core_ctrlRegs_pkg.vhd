@@ -184,6 +184,8 @@ package core_ctrlRegs_pkg is
   
   -- Bit indices for DCR2.
   constant CR_DCR2_TR_ENA     : natural := 0; -- Trace unit enable flag.
+  constant CR_DCR2_TR_INSTR   : natural := 3; -- Trace fetched instructions.
+  constant CR_DCR2_TR_CACHE   : natural := 4; -- Trace cache performance information.
   constant CR_DCR2_TR_REG     : natural := 5; -- Trace register writes.
   constant CR_DCR2_TR_MEM     : natural := 6; -- Trace memory accesses.
   constant CR_DCR2_TR_TRAP    : natural := 7; -- Trace trap information.

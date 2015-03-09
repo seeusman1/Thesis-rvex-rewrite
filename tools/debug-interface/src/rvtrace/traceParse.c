@@ -231,7 +231,9 @@ int getTracePacket(
     SCAN(1);
     packet->hasTrapped          = (d[0] & (1 << 7)) != 0;
     packet->hasNewConfiguration = (d[0] & (1 << 6)) != 0;
-    if (d[0] & 0x3F) {
+    packet->cacheStatus         = (d[0] & (1 << 5)) != 0;
+    packet->hasSyllable         = (d[0] & (1 << 4)) != 0;
+    if (d[0] & 0x0F) {
       fprintf(stderr, "Error: encountered EXFLAGS with reserved bits set. This probably means the\n");
       fprintf(stderr, "trace was generated with a newer hardware version than what's currently\n");
       fprintf(stderr, "supported.\n");
@@ -260,6 +262,21 @@ int getTracePacket(
     packet->newConfiguration |= ((uint32_t)d[1]) << 8;
     packet->newConfiguration |= ((uint32_t)d[2]) << 16;
     packet->newConfiguration |= ((uint32_t)d[3]) << 24;
+  }
+  
+  // Scan cache status data.
+  if (packet->cacheStatus) {
+    SCAN(1);
+    packet->cacheStatus = d[0];
+  }
+  
+  // Scan reconfiguration data.
+  if (packet->hasSyllable) {
+    SCAN(4);
+    packet->syllable  = d[0];
+    packet->syllable |= ((uint32_t)d[1]) << 8;
+    packet->syllable |= ((uint32_t)d[2]) << 16;
+    packet->syllable |= ((uint32_t)d[3]) << 24;
   }
   
   // Scan optional zero-padding at the end of a cycle.

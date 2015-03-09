@@ -165,7 +165,17 @@ entity cache_data_mainCtrl is
     ---------------------------------------------------------------------------
     -- Connections to the memory bus. Governed by clkEnBus.
     cacheToBus                  : out bus_mst2slv_type;
-    busToCache                  : in  bus_slv2mst_type
+    busToCache                  : in  bus_slv2mst_type;
+    
+    ---------------------------------------------------------------------------
+    -- Status signals
+    ---------------------------------------------------------------------------
+    -- This signal is high when this block is servicing or has serviced a
+    -- write. It is reset when stall is low.
+    servicedWrite               : out std_logic;
+    
+    -- This signal is high when a write is currently buffered.
+    writeBuffered               : out std_logic
     
   );
 end cache_data_mainCtrl;
@@ -318,6 +328,8 @@ begin -- architecture
     acceptWrite <= '0';
     resumeAfterWrite_next <= '0';
     blockReconfig <= '1';
+    servicedWrite <= writeAccepted;
+    writeBuffered <= '0';
     
     -- Handle state machine states.
     case state is
@@ -421,6 +433,9 @@ begin -- architecture
         else
           writePrio <= "00";
         end if;
+        
+        -- Signal that a write is buffered.
+        writeBuffered <= '1';
       
       when STATE_UPDATE_1 =>
         

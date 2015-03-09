@@ -215,6 +215,14 @@ entity core_pipelanes is
     dmem2dmsw_exception         : in  trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
+    -- Common memory interface
+    ---------------------------------------------------------------------------
+    -- Cache performance information from the cache. The instruction cache
+    -- related signals are part of the S_IF+L_IF stage, the data cache related
+    -- signals are part of the S_MEM+L_MEM stage.
+    mem2pl_cacheStatus          : in  rvex_cacheStatus_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
     -- Control register interface
     ---------------------------------------------------------------------------
     -- Control register address, shared between read and write command.
@@ -479,6 +487,9 @@ begin -- architecture
         memu2dmsw_readEnable(S_MEM)       => memu2dmsw_readEnable(laneGroup),
         dmsw2memu_readData(S_MEM+L_MEM)   => dmsw2memu_readData(laneGroup),
         dmsw2pl_exception(S_MEM+L_MEM)    => dmsw2pl_exception(laneGroup),
+        
+        -- Common memory interface.
+        mem2pl_cacheStatus                => mem2pl_cacheStatus(laneGroup),
         
         -- Register file interface.
         pl2gpreg_readPortA                => pl2gpreg_readPorts(lane*2+0),

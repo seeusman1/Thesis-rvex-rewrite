@@ -136,6 +136,13 @@ static void dumpPC(int fd, uint32_t pc, trace_packet_t *extraData) {
         }
       }
     }
+    if (extraData->hasSyllable) {
+      dprintf(
+        fd,
+        "                      \t#\tFetched syllable was 0x%08X\n",
+        extraData->syllable
+      );
+    }
   }
   
 #endif
