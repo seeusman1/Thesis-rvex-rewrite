@@ -52,14 +52,37 @@
 
 #include "traceParse.h"
 
+//#define DEBUG
+
+#ifdef DEBUG
+#define DEBUG_MSG(s) fprintf(stderr, "%s\n", s)
+#else
+#define DEBUG_MSG(s) ;
+#endif
+
 /**
  * Scans count characters.
  */
+#ifdef DEBUG
+#define SCAN(count) \
+  if (*rawDataRemain < count) return 0; \
+  d = *rawDataPtr; \
+  { \
+    int _i; \
+    for (_i = 0; _i < (count); _i++) { \
+      fprintf(stderr, "%02X ", d[_i]); \
+    } \
+    fprintf(stderr, "\n"); \
+  } \
+  *rawDataPtr += count; \
+  *rawDataRemain -= count
+#else
 #define SCAN(count) \
   if (*rawDataRemain < count) return 0; \
   d = *rawDataPtr; \
   *rawDataPtr += count; \
-  *rawDataRemain -= count \
+  *rawDataRemain -= count
+#endif
 
 /**
  * Decodes the next trace packet. Returns 1 if a normal packet was encountered,
@@ -100,6 +123,7 @@ int getTracePacket(
   packet->hasNewConfiguration = 0;
   
   // Scan FLAGS.
+  DEBUG_MSG("FLAGS");
   SCAN(1);
   packet->hasPC  = (d[0] & (1 << 7)) != 0;
   packet->hasMem = (d[0] & (1 << 6)) != 0;
@@ -116,6 +140,7 @@ int getTracePacket(
   
   // Scan PC information.
   if (packet->hasPC) {
+    DEBUG_MSG("PC");
     SCAN(1);
     packet->hasBranched = 0;
     packet->pc = d[0] & 0xFC;
@@ -143,6 +168,7 @@ int getTracePacket(
   
   // Scan memory information.
   if (packet->hasMem) {
+    DEBUG_MSG("MEM");
     SCAN(1);
     switch (d[0]) {
       case 0x0: // Read word.
@@ -205,6 +231,7 @@ int getTracePacket(
   
   // Scan register information.
   if (hasRegs) {
+    DEBUG_MSG("REG");
     SCAN(1);
     packet->hasWrittenBranch = (d[0] & (1 << 7)) != 0;
     packet->hasWrittenLink   = (d[0] & (1 << 6)) != 0;
@@ -228,6 +255,7 @@ int getTracePacket(
   
   // Scan EXFLAGS.
   if (hasExFlags) {
+    DEBUG_MSG("EXFLAGS");
     SCAN(1);
     packet->hasTrapped          = (d[0] & (1 << 7)) != 0;
     packet->hasNewConfiguration = (d[0] & (1 << 6)) != 0;
@@ -243,6 +271,7 @@ int getTracePacket(
   
   // Scan trap data.
   if (packet->hasTrapped) {
+    DEBUG_MSG("TRAP");
     SCAN(9);
     packet->trapCause  = d[0];
     packet->trapPoint  = d[1];
@@ -257,6 +286,7 @@ int getTracePacket(
   
   // Scan reconfiguration data.
   if (packet->hasNewConfiguration) {
+    DEBUG_MSG("CFG");
     SCAN(4);
     packet->newConfiguration  = d[0];
     packet->newConfiguration |= ((uint32_t)d[1]) << 8;
@@ -266,12 +296,14 @@ int getTracePacket(
   
   // Scan cache status data.
   if (packet->cacheStatus) {
+    DEBUG_MSG("CACHE");
     SCAN(1);
     packet->cacheStatus = d[0];
   }
   
   // Scan reconfiguration data.
   if (packet->hasSyllable) {
+    DEBUG_MSG("INSTR");
     SCAN(4);
     packet->syllable  = d[0];
     packet->syllable |= ((uint32_t)d[1]) << 8;
@@ -350,7 +382,7 @@ int getCycleInfo(
       }
       
       // If there already is a packet for this lane, something went wrong.
-      if (lanesValid && (1 << packet.lane)) {
+      if (lanesValid & (1 << packet.lane)) {
         fprintf(stderr, "Error: multiple packets designated for the same lane encountered in the same\n");
         fprintf(stderr, "cycle. This could indicate that the number of lanes are not configured properly\n");
         fprintf(stderr, "on the command line.\n");
