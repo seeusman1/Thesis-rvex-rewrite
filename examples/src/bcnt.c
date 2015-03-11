@@ -78,6 +78,7 @@ main()
   else
     {
       rvex_succeed("bcnt: success\n");
+      return 0;
     }
-  return 0;
+  return 1;
 }

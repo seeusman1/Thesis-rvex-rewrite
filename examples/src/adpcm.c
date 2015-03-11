@@ -464,10 +464,11 @@ int main()
   if(xout[1] == 11113 && xout[2] == -11197)
     {
       rvex_succeed("adpcm: success\n");
+      return 0;
     } 
   else
     {
       rvex_fail("adpcm: failed\n");
     }
-  return 0;
+  return 1;
 }

@@ -507,7 +507,7 @@ void rowout(rowbuf, maxcol, currow)
     sm += *s;
   sum = sm;
 }
-main(argc, argv)
+int main(argc, argv)
      int argc;
      unsigned char *argv[];
 {
@@ -601,6 +601,7 @@ main(argc, argv)
   else
     {
       rvex_succeed("g3fax: success\n");
+      return 0;
     }
-  return 0;
+  return 1;
 }

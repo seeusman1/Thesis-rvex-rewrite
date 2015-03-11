@@ -87,7 +87,7 @@ static float gaussian()
 
 float sigma = 0.2;
 
-void main()
+int main()
 {
   int i, j;
   float x;
@@ -112,5 +112,7 @@ void main()
   else
     {
       rvex_succeed("fir: success\n");
+      return 0;
     }
+  return 1;
 }

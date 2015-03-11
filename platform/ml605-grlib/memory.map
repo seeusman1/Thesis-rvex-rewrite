@@ -8,10 +8,22 @@ all: CREG                    { 0xD0000000 }
 all: PLATFORM                { 0xD0000400 }
 all: CACHE                   { 0xD0000800 }
 all: MMU                     { 0xD0000C00 }
+all: _TRACE_ADDR             { 0xD0002000 }
 
-all: RESET_ALL {
-  printf("Flushing caches...\n");
+# Flushes the cache.
+all: FLUSH_CACHE {
   write(CACHE + 0x00, 0xF);
   write(CACHE + 0x04, 0xF);
-  write(GSR, 0x80000000);
+}
+
+# This is evaluated when "rvd reset" is called.
+all:_RESET {
+  write(DCRF, 0x09hh); # break
+  FLUSH_CACHE;
+  set(reg, 0);
+  while (reg < 64, (
+    writeWord(CREG_GPREG + (reg*4), 0);
+    set(reg, reg + 1);
+  ));
+  write(DCRF, 0x80hh); # reset
 }

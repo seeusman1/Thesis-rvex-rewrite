@@ -57,7 +57,7 @@ int main()
       if (SortArr[j] < SortArr[j - 1])
 	{
 	  rvex_fail("ucbqsort: failed\n");
-	  return 0;
+	  return 1;
 	}
     }
   rvex_succeed("ucbqsort: success\n");

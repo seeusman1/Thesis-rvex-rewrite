@@ -125,6 +125,12 @@ else
 LANECONFIG = 3333337B
 endif
 
+# List of platform-agnostic (generic) programs which run and complete without
+# interaction, and test for success/failure. On success, main() should return
+# 0.
+BENCH_EXECUTABLES  = adpcm bcnt blit crc engine fir g3fax itver2 jpeg matrix
+BENCH_EXECUTABLES += pocsag soma ucbqsort v42 x264
+
 # List of platform-agnostic (generic) programs.
 EXECUTABLES += adpcm blit crc des fir pocsag \
   ucbqsort bcnt compress engine g3fax jpeg qurt v42 \
@@ -148,6 +154,7 @@ VEXPARSE = $(PYTHON) $(TOOLS)/vexparse/main.py
 SIM = $(TOOLS)/sim/xstsim-r-VEX-1.1.2
 SIMFLAGS = --ips='"[r-VEX c]"' --c.core.issue_width=$(ISSUE_WIDTH) \
   -w --config-file=cfg.sim --c.trace=$(SIM_TRACE) --c.trace_regs=$(SIM_TRACEREGS)
+GDB = $(BUILD)/rvex-elf32-gdb
 PLATFORM_SRC = src
 GENERIC_SRC = $(GEN_EXAMPLES)/src
 

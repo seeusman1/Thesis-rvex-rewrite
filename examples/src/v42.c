@@ -634,7 +634,7 @@ void decode()
    }
 }
 
-main(argc, argv)
+int main(argc, argv)
  int argc;
  char *argv[];
 {
@@ -660,6 +660,6 @@ main(argc, argv)
 	  return 0;
    }
 
-return 0;
+return 1;
 }
 

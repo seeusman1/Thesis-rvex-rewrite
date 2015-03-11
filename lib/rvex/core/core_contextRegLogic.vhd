@@ -104,6 +104,10 @@ entity core_contextRegLogic is
     -- registers (including PC, done and break flag) will be reset.
     rctrl2cxreg_reset           : in  std_logic;
     
+    -- Reset vector. When the context or the entire core is reset, the PC
+    -- register will be set to this value.
+    rctrl2cxreg_resetVect       : in  rvex_address_type;
+    
     -- Active high done output. This is asserted when the context encounters
     -- a stop syllable. Processing a stop signal also sets the BRK control
     -- register, which stops the core. This bit can be reset by issuing a core
@@ -497,7 +501,7 @@ begin -- architecture
     -- when the debug bus writes to the register, stall will also be high due
     -- to the bus claiming logic.
     creg_makeNormalRegister(l2c, c2l, CR_PC, 31, 0,
-      resetState    => CFG.resetVectors(CONTEXT_INDEX),
+      resetState    => rctrl2cxreg_resetVect,
       writeEnable   => (not cxplif2cxreg_stall)
                    and (not creg_readRegisterBit(l2c, c2l, CR_DCR, CR_DCR_JUMP)),
       writeData     => cxplif2cxreg_nextPC,

@@ -93,8 +93,9 @@ int main(int argc, char *argv[])
   else
     {
       rvex_succeed("crc: success\n");
+      return 0;
     }
   
-  return 0;
+  return 1;
   
 }

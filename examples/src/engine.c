@@ -282,7 +282,7 @@ int main(void)
   if ((debug_val != 191932) || (debug_base != 3250) || (debug_interval != 418230))
     {
       rvex_fail("engine: failed\n");
-      return 0;
+      return 1;
     }
   rvex_succeed("engine: success\n");
   return 0;

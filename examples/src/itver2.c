@@ -549,9 +549,9 @@ int main(void)
 		if (tcbuf[i] != tcbuf_out[i])
 		{
 			rvex_fail("itver2 Test Failed\n");
-			return 0;
+			return 1;
 		}
 	}
 	rvex_succeed("itver2 Test Passed\n");
-	return 1;
+	return 0;
 }
