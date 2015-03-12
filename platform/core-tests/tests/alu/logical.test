@@ -12,11 +12,11 @@ init
 load    limmh 1, 0x12345678
 load    add r0.1 = r0.0, 0x12345678
 load    limmh 3, 0x87654321
-load    add r0.2 = r0.0, 0x87654321 --;;
+load    add r0.2 = r0.0, 0x87654321
 load    nop
 load    nop
 load    nop
-load    nop
+load    nop ;;
 
 inc     logical-kernel.inc
 
@@ -24,11 +24,11 @@ inc     logical-kernel.inc
 load    nop
 load    add r0.1 = r0.0, 0
 load    limmh 3, 0x87654321
-load    add r0.2 = r0.0, 0x87654321 --;;
+load    add r0.2 = r0.0, 0x87654321
 load    nop
 load    nop
 load    nop
-load    nop
+load    nop ;;
 
 inc     logical-kernel.inc
 
@@ -36,11 +36,11 @@ inc     logical-kernel.inc
 load    limmh 1, 0x12345678
 load    add r0.1 = r0.0, 0x12345678
 load    nop
-load    add r0.2 = r0.0, 0 --;;
+load    add r0.2 = r0.0, 0
 load    nop
 load    nop
 load    nop
-load    nop
+load    nop ;;
 
 inc     logical-kernel.inc
 
@@ -48,11 +48,11 @@ inc     logical-kernel.inc
 load    nop
 load    add r0.1 = r0.0, 0
 load    nop
-load    add r0.2 = r0.0, 0 --;;
+load    add r0.2 = r0.0, 0
 load    nop
 load    nop
 load    nop
-load    nop
+load    nop ;;
 
 inc     logical-kernel.inc
 

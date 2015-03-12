@@ -10,13 +10,13 @@ init
 
 -- 0x000
 load    add r0.1 = r0.0, r0.0
-load    add r0.2 = r0.0, r0.0 --;;
+load    add r0.2 = r0.0, r0.0
 load    nop
 load    nop
 load    nop
 load    nop
 load    nop
-load    nop
+load    nop ;;
 
 -- 0x020
 load    add r0.2 = r0.0, 33
@@ -26,7 +26,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.1 -- Should be 0
-load    add r0.1 = r0.0, 42 --;;
+load    add r0.1 = r0.0, 42 ;;
 
 -- 0x040
 load    add r0.11 = r0.1, 0
@@ -36,7 +36,7 @@ load    nop
 load    add r0.13 = r0.2, 0
 load    add r0.14 = r0.1, 0
 load    stw 0[r0.0] = r0.1 -- Should be 42
-load    nop --;;
+load    nop ;;
 
 -- 0x060
 load    nop
@@ -46,7 +46,7 @@ load    add r0.16 = r0.2, 0
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.2 -- Should be 33
-load    add r0.17 = r0.2, 0 --;;
+load    add r0.17 = r0.2, 0 ;;
 
 -- 0x080
 load    nop
@@ -56,7 +56,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.1 -- Should be 42
-load    nop --;;
+load    nop ;;
 
 -- 0x0A0
 load    nop
@@ -66,7 +66,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.1 -- Should be 42
-load    nop --;;
+load    nop ;;
 
 -- 0x0C0
 load    nop
@@ -76,7 +76,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.1 -- Should be 42
-load    nop --;;
+load    nop ;;
 
 -- 0x0E0
 load    nop
@@ -86,7 +86,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.1 -- Should be 42
-load    nop --;;
+load    nop ;;
 
 -- 0x100 -- Start dumping the forwarded registers.
 load    nop
@@ -96,7 +96,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.11 -- Should be 42
-load    nop --;;
+load    nop ;;
 
 -- 0x120
 load    nop
@@ -106,7 +106,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.12 -- Should be 33
-load    nop --;;
+load    nop ;;
 
 -- 0x140
 load    nop
@@ -116,7 +116,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.13 -- Should be 33
-load    nop --;;
+load    nop ;;
 
 -- 0x160
 load    nop
@@ -126,7 +126,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.14 -- Should be 42
-load    nop --;;
+load    nop ;;
 
 -- 0x180
 load    nop
@@ -136,7 +136,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.15 -- Should be 42
-load    nop --;;
+load    nop ;;
 
 -- 0x1A0
 load    nop
@@ -146,7 +146,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.16 -- Should be 32
-load    nop --;;
+load    nop ;;
 
 -- 0x1C0
 load    nop
@@ -156,7 +156,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.17 -- Should be 32
-load    nop --;;
+load    nop ;;
 
 -- 0x1E0
 load    nop
@@ -166,7 +166,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.1 -- Should still be 42
-load    nop --;;
+load    nop ;;
 
 -- 0x200
 load    nop
@@ -176,7 +176,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.2 -- Should still be 33
-load    stop --;;
+load    stop ;;
 
 
 -- Run the test.

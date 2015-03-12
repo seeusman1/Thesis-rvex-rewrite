@@ -15,7 +15,7 @@ load    cmpeq b0.3 = r0.0, 1
 load    cmpeq b0.4 = r0.0, 1
 load    cmpeq b0.5 = r0.0, 1
 load    cmpeq b0.6 = r0.0, 0
-load    cmpeq b0.7 = r0.0, 0 --;;
+load    cmpeq b0.7 = r0.0, 0 ;;
 
 -- Skip ahead to make sure that things are stored correctly.
 fillnops 0x100
@@ -28,7 +28,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 0[r0.0] = b0
-load    cmpeq b0.7 = r0.0, 1 --;; -- This should not be executed before STBR.
+load    cmpeq b0.7 = r0.0, 1 ;; -- This should not be executed before STBR.
 
 -- 0x120 -- 0b10011100
 load    cmpeq b0.7 = r0.0, 0
@@ -38,7 +38,7 @@ load    cmpeq b0.3 = r0.0, 0
 load    cmpeq b0.5 = r0.0, 1
 load    cmpeq b0.4 = r0.0, 0
 load    cmpeq b0.6 = r0.0, 1
-load    cmpeq b0.2 = r0.0, 0 --;;
+load    cmpeq b0.2 = r0.0, 0 ;;
 
 -- Skip ahead to make sure that things are stored correctly.
 fillnops 0x200
@@ -51,7 +51,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 1[r0.0] = b0
-load    stop --;;
+load    stop ;;
 
 -- Run the test.
 reset

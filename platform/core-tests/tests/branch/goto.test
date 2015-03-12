@@ -17,7 +17,7 @@ load    nop
 load    nop
 load    nop
 load    add r0.10 = r0.0, 42
-load    goto 0x20 --;; -- Skip next instruction.
+load    goto 0x20 ;; -- Skip next instruction.
 
 -- 0x0020
 load    add r0.11 = r0.0, 33
@@ -27,7 +27,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    add r0.12 = r0.0, 33 --;;
+load    add r0.12 = r0.0, 33 ;;
 
 -- 0x0040
 load    limmh 1, 0x00001000
@@ -37,7 +37,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.10
-load    nop --;;
+load    nop ;;
 
 -- 0x0060
 load    mtl l0.0 = r0.63
@@ -47,7 +47,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.11
-load    nop --;;
+load    nop ;;
 
 -- 0x0080
 load    nop
@@ -57,7 +57,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    igoto l0.0 --;;
+load    igoto l0.0 ;;
 
 -- 0x0100 - should never get here.
 load    nop
@@ -67,7 +67,7 @@ load    nop
 load    nop
 load    nop
 load    stw 0[r0.0] = r0.0
-load    stop --;;
+load    stop ;;
 
 -- First igoto target:
 at 0x1000
@@ -78,7 +78,7 @@ load    nop
 load    nop
 load    nop
 load    stw 4[r0.0] = r0.0
-load    nop --;;
+load    nop ;;
 
 -- 0x1020
 load    mtl l0.0 = r0.63
@@ -88,7 +88,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    nop --;;
+load    nop ;;
 
 -- 0x1040
 load    nop
@@ -98,7 +98,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    igoto l0.0 --;; -- Very misaligned, should go to panic handler.
+load    igoto l0.0 ;; -- Very misaligned, should go to panic handler.
 
 -- 0x1080 - should never get here.
 load    nop
@@ -108,7 +108,7 @@ load    nop
 load    nop
 load    nop
 load    stw 8[r0.0] = r0.0
-load    stop --;;
+load    stop ;;
 
 -- Panic handler:
 at 0x2000
@@ -119,7 +119,7 @@ load    nop
 load    nop
 load    nop
 load    stw 12[r0.0] = r0.0
-load    stop --;;
+load    stop ;;
 
 -- Reset the processor to start.
 reset
