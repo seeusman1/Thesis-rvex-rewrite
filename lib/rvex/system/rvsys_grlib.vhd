@@ -119,6 +119,12 @@ entity rvsys_grlib is
     -- Used to access debug control and status registers for the core, cache
     -- and any other support systems. The register map is as follows.
     --          _____________________________
+    --  0x3FFF |                             |
+    --         ~ Trace data buffer B         ~
+    --  0x3000 |_____________________________|
+    --  0x2FFF |                             |
+    --         ~ Trace data buffer A         ~
+    --  0x2000 |_____________________________|
     --  0x1FFF |                             |
     --         | Context 7 ctrl regs         |
     --         |                             |
@@ -206,10 +212,14 @@ architecture Behavioral of rvsys_grlib is
   -- Soft reset signal from the APB bus.
   signal dbg_reset              : std_logic;
   
-  -- rvex interrupt interface signals.
+  -- rvex interrupt/run control interface signals.
   signal rctrl2rv_irq           : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
   signal rctrl2rv_irqID         : rvex_address_array(2**CFG.core.numContextsLog2-1 downto 0);
   signal rv2rctrl_irqAck        : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
+  signal rctrl2rv_run           : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
+  signal rv2rctrl_idle          : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
+  signal rctrl2rv_reset         : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
+  signal rctrl2rv_resetVect     : rvex_address_array(2**CFG.core.numContextsLog2-1 downto 0);
   
   -- Common cache interface signals.
   signal rv2cache_decouple      : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
@@ -232,6 +242,11 @@ architecture Behavioral of rvsys_grlib is
   signal rv2dcache_writeEnable  : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal rv2dcache_bypass       : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_readData     : rvex_data_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  
+  -- Trace data interface signals.
+  signal rv2trace_push          : std_logic;
+  signal rv2trace_data          : rvex_byte_type;
+  signal trace2rv_busy          : std_logic;
   
   -- Cache to AHB bus bridge interface signals.
   signal cache2bridge_bus       : bus_mst2slv_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
@@ -261,6 +276,10 @@ architecture Behavioral of rvsys_grlib is
   -- Debug bus demuxer to core control registers.
   signal demux2rv               : bus_mst2slv_type;
   signal rv2demux               : bus_slv2mst_type;
+  
+  -- Debug bus demuxer to trace buffer.
+  signal demux2trace            : bus_mst2slv_type;
+  signal trace2demux            : bus_slv2mst_type;
   
 --=============================================================================
 begin -- architecture
@@ -314,6 +333,10 @@ begin -- architecture
         rctrl2rv_irq              => rctrl2rv_irq,
         rctrl2rv_irqID            => rctrl2rv_irqID,
         rv2rctrl_irqAck           => rv2rctrl_irqAck,
+        rctrl2rv_run              => rctrl2rv_run,
+        rv2rctrl_idle             => rv2rctrl_idle,
+        rctrl2rv_reset            => rctrl2rv_reset,
+        rctrl2rv_resetVect        => rctrl2rv_resetVect,
         
         -- Common memory interface.
         rv2mem_decouple           => rv2cache_decouple,
@@ -342,7 +365,12 @@ begin -- architecture
         dbg2rv_writeEnable        => dbg2rv_writeEnable,
         dbg2rv_writeMask          => dbg2rv_writeMask,
         dbg2rv_writeData          => dbg2rv_writeData,
-        rv2dbg_readData           => rv2dbg_readData
+        rv2dbg_readData           => rv2dbg_readData,
+        
+        -- Trace interface.
+        rv2trsink_push            => rv2trace_push,
+        rv2trsink_data            => rv2trace_data,
+        trsink2rv_busy            => trace2rv_busy
         
       );
     
@@ -492,6 +520,31 @@ begin -- architecture
     -- pragma translate_on
     
   end block;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the trace data buffer
+  -----------------------------------------------------------------------------
+  trace_buffer: entity rvex.periph_trace
+    generic map (
+      DEPTH_LOG2B                 => 13 -- 8kiB = 2x 4kiB
+    )
+    port map (
+      
+      -- System control.
+      reset                       => resetCPU,
+      clk                         => clk,
+      clkEn                       => clkEnCPU,
+      
+      -- Slave bus.
+      bus2trace                   => demux2trace,
+      trace2bus                   => trace2demux,
+      
+      -- Trace bytestream input.
+      rv2trace_push               => rv2trace_push,
+      rv2trace_data               => rv2trace_data,
+      trace2rv_busy               => trace2rv_busy
+      
+    );
   
   -----------------------------------------------------------------------------
   -- Generate the bypass signals
@@ -666,14 +719,24 @@ begin -- architecture
   -----------------------------------------------------------------------------
   irq_bridge_gen: for ctxt in 2**CFG.core.numContextsLog2-1 downto 0 generate
     
-    -- TODO
-    rctrl2rv_irq(ctxt)    <= '0';
-    rctrl2rv_irqID(ctxt)  <= (others => '0');
-    irqo(ctxt).intack     <= '0';
-    irqo(ctxt).irl        <= "0000";
-    irqo(ctxt).pwd        <= '0';
-    irqo(ctxt).fpen       <= '0';
-    irqo(ctxt).idle       <= '1';
+    -- Because the rvex does not have an interrupt level register, we always
+    -- accept any incoming interrupt when the interrupt enable flag is set.
+    -- This means interrupts can nest just fine, but it's all or nothing. Note
+    -- that the other run control signals are also connected to the interrupt
+    -- controller appropriately, except for the run signal. The default
+    -- interrupt controller seems to have run hardwired such that only
+    -- processor 0 is ever enabled, so it wouldn't make much sense to connect
+    -- it.
+    rctrl2rv_irq(ctxt)        <= '0' when irqi(ctxt).irl = "0000" else '1';
+    rctrl2rv_irqID(ctxt)      <= X"0000000" & irqi(ctxt).irl;
+    rctrl2rv_run(ctxt)        <= '1'; --irqi(ctxt).run;
+    rctrl2rv_reset(ctxt)      <= irqi(ctxt).rst or irqi(ctxt).hrdrst;
+    rctrl2rv_resetVect(ctxt)  <= irqi(ctxt).rstvec & X"000";
+    irqo(ctxt).intack         <= rv2rctrl_irqAck(ctxt);
+    irqo(ctxt).irl            <= irqi(ctxt).irl;
+    irqo(ctxt).pwd            <= '0';
+    irqo(ctxt).fpen           <= '0';
+    irqo(ctxt).idle           <= rv2rctrl_idle(ctxt);
     
   end generate;
   
@@ -713,18 +776,21 @@ begin -- architecture
   -----------------------------------------------------------------------------
   debug_bus_demux_block: block is
     
-    constant ADDR_MAP : addrRangeAndMapping_array(0 to 3) := (
+    constant ADDR_MAP : addrRangeAndMapping_array(0 to 4) := (
       0 => addrRangeAndMap( -- rvex debug interface (default).
-        match => "--------------------------------"
+        match => "------------------0-------------"
       ),
       1 => addrRangeAndMap( -- Global status/ctrl (256 bytes), overrides rvex global reg mirror at context 1.
-        match => "-------------------00100--------"
+        match => "------------------000100--------"
       ),
       2 => addrRangeAndMap( -- Cache status/ctrl (256 bytes), overrides rvex global reg mirror at context 2.
-        match => "-------------------01000--------"
+        match => "------------------001000--------"
       ),
       3 => addrRangeAndMap( -- MMU status/ctrl (256 bytes), overrides rvex global reg mirror at context 3.
-        match => "-------------------01100--------"
+        match => "------------------001100--------"
+      ),
+      4 => addrRangeAndMap( -- trace buffer.
+        match => "------------------1-------------"
       )
     );
     
@@ -749,10 +815,12 @@ begin -- architecture
         demux2slv(1)      => demux2glob,
         demux2slv(2)      => demux2cache,
         demux2slv(3)      => demux2mmu,
+        demux2slv(4)      => demux2trace,
         slv2demux(0)      => rv2demux,
         slv2demux(1)      => glob2demux,
         slv2demux(2)      => cache2demux,
-        slv2demux(3)      => mmu2demux
+        slv2demux(3)      => mmu2demux,
+        slv2demux(4)      => trace2demux
         
       );
     

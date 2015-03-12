@@ -24,8 +24,9 @@ endif
 TARGETS = \
 "make upload-<program>    uploads program to platform using rvd"\
 "make start-<program>     upload + start program"\
-"make run-<program>       start + wait for completion"\
 "make trace-<program>     upload + trace program (requires hardware trace unit)"\
+"make gdb-<program>       upload + gdb"\
+"make run-<program>       start + wait for completion"\
 "make run-all             run-<program> for all executables"\
 "make copy-<program>      registers program files for simulation"\
 "make copy-none           unregisters files for simulation"
@@ -62,10 +63,15 @@ trace-%: upload-% %.disas
 	$(RVTRACE) -c2 $(patsubst trace-%,%,$@).rawtrace $(patsubst trace-%,%,$@).disas | cat > $(patsubst trace-%,%,$@).2.trace
 	$(RVTRACE) -c3 $(patsubst trace-%,%,$@).rawtrace $(patsubst trace-%,%,$@).disas | cat > $(patsubst trace-%,%,$@).3.trace
 
-run-all: $(patsubst %,run-%,$(EXECUTABLES))
+.PHONY: gdb-%
+gdb-%: %.elf upload-%
+	$(RVD) -c0 gdb -- $(GDB) $<
 
-.PHONY: debug server stop monitor
-debug server stop monitor:
+.PHONY: run-all
+run-all: $(patsubst %,run-%,$(BENCH_EXECUTABLES))
+
+.PHONY: debug server stop monitor monitor-nobuf
+debug server stop monitor monitor-nobuf:
 	cd $(DEBUGIFACE) && make $@
 
 # Copies the given program machine code and disassembly to init* indicating

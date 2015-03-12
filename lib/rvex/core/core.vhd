@@ -288,6 +288,10 @@ entity core is
     -- registers (including PC, done and break flag) will be reset.
     rctrl2rv_reset              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
     
+    -- Reset vector. When the context or the entire core is reset, the PC
+    -- register will be set to this value.
+    rctrl2rv_resetVect          : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0) := CFG.resetVectors(2**CFG.numContextsLog2-1 downto 0);
+    
     -- Active high done output. This is asserted when the context encounters
     -- a stop syllable. Processing a stop signal also sets the BRK control
     -- register, which stops the core. This bit can be reset by issuing a core
@@ -999,6 +1003,7 @@ begin -- architecture
         
         -- Run control interface.
         rctrl2cxreg_reset           => rctrl2rv_reset(ctxt),
+        rctrl2cxreg_resetVect       => rctrl2rv_resetVect(ctxt),
         cxreg2rctrl_done            => rv2rctrl_done(ctxt),
         
         -- Pipelane interface.

@@ -90,6 +90,7 @@ int main()
   else
     {
       rvex_succeed("blit: success\n");
+      return 0;
     }
-  return 0;
+  return 1;
 }

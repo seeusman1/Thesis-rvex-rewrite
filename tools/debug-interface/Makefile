@@ -14,7 +14,7 @@ include $(SRCDIR)/default-configuration.cfg
 #------------------------------------------------------------------------------
 
 # Netcat is used for a number of commands.
-NETCAT = nc
+NETCAT = netcat
 
 # Directory containins the rvdbg binary and compilation outputs (ignored by
 # git).
@@ -39,6 +39,9 @@ catlog:
 
 monitor: copyconf
 	@echo "Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running."; $(NETCAT) localhost $(TCP_PORT_APP)
+
+monitor-nobuf: copyconf
+	@echo "Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running."; stty -echo -icanon && $(NETCAT) localhost $(TCP_PORT_APP)
 
 debug: copyconf $(BINDIR)/rvd $(BINDIR)/rvtrace
 	@echo "#!/bin/bash" > $(BINDIR)/rvd.sh

@@ -52,7 +52,7 @@
 
 #include "traceParse.h"
 
-#define DEBUG
+//#define DEBUG
 
 /**
  * Scans count characters.
@@ -61,9 +61,16 @@
 #define SCAN(count) \
   if (*rawDataRemain < count) return 0; \
   d = *rawDataPtr; \
+  { \
+    int _i; \
+    fprintf(stderr, "%s: ", dbg); \
+    for (_i = 0; _i < (count); _i++) { \
+      fprintf(stderr, "%02X ", d[_i]); \
+    } \
+    fprintf(stderr, "\n"); \
+  } \
   (*rawDataPtr) += count; \
-  (*rawDataRemain) -= count \
-  ; {int ii; for (ii = 0; ii < count; ii++) fprintf(stderr, "Scanned 0x%02X\n", d[ii]);}
+  (*rawDataRemain) -= count
 #define REPORT(s) fprintf(stderr, s)
 #define REPORT2(s, d) fprintf(stderr, s, d)
 #else
@@ -115,9 +122,11 @@ int getTracePacket(
   packet->hasWrittenBranch    = 0;
   packet->hasTrapped          = 0;
   packet->hasNewConfiguration = 0;
+  packet->cacheStatus         = 0;
+  packet->hasSyllable         = 0;
   
   // Scan FLAGS.
-  SCAN(1);
+  SCAN("FLAGS", 1);
   packet->hasPC  = (d[0] & (1 << 7)) != 0;
   packet->hasMem = (d[0] & (1 << 6)) != 0;
   hasRegs        = (d[0] & (1 << 5)) != 0;
@@ -131,12 +140,11 @@ int getTracePacket(
     endOfCycle = 1;
   }
   
-  REPORT2("This is a packet for lane %d.\n", packet->lane);
+  REPORT2("  Lane = %d.\n", packet->lane);
   
   // Scan PC information.
   if (packet->hasPC) {
-    REPORT("Scanning PC info...\n");
-    SCAN(1);
+    SCAN("  PC", 1);
     packet->hasBranched = 0;
     packet->pc = d[0] & 0xFC;
     switch (d[0] & 0x03) {
@@ -144,14 +152,14 @@ int getTracePacket(
         packet->hasBranched = 1;
         // continue
       case 2:
-        SCAN(3);
+        SCAN("    EX", 3);
         packet->hasPC = 0xFFFFFFFF;
         packet->pc |= ((uint32_t)d[0]) << 8;
         packet->pc |= ((uint32_t)d[1]) << 16;
         packet->pc |= ((uint32_t)d[2]) << 24;
         break;
       case 1:
-        SCAN(1);
+        SCAN("    EX", 1);
         packet->hasPC = 0x0000FFFF;
         packet->pc |= ((uint32_t)d[0]) << 8;
         break;
@@ -163,8 +171,7 @@ int getTracePacket(
   
   // Scan memory information.
   if (packet->hasMem) {
-    REPORT("Scanning memory info...\n");
-    SCAN(1);
+    SCAN("  MEM", 1);
     switch (d[0]) {
       case 0x0: // Read word.
         packet->memAddr = 0;
@@ -203,22 +210,22 @@ int getTracePacket(
         return -1;
     }
     
-    SCAN(4);
+    SCAN("    ADDR", 4);
     packet->memAddr += d[0];
     packet->memAddr |= ((uint32_t)d[1]) << 8;
     packet->memAddr |= ((uint32_t)d[2]) << 16;
     packet->memAddr |= ((uint32_t)d[3]) << 24;
     
     if (packet->hasMem >= 1) {
-      SCAN(1);
+      SCAN("    DATA", 1);
       packet->memWriteData = d[0];
     }
     if (packet->hasMem >= 2) {
-      SCAN(1);
+      SCAN("    DATA", 1);
       packet->memWriteData |= ((uint32_t)d[0]) << 8;
     }
     if (packet->hasMem >= 4) {
-      SCAN(2);
+      SCAN("    DATA", 2);
       packet->memWriteData |= ((uint32_t)d[0]) << 16;
       packet->memWriteData |= ((uint32_t)d[1]) << 14;
     }
@@ -226,14 +233,13 @@ int getTracePacket(
   
   // Scan register information.
   if (hasRegs) {
-    REPORT("Scanning register info...\n");
-    SCAN(1);
+    SCAN("  REG", 1);
     packet->hasWrittenBranch = (d[0] & (1 << 7)) != 0;
     packet->hasWrittenLink   = (d[0] & (1 << 6)) != 0;
     packet->hasWrittenGP     = d[0] & 0x3F;
     
     if (packet->hasWrittenLink || packet->hasWrittenGP) {
-      SCAN(4);
+      SCAN("    GP/LINK", 4);
       packet->gpWriteData  = d[0];
       packet->gpWriteData |= ((uint32_t)d[1]) << 8;
       packet->gpWriteData |= ((uint32_t)d[2]) << 16;
@@ -242,7 +248,7 @@ int getTracePacket(
     }
     
     if (packet->hasWrittenBranch) {
-      SCAN(2);
+      SCAN("    BR", 2);
       packet->hasWrittenBranch = d[0];
       packet->branchWriteData = d[1];
     }
@@ -250,7 +256,7 @@ int getTracePacket(
   
   // Scan EXFLAGS.
   if (hasExFlags) {
-    SCAN(1);
+    SCAN("  EXFLAGS", 1);
     packet->hasTrapped          = (d[0] & (1 << 7)) != 0;
     packet->hasNewConfiguration = (d[0] & (1 << 6)) != 0;
     packet->cacheStatus         = (d[0] & (1 << 5)) != 0;
@@ -265,8 +271,7 @@ int getTracePacket(
   
   // Scan trap data.
   if (packet->hasTrapped) {
-    REPORT("Scanning trap info...\n");
-    SCAN(9);
+    SCAN("    TRAP", 9);
     packet->trapCause  = d[0];
     packet->trapPoint  = d[1];
     packet->trapPoint |= ((uint32_t)d[2]) << 8;
@@ -280,20 +285,25 @@ int getTracePacket(
   
   // Scan reconfiguration data.
   if (packet->hasNewConfiguration) {
-    REPORT("Scanning reconfiguration info...\n");
-    SCAN(1);
+    SCAN("    CFG", 1);
     packet->newConfiguration = d[0] & 0x0F;
   }
   
   // Scan cache status data.
   if (packet->cacheStatus) {
-    SCAN(1);
+    SCAN("    CACHE", 1);
     packet->cacheStatus = d[0];
+    if (packet->cacheStatus & 0x01) {
+      fprintf(stderr, "Error: encountered cache info field with reserved bits set. This probably means\n");
+      fprintf(stderr, "the trace was generated with a newer hardware version than what's currently\n");
+      fprintf(stderr, "supported.\n");
+      return -1;
+    }
   }
   
   // Scan reconfiguration data.
   if (packet->hasSyllable) {
-    SCAN(4);
+    SCAN("    INSTR", 4);
     packet->syllable  = d[0];
     packet->syllable |= ((uint32_t)d[1]) << 8;
     packet->syllable |= ((uint32_t)d[2]) << 16;
@@ -350,6 +360,8 @@ int getCycleInfo(
     data->slot[i].hasWrittenBranch = 0;
     data->slot[i].hasTrapped = 0;
     data->slot[i].hasNewConfiguration = 0;
+    data->slot[i].cacheStatus = 0;
+    data->slot[i].hasSyllable = 0;
   }
   
   // Read trace packets until we've found a full cycle's worth of data for the

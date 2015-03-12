@@ -499,23 +499,24 @@ int main()
 	  else
 	    {
 	      rvex_fail("pocsag: failed\n");
-	      return 0;
+	      return 1;
 	    }
 	} 
       else
 	{
 	  rvex_fail("pocsag: failed\n");
-	  return 0;
+	  return 1;
 	}
     }
   if (strncmp((char *) msg, "Dear fellow ACP benchmarker", 27) == 0 &&
       msg_length == 88)
     {
       rvex_succeed("pocsag: success\n");
+      return 0;
     } 
   else
     {
       rvex_fail("pocsag: failed\n");
     }
-  return 0;
+  return 1;
 }

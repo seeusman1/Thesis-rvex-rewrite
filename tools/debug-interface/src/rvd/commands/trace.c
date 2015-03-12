@@ -62,6 +62,43 @@
 #include "commands.h"
 #include "definitions.h"
 
+static int flushTraceBuf(uint32_t address) {
+  uint32_t numBytes;
+  int done = 0;
+  while (!done) {
+    done = 1;
+    switch (rvsrv_readSingle(address, &numBytes, 4)) {
+      case 1:
+        if (numBytes != 4) {
+          done = 0;
+        }
+        break;
+      case 0:
+        fprintf(stderr,
+          "Error: failed to read from address 0x%08X; bus fault 0x%08X.\n",
+          address, numBytes
+        );
+      default:
+        return -1;
+    }
+    switch (rvsrv_readSingle(address + RVSRV_PAGE_SIZE, &numBytes, 4)) {
+      case 1:
+        if (numBytes != 4) {
+          done = 0;
+        }
+        break;
+      case 0:
+        fprintf(stderr,
+          "Error: failed to read from address 0x%08X; bus fault 0x%08X.\n",
+          address, numBytes
+        );
+      default:
+        return -1;
+    }
+  }
+  return 0;
+}
+
 /**
  * Executes the "rvd trace" command.
  */
@@ -70,7 +107,6 @@ int runTrace(commandLineArgs_t *args) {
   value_t address;
   int f;
   int first;
-  uint32_t i;
   uint32_t traceByteCount;
   int page;
   
@@ -119,11 +155,10 @@ int runTrace(commandLineArgs_t *args) {
     return 0;
   }
   
-  printf("Initializing trace...\n");
-  
   // Halt each selected context and evaluate the trace buffer address. Do the
   // latter for each context and make sure the result is the same for all
   // (which might not be the case in multiprocessor systems).
+  printf("Halting execution...\n");
   first = 1;
   FOR_EACH_CONTEXT(
     value_t value;
@@ -148,6 +183,7 @@ int runTrace(commandLineArgs_t *args) {
   );
   
   // Write to the trace control registers.
+  printf("Setting up trace control flags...\n");
   FOR_EACH_CONTEXT(
     value_t value;
     value_t regAddr;
@@ -188,49 +224,13 @@ int runTrace(commandLineArgs_t *args) {
   // reset. This might not be the case if the core is for some reason
   // outputting trace data even though we're expecting it not to be right
   // now.
-  switch (rvsrv_readSingle(address.value + RVSRV_PAGE_SIZE, &i, 4)) {
-    case 1:
-      break;
-    case 0:
-      fprintf(stderr,
-        "Error: failed to read from address 0x%08X; bus fault 0x%08X.\n",
-        address.value,
-        i
-      );
-    default:
-      return -1;
-  }
-  switch (rvsrv_readSingle(address.value, &i, 4)) {
-    case 1:
-      break;
-    case 0:
-      fprintf(stderr,
-        "Error: failed to read from address 0x%08X; bus fault 0x%08X.\n",
-        address.value,
-        i
-      );
-    default:
-      return -1;
-  }
-  switch (rvsrv_readSingle(address.value + RVSRV_PAGE_SIZE, &i, 4)) {
-    case 1:
-      if (i != 4) {
-        fprintf(stderr,
-          "Error: failed to reset trace buffer.\n"
-        );
-      }
-      break;
-    case 0:
-      fprintf(stderr,
-        "Error: failed to read from address 0x%08X; bus fault 0x%08X.\n",
-        address.value,
-        i
-      );
-    default:
-      return -1;
+  printf("Flushing the trace buffer...\n");
+  if (flushTraceBuf(address.value) == -1) {
+    return -1;
   }
   
   // Resume execution.
+  printf("Resuming execution...\n");
   first = 1;
   FOR_EACH_CONTEXT(
     value_t value;
@@ -359,12 +359,12 @@ int runTrace(commandLineArgs_t *args) {
     
   }
   
-  printf("Done. Cleaning up...\n");
   
   // Close the file.
   close(f);
   
   // Clear the trace control registers.
+  printf("Resetting trace control flags...\n");
   FOR_EACH_CONTEXT(
     value_t regAddr;
     uint32_t fault;
@@ -392,29 +392,9 @@ int runTrace(commandLineArgs_t *args) {
   
   // Flush the trace buffer again, to make sure the core can finish writing
   // the trace packet it may be in the middle of.
-  switch (rvsrv_readSingle(address.value + RVSRV_PAGE_SIZE, &i, 4)) {
-    case 1:
-      break;
-    case 0:
-      fprintf(stderr,
-        "Error: failed to read from address 0x%08X; bus fault 0x%08X.\n",
-        address.value,
-        i
-      );
-    default:
-      return -1;
-  }
-  switch (rvsrv_readSingle(address.value, &i, 4)) {
-    case 1:
-      break;
-    case 0:
-      fprintf(stderr,
-        "Error: failed to read from address 0x%08X; bus fault 0x%08X.\n",
-        address.value,
-        i
-      );
-    default:
-      return -1;
+  printf("Flushing the trace buffer...\n");
+  if (flushTraceBuf(address.value) == -1) {
+    return -1;
   }
   
   // Print an extra newline after the operation to keep things clean.

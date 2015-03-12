@@ -1,8 +1,7 @@
 
-.PHONY: help compile-% vsim-% ise-% upload-% start-% run-% trace-% server stop debug monitor clean
-
 UNISIM = $(XILINX)/vhdl/src/unisims
 
+.PHONY: help
 help:
 	@echo ""
 	@echo " This platform consists of an rvex processor, on-chip memories and basic clock"
@@ -41,6 +40,9 @@ help:
 	@echo "  make trace-<prog>    : uploads and traces a program using the hardware trace"
 	@echo "                         unit."
 	@echo ""
+	@echo "  make gdb-<prog>   : compiles and uploads the specified program and then runs"
+	@echo "                      gdb to debug it."
+	@echo ""
 	@echo "  make run-<prog>      : same as start-<prog>, but also waits for completion."
 	@echo "                         Completion is detected when none of the context cycle"
 	@echo "                         counters increment between two reads."
@@ -61,6 +63,11 @@ help:
 	@echo "                         to the program which can be read using getchar. Exit"
 	@echo "                         using ctrl+C."
 	@echo ""
+	@echo "  make monitor-nobuf   : same as monitor, but with line buffering and echo"
+	@echo "                         disabled."
+	@echo ""
+	@echo "  make clean           : cleans C and modelsim output files."
+	@echo ""
 	@cd examples && $(MAKE) --no-print-directory list-executables
 	@echo " In addition, you can use \"none\" to initialize the memories with zeros for all"
 	@echo " targets but upload-<prog> and run-<prog>."
@@ -69,30 +76,43 @@ help:
 	@echo " or synthesizing with the memories initialized to a large program."
 	@echo ""
 
+.PHONY: compile-%
 compile-%:
 	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
 
+.PHONY: vsim-%
 vsim-%: compile-%
 	cd modelsim && $(MAKE) vsim
 
+.PHONY: ise-%
 ise-%: compile-%
 	cd ise && ise standalone.xise
 
+.PHONY: upload-%
 upload-%:
 	cd examples && $(MAKE) $@
 
+.PHONY: start-%
 start-%:
 	cd examples && $(MAKE) $@
 
+.PHONY: run-%
 run-%:
 	cd examples && $(MAKE) $@
 
+.PHONY: trace-%
 trace-%:
 	cd examples && $(MAKE) $@
 
-server stop monitor:
+.PHONY: gdb-%
+gdb-%:
 	cd examples && $(MAKE) $@
 
+.PHONY: server stop monitor monitor-nobuf
+server stop monitor monitor-nobuf:
+	cd examples && $(MAKE) $@
+
+.PHONY: debug
 debug:
 	cd examples && $(MAKE) $@
 	cat ../../tools/debug-interface/debug > debug
@@ -101,6 +121,7 @@ debug:
 	@echo " Run \"source debug\" now..."
 	@echo ""
 
+.PHONY: clean
 clean:
 	cd examples && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
