@@ -24,8 +24,6 @@ architecture Behavioral of testbench is
     numLanesLog2                => 3,
     numLaneGroupsLog2           => 2,
     numContextsLog2             => 2,
-    limmhFromPreviousPair       => 0,
-    bundleAlignLog2             => 0,
     traceEnable                 => 1
   );
   constant CCFG                 : cache_generic_config_type := cache_cfg(

@@ -250,7 +250,7 @@ architecture Behavioral of core_tb is
     -- stop bit earlier when ILP is not sufficient to save on memory accesses.
     -- Note that traps are generated when a stop bit is encountered in any
     -- syllable not occuring just before an alignment point.
-    bundleAlignLog2             => 0,
+    bundleAlignLog2             => 3,
     
     -- Defines which lanes have a multiplier. Bit 0 of this number maps to lane
     -- 0, bit 1 to lane 1, etc.
@@ -285,7 +285,7 @@ architecture Behavioral of core_tb is
     -- When true, syllables can borrow long immediates from the previous
     -- syllable pair (with the same index within the pair) within a generic
     -- binary bundle.
-    limmhFromPreviousPair       => 0,
+    limmhFromPreviousPair       => 1,
     
     -- When true, general purpose register 63 maps directly to the link
     -- register. When false, MTL, MFL, STL and LDL must be used to access the
