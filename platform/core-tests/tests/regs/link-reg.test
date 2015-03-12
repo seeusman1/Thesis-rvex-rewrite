@@ -9,13 +9,13 @@ init
 
 -- 0x000
 load    add r0.1 = r0.0, 42
-load    mtl l0.0 = r0.0 --;;
+load    mtl l0.0 = r0.0
 load    nop
 load    nop
 load    nop
 load    nop
 load    nop
-load    nop
+load    nop ;;
 
 -- Give the write to r0.1 and the link register time to commit.
 fillnops 0x100
@@ -28,7 +28,7 @@ load    nop
 load    nop
 load    nop
 load    stl 0[r0.0] = l0.0 -- Should be 0, still
-load    mtl l0.0 = r0.1 --;;
+load    mtl l0.0 = r0.1 ;;
 
 -- Give the move to the link register time to commit.
 fillnops 0x200
@@ -41,7 +41,7 @@ load    nop
 load    nop
 load    nop
 load    stl 0[r0.0] = l0.0
-load    stop --;;
+load    stop ;;
 
 -- Run the test.
 reset

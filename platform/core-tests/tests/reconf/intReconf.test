@@ -14,13 +14,13 @@ init
 
 -- 0x000: load new configuration word.
 load    add r0.1 = r0.0, 0x1123
-load    limmh 0, 0x1123 --;;
+load    limmh 0, 0x1123
 load    nop
 load    nop
 load    nop
 load    nop
 load    nop
-load    nop
+load    nop ;;
 
 -- 0x020: write new configuration word.
 load    nop
@@ -30,7 +30,7 @@ load    nop
 load    nop
 load    nop
 load    stw CR_CRR[r0.0] = r0.1
-load    limmh 6, CR_CRR --;;
+load    limmh 6, CR_CRR ;;
 
 -- Delay for a bit.
 fillnops 0x200
@@ -43,7 +43,7 @@ load    nop
 load    nop
 load    nop
 load    ldb r0.2 = CR_CID[r0.0]
-load    limmh 6, CR_CID --;;
+load    limmh 6, CR_CID ;;
 
 -- 0x220: determine number of cycles per generic bundle while waiting for load.
 load    add r0.1 = r0.1, 1
@@ -53,7 +53,7 @@ load    nop
 load    add r0.1 = r0.1, 1
 load    nop
 load    add r0.1 = r0.1, 1
-load    nop
+load    nop ;;
 
 -- 0x240: write number of cycles per generic bundle to memory and stop.
 load    nop
@@ -63,7 +63,7 @@ load    nop
 load    nop
 load    nop
 load    stb 0[r0.2] = r0.1
-load    stop
+load    stop ;;
 
 -- Reset the processor.
 reset

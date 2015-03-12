@@ -23,7 +23,7 @@ load      andl    r0.13 = r0.1, r0.2
 load      nandl   b0.0  = r0.1, r0.2
 load      norl    b0.1  = r0.1, r0.2
 load      orl     b0.2  = r0.1, r0.2
-load      andl    b0.3  = r0.1, r0.2 --;;
+load      andl    b0.3  = r0.1, r0.2 ;;
 
 -- Delay for a bit, in case forwarding is disabled.
 loadnops  64
@@ -36,7 +36,7 @@ load      nop
 load      nop
 load      nop
 load      stbr 0[r0.0] = b0
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -45,7 +45,7 @@ load      nop
 load      nop
 load      nop
 load      stw 4[r0.0] = r0.10
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -54,7 +54,7 @@ load      nop
 load      nop
 load      nop
 load      stw 8[r0.0] = r0.11
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -63,7 +63,7 @@ load      nop
 load      nop
 load      nop
 load      stw 12[r0.0] = r0.12
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -72,5 +72,5 @@ load      nop
 load      nop
 load      nop
 load      stw 16[r0.0] = r0.13
-load      nop --;;
+load      nop ;;
 

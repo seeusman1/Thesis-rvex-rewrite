@@ -12,11 +12,11 @@ loadnops  64
 load      sxtb    r0.10 = r0.1
 load      sxth    r0.11 = r0.1
 load      zxtb    r0.12 = r0.1
-load      zxth    r0.13 = r0.1 --;;
+load      zxth    r0.13 = r0.1
 load      nop
 load      nop
 load      nop
-load      nop
+load      nop ;;
 
 -- Delay for a bit, in case forwarding is disabled.
 loadnops  64
@@ -29,7 +29,7 @@ load      nop
 load      nop
 load      nop
 load      stw 0[r0.0] = r0.10
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -38,7 +38,7 @@ load      nop
 load      nop
 load      nop
 load      stw 4[r0.0] = r0.11
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -47,7 +47,7 @@ load      nop
 load      nop
 load      nop
 load      stw 8[r0.0] = r0.12
-load      nop --;;
+load      nop ;;
 
 load      nop
 load      nop
@@ -56,5 +56,5 @@ load      nop
 load      nop
 load      nop
 load      stw 12[r0.0] = r0.13
-load      nop --;;
+load      nop ;;
 

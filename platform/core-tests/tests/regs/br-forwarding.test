@@ -16,7 +16,7 @@ load    cmpeq b0.3 = r0.0, 1
 load    cmpeq b0.4 = r0.0, 1
 load    cmpeq b0.5 = r0.0, 1
 load    cmpeq b0.6 = r0.0, 1
-load    cmpeq b0.7 = r0.0, 1 --;;
+load    cmpeq b0.7 = r0.0, 1 ;;
 
 -- 0x020
 load    nop
@@ -26,7 +26,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 0[r0.0] = b0
-load    cmpeq b0.3 = r0.0, 0 --;;
+load    cmpeq b0.3 = r0.0, 0 ;;
 
 -- 0x040
 load    nop
@@ -36,7 +36,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 1[r0.0] = b0
-load    cmpeq b0.5 = r0.0, 0 --;;
+load    cmpeq b0.5 = r0.0, 0 ;;
 
 -- 0x060
 load    nop
@@ -46,7 +46,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 2[r0.0] = b0
-load    cmpeq b0.0 = r0.0, 0 --;;
+load    cmpeq b0.0 = r0.0, 0 ;;
 
 -- 0x080
 load    nop
@@ -56,7 +56,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 3[r0.0] = b0
-load    cmpeq b0.2 = r0.0, 0 --;;
+load    cmpeq b0.2 = r0.0, 0 ;;
 
 -- 0x0A0
 load    nop
@@ -66,7 +66,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 4[r0.0] = b0
-load    cmpeq b0.1 = r0.0, 0 --;;
+load    cmpeq b0.1 = r0.0, 0 ;;
 
 -- Skip ahead to make sure that things are stored correctly.
 fillnops 0x200
@@ -79,7 +79,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 5[r0.0] = b0
-load    cmpeq b0.7 = r0.0, 0 --;;
+load    cmpeq b0.7 = r0.0, 0 ;;
 
 -- 0x220
 load    nop
@@ -89,7 +89,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 6[r0.0] = b0
-load    cmpeq b0.4 = r0.0, 0 --;;
+load    cmpeq b0.4 = r0.0, 0 ;;
 
 -- 0x240
 load    nop
@@ -99,7 +99,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 7[r0.0] = b0
-load    cmpeq b0.6 = r0.0, 0 --;;
+load    cmpeq b0.6 = r0.0, 0 ;;
 
 -- 0x260
 load    nop
@@ -109,7 +109,7 @@ load    nop
 load    nop
 load    nop
 load    stbr 8[r0.0] = b0
-load    stop --;;
+load    stop ;;
 
 -- Run the test.
 reset
