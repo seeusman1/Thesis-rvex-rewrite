@@ -195,7 +195,10 @@ int run(const commandLineArgs_t *args) {
         }
       } else {
 #ifndef FORMAT_LIKE_XSTSIM
-        dprintf(args->outputFile, "\n");
+        dprintf(
+          args->outputFile,
+          "# Branch ===================================================\n"
+        );
 #endif
         pc = d.pc;
       }
@@ -207,7 +210,10 @@ int run(const commandLineArgs_t *args) {
       if (d.hasTrapped) {
         dprintf(
           args->outputFile,
-          "# Trap %d occurred at 0x%08X, arg = 0x%08X (%d)\n\n",
+          "# Trap =====================================================\n"
+          "# Cause: %d\n"
+          "# Point: 0x%08X\n"
+          "# Arg = 0x%08X (%d)\n",
           d.trapCause,
           d.trapPoint,
           d.trapArg,
@@ -223,15 +229,69 @@ int run(const commandLineArgs_t *args) {
         pc += 4;
       }
       
+#ifndef FORMAT_LIKE_XSTSIM
+      
+      // Dump instruction cache information.
+      for (slot = 0; slot < d.usedSlots; slot++) {
+        if (d.slot[slot].cacheStatus & 0x80) {
+          dprintf(
+            args->outputFile,
+            "# fetch serviced by icache block %d: %s\n",
+            slot / (args->numLanes / args->numLaneGroups),
+            (d.slot[slot].cacheStatus & 0x40) ? "miss" : "hit"
+          );
+        }
+      }
+      
+      // Dump data cache information.
+      for (slot = 0; slot < d.usedSlots; slot++) {
+        if (d.slot[slot].cacheStatus & 0x30) {
+          const char *op = "unknown op";
+          const char *wbuf = "";
+          const char *result = "unknown";
+          switch (d.slot[slot].cacheStatus & 0x38) {
+            case 0x10: op = "read"; break;
+            case 0x18: op = "bypass read"; break;
+            case 0x20: op = "write (full line)"; break;
+            case 0x28: op = "bypass write"; break;
+            case 0x30: op = "write (partial line)"; break;
+            case 0x38: op = "bypass write"; break;
+          }
+          switch (d.slot[slot].cacheStatus & 0x0C) {
+            case 0x00: result = "miss"; break;
+            case 0x04: result = "hit"; break;
+            case 0x08: result = "bypass"; break;
+            case 0x0C: result = "bypass"; break;
+          }
+          if (d.slot[slot].cacheStatus & 0x02) {
+            wbuf = " after buffered write was completed";
+          }
+          if ((d.slot[slot].cacheStatus & 0x3C) == 0x10) {
+            wbuf = ""; // Read hits can be serviced while a write is buffered.
+          }
+          dprintf(
+            args->outputFile,
+            "# %s serviced by dcache block %d%s: %s\n",
+            op,
+            slot / (args->numLanes / args->numLaneGroups),
+            wbuf,
+            result
+          );
+        }
+      }
+      
+#endif
+      
     }
     
 #ifndef FORMAT_LIKE_XSTSIM
-      
+    
     // Dump reconfiguration information.
     if (d.hasNewConfiguration) {
       dprintf(
         args->outputFile,
-        "\n# Reconfiguration: new config word is 0x%08X.\n\n",
+        "# Reconfiguration ==========================================\n"
+        "# New config: 0x%08X\n",
         d.config
       );
     }
