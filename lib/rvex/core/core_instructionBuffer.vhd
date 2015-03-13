@@ -406,6 +406,8 @@ begin -- architecture
         -- Determine the index from the lane index and mux signal.
         index(CFG.numLanesLog2-1 downto CFG.bundleAlignLog2)
           := unsigned(mux(lane));
+        index(CFG.bundleAlignLog2-1 downto 0)
+          := (others => '0');
         if unsigned(mux(lane)) = 0 then
           index(CFG.numLanesLog2) := '1';
         else

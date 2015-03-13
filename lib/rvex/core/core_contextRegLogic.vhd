@@ -314,13 +314,13 @@ begin -- architecture
   -- Single process which handles all combinatorial logic for the context
   -- control registers.
   logic: process (
-    creg2cxreg, rctrl2cxreg_reset, cxplif2cxreg_stall, cxplif2cxreg_stop,
-    cxplif2cxreg_brWriteData, cxplif2cxreg_brWriteEnable, cxplif2cxreg_nextPC,
-    cxplif2cxreg_linkWriteData, cxplif2cxreg_linkWriteEnable,
-    cxplif2cxreg_overridePC_ack, cxplif2cxreg_trapInfo, cxplif2cxreg_trapPoint,
-    cxplif2cxreg_rfi, cxplif2cxreg_exDbgTrapInfo, cxplif2cxreg_resuming_ack,
-    cxplif2cxreg_idle_r, cxplif2cxreg_sylCommit_r, cxplif2cxreg_sylNop_r,
-    cxplif2cxreg_stall_r
+    creg2cxreg, rctrl2cxreg_reset, rctrl2cxreg_resetVect, cxplif2cxreg_stall,
+    cxplif2cxreg_stop, cxplif2cxreg_brWriteData, cxplif2cxreg_brWriteEnable,
+    cxplif2cxreg_nextPC, cxplif2cxreg_linkWriteData,
+    cxplif2cxreg_linkWriteEnable, cxplif2cxreg_overridePC_ack,
+    cxplif2cxreg_trapInfo, cxplif2cxreg_trapPoint, cxplif2cxreg_rfi,
+    cxplif2cxreg_exDbgTrapInfo, cxplif2cxreg_resuming_ack, cxplif2cxreg_idle_r,
+    cxplif2cxreg_sylCommit_r, cxplif2cxreg_sylNop_r, cxplif2cxreg_stall_r
   ) is
     variable l2c  : cxreg2creg_type;
     variable c2l  : creg2cxreg_type;

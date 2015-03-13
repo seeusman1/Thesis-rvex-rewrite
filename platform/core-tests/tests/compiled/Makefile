@@ -41,7 +41,7 @@ all: $(EXECUTABLES)
 
 # How to link and generate srec;
 $(EXECUTABLES) : % : %.o _start.o tools/sbitmod
-	$(LD) $< _start.o -o $@
+	$(LD) _start.o $< -o $@
 	tools/sbitmod $@ 8
 	$(OBJCOPY) -O srec $@ $(SREC)/$@.srec
 
