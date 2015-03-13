@@ -1575,6 +1575,39 @@ begin -- architecture
       
     end combinePC;
     
+    -- Aligns a PC.
+    function alignPC(
+      PC                        : rvex_address_type;
+      numGroupsLog2             : rvex_2bit_type
+    ) return rvex_address_type is
+      variable i                : natural;
+      variable sbitMask         : rvex_address_type;
+      variable reconfMask       : rvex_address_type;
+    begin
+      
+      -- Determine a mask for the smallest alignment which can be handled by
+      -- the stop bit logic.
+      sbitMask := (
+        SYLLABLE_SIZE_LOG2B + CFG.bundleAlignLog2 - 1 downto 0 => '0',
+        others => '1'
+      );
+      
+      -- Determine a mask for the smallest alignment which can be handled by
+      -- the reconfiguration logic (less groups working together means less
+      -- alignment requirements).
+      i := SYLLABLE_SIZE_LOG2B + (CFG.numLanesLog2-CFG.numLaneGroupsLog2);
+      case numGroupsLog2 is
+        when "00"   => reconfMask := (i-1 downto 0 => '0', others => '1');
+        when "01"   => reconfMask := (i   downto 0 => '0', others => '1');
+        when "10"   => reconfMask := (i+1 downto 0 => '0', others => '1');
+        when others => reconfMask := (i+2 downto 0 => '0', others => '1');
+      end case;
+      
+      -- Mask the PC with the larger of the two masks to align it.
+      return PC and (sbitMask or reconfMask);
+      
+    end alignPC;
+    
   begin
     
     ---------------------------------------------------------------------------
@@ -1676,10 +1709,10 @@ begin -- architecture
           a2 := (others => '0');
         end if;
         
-        -- Perform the addition for PC_plusSbitInd.
-        s(S_PCP1).br.PC_plusSbitInd := std_logic_vector(
+        -- Perform the addition for PC_plusSbitInd and align the result.
+        s(S_PCP1).br.PC_plusSbitInd := alignPC(std_logic_vector(
           vect2unsigned(a1) + vect2unsigned(a2)
-        );
+        ), cfg2pl_numGroupsLog2);
         
         -- Determine numCoupledLanes - 1.
         i := SYLLABLE_SIZE_LOG2B + (CFG.numLanesLog2-CFG.numLaneGroupsLog2);
@@ -1690,10 +1723,10 @@ begin -- architecture
           when others => a1 := (i+2 downto SYLLABLE_SIZE_LOG2B => '1', others => '0');
         end case;
         
-        -- Perform the addition for PC_plusSbitFetchInd.
-        s(S_PCP1).br.PC_plusSbitFetchInd := std_logic_vector(
+        -- Perform the addition for PC_plusSbitFetchInd and align the result.
+        s(S_PCP1).br.PC_plusSbitFetchInd := alignPC(std_logic_vector(
           vect2unsigned(s(S_PCP1).br.PC_plusSbitInd) + vect2unsigned(a1)
-        );
+        ), cfg2pl_numGroupsLog2);
         
       end if;
       
@@ -1715,7 +1748,8 @@ begin -- architecture
           others => '0'
         );
         
-        -- Perform the addition.
+        -- Perform the addition. We don't need to align it, because we're not
+        -- going to use the LSBs anyway.
         s(S_PCP1).br.PC_plusNumLanesX2 := std_logic_vector(
           vect2unsigned(a1) + vect2unsigned(a2)
         );
@@ -1725,20 +1759,23 @@ begin -- architecture
     else
       
       -- Stop bits are disabled, compute the next PC directly.
-      
-      -- Load the relevant part of the PC.
-      a1 := (others => '0');
-      a1(31 downto SYLLABLE_SIZE_LOG2B)
-        := s(S_PCP1).PC(31 downto SYLLABLE_SIZE_LOG2B);
-      
-      -- Perform the addition.
-      a2 := std_logic_vector(
-        vect2unsigned(a1) + vect2unsigned(cfg2pl_pcAddVal)
-      );
-      
-      -- Store the value in both the next PC as well as the fetch address.
-      s(S_PCP1).br.PC_plusSbit := a2;
-      s(S_PCP1).br.PC_plusSbitFetch := a2;
+      if HAS_BR then
+        
+        -- Load the relevant part of the PC.
+        a1 := (others => '0');
+        a1(31 downto SYLLABLE_SIZE_LOG2B)
+          := s(S_PCP1).PC(31 downto SYLLABLE_SIZE_LOG2B);
+        
+        -- Perform the addition and align the result.
+        a2 := alignPC(std_logic_vector(
+          vect2unsigned(a1) + vect2unsigned(cfg2pl_pcAddVal)
+        ), cfg2pl_numGroupsLog2);
+        
+        -- Store the value in both the next PC as well as the fetch address.
+        s(S_PCP1).br.PC_plusSbit := a2;
+        s(S_PCP1).br.PC_plusSbitFetch := a2;
+        
+      end if;
       
     end if;
     
@@ -2634,7 +2671,7 @@ begin -- architecture
         
         -- Display PC for the current syllable.
         rvs_append(debug, rvs_hex(std_logic_vector(
-          unsigned(s(S_LAST).PC)
+          unsigned(alignPC(s(S_LAST).PC, cfg2pl_numGroupsLog2))
           + unsigned(cfg2pl_laneIndex) * 4
         ), 8));
         rvs_append(debug, " => ");

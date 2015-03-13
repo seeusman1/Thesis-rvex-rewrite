@@ -646,9 +646,12 @@ begin -- architecture
   two_cycle_fetch_proc: process (branching, nextPC, cfg2br_numGroupsLog2) is
     
     -- log2 of the size of an instruction for a lane group.
-    constant groupSizeLog2 : natural
+    constant groupSizeLog2  : natural
       := (CFG.numLanesLog2 - CFG.numLaneGroupsLog2)
       + SYLLABLE_SIZE_LOG2B;
+    
+    variable mask           : rvex_address_type;
+    variable nextPC_v       : rvex_address_type;
     
   begin
     
@@ -658,20 +661,31 @@ begin -- architecture
     -- Handle branches.
     if branching(S_BR) = '1' then
       
+      -- Before testing alignment, align the target PC to what alignment the
+      -- stop bit system can take care of. If stop bits are disabled, for
+      -- example, we can't handle the misalignment here. In that case, cxplif
+      -- will take care of it by disabling lanes which would end up getting
+      -- instructions preceding the PC.
+      mask := (
+        SYLLABLE_SIZE_LOG2B + CFG.bundleAlignLog2 - 1 downto 0 => '0',
+        others => '1'
+      );
+      nextPC_v := nextPC(S_IF) and mask;
+      
       -- If the branch target is not even aligned to a lane group, we
       -- definitely need two cycles.
-      if unsigned(nextPC(S_IF)(groupSizeLog2-1 downto 0)) /= 0 then
+      if unsigned(nextPC_v(groupSizeLog2-1 downto 0)) /= 0 then
         doubleFetch(S_IF) <= '1';
       end if;
       
       -- Handle reconfiguration.
-      if (vect2uint(cfg2br_numGroupsLog2) >= 1) and (nextPC(S_IF)(groupSizeLog2) = '1') then
+      if (vect2uint(cfg2br_numGroupsLog2) >= 1) and (nextPC_v(groupSizeLog2) = '1') then
         doubleFetch(S_IF) <= '1';
       end if;
-      if (vect2uint(cfg2br_numGroupsLog2) >= 2) and (nextPC(S_IF)(groupSizeLog2+1) = '1') then
+      if (vect2uint(cfg2br_numGroupsLog2) >= 2) and (nextPC_v(groupSizeLog2+1) = '1') then
         doubleFetch(S_IF) <= '1';
       end if;
-      if (vect2uint(cfg2br_numGroupsLog2) >= 3) and (nextPC(S_IF)(groupSizeLog2+2) = '1') then
+      if (vect2uint(cfg2br_numGroupsLog2) >= 3) and (nextPC_v(groupSizeLog2+2) = '1') then
         doubleFetch(S_IF) <= '1';
       end if;
       
