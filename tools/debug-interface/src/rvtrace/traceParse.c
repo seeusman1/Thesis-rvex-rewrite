@@ -58,7 +58,7 @@
  * Scans count characters.
  */
 #ifdef DEBUG
-#define SCAN(count) \
+#define SCAN(dbg, count) \
   if (*rawDataRemain < count) return 0; \
   d = *rawDataPtr; \
   { \
@@ -74,7 +74,7 @@
 #define REPORT(s) fprintf(stderr, s)
 #define REPORT2(s, d) fprintf(stderr, s, d)
 #else
-#define SCAN(count) \
+#define SCAN(dbg, count) \
   if (*rawDataRemain < count) return 0; \
   d = *rawDataPtr; \
   *rawDataPtr += count; \
