@@ -258,8 +258,8 @@ int run(const commandLineArgs_t *args) {
             case 0x38: op = "bypass write"; break;
           }
           switch (d.slot[slot].cacheStatus & 0x0C) {
-            case 0x00: result = "miss"; break;
-            case 0x04: result = "hit"; break;
+            case 0x00: result = "hit"; break;
+            case 0x04: result = "miss"; break;
             case 0x08: result = "bypass"; break;
             case 0x0C: result = "bypass"; break;
           }
