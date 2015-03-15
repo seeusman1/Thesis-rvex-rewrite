@@ -1,5 +1,7 @@
 
 UNISIM = $(XILINX)/vhdl/src/unisims
+SYNTH_MAKEFILE= ../share/synthesis.makefile
+SYNTH_INIT = ../share/synthesis-init.py
 
 .PHONY: help
 help:
@@ -31,6 +33,11 @@ help:
 	@echo "  make ise-<prog>      : compiles the specified program and runs ISE for"
 	@echo "                         simulation using ISIM or synthesis."
 	@echo ""
+	@echo "  make synth-<prog>    : synthesizes the project using ISE in command line mode."
+	@echo "                         Will make a new fresh directory with copies of all"
+	@echo "                         sources, so multiple synthesis attempts can be run at"
+	@echo "                         once."
+	@echo ""
 	@echo "  make upload-<prog>   : compiles the specified program, starts rvsrv if it is"
 	@echo "                         not already running and uploads the program to the"
 	@echo "                         core. Leaves the core reset at PC 0."
@@ -40,8 +47,8 @@ help:
 	@echo "  make trace-<prog>    : uploads and traces a program using the hardware trace"
 	@echo "                         unit."
 	@echo ""
-	@echo "  make gdb-<prog>   : compiles and uploads the specified program and then runs"
-	@echo "                      gdb to debug it."
+	@echo "  make gdb-<prog>      : compiles and uploads the specified program and then"
+	@echo "                         runs gdb to debug it."
 	@echo ""
 	@echo "  make run-<prog>      : same as start-<prog>, but also waits for completion."
 	@echo "                         Completion is detected when none of the context cycle"
@@ -68,6 +75,9 @@ help:
 	@echo ""
 	@echo "  make clean           : cleans C and modelsim output files."
 	@echo ""
+	@echo "  make clean-synth     : removes synthesis temporary and output files generated"
+	@echo "                         by make synth-<prog>."
+	@echo ""
 	@cd examples && $(MAKE) --no-print-directory list-executables
 	@echo " In addition, you can use \"none\" to initialize the memories with zeros for all"
 	@echo " targets but upload-<prog> and run-<prog>."
@@ -87,6 +97,18 @@ vsim-%: compile-%
 .PHONY: ise-%
 ise-%: compile-%
 	cd ise && ise standalone.xise
+
+.PHONY: synth-%
+UNIQUE := $(shell date +%Y-%m-%d-%H-%M-%S-%N)
+synth-%: compile-%
+	mkdir -p synth-$(UNIQUE)/vhdl
+	cp opts-xst.cfg synth-$(UNIQUE)
+	cp opts-map.cfg synth-$(UNIQUE)
+	cp opts-par.cfg synth-$(UNIQUE)
+	cp $(SYNTH_MAKEFILE) synth-$(UNIQUE)
+	cd synth-$(UNIQUE) && mv synthesis.makefile Makefile
+	cd synth-$(UNIQUE) && python3 ../$(SYNTH_INIT) ../ise/standalone.xise
+	cd synth-$(UNIQUE) && $(MAKE)
 
 .PHONY: upload-%
 upload-%:
@@ -126,3 +148,6 @@ clean:
 	cd examples && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
 
+.PHONY: clean-synth
+clean-synth:
+	rm -rf synth-*
