@@ -144,7 +144,7 @@ EXECUTABLES += adpcm blit crc des fir pocsag ucbqsort bcnt compress engine\
 
 # Random other applications.
 EXECUTABLES += ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite\
-	soma x264 uart xstsimframebuffer
+	soma x264 uart xstsimframebuffer all-at-once
 
 # List of platform-agnostic (generic) programs which run and complete without
 # interaction, and test for success/failure. On success, main() should return
@@ -319,6 +319,13 @@ ifeq ($(VEXPARSE_ENABLE), true)
 endif
 	$(AS) $(ASFLAGS) $< -o $@
 
+# How to convert objects with a main() such that they can be used as
+# subprograms in a bigger program (prefixes global symbols with the object
+# name);
+%-sub.o: %.o
+	$(OBJDUMP) -t $< | grep -E '^[0-9a-fA-F]{8} g' | sed -r 's/^.* (\w+)$$/\1 $(patsubst %.o,%,$<)_\1/g' > $(patsubst %.o,%.syms,$<)
+	$(OBJCOPY) --redefine-syms $(patsubst %.o,%.syms,$<) $< $@
+
 # Special rule for _start.o, may be overwritten target-specifically;
 .PHONY: _start.o-%
 _start.o-%: default_start.o
@@ -329,6 +336,13 @@ _start.o-%: default_start.o
 .SECONDEXPANSION:
 %.elf: _start.o-% %.o $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$@)
 	$(LD) _start.o $(filter-out $<,$^) -o $@
+
+# How to link all BENCH_EXECUTABLES together so they all run from a single
+# main():
+all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES)) $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$(BENCH_EXECUTABLES))
+	$(PYTHON3) $(GEN_EXAMPLES)/all-at-once.py $(BENCH_EXECUTABLES) > all-at-once.s
+	$(AS) $(ASFLAGS) all-at-once.s -o all-at-once.o
+	$(LD) _start.o all-at-once.o $(filter-out $<,$^) -o $@
 
 # How to generate an srec;
 %.srec: %.elf
@@ -372,6 +386,6 @@ tools/sbitmod: tools/sbitmod.c
 
 .PHONY: clean
 clean:
-	$(RM) *.o *.s *.elf *.srec *.disas $(CLEAN)
+	$(RM) *.o *.s *.elf *.srec *.disas *.syms $(CLEAN)
 
 
