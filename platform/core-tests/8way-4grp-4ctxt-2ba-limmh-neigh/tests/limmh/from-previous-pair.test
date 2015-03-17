@@ -1,0 +1,69 @@
+name    Test LIMMH from previous pair
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  limmhFromPreviousPair 1
+config  forwarding            1
+
+-- Initialize memories.
+init
+
+-- 0x000
+load    nop
+load    nop ;;
+
+-- 0x008
+load    limmh 2, 0x5A22225A
+load    limmh 3, 0x5A33335A
+load    add r0.12 = r0.0, 0x5A22225A
+load    add r0.13 = r0.0, 0x5A33335A
+load    limmh 6, 0x5A66665A
+load    limmh 7, 0x5A77775A
+load    add r0.16 = r0.0, 0x5A66665A
+load    add r0.17 = r0.0, 0x5A77775A ;;
+
+-- 0x028
+load    nop
+load    nop
+load    limmh 4, 0x5A44445A
+load    limmh 5, 0x5A55555A
+load    add r0.14 = r0.0, 0x5A44445A
+load    add r0.15 = r0.0, 0x5A55555A
+load    stw 8[r0.0] = r0.12
+load    nop ;;
+
+-- 0x048
+load    stw 12[r0.0] = r0.13
+load    nop ;;
+
+-- 0x050
+load    stw 16[r0.0] = r0.14
+load    nop ;;
+
+-- 0x058
+load    stw 20[r0.0] = r0.15
+load    nop ;;
+
+-- 0x060
+load    stw 24[r0.0] = r0.16
+load    nop ;;
+
+-- 0x068
+load    stw 28[r0.0] = r0.17
+load    stop ;;
+
+-- Run the test.
+reset
+wait    100 idle 0
+
+-- Verify that all constants were loaded correctly.
+read    dmem word  8 0x5A22225A
+read    dmem word 12 0x5A33335A
+read    dmem word 16 0x5A44445A
+read    dmem word 20 0x5A55555A
+read    dmem word 24 0x5A66665A
+read    dmem word 28 0x5A77775A
+

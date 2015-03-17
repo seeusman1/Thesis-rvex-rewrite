@@ -1,0 +1,83 @@
+name    Test bitwise logic instructions
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+
+-- Initialize memories.
+init
+
+-- Test 0xF0F0F0F0 and 0xFF00FF00.
+load    limmh 1, 0xF0F0F0F0
+load    add r0.1 = r0.0, 0xF0F0F0F0
+load    limmh 3, 0xFF00FF00
+load    add r0.2 = r0.0, 0xFF00FF00
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     bitwise-kernel.inc
+
+-- Test random numbers 0x6560d079 and 0x2cff892c.
+load    limmh 1, 0x6560d079
+load    add r0.1 = r0.0, 0x6560d079
+load    limmh 3, 0x2cff892c
+load    add r0.2 = r0.0, 0x2cff892c
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     bitwise-kernel.inc
+
+-- Test random numbers 0x6900957a and 0xed8dc2cc.
+load    limmh 1, 0x6900957a
+load    add r0.1 = r0.0, 0x6900957a
+load    limmh 3, 0xed8dc2cc
+load    add r0.2 = r0.0, 0xed8dc2cc
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     bitwise-kernel.inc
+
+-- Stop the processor.
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stop ;;
+
+-- Reset the processor.
+reset
+
+-- Operating on 0xF0F0F0F0 and 0xFF00FF00.
+wait    400 write *  0  0xF000F000 exclusive
+wait    40  write *  4  0x0F000F00 exclusive
+wait    40  write *  8  0xFFF0FFF0 exclusive
+wait    40  write * 12  0xFF0FFF0F exclusive
+wait    40  write * 16  0x0FF00FF0 exclusive
+
+-- Operating on 0x6560D079 and 0x2CFF892C.
+wait    400 write *  0  0x24608028 exclusive
+wait    40  write *  4  0x089F0904 exclusive
+wait    40  write *  8  0x6DFFD97D exclusive
+wait    40  write * 12  0xBEFFAFAE exclusive
+wait    40  write * 16  0x499F5955 exclusive
+
+-- Operating on 0x6900957A and 0xED8DC2CC.
+wait    400 write *  0  0x69008048 exclusive
+wait    40  write *  4  0x848D4284 exclusive
+wait    40  write *  8  0xED8DD7FE exclusive
+wait    40  write * 12  0xFFFFEACD exclusive
+wait    40  write * 16  0x848D57B6 exclusive
+
+-- Wait until the processor is idle.
+wait    40 idle 0
+

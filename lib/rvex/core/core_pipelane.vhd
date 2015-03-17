@@ -1839,6 +1839,17 @@ begin -- architecture
       
     end if;
     
+    -- Handle stop-bit based lane invalidation.
+    if CFG.genBundleSizeLog2 /= CFG.bundleAlignLog2 then
+      if sbit2pl_invalidate(S_STOP) = '1' then
+        s(S_STOP).valid := '0';
+        s(S_STOP).limmValid := '0';
+        -- pragma translate_off
+        s(S_STOP).invalidDueToStop := '1';
+        -- pragma translate_on
+      end if;
+    end if;
+    
     -- Some sanity checking...
     assert S_IF+L_IF >= S_STOP
       report "Instruction decoding somehow ended up before stop bit "

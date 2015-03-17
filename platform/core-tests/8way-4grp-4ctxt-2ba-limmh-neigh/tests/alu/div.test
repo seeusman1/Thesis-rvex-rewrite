@@ -1,0 +1,41 @@
+name    Test soft division using DIVS and ADDCG.
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  forwarding            1
+config  limmhFromNeighbor     1
+
+-- Initialize memories.
+init
+
+-- div.srec is compiled from the following C source:
+--
+-- int main(void) {
+--   *(int*)(8) = *(int*)(0) / *(int*)(4);
+-- }
+--
+-- i.e., it will load two words from memory, perform a signed division, and
+-- store the result in memory.
+srec    imem 0 ../../compile/div.srec
+srec    dmem 0 ../../compile/div.srec
+
+-- Compute 9 / 3.
+reset
+write   dmem word 0 9
+write   dmem word 4 3
+wait    1000 write * 8 3 exclusive
+
+-- Do two randomly generated divisions.
+reset
+write   dmem word 0 0xC761B6A2
+write   dmem word 4 0x000B30E9
+wait    1000 write * 8 0xFFFFFAF1 exclusive
+
+reset
+write   dmem word 0 0x4F253D3C
+write   dmem word 4 0x000016B1
+wait    1000 write * 8 0x00037CE7 exclusive
+

@@ -1,6 +1,5 @@
 
-.PHONY: help sim clean
-
+.PHONY: help
 help:
 	@echo ""
 	@echo " This simulation-only platform runs unit test cases on the current core design."
@@ -10,9 +9,13 @@ help:
 	@echo " The test cases are defined using the *.suite and *.test files in the tests"
 	@echo " directory. *.suite files are just lists of *.test files and/or other *.suite"
 	@echo " files to process; the simulation runs tests/index.suite. Refer to the"
-	@echo " documentation at the top of design/core_tb.vhd for more information on the"
+	@echo " documentation at the top of share/core_tb.vhd for more information on the"
 	@echo "*.test file structure and available commands."
 	@echo ""
+	@echo " Simulation can be run in the Modelsim GUI, or in command-line only mode for"
+	@echo " conformance testing."
+	@echo ""
+	@echo " To run GUI mode, run make vsim in the desired core configuration subdirectory."
 	@echo " The primary output of the test runner is the output log. Whenever a test is"
 	@echo " performed, either \"SUCCESS\", \"FAILURE\", or \"Aborting.\" will be logged."
 	@echo " Success and failure are self-explanatory. An abort is listed when the test file"
@@ -26,22 +29,41 @@ help:
 	@echo " traced in the waveform by default, giving a starting point of figuring out what"
 	@echo " went wrong."
 	@echo ""
-	@echo " The test case runner cannot change the generic configuration of the core, so"
-	@echo " you will need to set this yourself at the top of design/core_tb.vhd. Note that"
-	@echo " the test case runner generates random clkEn and memory stall signals in order"
-	@echo " to test that functionality, as well."
+	@echo " To run in conformance testing/command line mode, run make conformance in this"
+	@echo " directory. All core configurations will be tested. Core configurations can"
+	@echo " also be tested in parallel using up to N threads using make's -j <N> option."
+	@echo " If any test fails, make will return exit code 1. The logs for each"
+	@echo " configuration are written to <configuration>.log.
 	@echo ""
 	@echo " Make targets:"
 	@echo ""
-	@echo "  make sim             : runs the simulation in Modelsim."
+	@echo "  make conformance     : conformance-tests all core configurations."
 	@echo ""
 	@echo "  make clean           : removes intermediate files."
 	@echo ""
 
+.PHONY: sim vsim
 sim vsim:
-	cd tests/compiled && $(MAKE) all
-	cd modelsim && $(MAKE) vsim
+	@echo "Please re-run 'make vsim' from the subdirectory corresponding to the desired"
+	@echo "core configuration."
+	@false
 
-clean:
-	cd tests/compiled && $(MAKE) clean
-	cd modelsim && $(MAKE) clean
+
+CONFIGURATIONS := $(patsubst %/core_cfg.vhd,%,$(shell ls -d */core_cfg.vhd))
+
+.PHONY: conformance
+conformance: $(patsubst %,conformance-%,$(CONFIGURATIONS))
+	@echo "Conformance test passed."
+
+.PHONY: conformance-%
+conformance-%: %
+	cd $< && make conformance 2>&1 > ../$<.log
+
+.PHONY: clean
+clean: $(patsubst %,clean-%,$(CONFIGURATIONS))
+
+.PHONY: clean-%
+clean-%: %
+	cd $< && make clean
+	rm -f $<.log
+

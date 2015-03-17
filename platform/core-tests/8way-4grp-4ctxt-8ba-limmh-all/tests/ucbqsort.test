@@ -1,0 +1,21 @@
+name    Test ucbqsort-fast
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  forwarding            1
+config  limmhFromPreviousPair 1
+config  limmhFromNeighbor     1
+
+-- Initialize memories.
+init
+
+-- Load srec file into data and instruction memories.
+srec    imem 0 ../compile/ucbqsort-fast.srec
+srec    dmem 0 ../compile/ucbqsort-fast.srec
+
+-- Run the program.
+reset
+wait    100000  done 0
+read    dmem word 0x33333330 0xDEADBEEF

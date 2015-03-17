@@ -1,0 +1,55 @@
+name    Internal reconfiguration
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  numLanes              8
+config  numLaneGroups         4
+config  forwarding            1
+config  limmhFromNeighbor     1
+
+-- Initialize memories.
+init
+
+-- 0x000: load new configuration word.
+load    add r0.1 = r0.0, 0x1123
+load    limmh 0, 0x1123 ;;
+
+-- 0x008: write new configuration word.
+load    stw CR_CRR[r0.0] = r0.1
+load    limmh 6, CR_CRR ;;
+
+-- Delay for a bit.
+fillnops 0x200
+
+-- 0x200: load context ID.
+load    add r0.1 = r0.0, 0
+load    nop
+load    ldb r0.2 = CR_CID[r0.0]
+load    limmh 6, CR_CID ;;
+
+-- 0x210: determine number of cycles per generic bundle while waiting for load.
+load    add r0.1 = r0.1, 1
+load    nop
+load    add r0.1 = r0.1, 1
+load    nop
+load    add r0.1 = r0.1, 1
+load    nop
+load    add r0.1 = r0.1, 1
+load    nop ;;
+
+-- 0x230: write number of cycles per generic bundle to memory and stop.
+load    stb 0[r0.2] = r0.1
+load    stop ;;
+
+-- Reset the processor.
+reset
+
+-- Wait for (expected) completion.
+wait    1000
+
+-- Check the result.
+read    dmem word 0 0x00020404
+
