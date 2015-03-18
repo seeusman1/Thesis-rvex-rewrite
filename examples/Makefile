@@ -14,6 +14,7 @@
 ifndef ISSUE_WIDTH
 ISSUE_WIDTH = 8
 endif
+DEFS += ISSUE=$(ISSUE_WIDTH)
 
 # Bundle alignment requirement. Must be 1, 2, 4 or 8 (and at most ISSUE_WIDTH).
 ifndef BUNDLE_ALIGN
