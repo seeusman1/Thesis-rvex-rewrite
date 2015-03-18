@@ -131,7 +131,7 @@ package core_intIface_pkg is
   -- set to 2 or 3. When set to 3, the old encoding is used, where the LSB of
   -- the branch offset is equal to 64 bits. When set to 2, the branch offset
   -- is shifted right by one bit, to allow branching to 32 bit boundaries.
-  constant BRANCH_OFFS_SHIFT    : natural := 3;
+  constant BRANCH_OFFS_SHIFT    : natural := 2;
     
   -----------------------------------------------------------------------------
   -- General purpose register file read/write ports

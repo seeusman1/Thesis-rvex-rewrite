@@ -75,7 +75,7 @@ entity ml605 is
     
     -- Clock division value. The internal clock will be 750 MHz divided by this
     -- number. Ignored when DIRECT_RESET_AND_CLOCK is set.
-    DIV_VAL                     : natural := 20; -- 37.5 MHz
+    DIV_VAL                     : natural := 40; -- 18.75 MHz   20; -- 37.5 MHz
     
     -- Baud rate to use for the UART.
     F_BAUD                      : real := 115200.0;
@@ -127,16 +127,18 @@ architecture Behavioral of ml605 is
   -- Core and standalone system configuration WITH cache.
   constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
     core => rvex_cfg(
-      numLanesLog2              => 3,
-      numLaneGroupsLog2         => 2,
-      numContextsLog2           => 2,
+      numLanesLog2              => 2,
+      numLaneGroupsLog2         => 1,
+      numContextsLog2           => 1,
+      bundleAlignLog2           => 0,
+      limmhFromPreviousPair     => 0,
       traceEnable               => 1
     ),
     core_valid                  => true,
     cache_enable                => 1,
     cache_config => cache_cfg(
-      instrCacheLinesLog2       => 8, -- 256*32 = 8 kiB per block, 32 kiB total
-      dataCacheLinesLog2        => 8  -- 256*4 = 1 kiB per block, 4 kiB total
+      instrCacheLinesLog2       => 11, -- 256*32 = 64 kiB per block, 128 kiB total
+      dataCacheLinesLog2        => 10 -- 256*4 = 4 kiB per block, 8 kiB total
     ),
     cache_config_valid          => true,
     dmemDepthLog2B              => 18 -- 256 kiB (0x00000..0x3FFFF)
