@@ -33,3 +33,6 @@ patch-%:
 	  > $@.patch ; true
 	rm -rf clean
 
+# Removes all downloaded content which is not redistributable.
+clean:
+	rm -rf grlib-*
