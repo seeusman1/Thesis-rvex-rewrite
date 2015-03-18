@@ -346,6 +346,7 @@ int getCycleInfo(
   
   uint32_t currentCfg = data->config;
   int i;
+  int cacheDataAvailable = 0;
   
   // Reset valid flags.
   data->hasBranched = 0;
@@ -353,6 +354,7 @@ int getCycleInfo(
   data->hasNewConfiguration = 0;
   data->usedSlots = 0;
   for (i = 0; i < 16; i++) {
+    data->cacheStatus[i] = 0;
     data->slot[i].hasPC = 0;
     data->slot[i].hasMem = 0;
     data->slot[i].hasWrittenGP = 0;
@@ -466,7 +468,13 @@ int getCycleInfo(
               data->trapArg = packet.trapArg;
             }
             
-            // Handle reconfiguration.
+            // Handle cache information.
+            if (packet.cacheStatus) {
+              data->cacheStatus[i] = packet.cacheStatus;
+              cacheDataAvailable = 1;
+            }
+            
+            // Handle reconfiguration information.
             if (packet.hasNewConfiguration) {
               int shift = (i / (numLanes / numGroups)) * 4;
               data->hasNewConfiguration = 1;
@@ -487,7 +495,9 @@ int getCycleInfo(
       
     }
     
-    if (data->hasNewConfiguration) {
+    // Break if there is a new configuration or if there is cache information
+    // available.
+    if (data->hasNewConfiguration || cacheDataAvailable) {
       break;
     }
     

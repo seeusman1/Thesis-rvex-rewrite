@@ -52,13 +52,14 @@ int main()
   a[2] = 8.31;
   qurt(a, x1, x2);
   result -= *(int *) &x1[1];
-  if(result != -1776094907)
+  if(result != 0x3FD24B88)
     {
       rvex_fail("qurt: fail\n");
     } 
   else
     {
       rvex_succeed("qurt: success\n");
+      return 0;
     }
-  return 0;
+  return 1;
 }

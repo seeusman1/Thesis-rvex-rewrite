@@ -155,6 +155,11 @@ typedef struct {
   uint32_t config;
   
   /**
+   * Status information from each cache block.
+   */
+  uint8_t cacheStatus[16];
+  
+  /**
    * Number of issue slots used.
    */
   int usedSlots;
