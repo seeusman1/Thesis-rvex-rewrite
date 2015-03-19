@@ -14,7 +14,7 @@ int putchar(int character) {
   unsigned char c = character;
   
   // Wait for the TX data FIFO ready flag.
-  while (!(UART_STAT & (1 << 1)));
+  //while (!(UART_STAT & (1 << 1)));
   
   // Write to the UART.
   UART_DATA = c;
@@ -49,7 +49,7 @@ int rvex_fail(const char *str) {
 int getchar(void) {
   
   // Wait for the RX data ready flag.
-  while (!(UART_STAT & (1 << 3)));
+  //while (!(UART_STAT & (1 << 3)));
   
   // Read from the UART.
   return UART_DATA;
