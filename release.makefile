@@ -2,18 +2,21 @@
 VERSION = rvex-release-4.0
 
 OUTPUT = rvex-release
-STATIC = $(OUTPUT)/static
+CACHE = $(OUTPUT)/cache
 TREE = $(OUTPUT)/$(VERSION)
 STATUS = $(OUTPUT)/$(VERSION)-status
 
-# Git repository configuration.
+# Git repository configuration. If you change the repositories, run clean-cache
+# first.
 RVEX_DIR = .
 RVEX_GIT = git@bitbucket.org:jvanstraten/rvex-rewrite.git
 RVEX_COMMIT = master
 BINUTILS_DIR = tools/binutils-gdb
+BINUTILS_BUILD = tools/build
 BINUTILS_GIT = git@bitbucket.org:anarcobra/binutils-gdb.git
 BINUTILS_COMMIT = master
 GCC_DIR = tools/gcc
+GCC_BUILD = tools/build
 GCC_GIT = git@bitbucket.org:anarcobra/gcc.git
 GCC_COMMIT = master
 VEXPARSE_DIR = tools/vexparse
@@ -88,8 +91,10 @@ help:
 	@echo ""
 	@for i in $(TRIM); do echo "  - $$i"; done
 	@echo ""
-	
 
+#------------------------------------------------------------------------------
+# tar.gz output file generation and release maintenance
+#------------------------------------------------------------------------------
 .PHONY: release
 release: $(OUTPUT)/$(VERSION).tar.gz
 $(OUTPUT)/$(VERSION).tar.gz: $(STATUS)/completed
@@ -110,67 +115,96 @@ clean:
 		fi \
 	fi
 
+#------------------------------------------------------------------------------
+# Repository and download cache maintenance
+#------------------------------------------------------------------------------
+.PHONY: clean-cache
+clean-cache:
+	@echo ""
+	@echo " You are about to delete all download cache (git repos, grlib, etc). Sure?"
+	@echo ""
+	rm -rI $(CACHE);
+
+$(CACHE)/rvex/.git:
+	mkdir -p $(CACHE)/rvex
+	cd $(CACHE)/rvex && git init
+	cd $(CACHE)/rvex && git remote add origin $(RVEX_GIT)
+
+$(CACHE)/binutils/.git:
+	mkdir -p $(CACHE)/binutils
+	cd $(CACHE)/binutils && git init
+	cd $(CACHE)/binutils && git remote add origin $(BINUTILS_GIT)
+
+$(CACHE)/gcc/.git:
+	mkdir -p $(CACHE)/gcc
+	cd $(CACHE)/gcc && git init
+	cd $(CACHE)/gcc && git remote add origin $(GCC_GIT)
+
+$(CACHE)/vexparse/.git:
+	mkdir -p $(CACHE)/vexparse
+	cd $(CACHE)/vexparse && git init
+	cd $(CACHE)/vexparse && git remote add origin $(VEXPARSE_GIT)
+
+$(CACHE)/$(HP_VEX_FNAME):
+	mkdir -p $(CACHE)
+	cd $(CACHE) && wget $(HP_VEX_URL)
+
+$(CACHE)/$(GRLIB_FNAME):
+	mkdir -p $(CACHE)
+	cd $(CACHE) && wget $(GRLIB_URL)
+
+#------------------------------------------------------------------------------
+# Directory tree initialization (expand)
+#------------------------------------------------------------------------------
 $(STATUS)/initialized:
-	$(MAKE) clean
+	$(MAKE) -f release.makefile clean
 	mkdir -p $(TREE)
 	mkdir -p $(STATUS)
 	touch $@
 
-$(STATUS)/pull-rvex: $(STATUS)/initialized
-	rm -rf $(TREE)/$(RVEX_DIR)
+$(STATUS)/pull-rvex: $(CACHE)/rvex/.git $(STATUS)/initialized
+	# <DISABLED> cd $(CACHE)/rvex && git fetch origin $(RVEX_COMMIT)
 	mkdir -p $(TREE)/$(RVEX_DIR)
-	cd $(TREE)/$(RVEX_DIR) && git init
-	cd $(TREE)/$(RVEX_DIR) && git remote add origin $(RVEX_GIT)
-	cd $(TREE)/$(RVEX_DIR) && git fetch origin $(RVEX_COMMIT)
-	cd $(TREE)/$(RVEX_DIR) && git reset --hard FETCH_HEAD
+	-rm -f $(TREE)/$(RVEX_DIR)/.git
+	ln -s -T $(shell readlink -m $(CACHE)/rvex/.git) $(TREE)/$(RVEX_DIR)/.git
+	cd $(TREE)/$(RVEX_DIR) && git reset --hard FETCH_HEAD --
 	touch $@
 
-$(STATUS)/pull-binutils: $(STATUS)/pull-rvex
-	rm -rf $(TREE)/$(BINUTILS_DIR)
+$(STATUS)/pull-binutils: $(CACHE)/binutils/.git $(STATUS)/pull-rvex
+	# <DISABLED> cd $(CACHE)/binutils && git fetch origin $(BINUTILS_COMMIT)
 	mkdir -p $(TREE)/$(BINUTILS_DIR)
-	cd $(TREE)/$(BINUTILS_DIR) && git init
-	cd $(TREE)/$(BINUTILS_DIR) && git remote add origin $(BINUTILS_GIT)
-	cd $(TREE)/$(BINUTILS_DIR) && git fetch origin $(BINUTILS_COMMIT)
-	cd $(TREE)/$(BINUTILS_DIR) && git reset --hard FETCH_HEAD
+	-rm -f $(TREE)/$(BINUTILS_DIR)/.git
+	ln -s -T $(shell readlink -m $(CACHE)/binutils/.git) $(TREE)/$(BINUTILS_DIR)/.git
+	cd $(TREE)/$(BINUTILS_DIR) && git reset --hard FETCH_HEAD --
 	touch $@
 
-$(STATUS)/pull-gcc: $(STATUS)/pull-binutils
-	rm -rf $(TREE)/$(GCC_DIR)
+$(STATUS)/pull-gcc: $(CACHE)/gcc/.git $(STATUS)/pull-rvex
+	cd $(CACHE)/gcc && git fetch origin $(GCC_COMMIT)
 	mkdir -p $(TREE)/$(GCC_DIR)
-	cd $(TREE)/$(GCC_DIR) && git init
-	cd $(TREE)/$(GCC_DIR) && git remote add origin $(GCC_GIT)
-	cd $(TREE)/$(GCC_DIR) && git fetch origin $(GCC_COMMIT)
-	cd $(TREE)/$(GCC_DIR) && git reset --hard FETCH_HEAD
+	-rm -f $(TREE)/$(GCC_DIR)/.git
+	ln -s -T $(shell readlink -m $(CACHE)/gcc/.git) $(TREE)/$(GCC_DIR)/.git
+	cd $(TREE)/$(GCC_DIR) && git reset --hard FETCH_HEAD --
 	touch $@
 
-$(STATUS)/pull-vexparse: $(STATUS)/pull-gcc
-	rm -rf $(TREE)/$(VEXPARSE_DIR)
+$(STATUS)/pull-vexparse: $(CACHE)/vexparse/.git $(STATUS)/pull-rvex
+	cd $(CACHE)/vexparse && git fetch origin $(VEXPARSE_COMMIT)
 	mkdir -p $(TREE)/$(VEXPARSE_DIR)
-	cd $(TREE)/$(VEXPARSE_DIR) && git init
-	cd $(TREE)/$(VEXPARSE_DIR) && git remote add origin $(VEXPARSE_GIT)
-	cd $(TREE)/$(VEXPARSE_DIR) && git fetch origin $(VEXPARSE_COMMIT)
-	cd $(TREE)/$(VEXPARSE_DIR) && git reset --hard FETCH_HEAD
+	-rm -f $(TREE)/$(VEXPARSE_DIR)/.git
+	ln -s -T $(shell readlink -m $(CACHE)/vexparse/.git) $(TREE)/$(VEXPARSE_DIR)/.git
+	cd $(TREE)/$(VEXPARSE_DIR) && git reset --hard FETCH_HEAD --
 	touch $@
 
-$(STATIC)/$(HP_VEX_FNAME):
-	mkdir -p $(STATIC)
-	cd $(STATIC) && wget $(HP_VEX_URL)
-
-$(STATUS)/extract-vex: $(STATIC)/$(HP_VEX_FNAME) $(STATUS)/pull-rvex
-	rm -rf $(TREE)/$(HP_VEX_DIR)
+$(STATUS)/extract-vex: $(CACHE)/$(HP_VEX_FNAME) $(STATUS)/pull-rvex
+	-rm -rf $(TREE)/$(HP_VEX_DIR)
 	mkdir -p $(TREE)/$(HP_VEX_XDIR)
-	cp $(STATIC)/$(HP_VEX_FNAME) $(TREE)/$(HP_VEX_XDIR)
+	cp $(CACHE)/$(HP_VEX_FNAME) $(TREE)/$(HP_VEX_XDIR)
 	cd $(TREE)/$(HP_VEX_XDIR) && tar -xzf $(HP_VEX_FNAME)
 	rm -f $(TREE)/$(HP_VEX_XDIR)/$(HP_VEX_FNAME)
 	touch $@
 
-$(STATIC)/$(GRLIB_FNAME):
-	mkdir -p $(STATIC)
-	cd $(STATIC) && wget $(GRLIB_URL)
-
-$(STATUS)/cache-grlib: $(STATIC)/$(GRLIB_FNAME) $(STATUS)/pull-rvex
+$(STATUS)/cache-grlib: $(CACHE)/$(GRLIB_FNAME) $(STATUS)/pull-rvex
 	mkdir -p $(TREE)/$(GRLIB_DIR)
-	cp $(STATIC)/$(GRLIB_FNAME) $(TREE)/$(GRLIB_DIR)
+	cp $(CACHE)/$(GRLIB_FNAME) $(TREE)/$(GRLIB_DIR)
 	touch $@
 
 $(TREE)/%: % $(STATUS)/pull-rvex
@@ -179,11 +213,31 @@ $(TREE)/%: % $(STATUS)/pull-rvex
 $(STATUS)/copy: $(patsubst %,$(TREE)/%,$(COPY)) $(STATUS)/pull-rvex
 	touch $@
 
-$(STATUS)/download: $(STATUS)/pull-rvex $(STATUS)/pull-binutils $(STATUS)/pull-gcc $(STATUS)/pull-vexparse $(STATUS)/extract-vex $(STATUS)/cache-grlib $(STATUS)/copy
-	touch $(STATUS)/download
+$(STATUS)/expand: $(STATUS)/pull-rvex $(STATUS)/pull-binutils $(STATUS)/pull-gcc $(STATUS)/pull-vexparse $(STATUS)/extract-vex $(STATUS)/cache-grlib $(STATUS)/copy
+	touch $@
+
+#------------------------------------------------------------------------------
+# Toolchain building
+#------------------------------------------------------------------------------
+$(STATUS)/build-binutils: $(STATUS)/expand
+	mkdir -p $(TREE)/$(BINUTILS_BUILD)
+	cd $(TREE)/$(BINUTILS_DIR) && ./configure --prefix=$(shell readlink -m $(TREE)/$(BINUTILS_BUILD)) --target=rvex-elf32 --build=i386-unknown-linux-gnu
+	cd $(TREE)/$(BINUTILS_DIR) && make
+	cd $(TREE)/$(BINUTILS_DIR) && make install
+	touch $@
+
+$(STATUS)/build-gcc: $(STATUS)/expand
+	mkdir -p $(TREE)/$(GCC_BUILD)
+	cd $(TREE)/$(GCC_DIR) && ./configure --prefix=$(shell readlink -m $(TREE)/$(GCC_BUILD)) --target=rvex-elf32 --build=i386-unknown-linux-gnu
+	cd $(TREE)/$(GCC_DIR) && make
+	cd $(TREE)/$(GCC_DIR) && make install
+	touch $@
+
+$(STATUS)/build: $(STATUS)/build-binutils
+	touch $@
 
 # MUCH TODO
 
-$(STATUS)/completed: $(STATUS)/download
+$(STATUS)/completed: $(STATUS)/build
 	touch $(STATUS)/completed
 
