@@ -140,8 +140,9 @@ endif
 EXECUTABLES += nothing
 
 # Powerstone benchmarks.
-EXECUTABLES += adpcm blit crc des fir pocsag ucbqsort bcnt compress engine\
-	g3fax jpeg qurt v42
+POWERSTONE = adpcm blit crc des fir pocsag ucbqsort bcnt compress engine
+POWERSTONE += g3fax jpeg qurt v42
+EXECUTABLES += $(POWERSTONE)
 
 # Random other applications.
 EXECUTABLES += ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite\
@@ -151,7 +152,7 @@ EXECUTABLES += ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite\
 # interaction, and test for success/failure. On success, main() should return
 # 0.
 BENCH_EXECUTABLES  = adpcm bcnt blit crc engine fir g3fax itver2 jpeg matrix
-BENCH_EXECUTABLES += pocsag soma ucbqsort v42 x264
+BENCH_EXECUTABLES += pocsag qurt soma ucbqsort v42 x264
 
 # Toolchain setup.
 ifndef TOOLS
