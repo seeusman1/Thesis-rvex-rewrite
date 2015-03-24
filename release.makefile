@@ -163,17 +163,17 @@ $(STATUS)/initialized:
 	touch $@
 
 $(STATUS)/pull-rvex: $(CACHE)/rvex/.git $(STATUS)/initialized
-	# <DISABLED> cd $(CACHE)/rvex && git fetch origin $(RVEX_COMMIT)
+	cd $(CACHE)/rvex && git fetch origin $(RVEX_COMMIT)
 	mkdir -p $(TREE)/$(RVEX_DIR)
-	-rm -f $(TREE)/$(RVEX_DIR)/.git
+	-rm -rf $(TREE)/$(RVEX_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/rvex/.git) $(TREE)/$(RVEX_DIR)/.git
 	cd $(TREE)/$(RVEX_DIR) && git reset --hard FETCH_HEAD --
 	touch $@
 
 $(STATUS)/pull-binutils: $(CACHE)/binutils/.git $(STATUS)/pull-rvex
-	# <DISABLED> cd $(CACHE)/binutils && git fetch origin $(BINUTILS_COMMIT)
+	cd $(CACHE)/binutils && git fetch origin $(BINUTILS_COMMIT)
 	mkdir -p $(TREE)/$(BINUTILS_DIR)
-	-rm -f $(TREE)/$(BINUTILS_DIR)/.git
+	-rm -rf $(TREE)/$(BINUTILS_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/binutils/.git) $(TREE)/$(BINUTILS_DIR)/.git
 	cd $(TREE)/$(BINUTILS_DIR) && git reset --hard FETCH_HEAD --
 	touch $@
@@ -181,7 +181,7 @@ $(STATUS)/pull-binutils: $(CACHE)/binutils/.git $(STATUS)/pull-rvex
 $(STATUS)/pull-gcc: $(CACHE)/gcc/.git $(STATUS)/pull-rvex
 	cd $(CACHE)/gcc && git fetch origin $(GCC_COMMIT)
 	mkdir -p $(TREE)/$(GCC_DIR)
-	-rm -f $(TREE)/$(GCC_DIR)/.git
+	-rm -rf $(TREE)/$(GCC_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/gcc/.git) $(TREE)/$(GCC_DIR)/.git
 	cd $(TREE)/$(GCC_DIR) && git reset --hard FETCH_HEAD --
 	touch $@
@@ -189,7 +189,7 @@ $(STATUS)/pull-gcc: $(CACHE)/gcc/.git $(STATUS)/pull-rvex
 $(STATUS)/pull-vexparse: $(CACHE)/vexparse/.git $(STATUS)/pull-rvex
 	cd $(CACHE)/vexparse && git fetch origin $(VEXPARSE_COMMIT)
 	mkdir -p $(TREE)/$(VEXPARSE_DIR)
-	-rm -f $(TREE)/$(VEXPARSE_DIR)/.git
+	-rm -rf $(TREE)/$(VEXPARSE_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/vexparse/.git) $(TREE)/$(VEXPARSE_DIR)/.git
 	cd $(TREE)/$(VEXPARSE_DIR) && git reset --hard FETCH_HEAD --
 	touch $@
@@ -221,23 +221,23 @@ $(STATUS)/expand: $(STATUS)/pull-rvex $(STATUS)/pull-binutils $(STATUS)/pull-gcc
 #------------------------------------------------------------------------------
 $(STATUS)/build-binutils: $(STATUS)/expand
 	mkdir -p $(TREE)/$(BINUTILS_BUILD)
-	cd $(TREE)/$(BINUTILS_DIR) && ./configure --prefix=$(shell readlink -m $(TREE)/$(BINUTILS_BUILD)) --target=rvex-elf32 --build=i386-unknown-linux-gnu
+	cd $(TREE)/$(BINUTILS_DIR) && ./configure --prefix=$(shell readlink -m $(TREE)/$(BINUTILS_BUILD)) --target=rvex-elf32
 	cd $(TREE)/$(BINUTILS_DIR) && make
 	cd $(TREE)/$(BINUTILS_DIR) && make install
 	touch $@
 
 $(STATUS)/build-gcc: $(STATUS)/expand
 	mkdir -p $(TREE)/$(GCC_BUILD)
-	cd $(TREE)/$(GCC_DIR) && ./configure --prefix=$(shell readlink -m $(TREE)/$(GCC_BUILD)) --target=rvex-elf32 --build=i386-unknown-linux-gnu
-	cd $(TREE)/$(GCC_DIR) && make
-	cd $(TREE)/$(GCC_DIR) && make install
+	cd $(TREE)/$(GCC_DIR) && ./configure CC="gcc -m32" CXX="g++ -m32" --prefix=$(shell readlink -m $(TREE)/$(GCC_BUILD)) --target=vex --disable-bootstrap --enable-language=c,c++
+	cd $(TREE)/$(GCC_DIR) && make all-gcc
+	cd $(TREE)/$(GCC_DIR) && make install-gcc
 	touch $@
 
-$(STATUS)/build: $(STATUS)/build-binutils
+$(STATUS)/build: $(STATUS)/build-binutils $(STATUS)/build-gcc
 	touch $@
 
 # MUCH TODO
 
 $(STATUS)/completed: $(STATUS)/build
-	touch $(STATUS)/completed
+	touch $@
 
