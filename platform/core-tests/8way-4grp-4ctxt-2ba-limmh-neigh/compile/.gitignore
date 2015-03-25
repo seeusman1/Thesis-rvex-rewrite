@@ -3,3 +3,4 @@
 *.elf
 *.disas
 *.srec
+*.syms

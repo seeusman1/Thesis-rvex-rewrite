@@ -40,15 +40,12 @@ COPY += tools/sim
 
 # Files to remove from the release:
 TRIM_GLOBAL += .git
-TRIM_GLOBAL += .gitignore
 TRIM_GLOBAL += temp
-TRIM += platform/zed-standalone
 TRIM += release.makefile
+TRIM += README.INTERNAL
 
 .PHONY: help
 help:
-	@echo ""
-	@echo ""
 	@echo ""
 	@echo " This makefile is supposed to generate a release tar.gz of the rvex core and"
 	@echo " related (redistributable) utilities. This is done using the following command:"
@@ -93,13 +90,8 @@ help:
 	@echo ""
 
 #------------------------------------------------------------------------------
-# tar.gz output file generation and release maintenance
+# Clean up
 #------------------------------------------------------------------------------
-.PHONY: release
-release: $(OUTPUT)/$(VERSION).tar.gz
-$(OUTPUT)/$(VERSION).tar.gz: $(STATUS)/completed
-	# <DISABLED> cd $(OUTPUT) && tar -czf $(VERSION).tar.gz $(VERSION)
-
 .PHONY: clean
 clean:
 	@if [ -d "$(TREE)" ]; then \
@@ -163,7 +155,9 @@ $(STATUS)/initialized:
 	touch $@
 
 $(STATUS)/pull-rvex: $(CACHE)/rvex/.git $(STATUS)/initialized
+ifndef NO_FETCH
 	cd $(CACHE)/rvex && git fetch origin $(RVEX_COMMIT)
+endif
 	mkdir -p $(TREE)/$(RVEX_DIR)
 	-rm -rf $(TREE)/$(RVEX_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/rvex/.git) $(TREE)/$(RVEX_DIR)/.git
@@ -171,7 +165,9 @@ $(STATUS)/pull-rvex: $(CACHE)/rvex/.git $(STATUS)/initialized
 	touch $@
 
 $(STATUS)/pull-binutils: $(CACHE)/binutils/.git $(STATUS)/pull-rvex
+ifndef NO_FETCH
 	cd $(CACHE)/binutils && git fetch origin $(BINUTILS_COMMIT)
+endif
 	mkdir -p $(TREE)/$(BINUTILS_DIR)
 	-rm -rf $(TREE)/$(BINUTILS_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/binutils/.git) $(TREE)/$(BINUTILS_DIR)/.git
@@ -179,7 +175,9 @@ $(STATUS)/pull-binutils: $(CACHE)/binutils/.git $(STATUS)/pull-rvex
 	touch $@
 
 $(STATUS)/pull-gcc: $(CACHE)/gcc/.git $(STATUS)/pull-rvex
+ifndef NO_FETCH
 	cd $(CACHE)/gcc && git fetch origin $(GCC_COMMIT)
+endif
 	mkdir -p $(TREE)/$(GCC_DIR)
 	-rm -rf $(TREE)/$(GCC_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/gcc/.git) $(TREE)/$(GCC_DIR)/.git
@@ -187,7 +185,9 @@ $(STATUS)/pull-gcc: $(CACHE)/gcc/.git $(STATUS)/pull-rvex
 	touch $@
 
 $(STATUS)/pull-vexparse: $(CACHE)/vexparse/.git $(STATUS)/pull-rvex
+ifndef NO_FETCH
 	cd $(CACHE)/vexparse && git fetch origin $(VEXPARSE_COMMIT)
+endif
 	mkdir -p $(TREE)/$(VEXPARSE_DIR)
 	-rm -rf $(TREE)/$(VEXPARSE_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/vexparse/.git) $(TREE)/$(VEXPARSE_DIR)/.git
@@ -221,23 +221,49 @@ $(STATUS)/expand: $(STATUS)/pull-rvex $(STATUS)/pull-binutils $(STATUS)/pull-gcc
 #------------------------------------------------------------------------------
 $(STATUS)/build-binutils: $(STATUS)/expand
 	mkdir -p $(TREE)/$(BINUTILS_BUILD)
+	cd $(TREE)/$(BINUTILS_DIR) && git clean -fdx
 	cd $(TREE)/$(BINUTILS_DIR) && ./configure --prefix=$(shell readlink -m $(TREE)/$(BINUTILS_BUILD)) --target=rvex-elf32
 	cd $(TREE)/$(BINUTILS_DIR) && make
 	cd $(TREE)/$(BINUTILS_DIR) && make install
+	cd $(TREE)/$(BINUTILS_DIR) && git clean -fdx
 	touch $@
 
 $(STATUS)/build-gcc: $(STATUS)/expand
 	mkdir -p $(TREE)/$(GCC_BUILD)
+	cd $(TREE)/$(GCC_DIR) && git clean -fdx
 	cd $(TREE)/$(GCC_DIR) && ./configure CC="gcc -m32" CXX="g++ -m32" --prefix=$(shell readlink -m $(TREE)/$(GCC_BUILD)) --target=vex --disable-bootstrap --enable-language=c,c++
 	cd $(TREE)/$(GCC_DIR) && make all-gcc
 	cd $(TREE)/$(GCC_DIR) && make install-gcc
+	cd $(TREE)/$(GCC_DIR) && git clean -fdx
 	touch $@
 
-$(STATUS)/build: $(STATUS)/build-binutils $(STATUS)/build-gcc
+$(STATUS)/build-doc: $(STATUS)/expand
+	cd $(TREE)/doc && make clean
+	cd $(TREE)/doc && make all
 	touch $@
 
-# MUCH TODO
-
-$(STATUS)/completed: $(STATUS)/build
+$(STATUS)/build: $(STATUS)/build-binutils $(STATUS)/build-gcc $(STATUS)/build-doc
 	touch $@
 
+#------------------------------------------------------------------------------
+# Trimming fat and generating tar.gz archive
+#------------------------------------------------------------------------------
+$(STATUS)/trim: $(STATUS)/build
+	@cd $(TREE) && find $(patsubst %,-name % -or,$(TRIM_GLOBAL)) -false | xargs -t -- rm -rf
+	cd $(TREE) && rm -rf $(TRIM)
+	touch $@
+
+$(OUTPUT)/$(VERSION)-untested.tar.gz: $(STATUS)/trim
+	cd $(OUTPUT) && tar -czf $(VERSION)-untested.tar.gz $(VERSION)
+	rm -rf $(TREE) $(STATUS)
+
+$(OUTPUT)/$(VERSION).tar.gz: $(OUTPUT)/$(VERSION)-untested.tar.gz
+	mkdir -p $(OUTPUT)/conformance
+	-rm -rf $(OUTPUT)/conformance/$(VERSION)
+	cd $(OUTPUT)/conformance && tar -xzf ../$(VERSION).tar.gz
+	cd $(OUTPUT)/conformance/$(VERSION) && make conformance
+	rm -rf $(OUTPUT)/conformance/$(VERSION)
+	cd $(OUTPUT) && mv $(VERSION)-untested.tar.gz $(VERSION).tar.gz
+
+.PHONY: release
+release: $(OUTPUT)/$(VERSION).tar.gz

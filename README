@@ -1,28 +1,31 @@
+
 --=============================================================================
 -- Installation
 --=============================================================================
 
-To finish setting up the environment after cloning the git repo, copy or make
-symlinks to the contents of the tools directory from the rvex release in
-:/tools/. From this directory, you can do this from the command line as
-follows:
+Note: this assumes that you downloaded an rvex release. If you're new to the
+rvex project and got this from the (private) git repositories instead, check
+out README.INTERNAL.
 
-(cd tools && ln -s <path to release dir>/tools/* .)
+You will need at least the following things (this list is probably not
+complete):
 
-The path needs to be an absolute path or needs to be relative to the tools
-directory, as the cd command would suggest. In addition, if you want to compile
-generic binaries, you should have python3 installed and link vexparse in the
-tools directory as well:
+ - Xilinx ISE. Version 14.7 is STRONGLY RECOMMENDED; older versions are known
+   to synthesize the rvex incorrectly. Vivado may or may not work, but be
+   aware that the makefiles are not designed for it.
+ - Modelsim. The system is tested using version SE 10.2a; older versions are
+   known to crash when simulating the core.
+ - GNU make
+ - gcc
+ - python 3.x
 
-(cd tools && ln -s <path to vexparse>/vexparse)
+The release comes with binutils-gdb and gcc pre-built. If you wish to compile
+them yourself, you will need their build dependencies. gcc is forcibly compiled
+in 32-bit mode, so you will need the 32-bit versions of its build dependencies.
 
-Aside from all that, you should have Xilinx ISE 14.7 and Modelsim SE 10.2a.
-DO NOT USE OLDER ISE VERSIONS: ISE 13.4 at least synthesizes the rvex core
-incorrectly for some reason, causing it to behave erratically when stalls
-occur.
-DO NOT USE OLDER MODELSIM VERSIONS: Modelsim 6.5g will not simulate the core due 
-to some incompatibility issues.
-
+In general, as long as you have the dependencies installed, you shouldn't need
+to do anything else to get the system to work. If things are missing or are not
+yet compiled, the makefiles should take care of it as soon as you do something.
 
 --=============================================================================
 -- Basic platform usage
@@ -40,13 +43,21 @@ less guided usage information.
 -------------------------------------------------------------------------------
 
 This is a modelsim-only platform which runs unit tests on the rvex core. You
-can run the simulation as follows:
+can run the test suite in command line mode as follows:
 
-(cd platform/core-tests && make sim)
+(cd platform/core-tests && make -j conformance)
 
 You will need to have sourced your modelsim environment setup script before
-doing so.
+doing so. Should a test case fail, you'll probably want to run modelsim in GUI
+mode to see why; to do this, start the simulation as follows instead:
    
+(cd platform/core-tests/<configuration> && make vsim)
+
+You will need to replace <configuration> with the core configuration which you
+want to test. The following command lists the valid configurations:
+
+(cd platform/core-tests && make list-configs)
+
 -------------------------------------------------------------------------------
 -- Cache/specific program testbench: :/platform/cache-test/
 -------------------------------------------------------------------------------
@@ -77,34 +88,55 @@ themselves.)
 To simulate the design, source your local Modelsim AND Xilinx ISE
 environment setup scripts and run:
 
-(cd platform/ml605-standalone && make vsim-x264)
+(cd platform/ml605-standalone && make vsim-ucbqsort-fast)
 
 Initialization may take up to a couple minutes due to the size of the loaded
-program. You can change "x264" into whatever program you want to, or to
-"none" if you don't need a program loaded into the memory. The following
+program. You can change "ucbqsort-fast" into whatever program you want to, or
+to "none" if you don't need a program loaded into the memory. The following
 command lists which program names are valid (among other things):
 
 (cd platform/ml605-standalone && make)
 
-To start Xilinx ISE in order to synthesize the design, make sure you have
-sourced the Xilinx ISE startup script and run:
+You have two options to synthesize the design. You can either do it manually
+in the Xilinx ISE GUI, or from the command line. To launch the GUI, make sure
+you have sourced the Xilinx ISE startup script and run:
 
 (cd platform/ml605-standalone && make ise-none)
 
 Use the usual Xilinx ISE GUI design flow to synthesize the design and
 program the board.
 
-Once programmed onto the board using the Xilinx toolchain, you can load
-program onto the board using the debug support unit. To do that, you first
-need to start the rvsrv daemon, which provides a bridge between the hardware
-and any scripted programs which may want to connect with it. You can start
-the server as follows:
+To synthesize from the command line, use the following command.
+
+(cd platform/ml605-standalone && make synth-none NAME=<name>)
+
+Substitute <name> with something arbitrary but unique. <name> will be used to
+generate a build directory, so you can run the synthesis tools multiple times
+in parallel. The VHDL source files are copied into the build directory
+immediately after the command is given, so you can safely modify the sources
+without messing up an ongoing synthesis run. By the way, if you don't want to
+have to get creative with names, you can ommit the whole NAME=<name> part, in
+which case the current timestamp will be used instead.
+
+To program a synthesized design to the ML605 development board, run the
+following:
+
+(cd platform/ml605-standalone && make prog-<name>)
+
+You will need to substitute <name> with the same thing you specified when
+synthesizing. Alternatively, if you want to program the FPGA manually, the bit
+file is stored in platform/ml605-standalone/synth-<name>/routed.bit.
+
+Once the FPGA has been configured, you can load a program onto the board using
+the debug support unit. To do that, you first need to start the rvsrv daemon,
+which provides a bridge between the hardware and any scripted programs which
+may want to connect with it. You can start the server as follows:
 
 (cd platform/ml605-standalone && make server)
 
 If rvsrv won't start because it can't open the serial port, which it
 probably will, you'll need to change the configuration file. The file you're
-looking for is :/tools/debug-interface/configuration.cfg. You can edit this
+looking for is tools/debug-interface/configuration.cfg. You can edit this
 with any text editor. You need to change the SERIAL_PORT = line to the
 serial port which rvsrv is to use. This will probably need to be ttyUSB0
 since the ML605 board contains an USB to serial converter.
@@ -115,23 +147,18 @@ following command (but you won't want to do this just yet):
 (cd platform/ml605-standalone && make stop)
 
 You should also set up the debugging environment at this point. Run the
-following command:
+following commands:
 
-(cd platform/ml605-standalone && make debug); source platform/ml605-standalone/debug
+(cd platform/ml605-standalone && make debug)
+source platform/ml605-standalone/debug
 
 You can now run the rvd command to give commands to the board. Running rvd
-without any parameters should tell you how to use it, so I won't get into
-it here.
+without any parameters should tell you how to use it.
 
 You can now upload the UART test program to the board to see if it works
 using the following command:
 
 (cd platform/ml605-standalone && make upload-uart)
-
-If make complains that it can't find rvex-elf32-objcopy, running the
-following command will probably do the trick:
-
-(cd tools/build/bin && ln -s vex-objcopy rvex-elf32-objcopy)
 
 The UART program will echo anything sent to it back in all-caps. To open a
 UART terminal to communicate with the board, run:
@@ -142,15 +169,50 @@ You can press ctrl+C to exit the monitor program. Typing anything and
 pressing enter will send it to the board; anything received from the board
 will be shown in the terminal.
 
+The platform makefile and rvd support a lot more than what's specified here.
+For more information, run:
+
+(cd platform/ml605-standalone && make)
+
 -------------------------------------------------------------------------------
 -- GRLIB platform: :/platform/ml605-grlib
 -------------------------------------------------------------------------------
 
-This platform will run the rvex with instruction and data cache within a
-grlib environment. It probably doesn't work yet, so I haven't made a tutorial
-for it yet. Run "make" from the platform directory to get up-to-date usage
-information.
+This platform contains the rvex with instruction and data cache within a grlib
+environment. It is based on the leon3mp example project from grlib. A lot of
+the commands for this platform are virtually identical to those in the
+ml605-standalone platform (just substitute standalone with grlib), so I'm only
+going to note the differences.
 
+First of all, simulation. The command is the same. However, if you're going to
+restart simulation after only changing VHDL files, you'll probably want to use
+"resim" instead of "vsim" to save a bit of time. Also, the startup script is
+set up such that it will automatically run the DDR3 controller initialization
+procedure and save a checkpoint before giving you control. When you would
+normally restart simulation (for example because you forgot to add some signal)
+you should in stead run the following TCL command in modelsim:
+
+restore modelsim/cpt
+
+This will restore the simulation state to just after the DDR controller
+initialization.
+
+Secondly, synthesis. This can only be done from the command line, as follows:
+
+(cd platform/ml605-grlib && make synth)
+
+You can't run multiple synthesis runs at the same time like in the standalone
+platform. If you want to do that, you'll probably need to make copies of the
+entire tree.
+
+There is no special command to program the FPGA at this time. Instead, run
+
+impact
+
+and load the bit file from platform/ml605-grlib/work/leon3mp.bit manually.
+
+Finally, the program uploading and debugging commands are similar to the
+standalone platform.
 
 --=============================================================================
 -- Hacking the core
