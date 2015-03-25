@@ -253,15 +253,16 @@ $(STATUS)/trim: $(STATUS)/build
 	cd $(TREE) && rm -rf $(TRIM)
 	touch $@
 
-$(OUTPUT)/$(VERSION)-untested.tar.gz: $(STATUS)/trim
+$(OUTPUT)/$(VERSION)-untested.tar.gz:
+	make -j -f release.makefile $(STATUS)/trim
 	cd $(OUTPUT) && tar -czf $(VERSION)-untested.tar.gz $(VERSION)
 	rm -rf $(TREE) $(STATUS)
 
 $(OUTPUT)/$(VERSION).tar.gz: $(OUTPUT)/$(VERSION)-untested.tar.gz
 	mkdir -p $(OUTPUT)/conformance
 	-rm -rf $(OUTPUT)/conformance/$(VERSION)
-	cd $(OUTPUT)/conformance && tar -xzf ../$(VERSION).tar.gz
-	cd $(OUTPUT)/conformance/$(VERSION) && make conformance
+	cd $(OUTPUT)/conformance && tar -xzf ../$(VERSION)-untested.tar.gz
+	cd $(OUTPUT)/conformance/$(VERSION) && make -j conformance
 	rm -rf $(OUTPUT)/conformance/$(VERSION)
 	cd $(OUTPUT) && mv $(VERSION)-untested.tar.gz $(VERSION).tar.gz
 
