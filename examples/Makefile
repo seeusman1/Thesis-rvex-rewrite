@@ -10,6 +10,10 @@
 #   TARGETS - list of platform-specific make targets for make help
 #   CLEAN - list of platform-specific file(type)s to clean
 
+# Parallel execution is not supported due to the _start.o file, which differs
+# for different targets while the filename is shared.
+.NOTPARALLEL:
+
 # Issue width; must be 2, 4 or 8. Default = 8.
 ifndef ISSUE_WIDTH
 ISSUE_WIDTH = 8

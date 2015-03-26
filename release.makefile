@@ -162,9 +162,6 @@ endif
 	-rm -rf $(TREE)/$(RVEX_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/rvex/.git) $(TREE)/$(RVEX_DIR)/.git
 	cd $(TREE)/$(RVEX_DIR) && git reset --hard FETCH_HEAD --
-	touch $@
-
-$(STATUS)/pull-binutils: $(CACHE)/binutils/.git $(STATUS)/pull-rvex
 ifndef NO_FETCH
 	cd $(CACHE)/binutils && git fetch origin $(BINUTILS_COMMIT)
 endif
@@ -172,9 +169,6 @@ endif
 	-rm -rf $(TREE)/$(BINUTILS_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/binutils/.git) $(TREE)/$(BINUTILS_DIR)/.git
 	cd $(TREE)/$(BINUTILS_DIR) && git reset --hard FETCH_HEAD --
-	touch $@
-
-$(STATUS)/pull-gcc: $(CACHE)/gcc/.git $(STATUS)/pull-rvex
 ifndef NO_FETCH
 	cd $(CACHE)/gcc && git fetch origin $(GCC_COMMIT)
 endif
@@ -182,9 +176,6 @@ endif
 	-rm -rf $(TREE)/$(GCC_DIR)/.git
 	ln -s -T $(shell readlink -m $(CACHE)/gcc/.git) $(TREE)/$(GCC_DIR)/.git
 	cd $(TREE)/$(GCC_DIR) && git reset --hard FETCH_HEAD --
-	touch $@
-
-$(STATUS)/pull-vexparse: $(CACHE)/vexparse/.git $(STATUS)/pull-rvex
 ifndef NO_FETCH
 	cd $(CACHE)/vexparse && git fetch origin $(VEXPARSE_COMMIT)
 endif
@@ -213,7 +204,7 @@ $(TREE)/%: % $(STATUS)/pull-rvex
 $(STATUS)/copy: $(patsubst %,$(TREE)/%,$(COPY)) $(STATUS)/pull-rvex
 	touch $@
 
-$(STATUS)/expand: $(STATUS)/pull-rvex $(STATUS)/pull-binutils $(STATUS)/pull-gcc $(STATUS)/pull-vexparse $(STATUS)/extract-vex $(STATUS)/cache-grlib $(STATUS)/copy
+$(STATUS)/expand: $(STATUS)/pull-rvex $(STATUS)/extract-vex $(STATUS)/cache-grlib $(STATUS)/copy
 	touch $@
 
 #------------------------------------------------------------------------------
