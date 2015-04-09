@@ -524,7 +524,14 @@ begin -- architecture
         if clkEnCPU = '1' and stall = '0' then
           nextState <= STATE_IDLE;
         end if;
-
+        
+        -- Compute the proper write priority.
+        if hit = '1' then
+          writePrio <= "10";
+        else
+          writePrio <= "01";
+        end if;
+      
     end case;
     
     -- Force writePrio to "11" when a write is in progress.
