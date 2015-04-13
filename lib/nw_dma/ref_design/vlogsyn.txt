@@ -1,0 +1,6 @@
+c2s_pkt_streaming_fifo.v
+ref_inferred_shallow_ram.v
+ref_tiny_fifo.v
+ref_inferred_block_ram.v
+ref_sc_fifo_shallow_ram.v
+s2c_pkt_streaming_fifo.v

@@ -131,6 +131,7 @@ sim-%: work compile-%
 		migclean\
 		scripts-clean\
 		mig39\
+		pcie\
 		install-secureip\
 		compile_xilinx_verilog_lib\
 		compile.vsim\
@@ -155,6 +156,7 @@ synth: work
 		scripts-clean\
 		migclean\
 		mig39\
+		pcie\
 		planahead
 
 # Shorthand for launching ISE.
@@ -163,6 +165,7 @@ ise: work
 		scripts-clean\
 		migclean\
 		mig39\
+		pcie\
 		ise-launch
 
 

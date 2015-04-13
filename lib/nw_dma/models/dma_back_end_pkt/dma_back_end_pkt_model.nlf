@@ -1,0 +1,27 @@
+Release 12.3 - netgen M.70d (nt64)
+Copyright (c) 1995-2010 Xilinx, Inc.  All rights reserved.
+
+Command Line: netgen -ofmt verilog -sim -sdf_anno false
+C:\projects\Xilinx\xil_pdma_axi\version_1_00/dont_deliver_me_v6_x4_gen2_xil_axi_
+dma/dma_back_end_pkt/dma_back_end_pkt.ngc
+C:\projects\Xilinx\xil_pdma_axi\version_1_00/nwl_ip_1_00_12032010_v6_x4_gen2_xil
+_axi_dma/models/dma_back_end_pkt/dma_back_end_pkt_model.v  
+
+WARNING:NetListWriters:550 - Ignoring non-applicable option -sdf_anno for input
+   file with 'ngc' extension. 
+Reading design
+'C:/projects/Xilinx/xil_pdma_axi/version_1_00/dont_deliver_me_v6_x4_gen2_xil_axi
+_dma/dma_back_end_pkt/dma_back_end_pkt.ngc' ...
+Flattening design ...
+Processing design ... 
+  Preping design's networks ...
+  Preping design's macros ...
+Writing Verilog netlist file
+'C:/projects/Xilinx/xil_pdma_axi/version_1_00/nwl_ip_1_00_12032010_v6_x4_gen2_xi
+l_axi_dma/models/dma_back_end_pkt/dma_back_end_pkt_model.v' ...
+INFO:NetListWriters:633 - The generated Verilog netlist contains Xilinx UNISIM
+   simulation primitives and has to be used with UNISIM simulation library for
+   correct compilation and simulation. 
+Number of warnings: 1
+Number of info messages: 1
+Total memory usage is 211588 kilobytes
