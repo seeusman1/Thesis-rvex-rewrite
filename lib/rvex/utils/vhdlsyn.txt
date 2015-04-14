@@ -1,4 +1,5 @@
 utils_pkg.vhd
+utils_sync.vhd
 utils_fracDiv.vhd
 utils_crc.vhd
 utils_uart_rxBit.vhd

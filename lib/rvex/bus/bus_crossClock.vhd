@@ -187,8 +187,8 @@ begin
     if reset = '1' then
       req_sync <= BUS_MST2SLV_IDLE;
       res_reg  <= BUS_SLV2MST_IDLE;
-    elsif rising_edge(mst_clk) then
-      if mst_clkEn = '1' then
+    elsif rising_edge(slv_clk) then
+      if slv_clkEn = '1' then
         req_sync <= req_reg;
         if slv2crclk.ack = '1' then
           res_reg  <= slv2crclk;
