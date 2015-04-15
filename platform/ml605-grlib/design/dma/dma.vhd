@@ -74,16 +74,16 @@ entity dma is
     ---------------------------------------------------------------------------
     -- PCIe signals
     ---------------------------------------------------------------------------
-    pcie_txp             : out std_logic_vector(NO_OF_LANES-1 downto 0);
-    pcie_txn             : out std_logic_vector(NO_OF_LANES-1 downto 0);
-    pcie_rxp             : in  std_logic_vector(NO_OF_LANES-1 downto 0);
-    pcie_rxn             : in  std_logic_vector(NO_OF_LANES-1 downto 0);
+    pcie_txp                : out std_logic_vector(NO_OF_LANES-1 downto 0);
+    pcie_txn                : out std_logic_vector(NO_OF_LANES-1 downto 0);
+    pcie_rxp                : in  std_logic_vector(NO_OF_LANES-1 downto 0);
+    pcie_rxn                : in  std_logic_vector(NO_OF_LANES-1 downto 0);
 
-    pcie_clk_p           : in  std_logic;
-    pcie_clk_n           : in  std_logic;
+    pcie_clk_p              : in  std_logic;
+    pcie_clk_n              : in  std_logic;
 
     -- PCI Express slot PERST# reset signal
-    perst_n              : in  std_logic;
+    perst_n                 : in  std_logic;
 
     ---------------------------------------------------------------------------
     -- r-VEX bus signals
@@ -105,6 +105,7 @@ architecture behavioral of dma is
   signal user_clk                  : std_logic;
   -- PCIe reset
   signal perst_n_c                 : std_logic;
+  signal perst_c                   : std_logic;
 
   signal targ_wr_req               : std_logic;
   signal targ_wr_core_ready        : std_logic;
@@ -140,6 +141,7 @@ architecture behavioral of dma is
   signal s2c0_user_control         : std_logic_vector(0 to 63);      
   signal s2c0_sop                  : std_logic;              
   signal s2c0_eop                  : std_logic;              
+  signal s2c0_err                  : std_logic;
   signal s2c0_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);             
   signal s2c0_data_valid           : std_logic_vector(0 to CORE_REMAIN_WIDTH-1);
   signal s2c0_src_rdy              : std_logic;          
@@ -147,6 +149,11 @@ architecture behavioral of dma is
   signal s2c0_abort                : std_logic;            
   signal s2c0_abort_ack            : std_logic; 
   signal s2c0_user_rst_n           : std_logic;
+
+  signal s2c0_apkt_req             : std_logic;
+  signal s2c0_apkt_ready           : std_logic;
+  signal s2c0_apkt_addr            : std_logic_vector(0 to 63);
+  signal s2c0_apkt_bcount          : std_logic_vector(0 to 9);
 
   signal c2s0_user_status          : std_logic_vector(0 to 63);      
   signal c2s0_sop                  : std_logic;              
@@ -159,9 +166,16 @@ architecture behavioral of dma is
   signal c2s0_abort_ack            : std_logic; 
   signal c2s0_user_rst_n           : std_logic;
 
+  signal c2s0_apkt_req             : std_logic;
+  signal c2s0_apkt_ready           : std_logic;
+  signal c2s0_apkt_addr            : std_logic_vector(0 to 63);
+  signal c2s0_apkt_bcount          : std_logic_vector(0 to 31);
+  signal c2s0_apkt_eop             : std_logic;
+
   signal s2c1_user_control         : std_logic_vector(0 to 63);      
   signal s2c1_sop                  : std_logic;              
   signal s2c1_eop                  : std_logic;              
+  signal s2c1_err                  : std_logic;
   signal s2c1_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);             
   signal s2c1_data_valid           : std_logic_vector(0 to CORE_REMAIN_WIDTH-1);
   signal s2c1_src_rdy              : std_logic;          
@@ -169,6 +183,11 @@ architecture behavioral of dma is
   signal s2c1_abort                : std_logic;            
   signal s2c1_abort_ack            : std_logic;   
   signal s2c1_user_rst_n           : std_logic;
+
+  signal s2c1_apkt_req             : std_logic;
+  signal s2c1_apkt_ready           : std_logic;
+  signal s2c1_apkt_addr            : std_logic_vector(0 to 63);
+  signal s2c1_apkt_bcount          : std_logic_vector(0 to 9);
 
   signal c2s1_user_status          : std_logic_vector(0 to 63);      
   signal c2s1_sop                  : std_logic;              
@@ -180,6 +199,12 @@ architecture behavioral of dma is
   signal c2s1_abort                : std_logic;            
   signal c2s1_abort_ack            : std_logic; 
   signal c2s1_user_rst_n           : std_logic;
+
+  signal c2s1_apkt_req             : std_logic;
+  signal c2s1_apkt_ready           : std_logic;
+  signal c2s1_apkt_addr            : std_logic_vector(0 to 63);
+  signal c2s1_apkt_bcount          : std_logic_vector(0 to 31);
+  signal c2s1_apkt_eop             : std_logic;
 
 
   -- -------------------
@@ -304,6 +329,7 @@ begin
       I     => perst_n,
       O     => perst_n_c
     );
+  perst_c <= perst_n_c;
 
   -- Register to improve timing
   user_lnk_up_int_i : FDCP 
@@ -337,7 +363,7 @@ begin
   -- PCI Express Interface
   -- -------------------------
 
-  pcie_v2_5
+  pcie_coregen: entity work.pcie_v2_5
     generic map (
       -- pragma translate_off
       PL_FAST_TRAIN                                => TRUE, -- Default is FALSE
@@ -353,8 +379,8 @@ begin
       CLASS_CODE                                   => X"07_80_00",
 
       DEV_CAP_MAX_PAYLOAD_SUPPORTED                => 2,
-      LINK_CAP_MAX_LINK_WIDTH                      => NO_OF_LANES,
-      LTSSM_MAX_LINK_WIDTH                         => NO_OF_LANES,
+      LINK_CAP_MAX_LINK_WIDTH                      => X"4",--NO_OF_LANES,
+      LTSSM_MAX_LINK_WIDTH                         => X"4",--NO_OF_LANES,
       DEVICE_ID                                    => X"6024",
       VENDOR_ID                                    => X"10EE",
 
@@ -497,7 +523,7 @@ begin
       ---------------------------------------------------------
 
       sys_clk                                   => pcie_ref_clk,
-      sys_reset                                 => not perst_n_c
+      sys_reset                                 => perst_c
     );
 
   --+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -506,8 +532,8 @@ begin
   -- ---------------------------------
   -- Physical Layer Control and Status
 
-  pl_directed_link_change      <= '0';
-  pl_directed_link_width       <= '0';
+  pl_directed_link_change      <= "00";
+  pl_directed_link_width       <= "00";
   pl_directed_link_speed       <= '0';
   pl_directed_link_auton       <= '0';
   pl_upstream_prefer_deemph    <= '1';
@@ -515,14 +541,14 @@ begin
   -- -------------------------------
   -- Device Serial Number Capability
 
-  cfg_dsn                      = uint2vect(DEVICE_SN, 64);
+  cfg_dsn                      <= uint2vect(DEVICE_SN, 64);
 
   --+++++++++++++++++++++++++++++++++++++++++++++++++++
 
   -- -------------------------
   -- Packet DMA Instance
   -- -------------------------
-  packet_dma_inst : packet_dma_entity 
+  packet_dma_inst : entity work.packet_dma_entity 
     generic map (
       XIL_DATA_WIDTH                 => 64,
       XIL_STRB_WIDTH                 => 8
@@ -707,10 +733,11 @@ begin
 
   -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   -- c2s to r-VEX bus
-  c2s_to_bus: c2s_bus_bridge
+  c2s_to_bus: entity work.c2s_bus_bridge
     port map (
       reset                   => reset,
-      clk                     => bus_clk,
+      sys_clk                 => pcie_ref_clk,
+      c2s_clk                 => bus_clk,
       
       -- c2s bus
       sop                     => c2s0_sop,
@@ -736,10 +763,11 @@ begin
 
   -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   -- s2c to r-VEX bus
-  s2c_to_bus: s2c_bus_bridge
-    port (
+  s2c_to_bus: entity work.s2c_bus_bridge
+    port map (
       reset                   => reset,
-      clk                     => bus_clk,
+      sys_clk                 => pcie_ref_clk,
+      s2c_clk                 => bus_clk,
       
       -- s2c bus
       sop                     => s2c0_sop,

@@ -63,8 +63,10 @@ entity s2c_bus_bridge is
     -- Active high synchronous reset input.
     reset                   : in  std_logic;
     
-    -- Clock input, registers are rising edge triggered.
-    clk                     : in  std_logic;
+    -- Clock inputs, registers are rising edge triggered.
+    -- We assume that sys_clk runs at an integer multiple of s2c_clk
+    s2c_clk                 : in  std_logic;
+    sys_clk                 : in  std_logic;
     
     ---------------------------------------------------------------------------
     -- s2c bus
@@ -101,106 +103,119 @@ architecture Behavioral of s2c_bus_bridge is
   type transmit_state is (wait_pkt, wait_data, write_low, write_high);
 
   signal curr_addr          : rvex_address_type;
+  signal next_addr          : rvex_address_type;
+
   signal curr_state         : transmit_state;
+  signal next_state         : transmit_state;
 
 --=============================================================================
 begin -- architecture
 --=============================================================================
 
-  handle_cmd: process (clk) is
+  handle_cmd: process (sys_clk, reset, user_rst_n,
+                       next_addr, curr_addr, next_state, curr_state,
+                       apkt_req, apkt_addr,
+                       data, valid, eop,
+                       bus2dma.ack) is
   begin
-    if rising_edge(clk) then
-      if reset = '1' or user_rst_n = '0' then
-        dst_rdy <= '0';
-        abort_ack <= '0';
-        apkt_ready <= '0';
+    if reset = '1' or user_rst_n = '0' then
+      dst_rdy <= '0';
+      abort_ack <= '0';
+      apkt_ready <= '0';
 
-        dma2bus.writeMask <= "1111";
-        dma2bus.flags <= BUS_FLAGS_DEFAULT;
-        dma2bus.writeEnable <= '0';
-        dma2bus.readEnable <= '0';
+      dma2bus.writeMask <= "1111";
+      dma2bus.flags <= BUS_FLAGS_DEFAULT;
+      dma2bus.writeEnable <= '0';
+      dma2bus.readEnable <= '0';
 
-        curr_state <= wait_pkt;
+      curr_state <= wait_pkt;
+      next_state <= wait_pkt;
+
+    elsif rising_edge(sys_clk) then
+      curr_state <= next_state;
+      curr_addr <= next_addr;
+
+    else
+      if apkt_req = '1' and curr_state = wait_pkt then
+        apkt_ready <= '1';
       else
-        if apkt_req = '0' then
-          apkt_ready <= '0';
-        end if;
-        if src_rdy = '0' then
-          dst_rdy <= '0';
-        end if;
-
-        case curr_state is
-          when wait_pkt =>
-            if apkt_req = '1' then
-              apkt_ready <= '1';
-              curr_addr <= apkt_addr(0 to 31);
-
-              curr_state <= wait_data;
-            end if;
-
-          when wait_data =>
-            if src_rdy = '1' then
-              dma2bus.address <= curr_addr;
-              dma2bus.writeData <= data(0 to 31);
-              dma2bus.writeEnable <= '1';
-
-              -- Correctly handle the last word of a packet
-              if eop = '1' and vect2uint(valid) <= 4
-                    and vect2uint(valid) > 0 then
-                case valid is
-                  when "001" => dma2bus.writeMask <= "0001";
-                  when "010" => dma2bus.writeMask <= "0011";
-                  when "011" => dma2bus.writeMask <= "0111";
-                  when "100" => dma2bus.writeMask <= "1111";
-                  when others => null;
-                end case;
-                curr_state <= write_high;
-              else
-                dma2bus.writeMask <= "1111";
-
-                curr_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
-                curr_state <= write_low;
-              end if;
-            end if;
-
-          when write_low =>
-            if bus2dma.ack = '1' then
-              -- Write next data element, writes still enabled
-              dma2bus.address <= curr_addr;
-              dma2bus.writeData <= data(32 to 63);
-
-              -- Handle the last word of a packet
-              if eop = '1' then
-                case valid is
-                  when "101" => dma2bus.writeMask <= "0001";
-                  when "110" => dma2bus.writeMask <= "0011";
-                  when "111" => dma2bus.writeMask <= "0111";
-                  when "000" => dma2bus.writeMask <= "1111";
-                  when others => null;
-                end case;
-              else
-                dma2bus.writeMask <= "1111";
-              end if;
-
-              curr_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
-              curr_state <= write_high;
-            end if;
-
-          when write_high =>
-            if bus2dma.ack = '1' then
-              dma2bus.writeEnable <= '0';
-
-              dst_rdy <= '1';
-
-              if eop = '0' then
-                curr_state <= wait_data;
-              else
-                curr_state <= wait_pkt;
-              end if;
-            end if;
-        end case;
-
+        apkt_ready <= '0';
       end if;
+
+      if curr_state = write_high then
+        dst_rdy <= '1';
+      else
+        dst_rdy <= '0';
+      end if;
+
+      case curr_state is
+        when wait_pkt =>
+          if apkt_req = '1' then
+            next_addr <= apkt_addr(0 to 31);
+            next_state <= wait_data;
+          end if;
+
+        when wait_data =>
+          if src_rdy = '1' then
+            dma2bus.address <= curr_addr;
+            dma2bus.writeData <= data(0 to 31);
+            dma2bus.writeEnable <= '1';
+
+            next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+
+            -- Correctly handle the last word of a packet
+            if eop = '1' and vect2uint(valid) <= 4
+                  and vect2uint(valid) > 0 then
+              case valid is
+                when "001" => dma2bus.writeMask <= "0001";
+                when "010" => dma2bus.writeMask <= "0011";
+                when "011" => dma2bus.writeMask <= "0111";
+                when "100" => dma2bus.writeMask <= "1111";
+                when others => null;
+              end case;
+              next_state <= write_high;
+            else
+              dma2bus.writeMask <= "1111";
+
+              next_state <= write_low;
+            end if;
+          end if;
+
+        when write_low =>
+          if bus2dma.ack = '1' then
+            -- Write next data element, writes still enabled
+            dma2bus.address <= curr_addr;
+            dma2bus.writeData <= data(32 to 63);
+
+            -- Handle the last word of a packet
+            if eop = '1' then
+              case valid is
+                when "101" => dma2bus.writeMask <= "0001";
+                when "110" => dma2bus.writeMask <= "0011";
+                when "111" => dma2bus.writeMask <= "0111";
+                when "000" => dma2bus.writeMask <= "1111";
+                when others => null;
+              end case;
+            else
+              dma2bus.writeMask <= "1111";
+            end if;
+
+            next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+            next_state <= write_high;
+          end if;
+
+        when write_high =>
+          if bus2dma.ack = '1' then
+            dma2bus.writeEnable <= '0';
+
+            if eop = '0' then
+              next_state <= wait_data;
+            else
+              next_state <= wait_pkt;
+            end if;
+          end if;
+      end case;
+
     end if;
   end process;
 
