@@ -1,0 +1,30 @@
+name    Test multiplier by computing factorial.
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  forwarding            1
+config  limmhFromPreviousPair 1
+config  limmhFromNeighbor     1
+
+-- Initialize memories.
+init
+
+srec    imem 0 ../../compile/factorial.srec
+srec    dmem 0 ../../compile/factorial.srec
+
+-- Start the program.
+reset
+wait    1000 write *  0 0x00000001 -- 1!
+wait    1000 write *  4 0x00000002 -- 2!
+wait    1000 write *  8 0x00000006 -- 3!
+wait    1000 write * 12 0x00000018 -- 4!
+wait    1000 write * 16 0x00000078 -- 5!
+wait    1000 write * 20 0x000002D0 -- 6!
+wait    1000 write * 24 0x000013B0 -- 7!
+wait    1000 write * 28 0x00009D80 -- 8!
+wait    1000 write * 32 0x00058980 -- 9!
+wait    1000 write * 36 0x00375F00 -- 10!
+wait    1000 write * 40 0x02611500 -- 11!
+wait    1000 write * 44 0x1C8CFC00 -- 12!

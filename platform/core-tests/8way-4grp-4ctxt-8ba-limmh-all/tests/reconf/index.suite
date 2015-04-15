@@ -1,0 +1,7 @@
+-- This tests basic dynamic reconfiguration.
+
+-- Test external (debug bus) reconfiguration.
+extReconf.test
+
+-- Test internal reconfiguration.
+intReconf.test

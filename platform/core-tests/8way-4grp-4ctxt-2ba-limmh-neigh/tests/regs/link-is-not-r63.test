@@ -1,0 +1,20 @@
+name    Test r0.63/link register independent
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+config  reg63isLink           0
+
+-- Initialize memories.
+init
+
+-- Include the file containing the assembly for this test and its counterpart.
+inc     link-r63-test.inc
+
+-- Run the test.
+reset
+wait    40 write * 0 0 exclusive
+wait    40 write * 0 42 exclusive
+wait    40 idle 0
+

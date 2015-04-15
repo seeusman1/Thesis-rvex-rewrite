@@ -1,0 +1,106 @@
+name    Test ALU comparison operations
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+
+-- Initialize memories.
+init
+
+-- Test 32 <op> 33
+load    add r0.1 = r0.0, 32
+load    add r0.2 = r0.0, 33
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     compare-kernel.inc
+
+-- Test 33 <op> 33
+load    add r0.1 = r0.0, 33
+load    add r0.2 = r0.0, 33
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     compare-kernel.inc
+
+-- Test 34 <op> 33
+load    add r0.1 = r0.0, 34
+load    add r0.2 = r0.0, 33
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     compare-kernel.inc
+
+-- Test 1 <op> -1
+load    add r0.1 = r0.0, 1
+load    add r0.2 = r0.0, -1
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     compare-kernel.inc
+
+-- Test -1 <op> 1
+load    add r0.1 = r0.0, -1
+load    add r0.2 = r0.0, 1
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     compare-kernel.inc
+
+-- Stop the processor.
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stop ;;
+
+-- Reset the processor.
+reset
+
+-- Assert 32 < 33
+inc     compare-match-lt.inc
+inc     compare-match-lt.inc
+
+-- Assert 33 = 33
+inc     compare-match-eq.inc
+inc     compare-match-eq.inc
+
+-- Assert 34 > 33
+inc     compare-match-gt.inc
+inc     compare-match-gt.inc
+
+-- Assert 1 > -1 when signed, 1 < 0xFFFFFFFF when unsigned
+inc     compare-match-gt.inc
+inc     compare-match-lt.inc
+
+-- Assert -1 < 1 when signed, 0xFFFFFFFF > 1 when unsigned
+inc     compare-match-lt.inc
+inc     compare-match-gt.inc
+
+-- Wait until the processor is idle.
+wait    40 idle 0
+

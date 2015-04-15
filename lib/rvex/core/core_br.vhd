@@ -209,7 +209,8 @@ entity core_br is
     -- The current value of the context PC register and associated override
     -- flag. When the override flag is set, the branch unit should behave as if
     -- there was a branch to the value in contextPC. This happens when the
-    -- debug bus writes to the PC register.
+    -- debug bus writes to the PC register. overridePC will remain asserted
+    -- until after the next cycle where br2cxplif_valid is asserted.
     cxplif2br_contextPC         : in  rvex_address_array(S_IF+1 to S_IF+1);
     cxplif2br_overridePC        : in  std_logic_vector(S_IF+1 to S_IF+1);
     
@@ -260,6 +261,16 @@ architecture Behavioral of core_br is
   -- Stop flags. When stop or stop_r are active, instruction fetching should be
   -- disabled, and if stop_r is active, a stop trap should be generated.
   signal stop, stop_r           : std_logic_vector(S_BR to S_BR);
+  
+  -- RFI flush control signals. The first of these is generated in the branch
+  -- determination process. It is set only if the change in CCR due to the SCCR
+  -- restore affects instruction fetches, in which case fetching should be
+  -- disabled until CCR is updated (this happens in S_MEM). Fetching is
+  -- disabled when rfiFlush(S_BR..S_MEM) is nonzero. The branch determination
+  -- logic will continue to force the next PC to the trap point when
+  -- rfiFlush(S_BR+1..S_MEM+1) is nonzero.
+  signal rfiFlush               : std_logic_vector(S_BR to S_MEM+1);
+  signal rfiFlush_r             : std_logic_vector(S_BR+1 to S_MEM+1);
   
   -- Breakpoint enable signal for the next instruction. Goes low for the first
   -- valid instruction after leaving a debug trap.
@@ -367,16 +378,29 @@ begin -- architecture
     end if;
   end process;
   
+  -- Generate the RFI flush stage registers.
+  rfi_flush_reg_gen: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        rfiFlush_r <= (others => '0');
+      elsif clkEn = '1' and stall = '0' then
+        rfiFlush_r(S_BR+1 to S_MEM+1) <= rfiFlush(S_BR to S_MEM);
+      end if;
+    end if;
+  end process;
+  
   -----------------------------------------------------------------------------
   -- Determine next PC source and control signal states
   -----------------------------------------------------------------------------
   det_branch: process (
-    stall, ctrl, run, run_r, stop_r, cxplif2br_irqID,
+    stall, ctrl, run, run_r, stop_r, cxplif2br_irqID, rfiFlush_r,
     pl2br_valid, pl2br_opBr,
     pl2br_trapPending, cxplif2br_overridePC,
     pl2br_trapToHandleInfo, pl2br_trapToHandlePoint,
     cxplif2br_extDebug, cxplif2br_handlingDebugTrap
   ) is
+    variable rfiFlushInProgress : std_logic;
   begin
     
     -- Set trap information defaults.
@@ -389,6 +413,8 @@ begin -- architecture
     
     -- Set special instruction flags low by default.
     br2pl_rfi(S_BR) <= '0';
+    rfiFlush(S_BR) <= '0';
+    rfiFlush(S_BR+1 to S_MEM+1) <= rfiFlush_r(S_BR+1 to S_MEM+1);
     br2cxplif_stop(S_BR) <= '0';
     stop(S_BR) <= '0';
     
@@ -398,7 +424,31 @@ begin -- architecture
     -- Do not acknowledge interrupts by default.
     br2cxplif_irqAck(S_BR) <= '0';
     
-    if cxplif2br_overridePC(S_IF+1) = '1' then
+    -- Determine whether we're currently handling an RFI flush.
+    rfiFlushInProgress := '0';
+    for stage in S_BR+1 to S_MEM+1 loop
+      rfiFlushInProgress := rfiFlushInProgress or rfiFlush(stage);
+    end loop;
+    
+    -- Determine what to do next.
+    if rfiFlushInProgress = '1' then
+      
+      -- Set the next PC to the trap return address.
+      nextPCsrc(S_BR) <= NEXT_PC_TRAP_RETURN;
+      
+      -- Fetch the previous instruction first if it's possible that there's
+      -- relevant LIMMH instructions there.
+      noLimmPrefetch(S_BR) <= '0';
+      
+      -- pragma translate_off
+      if rfiFlush(S_MEM+1) = '1' then
+        simReason <= to_rvs("RFI return");
+      else
+        simReason <= to_rvs("RFI flush");
+      end if;
+      -- pragma translate_on
+      
+    elsif cxplif2br_overridePC(S_IF+1) = '1' then
       
       -- Branch to the address in the context PC register when requested.
       nextPCsrc(S_BR) <= NEXT_PC_CURRENT;
@@ -503,6 +553,16 @@ begin -- architecture
       -- pragma translate_off
       simReason <= to_rvs("RFI instr.");
       -- pragma translate_on
+      
+      -- Determine if we need to flush due to the SCCR->CCR transfer casuing
+      -- changes in fetch behavior. This doesn't occur yet, but it will when
+      -- the MMU is added.
+      if false then
+        
+        -- We need to flush.
+        rfiFlush(S_BR) <= '1';
+        
+      end if;
       
     elsif ctrl(S_BR).stop = '1' and pl2br_valid(S_BR) = '1' then
       
@@ -761,7 +821,7 @@ begin -- architecture
   det_next_op: process (
     nextPC, fetchPC, branching, branch, doubleFetch, noLimmPrefetch,
     cfg2br_numGroupsLog2, run, run_r, pl2br_trapPending, brkptEnable,
-    nextPCMisaligned, stop, stop_r
+    nextPCMisaligned, stop, stop_r, rfiFlush
   ) is
     variable nextPC_v           : rvex_address_array(S_IF to S_IF);
     variable fetchPC_v          : rvex_address_array(S_IF to S_IF);
@@ -858,6 +918,12 @@ begin -- architecture
       and (not nextPCMisaligned(S_IF))
       and (not stop(S_BR))
       and (not stop_r(S_BR));
+    
+    -- Disable fetching while we're waiting for CCR bits which control the fetch
+    -- to be updated due to an RFI instruction.
+    for stage in S_BR to S_MEM loop
+      fetch(S_IF) := fetch(S_IF) and not rfiFlush(stage);
+    end loop;
     
     -- Drive PC outputs.
     br2cxplif_PC(S_IF)                <= nextPC_v(S_IF);

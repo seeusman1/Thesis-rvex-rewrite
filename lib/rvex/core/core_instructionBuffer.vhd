@@ -355,7 +355,7 @@ begin -- architecture
             for PC in 0 to 2**MUX_SIZE_LOG2-1 loop
               addr := numGroupsLog2*2**MUX_SIZE_LOG2 + PC;
               ret(lane)(addr) := uint2vect(PC, MUX_SIZE_LOG2);
-              if (((2**MUX_SIZE_LOG2-1) - PC) mod 2**i) < (lane mod 2**i) then
+              if (((2**MUX_SIZE_LOG2-1) - PC) mod 2**i) < ((lane / 2**CFG.bundleAlignLog2) mod 2**i) then
                 ret(lane)(addr)(MUX_SIZE_LOG2-1 downto i) := (others => '1');
               else
                 ret(lane)(addr)(MUX_SIZE_LOG2-1 downto i) := (others => '0');

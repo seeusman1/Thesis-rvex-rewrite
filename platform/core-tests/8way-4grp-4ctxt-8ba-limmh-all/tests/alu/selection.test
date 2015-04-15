@@ -1,0 +1,146 @@
+name    Test min, max and select instructions
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+
+-- Initialize memories.
+init
+
+-- Test 0, -42 and false.
+load    add r0.1 = r0.0, 0
+load    add r0.2 = r0.0, -42
+load    cmpeq b0.0 = r0.0, 1
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     selection-kernel.inc
+
+-- Test -42, 0 and false.
+load    add r0.1 = r0.0, -42
+load    add r0.2 = r0.0, 0
+load    cmpeq b0.0 = r0.0, 1
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     selection-kernel.inc
+
+-- Test 0, 42 and false.
+load    add r0.1 = r0.0, 0
+load    add r0.2 = r0.0, 42
+load    cmpeq b0.0 = r0.0, 1
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     selection-kernel.inc
+
+-- Test 42, 0 and false.
+load    add r0.1 = r0.0, 42
+load    add r0.2 = r0.0, 0
+load    cmpeq b0.0 = r0.0, 1
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     selection-kernel.inc
+
+-- Test 33, 42 and true.
+load    add r0.1 = r0.0, 33
+load    add r0.2 = r0.0, 42
+load    cmpeq b0.0 = r0.0, 0
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     selection-kernel.inc
+
+-- Test 42, 33 and true.
+load    add r0.1 = r0.0, 42
+load    add r0.2 = r0.0, 33
+load    cmpeq b0.0 = r0.0, 0
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     selection-kernel.inc
+
+-- Stop the processor.
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stop ;;
+
+-- Reset the processor.
+reset
+
+-- Test 0, -42 and false.
+wait    400 write *  0   0  exclusive  -- max(0, -42)
+wait    40  write *  4 -42  exclusive  -- maxu(0, -42)
+wait    40  write *  8 -42  exclusive  -- min(0, -42)
+wait    40  write * 12   0  exclusive  -- minu(0, -42)
+wait    40  write * 16 -42  exclusive  -- select -42
+wait    40  write * 20   0  exclusive  -- select 0
+
+-- Test -42, 0 and false.
+wait    400 write *  0   0  exclusive  -- max(-42, 0)
+wait    40  write *  4 -42  exclusive  -- maxu(-42, 0)
+wait    40  write *  8 -42  exclusive  -- min(-42, 0)
+wait    40  write * 12   0  exclusive  -- minu(-42, 0)
+wait    40  write * 16   0  exclusive  -- select 0
+wait    40  write * 20 -42  exclusive  -- select -42
+
+-- Test 0, 42 and false.
+wait    400 write *  0  42  exclusive  -- max(0, 42)
+wait    40  write *  4  42  exclusive  -- maxu(0, 42)
+wait    40  write *  8   0  exclusive  -- min(0, 42)
+wait    40  write * 12   0  exclusive  -- minu(0, 42)
+wait    40  write * 16  42  exclusive  -- select 42
+wait    40  write * 20   0  exclusive  -- select 0
+
+-- Test 42, 0 and false.
+wait    400 write *  0  42  exclusive  -- max(42, 0)
+wait    40  write *  4  42  exclusive  -- maxu(42, 0)
+wait    40  write *  8   0  exclusive  -- min(42, 0)
+wait    40  write * 12   0  exclusive  -- minu(42, 0)
+wait    40  write * 16   0  exclusive  -- select 0
+wait    40  write * 20  42  exclusive  -- select 42
+
+-- Test 33, 42 and true.
+wait    400 write *  0  42  exclusive  -- max(33, 42)
+wait    40  write *  4  42  exclusive  -- maxu(33, 42)
+wait    40  write *  8  33  exclusive  -- min(33, 42)
+wait    40  write * 12  33  exclusive  -- minu(33, 42)
+wait    40  write * 16  33  exclusive  -- select 33
+wait    40  write * 20  42  exclusive  -- select 42
+
+-- Test 42, 33 and true.
+wait    400 write *  0  42  exclusive  -- max(42, 33)
+wait    40  write *  4  42  exclusive  -- maxu(42, 33)
+wait    40  write *  8  33  exclusive  -- min(42, 33)
+wait    40  write * 12  33  exclusive  -- minu(42, 33)
+wait    40  write * 16  42  exclusive  -- select 42
+wait    40  write * 20  33  exclusive  -- select 33
+
+-- Wait until the processor is idle.
+wait    40 idle 0
+

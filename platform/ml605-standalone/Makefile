@@ -2,6 +2,7 @@
 UNISIM = $(XILINX)/vhdl/src/unisims
 SYNTH_MAKEFILE= ../share/synthesis.makefile
 SYNTH_INIT = ../share/synthesis-init.py
+IMPACT_MAKEFILE = ../share/impact.makefile
 
 .PHONY: help
 help:
@@ -36,7 +37,14 @@ help:
 	@echo "  make synth-<prog>    : synthesizes the project using ISE in command line mode."
 	@echo "                         Will make a new fresh directory with copies of all"
 	@echo "                         sources, so multiple synthesis attempts can be run at"
-	@echo "                         once."
+	@echo "                         once. This directory can be specified manually with"
+	@echo "                         NAME=<name>, in which case the directory used will be"
+	@echo "                         synth-<name>, or it will be generated based on the"
+	@echo "                         current timestamp."
+	@echo ""
+	@echo "  make prog-<name>     : programs the ML605 board using synth-<name>/routed.bit"
+	@echo "                         (as generated with 'make synth-<prog> NAME=<name>')"
+	@echo "                         with impact."
 	@echo ""
 	@echo "  make upload-<prog>   : compiles the specified program, starts rvsrv if it is"
 	@echo "                         not already running and uploads the program to the"
@@ -99,16 +107,24 @@ ise-%: compile-%
 	cd ise && ise standalone.xise
 
 .PHONY: synth-%
-UNIQUE := $(shell date +%Y-%m-%d-%H-%M-%S-%N)
+ifndef NAME
+NAME := $(shell date +%Y-%m-%d-%H-%M-%S-%N)
+endif
 synth-%: compile-%
-	mkdir -p synth-$(UNIQUE)/vhdl
-	cp opts-xst.cfg synth-$(UNIQUE)
-	cp opts-map.cfg synth-$(UNIQUE)
-	cp opts-par.cfg synth-$(UNIQUE)
-	cp $(SYNTH_MAKEFILE) synth-$(UNIQUE)
-	cd synth-$(UNIQUE) && mv synthesis.makefile Makefile
-	cd synth-$(UNIQUE) && python3 ../$(SYNTH_INIT) ../ise/standalone.xise
-	cd synth-$(UNIQUE) && $(MAKE)
+	if [ -d synth-$(NAME) ]; then rm -rI synth-$(NAME); fi
+	if [ -d synth-$(NAME) ]; then exit 1; fi
+	mkdir -p synth-$(NAME)/vhdl
+	cp opts-xst.cfg synth-$(NAME)
+	cp opts-map.cfg synth-$(NAME)
+	cp opts-par.cfg synth-$(NAME)
+	cp $(SYNTH_MAKEFILE) synth-$(NAME)
+	cd synth-$(NAME) && mv synthesis.makefile Makefile
+	cd synth-$(NAME) && python3 ../$(SYNTH_INIT) ../ise/standalone.xise
+	cd synth-$(NAME) && $(MAKE)
+
+.PHONY: prog-%
+prog-%: synth-%/routed.bit
+	cd $(dir $<) && $(MAKE) -f ../$(IMPACT_MAKEFILE) prog-ml605-routed.bit
 
 .PHONY: upload-%
 upload-%:

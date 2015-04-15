@@ -18,7 +18,7 @@ int main()
 	for (j = 0; j < 20; j++) {
 		if (SortArr[j] != SortedArr[j]) {
 			rvex_fail("ucbqsort-fast: failed\n");
-			return 0;
+			return 1;
 		}
 	}
 	rvex_succeed("ucbqsort-fast: success\n");

@@ -1,0 +1,263 @@
+name    Test SBIT, SBITF, TBIT, TBITF and CLZ
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  forwarding            1
+
+-- Initialize memories.
+init
+
+-- Load random number into r0.1 and r0.2.
+load    limmh 1, 0x6560D079
+load    add r0.1 = r0.0, 0x6560D079
+load    limmh 3, 0x6560D079
+load    add r0.2 = r0.0, 0x6560D079
+load    add r0.3 = r0.0, 33
+load    nop
+load    nop
+load    nop ;;
+
+-- Run kernel 34 times.
+inc     bit-kernel.inc  -- 33
+inc     bit-kernel.inc  -- 32
+inc     bit-kernel.inc  -- 31
+inc     bit-kernel.inc  -- 30
+inc     bit-kernel.inc  -- 29
+inc     bit-kernel.inc  -- 28
+inc     bit-kernel.inc  -- 27
+inc     bit-kernel.inc  -- 26
+inc     bit-kernel.inc  -- 25
+inc     bit-kernel.inc  -- 24
+inc     bit-kernel.inc  -- 23
+inc     bit-kernel.inc  -- 22
+inc     bit-kernel.inc  -- 21
+inc     bit-kernel.inc  -- 20
+inc     bit-kernel.inc  -- 19
+inc     bit-kernel.inc  -- 18
+inc     bit-kernel.inc  -- 17
+inc     bit-kernel.inc  -- 16
+inc     bit-kernel.inc  -- 15
+inc     bit-kernel.inc  -- 14
+inc     bit-kernel.inc  -- 13
+inc     bit-kernel.inc  -- 12
+inc     bit-kernel.inc  -- 11
+inc     bit-kernel.inc  -- 10
+inc     bit-kernel.inc  -- 9
+inc     bit-kernel.inc  -- 8
+inc     bit-kernel.inc  -- 7
+inc     bit-kernel.inc  -- 6
+inc     bit-kernel.inc  -- 5
+inc     bit-kernel.inc  -- 4
+inc     bit-kernel.inc  -- 3
+inc     bit-kernel.inc  -- 2
+inc     bit-kernel.inc  -- 1
+inc     bit-kernel.inc  -- 0
+
+-- Reset processor.
+reset
+
+-- After testing and modifying "bit 33"
+wait    40 write * 4 1 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x6560D079 exclusive
+wait    40 write * 12 0x6560D079 exclusive
+
+-- After testing and modifying "bit 32"
+wait    40 write * 4 1 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x6560D079 exclusive
+wait    40 write * 12 0x6560D079 exclusive
+
+-- After testing and modifying bit 31
+wait    40 write * 4 1 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x6560D079 exclusive
+wait    40 write * 12 0xE560D079 exclusive
+
+-- After testing and modifying bit 30
+wait    40 write * 4 1 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x2560D079 exclusive
+wait    40 write * 12 0xE560D079 exclusive
+
+-- After testing and modifying bit 29
+wait    40 write * 4 2 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x0560D079 exclusive
+wait    40 write * 12 0xE560D079 exclusive
+
+-- After testing and modifying bit 28
+wait    40 write * 4 5 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x0560D079 exclusive
+wait    40 write * 12 0xF560D079 exclusive
+
+-- After testing and modifying bit 27
+wait    40 write * 4 5 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x0560D079 exclusive
+wait    40 write * 12 0xFD60D079 exclusive
+
+-- After testing and modifying bit 26
+wait    40 write * 4 5 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x0160D079 exclusive
+wait    40 write * 12 0xFD60D079 exclusive
+
+-- After testing and modifying bit 25
+wait    40 write * 4 7 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x0160D079 exclusive
+wait    40 write * 12 0xFF60D079 exclusive
+
+-- After testing and modifying bit 24
+wait    40 write * 4 7 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x0060D079 exclusive
+wait    40 write * 12 0xFF60D079 exclusive
+
+-- After testing and modifying bit 23
+wait    40 write * 4 9 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x0060D079 exclusive
+wait    40 write * 12 0xFFE0D079 exclusive
+
+-- After testing and modifying bit 22
+wait    40 write * 4 9 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x0020D079 exclusive
+wait    40 write * 12 0xFFE0D079 exclusive
+
+-- After testing and modifying bit 21
+wait    40 write * 4 10 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x0000D079 exclusive
+wait    40 write * 12 0xFFE0D079 exclusive
+
+-- After testing and modifying bit 20
+wait    40 write * 4 16 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x0000D079 exclusive
+wait    40 write * 12 0xFFF0D079 exclusive
+
+-- After testing and modifying bit 19
+wait    40 write * 4 16 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x0000D079 exclusive
+wait    40 write * 12 0xFFF8D079 exclusive
+
+-- After testing and modifying bit 18
+wait    40 write * 4 16 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x0000D079 exclusive
+wait    40 write * 12 0xFFFCD079 exclusive
+
+-- After testing and modifying bit 17
+wait    40 write * 4 16 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x0000D079 exclusive
+wait    40 write * 12 0xFFFED079 exclusive
+
+-- After testing and modifying bit 16
+wait    40 write * 4 16 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x0000D079 exclusive
+wait    40 write * 12 0xFFFFD079 exclusive
+
+-- After testing and modifying bit 15
+wait    40 write * 4 16 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x00005079 exclusive
+wait    40 write * 12 0xFFFFD079 exclusive
+
+-- After testing and modifying bit 14
+wait    40 write * 4 17 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x00001079 exclusive
+wait    40 write * 12 0xFFFFD079 exclusive
+
+-- After testing and modifying bit 13
+wait    40 write * 4 19 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x00001079 exclusive
+wait    40 write * 12 0xFFFFF079 exclusive
+
+-- After testing and modifying bit 12
+wait    40 write * 4 19 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x00000079 exclusive
+wait    40 write * 12 0xFFFFF079 exclusive
+
+-- After testing and modifying bit 11
+wait    40 write * 4 25 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x00000079 exclusive
+wait    40 write * 12 0xFFFFF879 exclusive
+
+-- After testing and modifying bit 10
+wait    40 write * 4 25 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x00000079 exclusive
+wait    40 write * 12 0xFFFFFC79 exclusive
+
+-- After testing and modifying bit 9
+wait    40 write * 4 25 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x00000079 exclusive
+wait    40 write * 12 0xFFFFFE79 exclusive
+
+-- After testing and modifying bit 8
+wait    40 write * 4 25 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x00000079 exclusive
+wait    40 write * 12 0xFFFFFF79 exclusive
+
+-- After testing and modifying bit 7
+wait    40 write * 4 25 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x00000079 exclusive
+wait    40 write * 12 0xFFFFFFF9 exclusive
+
+-- After testing and modifying bit 6
+wait    40 write * 4 25 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x00000039 exclusive
+wait    40 write * 12 0xFFFFFFF9 exclusive
+
+-- After testing and modifying bit 5
+wait    40 write * 4 26 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x00000019 exclusive
+wait    40 write * 12 0xFFFFFFF9 exclusive
+
+-- After testing and modifying bit 4
+wait    40 write * 4 27 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x00000009 exclusive
+wait    40 write * 12 0xFFFFFFF9 exclusive
+
+-- After testing and modifying bit 3
+wait    40 write * 4 28 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x00000001 exclusive
+wait    40 write * 12 0xFFFFFFF9 exclusive
+
+-- After testing and modifying bit 2
+wait    40 write * 4 31 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x00000001 exclusive
+wait    40 write * 12 0xFFFFFFFD exclusive
+
+-- After testing and modifying bit 1
+wait    40 write * 4 31 exclusive
+read    dmem byte 0 2
+wait    40 write * 8  0x00000001 exclusive
+wait    40 write * 12 0xFFFFFFFF exclusive
+
+-- After testing and modifying bit 0
+wait    40 write * 4 31 exclusive
+read    dmem byte 0 1
+wait    40 write * 8  0x00000000 exclusive
+wait    40 write * 12 0xFFFFFFFF exclusive

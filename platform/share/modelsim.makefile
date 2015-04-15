@@ -6,9 +6,21 @@
 
 UNISIM = $(XILINX)/vhdl/src/unisims
 
+ifndef VSIM
+VSIM = vsim
+endif
+
+ifndef VSIMFLAGS
+VSIMFLAGS =
+endif
+
 .PHONY: vsim
 vsim: compile.do
-	vsim -do sim.do
+	$(VSIM) $(VSIMFLAGS) -do sim.do
+
+.PHONY: vsim-%
+vsim-%: compile.do
+	$(VSIM) $(VSIMFLAGS) -do $(patsubst vsim-%,%,$@)
 
 .PHONY: clean
 clean:

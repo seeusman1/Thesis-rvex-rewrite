@@ -1,0 +1,124 @@
+name    Test general purpose register file with forwarding
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+config  forwarding            1
+
+-- Initialize memories.
+init
+
+-- 0x000
+load    add r0.1 = r0.0, r0.0
+load    add r0.2 = r0.0, r0.0
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+-- 0x020
+load    add r0.2 = r0.0, 33
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stw 0[r0.0] = r0.1 -- Should be 0
+load    add r0.1 = r0.0, 42 ;;
+
+-- 0x040
+load    add r0.11 = r0.1, 0
+load    add r0.12 = r0.2, 0
+load    nop
+load    nop
+load    add r0.13 = r0.2, 0
+load    add r0.14 = r0.1, 0
+load    stw 0[r0.0] = r0.1 -- Should be 42
+load    nop ;;
+
+-- 0x060
+load    nop
+load    nop
+load    add r0.15 = r0.1, 0
+load    add r0.16 = r0.2, 0
+load    nop
+load    nop
+load    stw 0[r0.0] = r0.2 -- Should be 33
+load    add r0.17 = r0.2, 0 ;;
+
+-- 0x080
+load    stw 0[r0.0] = r0.1 -- Should be 42
+load    nop ;;
+
+-- 0x088
+load    stw 0[r0.0] = r0.1 -- Should be 42
+load    nop ;;
+
+-- 0x090
+load    stw 0[r0.0] = r0.1 -- Should be 42
+load    nop ;;
+
+-- 0x098
+load    stw 0[r0.0] = r0.1 -- Should be 42
+load    nop ;;
+
+-- 0x0A0 -- Start dumping the forwarded registers.
+load    stw 0[r0.0] = r0.11 -- Should be 42
+load    nop ;;
+
+-- 0x0A8
+load    stw 0[r0.0] = r0.12 -- Should be 33
+load    nop ;;
+
+-- 0x0B0
+load    stw 0[r0.0] = r0.13 -- Should be 33
+load    nop ;;
+
+-- 0x0B8
+load    stw 0[r0.0] = r0.14 -- Should be 42
+load    nop ;;
+
+-- 0x0C0
+load    stw 0[r0.0] = r0.15 -- Should be 42
+load    nop ;;
+
+-- 0x0C8
+load    stw 0[r0.0] = r0.16 -- Should be 32
+load    nop ;;
+
+-- 0x0D0
+load    stw 0[r0.0] = r0.17 -- Should be 32
+load    nop ;;
+
+-- 0x0D8
+load    stw 0[r0.0] = r0.1 -- Should still be 42
+load    nop ;;
+
+-- 0x0E0
+load    stw 0[r0.0] = r0.2 -- Should still be 33
+load    stop ;;
+
+
+-- Run the test.
+reset
+wait    40 write * 0  0 exclusive -- r0.1
+wait    40 write * 0 42 exclusive -- r0.1
+wait    40 write * 0 33 exclusive -- r0.2
+wait    40 write * 0 42 exclusive -- r0.1
+wait    40 write * 0 42 exclusive -- r0.1
+wait    40 write * 0 42 exclusive -- r0.1
+wait    40 write * 0 42 exclusive -- r0.1
+wait    40 write * 0 42 exclusive -- r0.11 = r0.1
+wait    40 write * 0 33 exclusive -- r0.12 = r0.2
+wait    40 write * 0 33 exclusive -- r0.13 = r0.2
+wait    40 write * 0 42 exclusive -- r0.14 = r0.1
+wait    40 write * 0 42 exclusive -- r0.15 = r0.1
+wait    40 write * 0 33 exclusive -- r0.16 = r0.2
+wait    40 write * 0 33 exclusive -- r0.17 = r0.2
+wait    40 write * 0 42 exclusive -- r0.1
+wait    40 write * 0 33 exclusive -- r0.2
+wait    40 idle 0
+

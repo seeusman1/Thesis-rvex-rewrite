@@ -1,0 +1,63 @@
+-- Ensures that the STW and STOP syllables function.
+name    Test basic STW functionality and STOP instruction.
+
+-- Check configuration.
+config  genBundleSize       8
+config  bundleAlign         2
+config  memLaneRevIndex     1
+config  branchLaneRevIndex  0
+
+-- Initialize memories.
+init
+
+-- 0x00
+load    nop
+load    nop ;;
+
+-- 0x08
+load    nop
+load    nop
+load    stw 8[r0.0] = r0.0
+load    nop ;;
+
+-- 0x18
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stop ;;
+
+-- 0x38
+load    nop
+load    nop
+load    nop
+load    nop
+load    stw 4[r0.0] = r0.0
+load    nop ;;
+
+-- Write a non-zero values to memory addresses 4 and 8 so we can make sure
+-- that the processor worked right (since we can only write zeroes without
+-- using other instructions as well).
+write   dmem word 4 0xDEADC0DE
+write   dmem word 8 0x12345678
+
+-- Start the test.
+reset
+
+-- Make sure that the processor asserts the done output and becomes idle.
+wait    400 done 0
+wait    400 idle 0
+
+-- Make sure that the continuation address is correct.
+read    dbg word CR_PC 0x38
+
+-- Make sure that the write at 0x20 was executed.
+read    dmem word 8 0x00000000
+
+-- Make sure that the instruction after the stop instruction did not get
+-- executed. This check is not reliable when not running in 8-way mode though.
+read    dmem word 4 0xDEADC0DE
+

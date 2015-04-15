@@ -4,3 +4,4 @@ bus_ramBlock_singlePort.vhd
 bus_ramBlock.vhd
 bus_arbiter.vhd
 bus_demux.vhd
+bus_crossClock.vhd

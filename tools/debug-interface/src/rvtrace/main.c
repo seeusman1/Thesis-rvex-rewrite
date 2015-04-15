@@ -183,7 +183,7 @@ int run(const commandLineArgs_t *args) {
         return -1;
     }
     
-    // Dump execution information.
+    // Dump extrapolated execution information and branch behavior.
     if (d.usedSlots) {
       
       // If this is not a branch, dump all instructions which were implicitely
@@ -222,69 +222,71 @@ int run(const commandLineArgs_t *args) {
       }
       
 #endif
+    
+    }
       
-      // Dump the explicitely executed instructions.
+#ifndef FORMAT_LIKE_XSTSIM
+    
+    // Dump instruction cache information.
+    for (slot = 0; slot < 16; slot++) {
+      if (d.cacheStatus[slot] & 0x80) {
+        dprintf(
+          args->outputFile,
+          "# fetch for next bundle serviced by icache block %d: %s\n",
+          slot / (args->numLanes / args->numLaneGroups),
+          (d.cacheStatus[slot] & 0x40) ? "miss" : "hit"
+        );
+      }
+    }
+    
+#endif
+    
+    // Dump the explicitely executed instructions.
+    if (d.usedSlots) {
       for (slot = 0; slot < d.usedSlots; slot++) {
         dumpPC(args->outputFile, pc, &(d.slot[slot]));
         pc += 4;
       }
-      
-#ifndef FORMAT_LIKE_XSTSIM
-      
-      // Dump instruction cache information.
-      for (slot = 0; slot < d.usedSlots; slot++) {
-        if (d.slot[slot].cacheStatus & 0x80) {
-          dprintf(
-            args->outputFile,
-            "# fetch serviced by icache block %d: %s\n",
-            slot / (args->numLanes / args->numLaneGroups),
-            (d.slot[slot].cacheStatus & 0x40) ? "miss" : "hit"
-          );
-        }
-      }
-      
-      // Dump data cache information.
-      for (slot = 0; slot < d.usedSlots; slot++) {
-        if (d.slot[slot].cacheStatus & 0x30) {
-          const char *op = "unknown op";
-          const char *wbuf = "";
-          const char *result = "unknown";
-          switch (d.slot[slot].cacheStatus & 0x38) {
-            case 0x10: op = "read"; break;
-            case 0x18: op = "bypass read"; break;
-            case 0x20: op = "write (full line)"; break;
-            case 0x28: op = "bypass write"; break;
-            case 0x30: op = "write (partial line)"; break;
-            case 0x38: op = "bypass write"; break;
-          }
-          switch (d.slot[slot].cacheStatus & 0x0C) {
-            case 0x00: result = "hit"; break;
-            case 0x04: result = "miss"; break;
-            case 0x08: result = "bypass"; break;
-            case 0x0C: result = "bypass"; break;
-          }
-          if (d.slot[slot].cacheStatus & 0x02) {
-            wbuf = " after buffered write was completed";
-          }
-          if ((d.slot[slot].cacheStatus & 0x3C) == 0x10) {
-            wbuf = ""; // Read hits can be serviced while a write is buffered.
-          }
-          dprintf(
-            args->outputFile,
-            "# %s serviced by dcache block %d%s: %s\n",
-            op,
-            slot / (args->numLanes / args->numLaneGroups),
-            wbuf,
-            result
-          );
-        }
-      }
-      
-#endif
-      
     }
     
 #ifndef FORMAT_LIKE_XSTSIM
+    
+    // Dump data cache information.
+    for (slot = 0; slot < 16; slot++) {
+      if (d.cacheStatus[slot] & 0x30) {
+        const char *op = "unknown op";
+        const char *wbuf = "";
+        const char *result = "unknown";
+        switch (d.cacheStatus[slot] & 0x38) {
+          case 0x10: op = "read"; break;
+          case 0x18: op = "bypass read"; break;
+          case 0x20: op = "write (full line)"; break;
+          case 0x28: op = "bypass write"; break;
+          case 0x30: op = "write (partial line)"; break;
+          case 0x38: op = "bypass write"; break;
+        }
+        switch (d.cacheStatus[slot] & 0x0C) {
+          case 0x00: result = "hit"; break;
+          case 0x04: result = "miss"; break;
+          case 0x08: result = "bypass"; break;
+          case 0x0C: result = "bypass"; break;
+        }
+        if (d.cacheStatus[slot] & 0x02) {
+          wbuf = " after buffered write was completed";
+        }
+        if ((d.cacheStatus[slot] & 0x3C) == 0x10) {
+          wbuf = ""; // Read hits can be serviced while a write is buffered.
+        }
+        dprintf(
+          args->outputFile,
+          "# %s serviced by dcache block %d%s: %s\n",
+          op,
+          slot / (args->numLanes / args->numLaneGroups),
+          wbuf,
+          result
+        );
+      }
+    }
     
     // Dump reconfiguration information.
     if (d.hasNewConfiguration) {

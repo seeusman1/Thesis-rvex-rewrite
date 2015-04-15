@@ -1,0 +1,4 @@
+-- The multiplier is tested by just running some multiplication-heavy C code.
+
+-- Computes the factorial for a couple numbers.
+factorial.test

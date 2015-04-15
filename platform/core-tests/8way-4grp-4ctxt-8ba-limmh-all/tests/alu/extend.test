@@ -1,0 +1,67 @@
+name    Test ALU sign/zero extension instructions
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+
+-- Initialize memories.
+init
+
+-- Test 0x12345678.
+load    limmh 1, 0x12345678
+load    add r0.1 = r0.0, 0x12345678
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     extend-kernel.inc
+
+-- Test 0x123456F8.
+load    limmh 1, 0x123456F8
+load    add r0.1 = r0.0, 0x123456F8
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     extend-kernel.inc
+
+-- Test 0x1234D678.
+load    limmh 1, 0x1234D678
+load    add r0.1 = r0.0, 0x1234D678
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     extend-kernel.inc
+
+-- Reset the processor.
+reset
+
+-- Test 0x12345678.
+wait    400 write *  0   0x00000078  exclusive  -- sign extend byte
+wait    40  write *  4   0x00005678  exclusive  -- sign extend halfword
+wait    40  write *  8   0x00000078  exclusive  -- zero extend byte
+wait    40  write * 12   0x00005678  exclusive  -- zero extend halfword
+
+-- Test 0x123456F8.
+wait    400 write *  0   0xFFFFFFF8  exclusive  -- sign extend byte
+wait    40  write *  4   0x000056F8  exclusive  -- sign extend halfword
+wait    40  write *  8   0x000000F8  exclusive  -- zero extend byte
+wait    40  write * 12   0x000056F8  exclusive  -- zero extend halfword
+
+-- Test 0x1234D678.
+wait    400 write *  0   0x00000078  exclusive  -- sign extend byte
+wait    40  write *  4   0xFFFFD678  exclusive  -- sign extend halfword
+wait    40  write *  8   0x00000078  exclusive  -- zero extend byte
+wait    40  write * 12   0x0000D678  exclusive  -- zero extend halfword
+

@@ -1,5 +1,15 @@
 #include "rvex.h"
 
+#if ISSUE == 2
+#define ISSUE_2 ;;
+#define ISSUE_4 ;;
+#elif ISSUE == 4
+#define ISSUE_2
+#define ISSUE_4 ;;
+#else
+#define ISSUE_2
+#define ISSUE_4
+#endif
 
 /*****************************************************************************/
 /* ENTRY POINT                                                               */
@@ -9,10 +19,13 @@
 _start::
   /* Load BSS section start and end. */
   c0  add     $r0.21      = $r0.0, __BSS_START
+  ISSUE_2
   c0  add     $r0.22      = $r0.0, __BSS_END
+  ISSUE_4
   
   /* Load panic handler address. */
   c0  add     $r0.23      = $r0.0, _panic_handler
+  ISSUE_2
   
   /* Load hardware context ID. */
 #ifdef XSTSIM
@@ -23,21 +36,26 @@ _start::
 ;;
   /* Set r0.23 if the BSS size is 0. */
   c0  cmpleu  $r0.23      = $r0.22, $r0.21
+  ISSUE_2
   
 #ifndef XSTSIM
   /* Set panic handler address. */
   c0  stw     CR_PH_ADDR[$r0.0] = $r0.23
 #endif
 
+  ISSUE_4
+
   /* Load trap handler address. */
   c0  add     $r0.24      = $r0.0, _trap_handler
 ;;
   /* Set b0.0 if the BSS size is 0 or if we're not running in context 0. */
   c0  orl     $b0.0       = $r0.23, $r0.11
+  ISSUE_2
   
   /* Multiply the context ID by the per-context stack size (chosen manually), */
   /* so each context has its own stack. */
   c0  mpyl    $r0.12      = $r0.11, 0x1000
+  ISSUE_4
   
 #ifndef XSTSIM
   /* Set trap handler address. */
@@ -63,6 +81,7 @@ _start::
 2:
   /* Initialize the stack pointer. */
   c0  add     $r0.1       = $r0.12, __STACK_START
+  ISSUE_2
 
   /* Call main. */
   c0  call    $l0.0       = main
@@ -97,6 +116,7 @@ _panic_handler::
 #else
   c0  ldb     $r0.57      = CR_CID_ADDR[$r0.0]
 #endif
+  ISSUE_2
   c0  add     $r0.3       = $r0.0, '\n'
   c0  call    $l0.0       = putchar
 ;;
@@ -319,6 +339,7 @@ _trap_handler::
   /* The trap argument, already stored in r0.55, identifies the interrupt. */
   /* Copy it to r0.3 so it is supplied as an argument to interrupt(). */
   c0  add     $r0.3       = $r0.0, $r0.55
+  ISSUE_2
   c0  call    $l0.0       = interrupt
 ;;
   /* Make sure interrupts and traps are disabled again, so we can safely */
