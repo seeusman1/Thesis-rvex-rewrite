@@ -21,7 +21,7 @@ SET addpads = false
 SET asysymbol = true
 SET busformat = BusFormatAngleBracketNotRipped
 SET createndf = false
-SET designentry = VHDL
+SET designentry = Verilog
 SET device = xc6vlx240t
 SET devicefamily = virtex6
 SET flowvendor = Other
@@ -32,8 +32,8 @@ SET package = ff1156
 SET removerpms = false
 SET simulationfiles = Behavioral
 SET speedgrade = -1
-SET verilogsim = false
-SET vhdlsim = true
+SET verilogsim = true
+SET vhdlsim = false
 # END Project Options
 # BEGIN Select
 SELECT Virtex-6_Integrated_Block_for_PCI_Express xilinx.com:ip:v6_pcie:2.5

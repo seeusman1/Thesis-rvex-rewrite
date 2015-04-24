@@ -62,12 +62,11 @@ entity s2c_bus_bridge is
     ---------------------------------------------------------------------------
     -- Active high synchronous reset input.
     reset                   : in  std_logic;
-    
+
     -- Clock inputs, registers are rising edge triggered.
-    -- We assume that sys_clk runs at an integer multiple of s2c_clk
-    s2c_clk                 : in  std_logic;
-    sys_clk                 : in  std_logic;
-    
+    -- All buses run in the same clock domain
+    clk                     : in  std_logic;
+
     ---------------------------------------------------------------------------
     -- s2c bus
     ---------------------------------------------------------------------------
@@ -108,115 +107,145 @@ architecture Behavioral of s2c_bus_bridge is
   signal curr_state         : transmit_state;
   signal next_state         : transmit_state;
 
+  signal curr_bcnt          : std_logic_vector(0 to 9);
+  signal next_bcnt          : std_logic_vector(0 to 9);
+
+  signal eop_dly            : std_logic;
+
 --=============================================================================
 begin -- architecture
 --=============================================================================
 
-  handle_cmd: process (sys_clk, reset, user_rst_n,
-                       next_addr, curr_addr, next_state, curr_state,
+  prop_state: process (clk, reset, user_rst_n) is
+  begin
+    if reset = '1' or user_rst_n = '0' then
+      curr_state <= wait_pkt;
+      curr_addr  <= (others => '0');
+      curr_bcnt  <= (others => '0');
+    elsif rising_edge(clk) then
+      curr_state <= next_state;
+      curr_addr  <= next_addr;
+      curr_bcnt  <= next_bcnt;
+    end if;
+
+    eop_dly <= eop;
+  end process;
+
+  handle_cmd: process (next_addr, curr_addr, next_state, curr_state,
+                       next_bcnt, curr_bcnt,
                        apkt_req, apkt_addr,
                        data, valid, eop,
                        bus2dma.ack) is
   begin
-    if reset = '1' or user_rst_n = '0' then
-      dst_rdy <= '0';
-      abort_ack <= '0';
-      apkt_ready <= '0';
+    -- Make sure that the state only changes when set explicitly
+    next_state <= curr_state;
+    next_addr  <= curr_addr;
+    next_bcnt  <= curr_bcnt;
 
-      dma2bus.writeMask <= "1111";
-      dma2bus.flags <= BUS_FLAGS_DEFAULT;
-      dma2bus.writeEnable <= '0';
-      dma2bus.readEnable <= '0';
+    abort_ack <= '0';
 
-      curr_state <= wait_pkt;
-      next_state <= wait_pkt;
+    dma2bus.flags <= BUS_FLAGS_DEFAULT;
+    dma2bus.readEnable <= '0';
 
-    elsif rising_edge(sys_clk) then
-      curr_state <= next_state;
-      curr_addr <= next_addr;
-
+    if curr_state = wait_pkt then
+      apkt_ready <= apkt_req;
     else
-      if apkt_req = '1' and curr_state = wait_pkt then
-        apkt_ready <= '1';
-      else
-        apkt_ready <= '0';
-      end if;
+      apkt_ready <= '0';
+    end if;
 
-      if curr_state = write_high then
+    dst_rdy <= '0';
+
+    case curr_state is
+      when wait_pkt =>
+        dma2bus.writeEnable <= '0';
+
+        if apkt_req = '1' then
+          dst_rdy <= '1';
+
+          next_addr  <= apkt_addr(32 to 63);
+          next_state <= wait_data;
+          next_bcnt  <= apkt_bcount;
+        end if;
+
+      when wait_data =>
+        dma2bus.writeEnable <= '0';
         dst_rdy <= '1';
-      else
-        dst_rdy <= '0';
-      end if;
 
-      case curr_state is
-        when wait_pkt =>
-          if apkt_req = '1' then
-            next_addr <= apkt_addr(0 to 31);
-            next_state <= wait_data;
-          end if;
+        if src_rdy = '1' then
+          next_state <= write_low;
+        end if;
 
-        when wait_data =>
-          if src_rdy = '1' then
-            dma2bus.address <= curr_addr;
-            dma2bus.writeData <= data(0 to 31);
-            dma2bus.writeEnable <= '1';
+      when write_low =>
+        -- Note: we assume `src_rdy = '1'` and thus that data, sop and eop
+        -- are valid at least untill the next cycle where `dst_rdy = '1'`
+        dma2bus.address <= curr_addr;
+        dma2bus.writeData <= data(32 to 63);
+        dma2bus.writeEnable <= '1';
 
-            next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+        -- `valid = "000"` when `eop = '0'`
+        case valid is
+          when "001" => dma2bus.writeMask <= "0001";
+          when "010" => dma2bus.writeMask <= "0011";
+          when "011" => dma2bus.writeMask <= "0111";
+          when "100" => dma2bus.writeMask <= "1111";
+          when others => dma2bus.writeMask <= "1111";
+        end case;
 
-            -- Correctly handle the last word of a packet
-            if eop = '1' and vect2uint(valid) <= 4
-                  and vect2uint(valid) > 0 then
-              case valid is
-                when "001" => dma2bus.writeMask <= "0001";
-                when "010" => dma2bus.writeMask <= "0011";
-                when "011" => dma2bus.writeMask <= "0111";
-                when "100" => dma2bus.writeMask <= "1111";
-                when others => null;
-              end case;
-              next_state <= write_high;
-            else
-              dma2bus.writeMask <= "1111";
+        if bus2dma.ack = '1' then
+          next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
 
-              next_state <= write_low;
-            end if;
-          end if;
-
-        when write_low =>
-          if bus2dma.ack = '1' then
-            -- Write next data element, writes still enabled
-            dma2bus.address <= curr_addr;
-            dma2bus.writeData <= data(32 to 63);
-
-            -- Handle the last word of a packet
-            if eop = '1' then
-              case valid is
-                when "101" => dma2bus.writeMask <= "0001";
-                when "110" => dma2bus.writeMask <= "0011";
-                when "111" => dma2bus.writeMask <= "0111";
-                when "000" => dma2bus.writeMask <= "1111";
-                when others => null;
-              end case;
-            else
-              dma2bus.writeMask <= "1111";
-            end if;
-
-            next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
-            next_state <= write_high;
-          end if;
-
-        when write_high =>
-          if bus2dma.ack = '1' then
+          if vect2uint(curr_bcnt) <= 4 then
             dma2bus.writeEnable <= '0';
 
-            if eop = '0' then
-              next_state <= wait_data;
-            else
-              next_state <= wait_pkt;
-            end if;
-          end if;
-      end case;
+            next_state <= wait_data;
+            next_bcnt  <= (others => '0');
+          else
+            dma2bus.address <= uint2vect(vect2uint(curr_addr) + 4, 32);
+            dma2bus.writeData <= data(0 to 31);
 
-    end if;
+            next_state <= write_high;
+            next_bcnt  <= uint2vect(vect2uint(curr_bcnt) - 4, 10);
+          end if;
+        end if;
+
+      when write_high =>
+        dma2bus.address <= curr_addr;
+        dma2bus.writeData <= data(0 to 31);
+        dma2bus.writeEnable <= '1';
+
+        -- Handle the last word of a packet
+        case valid is
+          when "101" => dma2bus.writeMask <= "0001";
+          when "110" => dma2bus.writeMask <= "0011";
+          when "111" => dma2bus.writeMask <= "0111";
+          when "000" => dma2bus.writeMask <= "1111";
+          -- Should not reach here if 0 < valid < 4
+          when others => dma2bus.writeMask <= "1111";
+        end case;
+
+        if bus2dma.ack = '1' then
+          next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+          dma2bus.writeEnable <= '0';
+
+          -- use the delayed eop here as we might otherwise get into
+          -- trouble as toggling dst_rdy might change the value of eop,
+          -- making us miss the last 64 bit of a packet
+          --if eop_dly = '0' then
+          if vect2uint(curr_bcnt) > 4 then
+            next_state <= wait_data;
+            next_bcnt  <= uint2vect(vect2uint(curr_bcnt) - 4, 10);
+            -- already set dst_rdy, so we are sure to trigger the dma
+            -- engine
+            dst_rdy <= '1';
+          else
+            apkt_ready <= apkt_req;
+
+            next_state <= wait_pkt;
+            next_bcnt  <= (others => '0');
+          end if;
+        end if;
+
+    end case;
   end process;
 
 end Behavioral;

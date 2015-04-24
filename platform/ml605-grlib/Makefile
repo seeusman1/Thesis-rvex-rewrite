@@ -104,7 +104,7 @@ update-patch: clean
 # Cleans all grlib and rvex compilation intermediate files.
 .PHONY: clean
 clean: clean-ex
-	-cd work && $(MAKE) distclean scripts-clean migclean
+	-cd work && $(MAKE) distclean scripts-clean migclean pcieclean
 	rm -f work/*_beh.prj
 
 # Removes the entire working directory; use with care (because the work dir might contain

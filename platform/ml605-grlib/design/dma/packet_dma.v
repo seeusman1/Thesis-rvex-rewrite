@@ -13,8 +13,8 @@
 //
 //                 Copyright 2009 by Northwest Logic, Inc.
 //
-//  All rights reserved.  No part of this source code may be reproduced or 
-//  transmitted in any form or by any means, electronic or mechanical, 
+//  All rights reserved.  No part of this source code may be reproduced or
+//  transmitted in any form or by any means, electronic or mechanical,
 //  including photocopying, recording, or any information storage and
 //  retrieval system, without permission in writing from Northest Logic, Inc.
 //
@@ -24,7 +24,7 @@
 //                         Northwest Logic, Inc.
 //                  1100 NW Compton Drive, Suite 100
 //                      Beaverton, OR 97006, USA
-//  
+//
 //                       Ph.  +1 503 533 5800
 //                       Fax. +1 503 533 5900
 //                          www.nwlogic.com
@@ -203,7 +203,7 @@ module packet_dma #(
   output                              c2s1_dst_rdy,
   output                              c2s1_abort,
   input                               c2s1_abort_ack,
-  output                              c2s1_user_rst_n, 
+  output                              c2s1_user_rst_n,
   output                              c2s1_apkt_req,
   input                               c2s1_apkt_ready,
   output [63:0]                       c2s1_apkt_addr,
@@ -230,8 +230,8 @@ module packet_dma #(
   output [12:0]                       targ_rd_count,
   output                              targ_rd_en,
   input  [DATA_WIDTH-1:0]             targ_rd_data,
-  output [BE_WIDTH-1:0]               targ_rd_first_be,  
-  output [BE_WIDTH-1:0]               targ_rd_last_be,  
+  output [BE_WIDTH-1:0]               targ_rd_first_be,
+  output [BE_WIDTH-1:0]               targ_rd_last_be,
 
   // Register interface
   output [ADDR_WIDTH-1:0]             reg_wr_addr,
@@ -299,7 +299,7 @@ wire                                c2s0_desc_done;
 wire    [7:0]                       c2s0_desc_done_channel;
 wire    [DESC_STATUS_WIDTH-1:0]     c2s0_desc_done_status;
 
-wire                                c2s0_cmd_rst_n;                  
+wire                                c2s0_cmd_rst_n;
 wire                                c2s0_cmd_req;
 wire                                c2s0_cmd_ready;
 wire                                c2s0_cmd_first_chain;
@@ -347,7 +347,7 @@ wire                                c2s1_desc_done;
 wire    [7:0]                       c2s1_desc_done_channel;
 wire    [DESC_STATUS_WIDTH-1:0]     c2s1_desc_done_status;
 
-wire                                c2s1_cmd_rst_n;                  
+wire                                c2s1_cmd_rst_n;
 wire                                c2s1_cmd_req;
 wire                                c2s1_cmd_ready;
 wire                                c2s1_cmd_first_chain;
@@ -394,7 +394,7 @@ wire                                s2c0_desc_done;
 wire    [7:0]                       s2c0_desc_done_channel;
 wire    [159:0]                     s2c0_desc_done_status;
 
-wire                                s2c0_cmd_rst_n;                  
+wire                                s2c0_cmd_rst_n;
 wire                                s2c0_cmd_req;
 wire                                s2c0_cmd_ready;
 wire    [9:0]                       s2c0_cmd_bcount;
@@ -437,7 +437,7 @@ wire                                s2c1_desc_done;
 wire    [7:0]                       s2c1_desc_done_channel;
 wire    [159:0]                     s2c1_desc_done_status;
 
-wire                                s2c1_cmd_rst_n;                  
+wire                                s2c1_cmd_rst_n;
 wire                                s2c1_cmd_req;
 wire                                s2c1_cmd_ready;
 wire    [9:0]                       s2c1_cmd_bcount;
@@ -700,7 +700,7 @@ begin
         cfg_trn_pending             <= cpl_tag_active;
 
         mgmt_mst_en                 <= cfg_command[2];
-        mgmt_msi_en                 <= cfg_interrupt_msienable; 
+        mgmt_msi_en                 <= cfg_interrupt_msienable;
         mgmt_max_payload_size       <= cfg_dcommand[ 7: 5];
         mgmt_max_rd_req_size        <= cfg_dcommand[14:12];
         mgmt_cfg_id                 <= {cfg_bus_number, cfg_device_number, cfg_function_number};
@@ -762,8 +762,8 @@ assign mgmt_user_version = 32'h00_01_01_00;
 
 // Hold core in reset whenever hard core reset is asserted or link is down
 // Also make sure fc_sel is 0, else the credit values passed into the DMA
-// will be incorrect. the DMA requires fc_sel should be 3'b0 for atleast 
-// 4 clock cyles after reset is 1'b1. In this design the fc_sel is 3'b101 
+// will be incorrect. the DMA requires fc_sel should be 3'b0 for atleast
+// 4 clock cyles after reset is 1'b1. In this design the fc_sel is 3'b101
 // initially and 3'b000 after that
 assign reset = user_reset | ~user_lnk_up | (|fc_sel);
 
@@ -1091,7 +1091,7 @@ assign c2s0_cfg_constants[    1] = SUPPORT_64BIT_SYS_ADDR;  // 1 == Support 32/6
 assign c2s0_cfg_constants[    2] = SUPPORT_64BIT_DESC_ADDR; // 1 == Support 32/64-bit descriptor pointer system addresses; 0 == 32-bit address support only (Block DMA Only)
 assign c2s0_cfg_constants[    3] = 1'b0;                    // Reserved; was enable overlapping of commands
 assign c2s0_cfg_constants[ 7: 4] = 4'h0;                    // Reserved
-assign c2s0_cfg_constants[14: 8] = 7'h0;                    // Address space implemented on the card for this engine == 2^DMA_DEST_ADDR_WIDTH (Streams don't have addresses so set to 0)
+assign c2s0_cfg_constants[14: 8] = 7'h28;                    // Address space implemented on the card for this engine == 2^DMA_DEST_ADDR_WIDTH (Streams don't have addresses so set to 0)
 assign c2s0_cfg_constants[   15] = 1'b0;                    // Reserved
 assign c2s0_cfg_constants[21:16] = 6'h0;                    // Implemented byte count width; 0 selects maximum supported DMA engine value
 assign c2s0_cfg_constants[23:22] = 2'h0;                    // Reserved
@@ -1101,7 +1101,7 @@ assign c2s0_cfg_constants[38:32] = 7'd64;                   // Implemented user 
 assign c2s0_cfg_constants[   39] = 1'b0;                    // Reserved
 assign c2s0_cfg_constants[46:40] = 7'h0;                    // Implemented user control width; 0 == not used; not supported for C2S Engines
 assign c2s0_cfg_constants[   47] = 1'b0;                    // Reserved
-assign c2s0_cfg_constants[63:48] = 16'h0;  
+assign c2s0_cfg_constants[63:48] = 16'h0;
 
 // DMA Direct Control Port is unused
 assign c2s0_desc_req   = 1'b0;
@@ -1114,7 +1114,7 @@ c2s_pkt_streaming_fifo #(
 
     .FIFO_ADDR_WIDTH        (FIFO_DADDR_WIDTH           )
 
-) c2s0_c2s_pkt_streaming_fifo 
+) c2s0_c2s_pkt_streaming_fifo
 (
 
     .rst_n                  (c2s0_cmd_rst_n             ),
@@ -1138,7 +1138,7 @@ c2s_pkt_streaming_fifo #(
     .data_bcount            (c2s0_data_bcount           ),
     .data_stop              (c2s0_data_stop             ),
     .data_stop_bcount       (c2s0_data_stop_bcount      ),
-    
+
     .data_en                (c2s0_data_en               ),
     .data_remain            (c2s0_data_remain           ),
     .data_valid             (c2s0_data_valid            ),
@@ -1266,7 +1266,7 @@ assign s2c0_cfg_constants[    1] = SUPPORT_64BIT_SYS_ADDR;  // 1 == Support 32/6
 assign s2c0_cfg_constants[    2] = SUPPORT_64BIT_DESC_ADDR; // 1 == Support 32/64-bit descriptor pointer system addresses; 0 == 32-bit address support only (Block DMA Only)
 assign s2c0_cfg_constants[    3] = 1'b0;                    // Reserved; was enable overlapping of commands
 assign s2c0_cfg_constants[ 7: 4] = 4'h0;                    // Reserved
-assign s2c0_cfg_constants[14: 8] = 7'h0;                    // Address space implemented on the card for this engine == 2^DMA_DEST_ADDR_WIDTH (Streams don't have addresses so set to 0)
+assign s2c0_cfg_constants[14: 8] = 7'h28;                   // Address space implemented on the card for this engine == 2^DMA_DEST_ADDR_WIDTH (Streams don't have addresses so set to 0)
 assign s2c0_cfg_constants[   15] = 1'b0;                    // Reserved
 assign s2c0_cfg_constants[21:16] = 6'h0;                    // Implemented byte count width; 0 selects maximum supported DMA engine value
 assign s2c0_cfg_constants[23:22] = 2'h0;                    // Reserved
@@ -1289,7 +1289,7 @@ s2c_pkt_streaming_fifo #(
 
     .FIFO_ADDR_WIDTH        (FIFO_DADDR_WIDTH           )
 
-) s2c0_s2c_pkt_streaming_fifo 
+) s2c0_s2c_pkt_streaming_fifo
 (
 
     .rst_n                  (s2c0_cmd_rst_n             ),
@@ -1321,7 +1321,7 @@ s2c_pkt_streaming_fifo #(
     .data_last_chain        (s2c0_data_last_chain       ),
     .data_data              (s2c0_data_data             ),
     .data_user_control      (s2c0_data_user_control     ),
-                                                          
+
     .user_control           (s2c0_user_control          ),
     .sop                    (s2c0_sop                   ),
     .eop                    (s2c0_eop                   ),
@@ -1333,12 +1333,12 @@ s2c_pkt_streaming_fifo #(
     .abort                  (s2c0_abort                 ),
     .abort_ack              (s2c0_abort_ack             ),
     .user_rst_n             (s2c0_user_rst_n            ),
-                                                          
+
     .apkt_req               (s2c0_apkt_req              ),
     .apkt_ready             (s2c0_apkt_ready            ),
     .apkt_addr              (s2c0_apkt_addr             ),
     .apkt_bcount            (s2c0_apkt_bcount           )
-                                                          
+
 );
 
 //-------------------------------
@@ -1372,7 +1372,7 @@ s2c_pkt_streaming_fifo #(
 
     .FIFO_ADDR_WIDTH        (FIFO_DADDR_WIDTH           )
 
-) s2c1_s2c_pkt_streaming_fifo 
+) s2c1_s2c_pkt_streaming_fifo
 (
 
     .rst_n                  (s2c1_cmd_rst_n             ),
@@ -1404,7 +1404,7 @@ s2c_pkt_streaming_fifo #(
     .data_last_chain        (s2c1_data_last_chain       ),
     .data_data              (s2c1_data_data             ),
     .data_user_control      (s2c1_data_user_control     ),
-                                                          
+
     .user_control           (s2c1_user_control          ),
     .sop                    (s2c1_sop                   ),
     .eop                    (s2c1_eop                   ),
@@ -1416,12 +1416,12 @@ s2c_pkt_streaming_fifo #(
     .abort                  (s2c1_abort                 ),
     .abort_ack              (s2c1_abort_ack             ),
     .user_rst_n             (s2c1_user_rst_n            ),
-                                                          
+
     .apkt_req               (s2c1_apkt_req              ),
     .apkt_ready             (s2c1_apkt_ready            ),
     .apkt_addr              (s2c1_apkt_addr             ),
     .apkt_bcount            (s2c1_apkt_bcount           )
-                                                          
+
 );
 
 

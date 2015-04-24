@@ -88,7 +88,7 @@ entity dma is
     ---------------------------------------------------------------------------
     -- r-VEX bus signals
     ---------------------------------------------------------------------------
-    -- The bus clock. We assume that it is related to the PCIe clock.
+    -- The bus clock.
     bus_clk                 : in std_logic;
 
     bus2dma_c2s             : in  bus_slv2mst_type;
@@ -99,6 +99,12 @@ entity dma is
 end entity;
 
 architecture behavioral of dma is
+  -- r-VEX buses running on the PCIe clock
+  signal bus2dma_c2s_pclk          : bus_slv2mst_type;
+  signal dma2bus_c2s_pclk          : bus_mst2slv_type;
+  signal bus2dma_s2c_pclk          : bus_slv2mst_type;
+  signal dma2bus_s2c_pclk          : bus_mst2slv_type;
+
   -- Driving clock of the PCIe interface
   signal pcie_ref_clk              : std_logic;
   -- Clock from the PCIe interface
@@ -127,8 +133,8 @@ architecture behavioral of dma is
   signal targ_rd_count             : std_logic_vector(0 to 12);
   signal targ_rd_en                : std_logic;
   signal targ_rd_data              : std_logic_vector(0 to CORE_DATA_WIDTH-1);
-  signal targ_rd_first_be          : std_logic_vector(0 to CORE_BE_WIDTH-1);  
-  signal targ_rd_last_be           : std_logic_vector(0 to CORE_BE_WIDTH-1);  
+  signal targ_rd_first_be          : std_logic_vector(0 to CORE_BE_WIDTH-1);
+  signal targ_rd_last_be           : std_logic_vector(0 to CORE_BE_WIDTH-1);
 
   signal reg_wr_addr               : std_logic_vector(0 to REG_ADDR_WIDTH-1);
   signal reg_wr_en                 : std_logic;
@@ -138,16 +144,16 @@ architecture behavioral of dma is
   signal reg_rd_be                 : std_logic_vector(0 to CORE_BE_WIDTH-1);
   signal reg_rd_data               : std_logic_vector(0 to CORE_DATA_WIDTH-1);
 
-  signal s2c0_user_control         : std_logic_vector(0 to 63);      
-  signal s2c0_sop                  : std_logic;              
-  signal s2c0_eop                  : std_logic;              
+  signal s2c0_user_control         : std_logic_vector(0 to 63);
+  signal s2c0_sop                  : std_logic;
+  signal s2c0_eop                  : std_logic;
   signal s2c0_err                  : std_logic;
-  signal s2c0_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);             
+  signal s2c0_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);
   signal s2c0_data_valid           : std_logic_vector(0 to CORE_REMAIN_WIDTH-1);
-  signal s2c0_src_rdy              : std_logic;          
-  signal s2c0_dst_rdy              : std_logic;          
-  signal s2c0_abort                : std_logic;            
-  signal s2c0_abort_ack            : std_logic; 
+  signal s2c0_src_rdy              : std_logic;
+  signal s2c0_dst_rdy              : std_logic;
+  signal s2c0_abort                : std_logic;
+  signal s2c0_abort_ack            : std_logic;
   signal s2c0_user_rst_n           : std_logic;
 
   signal s2c0_apkt_req             : std_logic;
@@ -155,15 +161,15 @@ architecture behavioral of dma is
   signal s2c0_apkt_addr            : std_logic_vector(0 to 63);
   signal s2c0_apkt_bcount          : std_logic_vector(0 to 9);
 
-  signal c2s0_user_status          : std_logic_vector(0 to 63);      
-  signal c2s0_sop                  : std_logic;              
-  signal c2s0_eop                  : std_logic;              
-  signal c2s0_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);             
+  signal c2s0_user_status          : std_logic_vector(0 to 63);
+  signal c2s0_sop                  : std_logic;
+  signal c2s0_eop                  : std_logic;
+  signal c2s0_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);
   signal c2s0_data_valid           : std_logic_vector(0 to CORE_REMAIN_WIDTH-1);
-  signal c2s0_src_rdy              : std_logic;          
-  signal c2s0_dst_rdy              : std_logic;          
-  signal c2s0_abort                : std_logic;            
-  signal c2s0_abort_ack            : std_logic; 
+  signal c2s0_src_rdy              : std_logic;
+  signal c2s0_dst_rdy              : std_logic;
+  signal c2s0_abort                : std_logic;
+  signal c2s0_abort_ack            : std_logic;
   signal c2s0_user_rst_n           : std_logic;
 
   signal c2s0_apkt_req             : std_logic;
@@ -172,16 +178,16 @@ architecture behavioral of dma is
   signal c2s0_apkt_bcount          : std_logic_vector(0 to 31);
   signal c2s0_apkt_eop             : std_logic;
 
-  signal s2c1_user_control         : std_logic_vector(0 to 63);      
-  signal s2c1_sop                  : std_logic;              
-  signal s2c1_eop                  : std_logic;              
+  signal s2c1_user_control         : std_logic_vector(0 to 63);
+  signal s2c1_sop                  : std_logic;
+  signal s2c1_eop                  : std_logic;
   signal s2c1_err                  : std_logic;
-  signal s2c1_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);             
+  signal s2c1_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);
   signal s2c1_data_valid           : std_logic_vector(0 to CORE_REMAIN_WIDTH-1);
-  signal s2c1_src_rdy              : std_logic;          
-  signal s2c1_dst_rdy              : std_logic;          
-  signal s2c1_abort                : std_logic;            
-  signal s2c1_abort_ack            : std_logic;   
+  signal s2c1_src_rdy              : std_logic;
+  signal s2c1_dst_rdy              : std_logic;
+  signal s2c1_abort                : std_logic;
+  signal s2c1_abort_ack            : std_logic;
   signal s2c1_user_rst_n           : std_logic;
 
   signal s2c1_apkt_req             : std_logic;
@@ -189,15 +195,15 @@ architecture behavioral of dma is
   signal s2c1_apkt_addr            : std_logic_vector(0 to 63);
   signal s2c1_apkt_bcount          : std_logic_vector(0 to 9);
 
-  signal c2s1_user_status          : std_logic_vector(0 to 63);      
-  signal c2s1_sop                  : std_logic;              
-  signal c2s1_eop                  : std_logic;              
-  signal c2s1_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);             
+  signal c2s1_user_status          : std_logic_vector(0 to 63);
+  signal c2s1_sop                  : std_logic;
+  signal c2s1_eop                  : std_logic;
+  signal c2s1_data                 : std_logic_vector(0 to CORE_DATA_WIDTH-1);
   signal c2s1_data_valid           : std_logic_vector(0 to CORE_REMAIN_WIDTH-1);
-  signal c2s1_src_rdy              : std_logic;          
-  signal c2s1_dst_rdy              : std_logic;          
-  signal c2s1_abort                : std_logic;            
-  signal c2s1_abort_ack            : std_logic; 
+  signal c2s1_src_rdy              : std_logic;
+  signal c2s1_dst_rdy              : std_logic;
+  signal c2s1_abort                : std_logic;
+  signal c2s1_abort_ack            : std_logic;
   signal c2s1_user_rst_n           : std_logic;
 
   signal c2s1_apkt_req             : std_logic;
@@ -252,7 +258,7 @@ architecture behavioral of dma is
   signal cfg_dwaddr                : std_logic_vector(0 to 9);
   signal cfg_wr_en                 : std_logic;
   signal cfg_rd_en                 : std_logic;
-    
+
   signal cfg_err_cor               : std_logic;
   signal cfg_err_ur                : std_logic;
   signal cfg_err_ecrc              : std_logic;
@@ -319,7 +325,7 @@ begin
       I     => pcie_clk_p,
       IB    => pcie_clk_n,
       O     => pcie_ref_clk,
-      CEB   => '1',
+      CEB   => '0',
       ODIV2 => open
     );
 
@@ -332,7 +338,7 @@ begin
   perst_c <= perst_n_c;
 
   -- Register to improve timing
-  user_lnk_up_int_i : FDCP 
+  user_lnk_up_int_i : FDCP
     generic map (
       INIT   => '1'
     )
@@ -363,10 +369,10 @@ begin
   -- PCI Express Interface
   -- -------------------------
 
-  pcie_coregen: entity work.pcie_v2_5
+  pcie_coregen: entity work.pcie_v2_5_wrap
     generic map (
       -- pragma translate_off
-      PL_FAST_TRAIN                                => TRUE, -- Default is FALSE
+      PL_FAST_TRAIN                                => "TRUE", -- Default is FALSE
       -- pragma translate_on
 
       BAR0                                         => X"FFFF0000", -- bar0; 64 KByte registers
@@ -390,7 +396,7 @@ begin
       REVISION_ID                                  => X"04",
 
 
-      UPCONFIG_CAPABLE                             => TRUE,
+      UPCONFIG_CAPABLE                             => "TRUE",
       LINK_CAP_MAX_LINK_SPEED                      => X"1",
       LINK_CTRL2_TARGET_LINK_SPEED                 => X"1",
       USER_CLK_FREQ                                => 2
@@ -523,7 +529,7 @@ begin
       ---------------------------------------------------------
 
       sys_clk                                   => pcie_ref_clk,
-      sys_reset                                 => perst_c
+      sys_reset                                 => reset
     );
 
   --+++++++++++++++++++++++++++++++++++++++++++++++++
@@ -548,7 +554,7 @@ begin
   -- -------------------------
   -- Packet DMA Instance
   -- -------------------------
-  packet_dma_inst : entity work.packet_dma_entity 
+  packet_dma_inst : entity work.packet_dma_entity
     generic map (
       XIL_DATA_WIDTH                 => 64,
       XIL_STRB_WIDTH                 => 8
@@ -562,7 +568,7 @@ begin
       user_interrupt                 => '0',
 
       -- Tx
-      s_axis_tx_tready               => s_axis_tx_tready, -- I 
+      s_axis_tx_tready               => s_axis_tx_tready, -- I
       s_axis_tx_tdata                => s_axis_tx_tdata, -- O [XIL_DATA_WIDTH-1:0]
       s_axis_tx_tstrb                => s_axis_tx_tstrb, -- O [XIL_STRB_WIDTH-1:0]
       s_axis_tx_tuser                => s_axis_tx_tuser, -- O [3:0]
@@ -578,19 +584,19 @@ begin
       m_axis_rx_tstrb                => m_axis_rx_tstrb, -- I  [XIL_STRB_WIDTH-1:0]
       m_axis_rx_tlast                => m_axis_rx_tlast, -- I
       m_axis_rx_tvalid               => m_axis_rx_tvalid, -- I
-      m_axis_rx_tready               => m_axis_rx_tready, -- O  
+      m_axis_rx_tready               => m_axis_rx_tready, -- O
       m_axis_rx_tuser                => m_axis_rx_tuser, -- I  [21:0]
       rx_np_ok                       => rx_np_ok, -- O
 
       -- Flow Control
       fc_cpld                        => fc_cpld, -- I [11:0]
-      fc_cplh                        => fc_cplh, -- I [7:0] 
+      fc_cplh                        => fc_cplh, -- I [7:0]
       fc_npd                         => fc_npd, -- I [11:0]
-      fc_nph                         => fc_nph, -- I [7:0] 
+      fc_nph                         => fc_nph, -- I [7:0]
       fc_pd                          => fc_pd, -- I [11:0]
-      fc_ph                          => fc_ph, -- I [7:0] 
-      fc_sel                         => fc_sel, -- I [2:0] 
-      
+      fc_ph                          => fc_ph, -- I [7:0]
+      fc_sel                         => fc_sel, -- I [2:0]
+
       cfg_di                         => cfg_di, -- O [31:0]
       cfg_byte_en                    => cfg_byte_en, -- O
       cfg_dwaddr                     => cfg_dwaddr, -- O
@@ -614,7 +620,7 @@ begin
       cfg_interrupt_di               => cfg_interrupt_di, -- O [7:0]
       cfg_interrupt_do               => cfg_interrupt_do, -- I [7:0]
       cfg_interrupt_mmenable         => cfg_interrupt_mmenable, -- I [2:0]
-      cfg_interrupt_msienable        => cfg_interrupt_msienable, -- I 
+      cfg_interrupt_msienable        => cfg_interrupt_msienable, -- I
       cfg_interrupt_msixenable       => cfg_interrupt_msixenable, -- I
       cfg_interrupt_msixfm           => cfg_interrupt_msixfm, -- I
 
@@ -692,7 +698,7 @@ begin
       c2s1_dst_rdy                   => c2s1_dst_rdy,
       c2s1_abort                     => c2s1_abort,
       c2s1_abort_ack                 => c2s1_abort_ack,
-      c2s1_user_rst_n                => c2s1_user_rst_n,    
+      c2s1_user_rst_n                => c2s1_user_rst_n,
       c2s1_apkt_req                  => c2s1_apkt_req,
       c2s1_apkt_ready                => c2s1_apkt_ready,
       c2s1_apkt_addr                 => c2s1_apkt_addr,
@@ -733,12 +739,26 @@ begin
 
   -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   -- c2s to r-VEX bus
-  c2s_to_bus: entity work.c2s_bus_bridge
+  c2s_bus_clock_cross: entity rvex.bus_crossClock
     port map (
       reset                   => reset,
-      sys_clk                 => pcie_ref_clk,
-      c2s_clk                 => bus_clk,
-      
+
+      -- master bus
+      mst_clk                 => pcie_ref_clk,
+      mst2crclk               => dma2bus_c2s_pclk,
+      crclk2mst               => bus2dma_c2s_pclk,
+
+      -- slave bus
+      slv_clk                 => bus_clk,
+      crclk2slv               => dma2bus_c2s,
+      slv2crclk               => bus2dma_c2s
+    );
+
+  c2s_to_bus_pclk: entity work.c2s_bus_bridge
+    port map (
+      reset                   => reset,
+      clk                     => pcie_ref_clk,
+
       -- c2s bus
       sop                     => c2s0_sop,
       eop                     => c2s0_eop,
@@ -757,18 +777,32 @@ begin
       apkt_eop                => c2s0_apkt_eop,
 
       -- Master bus
-      bus2dma                 => bus2dma_c2s,
-      dma2bus                 => dma2bus_c2s
+      bus2dma                 => bus2dma_c2s_pclk,
+      dma2bus                 => dma2bus_c2s_pclk
     );
 
   -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   -- s2c to r-VEX bus
+  s2c_bus_clock_cross: entity rvex.bus_crossClock
+    port map (
+      reset                   => reset,
+
+      -- master bus
+      mst_clk                 => pcie_ref_clk,
+      mst2crclk               => dma2bus_s2c_pclk,
+      crclk2mst               => bus2dma_s2c_pclk,
+
+      -- slave bus
+      slv_clk                 => bus_clk,
+      crclk2slv               => dma2bus_s2c,
+      slv2crclk               => bus2dma_s2c
+    );
+
   s2c_to_bus: entity work.s2c_bus_bridge
     port map (
       reset                   => reset,
-      sys_clk                 => pcie_ref_clk,
-      s2c_clk                 => bus_clk,
-      
+      clk                     => pcie_ref_clk,
+
       -- s2c bus
       sop                     => s2c0_sop,
       eop                     => s2c0_eop,
@@ -787,8 +821,8 @@ begin
       apkt_bcount             => s2c0_apkt_bcount,
 
       -- Master bus
-      bus2dma                 => bus2dma_s2c,
-      dma2bus                 => dma2bus_s2c
+      bus2dma                 => bus2dma_s2c_pclk,
+      dma2bus                 => dma2bus_s2c_pclk
     );
 
 end architecture;

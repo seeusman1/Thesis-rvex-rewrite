@@ -62,14 +62,13 @@ entity c2s_bus_bridge is
     ---------------------------------------------------------------------------
     -- Active high synchronous reset input.
     reset                   : in  std_logic;
-    
+
     -- Clock inputs, registers are rising edge triggered.
-    -- We assume that sys_clk runs at an integer multiple of c2s_clk
-    c2s_clk                 : in  std_logic;
-    sys_clk                 : in  std_logic;
-    
+    -- All buses run in the same clock domain
+    clk                     : in  std_logic;
+
     ---------------------------------------------------------------------------
-    -- c2s bus, runs in c2s_clk domain
+    -- c2s bus
     ---------------------------------------------------------------------------
     sop                     : out std_logic; --
     eop                     : out std_logic; --
@@ -88,7 +87,7 @@ entity c2s_bus_bridge is
     apkt_eop                : in  std_logic;
 
     ---------------------------------------------------------------------------
-    -- Master bus, runs in sys_clk domain
+    -- Master bus
     ---------------------------------------------------------------------------
     bus2dma                 : in  bus_slv2mst_type; --
     dma2bus                 : out bus_mst2slv_type --
@@ -100,7 +99,7 @@ end c2s_bus_bridge;
 architecture Behavioral of c2s_bus_bridge is
 --=============================================================================
 
-  type transmit_state is (wait_pkt, read_low, read_high, send_data);
+  type transmit_state is (wait_pkt, read_high, read_low, send_data);
 
   signal curr_addr          : rvex_address_type;
   signal next_addr          : rvex_address_type;
@@ -110,141 +109,149 @@ architecture Behavioral of c2s_bus_bridge is
   signal curr_state         : transmit_state;
   signal next_state         : transmit_state;
 
+  signal curr_sop, next_sop : std_logic;
+
 --=============================================================================
 begin -- architecture
 --=============================================================================
 
 
-  handle_cmd: process (reset, user_rst_n, sys_clk,
-                       next_state, next_addr, next_bcnt,
+  proc_clk: process (reset, user_rst_n, clk) is
+  begin
+    if reset = '1' or user_rst_n = '0' then
+      curr_state <= wait_pkt;
+      curr_addr  <= (others => '0');
+      curr_bcnt  <= (others => '0');
+      curr_sop   <= '0';
+
+    elsif rising_edge(clk) then
+      curr_state <= next_state;
+      curr_addr  <= next_addr;
+      curr_bcnt  <= next_bcnt;
+      curr_sop   <= next_sop;
+    end if;
+  end process;
+
+  handle_cmd: process (next_state, next_addr, next_bcnt,
                        curr_state, curr_addr, curr_bcnt,
                        apkt_req, apkt_addr, apkt_bcount,
                        bus2dma.ack, bus2dma.readData,
                        dst_rdy) is
   begin
-    if reset = '1' or user_rst_n = '0' then
-      sop <= '0';
-      eop <= '0';
-      data <= (others => '0');
-      valid <= "000";
-      src_rdy <= '0';
-      abort_ack <= '0';
+    -- Make sure that the state only changes when set explicitly
+    next_state <= curr_state;
+    next_addr  <= curr_addr;
+    next_bcnt  <= curr_bcnt;
+    next_sop   <= curr_sop;
+
+    -- Set the sop signal
+    sop <= curr_sop;
+
+    -- Only accept a packet when we are waiting for one
+    if apkt_req = '0' then
       apkt_ready <= '0';
+    end if;
 
-      dma2bus <= BUS_MST2SLV_IDLE;
+    src_rdy <= '0';
 
-      curr_state <= wait_pkt;
-      next_state <= wait_pkt;
+    dma2bus.flags <= BUS_FLAGS_DEFAULT;
+    dma2bus.writeEnable <= '0';
 
-    elsif rising_edge(sys_clk) then
-      if reset = '0' and user_rst_n = '1' then
-        if (curr_state /= next_state) then
-          curr_state <= next_state;
-          curr_addr  <= next_addr;
-          curr_bcnt  <= next_bcnt;
-        end if;
-      end if;
-
+    -- sending the last double word of the block
+    if vect2uint(curr_bcnt) <= 8 then
+      valid <= curr_bcnt(29 to 31);
     else
-      -- Only accept a packet when we are waiting for one
-      if (curr_state = wait_pkt) and (apkt_req = '1') then
-        apkt_ready <= '1';
-      else
+      valid <= "000";
+    end if;
+
+    if vect2uint(curr_bcnt) <= 8 then
+      eop <= apkt_eop;
+    end if;
+
+    case curr_state is
+      when wait_pkt =>
+
+        next_sop <= '1';
+        data <= (others => '0');
+        valid <= "000";
+        abort_ack <= '0';
         apkt_ready <= '0';
-      end if;
-      -- Read from RAM in the read_low and read_high states
-      if (curr_state = read_low) or (curr_state = read_high) then
-        dma2bus.readEnable <= '1';
-      else
+
         dma2bus.readEnable <= '0';
-      end if;
 
-      case curr_state is
-        when wait_pkt =>
-          -- Only transition when there is a packet
-          if apkt_req = '1' then
-            next_addr <= uint2vect(vect2uint(apkt_addr(0 to 31)) + 4, 32);
-            dma2bus.address <= apkt_addr(0 to 31);
-            next_bcnt <= apkt_bcount;
+        -- Only transition when there is a packet
+        if apkt_req = '1' then
+          apkt_ready <= '1';
 
-            sop <= '1';
-            valid <= "000";
+          -- Only use the lower 32 bits of the address
+          next_addr <= apkt_addr(32 to 63);
+          next_state <= read_low;
+          next_bcnt <= apkt_bcount;
+        end if;
 
-            if vect2uint(apkt_bcount) <= 4 then
-              next_state <= read_low;
-            else
-              next_state <= read_high;
-            end if;
-          end if;
+      when read_low =>
+        dma2bus.address <= curr_addr;
+        dma2bus.readEnable <= '1';
 
-        when read_high =>
-          if bus2dma.ack = '1' then
-            data(32 to 63) <= bus2dma.readData;
+        if bus2dma.ack = '1' then
+          data(32 to 63) <= bus2dma.readData;
 
+          next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+
+          if vect2uint(curr_bcnt) > 4 then
             -- Read next data element
-            dma2bus.address <= curr_addr;
-            next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+            dma2bus.address <= uint2vect(vect2uint(curr_addr) + 4, 32);
 
-            -- Correctly handle the last word of a packet
-            if vect2uint(curr_bcnt) <= 8 and vect2uint(curr_bcnt) > 4 then
-              case vect2uint(curr_bcnt) is
-                when 5 => valid <= "101";
-                when 6 => valid <= "110";
-                when 7 => valid <= "111";
-                when 8 => valid <= "000";
-                when others => null;
-              end case;
-              eop <= '1';
-            end if;
-
-            next_state <= read_low;
-          end if;
-
-        when read_low =>
-          if bus2dma.ack = '1' then
-            -- Read data
-            data(0 to 31) <= bus2dma.readData;
-
-            -- Disable reads
+            next_state <= read_high;
+          else
             dma2bus.readEnable <= '0';
 
-            -- Increment address
-            next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
-
-            -- Handle the last word of a packet
-            if vect2uint(curr_bcnt) <= 4 then
-              valid <= curr_bcnt(0 to 2);
-              eop <= '1';
-            end if;
-
-            -- Send data over DMA
             src_rdy <= '1';
 
-            -- State transition
             next_state <= send_data;
           end if;
+        end if;
 
-        when send_data =>
-          if dst_rdy = '1' then
-            -- Give us the time to request new data
-            src_rdy <= '0';
+      when read_high =>
+        dma2bus.address <= curr_addr;
+        dma2bus.readEnable <= '1';
 
-            -- Reset sop signal
-            sop <= '0';
+        if bus2dma.ack = '1' then
+          -- Read data
+          data(0 to 31) <= bus2dma.readData;
 
-            -- Decrement byte count
-            -- This may underflow, as we have already determined what state we will go to
-            next_bcnt <= uint2vect(vect2uint(curr_bcnt) - 8, 31);
+          -- Disable reads
+          dma2bus.readEnable <= '0';
 
-            if vect2uint(curr_bcnt) > 8 then
-              next_state <= read_high;
-            else
-              next_state <= wait_pkt;
-            end if;
+          src_rdy <= '1';
+
+          -- Increment address
+          next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+
+          -- State transition
+          next_state <= send_data;
+        end if;
+
+      when send_data =>
+        src_rdy <= '1';
+
+        if dst_rdy = '1' and bus2dma.ack = '0' then
+          -- Reset sop signal
+          next_sop <= '0';
+
+          if vect2uint(curr_bcnt) > 8 then
+            dma2bus.address <= curr_addr;
+            dma2bus.readEnable <= '1';
+
+            next_state <= read_low;
+            next_bcnt <= uint2vect(vect2uint(curr_bcnt) - 8, 32);
+          else
+            next_state <= wait_pkt;
+            next_bcnt <= (others => '0');
           end if;
-      end case;
+        end if;
+    end case;
 
-    end if;
   end process;
 
 end Behavioral;
