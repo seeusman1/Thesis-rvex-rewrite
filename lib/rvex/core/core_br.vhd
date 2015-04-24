@@ -242,7 +242,15 @@ entity core_br is
     
     -- Whether debug traps are to be handled normally or by halting execution
     -- for debugging through the external bebug bus.
-    cxplif2br_extDebug          : in  std_logic_vector(S_BR to S_BR)
+    cxplif2br_extDebug          : in  std_logic_vector(S_BR to S_BR);
+    
+    ---------------------------------------------------------------------------
+    -- Trace output signals
+    ---------------------------------------------------------------------------
+    -- Trap information for the trace unit (this first passes through the
+    -- pipelane to sync up with all the other signals).
+    br2pl_traceTrapInfo         : out trap_info_array(S_IF to S_IF);
+    br2pl_traceTrapPoint        : out rvex_address_array(S_IF to S_IF)
     
   );
 end core_br;
@@ -405,7 +413,9 @@ begin -- architecture
     
     -- Set trap information defaults.
     br2cxplif_trapInfo(S_BR)      <= pl2br_trapToHandleInfo(S_BR);
+    br2pl_traceTrapInfo(S_IF)     <= pl2br_trapToHandleInfo(S_BR);
     br2cxplif_trapPoint(S_BR)     <= pl2br_trapToHandlePoint(S_BR);
+    br2pl_traceTrapPoint(S_IF)    <= pl2br_trapToHandlePoint(S_BR);
     br2cxplif_exDbgTrapInfo(S_BR) <= pl2br_trapToHandleInfo(S_BR);
     
     -- Don't try to fetch the previous instruction first by default.
@@ -471,6 +481,7 @@ begin -- architecture
         -- to the instruction which caused the trap.
         nextPCsrc(S_BR) <= NEXT_PC_TRAP_POINT;
         br2cxplif_trapInfo(S_BR).active <= '0';
+        br2pl_traceTrapInfo(S_IF).active <= '0';
         br2cxplif_exDbgTrapInfo(S_BR).active <= '0';
         
         -- pragma translate_off
@@ -489,6 +500,7 @@ begin -- architecture
         -- trap point.
         nextPCsrc(S_BR) <= NEXT_PC_TRAP_POINT;
         br2cxplif_trapInfo(S_BR).active <= '0';
+        br2pl_traceTrapInfo(S_IF).active <= '0';
         
         if rvex_isStopTrap(pl2br_trapToHandleInfo(S_BR)) = '1' then
           
@@ -525,6 +537,7 @@ begin -- architecture
         -- current interrupt ID.
         if rvex_isInterruptTrap(pl2br_trapToHandleInfo(S_BR)) = '1' then
           br2cxplif_trapInfo(S_BR).arg <= cxplif2br_irqID(S_BR);
+          br2pl_traceTrapInfo(S_IF).arg <= cxplif2br_irqID(S_BR);
           br2cxplif_irqAck(S_BR) <= not stall;
         end if;
         

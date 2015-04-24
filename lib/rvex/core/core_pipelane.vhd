@@ -844,6 +844,12 @@ architecture Behavioral of core_pipelane is
     -- The syllable as it was fetched, valid when instr_enable is high.
     instr_syllable              : rvex_syllable_type;
     
+    -- Information about the trap which is handled by this instruction.
+    trap_info                   : trap_info_type;
+    
+    -- Trap point associated with the trap handled by this instruction.
+    trap_point                  : rvex_address_type;
+    
   end record;
   
   -- Default/initialization value for trap state.
@@ -852,6 +858,7 @@ architecture Behavioral of core_pipelane is
     mem_enable                  => RVEX_UNDEF,
     cache_status                => (data_accessType => (others => RVEX_UNDEF), others => RVEX_UNDEF),
     instr_enable                => '0',
+    trap_info                   => TRAP_INFO_NONE,
     others                      => (others => RVEX_UNDEF)
   );
   
@@ -979,6 +986,8 @@ architecture Behavioral of core_pipelane is
   signal br2pl_sim              : rvex_string_builder_array(S_IF to S_IF);
   signal br2pl_simActive        : std_logic_vector(S_IF to S_IF);
   -- pragma translate_on
+  signal br2pl_traceTrapInfo    : trap_info_array(S_IF to S_IF);
+  signal br2pl_traceTrapPoint   : rvex_address_array(S_IF to S_IF);
   
   -- Pipelane <-> ALU interconnect. Refer to ALU entity for more information
   -- about the signals.
@@ -1264,7 +1273,11 @@ begin -- architecture
         br2cxplif_stop(S_BR)            => br2cxplif_stop(S_BR),
         cxplif2br_trapReturn(S_BR)      => cxplif2br_trapReturn(S_BR),
         cxplif2br_handlingDebugTrap(S_BR)=>cxplif2br_handlingDebugTrap(S_BR),
-        cxplif2br_extDebug(S_BR)        => cxplif2br_extDebug(S_BR)
+        cxplif2br_extDebug(S_BR)        => cxplif2br_extDebug(S_BR),
+        
+        -- Trace output signals.
+        br2pl_traceTrapInfo(S_IF)       => br2pl_traceTrapInfo(S_IF),
+        br2pl_traceTrapPoint(S_IF)      => br2pl_traceTrapPoint(S_IF)
         
       );
   end generate;
@@ -1510,6 +1523,7 @@ begin -- architecture
     --------------------------------
     -- Signals from the branch unit.
     br2pl_rfi, br2pl_isBranch, br2pl_isBranching, br2pl_trap,
+    br2pl_traceTrapInfo, br2pl_traceTrapPoint,
     
     -- Signals from the ALU.
     alu2pl_resultAdd, alu2pl_result, alu2pl_resultBr,
@@ -2597,11 +2611,15 @@ begin -- architecture
       end if;
       
       -- Forward handled trap information.
+      if HAS_BR then
+        s(S_IF).trace.trap_info     := br2pl_traceTrapInfo(S_IF);
+        s(S_IF).trace.trap_point    := br2pl_traceTrapPoint(S_IF);
+      end if;
       if HAS_BR and cfg2pl_decouple = '1' then
-        pl2trace_data.trap_enable   <= s(S_LAST).br.trapInfo.active;
-        pl2trace_data.trap_cause    <= s(S_LAST).br.trapInfo.cause;
-        pl2trace_data.trap_point    <= s(S_LAST).br.trapPoint;
-        pl2trace_data.trap_arg      <= s(S_LAST).br.trapInfo.arg;
+        pl2trace_data.trap_enable   <= s(S_LAST).trace.trap_info.active;
+        pl2trace_data.trap_cause    <= s(S_LAST).trace.trap_info.cause;
+        pl2trace_data.trap_point    <= s(S_LAST).trace.trap_point;
+        pl2trace_data.trap_arg      <= s(S_LAST).trace.trap_info.arg;
       else
         pl2trace_data.trap_enable   <= '0';
         pl2trace_data.trap_cause    <= (others => '0');
