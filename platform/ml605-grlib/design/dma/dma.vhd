@@ -744,7 +744,7 @@ begin
       reset                   => reset,
 
       -- master bus
-      mst_clk                 => pcie_ref_clk,
+      mst_clk                 => user_clk,
       mst2crclk               => dma2bus_c2s_pclk,
       crclk2mst               => bus2dma_c2s_pclk,
 
@@ -757,7 +757,7 @@ begin
   c2s_to_bus_pclk: entity work.c2s_bus_bridge
     port map (
       reset                   => reset,
-      clk                     => pcie_ref_clk,
+      clk                     => user_clk,
 
       -- c2s bus
       sop                     => c2s0_sop,
@@ -788,7 +788,7 @@ begin
       reset                   => reset,
 
       -- master bus
-      mst_clk                 => pcie_ref_clk,
+      mst_clk                 => user_clk,
       mst2crclk               => dma2bus_s2c_pclk,
       crclk2mst               => bus2dma_s2c_pclk,
 
@@ -798,10 +798,10 @@ begin
       slv2crclk               => bus2dma_s2c
     );
 
-  s2c_to_bus: entity work.s2c_bus_bridge
+  s2c_to_bus_pclk: entity work.s2c_bus_bridge
     port map (
       reset                   => reset,
-      clk                     => pcie_ref_clk,
+      clk                     => user_clk,
 
       -- s2c bus
       sop                     => s2c0_sop,
