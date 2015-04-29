@@ -145,6 +145,7 @@ begin -- architecture
     dma2bus.flags <= BUS_FLAGS_DEFAULT;
     dma2bus.readEnable <= '0';
     dma2bus.writeEnable <= '0';
+    dma2bus.address <= (others => '0');
     -- Always write all 4 bytes for now, as writing less is not supported by
     -- the memory controller
     dma2bus.writeMask <= "1111";

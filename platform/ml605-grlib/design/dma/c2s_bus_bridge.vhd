@@ -112,6 +112,10 @@ architecture Behavioral of c2s_bus_bridge is
 
   signal curr_sop, next_sop : std_logic;
 
+
+  signal curr_data          : std_logic_vector(0 to CORE_DATA_WIDTH-1);
+  signal next_data          : std_logic_vector(0 to CORE_DATA_WIDTH-1);
+
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -124,14 +128,18 @@ begin -- architecture
       curr_addr  <= (others => '0');
       curr_bcnt  <= (others => '0');
       curr_sop   <= '0';
+      curr_data  <= (others => '0');
 
     elsif rising_edge(clk) then
       curr_state <= next_state;
       curr_addr  <= next_addr;
       curr_bcnt  <= next_bcnt;
       curr_sop   <= next_sop;
+      curr_data  <= next_data;
     end if;
   end process;
+
+  data <= curr_data;
 
   handle_cmd: process (next_state, next_addr, next_bcnt,
                        curr_state, curr_addr, curr_bcnt,
@@ -144,6 +152,7 @@ begin -- architecture
     next_addr  <= curr_addr;
     next_bcnt  <= curr_bcnt;
     next_sop   <= curr_sop;
+    next_data  <= curr_data;
 
     -- Set the sop signal
     sop <= curr_sop;
@@ -164,6 +173,7 @@ begin -- architecture
     dma2bus.flags <= BUS_FLAGS_DEFAULT;
     dma2bus.writeEnable <= '0';
     dma2bus.readEnable <= '0';
+    dma2bus.address <= (others => '0');
 
     -- sending the last double word of the block
     -- NB: The value of valid doesn't seem to influence what is sent over the
@@ -179,7 +189,7 @@ begin -- architecture
     case curr_state is
       when wait_pkt =>
         -- reset data
-        data <= (others => '0');
+        next_data <= (others => '0');
 
         -- Indicate that we are ready for a request
         apkt_ready <= apkt_req;
@@ -203,7 +213,7 @@ begin -- architecture
 
         if bus2dma.ack = '1' then
           -- Set the lower word
-          data(32 to 63) <= bus2dma.readData;
+          next_data(32 to 63) <= bus2dma.readData;
 
           -- Increment the next address to read
           next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
@@ -228,7 +238,7 @@ begin -- architecture
 
         if bus2dma.ack = '1' then
           -- Set the upper word
-          data(0 to 31) <= bus2dma.readData;
+          next_data(0 to 31) <= bus2dma.readData;
 
           -- Disable reads
           dma2bus.readEnable <= '0';
