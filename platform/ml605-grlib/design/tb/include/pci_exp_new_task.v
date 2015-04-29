@@ -278,7 +278,7 @@ end
        DESC_DATA[start_bd_addr + 8*i_] = 32'h0;
        DESC_DATA[start_bd_addr + 8*i_ + 1] = 32'h0;
        DESC_DATA[start_bd_addr + 8*i_ + 2] = 32'h0;
-       DESC_DATA[start_bd_addr + 8*i_ + 3] = 32'h4; // Read data from address 4 and higher
+       DESC_DATA[start_bd_addr + 8*i_ + 3] = 32'h4 + i_ * 32'h10; // Read data from address 4 and higher
        DESC_DATA[start_bd_addr + 8*i_ + 4] = 32'h0;
        DESC_DATA[start_bd_addr + 8*i_ + 5] = buff_addr;
        DESC_DATA[start_bd_addr + 8*i_ + 6] = 32'h0;
@@ -294,7 +294,7 @@ end
         DESC_DATA[start_bd_addr + 8*i_ + 4][31:30] = 2'b11; //sop , eop
        end
        else if(start_addr == `RXDESC0_BASE) begin
-         length = 'd50;//`MAX_BUFFER_LENGTH_CHNL0;
+         length = `MAX_BUFFER_LENGTH_CHNL0;
          C2S_SW_DESC_CH0 = next_bd_addr;
        end
        else if(start_addr == `TXDESC1_BASE) begin

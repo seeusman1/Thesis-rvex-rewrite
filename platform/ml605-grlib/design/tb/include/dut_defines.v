@@ -99,7 +99,7 @@
  `define RP_RCB 'd64 
  
  // max payload for channels 
- `define MAX_BUFFER_LENGTH_CHNL0 'd1500
+ `define MAX_BUFFER_LENGTH_CHNL0 'd190
  // This has to be a multiple of 128 bytes (DUT_MPS)
  `define MAX_BUFFER_LENGTH_CHNL1 'd1024
  `define MAX_ETH_SIZE 'd1536

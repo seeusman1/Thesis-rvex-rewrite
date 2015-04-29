@@ -58,7 +58,7 @@
 
  // CH0_S2C_BD_COUNT defines the number of descriptors set up in S2C
  // direction for APP-0. It has an upper bound of 25.
- `define CH0_S2C_BD_COUNT 2
+ `define CH0_S2C_BD_COUNT 5
 
  // CH1_S2C_BD_COUNT defines the number of descriptors set up in S2C
  // direction for APP-1. It has an upper bound of 25.
