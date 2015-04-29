@@ -110,8 +110,6 @@ architecture Behavioral of s2c_bus_bridge is
   signal curr_bcnt          : std_logic_vector(0 to 9);
   signal next_bcnt          : std_logic_vector(0 to 9);
 
-  signal eop_dly            : std_logic;
-
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -127,8 +125,6 @@ begin -- architecture
       curr_addr  <= next_addr;
       curr_bcnt  <= next_bcnt;
     end if;
-
-    eop_dly <= eop;
   end process;
 
   handle_cmd: process (next_addr, curr_addr, next_state, curr_state,
@@ -142,36 +138,40 @@ begin -- architecture
     next_addr  <= curr_addr;
     next_bcnt  <= curr_bcnt;
 
+    -- We don't handle abort requests
     abort_ack <= '0';
 
+    -- Default values for the dma2bus interface
     dma2bus.flags <= BUS_FLAGS_DEFAULT;
     dma2bus.readEnable <= '0';
+    dma2bus.writeEnable <= '0';
+    -- Always write all 4 bytes for now, as writing less is not supported by
+    -- the memory controller
+    dma2bus.writeMask <= "1111";
 
-    if curr_state = wait_pkt then
-      apkt_ready <= apkt_req;
-    else
-      apkt_ready <= '0';
-    end if;
-
+    -- Default values for the outgoing sync signals
+    apkt_ready <= '0';
     dst_rdy <= '0';
 
     case curr_state is
       when wait_pkt =>
-        dma2bus.writeEnable <= '0';
+        -- Indicate that we are ready for a request
+        apkt_ready <= apkt_req;
 
         if apkt_req = '1' then
-          dst_rdy <= '1';
-
+          -- Only use the lower 32 bits of the address
           next_addr  <= apkt_addr(32 to 63);
-          next_state <= wait_data;
+          -- Store the amount of bytes to transfer
           next_bcnt  <= apkt_bcount;
+          next_state <= wait_data;
         end if;
 
       when wait_data =>
-        dma2bus.writeEnable <= '0';
+        -- Indicate that we are ready for a new double word
         dst_rdy <= '1';
 
         if src_rdy = '1' then
+          -- New data loaded, continue to writing
           next_state <= write_low;
         end if;
 
@@ -179,69 +179,51 @@ begin -- architecture
         -- Note: we assume `src_rdy = '1'` and thus that data, sop and eop
         -- are valid at least untill the next cycle where `dst_rdy = '1'`
         dma2bus.address <= curr_addr;
+        -- Transmit the lower word
         dma2bus.writeData <= data(32 to 63);
         dma2bus.writeEnable <= '1';
 
-        -- `valid = "000"` when `eop = '0'`
-        case valid is
-          when "001" => dma2bus.writeMask <= "0001";
-          when "010" => dma2bus.writeMask <= "0011";
-          when "011" => dma2bus.writeMask <= "0111";
-          when "100" => dma2bus.writeMask <= "1111";
-          when others => dma2bus.writeMask <= "1111";
-        end case;
-
         if bus2dma.ack = '1' then
+          -- Increment the next address to read
           next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
 
           if vect2uint(curr_bcnt) <= 4 then
-            dma2bus.writeEnable <= '0';
-
-            next_state <= wait_data;
+            -- Done transfering, stop writing
             next_bcnt  <= (others => '0');
+            next_state <= wait_pkt;
           else
+            -- Start writing the next word, to speed up the transfer
             dma2bus.address <= uint2vect(vect2uint(curr_addr) + 4, 32);
             dma2bus.writeData <= data(0 to 31);
 
-            next_state <= write_high;
+            -- Decrement the byte count
             next_bcnt  <= uint2vect(vect2uint(curr_bcnt) - 4, 10);
+            next_state <= write_high;
           end if;
         end if;
 
       when write_high =>
+        -- Transmit the upper word
         dma2bus.address <= curr_addr;
         dma2bus.writeData <= data(0 to 31);
         dma2bus.writeEnable <= '1';
 
-        -- Handle the last word of a packet
-        case valid is
-          when "101" => dma2bus.writeMask <= "0001";
-          when "110" => dma2bus.writeMask <= "0011";
-          when "111" => dma2bus.writeMask <= "0111";
-          when "000" => dma2bus.writeMask <= "1111";
-          -- Should not reach here if 0 < valid < 4
-          when others => dma2bus.writeMask <= "1111";
-        end case;
-
         if bus2dma.ack = '1' then
+          -- Increment the next address to read
           next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+          -- Disable writing
           dma2bus.writeEnable <= '0';
 
-          -- use the delayed eop here as we might otherwise get into
-          -- trouble as toggling dst_rdy might change the value of eop,
-          -- making us miss the last 64 bit of a packet
-          --if eop_dly = '0' then
           if vect2uint(curr_bcnt) > 4 then
-            next_state <= wait_data;
+            -- Decrement the byte count
             next_bcnt  <= uint2vect(vect2uint(curr_bcnt) - 4, 10);
-            -- already set dst_rdy, so we are sure to trigger the dma
-            -- engine
-            dst_rdy <= '1';
+            -- Request the next double word
+            next_state <= wait_data;
           else
-            apkt_ready <= apkt_req;
-
-            next_state <= wait_pkt;
+            -- Reset the byte count
             next_bcnt  <= (others => '0');
+            -- Request new packet metadata
+            next_state <= wait_pkt;
           end if;
         end if;
 

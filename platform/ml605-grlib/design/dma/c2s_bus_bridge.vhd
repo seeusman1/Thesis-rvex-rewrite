@@ -70,27 +70,28 @@ entity c2s_bus_bridge is
     ---------------------------------------------------------------------------
     -- c2s bus
     ---------------------------------------------------------------------------
-    sop                     : out std_logic; --
-    eop                     : out std_logic; --
-    data                    : out std_logic_vector(0 to CORE_DATA_WIDTH-1); --
-    valid                   : out std_logic_vector(0 to CORE_REMAIN_WIDTH-1); --
-    src_rdy                 : out std_logic; --
-    dst_rdy                 : in  std_logic; --
-    abort                   : in  std_logic; --
-    abort_ack               : out std_logic; --
-    user_rst_n              : in  std_logic; --
+    sop                     : out std_logic;
+    eop                     : out std_logic;
+    data                    : out std_logic_vector(0 to CORE_DATA_WIDTH-1);
+    valid                   : out std_logic_vector(0 to CORE_REMAIN_WIDTH-1);
+    src_rdy                 : out std_logic;
+    dst_rdy                 : in  std_logic;
+    abort                   : in  std_logic;
+    abort_ack               : out std_logic;
+    user_rst_n              : in  std_logic;
 
-    apkt_req                : in  std_logic; -- Addressed Packet Interface
-    apkt_ready              : out std_logic; --
-    apkt_addr               : in  std_logic_vector(0 to 63); --
-    apkt_bcount             : in  std_logic_vector(0 to 31); --
+    -- Addressed Packet Interface
+    apkt_req                : in  std_logic;
+    apkt_ready              : out std_logic;
+    apkt_addr               : in  std_logic_vector(0 to 63);
+    apkt_bcount             : in  std_logic_vector(0 to 31);
     apkt_eop                : in  std_logic;
 
     ---------------------------------------------------------------------------
     -- Master bus
     ---------------------------------------------------------------------------
-    bus2dma                 : in  bus_slv2mst_type; --
-    dma2bus                 : out bus_mst2slv_type --
+    bus2dma                 : in  bus_slv2mst_type;
+    dma2bus                 : out bus_mst2slv_type
   );
 end c2s_bus_bridge;
 
@@ -147,83 +148,90 @@ begin -- architecture
     -- Set the sop signal
     sop <= curr_sop;
 
-    -- Only accept a packet when we are waiting for one
-    if apkt_req = '0' then
-      apkt_ready <= '0';
-    end if;
+    -- We don't handle abort requests
+    abort_ack <= '0';
 
+    -- The eop signal is always low. If we set it to high in the last double
+    -- word of the apkt where apkt_eop is high, the dma engine becomes confused
+    -- and stops requesting packets :S.
+    eop <= '0';
+
+    -- Default values for the outgoing sync signals
+    apkt_ready <= '0';
     src_rdy <= '0';
 
+    -- Default values for the dma2bus interface
     dma2bus.flags <= BUS_FLAGS_DEFAULT;
     dma2bus.writeEnable <= '0';
+    dma2bus.readEnable <= '0';
 
     -- sending the last double word of the block
+    -- NB: The value of valid doesn't seem to influence what is sent over the
+    -- PCIe bus.
     if vect2uint(curr_bcnt) <= 8 then
       valid <= curr_bcnt(29 to 31);
     else
+      -- send 8 bytes
       valid <= "000";
     end if;
 
-    if vect2uint(curr_bcnt) <= 8 then
-      eop <= apkt_eop;
-    end if;
 
     case curr_state is
       when wait_pkt =>
-
-        next_sop <= '1';
+        -- reset data
         data <= (others => '0');
-        valid <= "000";
-        abort_ack <= '0';
-        apkt_ready <= '0';
 
-        dma2bus.readEnable <= '0';
+        -- Indicate that we are ready for a request
+        apkt_ready <= apkt_req;
 
         -- Only transition when there is a packet
         if apkt_req = '1' then
-          apkt_ready <= '1';
-
           -- Only use the lower 32 bits of the address
           next_addr <= apkt_addr(32 to 63);
-          next_state <= read_low;
+          -- Store the amount of bytes to transfer
           next_bcnt <= apkt_bcount;
+          -- Indicate that we are starting a new transfer
+          next_sop <= '1';
+          -- Change to read_low
+          next_state <= read_low;
         end if;
 
       when read_low =>
+        -- Read the current address
         dma2bus.address <= curr_addr;
         dma2bus.readEnable <= '1';
 
         if bus2dma.ack = '1' then
+          -- Set the lower word
           data(32 to 63) <= bus2dma.readData;
 
+          -- Increment the next address to read
           next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
 
           if vect2uint(curr_bcnt) > 4 then
-            -- Read next data element
+            -- Start reading the next data element, to speed up the transfer
             dma2bus.address <= uint2vect(vect2uint(curr_addr) + 4, 32);
 
             next_state <= read_high;
           else
+            -- Done transfering, stop reading and send data
             dma2bus.readEnable <= '0';
-
-            src_rdy <= '1';
 
             next_state <= send_data;
           end if;
         end if;
 
       when read_high =>
+        -- Read the current address
         dma2bus.address <= curr_addr;
         dma2bus.readEnable <= '1';
 
         if bus2dma.ack = '1' then
-          -- Read data
+          -- Set the upper word
           data(0 to 31) <= bus2dma.readData;
 
           -- Disable reads
           dma2bus.readEnable <= '0';
-
-          src_rdy <= '1';
 
           -- Increment address
           next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
@@ -233,21 +241,25 @@ begin -- architecture
         end if;
 
       when send_data =>
+        -- Indicate that the data is valid
         src_rdy <= '1';
 
-        if dst_rdy = '1' and bus2dma.ack = '0' then
+        if dst_rdy = '1' then
           -- Reset sop signal
           next_sop <= '0';
 
           if vect2uint(curr_bcnt) > 8 then
+            -- Start reading the next double word
             dma2bus.address <= curr_addr;
             dma2bus.readEnable <= '1';
 
-            next_state <= read_low;
+            -- Decrement the byte counter
             next_bcnt <= uint2vect(vect2uint(curr_bcnt) - 8, 32);
+            next_state <= read_low;
           else
-            next_state <= wait_pkt;
+            -- Reset the byte counter
             next_bcnt <= (others => '0');
+            next_state <= wait_pkt;
           end if;
         end if;
     end case;
