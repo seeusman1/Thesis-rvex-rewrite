@@ -86,7 +86,14 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
    constant CFG_MCTRL_RAM8BIT : integer := 1;
    constant CFG_MCTRL_RAM16BIT : integer := 1;
    constant CFG_MCTRL_5CS : integer := 0;
-@@ -123,10 +156,10 @@ package config is
+@@ -117,16 +150,16 @@ package config is
+   constant CFG_AHBRADDR : integer := 16#A00#;
+   constant CFG_AHBRPIPE : integer := 0;
+ -- Gaisler Ethernet core
+-  constant CFG_GRETH : integer := 1;
++  constant CFG_GRETH : integer := 0;
+   constant CFG_GRETH1G : integer := 0;
+   constant CFG_ETH_FIFO : integer := 16;
    constant CFG_GRETH_FT : integer := 0;
    constant CFG_GRETH_EDCLFT : integer := 0;
  -- UART 1
@@ -99,6 +106,15 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
    constant CFG_IRQ3_NSEC : integer := 0;
  -- Modular timer
    constant CFG_GPT_ENABLE : integer := 1;
+@@ -147,7 +180,7 @@ package config is
+ -- VGA and PS2/ interface
+   constant CFG_KBD_ENABLE : integer := 0;
+   constant CFG_VGA_ENABLE : integer := 0;
+-  constant CFG_SVGA_ENABLE : integer := 1;
++  constant CFG_SVGA_ENABLE : integer := 0;
+ 
+ -- AMBA System ACE Interface Controller
+   constant CFG_GRACECTRL : integer := 1;
 @@ -158,10 +191,10 @@ package config is
   constant CFG_PCIE_SIM_MAS : integer := 0;
   constant CFG_PCIEXPVID : integer := 16#0#;
@@ -1029,7 +1045,21 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
    );
  end generate;
  ----------------------------------------------------------------------
-@@ -832,7 +1167,7 @@ end generate;
+@@ -792,6 +1142,13 @@ end generate;
+       port map (emdc, etho.mdc);
+   end generate;
+ 
++  eth_out : if (CFG_GRETH /= 1) generate
++      emdc <= '0';
++      etx_en <= '0';
++      etx_er <= '0';
++      etxd <= (others => '0');
++  end generate;
++
+ -----------------------------------------------------------------------
+ ---  AHB ROM ----------------------------------------------------------
+ -----------------------------------------------------------------------
+@@ -832,7 +1189,7 @@ end generate;
  ---  Drive unused bus elements  ---------------------------------------
  -----------------------------------------------------------------------
  
