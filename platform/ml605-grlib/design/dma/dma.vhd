@@ -367,7 +367,7 @@ begin
 
       BAR0                                         => X"FFFF0000", -- bar0; 64 KByte registers
       BAR1                                         => X"FFFFE000", -- bar1; 8K Byte internal SRAM
-      BAR2                                         => X"FFFFFE00", -- bar2; 8K Byte internal SRAM
+      BAR2                                         => X"FFFFE000", -- bar2; 8K Byte internal SRAM
       BAR3                                         => X"00000000",
       BAR4                                         => X"00000000",
       BAR5                                         => X"00000000",
@@ -386,9 +386,9 @@ begin
       REVISION_ID                                  => X"04",
 
 
-      UPCONFIG_CAPABLE                             => "TRUE",
+      UPCONFIG_CAPABLE                             => "FALSE",
       LINK_CAP_MAX_LINK_SPEED                      => X"1",
-      LINK_CTRL2_TARGET_LINK_SPEED                 => X"1",
+      LINK_CTRL2_TARGET_LINK_SPEED                 => X"0",
       USER_CLK_FREQ                                => 3 -- 250 MHz
     )
     port map (
