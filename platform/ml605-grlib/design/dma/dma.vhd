@@ -109,9 +109,6 @@ architecture behavioral of dma is
   signal pcie_ref_clk              : std_logic;
   -- Clock from the PCIe interface
   signal user_clk                  : std_logic;
-  -- PCIe reset
-  signal perst_n_c                 : std_logic;
-  signal perst_c                   : std_logic;
 
   signal targ_wr_req               : std_logic;
   signal targ_wr_core_ready        : std_logic;
@@ -329,13 +326,6 @@ begin
       ODIV2 => open
     );
 
-  -- PCIe PERST# input buffer
-  perst_n_ibuf : IBUF
-    port map(
-      I     => perst_n,
-      O     => perst_n_c
-    );
-  perst_c <= perst_n_c;
 
   -- Register to improve timing
   user_lnk_up_int_i : FDCP
