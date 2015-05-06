@@ -387,11 +387,11 @@ begin
       DEV_CAP_MAX_PAYLOAD_SUPPORTED                => 2,
       LINK_CAP_MAX_LINK_WIDTH                      => X"4",--NO_OF_LANES,
       LTSSM_MAX_LINK_WIDTH                         => X"4",--NO_OF_LANES,
-      DEVICE_ID                                    => X"6024",
-      VENDOR_ID                                    => X"10EE",
+      DEVICE_ID                                    => X"7000", -- r-VEX device
+      VENDOR_ID                                    => X"10EE", -- Xilinx vendor ID
 
-      SUBSYSTEM_ID                                 => X"0007",
-      SUBSYSTEM_VENDOR_ID                          => X"10EE",
+      SUBSYSTEM_ID                                 => X"7000", -- r-VEX device
+      SUBSYSTEM_VENDOR_ID                          => X"10EE", -- Xilinx vendor ID
 
       REVISION_ID                                  => X"04",
 
