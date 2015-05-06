@@ -149,7 +149,7 @@
  NET "erx_col"                       LOC = "AK13";   ## 114 on U80
  NET "erx_crs"                       LOC = "AL13";   ## 115 on U80
  NET "emdint"                       LOC = "AH14";   ## 32  on U80
-@@ -465,20 +465,20 @@ NET "etxd(5)"                      LOC =
+@@ -465,38 +465,36 @@ NET "etxd(5)"                      LOC =
  NET "etxd(6)"                      LOC = "AE11";   ## 28  on U80
  NET "etxd(7)"                      LOC = "AF11";   ## 29  on U80
  NET "etx_er"                      LOC = "AH10";   ## 13  on U80
@@ -174,11 +174,16 @@
  NET "led(0)"                    LOC = "AC22";   ## 2   on LED DS12, 1 on J62
  NET "led(1)"                    LOC = "AC24";   ## 2   on LED DS11, 2 on J62
  NET "led(2)"                    LOC = "AE22";   ## 2   on LED DS9,  3 on J62
-@@ -489,14 +489,14 @@ NET "led(5)"                    LOC = "A
- #NET "GPIO_LED_5"                    LOC = "AG23";   ## 2   on LED DS14, 6 on J62
- #NET "GPIO_LED_6"                    LOC = "AE24";   ## 2   on LED DS22, 7 on J62
- #NET "GPIO_LED_7"                    LOC = "AD24";   ## 2   on LED DS21, 8 on J62
+ NET "led(3)"                    LOC = "AE23";   ## 2   on LED DS10, 4 on J62
+ NET "led(4)"                    LOC = "AB23";   ## 2   on LED DS15, 5 on J62
+-NET "led(4)"                    LOC = "AB23";   ## 2   on LED DS15, 5 on J62
+ NET "led(5)"                    LOC = "AG23";   ## 2   on LED DS14, 6 on J62
+-#NET "GPIO_LED_5"                    LOC = "AG23";   ## 2   on LED DS14, 6 on J62
+-#NET "GPIO_LED_6"                    LOC = "AE24";   ## 2   on LED DS22, 7 on J62
+-#NET "GPIO_LED_7"                    LOC = "AD24";   ## 2   on LED DS21, 8 on J62
 -
++NET "led(6)"                    LOC = "AE24";   ## 2   on LED DS22, 6 on J62
++NET "led(7)"                    LOC = "AD24";   ## 2   on LED DS21, 6 on J62
 +
  NET "dvi_iic_scl"                   LOC = "AN10";   ## 2   on Q5, 15 on U38
  NET "iic_scl_main"               LOC = "AK9";    ## 2   on Q19
@@ -191,7 +196,7 @@
  NET "tft_lcd_data(0)"                        LOC = "AJ19";   ## 63 on U38 (thru series R111 47.5 ohm)
  NET "tft_lcd_data(1)"                        LOC = "AH19";   ## 62 on U38 (thru series R110 47.5 ohm)
  NET "tft_lcd_data(2)"                        LOC = "AM17";   ## 61 on U38 (thru series R109 47.5 ohm)
-@@ -516,7 +516,7 @@ NET "tft_lcd_reset_b"                LOC
+@@ -516,7 +514,7 @@ NET "tft_lcd_reset_b"                LOC
  NET "tft_lcd_vsync"                         LOC = "AD15";   ## 5  on U38 (thru series R114 47.5 ohm)
  NET "tft_lcd_clk_n"                    LOC = "AC17";   ## 56 on U38
  NET "tft_lcd_clk_p"                    LOC = "AC18";   ## 57 on U38
@@ -200,7 +205,7 @@
  #NET "SYSACE_CFGTDI"                 LOC = "AC8";    ## 81  on U19
  NET "sysace_d(0)"                     LOC = "AM15";   ## 66  on U19
  NET "sysace_d(1)"                     LOC = "AJ17";   ## 65  on U19
-@@ -539,52 +539,52 @@ NET "sysace_mpirq"                  LOC
+@@ -539,52 +537,52 @@ NET "sysace_mpirq"                  LOC
  NET "sysace_mpoe"                   LOC = "AL15";   ## 77  on U19
  NET "sysace_mpwe"                   LOC = "AL14";   ## 76  on U19
  NET "clk_33"              LOC = "AE16";   ## 93  on U19
@@ -299,7 +304,7 @@
  # Constrain BUFR clocks used to synchronize data from IOB to fabric logic
  # Note that ISE cannot infer this from other PERIOD constraints because
  # of the use of OSERDES blocks in the BUFR clock generation path
-@@ -611,3 +611,63 @@ TIMESPEC "TS_clk_rsync_rise_to_fall_xst"
+@@ -611,3 +609,63 @@ TIMESPEC "TS_clk_rsync_rise_to_fall_xst"
  #INST "u_memc_ui_top/u_mem_intfc/phy_top0/u_phy_init/u_ff_phy_init_data_sel" TNM = "TNM_PHY_INIT_SEL";
  #TIMESPEC "TS_MC_PHY_INIT_SEL" = FROM "TNM_PHY_INIT_SEL" TO FFS = 10 ns;  ## = "2.5ns * 4" ML605 single clock
  
@@ -425,7 +430,7 @@
  
      -- Output signals to LEDs
 -    led       : out   std_logic_vector(6 downto 0)
-+    led       : out   std_logic_vector(6 downto 0) := (others => '0')
++    led       : out   std_logic_vector(7 downto 0) := (others => '0')
      );
  end;
  
@@ -928,7 +933,12 @@
      MHz => 400, Mbyte => 512, nosync => boolean'pos(CFG_MIG_CLK4=12)) --CFG_CLKDIV/12)
        port map (
      rst => rstn, clk_ahb => clkm, clk_ddr => clk_ddr,
-@@ -483,7 +833,7 @@ begin
+@@ -478,12 +828,11 @@ begin
+     led(3)  <= phy_init_done;
+     led(4)  <= rstn;
+     led(5)  <= reset;
+-    led(6)  <= '0';
+     lock    <= phy_init_done; -- and cgo.clklock;
  
  --    end generate;
  --    noddr : if (CFG_DDR2SP+CFG_MIG_DDR2) = 0 generate lock <= cgo.clklock; end generate;
@@ -937,7 +947,7 @@
  ----------------------------------------------------------------------
  ---  System ACE I/F Controller ---------------------------------------
  ----------------------------------------------------------------------
-@@ -525,15 +875,15 @@ EP: pcie_master_target_virtex
+@@ -525,15 +874,15 @@ EP: pcie_master_target_virtex
      vendor_id        => CFG_PCIEXPVID,	 -- PCIE vendor ID
      pcie_bar_mask    => 16#FFE#,
      nsync            => 2,   -- 1 or 2 sync regs between clocks
@@ -960,7 +970,7 @@
      rst              => rstn,
      clk              => clkm,
      -- System Interface
-@@ -545,25 +895,25 @@ EP: pcie_master_target_virtex
+@@ -545,25 +894,25 @@ EP: pcie_master_target_virtex
      pci_exp_txn      => pci_exp_txn,
      pci_exp_rxp      => pci_exp_rxp,
      pci_exp_rxn      => pci_exp_rxn,
@@ -994,7 +1004,7 @@
      rst          => rstn,
      clk          => clkm,
      -- System Interface
-@@ -575,7 +925,7 @@ port map(
+@@ -575,7 +924,7 @@ port map(
      pci_exp_txn  => pci_exp_txn,
      pci_exp_rxp  => pci_exp_rxp,
      pci_exp_rxn  => pci_exp_rxn,
@@ -1003,7 +1013,7 @@
      dapbo        => apbo(8),
      dahbmo       => ahbmo((CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE)),
      apbi         => apbi,
-@@ -583,17 +933,17 @@ port map(
+@@ -583,17 +932,17 @@ port map(
      ahbmi        => ahbmi,
      ahbsi        => ahbsi,
      ahbso        => ahbso(8)
@@ -1025,7 +1035,7 @@
      rst          => rstn,
      clk          => clkm,
      -- System Interface
-@@ -605,11 +955,11 @@ port map(
+@@ -605,11 +954,11 @@ port map(
      pci_exp_txn  => pci_exp_txn,
      pci_exp_rxp  => pci_exp_rxp,
      pci_exp_rxn  => pci_exp_rxn,
@@ -1042,7 +1052,7 @@
    );
  end generate;
  ----------------------------------------------------------------------
-@@ -792,6 +1142,13 @@ end generate;
+@@ -792,6 +1141,13 @@ end generate;
        port map (emdc, etho.mdc);
    end generate;
  
@@ -1056,7 +1066,7 @@
  -----------------------------------------------------------------------
  ---  AHB ROM ----------------------------------------------------------
  -----------------------------------------------------------------------
-@@ -832,7 +1189,7 @@ end generate;
+@@ -832,7 +1188,7 @@ end generate;
  ---  Drive unused bus elements  ---------------------------------------
  -----------------------------------------------------------------------
  
