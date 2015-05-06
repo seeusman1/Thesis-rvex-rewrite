@@ -1,6 +1,5 @@
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2015-04-15 16:01:12.554482932 +0200
-+++ work/config.vhd	2015-04-21 13:55:41.944254623 +0200
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd
++++ work/config.vhd
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -128,9 +127,8 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 -  constant CFG_MIG_CLK4 : integer := 16;
 +  constant CFG_MIG_CLK4 : integer := 32;
  end;
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf work/leon3mp.ucf
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf	2015-04-15 16:01:12.590483652 +0200
-+++ work/leon3mp.ucf	2015-04-16 14:19:13.905348603 +0200
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf
++++ work/leon3mp.ucf
 @@ -386,8 +386,8 @@ INST "ddr3ctrl/u_infrastructure/u_mmcm_a
  
  #NET  "heartbeat"                LOC = "AC24";   # ML605 GPIO LED 1
@@ -365,9 +363,8 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +
 +# MMCM Placment. This constraint selects the MMCM Placement
 +INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2015-04-15 16:01:12.538482608 +0200
-+++ work/leon3mp.vhd	2015-04-24 16:00:44.668705646 +0200
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd
++++ work/leon3mp.vhd
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License
@@ -1068,9 +1065,8 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
      ahbmo(i) <= ahbm_none;
    end generate;
  
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile work/Makefile
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile	2015-04-15 16:01:12.534482533 +0200
-+++ work/Makefile	2015-04-24 16:08:10.913656208 +0200
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile
++++ work/Makefile
 @@ -1,5 +1,5 @@
  include .config
 -GRLIB=../..
@@ -1243,9 +1239,8 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +	-rm -rf pcie tx.dat rx.dat
  
  .PHONY : pcie pcieclean
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/coregen.cgp work/pcie/coregen.cgp
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/coregen.cgp	2015-04-15 16:01:12.738486626 +0200
-+++ work/pcie/coregen.cgp	1970-01-01 01:00:00.000000000 +0100
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/coregen.cgp
++++ work/pcie/coregen.cgp
 @@ -1,22 +0,0 @@
 -# Date: Wed Aug  8 14:52:14 2012
 -
@@ -1269,9 +1264,8 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 -SET workingdirectory = ./tmp/
 -
 -# CRC: efb42278
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/pcie.xco work/pcie/pcie.xco
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/pcie.xco	2015-04-15 16:01:12.734486543 +0200
-+++ work/pcie/pcie.xco	1970-01-01 01:00:00.000000000 +0100
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/pcie.xco
++++ work/pcie/pcie.xco
 @@ -1,205 +0,0 @@
 -##############################################################
 -#
@@ -1478,9 +1472,8 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 -# END Parameters
 -GENERATE
 -# CRC: 1ab9c854
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd work/testbench.vhd
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd	2015-04-15 16:01:12.558483006 +0200
-+++ work/testbench.vhd	2015-04-20 10:52:52.114126612 +0200
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd
++++ work/testbench.vhd
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License

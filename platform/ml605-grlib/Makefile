@@ -99,7 +99,7 @@ work: ../../grlib/grlib-gpl-1.3.7-b4144
 .PHONY: update-patch
 update-patch: clean
 	@cd work && $(MAKE) distclean
-	diff -rupN --exclude="ram.srec" ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/ work/ > work.patch ; true
+	diff -rupN --exclude="ram.srec" ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/ work/ | filterdiff --remove-timestamps > work.patch ; true
 
 # Cleans all grlib and rvex compilation intermediate files.
 .PHONY: clean
