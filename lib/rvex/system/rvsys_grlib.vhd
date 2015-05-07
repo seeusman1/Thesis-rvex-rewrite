@@ -260,9 +260,10 @@ architecture Behavioral of rvsys_grlib is
   signal bus2cache_invalSource  : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal bus2cache_invalEnable  : std_logic;
   
-  -- Flush control signals.
+  -- Cache control signals.
   signal sc2icache_flush        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal sc2dcache_flush        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal sc2dcache_bypass       : std_logic;
   
   -- Debug bus demuxer to global control registers.
   signal demux2glob             : bus_mst2slv_type;
@@ -561,7 +562,9 @@ begin -- architecture
   -- everything in the high 2 GiB memory space is mapped to peripherals and
   -- should not be cached.
   bypass_gen: for laneGroup in 2**CFG.core.numLaneGroupsLog2-1 downto 0 generate
-    rv2dcache_bypass(laneGroup) <= rv2dcache_addr(laneGroup)(31);
+    rv2dcache_bypass(laneGroup)
+      <= rv2dcache_addr(laneGroup)(31)
+      or sc2dcache_bypass;
   end generate;
   
   -----------------------------------------------------------------------------
@@ -635,6 +638,7 @@ begin -- architecture
     if rising_edge(clk) then
       if resetBus = '1' then
         defaultState;
+        sc2dcache_bypass <= '0';
       elsif clkEnBus = '1' then
         defaultState;
         
@@ -651,9 +655,17 @@ begin -- architecture
         -- Address 0x01 write: data cache flush bits.
         if bus_writing(demux2cache, "------------------------00000001") then
           sc2dcache_flush <= demux2cache.writeData(
-            2**CFG.core.numLaneGroupsLog2 + 23 downto 24
+            2**CFG.core.numLaneGroupsLog2 + 15 downto 16
           );
         end if;
+        
+        -- Address 0x03 write: bypass flag.
+        if bus_writing(demux2cache, "------------------------00000011") then
+          sc2dcache_bypass <= demux2cache.writeData(0);
+        end if;
+        
+        -- Allow readback of bypass flag.
+        cache2demux.readData(0) <= sc2dcache_bypass;
         
       end if;
     end if;
