@@ -127,6 +127,73 @@
 -  constant CFG_MIG_CLK4 : integer := 16;
 +  constant CFG_MIG_CLK4 : integer := 32;
  end;
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp_mig39.ucf
++++ work/leon3mp_mig39.ucf
+@@ -1,3 +1,55 @@
++######################################################################################
++## PCI-express signals (copied from reference project)                              ##
++######################################################################################
++#------------------------
++# Clock and Reset Pinout
++#------------------------
++NET "pcie_dma_block.pcie_dma/pcie_ref_clk" TNM_NET = "SYSCLK" ;
++NET "pcie_dma_block.pcie_clocking_i/clk_125" TNM_NET = "CLK_125" ;
++NET "*/TxOutClk_bufg" TNM_NET = "TXOUTCLKBUFG";
++
++TIMESPEC "TS_SYSCLK"  = PERIOD "SYSCLK" 250.00 MHz HIGH 50 % ;
++TIMESPEC "TS_CLK_125" = PERIOD "CLK_125" TS_SYSCLK*0.5 HIGH 50 %; # PRIORITY 100 ;
++TIMESPEC "TS_TXOUTCLKBUFG"  = PERIOD "TXOUTCLKBUFG" 250 MHz HIGH 50 %; # PRIORITY 100 ;
++
++NET "sys_reset_n" TIG;
++PIN "*/trn_reset_n_int_i.CLR" TIG ;
++PIN "*/trn_reset_n_i.CLR" TIG ;
++PIN "pcie_dma_block.pcie_clocking_i/mmcm_adv_i.RST" TIG ;
++
++#TIMESPEC "TS_TRNLNKUPN" = FROM FFS(*) TO FFS(trn_lnk_up_n_int_i) 4 ns;
++#TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS(trn_reset_n_i) 4 ns;
++TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS("pcie_dma_block.pcie_dma/user_reset") 8 ns;
++
++
++#-----------------------------------
++# PCIe Transceiver & Core Locations
++#-----------------------------------
++
++# PCIe Block Placement
++INST "*/pcie_2_0_i/pcie_block_i" LOC = PCIE_X0Y1;
++
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[0].GTX" LOC = GTXE1_X0Y15;
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[1].GTX" LOC = GTXE1_X0Y14;
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[2].GTX" LOC = GTXE1_X0Y13;
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[3].GTX" LOC = GTXE1_X0Y12;
++
++#------------------------
++# Clock and Reset Pinout
++#------------------------
++
++NET  sys_reset_n           LOC  = AE13 | IOSTANDARD = LVCMOS25 | NODELAY;
++
++# 250 MHz Reference Clock
++INST "pcie_dma_block.pcie_dma/pcie_refclk_ibuf" LOC = IBUFDS_GTXE1_X0Y4; # Implies pinout
++
++# MMCM Placment. This constraint selects the MMCM Placement
++INST "pcie_dma_block.pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
++
++######################################################################################
++## Other definitions                                                                ##
++######################################################################################
++
+ 
+ NET "clk_ref_p" TNM_NET = TNM_clk_ref;
+ TIMESPEC "TS_clk_ref" = PERIOD "TNM_clk_ref" 5 ns ;
+@@ -104,7 +156,7 @@ NET "led(3)"                    LOC = "A
+ NET "led(4)"                    LOC = "AB23";   ## 2   on LED DS15, 5 on J62
+ NET "led(5)"                    LOC = "AG23";   ## 2   on LED DS14, 6 on J62
+ NET "led(6)"                    LOC = "AE24";   ## 2   on LED DS22, 7 on J62
+-#NET "led(7)"                    LOC = "AD24";   ## 2   on LED DS21, 8 on J62
++NET "led(7)"                    LOC = "AD24";   ## 2   on LED DS21, 8 on J62
+ 
+ NET "dvi_iic_scl"                   LOC = "AN10";   ## 2   on Q5, 15 on U38
+ NET "iic_scl_main"               LOC = "AK9";    ## 2   on Q19
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf
 +++ work/leon3mp.ucf
 @@ -386,8 +386,8 @@ INST "ddr3ctrl/u_infrastructure/u_mmcm_a
