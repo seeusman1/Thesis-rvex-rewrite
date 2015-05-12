@@ -391,7 +391,7 @@ begin
       DEV_CAP_MAX_PAYLOAD_SUPPORTED                => 2,
       LINK_CAP_MAX_LINK_WIDTH                      => X"4",--NO_OF_LANES,
       LTSSM_MAX_LINK_WIDTH                         => X"4",--NO_OF_LANES,
-      DEVICE_ID                                    => X"7000", -- r-VEX device
+      DEVICE_ID                                    => X"6042", -- xdma device
       VENDOR_ID                                    => X"10EE", -- Xilinx vendor ID
 
       SUBSYSTEM_ID                                 => X"7000", -- r-VEX device
