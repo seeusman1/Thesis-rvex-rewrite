@@ -741,6 +741,9 @@ begin
       reg_rd_data                    => reg_rd_data
   );
 
+  -- Tie reg_rd_data to 0, as otherwise the whole register interface doesn't work
+  reg_rd_data <= (others => '0');
+
   -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   -- c2s to r-VEX bus
   c2s_bus_clock_cross: entity rvex.bus_crossClock
