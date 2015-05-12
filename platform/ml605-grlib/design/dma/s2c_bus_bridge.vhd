@@ -127,10 +127,9 @@ begin -- architecture
     end if;
   end process;
 
-  handle_cmd: process (next_addr, curr_addr, next_state, curr_state,
-                       next_bcnt, curr_bcnt,
-                       apkt_req, apkt_addr,
-                       data, valid, eop,
+  handle_cmd: process (curr_addr, curr_state, curr_bcnt,
+                       apkt_req, apkt_addr, apkt_bcount,
+                       src_rdy, data, valid, eop,
                        bus2dma.ack) is
   begin
     -- Make sure that the state only changes when set explicitly

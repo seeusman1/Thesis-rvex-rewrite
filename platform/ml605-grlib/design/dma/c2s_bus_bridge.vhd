@@ -141,8 +141,7 @@ begin -- architecture
 
   data <= curr_data;
 
-  handle_cmd: process (next_state, next_addr, next_bcnt,
-                       curr_state, curr_addr, curr_bcnt,
+  handle_cmd: process (curr_state, curr_addr, curr_bcnt, curr_sop, curr_data,
                        apkt_req, apkt_addr, apkt_bcount,
                        bus2dma.ack, bus2dma.readData,
                        dst_rdy) is
