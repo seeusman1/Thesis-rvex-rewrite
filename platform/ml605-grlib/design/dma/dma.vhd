@@ -85,6 +85,9 @@ entity dma is
     -- PCI Express slot PERST# reset signal
     perst_n                 : in  std_logic;
 
+    user_lnk_up_out         : out std_logic;
+    user_reset_out          : out std_logic;
+
     ---------------------------------------------------------------------------
     -- r-VEX bus signals
     ---------------------------------------------------------------------------
@@ -109,6 +112,11 @@ architecture behavioral of dma is
   signal pcie_ref_clk              : std_logic;
   -- Clock from the PCIe interface
   signal user_clk                  : std_logic;
+
+  -- PCI reset signal buffered
+  signal perst_n_c                 : std_logic;
+  -- Buffered inverted
+  signal perst                     : std_logic;
 
   signal targ_wr_req               : std_logic;
   signal targ_wr_core_ready        : std_logic;
@@ -340,6 +348,9 @@ begin
       PRE    => '0'
     );
 
+  user_lnk_up_out <= user_lnk_up_c;
+  user_reset_out  <= user_reset_c;
+
   -- Register to improve timing
   user_reset_i : FDCP
     generic map(
@@ -352,6 +363,9 @@ begin
       CLR    => '0',
       PRE    => '0'
     );
+
+
+  perst <= not perst_n;
 
   --+++++++++++++++++++++++++++++++++++++++++++++++++++
 
@@ -519,7 +533,7 @@ begin
       ---------------------------------------------------------
 
       sys_clk                                   => pcie_ref_clk,
-      sys_reset                                 => reset
+      sys_reset                                 => perst
     );
 
   --+++++++++++++++++++++++++++++++++++++++++++++++++

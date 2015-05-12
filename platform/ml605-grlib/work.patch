@@ -803,7 +803,7 @@
      dsurx_pad : inpad generic map (level => cmos, voltage => x25v, tech  => padtech) port map (dsurx, dui.rxd);
      dsutx_pad : outpad generic map (level => cmos, voltage => x25v, tech => padtech) port map (dsutx, duo.txd);
      led(0) <= not dui.rxd;
-@@ -384,6 +553,187 @@ begin
+@@ -384,6 +553,199 @@ begin
    end generate;
  
  ----------------------------------------------------------------------
@@ -924,6 +924,11 @@
 +    signal dma2bus      : bus_mst2slv_array(1 downto 0);
 +    signal bus2dma      : bus_slv2mst_array(1 downto 0);
 +
++      -- temp signals
++    signal user_lnk_up    : std_logic;
++    signal user_reset     : std_logic;
++    signal buf : std_logic;
++
 +  begin
 +
 +    reset <= not rstn;
@@ -977,21 +982,28 @@
 +      pcie_clk_n              => sys_clk_n,
 +
 +      -- PCI Express slot PERST# reset signal
-+      perst_n                 => sys_reset_n,
++      perst_n                 => sys_reset_n_c,
 +
 +      bus_clk                 => clkm,
 +      bus2dma_c2s             => bus2dma(0),
 +      dma2bus_c2s             => dma2bus(0),
 +      bus2dma_s2c             => bus2dma(1),
-+      dma2bus_s2c             => dma2bus(1)
++      dma2bus_s2c             => dma2bus(1),
++
++
++      user_lnk_up_out    => user_lnk_up,
++      user_reset_out     => user_reset
 +    );
++
++    led(6) <= user_lnk_up;
++    led(7) <= user_reset;
 +  end block;
 +
 +----------------------------------------------------------------------
  ---  Memory controllers ----------------------------------------------
  ----------------------------------------------------------------------
  
-@@ -429,7 +779,7 @@ begin
+@@ -429,7 +791,7 @@ begin
  --  mig_gen : if (CFG_MIG_DDR2 = 1) generate
  
      ahb2mig0 : ahb2mig_ml605
@@ -1000,7 +1012,7 @@
      MHz => 400, Mbyte => 512, nosync => boolean'pos(CFG_MIG_CLK4=12)) --CFG_CLKDIV/12)
        port map (
      rst => rstn, clk_ahb => clkm, clk_ddr => clk_ddr,
-@@ -478,12 +828,11 @@ begin
+@@ -478,12 +840,11 @@ begin
      led(3)  <= phy_init_done;
      led(4)  <= rstn;
      led(5)  <= reset;
@@ -1014,7 +1026,7 @@
  ----------------------------------------------------------------------
  ---  System ACE I/F Controller ---------------------------------------
  ----------------------------------------------------------------------
-@@ -525,15 +874,15 @@ EP: pcie_master_target_virtex
+@@ -525,15 +886,15 @@ EP: pcie_master_target_virtex
      vendor_id        => CFG_PCIEXPVID,	 -- PCIE vendor ID
      pcie_bar_mask    => 16#FFE#,
      nsync            => 2,   -- 1 or 2 sync regs between clocks
@@ -1037,7 +1049,7 @@
      rst              => rstn,
      clk              => clkm,
      -- System Interface
-@@ -545,25 +894,25 @@ EP: pcie_master_target_virtex
+@@ -545,25 +906,25 @@ EP: pcie_master_target_virtex
      pci_exp_txn      => pci_exp_txn,
      pci_exp_rxp      => pci_exp_rxp,
      pci_exp_rxn      => pci_exp_rxn,
@@ -1071,7 +1083,7 @@
      rst          => rstn,
      clk          => clkm,
      -- System Interface
-@@ -575,7 +924,7 @@ port map(
+@@ -575,7 +936,7 @@ port map(
      pci_exp_txn  => pci_exp_txn,
      pci_exp_rxp  => pci_exp_rxp,
      pci_exp_rxn  => pci_exp_rxn,
@@ -1080,7 +1092,7 @@
      dapbo        => apbo(8),
      dahbmo       => ahbmo((CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE)),
      apbi         => apbi,
-@@ -583,17 +932,17 @@ port map(
+@@ -583,17 +944,17 @@ port map(
      ahbmi        => ahbmi,
      ahbsi        => ahbsi,
      ahbso        => ahbso(8)
@@ -1102,7 +1114,7 @@
      rst          => rstn,
      clk          => clkm,
      -- System Interface
-@@ -605,11 +954,11 @@ port map(
+@@ -605,11 +966,11 @@ port map(
      pci_exp_txn  => pci_exp_txn,
      pci_exp_rxp  => pci_exp_rxp,
      pci_exp_rxn  => pci_exp_rxn,
@@ -1119,7 +1131,7 @@
    );
  end generate;
  ----------------------------------------------------------------------
-@@ -792,6 +1141,13 @@ end generate;
+@@ -792,6 +1153,13 @@ end generate;
        port map (emdc, etho.mdc);
    end generate;
  
@@ -1133,7 +1145,7 @@
  -----------------------------------------------------------------------
  ---  AHB ROM ----------------------------------------------------------
  -----------------------------------------------------------------------
-@@ -832,7 +1188,7 @@ end generate;
+@@ -832,7 +1200,7 @@ end generate;
  ---  Drive unused bus elements  ---------------------------------------
  -----------------------------------------------------------------------
  
@@ -1569,6 +1581,15 @@
    -- Debug support unit
    signal dsubre     : std_ulogic;
  
+@@ -128,7 +128,7 @@ constant SIM_BYPASS_INIT_CAL : string :=
+   signal gmiiclk_n  : std_logic := '0';
+ 
+   -- Output signals for LEDs
+-  signal led       : std_logic_vector(6 downto 0);
++  signal led       : std_logic_vector(7 downto 0);
+ 
+ signal iic_scl_main, iic_sda_main : std_logic;
+ signal iic_scl_dvi, iic_sda_dvi : std_logic;
 @@ -151,9 +151,8 @@ signal clk_33          : std_ulogic := '
  
  ---------------------pcie----------------------------------------------
