@@ -159,10 +159,16 @@ begin -- architecture
     -- We don't handle abort requests
     abort_ack <= '0';
 
-    -- The eop signal is always low. If we set it to high in the last double
-    -- word of the apkt where apkt_eop is high, the dma engine becomes confused
-    -- and stops requesting packets :S.
-    eop <= '0';
+    -- Set the eop signal high in the last double word of the apkt where
+    -- apkt_eop is high.
+    -- NB. This confuses the testbench, resulting in it only sending two
+    -- packets. The PC software requires this behaviour though, and the
+    -- testbench is wrong here.
+    if vect2uint(curr_bcnt) <= 8 then
+      eop <= apkt_eop;
+    else
+      eop <= '0';
+    end if;
 
     -- Default values for the outgoing sync signals
     apkt_ready <= '0';
