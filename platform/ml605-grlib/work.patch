@@ -1607,8 +1607,8 @@
    gmiiclk_n    <= not gmiiclk_n after 4 ns;
    clk_33       <= not clk_33 after 15 ns;
 -  rst        <= '1', '0' after 200 us;
-+  ep_sys_clk_p <= not ep_sys_clk_p after 2 ns;
-+  ep_sys_clk_n <= not ep_sys_clk_n after 2 ns;
++  ep_sys_clk_p <= not ep_sys_clk_p after 2 ns; -- 2 ns half cycle -> 250 MHz
++  ep_sys_clk_n <= not ep_sys_clk_n after 2 ns; -- 2 ns half cycle -> 250 MHz
 +  rst        <= '1', '0' after 20 us;
    rstn1      <= not rst;
 +  cor_sys_reset_n <= not rst;
@@ -1678,7 +1678,7 @@
  
 +  pcie: entity work.xilinx_pcie_tb
 +    generic map (
-+      REF_CLK_FREQ                            => 2, -- 0 - 100 MHz, 1 - 125 MHz,  2 - 250 MHz
++      REF_CLK_FREQ                            => 1, -- 0 - 100 MHz, 1 - 125 MHz,  2 - 250 MHz
 +      PL_FAST_TRAIN                           => "TRUE",
 +      LINK_CAP_MAX_LINK_WIDTH                 => 4, -- 1 - x1, 2 - x2, 4 - x4, 8 - x8
 +      DEVICE_ID                               => 16#0007#,

@@ -403,7 +403,7 @@ begin
       UPCONFIG_CAPABLE                             => "FALSE",
       LINK_CAP_MAX_LINK_SPEED                      => X"1",
       LINK_CTRL2_TARGET_LINK_SPEED                 => X"0",
-      USER_CLK_FREQ                                => 3 -- 250 MHz
+      USER_CLK_FREQ                                => 2 -- 125 MHz
     )
     port map (
       ---------------------------------------------------------
@@ -567,7 +567,7 @@ begin
       user_reset                     => user_reset,
       user_clk                       => user_clk,
       user_lnk_up                    => user_lnk_up,
-      clk_period_in_ns               => uint2vect(4, 8), -- 8 is 125 MHz, use 125 MHz for x4 GEN1, 250 MHz for x8 GEN1 and GEN2
+      clk_period_in_ns               => uint2vect(8, 8), -- 8 is 125 MHz, use 125 MHz for x4 GEN1, 250 MHz for x8 GEN1 and GEN2
 
       user_interrupt                 => '0',
 
