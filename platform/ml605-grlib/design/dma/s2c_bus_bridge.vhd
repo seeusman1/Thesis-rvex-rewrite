@@ -110,6 +110,12 @@ architecture Behavioral of s2c_bus_bridge is
   signal curr_bcnt          : std_logic_vector(0 to 9);
   signal next_bcnt          : std_logic_vector(0 to 9);
 
+  signal curr_data          : std_logic_vector(0 to 63);
+  signal next_data          : std_logic_vector(0 to 63);
+
+  signal curr_sop, curr_eop : std_logic;
+  signal next_sop, next_eop : std_logic;
+
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -120,14 +126,21 @@ begin -- architecture
       curr_state <= wait_pkt;
       curr_addr  <= (others => '0');
       curr_bcnt  <= (others => '0');
+      curr_data  <= (others => '0');
+      curr_sop   <= '0';
+      curr_eop   <= '0';
     elsif rising_edge(clk) then
       curr_state <= next_state;
       curr_addr  <= next_addr;
       curr_bcnt  <= next_bcnt;
+      curr_data  <= next_data;
+      curr_sop   <= next_sop;
+      curr_eop   <= next_eop;
     end if;
   end process;
 
-  handle_cmd: process (curr_addr, curr_state, curr_bcnt,
+  handle_cmd: process (curr_addr, curr_state, curr_bcnt, curr_data,
+                       curr_sop, curr_eop,
                        apkt_req, apkt_addr, apkt_bcount,
                        src_rdy, data, valid, eop,
                        bus2dma.ack) is
@@ -136,6 +149,9 @@ begin -- architecture
     next_state <= curr_state;
     next_addr  <= curr_addr;
     next_bcnt  <= curr_bcnt;
+    next_data  <= curr_data;
+    next_sop   <= curr_sop;
+    next_eop   <= curr_eop;
 
     -- We don't handle abort requests
     abort_ack <= '0';
@@ -171,16 +187,18 @@ begin -- architecture
         dst_rdy <= '1';
 
         if src_rdy = '1' then
+          -- Store loaded data
+          next_data <= data;
+          next_sop  <= sop;
+          next_eop  <= eop;
           -- New data loaded, continue to writing
           next_state <= write_low;
         end if;
 
       when write_low =>
-        -- Note: we assume `src_rdy = '1'` and thus that data, sop and eop
-        -- are valid at least untill the next cycle where `dst_rdy = '1'`
         dma2bus.address <= curr_addr;
         -- Transmit the lower word
-        dma2bus.writeData <= data(32 to 63);
+        dma2bus.writeData <= curr_data(32 to 63);
         dma2bus.writeEnable <= '1';
 
         if bus2dma.ack = '1' then
@@ -194,7 +212,7 @@ begin -- architecture
           else
             -- Start writing the next word, to speed up the transfer
             dma2bus.address <= uint2vect(vect2uint(curr_addr) + 4, 32);
-            dma2bus.writeData <= data(0 to 31);
+            dma2bus.writeData <= curr_data(0 to 31);
 
             -- Decrement the byte count
             next_bcnt  <= uint2vect(vect2uint(curr_bcnt) - 4, 10);
@@ -205,7 +223,7 @@ begin -- architecture
       when write_high =>
         -- Transmit the upper word
         dma2bus.address <= curr_addr;
-        dma2bus.writeData <= data(0 to 31);
+        dma2bus.writeData <= curr_data(0 to 31);
         dma2bus.writeEnable <= '1';
 
         if bus2dma.ack = '1' then
