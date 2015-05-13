@@ -112,6 +112,8 @@ architecture Behavioral of c2s_bus_bridge is
 
   signal curr_sop, next_sop : std_logic;
 
+  signal curr_apkt_eop      : std_logic;
+  signal next_apkt_eop      : std_logic;
 
   signal curr_data          : std_logic_vector(0 to CORE_DATA_WIDTH-1);
   signal next_data          : std_logic_vector(0 to CORE_DATA_WIDTH-1);
@@ -124,18 +126,22 @@ begin -- architecture
   proc_clk: process (reset, user_rst_n, clk) is
   begin
     if reset = '1' or user_rst_n = '0' then
-      curr_state <= wait_pkt;
-      curr_addr  <= (others => '0');
-      curr_bcnt  <= (others => '0');
-      curr_sop   <= '0';
-      curr_data  <= (others => '0');
+      curr_state      <= wait_pkt;
+      curr_addr       <= (others => '0');
+      curr_bcnt       <= (others => '0');
+
+      curr_data       <= (others => '0');
+      curr_sop        <= '0';
+      curr_apkt_eop   <= '0';
 
     elsif rising_edge(clk) then
-      curr_state <= next_state;
-      curr_addr  <= next_addr;
-      curr_bcnt  <= next_bcnt;
-      curr_sop   <= next_sop;
-      curr_data  <= next_data;
+      curr_state    <= next_state;
+      curr_addr     <= next_addr;
+      curr_bcnt     <= next_bcnt;
+
+      curr_data     <= next_data;
+      curr_sop      <= next_sop;
+      curr_apkt_eop <= next_apkt_eop;
     end if;
   end process;
 
@@ -147,11 +153,13 @@ begin -- architecture
                        dst_rdy) is
   begin
     -- Make sure that the state only changes when set explicitly
-    next_state <= curr_state;
-    next_addr  <= curr_addr;
-    next_bcnt  <= curr_bcnt;
-    next_sop   <= curr_sop;
-    next_data  <= curr_data;
+    next_state      <= curr_state;
+    next_addr       <= curr_addr;
+    next_bcnt       <= curr_bcnt;
+
+    next_data       <= curr_data;
+    next_sop        <= curr_sop;
+    next_apkt_eop   <= curr_apkt_eop;
 
     -- Set the sop signal
     sop <= curr_sop;
@@ -159,13 +167,13 @@ begin -- architecture
     -- We don't handle abort requests
     abort_ack <= '0';
 
-    -- Set the eop signal high in the last double word of the apkt where
+    -- Set the eop signal high in the last double word of the apkt when
     -- apkt_eop is high.
     -- NB. This confuses the testbench, resulting in it only sending two
     -- packets. The PC software requires this behaviour though, and the
     -- testbench is wrong here.
     if vect2uint(curr_bcnt) <= 8 then
-      eop <= apkt_eop;
+      eop <= curr_apkt_eop;
     else
       eop <= '0';
     end if;
@@ -207,6 +215,8 @@ begin -- architecture
           next_bcnt <= apkt_bcount;
           -- Indicate that we are starting a new transfer
           next_sop <= '1';
+          -- Store if this is the last apkt of the packet
+          next_apkt_eop <= apkt_eop;
           -- Change to read_low
           next_state <= read_low;
         end if;
