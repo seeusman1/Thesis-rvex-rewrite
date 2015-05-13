@@ -337,6 +337,7 @@ begin -- architecture
       outNetwork(RCFG.numLaneGroupsLog2)(i).readEnable_r
       and not (
         outNetwork(RCFG.numLaneGroupsLog2)(i).hit
+        or outNetwork(RCFG.numLaneGroupsLog2)(i).bypass_r
         or outNetwork(RCFG.numLaneGroupsLog2)(i).busFault
         or inNetwork(RCFG.numLaneGroupsLog2)(i).ifaceFault
       );

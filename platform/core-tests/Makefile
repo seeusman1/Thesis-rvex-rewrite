@@ -33,7 +33,7 @@ help:
 	@echo " directory. All core configurations will be tested. Core configurations can"
 	@echo " also be tested in parallel using up to N threads using make's -j <N> option."
 	@echo " If any test fails, make will return exit code 1. The logs for each"
-	@echo " configuration are written to <configuration>.log.
+	@echo " configuration are written to <configuration>.log."
 	@echo ""
 	@echo " Make targets:"
 	@echo ""
