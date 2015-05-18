@@ -111,7 +111,7 @@ clean: clean-ex
 # source files as well, which may not have been put in the patch file yet).
 .PHONY: very-clean
 very-clean: clean
-	rm -Ir work
+	rm -Irf work
 
 
 #------------------------------------------------------------------------------
