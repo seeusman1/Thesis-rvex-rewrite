@@ -58,6 +58,7 @@ architecture Behavioral of testbench is
   signal rv2icache_fetch        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal rv2icache_cancel       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_instr        : rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+  signal icache2rv_busFault     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_affinity     : std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
   
   -- Data cache interface signals.
@@ -68,6 +69,8 @@ architecture Behavioral of testbench is
   signal rv2dcache_writeEnable  : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal rv2dcache_bypass       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_readData     : rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_busFault     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_ifaceFault   : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
   -- Cache to arbiter interface signals.
   signal cache2arb_bus          : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -134,6 +137,7 @@ begin -- architecture
       rv2imem_cancel            => rv2icache_cancel,
       imem2rv_instr             => icache2rv_instr,
       imem2rv_affinity          => icache2rv_affinity,
+      imem2rv_busFault          => icache2rv_busFault,
       
       -- Data memory interface.
       rv2dmem_addr              => rv2dcache_addr,
@@ -142,6 +146,8 @@ begin -- architecture
       rv2dmem_writeMask         => rv2dcache_writeMask,
       rv2dmem_writeEnable       => rv2dcache_writeEnable,
       dmem2rv_readData          => dcache2rv_readData,
+      dmem2rv_ifaceFault        => dcache2rv_busFault,
+      dmem2rv_busFault          => dcache2rv_ifaceFault,
       
       -- Control/debug bus interface.
       dbg2rv_addr               => dbg2rv_addr,
@@ -316,6 +322,7 @@ begin -- architecture
       rv2icache_fetch           => rv2icache_fetch,
       rv2icache_cancel          => rv2icache_cancel,
       icache2rv_instr           => icache2rv_instr,
+      icache2rv_busFault        => icache2rv_busFault,
       icache2rv_affinity        => icache2rv_affinity,
       
       -- Core data memory interface.
@@ -326,6 +333,8 @@ begin -- architecture
       rv2dcache_writeEnable     => rv2dcache_writeEnable,
       rv2dcache_bypass          => rv2dcache_bypass,
       dcache2rv_readData        => dcache2rv_readData,
+      dcache2rv_busFault        => dcache2rv_busFault,
+      dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
       
       -- Bus master interface.
       cache2bus_bus             => cache2arb_bus,
@@ -408,6 +417,15 @@ begin -- architecture
           end if;
         end if;
         
+      end if;
+      
+      -- Force a bus fault for addresses starting with 0xFF in order to test
+      -- cache behavior in such a case.
+      if arb2mem_bus.address(31 downto 24) = X"FF" then
+        mem2arb_bus.readData <= X"01234567";
+        mem2arb_bus.fault <= '1';
+      else
+        mem2arb_bus.fault <= '0';
       end if;
       
     end loop;

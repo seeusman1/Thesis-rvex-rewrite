@@ -242,7 +242,15 @@ entity core_br is
     
     -- Whether debug traps are to be handled normally or by halting execution
     -- for debugging through the external bebug bus.
-    cxplif2br_extDebug          : in  std_logic_vector(S_BR to S_BR)
+    cxplif2br_extDebug          : in  std_logic_vector(S_BR to S_BR);
+    
+    ---------------------------------------------------------------------------
+    -- Trace output signals
+    ---------------------------------------------------------------------------
+    -- Trap information for the trace unit (this first passes through the
+    -- pipelane to sync up with all the other signals).
+    br2pl_traceTrapInfo         : out trap_info_array(S_IF to S_IF);
+    br2pl_traceTrapPoint        : out rvex_address_array(S_IF to S_IF)
     
   );
 end core_br;
@@ -334,6 +342,10 @@ architecture Behavioral of core_br is
   signal simAction              : rvex_string_builder_type;
   -- pragma translate_on
   
+  -- Trap information for the trace unit.
+  signal traceTrapInfo          : trap_info_array(S_IF to S_IF);
+  signal traceTrapPoint         : rvex_address_array(S_IF to S_IF);
+
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -405,7 +417,9 @@ begin -- architecture
     
     -- Set trap information defaults.
     br2cxplif_trapInfo(S_BR)      <= pl2br_trapToHandleInfo(S_BR);
+    traceTrapInfo(S_IF)     <= pl2br_trapToHandleInfo(S_BR);
     br2cxplif_trapPoint(S_BR)     <= pl2br_trapToHandlePoint(S_BR);
+    traceTrapPoint(S_IF)    <= pl2br_trapToHandlePoint(S_BR);
     br2cxplif_exDbgTrapInfo(S_BR) <= pl2br_trapToHandleInfo(S_BR);
     
     -- Don't try to fetch the previous instruction first by default.
@@ -471,6 +485,7 @@ begin -- architecture
         -- to the instruction which caused the trap.
         nextPCsrc(S_BR) <= NEXT_PC_TRAP_POINT;
         br2cxplif_trapInfo(S_BR).active <= '0';
+        traceTrapInfo(S_IF).active <= '0';
         br2cxplif_exDbgTrapInfo(S_BR).active <= '0';
         
         -- pragma translate_off
@@ -489,6 +504,7 @@ begin -- architecture
         -- trap point.
         nextPCsrc(S_BR) <= NEXT_PC_TRAP_POINT;
         br2cxplif_trapInfo(S_BR).active <= '0';
+        traceTrapInfo(S_IF).active <= '0';
         
         if rvex_isStopTrap(pl2br_trapToHandleInfo(S_BR)) = '1' then
           
@@ -525,6 +541,7 @@ begin -- architecture
         -- current interrupt ID.
         if rvex_isInterruptTrap(pl2br_trapToHandleInfo(S_BR)) = '1' then
           br2cxplif_trapInfo(S_BR).arg <= cxplif2br_irqID(S_BR);
+          traceTrapInfo(S_IF).arg <= cxplif2br_irqID(S_BR);
           br2cxplif_irqAck(S_BR) <= not stall;
         end if;
         
@@ -805,6 +822,44 @@ begin -- architecture
     branch(S_IF) <= branching(S_BR) or branching_r;
     
   end block;
+  
+  
+  -----------------------------------------------------------------------------
+  -- Register the trap trace data in case of a double fetch
+  -----------------------------------------------------------------------------
+  trap_trace_double_fetch_block: block is
+    signal traceTrapInfo_r    : trap_info_type;
+    signal traceTrapPoint_r   : rvex_address_type;
+    signal traceTrapFromReg   : std_logic;
+  begin
+    trap_trace_double_fetch_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          traceTrapInfo_r <= TRAP_INFO_NONE;
+          traceTrapPoint_r <= (others => '0');
+          traceTrapFromReg <= '0';
+        elsif clkEn = '1' and stall = '0' then
+          traceTrapInfo_r <= traceTrapInfo(S_IF);
+          traceTrapPoint_r <= traceTrapPoint(S_IF);
+          traceTrapFromReg <= doubleFetch(S_IF);
+        end if;
+      end if;
+    end process;
+    
+    -- Select the right trace signal.
+    br2pl_traceTrapInfo(S_IF)
+      <= traceTrapInfo_r
+      when traceTrapFromReg = '1'
+      else traceTrapInfo(S_IF);
+
+    br2pl_traceTrapPoint(S_IF)
+      <= traceTrapPoint_r
+      when traceTrapFromReg = '1'
+      else traceTrapPoint(S_IF);
+    
+  end block;
+  
   
   -----------------------------------------------------------------------------
   -- Determine which operation to perform next

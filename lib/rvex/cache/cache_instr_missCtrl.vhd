@@ -135,8 +135,14 @@ architecture Behavioral of cache_instr_missCtrl is
   -- When set, returns to idle state.
   signal resetState             : std_logic;
   
-  -- When set, the fault state is selected next.
+  -- When set, the bus fault output will be asserted until stall stall goes low
+  -- (at which point the core should start handling it).
   signal fault                  : std_logic;
+  
+  -- This register will always be cleared when stall is low, and will otherwise
+  -- be set when fault is high. Together with fault, it forms the bus_fault
+  -- signal, which is sent to the core.
+  signal fault_r                : std_logic;
   
   -- Next state.
   signal state_next             : natural range 0 to ACCESSES_PER_LINE+1;
@@ -145,10 +151,16 @@ architecture Behavioral of cache_instr_missCtrl is
   constant IDLE_STATE           : natural := 0;
   constant REQ_N_STATE          : natural := ACCESSES_PER_LINE;
   constant WAIT_STATE           : natural := ACCESSES_PER_LINE+1;
-  constant FAULT_STATE          : natural := ACCESSES_PER_LINE+2;
   
   -- Line buffer registers.
   signal line_buffer            : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+  
+  -- To get around a weird bug in XST, we need to provide some extra delay
+  -- between the line buffer registers and the inputs of the block RAM, because
+  -- it's having trouble doing this on its own to avoid hold violations.
+  signal line_buffer_d          : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+  attribute keep                : string;
+  attribute keep of line_buffer_d : signal is "true";
   
 --=============================================================================
 begin -- architecture
@@ -200,8 +212,14 @@ begin -- architecture
     if rising_edge(clk) then
       if reset = '1' then
         state <= 0;
+        fault_r <= '0';
       else
         state <= state_next;
+        if stall = '0' then
+          fault_r <= '0';
+        elsif fault = '1' then
+          fault_r <= '1';
+        end if;
       end if;
     end if;
   end process;
@@ -211,7 +229,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Determine the values for the advance and resetState signals.
   fsm_decode_1: process (
-    state, clkEnCPU, clkEnBus, updateEnable, busToCache.ack
+    state, clkEnCPU, clkEnBus, stall, updateEnable, busToCache.ack
   ) is
   begin
     
@@ -229,14 +247,11 @@ begin -- architecture
       if clkEnCPU = '1' then
         resetState <= '1';
       end if;
-    elsif state = FAULT_STATE then
-      if (clkEnCPU = '1') and (stall = '0') then
-        resetState <= '1';
-      end if;
     else
       if clkEnBus = '1' and busToCache.ack = '1' then
         if busToCache.fault = '1' then
           fault <= '1';
+          resetState <= '1';
         else
           if clkEnCPU = '1' and state = REQ_N_STATE then
             resetState <= '1';
@@ -251,7 +266,6 @@ begin -- architecture
   -- Determine the next state based on the advance and resetState signals.
   state_next <= IDLE_STATE  when resetState = '1' else
                 state + 1   when advance = '1' else
-                FAULT_STATE when fault = '1' else
                 state;
   
   -- Determine the memory bus address and whether we should request a read.
@@ -290,10 +304,13 @@ begin -- architecture
   end process;
   
   -- Generate the done signal.
-  done <= '1' when state_next = WAIT_STATE or resetState = '1' else '0';
+  done <= '1' when (
+    (state_next = WAIT_STATE or resetState = '1')
+    and ((fault or fault_r) = '0')
+  ) else '0';
   
   -- Generate the bus fault signal.
-  busFault <= '1' when state = FAULT_STATE else '0';
+  busFault <= fault_r;
   
   -- Generate the blockReconfig signal.
   blockReconfig <= '1' when state /= IDLE_STATE else updateEnable;
@@ -308,18 +325,24 @@ begin -- architecture
             <= busToCache.readData;
         end if;
       end if;
+      
+      -- Prevent hold timing violations on this signal, because XST doesn't
+      -- know how to deal with them for some reason.
+      if falling_edge(clk) then
+        line_buffer_d <= line_buffer;
+      end if;
     end process;
   end generate;
   
   -- Forward the cache line to the cache memory.
   line_buf_forward_a: if ACCESSES_PER_LINE > 1 generate
     line(icacheLineWidth(RCFG, CCFG)-32-1 downto 0)
-      <= line_buffer(icacheLineWidth(RCFG, CCFG)-32-1 downto 0);
+      <= line_buffer_d(icacheLineWidth(RCFG, CCFG)-32-1 downto 0);
   end generate;
   
   line(icacheLineWidth(RCFG, CCFG)-1 downto icacheLineWidth(RCFG, CCFG)-32) <=
     busToCache.readData when state = WAIT_STATE - 1 else
-    line_buffer(icacheLineWidth(RCFG, CCFG)-1 downto icacheLineWidth(RCFG, CCFG)-32);
+    line_buffer_d(icacheLineWidth(RCFG, CCFG)-1 downto icacheLineWidth(RCFG, CCFG)-32);
     
 end Behavioral;
 

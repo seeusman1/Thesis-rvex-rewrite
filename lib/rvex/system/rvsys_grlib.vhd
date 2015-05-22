@@ -233,6 +233,7 @@ architecture Behavioral of rvsys_grlib is
   signal rv2icache_cancel       : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_instr        : rvex_syllable_array(2**CFG.core.numLanesLog2-1 downto 0);
   signal icache2rv_affinity     : std_logic_vector(2**CFG.core.numLaneGroupsLog2*CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_busFault     : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   
   -- Data cache interface signals.
   signal rv2dcache_addr         : rvex_address_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
@@ -242,6 +243,8 @@ architecture Behavioral of rvsys_grlib is
   signal rv2dcache_writeEnable  : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal rv2dcache_bypass       : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_readData     : rvex_data_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_ifaceFault   : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_busFault     : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   
   -- Trace data interface signals.
   signal rv2trace_push          : std_logic;
@@ -257,9 +260,10 @@ architecture Behavioral of rvsys_grlib is
   signal bus2cache_invalSource  : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal bus2cache_invalEnable  : std_logic;
   
-  -- Flush control signals.
+  -- Cache control signals.
   signal sc2icache_flush        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal sc2dcache_flush        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+  signal sc2dcache_bypass       : std_logic;
   
   -- Debug bus demuxer to global control registers.
   signal demux2glob             : bus_mst2slv_type;
@@ -336,7 +340,7 @@ begin -- architecture
         rctrl2rv_run              => rctrl2rv_run,
         rv2rctrl_idle             => rv2rctrl_idle,
         rctrl2rv_reset            => rctrl2rv_reset,
-        rctrl2rv_resetVect        => rctrl2rv_resetVect,
+        --rctrl2rv_resetVect        => rctrl2rv_resetVect,
         
         -- Common memory interface.
         rv2mem_decouple           => rv2cache_decouple,
@@ -350,6 +354,7 @@ begin -- architecture
         rv2imem_cancel            => rv2icache_cancel,
         imem2rv_instr             => icache2rv_instr,
         imem2rv_affinity          => icache2rv_affinity,
+        imem2rv_busFault          => icache2rv_busFault,
         
         -- Data memory interface.
         rv2dmem_addr              => rv2dcache_addr,
@@ -358,6 +363,8 @@ begin -- architecture
         rv2dmem_writeMask         => rv2dcache_writeMask,
         rv2dmem_writeEnable       => rv2dcache_writeEnable,
         dmem2rv_readData          => dcache2rv_readData,
+        dmem2rv_busFault          => dcache2rv_busFault,
+        dmem2rv_ifaceFault        => dcache2rv_ifaceFault,
         
         -- Control/debug bus interface.
         dbg2rv_addr               => dbg2rv_addr,
@@ -555,7 +562,9 @@ begin -- architecture
   -- everything in the high 2 GiB memory space is mapped to peripherals and
   -- should not be cached.
   bypass_gen: for laneGroup in 2**CFG.core.numLaneGroupsLog2-1 downto 0 generate
-    rv2dcache_bypass(laneGroup) <= rv2dcache_addr(laneGroup)(31);
+    rv2dcache_bypass(laneGroup)
+      <= rv2dcache_addr(laneGroup)(31)
+      or sc2dcache_bypass;
   end generate;
   
   -----------------------------------------------------------------------------
@@ -586,6 +595,7 @@ begin -- architecture
       rv2icache_cancel          => rv2icache_cancel,
       icache2rv_instr           => icache2rv_instr,
       icache2rv_affinity        => icache2rv_affinity,
+      icache2rv_busFault        => icache2rv_busFault,
       
       -- Core data memory interface.
       rv2dcache_addr            => rv2dcache_addr,
@@ -595,6 +605,8 @@ begin -- architecture
       rv2dcache_writeEnable     => rv2dcache_writeEnable,
       rv2dcache_bypass          => rv2dcache_bypass,
       dcache2rv_readData        => dcache2rv_readData,
+      dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
+      dcache2rv_busFault        => dcache2rv_busFault,
       
       -- Bus master interface.
       cache2bus_bus             => cache2bridge_bus,
@@ -626,6 +638,7 @@ begin -- architecture
     if rising_edge(clk) then
       if resetBus = '1' then
         defaultState;
+        sc2dcache_bypass <= '0';
       elsif clkEnBus = '1' then
         defaultState;
         
@@ -642,9 +655,17 @@ begin -- architecture
         -- Address 0x01 write: data cache flush bits.
         if bus_writing(demux2cache, "------------------------00000001") then
           sc2dcache_flush <= demux2cache.writeData(
-            2**CFG.core.numLaneGroupsLog2 + 23 downto 24
+            2**CFG.core.numLaneGroupsLog2 + 15 downto 16
           );
         end if;
+        
+        -- Address 0x03 write: bypass flag.
+        if bus_writing(demux2cache, "------------------------00000011") then
+          sc2dcache_bypass <= demux2cache.writeData(0);
+        end if;
+        
+        -- Allow readback of bypass flag.
+        cache2demux.readData(0) <= sc2dcache_bypass;
         
       end if;
     end if;

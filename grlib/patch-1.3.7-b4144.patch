@@ -1,3 +1,32 @@
+diff -rupN --exclude tech clean/grlib-gpl-1.3.7-b4144/bin/Makefile grlib-gpl-1.3.7-b4144/bin/Makefile
+--- clean/grlib-gpl-1.3.7-b4144/bin/Makefile	2014-04-16 16:51:05.000000000 +0200
++++ grlib-gpl-1.3.7-b4144/bin/Makefile	2015-04-24 16:57:57.588895353 +0200
+@@ -303,7 +303,7 @@ vsim-fix:
+ 	@mv make.work2 make.work
+ 
+ modelsim: compile.vsim
+-	@MTI_DEFAULT_LIB_TYPE=0 vsim -c -quiet -do "do libs.do; quit"
++	MTI_DEFAULT_LIB_TYPE=0 vsim -c -quiet -do "do libs.do; quit"
+ 
+ vsim-grlib: modelsim
+ 	make vsim
+@@ -986,14 +986,14 @@ endif
+ 	@echo "set_property strategy $(PLANAHEAD_SYNTH_STRATEGY) [get_runs synth_1]" >> ./planahead/$(TOP)_planAhead.tcl
+ 	@echo "# Elaborate design to be able to apply SDC to top level" >> ./planahead/$(TOP)_planAhead_run.tcl
+ 	@echo "launch_runs -jobs 1 synth_1" >> ./planahead/$(TOP)_planAhead_run.tcl
+-	@echo "wait_on_run -timeout 120 synth_1" >> ./planahead/$(TOP)_planAhead_run.tcl
++	@echo "wait_on_run -timeout 1200 synth_1" >> ./planahead/$(TOP)_planAhead_run.tcl
+ 	@echo "# Launch place and route" >> ./planahead/$(TOP)_planAhead_run.tcl
+ 	@echo "set_property strategy $(PLANAHEAD_IMPL_STRATEGY) [get_runs impl_1]" >> ./planahead/$(TOP)_planAhead_run.tcl
+ #	@echo "set_property steps.map.args.mt on [get_runs impl_1]" >> ./planahead/$(TOP)_planAhead_run.tcl
+ #	@echo "set_property steps.par.args.mt 4 [get_runs impl_1]" >> ./planahead/$(TOP)_planAhead_run.tcl
+ 	@echo "set_property steps.bitgen.args.m true [get_runs impl_1]" >> ./planahead/$(TOP)_planAhead_run.tcl
+ 	@echo "launch_runs -jobs 1 impl_1 -to_step Bitgen" >> ./planahead/$(TOP)_planAhead_run.tcl
+-	@echo "wait_on_run -timeout 120 impl_1" >> ./planahead/$(TOP)_planAhead_run.tcl
++	@echo "wait_on_run -timeout 1200 impl_1" >> ./planahead/$(TOP)_planAhead_run.tcl
+ ifeq ("$(PROTOBOARD)","zedBoard")
+ 	@echo "export_hardware [get_files ./planahead/xps_files/leon3_zedboard/leon3_zedboard.xmp] [get_runs impl_1] -bitstream" >> ./planahead/$(TOP)_planAhead_run.tcl
+ endif
 diff -rupN --exclude tech clean/grlib-gpl-1.3.7-b4144/lib/grlib/amba/ahbctrl.vhd grlib-gpl-1.3.7-b4144/lib/grlib/amba/ahbctrl.vhd
 --- clean/grlib-gpl-1.3.7-b4144/lib/grlib/amba/ahbctrl.vhd	2014-04-16 16:51:32.000000000 +0200
 +++ grlib-gpl-1.3.7-b4144/lib/grlib/amba/ahbctrl.vhd	2015-01-11 13:10:36.005196409 +0100
