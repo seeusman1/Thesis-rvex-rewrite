@@ -1681,7 +1681,7 @@
  
 +  pcie: entity work.xilinx_pcie_tb
 +    generic map (
-+      REF_CLK_FREQ                            => 1, -- 0 - 100 MHz, 1 - 125 MHz,  2 - 250 MHz
++      REF_CLK_FREQ                            => 2, -- 0 - 100 MHz, 1 - 125 MHz,  2 - 250 MHz
 +      PL_FAST_TRAIN                           => "TRUE",
 +      LINK_CAP_MAX_LINK_WIDTH                 => 4, -- 1 - x1, 2 - x2, 4 - x4, 8 - x8
 +      DEVICE_ID                               => 16#0007#,
