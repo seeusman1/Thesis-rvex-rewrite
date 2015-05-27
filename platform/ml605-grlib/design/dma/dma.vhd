@@ -53,16 +53,18 @@ library unisim;
 use unisim.vcomponents.all;
 
 library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
 use rvex.bus_pkg.all;
-use rvex.rvsys_grlib_pkg.all;
+use rvex.common_pkg.all;
+use rvex.core_pkg.all;
+use rvex.utils_pkg.all;
 
 use work.constants.all;
 
 entity dma is
   generic (
-    NO_OF_LANES             : integer := 4
+    NO_OF_LANES             : integer := 4;
+    NO_CONTEXTS             : integer := 4;
+    NO_RVEX                 : integer := 1
   );
   port (
     ---------------------------------------------------------------------------
@@ -97,7 +99,14 @@ entity dma is
     bus2dma_c2s             : in  bus_slv2mst_type;
     dma2bus_c2s             : out bus_mst2slv_type;
     bus2dma_s2c             : in  bus_slv2mst_type;
-    dma2bus_s2c             : out bus_mst2slv_type
+    dma2bus_s2c             : out bus_mst2slv_type;
+
+    ---------------------------------------------------------------------------
+    -- Run control interfaces
+    ---------------------------------------------------------------------------
+    rctrl_clk               : in std_logic;
+    rctrl2rv                : out rvex_rctrl2rv_array(NO_CONTEXTS*NO_RVEX-1 downto 0);
+    rv2rctrl                : in  rvex_rv2rctrl_array(NO_CONTEXTS*NO_RVEX-1 downto 0)
   );
 end entity;
 
@@ -741,8 +750,29 @@ begin
       reg_rd_data                    => reg_rd_data
   );
 
-  -- Tie reg_rd_data to 0, as otherwise the whole register interface doesn't work
-  reg_rd_data <= (others => '0');
+  -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+  -- Register interface
+  register_interface_inst: entity work.registers
+    generic map (
+      NO_RVEX                 => NO_RVEX,
+      NO_CONTEXTS             => NO_CONTEXTS
+    )
+    port map (
+      reset                   => reset,
+
+      reg_clk                 => user_clk,
+      reg_wr_addr             => reg_wr_addr,
+      reg_wr_en               => reg_wr_en,
+      reg_wr_be               => reg_wr_be,
+      reg_wr_data             => reg_wr_data,
+      reg_rd_addr             => reg_rd_addr,
+      reg_rd_be               => reg_rd_be,
+      reg_rd_data             => reg_rd_data,
+
+      rctrl_clk               => bus_clk,
+      rctrl2rv                => rctrl2rv,
+      rv2rctrl                => rv2rctrl
+    );
 
   -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
   -- c2s to r-VEX bus

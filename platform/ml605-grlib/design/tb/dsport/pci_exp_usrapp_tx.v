@@ -264,6 +264,33 @@ end
  `endif
     // - Application - 0
  `ifdef CH0
+    TSK_TX_MEMORY_READ_32_1DW(`DMA_OFFSET_ADRS + 16'h8000);
+    $display("[%t] Read iface register at address = %h, value = %h",$time, `DMA_OFFSET_ADRS + 16'h8000, P_READ_DATA);
+
+    TSK_TX_MEMORY_READ_32_1DW(`DMA_OFFSET_ADRS + 16'h8008);
+    $display("[%t] Read NO_CONTEXTS register at address = %h, value = %h",$time, `DMA_OFFSET_ADRS + 16'h8008, P_READ_DATA);
+
+    TSK_TX_MEMORY_READ_32_1DW(`DMA_OFFSET_ADRS + 16'h800C);
+    $display("[%t] Read NO_RVEX register at address = %h, value = %h",$time, `DMA_OFFSET_ADRS + 16'h800C, P_READ_DATA);
+
+
+    TSK_TX_MEMORY_WRITE_1DW(DEFAULT_TAG, DEFAULT_TC, (`DMA_OFFSET_ADRS + 16'h9208), 32'h42008400);
+    TSK_TX_MEMORY_WRITE_1DW(DEFAULT_TAG, DEFAULT_TC, (`DMA_OFFSET_ADRS + 16'h9018), 32'h02);
+
+    TSK_TX_MEMORY_READ_32_1DW(`DMA_OFFSET_ADRS + 16'h9208);
+    $display("[%t] Read run register at address = %h, value = %h",$time, `DMA_OFFSET_ADRS + 16'h9208, P_READ_DATA);
+    TSK_TX_MEMORY_WRITE_1DW(DEFAULT_TAG, DEFAULT_TC, (`DMA_OFFSET_ADRS + 16'h9208), 32'h0);
+
+    // Write and read run register
+    TSK_TX_MEMORY_WRITE_1DW(DEFAULT_TAG, DEFAULT_TC, (`DMA_OFFSET_ADRS + 16'h9000), 32'h01);
+    TSK_TX_MEMORY_READ_32_1DW(`DMA_OFFSET_ADRS + 16'h9000);
+    $display("[%t] Read run register at address = %h, value = %h",$time, `DMA_OFFSET_ADRS + 16'h9000, P_READ_DATA);
+
+    TSK_TX_MEMORY_WRITE_1DW(DEFAULT_TAG, DEFAULT_TC, (`DMA_OFFSET_ADRS + 16'h9018), 32'h00);
+
+    TSK_TX_MEMORY_READ_32_1DW(`DMA_OFFSET_ADRS + 16'h9008);
+    $display("[%t] Read idle register at address = %h, value = %h",$time, `DMA_OFFSET_ADRS + 16'h9008, P_READ_DATA);
+
     TSK_INIT_DMA(1'b0);  // - DMA initialization and start of operations on APP-0
  `endif
    // - Application - 1

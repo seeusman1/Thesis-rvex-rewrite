@@ -304,6 +304,50 @@ package core_pkg is
     data_miss                   => '0',
     data_writePending           => '0'
   );
+
+  -- Run control interface types
+  type rvex_rctrl2rv_type is record
+
+    -- External interrupt request signal, active high.
+    irq                : std_logic;
+
+    -- External interrupt identification. Guaranteed to be loaded in the trap
+    -- argument register in the same clkEn'd cycle where irqAck is high.
+    irqID              : rvex_address_type;
+
+    -- Active high run signal. When released, the context will stop running as
+    -- soon as possible.
+    run                : std_logic;
+
+    -- Active high context reset input. When high, the context control
+    -- registers (including PC, done and break flag) will be reset.
+    reset              : std_logic;
+
+    -- Reset vector. When the context or the entire core is reset, the PC
+    -- register will be set to this value.
+    resetVect          : rvex_address_type;
+
+  end record;
+  type rvex_rctrl2rv_array is array (natural range <>) of rvex_rctrl2rv_type;
+
+  type rvex_rv2rctrl_type is record
+
+    -- External interrupt acknowledge signal, active high. Goes high for one
+    -- clkEn'abled cycle.
+    irqAck             : std_logic;
+
+    -- Active high idle output. This is asserted when the core is no longer
+    -- doing anything.
+    idle               : std_logic;
+
+    -- Active high done output. This is asserted when the context encounters
+    -- a stop syllable. Processing a stop signal also sets the BRK control
+    -- register, which stops the core. This bit can be reset by issuing a core
+    -- reset or by means of the debug interface.
+    done               : std_logic;
+
+  end record;
+  type rvex_rv2rctrl_array is array (natural range <>) of rvex_rv2rctrl_type;
   
 end core_pkg;
 
