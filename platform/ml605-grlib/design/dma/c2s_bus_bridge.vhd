@@ -132,7 +132,7 @@ begin -- architecture
 
       curr_data       <= (others => '0');
       curr_sop        <= '0';
-      curr_apkt_eop   <= '0';
+      curr_apkt_eop   <= '1';
 
     elsif rising_edge(clk) then
       curr_state    <= next_state;
@@ -214,7 +214,8 @@ begin -- architecture
           -- Store the amount of bytes to transfer
           next_bcnt <= apkt_bcount;
           -- Indicate that we are starting a new transfer
-          next_sop <= '1';
+          -- We start a new transfer the previous transfer was an EOP
+          next_sop <= curr_apkt_eop;
           -- Store if this is the last apkt of the packet
           next_apkt_eop <= apkt_eop;
           -- Change to read_low
