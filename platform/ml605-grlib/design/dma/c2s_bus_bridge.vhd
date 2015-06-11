@@ -229,7 +229,10 @@ begin -- architecture
 
         if bus2dma.ack = '1' then
           -- Set the lower word
-          next_data(32 to 63) <= bus2dma.readData;
+          next_data(32 to 39) <= bus2dma.readData( 7 downto  0);
+          next_data(40 to 47) <= bus2dma.readData(15 downto  8);
+          next_data(48 to 55) <= bus2dma.readData(23 downto 16);
+          next_data(56 to 63) <= bus2dma.readData(31 downto 24);
 
           -- Increment the next address to read
           next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
@@ -254,7 +257,10 @@ begin -- architecture
 
         if bus2dma.ack = '1' then
           -- Set the upper word
-          next_data(0 to 31) <= bus2dma.readData;
+          next_data( 0 to  7) <= bus2dma.readData( 7 downto  0);
+          next_data( 8 to 15) <= bus2dma.readData(15 downto  8);
+          next_data(16 to 23) <= bus2dma.readData(23 downto 16);
+          next_data(24 to 31) <= bus2dma.readData(31 downto 24);
 
           -- Disable reads
           dma2bus.readEnable <= '0';

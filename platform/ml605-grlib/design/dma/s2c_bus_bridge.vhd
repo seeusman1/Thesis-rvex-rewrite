@@ -198,7 +198,10 @@ begin -- architecture
       when write_low =>
         dma2bus.address <= curr_addr;
         -- Transmit the lower word
-        dma2bus.writeData <= curr_data(32 to 63);
+        dma2bus.writeData( 7 downto  0) <= curr_data(32 to 39);
+        dma2bus.writeData(15 downto  8) <= curr_data(40 to 47);
+        dma2bus.writeData(23 downto 16) <= curr_data(48 to 55);
+        dma2bus.writeData(31 downto 24) <= curr_data(56 to 63);
         dma2bus.writeEnable <= '1';
 
         if bus2dma.ack = '1' then
@@ -223,7 +226,10 @@ begin -- architecture
       when write_high =>
         -- Transmit the upper word
         dma2bus.address <= curr_addr;
-        dma2bus.writeData <= curr_data(0 to 31);
+        dma2bus.writeData( 7 downto  0) <= curr_data( 0 to  7);
+        dma2bus.writeData(15 downto  8) <= curr_data( 8 to 15);
+        dma2bus.writeData(23 downto 16) <= curr_data(16 to 23);
+        dma2bus.writeData(31 downto 24) <= curr_data(24 to 31);
         dma2bus.writeEnable <= '1';
 
         if bus2dma.ack = '1' then
