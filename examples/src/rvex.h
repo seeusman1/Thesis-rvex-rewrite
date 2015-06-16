@@ -82,6 +82,10 @@
 #define CR_CCR_BPE              (1 << 4)
 #define CR_CCR_BPE_C            (1 << 5)
 
+// Kernel mode enable/disable bits in (S)CCR
+#define CR_CCR_KME              (1 << 8)
+#define CR_CCR_KME_C            (1 << 9)
+
 // Shorthand notation for enabling/disabling interrupts/traps (in CCR).
 #define ENABLE_IRQ              (CR_CCR = CR_CCR_IEN)
 #define DISABLE_IRQ             (CR_CCR = CR_CCR_IEN_C)

@@ -342,9 +342,9 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- 
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- CCR   |     Cause     |    Branch     |                   |b|B|r|R|i|I|
+    -- CCR   |     Cause     |    Branch     |           |k|K|   |b|B|r|R|i|I|
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- SCCR  |      ID       |                                   |b|B|r|R|i|I|
+    -- SCCR  |      ID       |                           |k|K|   |b|B|r|R|i|I|
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- 
     -- I      = Interrupt enable flag.
@@ -384,7 +384,17 @@ begin -- architecture
     --          encountered. While breakpoint-enable is cleared breakpoints are
     --          ignored, unless the external debug flag is set in the debug
     --          control register.
-    -- 
+    --
+    -- K      = Kernel mode enable flag.
+    -- k      = Kernel mode disable flag. (user mode)
+    --          The kernel mode flag is enabled on reset and is set whenever a
+    --          trap is entered, and restored when an RFI instruction is
+    --          encountered. It can be disabled by writing the kernel mode
+    --          disable flag to the saved context control register before
+    --          executing an RFI instruction. This flag can be used by the
+    --          kernel to determine if it was running in user mode or kernel
+    --          mode when a trap occured.
+    --
     -- Branch = Branch register file. Contains the current state of the branch
     --          registers. Use with caution - there is no forwarding here, and
     --          the memory read is (likely, see also rvex_pipline_pkg) done in
@@ -428,9 +438,16 @@ begin -- architecture
       permissions   => READ_WRITE
     );
     cxreg2cxplif_debugTrapEnable <= creg_readRegisterBit(l2c, c2l, CR_CCR, CR_CCR_BPE);
+
+    -- Make the kernel mode flag
+    creg_makeSetClearFlag(l2c, c2l, CR_CCR, CR_CCR_KM, CR_CCR_KM_C, '1',
+      set => cxplif2cxreg_trapInfo.active and not cxplif2cxreg_stall,
+      permissions => READ_ONLY);
+    creg_makeSetClearFlag(l2c, c2l, CR_SCCR, CR_CCR_KM, CR_CCR_KM_C, '0',
+      permissions => READ_WRITE);
     
     -- Generate the save-restore logic for the flags.
-    creg_makeSaveRestoreLogic(l2c, c2l, CR_CCR, CR_SCCR, 5, 0,
+    creg_makeSaveRestoreLogic(l2c, c2l, CR_CCR, CR_SCCR, 9, 0,
       save          => cxplif2cxreg_trapInfo.active and not cxplif2cxreg_stall,
       restore       => cxplif2cxreg_rfi and not cxplif2cxreg_stall
     );
