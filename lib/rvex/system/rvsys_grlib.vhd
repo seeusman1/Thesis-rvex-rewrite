@@ -625,6 +625,21 @@ begin -- architecture
       sc2dcache_flush           => sc2dcache_flush
       
     );
+
+  ---------------------------------------------------------------------------
+  -- Cache Control Register
+  ---------------------------------------------------------------------------
+  --
+  --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- CACHE |       |  IFL  |       |  DFL  |               |             |B|
+  --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  --
+  -- IFL    = Instruction Cache Flush bits. One bit per context.
+  --
+  -- DFL    = Data Cache Flush bits. One bit per context.
+  --
+  -- B      = Data Cache Bypass bit. This bit causes the data cache to be
+  --          globally bypassed.
   
   -- Instantiate the cache registers.
   cache_control_reg_proc: process (clk) is
