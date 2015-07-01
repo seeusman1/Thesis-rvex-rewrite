@@ -634,6 +634,7 @@ architecture Behavioral of core is
   signal rctrl2cxplif_irqID           : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2rctrl_irqAck          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal rctrl2cxplif_run             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal rctrl2cxplif_reset           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2rctrl_idle            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
 
   -- Context register logic <-> run control signals.
@@ -753,6 +754,7 @@ begin -- architecture
       rctrl2cxplif_irqID            => rctrl2cxplif_irqID,
       cxplif2rctrl_irqAck           => cxplif2rctrl_irqAck,
       rctrl2cxplif_run              => rctrl2cxplif_run,
+      rctrl2cxplif_reset            => rctrl2cxplif_reset,
       cxplif2rctrl_idle             => cxplif2rctrl_idle,
       
       -- Instruction memory interface.
@@ -831,6 +833,7 @@ begin -- architecture
       rctrl2cxplif_irq(ctxt)    <= rctrl2rv(ctxt).irq;
       rctrl2cxplif_irqID(ctxt)  <= rctrl2rv(ctxt).irqID;
       rctrl2cxplif_run(ctxt)    <= rctrl2rv(ctxt).run;
+      rctrl2cxplif_reset(ctxt)  <= rctrl2rv(ctxt).reset;
       rv2rctrl(ctxt).irqAck     <= cxplif2rctrl_irqAck(ctxt);
       rv2rctrl(ctxt).idle       <= cxplif2rctrl_idle(ctxt);
     end generate;
