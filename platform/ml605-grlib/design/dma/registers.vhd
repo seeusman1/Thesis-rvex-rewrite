@@ -185,8 +185,8 @@ begin
       when 16#9018#/8 => read_data <= reset_ctxt(1);
       when others =>
         if vect2uint(reg_rd_addr) >= 16#9200#/8 and vect2uint(reg_rd_addr) < 16#9400#/8 then
-          read_data(0 to 31) <= resetVect(1)(vect2uint(reg_rd_addr(REG_ADDR_WIDTH-6 to REG_ADDR_WIDTH-1)));
-          read_data(32 to 63) <= (others => '0');
+          read_data(0 to 31) <= (others => '0');
+          read_data(32 to 63) <= resetVect(1)(vect2uint(reg_rd_addr(REG_ADDR_WIDTH-6 to REG_ADDR_WIDTH-1)));
         else
           read_data <= (others => '0');
         end if;
@@ -252,7 +252,7 @@ begin
       -- index the cores and contexts from the LSB first
       rctrl2rv(i*NO_CONTEXTS+j).run       <= run(2)       (63-(i*8 + j));
       rctrl2rv(i*NO_CONTEXTS+j).reset     <= reset_ctxt(2)(63-(i*8 + j));
-      rctrl2rv(i*NO_CONTEXTS+j).resetVect <= resetVect(2) (63-(i*8 + j));
+      rctrl2rv(i*NO_CONTEXTS+j).resetVect <= resetVect(2) (i*8 + j);
 
       rctrl2rv(i*NO_CONTEXTS+j).irq       <= '0';
       rctrl2rv(i*NO_CONTEXTS+j).irqID     <= (others => '0');
