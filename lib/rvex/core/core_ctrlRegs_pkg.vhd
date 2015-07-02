@@ -592,6 +592,11 @@ package body core_ctrlRegs_pkg is
     -- Override the clear bit output to the complement of the set bit state.
     l2c(wordAddr).overrideEnable(clearBit) := '1';
     l2c(wordAddr).overrideData(clearBit) := not c2l(wordAddr).readData(setBit);
+
+    -- Set the reset state for clear bit to the opposite of the reset state for
+    -- the set bit.
+    l2c(wordAddr).resetValue(setBit) := resetState;
+    l2c(wordAddr).resetValue(clearBit) := not resetState;
     
     -- Disable override for the set bit.
     l2c(wordAddr).overrideEnable(setBit) := '0';
