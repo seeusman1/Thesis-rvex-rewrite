@@ -51,6 +51,9 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <errno.h>
+
 
 #include "entry.h"
 #include "main.h"
@@ -70,13 +73,17 @@ static void license(void);
 /**
  * Application entry point.
  */
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   
   commandLineArgs_t args;
   char *progName = argv[0];
   char *outputFile = 0;
   char *traceFile = 0;
-  char *disasFile = 0;
+  char **disasFiles = 0;
+  int disasCount = 0;
+  unsigned long int *disasOffsets = 0;
+  int offsetCount = 0;
   uint8_t *traceData = 0;
   int traceDataSize = 0;
   int ok = 1;
@@ -98,11 +105,13 @@ int main(int argc, char **argv) {
       {"cfg",        required_argument, 0, 'C'},
       {"help",       no_argument,       0, 'h'},
       {"license",    no_argument,       0, 'L'},
+      {"offset",     required_argument, 0, '@'},
       {0, 0, 0, 0}
     };
     
     int option_index = 0;
-    int c = getopt_long(argc, argv, "o:l:g:c:h", long_options, &option_index);
+    int c = getopt_long(argc, argv, "o:l:g:c:@:h", long_options, &option_index);
+    char *endptr = 0;
 
     if (c == -1) {
       break;
@@ -140,6 +149,27 @@ int main(int argc, char **argv) {
       case 'C':
         args.initialCfg = atoi(optarg);
         break;
+
+      case '@':
+        disasOffsets = realloc(disasOffsets, (offsetCount + 1)*sizeof(unsigned long int));
+        if (!disasOffsets)
+        {
+          fprintf(stderr, "realloc failed\n");
+          exit(EXIT_FAILURE);
+        }
+        disasOffsets[offsetCount] = strtoul(optarg, &endptr, 0);
+        if ((errno == ERANGE && (disasOffsets[offsetCount] == LONG_MAX || disasOffsets[offsetCount] == LONG_MIN))
+            || (errno != 0 && disasOffsets[offsetCount] == 0)) {
+          perror("strtol");
+          exit(EXIT_FAILURE);
+        }
+
+        if (endptr == optarg) {
+          fprintf(stderr, "No digits were found\n");
+          exit(EXIT_FAILURE);
+        }
+        offsetCount++;
+        break;
         
       case 'h':
         usage(progName);
@@ -167,13 +197,26 @@ int main(int argc, char **argv) {
   argc -= optind;
   
   // Load trace and disassembly filenames.
-  switch (argc) {
-    case 2:
-      disasFile = argv[1];
-    case 1:
+  if (argc > 0 )
       traceFile = argv[0];
-      break;
-    default:
+  if (argc > 1)
+  {
+    int i;
+    disasFiles = malloc((argc-1)*sizeof(char *));
+    for (i = 1; i < argc; i++)
+    {
+      disasFiles[i-1] = argv[i];
+    }
+    disasCount = argc - 1;
+    if (disasCount > offsetCount)
+    {
+      fprintf(stderr, "%d %d\n", disasCount, offsetCount);
+      for (i = offsetCount; i < disasCount; i++)
+        disasOffsets[i] = 0;
+    }
+  }
+  if (argc < 1)
+  {
       usage(progName);
       exit(EXIT_FAILURE);
   }
@@ -199,9 +242,12 @@ int main(int argc, char **argv) {
   }
   
   // Load disassembly data into memory.
-  if (ok && disasFile) {
-    if (disasLoad(disasFile) < 0) {
-      ok = 0;
+  if (ok && disasFiles) {
+    int i;
+    for (i = 0; i < disasCount; i++) {
+      if (disasLoad(disasFiles[i], disasOffsets[i]) < 0) {
+        ok = 0;
+      }
     }
   }
   
@@ -246,6 +292,8 @@ static void usage(char *progName) {
     "  -l <count>      Specifies the number of lanes in the processor. Defaults to 8.\n"
     "  -g <count>      Number of lane groups in the processor. Defaults to 4.\n"
     "  --cfg <config>  Initial runtime configuration word.\n"
+    "  -@ <number>     Offset for disasembly file. Can be given multiple times for\n"
+    "                  multiple disasembly files.\n"
     "  -h or --help    Shows this usage screen.\n"
     "  --license       Prints licensing information.\n"
     "\n",
