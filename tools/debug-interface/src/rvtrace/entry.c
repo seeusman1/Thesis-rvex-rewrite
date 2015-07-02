@@ -210,7 +210,6 @@ int main(int argc, char **argv)
     disasCount = argc - 1;
     if (disasCount > offsetCount)
     {
-      fprintf(stderr, "%d %d\n", disasCount, offsetCount);
       for (i = offsetCount; i < disasCount; i++)
         disasOffsets[i] = 0;
     }
