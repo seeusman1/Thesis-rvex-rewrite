@@ -210,6 +210,12 @@ int main(int argc, char **argv)
     disasCount = argc - 1;
     if (disasCount > offsetCount)
     {
+      disasOffsets = realloc(disasOffsets, disasCount * sizeof(unsigned long int));
+      if (!disasOffsets)
+      {
+        fprintf(stderr, "realloc failure\n");
+        exit(EXIT_FAILURE);
+      }
       for (i = offsetCount; i < disasCount; i++)
         disasOffsets[i] = 0;
     }
