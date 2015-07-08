@@ -132,7 +132,7 @@
  end;
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp_mig39.ucf
 +++ work/leon3mp_mig39.ucf
-@@ -1,3 +1,55 @@
+@@ -1,10 +1,62 @@
 +######################################################################################
 +## PCI-express signals (copied from reference project)                              ##
 +######################################################################################
@@ -140,7 +140,7 @@
 +# Clock and Reset Pinout
 +#------------------------
 +NET "pcie_dma_block.pcie_dma/pcie_ref_clk" TNM_NET = "SYSCLK" ;
-+NET "pcie_dma_block.pcie_clocking_i/clk_125" TNM_NET = "CLK_125" ;
++NET "*/pcie_clocking_i/clk_125" TNM_NET = "CLK_125" ;
 +NET "*/TxOutClk_bufg" TNM_NET = "TXOUTCLKBUFG";
 +
 +TIMESPEC "TS_SYSCLK"  = PERIOD "SYSCLK" 250.00 MHz HIGH 50 % ;
@@ -150,7 +150,7 @@
 +NET "sys_reset_n" TIG;
 +PIN "*/trn_reset_n_int_i.CLR" TIG ;
 +PIN "*/trn_reset_n_i.CLR" TIG ;
-+PIN "pcie_dma_block.pcie_clocking_i/mmcm_adv_i.RST" TIG ;
++PIN "*/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
 +
 +#TIMESPEC "TS_TRNLNKUPN" = FROM FFS(*) TO FFS(trn_lnk_up_n_int_i) 4 ns;
 +#TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS(trn_reset_n_i) 4 ns;
@@ -179,7 +179,7 @@
 +INST "pcie_dma_block.pcie_dma/pcie_refclk_ibuf" LOC = IBUFDS_GTXE1_X0Y4; # Implies pinout
 +
 +# MMCM Placment. This constraint selects the MMCM Placement
-+INST "pcie_dma_block.pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
++INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
 +
 +######################################################################################
 +## Other definitions                                                                ##
@@ -188,6 +188,14 @@
  
  NET "clk_ref_p" TNM_NET = TNM_clk_ref;
  TIMESPEC "TS_clk_ref" = PERIOD "TNM_clk_ref" 5 ns ;
+ 
+ NET "reset" IOSTANDARD = SSTL15;
+ NET "reset" LOC = "H10";
+-NET "errorn" LOC = "AD24";
++#NET "errorn" LOC = "AD24";
+ 
+ NET "address(0)"                      LOC = "AL8";    ## 29 on U4, A1 on U27
+ NET "address(1)"                      LOC = "AK8";    ## 25 on U4, B1 on U27
 @@ -104,7 +156,7 @@ NET "led(3)"                    LOC = "A
  NET "led(4)"                    LOC = "AB23";   ## 2   on LED DS15, 5 on J62
  NET "led(5)"                    LOC = "AG23";   ## 2   on LED DS14, 6 on J62
