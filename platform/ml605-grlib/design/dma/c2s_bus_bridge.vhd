@@ -172,7 +172,7 @@ begin -- architecture
     -- NB. This confuses the testbench, resulting in it only sending two
     -- packets. The PC software requires this behaviour though, and the
     -- testbench is wrong here.
-    if vect2uint(curr_bcnt) <= 8 then
+    if vect2unsigned(curr_bcnt) <= 8 then
       eop <= curr_apkt_eop;
     else
       eop <= '0';
@@ -191,7 +191,7 @@ begin -- architecture
     -- sending the last double word of the block
     -- NB: The value of valid doesn't seem to influence what is sent over the
     -- PCIe bus.
-    if vect2uint(curr_bcnt) <= 8 then
+    if vect2unsigned(curr_bcnt) <= 8 then
       valid <= curr_bcnt(29 to 31);
     else
       -- send 8 bytes
@@ -235,11 +235,11 @@ begin -- architecture
           next_data(56 to 63) <= bus2dma.readData(31 downto 24);
 
           -- Increment the next address to read
-          next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+          next_addr <= std_logic_vector(vect2unsigned(curr_addr) + 4);
 
-          if vect2uint(curr_bcnt) > 4 then
+          if vect2unsigned(curr_bcnt) > 4 then
             -- Start reading the next data element, to speed up the transfer
-            dma2bus.address <= uint2vect(vect2uint(curr_addr) + 4, 32);
+            dma2bus.address <= std_logic_vector(vect2unsigned(curr_addr) + 4);
 
             next_state <= read_high;
           else
@@ -266,7 +266,7 @@ begin -- architecture
           dma2bus.readEnable <= '0';
 
           -- Increment address
-          next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+          next_addr <= std_logic_vector(vect2unsigned(curr_addr) + 4);
 
           -- State transition
           next_state <= send_data;
@@ -280,13 +280,13 @@ begin -- architecture
           -- Reset sop signal
           next_sop <= '0';
 
-          if vect2uint(curr_bcnt) > 8 then
+          if vect2unsigned(curr_bcnt) > 8 then
             -- Start reading the next double word
             dma2bus.address <= curr_addr;
             dma2bus.readEnable <= '1';
 
             -- Decrement the byte counter
-            next_bcnt <= uint2vect(vect2uint(curr_bcnt) - 8, 32);
+            next_bcnt <= std_logic_vector(vect2unsigned(curr_bcnt) - 8);
             next_state <= read_low;
           else
             -- Reset the byte counter

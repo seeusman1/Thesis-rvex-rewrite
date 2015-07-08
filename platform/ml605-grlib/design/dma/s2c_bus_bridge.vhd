@@ -206,19 +206,19 @@ begin -- architecture
 
         if bus2dma.ack = '1' then
           -- Increment the next address to read
-          next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+          next_addr <= std_logic_vector(vect2unsigned(curr_addr) + 4);
 
-          if vect2uint(curr_bcnt) <= 4 then
+          if vect2unsigned(curr_bcnt) <= 4 then
             -- Done transfering, stop writing
             next_bcnt  <= (others => '0');
             next_state <= wait_pkt;
           else
             -- Start writing the next word, to speed up the transfer
-            dma2bus.address <= uint2vect(vect2uint(curr_addr) + 4, 32);
+            dma2bus.address <= std_logic_vector(vect2unsigned(curr_addr) + 4);
             dma2bus.writeData <= curr_data(0 to 31);
 
             -- Decrement the byte count
-            next_bcnt  <= uint2vect(vect2uint(curr_bcnt) - 4, 10);
+            next_bcnt  <= std_logic_vector(vect2unsigned(curr_bcnt) - 4);
             next_state <= write_high;
           end if;
         end if;
@@ -234,13 +234,13 @@ begin -- architecture
 
         if bus2dma.ack = '1' then
           -- Increment the next address to read
-          next_addr <= uint2vect(vect2uint(curr_addr) + 4, 32);
+          next_addr <= std_logic_vector(vect2unsigned(curr_addr) + 4);
           -- Disable writing
           dma2bus.writeEnable <= '0';
 
-          if vect2uint(curr_bcnt) > 4 then
+          if vect2unsigned(curr_bcnt) > 4 then
             -- Decrement the byte count
-            next_bcnt  <= uint2vect(vect2uint(curr_bcnt) - 4, 10);
+            next_bcnt  <= std_logic_vector(vect2unsigned(curr_bcnt) - 4);
             -- Request the next double word
             next_state <= wait_data;
           else
