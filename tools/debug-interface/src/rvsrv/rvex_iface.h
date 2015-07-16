@@ -46,28 +46,25 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _RVEX_IFACE_H_
+#define _RVEX_IFACE_H_
 
-#include "entry.h"
-#include "tcpserv.h"
-
-/**
- * TCP server for sending data to and receiving data from the application code
- * running on the rvex platform.
- */
-extern tcpServer_t *appServer;
-
-/**
- * TCP server for debug requests.
- */
-extern tcpServer_t *debugServer;
-
-/**
- * Runs the application.
- */
-int run(const commandLineArgs_t *args);
-
-
+typedef struct rvex_iface {
+  /**
+   * Tries to handle a Read or Write command sent by a TCP client connected to
+   * the debug server. command should be null-terminated.
+   */
+  int (*handleReadWrite)(unsigned char *command, int clientID);
+  /**
+   * Updates the backend. Returns -1 if an error occured, 0 if the system is
+   * idle, or 1 if we want update to be called quickly again to handle potential
+   * timeouts.
+   */
+  int (*update)(void);
+  /**
+   * Frees all dynamically allocated memory by the interface.
+   */
+  void (*free)(void);
+} rvex_iface_t;
 
 #endif

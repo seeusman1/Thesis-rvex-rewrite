@@ -46,28 +46,18 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _UART_H_
+#define _UART_H_
 
-#include "entry.h"
-#include "tcpserv.h"
-
-/**
- * TCP server for sending data to and receiving data from the application code
- * running on the rvex platform.
- */
-extern tcpServer_t *appServer;
+typedef struct rvex_iface rvex_iface_t;
 
 /**
- * TCP server for debug requests.
+ * Initialize the uart interface with the rVEX.
+ *
+ * tty is an initialized serial connection with an softcore that has a debug
+ * peripheral.
+ * Returns 0 on success, -1 on error.
  */
-extern tcpServer_t *debugServer;
-
-/**
- * Runs the application.
- */
-int run(const commandLineArgs_t *args);
-
-
+int init_uart_iface(int tty, rvex_iface_t *iface);
 
 #endif

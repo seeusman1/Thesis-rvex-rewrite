@@ -46,28 +46,9 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#ifndef _UART_INTERNAL_H_
+#define _UART_INTERNAL_H_
 
-#include "entry.h"
-#include "tcpserv.h"
-
-/**
- * TCP server for sending data to and receiving data from the application code
- * running on the rvex platform.
- */
-extern tcpServer_t *appServer;
-
-/**
- * TCP server for debug requests.
- */
-extern tcpServer_t *debugServer;
-
-/**
- * Runs the application.
- */
-int run(const commandLineArgs_t *args);
-
-
+extern int tty;
 
 #endif

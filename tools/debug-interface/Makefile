@@ -73,7 +73,7 @@ TOOLS = rvsrv rvd
 
 all: $(BINDIR)/rvsrv $(BINDIR)/rvd $(BINDIR)/rvtrace
 
-$(BINDIR)/rvsrv: $(SRCDIR)/rvsrv/*.c $(SRCDIR)/common/*.c
+$(BINDIR)/rvsrv: $(SRCDIR)/rvsrv/*.c $(SRCDIR)/rvsrv/uart/*.c $(SRCDIR)/common/*.c
 	mkdir -p $(BINDIR)
 	$(CC) $(CFLAGS) -Wall -I $(SRCDIR)/common -o $@ $^
 

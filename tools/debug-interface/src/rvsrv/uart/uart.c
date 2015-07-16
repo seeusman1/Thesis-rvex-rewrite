@@ -46,28 +46,26 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef _MAIN_H_
-#define _MAIN_H_
+#include "uart.h"
 
-#include "entry.h"
-#include "tcpserv.h"
+#include "../rvex_iface.h"
 
-/**
- * TCP server for sending data to and receiving data from the application code
- * running on the rvex platform.
- */
-extern tcpServer_t *appServer;
+#include "debugCommands.h"
+#include "debugReadWrite.h"
 
 /**
- * TCP server for debug requests.
+ * File descriptor for the serial port.
  */
-extern tcpServer_t *debugServer;
+int tty = 0;
 
-/**
- * Runs the application.
- */
-int run(const commandLineArgs_t *args);
+int init_uart_iface(int tty, rvex_iface_t *iface) {
+  tty = tty;
 
+  *iface = (rvex_iface_t) {
+    .handleReadWrite = handleReadWrite,
+    .update = debugCommands_update,
+    .free = debugCommands_free,
+  };
 
-
-#endif
+  return 0;
+}

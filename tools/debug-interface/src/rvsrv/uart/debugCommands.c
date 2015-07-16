@@ -52,9 +52,9 @@
 #include <string.h>
 
 #include "debugCommands.h"
-#include "serial.h"
-#include "main.h"
-#include "timeout.h"
+#include "uart_internal.h"
+#include "../serial.h"
+#include "../timeout.h"
 
 // Define this to have this unit dump received and transmitted packets to
 // stdout/the log file.

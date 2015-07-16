@@ -54,8 +54,8 @@
 
 #include "debugReadWrite.h"
 #include "debugCommands.h"
-#include "tcpserv.h"
-#include "main.h"
+#include "../tcpserv.h"
+#include "../main.h"
 
 /**
  * Stores data needed by the callback functions.
