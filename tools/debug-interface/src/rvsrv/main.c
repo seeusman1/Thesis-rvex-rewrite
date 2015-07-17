@@ -56,6 +56,7 @@
 #include "main.h"
 #include "serial.h"
 #include "daemon.h"
+#include "parseReadWrite.h"
 #include "rvex_iface.h"
 #include "select.h"
 #include "tcpserv.h"
@@ -191,9 +192,27 @@ static int handleCommand(unsigned char *command, int clientID, int firstTime) {
     return 1;
     
   } else if (checkCommand(command, (const unsigned char *)"Read") || checkCommand(command, (const unsigned char *)"Write")) {
+
+    struct parse_rw_result res;
+    unsigned char *syntax_error;
     
-    // Handle read/write command.
-    if (rvexIface.handleReadWrite(command, clientID) < 0) {
+    // Parse read/write command.
+    int err = parseReadWrite(command, &res, &syntax_error);
+    if (err == 0) {
+      // Perform the write or read.
+      if (res.is_write) {
+        err = rvexIface.write(res.address, res.buffer, res.buf_size, clientID);
+        free(res.buffer);
+      } else {
+        err = rvexIface.read(res.address, res.buf_size, clientID);
+      }
+      if (err < 0) {
+        return -1;
+      }
+    } else if (err == 1) {
+      tcpServer_sendStr(debugServer, clientID, syntax_error);
+      free(syntax_error);
+    } else {
       return -1;
     }
     

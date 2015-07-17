@@ -98,54 +98,6 @@ typedef struct {
 } callbackData_t;
 
 /**
- * Returns 1 only if command[startPos-..] equals match. If it matches, pos will
- * be incremented by the size of match.
- */
-static int matchAt(const unsigned char *str, const unsigned char *match, int *pos) {
-  int len = 0;
-  str += *pos;
-  while (*match) {
-    if (*match++ != *str++) {
-      return 0;
-    }
-    len++;
-  }
-  *pos += len;
-  return 1;
-}
-
-/**
- * Converts a hexadecimal ASCII character to its value, or returns -1 if the
- * character is not hexadecimal.
- */
-static int charVal(unsigned char c) {
-  if ((c >= '0') && (c <= '9')) return c - '0';
-  if ((c >= 'A') && (c <= 'F')) return (c - 'A') + 10;
-  if ((c >= 'a') && (c <= 'f')) return (c - 'a') + 10;
-  return -1;
-}
-
-/**
- * Formats and returns a syntax error message.
- */
-static int syntaxError(unsigned char *command, int clientID, int scanPos) {
-  
-  if (tcpServer_sendStr(debugServer, clientID, (const unsigned char *)"Error, ") < 0) {
-    return -1;
-  }
-  while ((*command) && (*command != ',')) {
-    if (tcpServer_send(debugServer, clientID, *command++) < 0) {
-      return -1;
-    }
-  }
-  if (tcpServer_sendStr(debugServer, clientID, (const unsigned char *)", Syntax;\n") < 0) {
-    return -1;
-  }
-  
-  return 0;
-}
-
-/**
  * Writes data to the read buffer in cbData, starting at the offset determined
  * by the supplied address and the start address in cbData, making sure that
  * no out-of-range accesses are made. The address is suppied as a pointer to a
@@ -404,176 +356,38 @@ static int queueVolatile(uint32_t address, uint32_t writeData, int flags, callba
 
 
 /**
- * Tries to handle a Read or Write command sent by a TCP client connected to
- * the debug server. command should be a null-terminated string of one of the
- * following formats:
- * 
- *   Read,<1-8 hex chars: address>,<1-.. decimal chars: count>
- *   Write,<1-8 hex chars: address>,<1-.. decimal chars: count>,<2*count hex chars: data>
- * 
- * At most 4096 bytes may be read or written at once. The reply sent will be
- * one of:
+ * Try reading over the UART interface.
+ *
+ * At most 4096 bytes may be read at once. The reply sent will be one of:
  * 
  *   OK, Read, OK, < 8 hex chars: address>, < 1-.. decimal chars: count>, < 2*count hex chars: data>;
- *   OK, Write, OK, < 8 hex chars: address>, < 1-.. decimal chars: count>;
  *   OK, Read, Fault, < 8 hex chars: address>, < 1-.. decimal chars: count>, < 8 hex chars: fault ID>;
- *   OK, Write, Fault, < 8 hex chars: address>, < 1-.. decimal chars: count>, < 8 hex chars: fault ID>;
- *   Error, Syntax, <1-.. decimal chars: character index in command>
- *   Error, InvalidBufSize
  *   Error, CommunicationError
  * 
  * Bus faults are only checked for the last bus operation; if there are any bus
  * errors prior, these bus operations silently fail in hardware.
  */
-int handleReadWrite(unsigned char *command, int clientID) {
-  int scanPos = 0;
-  int i, j;
-  
-  int isWrite;
+int handleRead(uint32_t address, uint32_t buf_size, int clientID) {
   callbackData_t *cbData;
   operation_t op;
-  
+
   // Allocate memory for the callback data structure.
-  cbData = (callbackData_t*)malloc(sizeof(callbackData_t));
+  cbData = (callbackData_t*)malloc(sizeof(*cbData));
   if (!cbData) {
-    perror("Failed to allocate memory to service debug read/write command");
+    perror("handleRead: Failed to allocate memory to service debug read command");
     return -1;
   }
   cbData->clientID = clientID;
-  cbData->address = 0;
-  cbData->bufSize = 0;
-  cbData->buffer = 0;
+  cbData->address = address;
+  cbData->bufSize = buf_size;
+  cbData->buffer = malloc(buf_size);
   cbData->lastFault = 0;
   cbData->lastFaultCode = 0;
-  
-  // Make sure there's a comma in here somewhere. If not, we should return a
-  // syntax error instead of dying in the next test.
-  if (!strchr((char *)command, ',')) {
-    return syntaxError(command, clientID, scanPos);
-  }
-  
-  // Scan the "Read," or "Write,".
-  if (matchAt(command, (const unsigned char *)"Read,", &scanPos)) {
-    isWrite = 0;
-  } else if (matchAt(command, (const unsigned char *)"Write,", &scanPos)) {
-    isWrite = 1;
-  } else {
-    free(cbData);
-    printf("handleReadWrite() was called with a command other than Read or Write.\nThis should never happen.\n");
-    return -1;
-  }
-  
-  // Scan the address.
-  for (i = 0; i < 8; i++) {
-    
-    // Stop if we encounter a comma.
-    if (command[scanPos] == ',') {
-      break;
-    }
-    
-    // Read the next hex character.
-    j = charVal(command[scanPos]);
-    if (j < 0) {
-      free(cbData);
-      return syntaxError(command, clientID, scanPos);
-    }
-    scanPos++;
-    
-    // Shift it into the address.
-    cbData->address <<= 4;
-    cbData->address |= j;
-    
-  }
-  
-  // We must see a comma here.
-  if (command[scanPos] != ',') {
-    free(cbData);
-    return syntaxError(command, clientID, scanPos);
-  }
-  scanPos++;
-  
-  // Scan the count.
-  for (i = 0; i < 4; i++) {
-    
-    // Stop if we encounter a comma or null.
-    if ((command[scanPos] == ',') || (command[scanPos] == 0)) {
-      break;
-    }
-    
-    // Read the next decimal character.
-    j = charVal(command[scanPos]);
-    if ((j < 0) || (j > 9)) {
-      free(cbData);
-      return syntaxError(command, clientID, scanPos);
-    }
-    scanPos++;
-    
-    // Shift it into the address.
-    cbData->bufSize *= 10;
-    cbData->bufSize += j;
-    
-  }
-  
-  // Make sure the count is within range.
-  if ((cbData->bufSize < 1) || (cbData->bufSize > 4096)) {
-    free(cbData);
-    return tcpServer_sendStr(debugServer, clientID, (const unsigned char *)(isWrite ? "Error, Write, InvalidBufSize;\n" : "Error, Read, InvalidBufSize;\n"));
-  }
-  
-  // We should be at the end of the string for read commands, or we should have
-  // another comma for write commands.
-  if (command[scanPos] != (isWrite ? ',' : 0)) {
-    return syntaxError(command, clientID, scanPos);
-  }
-  scanPos++;
-  
-  // Allocate the data buffer.
-  cbData->buffer = (unsigned char*)malloc(cbData->bufSize);
+
   if (!cbData->buffer) {
-    perror("Failed to allocate memory to service debug read/write command");
+    perror("handleRead: Failed to allocate memory to service debug read command");
     free(cbData);
     return -1;
-  }
-  
-  // If this is a write command, read the supplied data into the buffer.
-  if (isWrite) {
-    
-    for (i = 0; i < cbData->bufSize; i++) {
-      
-      cbData->buffer[i] = 0;
-      
-      // Read the next hex character.
-      j = charVal(command[scanPos]);
-      if (j < 0) {
-        free(cbData->buffer);
-        free(cbData);
-        return syntaxError(command, clientID, scanPos);
-      }
-      scanPos++;
-      
-      cbData->buffer[i] = j << 4;
-      
-      // Read the next hex character.
-      j = charVal(command[scanPos]);
-      if (j < 0) {
-        free(cbData->buffer);
-        free(cbData);
-        return syntaxError(command, clientID, scanPos);
-      }
-      scanPos++;
-      
-      cbData->buffer[i] |= j;
-      
-    }
-    
-    // We should be at the end of the command now.
-    if (command[scanPos] != 0) {
-      free(cbData->buffer);
-      free(cbData);
-      return syntaxError(command, clientID, scanPos);
-    }
-    scanPos++;
-    
   }
   
   // All operations which will use callback data, will use the same callback
@@ -584,250 +398,290 @@ int handleReadWrite(unsigned char *command, int clientID) {
   uint32_t curAddress = cbData->address;
   int remain = cbData->bufSize;
   unsigned char *bufPtr = cbData->buffer;
-  if (isWrite) {
-    int curPage = -1;
     
-    // Handle writes
-    // -------------
-    
-    while (remain) {
-      
-      if (!((curAddress & 0xFFF) % 28) && (remain >= 8)) {
-        // The remain >= 8 condition is used to ensure that the last word is
-        // accessed using a volatile bus write, so the fault signal is always
-        // somewhat valid.
-        
-        int numWords;
-        int page;
-        
-        // We can do a bulk write.
-        
-        // Determine how many words we can write.
-        if (remain > 32) {
-          numWords = 7;
-        } else {
-          numWords = (remain - 4) / 4;
-        }
-        
-        // Make sure we don't cross a 4kb boundary mid write (auto-increment
-        // does not support this).
-        if ((curAddress + numWords*4) > ((curAddress & 0xFFFFF000) + 0x00001000)) {
-          numWords = (((curAddress & 0xFFFFF000) + 0x00001000) - curAddress) / 4;
-        }
-        
-        // Determine the page which this would belong to.
-        page = curAddress >> 12;
-        
-        // Switch page if needed.
-        if (page != curPage) {
-          
-          // We don't want to change the page while any previous writes may not
-          // have been completed, so we need a barrier.
-          op.t = OT_BARRIER;
-          op.cb = 0;
-          if (debugCommands_queue(&op) < 0) {
-            return -1;
-          }
-          
-          // Insert the set page command.
-          op.t = OT_COMMAND;
-          op.p.commandCode = COMCODE_SET_PAGE;
-          op.p.data[0] = (curAddress >> 24) & 0xFF;
-          op.p.data[1] = (curAddress >> 16) & 0xFF;
-          op.p.data[2] = (curAddress >>  8) & 0xF0;
-          op.p.len = 3;
-          if (debugCommands_queue(&op) < 0) {
-            return -1;
-          }
-          
-          // We don't want to change write until we're sure that the page
-          // command has been executed, so we need another barrier.
-          op.t = OT_BARRIER;
-          if (debugCommands_queue(&op) < 0) {
-            return -1;
-          }
-          
-          // Update the current page.
-          curPage = page;
-          
-        }
-        
-        // Queue the bulk write command.
-        op.t = OT_COMMAND;
-        op.p.commandCode = COMCODE_BULK_WRITE;
-        op.p.data[0] = (curAddress & 0xFFF) / 28;
-        memcpy(&(op.p.data[1]), bufPtr, numWords*4);
-        op.p.len = numWords*4+1;
-        if (debugCommands_queue(&op) < 0) {
-          return -1;
-        }
-        
-        // Update counters and pointers.
-        curAddress += numWords*4;
-        remain -= numWords*4;
-        bufPtr += numWords*4;
-        
-      } else if (!(curAddress & 0x3) && (remain >= 4)) {
-        
-        uint32_t writeData;
-        
-        // We can do a volatile word write.
-        writeData = *(bufPtr+0);
-        writeData <<= 8;
-        writeData |= *(bufPtr+1);
-        writeData <<= 8;
-        writeData |= *(bufPtr+2);
-        writeData <<= 8;
-        writeData |= *(bufPtr+3);
-        if (queueVolatile(curAddress & 0xFFFFFFFC, writeData, 0xF8, op.cbData) < 0) {
-          return -1;
-        }
-        
-        // Update counters and pointers.
-        curAddress += 4;
-        remain -= 4;
-        bufPtr += 4;
-        
-      } else if (!(curAddress & 0x1) && (remain >= 2)) {
-        
-        uint32_t writeData;
-        
-        // We can do a volatile halfword write.
-        writeData = *(bufPtr+0);
-        writeData <<= 8;
-        writeData |= *(bufPtr+1);
-        writeData <<= 8;
-        writeData |= *(bufPtr+0);
-        writeData <<= 8;
-        writeData |= *(bufPtr+1);
-        if (queueVolatile(curAddress & 0xFFFFFFFC, writeData, (curAddress & 0x2) ? 0x38 : 0xC8, op.cbData) < 0) {
-          return -1;
-        }
-        
-        // Update counters and pointers.
-        curAddress += 2;
-        remain -= 2;
-        bufPtr += 2;
-        
+  // Handle reads
+  while (remain) {
+
+    if (!(curAddress & 0x3) && (remain >= 8)) {
+      // The remain >= 8 condition is used to ensure that the last word is
+      // accessed using a volatile bus write, so the fault signal is always
+      // somewhat valid.
+
+      int numWords;
+
+      // We can do a bulk read.
+
+      // Determine how many words we can write.
+      if (remain > 32) {
+        numWords = 7;
       } else {
-        
-        uint32_t writeData;
-        int mask;
-        
-        // We need to do a volatile byte write.
-        switch (curAddress & 0x3) {
-          case 0: mask = 0x8; break;
-          case 1: mask = 0x4; break;
-          case 2: mask = 0x2; break;
-          case 3: mask = 0x1; break;
-        }
-        writeData = *bufPtr;
-        writeData <<= 8;
-        writeData |= *bufPtr;
-        writeData <<= 8;
-        writeData |= *bufPtr;
-        writeData <<= 8;
-        writeData |= *bufPtr;
-        if (queueVolatile(curAddress & 0xFFFFFFFC, writeData, (mask << 4) | 0x08, op.cbData) < 0) {
-          return -1;
-        }
-        
-        // Update counters and pointers.
-        curAddress += 1;
-        remain -= 1;
-        bufPtr += 1;
-        
+        numWords = (remain - 4) / 4;
       }
-      
-    }
-    
-    // We don't need the data buffer here anymore; everything has been copied
-    // into the operation queue.
-    free(cbData->buffer);
-    cbData->buffer = 0;
-    
-  } else {
-    
-    // Handle reads
-    // ------------
-    
-    while (remain) {
-      
-      if (!(curAddress & 0x3) && (remain >= 8)) {
-        // The remain >= 8 condition is used to ensure that the last word is
-        // accessed using a volatile bus write, so the fault signal is always
-        // somewhat valid.
-        
-        int numWords;
-        
-        // We can do a bulk read.
-        
-        // Determine how many words we can write.
-        if (remain > 32) {
-          numWords = 7;
-        } else {
-          numWords = (remain - 4) / 4;
-        }
-        
-        // Make sure we don't cross a 4kb boundary mid write (auto-increment
-        // does not support this).
-        if ((curAddress + numWords*4) > ((curAddress & 0xFFFFF000) + 0x00001000)) {
-          numWords = (((curAddress & 0xFFFFF000) + 0x00001000) - curAddress) / 4;
-        }
-        
-        // Queue the bulk read command.
-        op.t = OT_COMMAND;
-        op.p.commandCode = COMCODE_BULK_READ;
-        op.p.data[0] = (curAddress >> 24) & 0xFF;
-        op.p.data[1] = (curAddress >> 16) & 0xFF;
-        op.p.data[2] = (curAddress >>  8) & 0xFF;
-        op.p.data[3] = (curAddress >>  0) & 0xFF;
-        op.p.data[4] = (curAddress + (numWords*4)) & 0xFF;
-        op.p.len = 5;
-        op.cb = &onBulkRead;
-        if (debugCommands_queue(&op) < 0) {
-          return -1;
-        }
-        
-        // Update counters and pointers.
-        curAddress += numWords*4;
-        remain -= numWords*4;
-        bufPtr += numWords*4;
-        
-      } else {
-        
-        int numUsedBytes;
-        uint32_t alignedAddress;
-        
-        // We need to do a volatile word read.
-        
-        // Align the address to a word address.
-        alignedAddress = curAddress & 0xFFFFFFFC;
-        
-        // Queue the volatile bus operation.
-        if (queueVolatile(alignedAddress, 0, 0, op.cbData) < 0) {
-          return -1;
-        }
-        
-        // Determine how many bytes we're actually going to use from the read
-        // word.
-        numUsedBytes = 4;
-        numUsedBytes -= (uint32_t)(curAddress - alignedAddress);
-        if (remain < numUsedBytes) {
-          numUsedBytes = remain;
-        }
-        
-        // Update counters and pointers.
-        curAddress += numUsedBytes;
-        remain -= numUsedBytes;
-        bufPtr += numUsedBytes;
-        
+
+      // Make sure we don't cross a 4kb boundary mid write (auto-increment
+      // does not support this).
+      if ((curAddress + numWords*4) > ((curAddress & 0xFFFFF000) + 0x00001000)) {
+        numWords = (((curAddress & 0xFFFFF000) + 0x00001000) - curAddress) / 4;
       }
-    
+
+      // Queue the bulk read command.
+      op.t = OT_COMMAND;
+      op.p.commandCode = COMCODE_BULK_READ;
+      op.p.data[0] = (curAddress >> 24) & 0xFF;
+      op.p.data[1] = (curAddress >> 16) & 0xFF;
+      op.p.data[2] = (curAddress >>  8) & 0xFF;
+      op.p.data[3] = (curAddress >>  0) & 0xFF;
+      op.p.data[4] = (curAddress + (numWords*4)) & 0xFF;
+      op.p.len = 5;
+      op.cb = &onBulkRead;
+      if (debugCommands_queue(&op) < 0) {
+        return -1;
+      }
+
+      // Update counters and pointers.
+      curAddress += numWords*4;
+      remain -= numWords*4;
+      bufPtr += numWords*4;
+
+    } else {
+
+      int numUsedBytes;
+      uint32_t alignedAddress;
+
+      // We need to do a volatile word read.
+
+      // Align the address to a word address.
+      alignedAddress = curAddress & 0xFFFFFFFC;
+
+      // Queue the volatile bus operation.
+      if (queueVolatile(alignedAddress, 0, 0, op.cbData) < 0) {
+        return -1;
+      }
+
+      // Determine how many bytes we're actually going to use from the read
+      // word.
+      numUsedBytes = 4;
+      numUsedBytes -= (uint32_t)(curAddress - alignedAddress);
+      if (remain < numUsedBytes) {
+        numUsedBytes = remain;
+      }
+
+      // Update counters and pointers.
+      curAddress += numUsedBytes;
+      remain -= numUsedBytes;
+      bufPtr += numUsedBytes;
+
     }
-    
+
   }
   
+  // Insert a barrier with a callback to detect when we're done.
+  op.t = OT_BARRIER;
+  op.cb = onReadWriteComplete;
+  if (debugCommands_queue(&op) < 0) {
+    return -1;
+  }
+  
+  // Queued successfully.
+  return 0;
+}
+
+/**
+ * Try writing over the UART interface.
+ *
+ * At most 4096 bytes may be written at once. The reply sent will be one of:
+ * 
+ *   OK, Write, OK, < 8 hex chars: address>, < 1-.. decimal chars: count>;
+ *   OK, Write, Fault, < 8 hex chars: address>, < 1-.. decimal chars: count>, < 8 hex chars: fault ID>;
+ *   Error, CommunicationError
+ * 
+ * Bus faults are only checked for the last bus operation; if there are any bus
+ * errors prior, these bus operations silently fail in hardware.
+ */
+int handleWrite(uint32_t address, unsigned char *buffer, uint32_t buf_size,
+    int clientID) {
+  callbackData_t *cbData;
+  operation_t op;
+
+  // Allocate memory for the callback data structure.
+  cbData = (callbackData_t*)malloc(sizeof(*cbData));
+  if (!cbData) {
+    perror("handleRead: Failed to allocate memory to service debug read command");
+    return -1;
+  }
+  cbData->clientID = clientID;
+  cbData->address = address;
+  cbData->bufSize = buf_size;
+  cbData->buffer = 0;
+  cbData->lastFault = 0;
+  cbData->lastFaultCode = 0;
+  
+  // All operations which will use callback data, will use the same callback
+  // data. So we just set the pointer here once.
+  op.cbData = (void*)cbData;
+  
+  // Queue the necessary debug operations for handling this command.
+  uint32_t curAddress = cbData->address;
+  int remain = cbData->bufSize;
+  unsigned char *bufPtr = buffer;
+  int curPage = -1;
+
+  // Handle writes
+  while (remain) {
+
+    if (!((curAddress & 0xFFF) % 28) && (remain >= 8)) {
+      // The remain >= 8 condition is used to ensure that the last word is
+      // accessed using a volatile bus write, so the fault signal is always
+      // somewhat valid.
+
+      int numWords;
+      int page;
+
+      // We can do a bulk write.
+
+      // Determine how many words we can write.
+      if (remain > 32) {
+        numWords = 7;
+      } else {
+        numWords = (remain - 4) / 4;
+      }
+
+      // Make sure we don't cross a 4kb boundary mid write (auto-increment
+      // does not support this).
+      if ((curAddress + numWords*4) > ((curAddress & 0xFFFFF000) + 0x00001000)) {
+        numWords = (((curAddress & 0xFFFFF000) + 0x00001000) - curAddress) / 4;
+      }
+
+      // Determine the page which this would belong to.
+      page = curAddress >> 12;
+
+      // Switch page if needed.
+      if (page != curPage) {
+
+        // We don't want to change the page while any previous writes may not
+        // have been completed, so we need a barrier.
+        op.t = OT_BARRIER;
+        op.cb = 0;
+        if (debugCommands_queue(&op) < 0) {
+          return -1;
+        }
+
+        // Insert the set page command.
+        op.t = OT_COMMAND;
+        op.p.commandCode = COMCODE_SET_PAGE;
+        op.p.data[0] = (curAddress >> 24) & 0xFF;
+        op.p.data[1] = (curAddress >> 16) & 0xFF;
+        op.p.data[2] = (curAddress >>  8) & 0xF0;
+        op.p.len = 3;
+        if (debugCommands_queue(&op) < 0) {
+          return -1;
+        }
+
+        // We don't want to change write until we're sure that the page
+        // command has been executed, so we need another barrier.
+        op.t = OT_BARRIER;
+        if (debugCommands_queue(&op) < 0) {
+          return -1;
+        }
+
+        // Update the current page.
+        curPage = page;
+
+      }
+
+      // Queue the bulk write command.
+      op.t = OT_COMMAND;
+      op.p.commandCode = COMCODE_BULK_WRITE;
+      op.p.data[0] = (curAddress & 0xFFF) / 28;
+      memcpy(&(op.p.data[1]), bufPtr, numWords*4);
+      op.p.len = numWords*4+1;
+      printf("Write to address %x, len %d\n", curAddress, op.p.len);
+      if (debugCommands_queue(&op) < 0) {
+        return -1;
+      }
+
+      // Update counters and pointers.
+      curAddress += numWords*4;
+      remain -= numWords*4;
+      bufPtr += numWords*4;
+
+    } else if (!(curAddress & 0x3) && (remain >= 4)) {
+
+      uint32_t writeData;
+
+      // We can do a volatile word write.
+      writeData = *(bufPtr+0);
+      writeData <<= 8;
+      writeData |= *(bufPtr+1);
+      writeData <<= 8;
+      writeData |= *(bufPtr+2);
+      writeData <<= 8;
+      writeData |= *(bufPtr+3);
+      printf("Write to address %x, len %d\n", curAddress, 4);
+      if (queueVolatile(curAddress & 0xFFFFFFFC, writeData, 0xF8, op.cbData) < 0) {
+        return -1;
+      }
+
+      // Update counters and pointers.
+      curAddress += 4;
+      remain -= 4;
+      bufPtr += 4;
+
+    } else if (!(curAddress & 0x1) && (remain >= 2)) {
+
+      uint32_t writeData;
+
+      // We can do a volatile halfword write.
+      writeData = *(bufPtr+0);
+      writeData <<= 8;
+      writeData |= *(bufPtr+1);
+      writeData <<= 8;
+      writeData |= *(bufPtr+0);
+      writeData <<= 8;
+      writeData |= *(bufPtr+1);
+      printf("Write to address %x, len %d\n", curAddress, 2);
+      if (queueVolatile(curAddress & 0xFFFFFFFC, writeData, (curAddress & 0x2) ? 0x38 : 0xC8, op.cbData) < 0) {
+        return -1;
+      }
+
+      // Update counters and pointers.
+      curAddress += 2;
+      remain -= 2;
+      bufPtr += 2;
+
+    } else {
+
+      uint32_t writeData;
+      int mask;
+
+      // We need to do a volatile byte write.
+      switch (curAddress & 0x3) {
+        case 0: mask = 0x8; break;
+        case 1: mask = 0x4; break;
+        case 2: mask = 0x2; break;
+        case 3: mask = 0x1; break;
+      }
+      writeData = *bufPtr;
+      writeData <<= 8;
+      writeData |= *bufPtr;
+      writeData <<= 8;
+      writeData |= *bufPtr;
+      writeData <<= 8;
+      writeData |= *bufPtr;
+      printf("Write to address %x, len %d\n", curAddress, 1);
+      if (queueVolatile(curAddress & 0xFFFFFFFC, writeData, (mask << 4) | 0x08, op.cbData) < 0) {
+        return -1;
+      }
+
+      // Update counters and pointers.
+      curAddress += 1;
+      remain -= 1;
+      bufPtr += 1;
+
+    }
+
+  }
+
   // Insert a barrier with a callback to detect when we're done.
   op.t = OT_BARRIER;
   op.cb = onReadWriteComplete;

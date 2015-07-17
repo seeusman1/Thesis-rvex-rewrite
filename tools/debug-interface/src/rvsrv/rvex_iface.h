@@ -49,18 +49,23 @@
 #ifndef _RVEX_IFACE_H_
 #define _RVEX_IFACE_H_
 
+#include <stdint.h>
+
 typedef struct rvex_iface {
   /**
-   * Tries to handle a Read or Write command sent by a TCP client connected to
-   * the debug server. command should be null-terminated.
+   * Tries to handle a Read or Write command.
    */
-  int (*handleReadWrite)(unsigned char *command, int clientID);
+  int (*read)(uint32_t address, uint32_t buf_size, int clientID);
+  int (*write)(uint32_t address, unsigned char *buffer, uint32_t buf_size,
+      int clientID);
+
   /**
    * Updates the backend. Returns -1 if an error occured, 0 if the system is
    * idle, or 1 if we want update to be called quickly again to handle potential
    * timeouts.
    */
   int (*update)(void);
+
   /**
    * Frees all dynamically allocated memory by the interface.
    */

@@ -49,10 +49,14 @@
 #ifndef _DEBUG_READ_WRITE_H_
 #define _DEBUG_READ_WRITE_H_
 
+#include <stdint.h>
+
 /**
  * Tries to handle a Read or Write command sent by a TCP client connected to
  * the debug server. command should be null-terminated.
  */
-int handleReadWrite(unsigned char *command, int clientID);
+int handleRead(uint32_t address, uint32_t buf_size, int clientID);
+int handleWrite(uint32_t address, unsigned char *buffer, uint32_t buf_size,
+    int clientID);
 
 #endif

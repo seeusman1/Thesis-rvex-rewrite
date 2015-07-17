@@ -46,27 +46,19 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#include "uart.h"
+#ifndef _PARSE_READ_WRITE_H_
+#define _PARSE_READ_WRITE_H_
 
-#include "debugCommands.h"
-#include "debugReadWrite.h"
+#include <stdint.h>
 
-#include "../rvex_iface.h"
+struct parse_rw_result {
+  int is_write;
+  uint32_t address;
+  uint32_t buf_size;
+  unsigned char *buffer;
+};
 
-/**
- * File descriptor for the serial port.
- */
-int tty = 0;
+int parseReadWrite(unsigned char *command, struct parse_rw_result *res,
+    unsigned char **syntax_error);
 
-int init_uart_iface(int tty, rvex_iface_t *iface) {
-  tty = tty;
-
-  *iface = (rvex_iface_t) {
-    .read = handleRead,
-    .write = handleWrite,
-    .update = debugCommands_update,
-    .free = debugCommands_free,
-  };
-
-  return 0;
-}
+#endif
