@@ -193,7 +193,7 @@ void hexdump(uint32_t address, unsigned char *buffer, int byteCount, int fault, 
     
     // If we're dumping in no-skip mode, always print the current line.
     if (position == HEXDUMP_NO_SKIPPING) {
-      hexdumpLine(j.base, buffer + (j.base - address), j.startOffs, j.stopOffs, fault, 0);
+      hexdumpLine(j.base, buffer + j.base - address, j.startOffs, j.stopOffs, fault, 0);
       continue;
     }
     
@@ -222,7 +222,7 @@ void hexdump(uint32_t address, unsigned char *buffer, int byteCount, int fault, 
       if (identicalLines == 2) {
         
         // Print ellipsis line.
-        hexdumpLine(j.base, buffer + (j.base - address), j.startOffs, j.stopOffs, fault, 1);
+        hexdumpLine(j.base, buffer + j.base - address, j.startOffs, j.stopOffs, fault, 1);
         
       }
       
@@ -236,13 +236,13 @@ void hexdump(uint32_t address, unsigned char *buffer, int byteCount, int fault, 
       identicalLines = 0;
       
       // Print current line.
-      hexdumpLine(j.base, buffer + (j.base - address), j.startOffs, j.stopOffs, fault, 0);
+      hexdumpLine(j.base, buffer + j.base - address, j.startOffs, j.stopOffs, fault, 0);
       
     }
       
     // Store the current line for the next line if this is a full line.
     if (j.numBytes == 16) {
-      memcpy(prevLine, buffer + (j.base - address), 16);
+      memcpy(prevLine, buffer + j.base - address, 16);
       prevLine[16] = fault;
       prevAddr = j.base;
     }
