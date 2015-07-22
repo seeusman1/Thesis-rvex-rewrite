@@ -112,8 +112,8 @@ architecture behavioral of registers is
 
   -- Registers are 64-bit. With a maximum of 8 contexts per processor we support 8 processor instances
   type reg_array is array(natural range <>) of std_logic_vector(0 to CORE_DATA_WIDTH-1);
-  type addr_reg_array is array(natural range <>) of rvex_address_array(0 to 8*8-1);
-  type reg_array_array is array(natural range <>) of reg_array(0 to 8*8-1);
+  type addr_reg_array is array(natural range <>) of rvex_address_array(0 to NO_RVEX*NO_CONTEXTS-1);
+  type reg_array_array is array(natural range <>) of reg_array(0 to NO_RVEX*NO_CONTEXTS-1);
 
   --TODO: Generate an error if CORE_DATA_WIDTH != 64
   --TODO: Generate an error if CFG.numContextsLog > 8 or NO_RVEX > 8
@@ -164,7 +164,7 @@ begin
         when 16#9000#/8 => run(0)        <= apply_write_mask(run(1), reg_wr_data, mask);
         when 16#9018#/8 => reset_ctxt(0) <= apply_write_mask(reset_ctxt(1), reg_wr_data, mask);
         when others =>
-          if vect2uint(reg_wr_addr) >= 16#9200#/8 and vect2uint(reg_wr_addr) < 16#9400#/8 then
+          if vect2uint(reg_wr_addr) >= 16#9200#/8 and vect2uint(reg_wr_addr) < (16#9200#/8 + NO_RVEX*NO_CONTEXTS) then
             cur_vec := vect2uint(reg_wr_addr(REG_ADDR_WIDTH-6 to REG_ADDR_WIDTH-1));
             resetVect(0)(cur_vec) <= apply_write_mask(resetVect(1)(cur_vec), reg_wr_data, mask);
           end if;
@@ -185,7 +185,7 @@ begin
       when 16#9010#/8 => read_data <= done(2);
       when 16#9018#/8 => read_data <= reset_ctxt(1);
       when others =>
-        if vect2uint(reg_rd_addr) >= 16#9200#/8 and vect2uint(reg_rd_addr) < 16#9400#/8 then
+        if vect2uint(reg_rd_addr) >= 16#9200#/8 and vect2uint(reg_rd_addr) < (16#9200#/8 + NO_RVEX*NO_CONTEXTS) then
           read_data <= resetVect(1)(vect2uint(reg_rd_addr(REG_ADDR_WIDTH-6 to REG_ADDR_WIDTH-1)));
         else
           read_data <= (others => '0');
