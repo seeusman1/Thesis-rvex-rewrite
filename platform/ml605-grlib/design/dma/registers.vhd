@@ -146,7 +146,8 @@ architecture behavioral of registers is
 begin
 
   -- NB. We assume that all accesses are 64-bit, so ignore *_be
-  handle_reg_write: process(reg_wr_addr, reg_wr_en, reg_wr_data, reg_wr_be) is
+  handle_reg_write: process(reg_wr_addr, reg_wr_en, reg_wr_data, reg_wr_be,
+                            run(1), reset_ctxt(1), resetVect(1)) is
     variable mask : std_logic_vector(0 to CORE_DATA_WIDTH-1);
     variable cur_vec : integer;
   begin
@@ -160,12 +161,12 @@ begin
 
     if reg_wr_en = '1' then
       case vect2uint(reg_wr_addr) is
-        when 16#9000#/8 => run(0)        <= apply_write_mask(run(0), reg_wr_data, mask);
-        when 16#9018#/8 => reset_ctxt(0) <= apply_write_mask(reset_ctxt(0), reg_wr_data, mask);
+        when 16#9000#/8 => run(0)        <= apply_write_mask(run(1), reg_wr_data, mask);
+        when 16#9018#/8 => reset_ctxt(0) <= apply_write_mask(reset_ctxt(1), reg_wr_data, mask);
         when others =>
           if vect2uint(reg_wr_addr) >= 16#9200#/8 and vect2uint(reg_wr_addr) < 16#9400#/8 then
             cur_vec := vect2uint(reg_wr_addr(REG_ADDR_WIDTH-6 to REG_ADDR_WIDTH-1));
-            resetVect(0)(cur_vec) <= apply_write_mask(resetVect(0)(cur_vec), reg_wr_data, mask);
+            resetVect(0)(cur_vec) <= apply_write_mask(resetVect(1)(cur_vec), reg_wr_data, mask);
           end if;
       end case;
     end if;
