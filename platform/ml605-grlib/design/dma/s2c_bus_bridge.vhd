@@ -120,22 +120,24 @@ architecture Behavioral of s2c_bus_bridge is
 begin -- architecture
 --=============================================================================
 
-  prop_state: process (clk, reset, user_rst_n) is
+  prop_state: process (clk) is
   begin
-    if reset = '1' or user_rst_n = '0' then
-      curr_state <= wait_pkt;
-      curr_addr  <= (others => '0');
-      curr_bcnt  <= (others => '0');
-      curr_data  <= (others => '0');
-      curr_sop   <= '0';
-      curr_eop   <= '0';
-    elsif rising_edge(clk) then
-      curr_state <= next_state;
-      curr_addr  <= next_addr;
-      curr_bcnt  <= next_bcnt;
-      curr_data  <= next_data;
-      curr_sop   <= next_sop;
-      curr_eop   <= next_eop;
+    if rising_edge(clk) then
+      if reset = '1' or user_rst_n = '0' then
+        curr_state <= wait_pkt;
+        curr_addr  <= (others => '0');
+        curr_bcnt  <= (others => '0');
+        curr_data  <= (others => '0');
+        curr_sop   <= '0';
+        curr_eop   <= '0';
+      else
+        curr_state <= next_state;
+        curr_addr  <= next_addr;
+        curr_bcnt  <= next_bcnt;
+        curr_data  <= next_data;
+        curr_sop   <= next_sop;
+        curr_eop   <= next_eop;
+      end if;
     end if;
   end process;
 

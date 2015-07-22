@@ -123,25 +123,27 @@ begin -- architecture
 --=============================================================================
 
 
-  proc_clk: process (reset, user_rst_n, clk) is
+  proc_clk: process (clk) is
   begin
-    if reset = '1' or user_rst_n = '0' then
-      curr_state      <= wait_pkt;
-      curr_addr       <= (others => '0');
-      curr_bcnt       <= (others => '0');
+    if rising_edge(clk) then
+      if reset = '1' or user_rst_n = '0' then
+        curr_state      <= wait_pkt;
+        curr_addr       <= (others => '0');
+        curr_bcnt       <= (others => '0');
 
-      curr_data       <= (others => '0');
-      curr_sop        <= '0';
-      curr_apkt_eop   <= '1';
+        curr_data       <= (others => '0');
+        curr_sop        <= '0';
+        curr_apkt_eop   <= '1';
 
-    elsif rising_edge(clk) then
-      curr_state    <= next_state;
-      curr_addr     <= next_addr;
-      curr_bcnt     <= next_bcnt;
+      else
+        curr_state    <= next_state;
+        curr_addr     <= next_addr;
+        curr_bcnt     <= next_bcnt;
 
-      curr_data     <= next_data;
-      curr_sop      <= next_sop;
-      curr_apkt_eop <= next_apkt_eop;
+        curr_data     <= next_data;
+        curr_sop      <= next_sop;
+        curr_apkt_eop <= next_apkt_eop;
+      end if;
     end if;
   end process;
 

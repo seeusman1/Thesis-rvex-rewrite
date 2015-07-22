@@ -192,55 +192,59 @@ begin
     end case;
   end process;
   
-  transition_rvex2dma_reg_clk: process(reset, reg_clk) is
+  transition_rvex2dma_reg_clk: process(reg_clk) is
   begin
-    if reset = '1' then
-      -- dma2rvex
-      run(1)       <= (others => '0');
-      reset_ctxt(1)     <= (others => '0');
-      resetVect(1) <= (others => (others => '0'));
+    if rising_edge(reg_clk) then
+      if reset = '1' then
+        -- dma2rvex
+        run(1)       <= (others => '0');
+        reset_ctxt(1)     <= (others => '0');
+        resetVect(1) <= (others => (others => '0'));
 
-      -- rvex2dma
-      idle(2)      <= (others => '0');
-      done(2)      <= (others => '0');
+        -- rvex2dma
+        idle(2)      <= (others => '0');
+        done(2)      <= (others => '0');
 
-      -- register interface
-      rd_data_out  <= (others => '0');
-    elsif rising_edge(reg_clk) then
-      -- dma2rvex
-      run(1)       <= run(0);
-      reset_ctxt(1)     <= reset_ctxt(0);
-      resetVect(1) <= resetVect(0);
+        -- register interface
+        rd_data_out  <= (others => '0');
+      else
+        -- dma2rvex
+        run(1)       <= run(0);
+        reset_ctxt(1)     <= reset_ctxt(0);
+        resetVect(1) <= resetVect(0);
 
-      -- rvex2dma
-      idle(2)      <= idle(1);
-      done(2)      <= done(1);
+        -- rvex2dma
+        idle(2)      <= idle(1);
+        done(2)      <= done(1);
 
-      -- register interface
-      rd_data_out  <= read_data;
+        -- register interface
+        rd_data_out  <= read_data;
+      end if;
     end if;
   end process;
 
-  transition_rctrl_clk: process(reset, rctrl_clk) is
+  transition_rctrl_clk: process(rctrl_clk) is
   begin
-    if reset = '1' then
-      -- dma2rvex
-      run(2)       <= (others => '0');
-      reset_ctxt(2)     <= (others => '0');
-      resetVect(2) <= (others => (others => '0'));
+    if rising_edge(rctrl_clk) then
+      if reset = '1' then
+        -- dma2rvex
+        run(2)       <= (others => '0');
+        reset_ctxt(2)     <= (others => '0');
+        resetVect(2) <= (others => (others => '0'));
 
-      -- rvex2dma
-      idle(1)      <= (others => '0');
-      done(1)      <= (others => '0');
-    elsif rising_edge(rctrl_clk) then
-      -- dma2rvex
-      run(2)       <= run(1);
-      reset_ctxt(2)     <= reset_ctxt(1);
-      resetVect(2) <= resetVect(1);
+        -- rvex2dma
+        idle(1)      <= (others => '0');
+        done(1)      <= (others => '0');
+      else
+        -- dma2rvex
+        run(2)       <= run(1);
+        reset_ctxt(2)     <= reset_ctxt(1);
+        resetVect(2) <= resetVect(1);
 
-      -- rvex2dma
-      idle(1)      <= idle(0);
-      done(1)      <= done(0);
+        -- rvex2dma
+        idle(1)      <= idle(0);
+        done(1)      <= done(0);
+      end if;
     end if;
   end process;
 
