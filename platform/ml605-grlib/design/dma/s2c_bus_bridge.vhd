@@ -148,6 +148,8 @@ begin -- architecture
                        bus2dma.ack) is
     variable addr           : unsigned(0 to 31);
     variable bcnt           : unsigned(0 to 9);
+
+    variable is_legal_write       : boolean;
   begin
     -- Make sure that the state only changes when set explicitly
     next_state <= curr_state;
@@ -168,9 +170,37 @@ begin -- architecture
     dma2bus.readEnable <= '0';
     dma2bus.writeEnable <= '0';
     dma2bus.address <= (others => '0');
-    -- Always write all 4 bytes for now, as writing less is not supported by
-    -- the memory controller
-    dma2bus.writeMask <= "1111";
+
+    -- Set the write mask
+    -- We don't allow unaligned writes
+    case vect2int(curr_bcnt) is
+      when 1 =>
+        case curr_addr(1 downto 0) is
+          when "00"   => dma2bus.writeMask <= "1000"; is_legal_write := true;
+          when "01"   => dma2bus.writeMask <= "0100"; is_legal_write := true;
+          when "10"   => dma2bus.writeMask <= "0010"; is_legal_write := true;
+          when "11"   => dma2bus.writeMask <= "0001"; is_legal_write := true;
+          when others => dma2bus.writeMask <= "0000"; is_legal_write := false;
+        end case;
+      when 2 =>
+        case curr_addr(1 downto 0) is
+          when "00"   => dma2bus.writeMask <= "1100"; is_legal_write := true;
+          when "10"   => dma2bus.writeMask <= "0011"; is_legal_write := true;
+          when others => dma2bus.writeMask <= "0000"; is_legal_write := false;
+        end case;
+      when 3 =>
+        -- We don't support writing 3 bytes
+        dma2bus.writeMask <= "0000";
+        is_legal_write := false;
+      when others =>
+        if curr_addr(1 downto 0) = "00" then
+          dma2bus.writeMask <= "1111";
+          is_legal_write := true;
+        else
+          dma2bus.writeMask <= "0000";
+          is_legal_write := false;
+        end if;
+    end case;
 
     -- Default values for the outgoing sync signals
     apkt_ready <= '0';
@@ -205,13 +235,26 @@ begin -- architecture
       when write_low =>
         dma2bus.address <= curr_addr;
         -- Transmit the lower word
-        dma2bus.writeData( 7 downto  0) <= curr_data(32 to 39);
-        dma2bus.writeData(15 downto  8) <= curr_data(40 to 47);
-        dma2bus.writeData(23 downto 16) <= curr_data(48 to 55);
-        dma2bus.writeData(31 downto 24) <= curr_data(56 to 63);
+        case vect2int(curr_bcnt) is
+          when 1 =>
+            dma2bus.writeData( 7 downto  0) <= curr_data(56 to 63);
+            dma2bus.writeData(15 downto  8) <= curr_data(56 to 63);
+            dma2bus.writeData(23 downto 16) <= curr_data(56 to 63);
+            dma2bus.writeData(31 downto 24) <= curr_data(56 to 63);
+          when 2 =>
+            dma2bus.writeData( 7 downto  0) <= curr_data(48 to 55);
+            dma2bus.writeData(15 downto  8) <= curr_data(56 to 63);
+            dma2bus.writeData(23 downto 16) <= curr_data(48 to 55);
+            dma2bus.writeData(31 downto 24) <= curr_data(56 to 63);
+          when others =>
+            dma2bus.writeData( 7 downto  0) <= curr_data(32 to 39);
+            dma2bus.writeData(15 downto  8) <= curr_data(40 to 47);
+            dma2bus.writeData(23 downto 16) <= curr_data(48 to 55);
+            dma2bus.writeData(31 downto 24) <= curr_data(56 to 63);
+        end case;
         dma2bus.writeEnable <= '1';
 
-        if bus2dma.ack = '1' then
+        if bus2dma.ack = '1' or not is_legal_write then
           -- Increment the next address to read
           next_addr <= std_logic_vector(addr + 4);
 
@@ -221,8 +264,7 @@ begin -- architecture
             next_state <= wait_pkt;
           else
             -- Start writing the next word, to speed up the transfer
-            dma2bus.address <= std_logic_vector(addr + 4);
-            dma2bus.writeData <= curr_data(0 to 31);
+            dma2bus.writeEnable <= '0';
 
             -- Decrement the byte count
             next_bcnt  <= std_logic_vector(bcnt - 4);
@@ -233,13 +275,26 @@ begin -- architecture
       when write_high =>
         -- Transmit the upper word
         dma2bus.address <= curr_addr;
-        dma2bus.writeData( 7 downto  0) <= curr_data( 0 to  7);
-        dma2bus.writeData(15 downto  8) <= curr_data( 8 to 15);
-        dma2bus.writeData(23 downto 16) <= curr_data(16 to 23);
-        dma2bus.writeData(31 downto 24) <= curr_data(24 to 31);
+        case vect2int(curr_bcnt) is
+          when 1 =>
+            dma2bus.writeData( 7 downto  0) <= curr_data(24 to 31);
+            dma2bus.writeData(15 downto  8) <= curr_data(24 to 31);
+            dma2bus.writeData(23 downto 16) <= curr_data(24 to 31);
+            dma2bus.writeData(31 downto 24) <= curr_data(24 to 31);
+          when 2 =>
+            dma2bus.writeData( 7 downto  0) <= curr_data(16 to 23);
+            dma2bus.writeData(15 downto  8) <= curr_data(24 to 31);
+            dma2bus.writeData(23 downto 16) <= curr_data(16 to 23);
+            dma2bus.writeData(31 downto 24) <= curr_data(24 to 31);
+          when others =>
+            dma2bus.writeData( 7 downto  0) <= curr_data( 0 to  7);
+            dma2bus.writeData(15 downto  8) <= curr_data( 8 to 15);
+            dma2bus.writeData(23 downto 16) <= curr_data(16 to 23);
+            dma2bus.writeData(31 downto 24) <= curr_data(24 to 31);
+        end case;
         dma2bus.writeEnable <= '1';
 
-        if bus2dma.ack = '1' then
+        if bus2dma.ack = '1' or not is_legal_write then
           -- Increment the next address to read
           next_addr <= std_logic_vector(addr + 4);
           -- Disable writing
