@@ -150,7 +150,8 @@ begin -- architecture
   data <= curr_data;
 
   handle_cmd: process (curr_state, curr_addr, curr_bcnt, curr_sop, curr_data,
-                       apkt_req, apkt_addr, apkt_bcount,
+                       curr_apkt_eop,
+                       apkt_req, apkt_addr, apkt_bcount, apkt_eop,
                        bus2dma.ack, bus2dma.readData,
                        dst_rdy) is
   begin

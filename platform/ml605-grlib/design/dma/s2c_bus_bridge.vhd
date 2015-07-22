@@ -144,7 +144,7 @@ begin -- architecture
   handle_cmd: process (curr_addr, curr_state, curr_bcnt, curr_data,
                        curr_sop, curr_eop,
                        apkt_req, apkt_addr, apkt_bcount,
-                       src_rdy, data, valid, eop,
+                       src_rdy, data, valid, sop, eop,
                        bus2dma.ack) is
   begin
     -- Make sure that the state only changes when set explicitly

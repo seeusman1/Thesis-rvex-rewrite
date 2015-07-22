@@ -172,7 +172,7 @@ begin
     end if;
   end process;
 
-  handle_reg_read: process(reg_rd_addr, run(1), idle(2), done(2), reset_ctxt(1)) is
+  handle_reg_read: process(reg_rd_addr, run(1), idle(2), done(2), reset_ctxt(1), resetVect(1)) is
   begin
     case vect2uint(reg_rd_addr) is
       -- Interface version
