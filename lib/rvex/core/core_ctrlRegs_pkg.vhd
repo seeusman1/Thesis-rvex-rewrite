@@ -172,6 +172,8 @@ package core_ctrlRegs_pkg is
   constant CR_CCR_RFT_C       : natural := 3; -- Not ready for trap.
   constant CR_CCR_BPE         : natural := 4; -- Breakpoint enable.
   constant CR_CCR_BPE_C       : natural := 5; -- Breakpoint disable.
+  constant CR_CCR_KM          : natural := 8; -- Kernel mode enable.
+  constant CR_CCR_KM_C        : natural := 9; -- Kernel mode disable.
   
   -- Bit indices for DCR.
   constant CR_DCR_BREAK       : natural := 24; -- Break flag.
@@ -590,6 +592,11 @@ package body core_ctrlRegs_pkg is
     -- Override the clear bit output to the complement of the set bit state.
     l2c(wordAddr).overrideEnable(clearBit) := '1';
     l2c(wordAddr).overrideData(clearBit) := not c2l(wordAddr).readData(setBit);
+
+    -- Set the reset state for clear bit to the opposite of the reset state for
+    -- the set bit.
+    l2c(wordAddr).resetValue(setBit) := resetState;
+    l2c(wordAddr).resetValue(clearBit) := not resetState;
     
     -- Disable override for the set bit.
     l2c(wordAddr).overrideEnable(setBit) := '0';

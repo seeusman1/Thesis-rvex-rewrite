@@ -265,6 +265,14 @@ all:_STATE {
   printf("Dumping state for context %d...\n\n", _CUR_CONTEXT);
   
   SET_BANK;
+
+  # Core running or stopped
+  set (val, readByte(DCR));
+  if (val&0x1,
+    (printf("\033[1mCore stopped\033[0m\n");),
+    (printf("\033[1mCore running\033[0m\n");)
+  );
+  printf("\n");
   
   # Special registers
   printf("\033[1mSpecial regs:\033[0m\n");
@@ -315,6 +323,13 @@ all:_STATE {
   printf("      Committed NOP count = %u\n", readWord(C_NOP));
   printf("\n");
   
+  # Trap registers
+  printf("\033[1mTrap registers:\033[0m\n");
+  printf("    Trap cause = %u\n", readByte(TC));
+  printf("    Trap point = 0x%x\n", readWord(TP));
+  printf(" Trap argument = 0x%x\n", readWord(TA));
+  printf("\n");
+
 }
 
 # Convert a core/gdb address to a debug bus address.

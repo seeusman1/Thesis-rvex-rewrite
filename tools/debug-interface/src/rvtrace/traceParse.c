@@ -182,15 +182,15 @@ int getTracePacket(
         packet->hasMem = 1;
         break;
       case 0x4: // Write byte, index 1.
-        packet->memAddr = 1;
+        packet->memAddr = 0;
         packet->hasMem = 1;
         break;
       case 0x2: // Write byte, index 2.
-        packet->memAddr = 2;
+        packet->memAddr = 0;
         packet->hasMem = 1;
         break;
       case 0x1: // Write byte, index 3.
-        packet->memAddr = 3;
+        packet->memAddr = 0;
         packet->hasMem = 1;
         break;
       case 0xC: // Write half, index 0.

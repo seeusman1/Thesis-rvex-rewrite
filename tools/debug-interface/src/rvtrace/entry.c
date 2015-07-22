@@ -51,6 +51,9 @@
 #include <getopt.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <limits.h>
+#include <errno.h>
+
 
 #include "entry.h"
 #include "main.h"
@@ -68,15 +71,25 @@ static void usage(char *progName);
 static void license(void);
 
 /**
+ * Safe version of strtoul that checks for error conditions.
+ * Exits on error instead of returning.
+ */
+static unsigned long int safeStrToUl(char *str);
+
+/**
  * Application entry point.
  */
-int main(int argc, char **argv) {
+int main(int argc, char **argv)
+{
   
   commandLineArgs_t args;
   char *progName = argv[0];
   char *outputFile = 0;
   char *traceFile = 0;
-  char *disasFile = 0;
+  char **disasFiles = 0;
+  int disasCount = 0;
+  unsigned long int *disasOffsets = 0;
+  int offsetCount = 0;
   uint8_t *traceData = 0;
   int traceDataSize = 0;
   int ok = 1;
@@ -98,11 +111,12 @@ int main(int argc, char **argv) {
       {"cfg",        required_argument, 0, 'C'},
       {"help",       no_argument,       0, 'h'},
       {"license",    no_argument,       0, 'L'},
+      {"offset",     required_argument, 0, '@'},
       {0, 0, 0, 0}
     };
     
     int option_index = 0;
-    int c = getopt_long(argc, argv, "o:l:g:c:h", long_options, &option_index);
+    int c = getopt_long(argc, argv, "o:l:g:c:@:h", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -138,7 +152,18 @@ int main(int argc, char **argv) {
         break;
         
       case 'C':
-        args.initialCfg = atoi(optarg);
+        args.initialCfg = safeStrToUl(optarg);
+        break;
+
+      case '@':
+        disasOffsets = realloc(disasOffsets, (offsetCount + 1)*sizeof(unsigned long int));
+        if (!disasOffsets)
+        {
+          fprintf(stderr, "realloc failed\n");
+          exit(EXIT_FAILURE);
+        }
+        disasOffsets[offsetCount] = safeStrToUl(optarg);
+        offsetCount++;
         break;
         
       case 'h':
@@ -167,13 +192,31 @@ int main(int argc, char **argv) {
   argc -= optind;
   
   // Load trace and disassembly filenames.
-  switch (argc) {
-    case 2:
-      disasFile = argv[1];
-    case 1:
+  if (argc > 0 )
       traceFile = argv[0];
-      break;
-    default:
+  if (argc > 1)
+  {
+    int i;
+    disasFiles = malloc((argc-1)*sizeof(char *));
+    for (i = 1; i < argc; i++)
+    {
+      disasFiles[i-1] = argv[i];
+    }
+    disasCount = argc - 1;
+    if (disasCount > offsetCount)
+    {
+      disasOffsets = realloc(disasOffsets, disasCount * sizeof(unsigned long int));
+      if (!disasOffsets)
+      {
+        fprintf(stderr, "realloc failure\n");
+        exit(EXIT_FAILURE);
+      }
+      for (i = offsetCount; i < disasCount; i++)
+        disasOffsets[i] = 0;
+    }
+  }
+  if (argc < 1)
+  {
       usage(progName);
       exit(EXIT_FAILURE);
   }
@@ -199,9 +242,12 @@ int main(int argc, char **argv) {
   }
   
   // Load disassembly data into memory.
-  if (ok && disasFile) {
-    if (disasLoad(disasFile) < 0) {
-      ok = 0;
+  if (ok && disasFiles) {
+    int i;
+    for (i = 0; i < disasCount; i++) {
+      if (disasLoad(disasFiles[i], disasOffsets[i]) < 0) {
+        ok = 0;
+      }
     }
   }
   
@@ -246,6 +292,8 @@ static void usage(char *progName) {
     "  -l <count>      Specifies the number of lanes in the processor. Defaults to 8.\n"
     "  -g <count>      Number of lane groups in the processor. Defaults to 4.\n"
     "  --cfg <config>  Initial runtime configuration word.\n"
+    "  -@ <number>     Offset for disasembly file. Can be given multiple times for\n"
+    "                  multiple disasembly files.\n"
     "  -h or --help    Shows this usage screen.\n"
     "  --license       Prints licensing information.\n"
     "\n",
@@ -309,3 +357,24 @@ static void license(void) {
   );
 }
 
+/**
+ * Safe version of strtoul that checks for error conditions.
+ * Exits on error instead of returning.
+ */
+unsigned long int safeStrToUl(char *str)
+{
+  unsigned long int value = 0;
+  char *endptr = 0;
+  value = strtoul(str, &endptr, 0);
+  if ((errno == ERANGE && (value == LONG_MAX || value == LONG_MIN))
+      || (errno != 0 && value == 0)) {
+    perror("strtol");
+    exit(EXIT_FAILURE);
+  }
+
+  if (endptr == str) {
+    fprintf(stderr, "No digits were found\n");
+    exit(EXIT_FAILURE);
+  }
+  return value;
+}

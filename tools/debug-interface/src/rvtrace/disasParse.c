@@ -152,7 +152,7 @@ int strlenge(const char *str, int len) {
 /**
  * Parses a line in a disassembly file.
  */
-static int parseLine(const char *line) {
+static int parseLine(const char *line, unsigned long int offset) {
   
   int firstDigitScanned;
   int i;
@@ -187,7 +187,7 @@ static int parseLine(const char *line) {
     sscanf(line, "%x", &pc);
     
     // Get the leaf node at this PC.
-    l = getNode(pc, 1);
+    l = getNode(pc + offset, 1);
     if (!l) {
       return -1;
     }
@@ -224,7 +224,7 @@ static int parseLine(const char *line) {
       sscanf(line, "%x", &pc);
       
       // Get the leaf node at this PC.
-      l = getNode(pc, 1);
+      l = getNode(pc + offset, 1);
       if (!l) {
         return -1;
       }
@@ -272,7 +272,7 @@ static int parseLine(const char *line) {
  * memory and parse it. Prints an error to stderr and returns -1 on failure or
  * returns 0 on success.
  */
-int disasLoad(const char *filename) {
+int disasLoad(const char *filename, unsigned long int offset) {
   
   char *buf, *ptr;
   
@@ -285,7 +285,7 @@ int disasLoad(const char *filename) {
   // Read the file line by line.
   ptr = strtok(buf, "\n\r");
   while (ptr) {
-    if (parseLine(ptr) < 0) {
+    if (parseLine(ptr, offset) < 0) {
       free(buf);
       return -1;
     }

@@ -53,10 +53,11 @@
 
 /**
  * This will attempt to load the given disassembly file (objdump -d) into
- * memory and parse it. Prints an error to stderr and returns -1 on failure or
- * returns 0 on success.
+ * memory and parse it. The offset specifies the difference between the 
+ * disassembly addresses and trace addresses.
+ * Prints an error to stderr and returns -1 on failure o: returns 0 on success.
  */
-int disasLoad(const char *filename);
+int disasLoad(const char *filename, unsigned long int offset);
 
 /**
  * Returns pointers to disassembly and symbol information for the given program

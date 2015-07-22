@@ -216,7 +216,8 @@ architecture Behavioral of rvsys_grlib is
   signal cache2rv_blockReconfig : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal cache2rv_stallIn       : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal rv2cache_stallOut      : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
-  
+  signal cache2rv_status        : rvex_cacheStatus_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
+ 
   -- Instruction cache interface signals.
   signal rv2icache_PCs          : rvex_address_array(2**CFG.core.numLaneGroupsLog2-1 downto 0);
   signal rv2icache_fetch        : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
@@ -332,7 +333,8 @@ begin -- architecture
         mem2rv_blockReconfig      => cache2rv_blockReconfig,
         mem2rv_stallIn            => cache2rv_stallIn,
         rv2mem_stallOut           => rv2cache_stallOut,
-        
+        mem2rv_cacheStatus        => cache2rv_status,
+       
         -- Instruction memory interface.
         rv2imem_PCs               => rv2icache_PCs,
         rv2imem_fetch             => rv2icache_fetch,
@@ -573,6 +575,7 @@ begin -- architecture
       cache2rv_blockReconfig    => cache2rv_blockReconfig,
       cache2rv_stallIn          => cache2rv_stallIn,
       rv2cache_stallOut         => rv2cache_stallOut,
+      cache2rv_status           => cache2rv_status,
       
       -- Core instruction memory interface.
       rv2icache_PCs             => rv2icache_PCs,
@@ -607,6 +610,21 @@ begin -- architecture
       sc2dcache_flush           => sc2dcache_flush
       
     );
+
+  ---------------------------------------------------------------------------
+  -- Cache Control Register
+  ---------------------------------------------------------------------------
+  --
+  --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- CACHE |       |  IFL  |       |  DFL  |               |             |B|
+  --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  --
+  -- IFL    = Instruction Cache Flush bits. One bit per context.
+  --
+  -- DFL    = Data Cache Flush bits. One bit per context.
+  --
+  -- B      = Data Cache Bypass bit. This bit causes the data cache to be
+  --          globally bypassed.
   
   -- Instantiate the cache registers.
   cache_control_reg_proc: process (clk) is
