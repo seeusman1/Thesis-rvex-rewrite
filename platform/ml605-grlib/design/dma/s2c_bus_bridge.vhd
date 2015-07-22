@@ -146,6 +146,8 @@ begin -- architecture
                        apkt_req, apkt_addr, apkt_bcount,
                        src_rdy, data, valid, sop, eop,
                        bus2dma.ack) is
+    variable addr           : unsigned(0 to 31);
+    variable bcnt           : unsigned(0 to 9);
   begin
     -- Make sure that the state only changes when set explicitly
     next_state <= curr_state;
@@ -154,6 +156,9 @@ begin -- architecture
     next_data  <= curr_data;
     next_sop   <= curr_sop;
     next_eop   <= curr_eop;
+
+    addr := vect2unsigned(curr_addr);
+    bcnt := vect2unsigned(curr_bcnt);
 
     -- We don't handle abort requests
     abort_ack <= '0';
@@ -208,19 +213,19 @@ begin -- architecture
 
         if bus2dma.ack = '1' then
           -- Increment the next address to read
-          next_addr <= std_logic_vector(vect2unsigned(curr_addr) + 4);
+          next_addr <= std_logic_vector(addr + 4);
 
-          if vect2unsigned(curr_bcnt) <= 4 then
+          if bcnt <= 4 then
             -- Done transfering, stop writing
             next_bcnt  <= (others => '0');
             next_state <= wait_pkt;
           else
             -- Start writing the next word, to speed up the transfer
-            dma2bus.address <= std_logic_vector(vect2unsigned(curr_addr) + 4);
+            dma2bus.address <= std_logic_vector(addr + 4);
             dma2bus.writeData <= curr_data(0 to 31);
 
             -- Decrement the byte count
-            next_bcnt  <= std_logic_vector(vect2unsigned(curr_bcnt) - 4);
+            next_bcnt  <= std_logic_vector(bcnt - 4);
             next_state <= write_high;
           end if;
         end if;
@@ -236,13 +241,13 @@ begin -- architecture
 
         if bus2dma.ack = '1' then
           -- Increment the next address to read
-          next_addr <= std_logic_vector(vect2unsigned(curr_addr) + 4);
+          next_addr <= std_logic_vector(addr + 4);
           -- Disable writing
           dma2bus.writeEnable <= '0';
 
-          if vect2unsigned(curr_bcnt) > 4 then
+          if bcnt > 4 then
             -- Decrement the byte count
-            next_bcnt  <= std_logic_vector(vect2unsigned(curr_bcnt) - 4);
+            next_bcnt  <= std_logic_vector(bcnt - 4);
             -- Request the next double word
             next_state <= wait_data;
           else
