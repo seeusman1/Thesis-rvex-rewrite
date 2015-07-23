@@ -198,7 +198,7 @@ begin
     if rising_edge(reg_clk) then
       if reset = '1' then
         -- dma2rvex
-        run(1)       <= (others => '0');
+        run(1)       <= (others => '1');
         reset_ctxt(1)     <= (others => '0');
         resetVect(1) <= (others => (others => '0'));
 
@@ -229,7 +229,7 @@ begin
     if rising_edge(rctrl_clk) then
       if reset = '1' then
         -- dma2rvex
-        run(2)       <= (others => '0');
+        run(2)       <= (others => '1');
         reset_ctxt(2)     <= (others => '0');
         resetVect(2) <= (others => (others => '0'));
 
