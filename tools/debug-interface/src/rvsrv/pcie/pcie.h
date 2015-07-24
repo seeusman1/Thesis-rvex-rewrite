@@ -46,51 +46,19 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef _ENTRY_H_
-#define _ENTRY_H_
+#ifndef _PCIE_PCIE_H_
+#define _PCIE_PCIE_H_
+
+typedef struct rvex_iface rvex_iface_t;
 
 /**
- * Application entry point.
+ * Initialize the pcie interface with the rVEX.
+ *
+ * cdev is a path to a character device interface to the rVEX memory. It is
+ * assumed to be correct.
+ * iface will be populated initialized by this method.
+ * Returns 0 on success, -1 on error.
  */
-int main(int argc, char **argv);
-
-/**
- * Structure containing the command line parameters. This is filled in main and
- * then passed to run().
- */
-typedef struct {
-  
-  /**
-   * Filename of the serial port to connect to.
-   */ 
-  char *port;
-  
-  /**
-   * Baud rate to use when opening the serial port.
-   */
-  int baudrate;
-
-  /**
-   * Path to the PCIe driver character device. NULL when PCIe is not used.
-   */
-  char *pcieCdev;
-  
-  /**
-   * TCP port to listen on for application-access connections.
-   */
-  int appPort;
-  
-  /**
-   * TCP port to listen on for debug-access connections.
-   */
-  int debugPort;
-  
-  /**
-   * When set, rvsrv should keep running in the current shell, instead of
-   * turning into a daemon.
-   */
-  int foreground;
-  
-} commandLineArgs_t;
+int init_pcie_iface(const char *cdev, rvex_iface_t *iface);
 
 #endif

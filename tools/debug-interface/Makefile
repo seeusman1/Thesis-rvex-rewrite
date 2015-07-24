@@ -9,6 +9,10 @@ include $(SRCDIR)/default-configuration.cfg
 # Try to include user configuration.
 -include configuration.cfg
 
+ifeq ($(PCIE_ENABLE), 1)
+	PCIE_FLAG = -P$(PCIE_CDEV)
+endif
+
 #------------------------------------------------------------------------------
 # Environment setup
 #------------------------------------------------------------------------------
@@ -26,10 +30,10 @@ help: copyconf
 	@cat USAGE
 
 server: copyconf $(BINDIR)/rvsrv
-	$(BINDIR)/rvsrv -p$(SERIAL_PORT) -b$(SERIAL_BAUD) -a$(TCP_PORT_APP) -d$(TCP_PORT_DEBUG)
+	$(BINDIR)/rvsrv -p$(SERIAL_PORT) -b$(SERIAL_BAUD) -a$(TCP_PORT_APP) -d$(TCP_PORT_DEBUG) $(PCIE_FLAG)
 
 server-debug: copyconf $(BINDIR)/rvsrv
-	$(BINDIR)/rvsrv -p$(SERIAL_PORT) -b$(SERIAL_BAUD) -a$(TCP_PORT_APP) -d$(TCP_PORT_DEBUG) --foreground
+	$(BINDIR)/rvsrv -p$(SERIAL_PORT) -b$(SERIAL_BAUD) -a$(TCP_PORT_APP) -d$(TCP_PORT_DEBUG) $(PCIE_FLAG) --foreground
 
 stop: copyconf $(BINDIR)/rvd
 	@$(BINDIR)/rvd -p$(TCP_PORT_DEBUG) stop
@@ -73,7 +77,7 @@ TOOLS = rvsrv rvd
 
 all: $(BINDIR)/rvsrv $(BINDIR)/rvd $(BINDIR)/rvtrace
 
-$(BINDIR)/rvsrv: $(SRCDIR)/rvsrv/*.c $(SRCDIR)/rvsrv/uart/*.c $(SRCDIR)/common/*.c
+$(BINDIR)/rvsrv: $(SRCDIR)/rvsrv/*.c $(SRCDIR)/rvsrv/pcie/*.c $(SRCDIR)/rvsrv/uart/*.c $(SRCDIR)/common/*.c
 	mkdir -p $(BINDIR)
 	$(CC) $(CFLAGS) -Wall -I $(SRCDIR)/common -o $@ $^
 

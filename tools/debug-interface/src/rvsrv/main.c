@@ -61,6 +61,7 @@
 #include "select.h"
 #include "tcpserv.h"
 
+#include "pcie/pcie.h"
 #include "uart/uart.h"
 
 /**
@@ -470,10 +471,16 @@ int run(const commandLineArgs_t *args) {
   CHECK(select_init());
   
   // Try to open the serial port.
-  CHECK(tty = serial_open(args->port, args->baudrate));
+  tty = serial_open(args->port, args->baudrate);
+  // Only fail when we are not using PCIe communication.
+  CHECK_FALSE(tty >= 0 || args->pcieCdev);
 
   // Try to initalize the rvex interface.
-  CHECK(init_uart_iface(tty, &rvexIface));
+  if (args->pcieCdev) {
+    CHECK(init_pcie_iface(args->pcieCdev, &rvexIface));
+  } else {
+    CHECK(init_uart_iface(tty, &rvexIface));
+  }
   
   // Try to open the TCP servers.
   CHECKNULL(appServer = tcpServer_open(
@@ -514,7 +521,9 @@ int run(const commandLineArgs_t *args) {
     busy = 0;
     
     // Update the serial port (perform reads into our buffer).
-    serial_update(tty);
+    if (tty >= 0) {
+        serial_update(tty);
+    }
     
     // Update the TCP servers (accept incoming connections, perform reads into
     // our buffer).
@@ -530,11 +539,13 @@ int run(const commandLineArgs_t *args) {
     // Handle debug command issue and replies.
     CHECK(busy = rvexIface.update());
     
-    // Handle application data.
-    CHECK(handleApplicationData(tty));
+    if (tty >= 0) {
+      // Handle application data.
+      CHECK(handleApplicationData(tty));
     
-    // Flush the serial port (write pending data to the serial port).
-    serial_flush(tty);
+      // Flush the serial port (write pending data to the serial port).
+      serial_flush(tty);
+    }
     
     // Flush the TCP servers (write pending data to the sockets).
     tcpServer_flush(appServer);
