@@ -15,7 +15,8 @@ help:
 
 # Attempts to download grlib if it doesn't exist.
 grlib-gpl-%.tar.gz:
-	wget http://www.gaisler.com/products/grlib/$@
+	cp /data/grlib/$@ ./
+#	wget http://www.gaisler.com/products/grlib/$@
 
 # Extracts and patches grlib.
 grlib-gpl-%: grlib-gpl-%.tar.gz
@@ -23,7 +24,7 @@ grlib-gpl-%: grlib-gpl-%.tar.gz
 	cd $@ && patch -p1 < ../patch-$(patsubst grlib-gpl-%,%,$@).patch ; true
 
 # Updates the patchfile.
-patch-%:
+patch-%: grlib-gpl-%.tar.gz
 	mkdir clean
 	cd clean && tar -xzf ../$(patsubst patch-%,grlib-gpl-%,$@).tar.gz
 	diff -rupN\
