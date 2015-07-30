@@ -14,9 +14,107 @@
 /*****************************************************************************/
 /* ENTRY POINT                                                               */
 /*****************************************************************************/
-  .section .text
+  .section .init
   .proc 
 _start::
+
+/* clear register file (I know this is bullshit) */
+mov $r0.1 = 0
+mov $r0.2 = 0
+ISSUE_2
+mov $r0.3 = 0
+mov $r0.4 = 0
+ISSUE_4
+mov $r0.5 = 0
+mov $r0.6 = 0
+ISSUE_2
+mov $r0.7 = 0
+mov $r0.8 = 0
+;;
+mov $r0.11 = 0
+mov $r0.12 = 0
+ISSUE_2
+mov $r0.13 = 0
+mov $r0.14 = 0
+ISSUE_4
+mov $r0.15 = 0
+mov $r0.16 = 0
+ISSUE_2
+mov $r0.17 = 0
+mov $r0.18 = 0
+;;
+mov $r0.21 = 0
+mov $r0.22 = 0
+ISSUE_2
+mov $r0.23 = 0
+mov $r0.24 = 0
+ISSUE_4
+mov $r0.25 = 0
+mov $r0.26 = 0
+ISSUE_2
+mov $r0.27 = 0
+mov $r0.28 = 0
+;;
+mov $r0.31 = 0
+mov $r0.32 = 0
+ISSUE_2
+mov $r0.33 = 0
+mov $r0.34 = 0
+ISSUE_4
+mov $r0.35 = 0
+mov $r0.36 = 0
+ISSUE_2
+mov $r0.37 = 0
+mov $r0.38 = 0
+;;
+mov $r0.41 = 0
+mov $r0.42 = 0
+ISSUE_2
+mov $r0.43 = 0
+mov $r0.44 = 0
+ISSUE_4
+mov $r0.45 = 0
+mov $r0.46 = 0
+ISSUE_2
+mov $r0.47 = 0
+mov $r0.48 = 0
+;;
+mov $r0.51 = 0
+mov $r0.52 = 0
+ISSUE_2
+mov $r0.53 = 0
+mov $r0.54 = 0
+ISSUE_4
+mov $r0.55 = 0
+mov $r0.56 = 0
+ISSUE_2
+mov $r0.57 = 0
+mov $r0.58 = 0
+;;
+mov $r0.61 = 0
+mov $r0.62 = 0
+ISSUE_2
+mov $r0.63 = 0
+mov $r0.9 = 0
+ISSUE_4
+mov $r0.10 = 0
+mov $r0.19 = 0
+ISSUE_2
+mov $r0.20 = 0
+mov $r0.29 = 0
+;;
+mov $r0.30 = 0
+mov $r0.39 = 0
+ISSUE_2
+mov $r0.40 = 0
+mov $r0.49 = 0
+ISSUE_4
+mov $r0.55 = 0
+mov $r0.59 = 0
+ISSUE_2
+mov $r0.60 = 0
+;;
+
   /* Load BSS section start and end. */
   c0  add     $r0.21      = $r0.0, __BSS_START
   ISSUE_2
@@ -109,6 +207,8 @@ _start::
   .section .text
   .proc 
 _panic_handler::
+stop
+;;
   
   /* Try to write a failure message to stdout: "<context ID>: panic." */
 #ifdef XSTSIM
@@ -116,9 +216,15 @@ _panic_handler::
 #else
   c0  ldb     $r0.57      = CR_CID_ADDR[$r0.0]
 #endif
-  ISSUE_2
+  ISSUE_4
   c0  add     $r0.3       = $r0.0, '\n'
   c0  call    $l0.0       = putchar
+;;
+  c0  ldb     $r0.58      = CR_TC_ADDR[$r0.0]
+;;
+  c0  ldw     $r0.59      = CR_TP_ADDR[$r0.0]
+;;
+  c0  ldw     $r0.60      = CR_TA_ADDR[$r0.0]
 ;;
   c0  add     $r0.3       = $r0.57, '0'
   c0  call    $l0.0       = putchar
@@ -126,6 +232,7 @@ _panic_handler::
   c0  add     $r0.3       = $r0.0, ':'
   c0  call    $l0.0       = putchar
 ;;
+/*
   c0  add     $r0.3       = $r0.0, ' '
   c0  call    $l0.0       = putchar
 ;;
@@ -147,9 +254,104 @@ _panic_handler::
   c0  add     $r0.3       = $r0.0, '.'
   c0  call    $l0.0       = putchar
 ;;
+*/
   c0  add     $r0.3       = $r0.0, '\n'
   c0  call    $l0.0       = putchar
 ;;
+  /* Try to write the trap cause and trap cause */
+  c0  add     $r0.3       = $r0.0, 'c'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 'a'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 'u'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 's'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 'e'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, ':'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, ' '
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.4       = $r0.0, $r0.58
+  c0  add     $r0.3       = $r0.0, strbuf
+  c0  call    $l0.0       = tohex
+;;
+  c0 call     $l0.0       = puts
+;;
+  c0  add     $r0.3       = $r0.0, '\n'
+  c0  call    $l0.0       = putchar
+;;
+  /* Try to write the trap cause and trap point */
+  c0  add     $r0.3       = $r0.0, 'p'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 'o'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 'i'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 'n'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 't'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, ':'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, ' '
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.4       = $r0.0, $r0.59
+  c0  add     $r0.3       = $r0.0, strbuf
+  c0  call    $l0.0       = tohex
+;;
+  c0 call     $l0.0       = puts
+;;
+  c0  add     $r0.3       = $r0.0, '\n'
+  c0  call    $l0.0       = putchar
+;;
+  /* Try to write the trap cause and trap Argument */
+  c0  add     $r0.3       = $r0.0, 'a'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 'r'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 'g'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 'm'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, 't'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, ':'
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.3       = $r0.0, ' '
+  c0  call    $l0.0       = putchar
+;;
+  c0  add     $r0.4       = $r0.0, $r0.60
+  c0  add     $r0.3       = $r0.0, strbuf
+  c0  call    $l0.0       = tohex
+;;
+  c0 call     $l0.0       = puts
+;;
+  c0  add     $r0.3       = $r0.0, '\n'
+  c0  call    $l0.0       = putchar
+;;
+
   /* Stop this context. */
   c0  stop
 ;;
@@ -503,7 +705,7 @@ _trap_handler::
 /* In case putchar() and interrupt() are never defined anywhere, they will */
 /* point here and be nop. */
 
-  .weak putchar, interrupt
+  .weak putchar, interrupt, tohex
   .section .text
   .proc
 putchar::
@@ -513,3 +715,13 @@ interrupt::
   c0  return  $r0.1       = $r0.1, 0, $l0.0
 ;;
   .endp
+  
+  
+.section .data
+.size strbuf, 12
+.weak strbuf
+strbuf:
+.data4 0
+.data4 0
+.data4 0
+
