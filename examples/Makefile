@@ -22,8 +22,51 @@ DEFS += ISSUE=$(ISSUE_WIDTH)
 
 # Bundle alignment requirement. Must be 1, 2, 4 or 8 (and at most ISSUE_WIDTH).
 ifndef BUNDLE_ALIGN
-BUNDLE_ALIGN = $(ISSUE_WIDTH)
+#BUNDLE_ALIGN = $(ISSUE_WIDTH)
+BUNDLE_ALIGN = 2
 endif
+
+# Filename to give to io.c. replace the dot (.) by an underscore here,
+# the linker wants that.
+# You will need to add the file to the .dep file and convert it to elf
+# yourself.
+ifndef FILENAME
+FILENAMEDEF =
+else
+FILENAMEDEF = -DFILENAME=$(FILENAME)
+endif
+
+# Which libraries to link against. We have the uClibc library for use on 
+# Linux (2.0 nommu).
+# Or newlib for use on the bare-metal core. For newlib you might need 
+# to include an application-specific version of io.c that includes your input 
+# file(s). io.c contains a printf implementation that writes to the UART and 
+# stores all output in a circular buffer in memory. 
+# This can be used by xSTsim to read the output after the program exits.
+ifdef RVEXLIB_UCLIBC
+INCLUDES = -I/data/uCLinux/generic_binary/uCLinux/uClibc/include \
+ -I/data/uCLinux/generic_binary/uCLinux/linux-2.0.x/include/ \
+ -I/data/tools/st200/ST200R7.3.0/include/ $(FILENAMEDEF) \
+ -I/data/tools/st200/ST200R7.3.0/target/core/st220
+LDFLAGS = --no-demangle /data/uCLinux/generic_binary/uCLinux/uClibc/lib/crt0.o \
+ -L/data/uCLinux/generic_binary/uCLinux/uClibc/lib -lm -lc floatlib.o
+endif
+
+ifdef RVEXLIB_NEWLIB_FILE
+DEFS+= IO_LINK_FILE
+INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
+ -I/data/tools/st200/ST200R7.3.0/include/ \
+ -I/data/tools/st200/ST200R7.3.0/target/core/st220
+LDFLAGS = GR19.elf --no-demangle  --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
+endif
+
+ifdef RVEXLIB_NEWLIB_NOFILE
+INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
+ -I/data/tools/st200/ST200R7.3.0/include/ \
+ -I/data/tools/st200/ST200R7.3.0/target/core/st220
+LDFLAGS = --no-demangle --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
+endif
+
 
 # Generic binary behavior. Must be one of the following;
 #   false     - compile for the specified issue width only.
@@ -66,7 +109,7 @@ endif
 
 # Compiler to use, must be HP, GCC or ST200. Default = HP.
 ifndef COMPILER
-COMPILER = HP
+COMPILER = O64
 endif
 
 # Whether LIMMH from previous syllable pair is supported by the core
@@ -115,7 +158,7 @@ BORROW23   = .3.2
 BORROW4567 = .5.4.7.6
 endif
 ifeq ($(ISSUE_WIDTH), 2)
-BORROW = $(BORROW01)
+BORROW = $(BORROW01).
 else ifeq ($(ISSUE_WIDTH), 4)
 BORROW = $(BORROW01)$(BORROW23)
 else
@@ -129,14 +172,23 @@ endif
 #   Bit 3 = BR
 ifndef LANECONFIG
 ifeq ($(ISSUE_WIDTH), 2)
-# LANECONFIG = 7B
-LANECONFIG = FB
-else ifeq ($(ISSUE_WIDTH), 4)
-# LANECONFIG = 337B
-LANECONFIG = FBFB
+ifeq ($(DYNAMIC), false)
+ LANECONFIG = 7B
 else
-# LANECONFIG = 3333337B
-LANECONFIG = FBFBFBFB
+ LANECONFIG = FB
+endif
+else ifeq ($(ISSUE_WIDTH), 4)
+ifeq ($(DYNAMIC), false)
+ LANECONFIG = 337B
+else
+ LANECONFIG = FBFB
+endif
+else
+ifeq ($(DYNAMIC), false)
+ LANECONFIG = 3333337B
+else
+ LANECONFIG = FBFBFBFB
+endif
 endif
 endif
 
@@ -150,19 +202,19 @@ EXECUTABLES += $(POWERSTONE)
 
 # Random other applications.
 EXECUTABLES += ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite\
-	soma x264 uart xstsimframebuffer all-at-once
+	soma x264 uart xstsimframebuffer all-at-once convolution greyscale dijkstra chanvese gauss_parallel
 
 # List of platform-agnostic (generic) programs which run and complete without
 # interaction, and test for success/failure. On success, main() should return
 # 0.
-BENCH_EXECUTABLES  = adpcm bcnt blit crc engine fir g3fax itver2 jpeg matrix
-BENCH_EXECUTABLES += pocsag qurt soma ucbqsort v42 x264
+BENCH_EXECUTABLES  = adpcm bcnt blit crc engine fir g3fax itver2 jpeg matrix des compress
+BENCH_EXECUTABLES += pocsag qurt soma ucbqsort v42 x264 
 
 # Toolchain setup.
 ifndef TOOLS
 TOOLS = ../tools
 endif
-BUILD = $(TOOLS)/build/bin
+BUILD = $(TOOLS)/rvex-elf32-32bit/bin
 HOSTCC = gcc
 OBJCOPY = $(BUILD)/rvex-elf32-objcopy
 OBJDUMP = $(BUILD)/rvex-elf32-objdump
@@ -182,7 +234,7 @@ GENERIC_SRC = $(GEN_EXAMPLES)/src
 
 # Assembler setup.
 AS = $(BUILD)/rvex-elf32-as
-ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG) --padding $(BUNDLE_ALIGN)
+ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG) --padding $(BUNDLE_ALIGN) --autosplit
 ifneq ($(DYNAMIC), false)
 ASFLAGS += -u
 endif
@@ -216,12 +268,25 @@ CFLAGS += -g
 endif
 
 else
-CC=st200-gcc
-CFLAGS = -I$(GEN_EXAMPLES)/src -mcore=st220 -EB -fshort-double #use with Open64 compiler
+FPLIB=libcfpi-st220.cc.a
+CFLAGS = -I$(GEN_EXAMPLES)/src -mcore=st220 -EB -fshort-double -fno-dismissible-load \
+-fno-exceptions -mno-auto-prefetch -std=c99 $(INCLUDES)
+ifeq ($(ISSUE_WIDTH), 8)
+CC=/shares/group/ce-rvex/tools/builds/open64_8issue_1MEM/bin/st200-gcc
+ifeq ($(DEBUG), false)
+CFLAGS += -O2
+else
+CFLAGS += -g
+endif
+else ifeq ($(ISSUE_WIDTH), 4)
+CC=/shares/group/ce-rvex/tools/builds/open64_4issue_stopbit/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3
 else
 CFLAGS += -g
+endif
+else
+error
 endif
 endif
 
@@ -294,6 +359,12 @@ else
 endif
 
 # How to compile generic sources;
+io.s: $(GENERIC_SRC)/io.c
+	$(CC) $(CFLAGS) -I/data/other/newlib/build/rvex/rvex-elf32/include \
+	-I/data/tools/st200/ST200R7.3.0/include/ \
+	-I/data/tools/st200/ST200R7.3.0/target/core/st220 \
+	$(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
+
 %.s: $(GENERIC_SRC)/%.c
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
 ifeq ($(COMPILER), HP)
@@ -308,6 +379,25 @@ ifeq ($(COMPILER), HP)
 else
 %.s: $(GENERIC_SRC)/%.S
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@
+endif
+
+# Always compile VEXdiv with HP
+VEXdiv.s: $(GENERIC_SRC)/VEXdiv.c
+	$(TOOLS)/vex-3.43/bin/cc -I$(GEN_EXAMPLES)/src -fno-xnop -fexpand-div -fmm=$(GEN_EXAMPLES)/pipe_1_$(ISSUE_WIDTH)_fw.mm \
+	-S $< -o $@
+
+#Dirty tricks to force other FP library in case we're using Open64
+.PHONY: FORCE
+FORCE:
+
+ifeq ($(COMPILER), O64)
+ifeq ($(ISSUE_WIDTH), 4)
+floatlib.o: IFR4_stat/LIBFP/libcfpi-st220.cc.a FORCE
+	cp $< $@
+else ifeq ($(ISSUE_WIDTH), 8)
+floatlib.o: IFR8_stat/LIBFP/libcfpi-st220.cc.a FORCE
+	cp $< $@
+endif
 endif
 
 # How to assemble;
@@ -341,7 +431,7 @@ _start.o-%: default_start.o
 # How to link;
 .SECONDEXPANSION:
 %.elf: _start.o-% %.o $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$@)
-	$(LD) _start.o $(filter-out $<,$^) -o $@
+	$(LD) _start.o $(filter-out $<,$^) -o $@ $(LDFLAGS)
 
 # How to link all BENCH_EXECUTABLES together so they all run from a single
 # main():
@@ -356,7 +446,11 @@ all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES
 
 # How to disassemble;
 %.disas: %.elf
-	$(OBJDUMP) -D $< > $@
+	$(OBJDUMP) -d $< > $@
+
+#Create binary file to upload using GRMON
+%.bin: %.elf
+	$(OBJCOPY) -O binary $< $@
 
 # Default targets for applications;
 .PHONY: $(EXECUTABLES)
@@ -364,7 +458,7 @@ $(EXECUTABLES):
 	$(MAKE) $@.srec $@.disas
 
 # How to run xSTsim;
-xstsim-%: export XSTSIM = XSTSIM
+xstsim%: export XSTSIM = XSTSIM
 xstsim-%: %.xst.elf
 ifneq ($(DYNAMIC), false)
 ifeq ($(LIMMH_PREV), true)
@@ -376,6 +470,27 @@ endif
 endif
 endif
 	$(SIM) $(SIMFLAGS) --c.target_exec='"$<"'
+
+#Rules for xSTsim:
+.PHONY: xstsimtestall
+xstsimtestall: $(POWERSTONE:%=xstsimtest-%)
+
+#The Powerstone programs all return 0xdeadbeef. 
+#We take the last register contents using tail and grep for that value in r3 (return value register).
+xstsimtest-% : %.xst.elf cfg.sim
+	$(SIM) $(SIMFLAGS) |tail -n 12 | grep "r0.3  = deadbeef"; if [ $$? != 0 ] ; then \
+	echo "Program returned unexpected exit code" ; false; \
+	else \
+	echo "Program Finished Successfully" ; true;  \
+	fi
+
+.PHONY: xstsimlogall
+xstsimlogall: $(POWERSTONE:%=xstsimlog-%)
+
+xstsimlog-% : %.xst.elf cfg.sim
+	$(SIM) $(SIMFLAGS) --c.target_exec='"$<"' --c.core.issue_width=$(ISSUE_WIDTH) --config-file=cfg.sim > $@
+
+
 
 # How to convert from a (generic binary) r-VEX elf to an elf file which xSTsim
 # understands (this modifies the stop bits when assembly was done with the -u

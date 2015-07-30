@@ -129,6 +129,7 @@ int puts(const char *str) {
  * and in addition reports success or failure, if supported by the platform.
  */
 int rvex_succeed(const char *str) {
+#if 0
   puts("success: ");
   puts(str);
   while (1)
@@ -139,12 +140,17 @@ int rvex_succeed(const char *str) {
    */
    }
   return 0;
+#endif
+  return stop(0xdeadbeef);
 }
 int rvex_fail(const char *str) {
+#if 0
   puts("failure: ");
   puts(str);
   while (1) ;
   return 0;
+#endif
+  return stop(-1);
 }
 
 /**
@@ -154,4 +160,9 @@ int rvex_fail(const char *str) {
 int getchar(void) {
   while (1) ;
   return 0;
+}
+
+int stop(int exit_code)
+{
+	asm volatile("stop");
 }

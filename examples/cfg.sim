@@ -35,7 +35,7 @@ inst_tb_channel    true	# this maps the RAM also in the instruction memory
 
 
 [c]
-target_exec    "adpcm.elf"
+#target_exec    "adpcm.elf"
 #target_args    ""
 symbol_table                 target_exec                                 # path of the symbol table (empty string if no symbol table is available)
 kernel_debug_trace       "disabled"                                  # specify if and when debug information related to the 'gpe' core model simulation kernel must be printed (allowed values are "disabled", "always" and "on trace")

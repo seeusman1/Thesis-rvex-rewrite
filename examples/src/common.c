@@ -67,11 +67,11 @@ double cos(double rad) {
   }
   return app;
 }
-
+/*
 double tan(double rad) {
   return sin(rad) / cos(rad);
 }
-
+*/
 double sqrt(double val) {
   double x = val/10;
   double dx;
@@ -96,6 +96,7 @@ double sqrt(double val) {
   }
   return x;
 }
+
 
 void putc(char c) {
   /* implement your own version of this or use the standard */

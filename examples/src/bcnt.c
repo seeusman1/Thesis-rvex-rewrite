@@ -44,6 +44,8 @@ main()
   unsigned long *s, *d;
   unsigned long x;
   int k, t = 0;
+  puts("reconfig:\n\r");
+  CR_CRR = 0x9999;
   for (s = src, d = dst, t = 0; *s; s += 4, d += 4)
     {
       x = s[0] ^ d[0];
