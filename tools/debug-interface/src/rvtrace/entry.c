@@ -147,7 +147,17 @@ int main(int argc, char **argv)
         break;
         
       case 'C':
-        args.initialCfg = atoi(optarg);
+        args.initialCfg = strtoul(optarg, &endptr, 0);
+        if ((errno == ERANGE && (args.initialCfg == LONG_MAX || args.initialCfg == LONG_MIN))
+            || (errno != 0 && args.initialCfg == 0)) {
+          perror("strtol");
+          exit(EXIT_FAILURE);
+        }
+
+        if (endptr == optarg) {
+          fprintf(stderr, "No digits were found\n");
+          exit(EXIT_FAILURE);
+        }
         break;
 
       case '@':
