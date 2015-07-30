@@ -52,6 +52,10 @@
 #define CR_AFF_ADDR             CREG_GLOB_ADDR(0x00C)
 #define CR_AFF                  CREG_UINT32_R(CR_AFF_ADDR)
 
+// Cache control register
+#define CR_CACHE_ADDR			CREG_GLOB_ADDR(0x800)
+#define CR_CACHE                CREG_UINT32_RW(CR_CACHE_ADDR)
+
 // Cycle counter.
 #define CR_CNT_ADDR             CREG_GLOB_ADDR(0x010)
 #define CR_CNT                  CREG_UINT32_R(CR_CNT_ADDR)
