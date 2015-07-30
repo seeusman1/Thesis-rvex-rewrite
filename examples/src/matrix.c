@@ -4,6 +4,13 @@
 
 int matrix_mul();
 
+#define M 32
+
+int a[M][M];
+int b[M][M];
+int c[M][M];
+
+/*
 int a[10][10] = { {1, -1, 1, 1, -1, 1, 1, 1, -1, 1},
 			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
 			{1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
@@ -47,16 +54,29 @@ int result[10][10] = {{8, 4, 4, 0, 2, 4, 2, 4, 6, 4, },
 	{6, 10, 10, 6, 8, 6, 8, 10, 8, 10, },
 	{6, 10, 10, 6, 8, 6, 8, 10, 8, 10, },
 };
-
+*/
 					
-
+#if 0
 int matrix_mul(){	
 	
 	int i , j , k;
-			
-	for(i = 0; i < 10; i++){  
-		for(j = 0; j < 10; j++){
-			for(k = 0; k < 10; k++){
+	
+	int m = M;
+	
+	for (i = 0; i < m; i++)
+	{
+		for (j = 0; j < m; j++)
+		{
+			a[i][j] = i + j;
+			b[i][j] = i + j;
+			c[i][j] = i + j;
+		}
+	}
+	
+	for(i = 0; i < m; i++){  
+		for(j = 0; j < m; j++){
+		#pragma unroll(16)
+			for(k = 0; k < m; k++){
 				c[i][j] += a[i][k] * b[k][j];
 			}
 		}
@@ -65,11 +85,32 @@ int matrix_mul(){
 	return 0;
 }
 
+#endif
+
+int matrix_mul(){
+
+     int i , j , k;
+
+     for(i = 0; i < 10; i++){
+         for(j = 0; j < 10; j+=2){
+//         #pragma unroll 4
+             for(k = 0; k < 10; k++){
+                 c[i][k] += a[i][j] * b[j][k];
+                 c[i][k] += a[i][j+1] * b[j+1][k];
+             }
+         }
+     }
+
+     return 0;
+ }
+
+
 int main(void)
 {
 	int i, j;
 	puts("matrix Test Started\n");
 	matrix_mul();
+	/*
 	for (i = 0; i < 10; i++)
 	{
 		for (j = 0; j < 10; j++)
@@ -81,6 +122,7 @@ int main(void)
 			}
 		}
 	}
+	*/
 	rvex_succeed("matrix Test Passed\n");
 	return 0;
 }
