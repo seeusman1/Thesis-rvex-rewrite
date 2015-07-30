@@ -71,6 +71,12 @@ static void usage(char *progName);
 static void license(void);
 
 /**
+ * Safe version of strtoul that checks for error conditions.
+ * Exits on error instead of returning.
+ */
+static unsigned long int safeStrToUl(char *str);
+
+/**
  * Application entry point.
  */
 int main(int argc, char **argv)
@@ -111,7 +117,6 @@ int main(int argc, char **argv)
     
     int option_index = 0;
     int c = getopt_long(argc, argv, "o:l:g:c:@:h", long_options, &option_index);
-    char *endptr = 0;
 
     if (c == -1) {
       break;
@@ -147,17 +152,8 @@ int main(int argc, char **argv)
         break;
         
       case 'C':
-        args.initialCfg = strtoul(optarg, &endptr, 0);
-        if ((errno == ERANGE && (args.initialCfg == LONG_MAX || args.initialCfg == LONG_MIN))
-            || (errno != 0 && args.initialCfg == 0)) {
-          perror("strtol");
-          exit(EXIT_FAILURE);
-        }
 
-        if (endptr == optarg) {
-          fprintf(stderr, "No digits were found\n");
-          exit(EXIT_FAILURE);
-        }
+        args.initialCfg = safeStrToUl(optarg);
         break;
 
       case '@':
@@ -167,17 +163,7 @@ int main(int argc, char **argv)
           fprintf(stderr, "realloc failed\n");
           exit(EXIT_FAILURE);
         }
-        disasOffsets[offsetCount] = strtoul(optarg, &endptr, 0);
-        if ((errno == ERANGE && (disasOffsets[offsetCount] == LONG_MAX || disasOffsets[offsetCount] == LONG_MIN))
-            || (errno != 0 && disasOffsets[offsetCount] == 0)) {
-          perror("strtol");
-          exit(EXIT_FAILURE);
-        }
-
-        if (endptr == optarg) {
-          fprintf(stderr, "No digits were found\n");
-          exit(EXIT_FAILURE);
-        }
+        disasOffsets[offsetCount] = safeStrToUl(optarg);
         offsetCount++;
         break;
         
@@ -372,3 +358,24 @@ static void license(void) {
   );
 }
 
+/**
+ * Safe version of strtoul that checks for error conditions.
+ * Exits on error instead of returning.
+ */
+unsigned long int safeStrToUl(char *str)
+{
+  unsigned long int value = 0;
+  char *endptr = 0;
+  value = strtoul(str, &endptr, 0);
+  if ((errno == ERANGE && (value == LONG_MAX || value == LONG_MIN))
+      || (errno != 0 && value == 0)) {
+    perror("strtol");
+    exit(EXIT_FAILURE);
+  }
+
+  if (endptr == str) {
+    fprintf(stderr, "No digits were found\n");
+    exit(EXIT_FAILURE);
+  }
+  return value;
+}
