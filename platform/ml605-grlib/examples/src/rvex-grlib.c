@@ -57,3 +57,25 @@ int getchar(void) {
   
 }
 
+
+//needs a 12 bytes sized char array, returns a string repres. of the supplied val.
+void tohex(char* s, int val)
+{
+	int i;
+	char tmp;
+	int nibble;
+	s[0] = '0';
+	s[1] = 'x';
+	s[10] = '\n';
+//	s[10] = '\0';
+	s[11] = '\0';
+	for(i = 0; i < 8; i++)
+	{
+		nibble = val&0xF;
+		if (nibble > 9) tmp = 'A'-10+nibble;
+		else tmp = '0'+nibble;
+		s[9-i] = tmp;
+		val = val>>4;
+	}
+}
+
