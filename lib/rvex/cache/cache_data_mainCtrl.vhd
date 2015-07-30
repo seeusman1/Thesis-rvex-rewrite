@@ -420,6 +420,7 @@ begin -- architecture
           if (clkEnCPU = '1' and stall = '0') or writeAccepted = '0' then
             nextState <= STATE_IDLE;
           else
+            memSyncRegEna <= '1';
             nextState <= STATE_WAIT_FOR_CPU;
           end if;
           
