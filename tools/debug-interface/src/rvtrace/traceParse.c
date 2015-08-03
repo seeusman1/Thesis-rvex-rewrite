@@ -227,7 +227,7 @@ int getTracePacket(
     if (packet->hasMem >= 4) {
       SCAN("    DATA", 2);
       packet->memWriteData |= ((uint32_t)d[0]) << 16;
-      packet->memWriteData |= ((uint32_t)d[1]) << 14;
+      packet->memWriteData |= ((uint32_t)d[1]) << 24;
     }
   }
   
