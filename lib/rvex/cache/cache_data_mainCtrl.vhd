@@ -245,7 +245,10 @@ begin -- architecture
       -- Instantiate read data synchronization register to go from the clkEnBus
       -- domain to the clkEnCPU domain. When the bus returns read data, this
       -- stores the data in case clkEnCPU was not active in that cycle.
-      if memSyncRegEna = '1' then
+      if reset = '1' then
+        memSyncRegData <= (others => '0');
+        memSyncRegFault <= '0';
+      elsif memSyncRegEna = '1' then
         memSyncRegData <= busToCache.readData;
         memSyncRegFault <= busToCache.fault;
       end if;
@@ -413,14 +416,25 @@ begin -- architecture
       when STATE_WRITE =>
         
         if clkEnBus = '1' and busToCache.ack = '1' then
-          
-          -- Memory write completed. Wait for the CPU to finish processing the
-          -- write instruction (there might be other stall signals preventing
-          -- it from doing so) before swicthing back to idle.
-          if (clkEnCPU = '1' and stall = '0') or writeAccepted = '0' then
-            nextState <= STATE_IDLE;
-          else
+
+          if busToCache.fault = '1' then
+             
+            -- Report a bus fault to the CPU. We can do this easily by just
+            -- enabling the synchronization register (which also stores the
+            -- fault flag) and going to the STATE_WAIT_FOR_CPU state.
+            memSyncRegEna <= '1';
             nextState <= STATE_WAIT_FOR_CPU;
+          else
+            
+            -- Memory write completed. Wait for the CPU to finish processing the
+            -- write instruction (there might be other stall signals preventing
+            -- it from doing so) before swicthing back to idle.
+            if (clkEnCPU = '1' and stall = '0') or writeAccepted = '0' then
+              nextState <= STATE_IDLE;
+            else
+              nextState <= STATE_WAIT_FOR_CPU;
+            end if;
+            
           end if;
           
         else
