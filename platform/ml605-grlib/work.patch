@@ -551,6 +551,9 @@
 +  signal rctrl2rv : rvex_rctrl2rv_array(CFG_NRVEX*(2**CFG_RVEX_CFG.core.numContextsLog2)-1 downto 0);
 +  signal rv2rctrl : rvex_rv2rctrl_array(CFG_NRVEX*(2**CFG_RVEX_CFG.core.numContextsLog2)-1 downto 0);
 +
++  signal pcie_rctrl2rv : rvex_rctrl2rv_array(CFG_NRVEX*(2**CFG_RVEX_CFG.core.numContextsLog2)-1 downto 0);
++  signal irq_rctrl2rv  : rvex_rctrl2rv_array(CFG_NRVEX*(2**CFG_RVEX_CFG.core.numContextsLog2)-1 downto 0);
++
  begin
  
 +
@@ -860,11 +863,31 @@
 +          CFG                     => CFG_RVEX_CFG.core
 +        )
 +        port map (
-+          rctrl2rv                => rctrl2rv(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX),
++          rctrl2rv                => irq_rctrl2rv(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX),
 +          rv2rctrl                => rv2rctrl(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX),
 +          irqi                    => irqi(PIND to PIND+PNUM-1),
 +          irqo                    => irqo(PIND to PIND+PNUM-1)
 +        );
++    end generate;
++    irq_nobridge_gen: if CFG_IRQ3_ENABLE = 0 generate
++      irq_rctrl2rv_gen: for j in i*CFG_NRVEX to i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 generate
++        irq_rctrl2rv(j).run       <= '1';
++        irq_rctrl2rv(j).reset     <= '0';
++        irq_rctrl2rv(j).resetVect <= (others => '0');
++        irq_rctrl2rv(j).irq       <= '0';
++        irq_rctrl2rv(j).irqID     <= (others => '0');
++      end generate;
++    end generate;
++
++    rctrl_map_gen: for j in i*CFG_NRVEX to i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 generate
++    begin
++      rctrl2rv(j).run       <= irq_rctrl2rv(j).run;--pcie_rctrl2rv(j).run and irq_rctrl2rv(j).run;
++      rctrl2rv(j).reset     <= irq_rctrl2rv(j).reset;--pcie_rctrl2rv(j).reset or irq_rctrl2rv(j).reset;
++      rctrl2rv(j).resetVect <= irq_rctrl2rv(j).resetVect;-- when pcie_rctrl2rv(j).reset = '0' and irq_rctrl2rv(j).reset = '1' else
++                               --pcie_rctrl2rv(j).resetVect;
++
++      rctrl2rv(j).irq       <= irq_rctrl2rv(j).irq;
++      rctrl2rv(j).irqID     <= irq_rctrl2rv(j).irqID;
 +    end generate;
 +
 +  end generate;
@@ -1021,7 +1044,7 @@
 +      dma2bus_s2c             => dma2bus(1),
 +
 +      rctrl_clk               => clkm,
-+      rctrl2rv                => rctrl2rv,
++      rctrl2rv                => pcie_rctrl2rv,
 +      rv2rctrl                => rv2rctrl,
 +
 +
