@@ -2,19 +2,31 @@
 #include <stdlib.h>
 #include "rvex.h"
 
-#define NUM 32
-
+#define NUM 64
 #define maxIter 2
-#define MASTER 0
-#define NR_THREADS 1
 
-volatile int running = 0;
+#define MASTER 0
+#define NR_THREADS 4
+
 volatile int initialized = 0;
+
+volatile int *finished1 = (int*)0x80000604;
+volatile int *finished2 = (int*)0x80000608;
 
 
 
 
 double *dx, *b, *A, *x;
+
+void print_results()
+{
+	int i;
+	for (i = 0; i < NUM; i++)
+	{
+		printf("0x%08x\n", x[i]);
+	}
+	printf("\n");
+}
 
 //int main(int argc, char **argv){
 int main(){
@@ -22,13 +34,11 @@ int main(){
 		int i, j, k;
 		int start, end, chunk, chunkPlus, excess;
 
-		volatile int c = 0;
+		//volatile int c = 0;
 		int size = NUM;		
 		int core_id = (int)CR_CID;
 
 		
-		i = j = k = 0;
-		start = end = chunk = chunkPlus = excess = 0;
 		
 		if(size%NR_THREADS == 0){
 			start = (size/NR_THREADS) * core_id;
@@ -76,7 +86,7 @@ int main(){
 				}
 				initialized = 1;
 				
-//				CR_CRR = 0x3210; //Start the other contexts
+				CR_CRR = 0x3210; //Start the other contexts
 		}
 
 		//all threads wait until the end of the master thread operation
@@ -84,12 +94,12 @@ int main(){
 		
 
 		for(k=0;k<maxIter;k++){
-				printf("starting iteration %d of %d\n", k, maxIter);
-				running |= (1<< core_id); //flag that we are running
+				//printf("s %d/%d, start %d, end %d\n", k, maxIter, start, end);
+				((char*)finished1)[core_id] = 0;
 				
 				for(i=start;i<end;i++){
 //				__asm__ volatile ("nop"); //H ain't that some shit
-						printf("i %d\n", i);
+						//printf("i %d\n", i);
 						dx[i] = b[i];
 						for(j=0;j<NUM;j++){
 								dx[i] -= A[(i*NUM)+j]*x[j];
@@ -99,20 +109,15 @@ int main(){
 //				__asm__ volatile ("nop"); //H ain't that some shit
 				}
 
-				running &= ~(1<<core_id); //flag that we are finished with this round
-				/*
-				while (running) //wait for the others to finish
-				{
-				
-					for (c = 400000; c > 0; c--) ;
-					printf("running 0x%x\n", running);
+				((char*)finished1)[core_id] = 1;
 
-				}
-				printf("Round completed\n");
-				*/
+				while (*finished1 != 0x01010101) ;
+				//printf("Round completed\n");
+
 		}
 		
 		printf("Program Finished\n");
+		print_results();
 		return 0;
 }
 
