@@ -1,0 +1,496 @@
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.4.1-b4156/designs/leon3-xilinx-vc707/config.vhd work/config.vhd
+--- ../../grlib/grlib-gpl-1.4.1-b4156/designs/leon3-xilinx-vc707/config.vhd	2015-05-06 15:12:28.000000000 +0200
++++ work/config.vhd	2015-06-01 14:01:21.421439342 +0200
+@@ -10,6 +10,15 @@
+ library techmap;
+ use techmap.gencomp.all;
+ 
++library ieee;
++use ieee.std_logic_1164.all;
++
++library rvex;
++use rvex.common_pkg.all;
++use rvex.core_pkg.all;
++use rvex.cache_pkg.all;
++use rvex.rvsys_grlib_pkg.all;
++
+ package config is
+ -- Technology and synthesis options
+   constant CFG_FABTECH : integer := virtex7;
+@@ -20,8 +29,8 @@ package config is
+   constant CFG_SCAN : integer := 0;
+ -- Clock generator
+   constant CFG_CLKTECH : integer := virtex7;
+-  constant CFG_CLKMUL : integer := (4);
+-  constant CFG_CLKDIV : integer := (8);
++  constant CFG_CLKMUL : integer := (6);
++  constant CFG_CLKDIV : integer := (16);
+   constant CFG_OCLKDIV : integer := 1;
+   constant CFG_OCLKBDIV : integer := 0;
+   constant CFG_OCLKCDIV : integer := 0;
+@@ -29,8 +38,8 @@ package config is
+   constant CFG_PCISYSCLK: integer := 0;
+   constant CFG_CLK_NOFB : integer := 0;
+ -- LEON3 processor core
+-  constant CFG_LEON3 : integer := 1;
+-  constant CFG_NCPU : integer := (1);
++  constant CFG_LEON3 : integer := 0;
++  constant CFG_NLEON : integer := (0);
+   constant CFG_NWIN : integer := (8);
+   constant CFG_V8 : integer := 2 + 4*0;
+   constant CFG_MAC : integer := 0;
+@@ -97,6 +106,30 @@ package config is
+   constant CFG_L2_MAP : integer := 16#00F0#;
+   constant CFG_L2_MTRR : integer := (0);
+   constant CFG_L2_EDAC : integer := 0;
++-- r-VEX processor core
++  constant CFG_RVEX : integer := 1;
++  constant CFG_NRVEX : integer := 1;
++  constant CFG_RVEX_CFG : rvex_grlib_generic_config_type := rvex_grlib_cfg(
++    
++    -- Core configuration
++    core => rvex_cfg(
++      numLanesLog2          => 3,
++      numLaneGroupsLog2     => 2,
++      numContextsLog2       => 2,
++      bundleAlignLog2       => 1,
++      limmhFromPreviousPair => 0,
++      traceEnable           => 0
++    ), core_valid => true,
++    
++    -- Cache configuration
++    cache => cache_cfg(
++      instrCacheLinesLog2 => 8, -- 8 kiB
++      dataCacheLinesLog2  => 8  -- 1 KiB
++    ), cache_valid => true
++    
++  );
++-- Total number of processors
++  constant CFG_NCPU : integer := CFG_NLEON + CFG_NRVEX * 2**CFG_RVEX_CFG.core.numLaneGroupsLog2;  
+ -- AMBA settings
+   constant CFG_DEFMST : integer := (0);
+   constant CFG_RROBIN : integer := 1;
+@@ -110,6 +143,7 @@ package config is
+   constant CFG_AHB_DTRACE : integer := 0;
+ -- DSU UART
+   constant CFG_AHB_UART : integer := 1;
++  constant CFG_AHB_UART_RVEX : integer := 1; -- Use rvex debug UART instead of grlib UART
+ -- JTAG based DSU interface
+   constant CFG_AHB_JTAG : integer := 1;
+ -- USB DSU
+@@ -124,7 +158,7 @@ package config is
+   constant CFG_ETH_ENM : integer := 16#020000#;
+   constant CFG_ETH_ENL : integer := 16#000000#;
+ -- LEON2 memory controller
+-  constant CFG_MCTRL_LEON2 : integer := 1;
++  constant CFG_MCTRL_LEON2 : integer := 0;
+   constant CFG_MCTRL_RAM8BIT : integer := 1;
+   constant CFG_MCTRL_RAM16BIT : integer := 1;
+   constant CFG_MCTRL_5CS : integer := 0;
+@@ -242,7 +276,7 @@ package config is
+   constant CFG_SPW_OUTPUT : integer := 0;
+   constant CFG_SPW_RTSAME : integer := 0;
+ -- UART 1
+-  constant CFG_UART1_ENABLE : integer := 1;
++  constant CFG_UART1_ENABLE : integer := 0;
+   constant CFG_UART1_FIFO : integer := 32;
+ 
+ -- LEON3 interrupt controller
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.4.1-b4156/designs/leon3-xilinx-vc707/leon3mp.vhd work/leon3mp.vhd
+--- ../../grlib/grlib-gpl-1.4.1-b4156/designs/leon3-xilinx-vc707/leon3mp.vhd	2015-05-06 15:12:28.000000000 +0200
++++ work/leon3mp.vhd	2015-06-01 14:18:06.566156874 +0200
+@@ -47,6 +47,13 @@ use unisim.all;
+ -- pragma translate_on
+ library testgrouppolito;
+ use testgrouppolito.dprc_pkg.all;
++library rvex;
++use rvex.common_pkg.all;
++use rvex.bus_pkg.all;
++use rvex.bus_addrConv_pkg.all;
++use rvex.core_pkg.all;
++use rvex.cache_pkg.all;
++use rvex.rvsys_grlib_pkg.all;
+ 
+ 
+ library esa;
+@@ -73,11 +80,11 @@ entity leon3mp is
+     reset           : in    std_ulogic;
+     clk200p         : in    std_ulogic;  -- 200 MHz clock
+     clk200n         : in    std_ulogic;  -- 200 MHz clock
+-    address         : out   std_logic_vector(25 downto 0);
+-    data            : inout std_logic_vector(15 downto 0);
+-    oen             : out   std_ulogic;
+-    writen          : out   std_ulogic;
+-    romsn           : out   std_logic;
++    address         : out   std_logic_vector(25 downto 0) := (others => '0');
++    data            : inout std_logic_vector(15 downto 0) := (others => 'Z');
++    oen             : out   std_ulogic := '0';
++    writen          : out   std_ulogic := '0';
++    romsn           : out   std_logic := '0';
+     adv             : out   std_logic;
+     ddr3_dq         : inout std_logic_vector(63 downto 0);
+     ddr3_dqs_p      : inout std_logic_vector(7 downto 0);
+@@ -94,13 +101,13 @@ entity leon3mp is
+     ddr3_cs_n       : out   std_logic_vector(0 downto 0);
+     ddr3_dm         : out   std_logic_vector(7 downto 0);
+     ddr3_odt        : out   std_logic_vector(0 downto 0);
+-    dsurx           : in    std_ulogic;
+-    dsutx           : out   std_ulogic;
+-    dsuctsn         : in    std_ulogic;
+-    dsurtsn         : out   std_ulogic;
++--    dsurx           : in    std_ulogic;
++--    dsutx           : out   std_ulogic;
++--    dsuctsn         : in    std_ulogic;
++--    dsurtsn         : out   std_ulogic;
+     button          : in    std_logic_vector(3 downto 0);
+     switch          : inout std_logic_vector(4 downto 0); 
+-    led             : out   std_logic_vector(6 downto 0);
++    led             : out   std_logic_vector(6 downto 0) := (others => '0');
+     iic_scl         : inout std_ulogic;
+     iic_sda         : inout std_ulogic;
+     usb_refclk_opt  : in    std_logic;
+@@ -283,8 +290,8 @@ signal u1o, u2o, duo : uart_out_type;
+ signal irqi : irq_in_vector(0 to CFG_NCPU-1);
+ signal irqo : irq_out_vector(0 to CFG_NCPU-1);
+ 
+-signal dbgi : l3_debug_in_vector(0 to CFG_NCPU-1);
+-signal dbgo : l3_debug_out_vector(0 to CFG_NCPU-1);
++signal dbgi : l3_debug_in_vector(0 to CFG_NLEON-1);
++signal dbgo : l3_debug_out_vector(0 to CFG_NLEON-1);
+ 
+ signal dsui : dsu_in_type;
+ signal dsuo : dsu_out_type;
+@@ -357,6 +364,15 @@ attribute syn_keep : string;
+ attribute keep of clkm : signal is true;
+ attribute keep of uclk : signal is true;
+ 
++-- rvex bus master interface.
++signal rvbmo  : bus_mst2slv_type;
++signal rvbmi  : bus_slv2mst_type;
++  
++-- rvex bus slave interfaces.
++constant N_RVB_SLAVES : integer := CFG_NRVEX + CFG_AHB_UART*CFG_AHB_UART_RVEX;
++signal rvbsi  : bus_mst2slv_array(0 to N_RVB_SLAVES - 1);
++signal rvbso  : bus_slv2mst_array(0 to N_RVB_SLAVES - 1);
++
+ begin
+ 
+ ----------------------------------------------------------------------
+@@ -399,7 +415,7 @@ begin
+ ----------------------------------------------------------------------
+ 
+   nosh : if CFG_GRFPUSH = 0 generate
+-    cpu : for i in 0 to CFG_NCPU-1 generate
++    cpu : for i in 0 to CFG_NLEON-1 generate
+       l3ft : if CFG_LEON3FT_EN /= 0 generate
+         leon3ft0 : leon3ft    -- LEON3 processor
+         generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU, CFG_V8,
+@@ -407,7 +423,7 @@ begin
+     CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+     CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+     CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-    CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
++    CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NLEON-1,
+     CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
+     CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE,
+     CFG_BP, CFG_NP_ASI, CFG_WRPSR)
+@@ -422,7 +438,7 @@ begin
+     CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+     CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+     CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-    CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
++    CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NLEON-1,
+     CFG_DFIXED, CFG_SCAN, CFG_MMU_PAGE, CFG_BP,  CFG_NP_ASI, CFG_WRPSR)
+         port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+         irqi(i), irqo(i), dbgi(i), dbgo(i));
+@@ -431,7 +447,7 @@ begin
+   end generate;
+ 
+   sh : if CFG_GRFPUSH = 1 generate
+-    cpu : for i in 0 to CFG_NCPU-1 generate
++    cpu : for i in 0 to CFG_NLEON-1 generate
+       l3ft : if CFG_LEON3FT_EN /= 0 generate
+         leon3ft0 : leon3ftsh    -- LEON3 processor
+         generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU, CFG_V8,
+@@ -439,7 +455,7 @@ begin
+     CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+     CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+     CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-    CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
++    CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NLEON-1,
+     CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
+     CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE, CFG_BP,
+     CFG_NP_ASI, CFG_WRPSR)
+@@ -454,37 +470,99 @@ begin
+     CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
+     CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
+     CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
+-    CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NCPU-1,
++    CFG_LDDEL, disas, CFG_ITBSZ, CFG_PWD, CFG_SVT, CFG_RSTADDR, CFG_NLEON-1,
+     CFG_DFIXED, CFG_SCAN, CFG_MMU_PAGE, CFG_BP, CFG_NP_ASI, CFG_WRPSR)
+         port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
+         irqi(i), irqo(i), dbgi(i), dbgo(i), fpi(i), fpo(i));
+       end generate;
+     end generate;
+ 
+-    grfpush0 : grfpushwx generic map ((CFG_FPU-1), CFG_NCPU, fabtech)
++    grfpush0 : grfpushwx generic map ((CFG_FPU-1), CFG_NLEON, fabtech)
+     port map (clkm, rstn, fpi, fpo);
+ 
+   end generate;
+ 
+   led1_pad : outpad generic map (tech => padtech, level => cmos, voltage => x18v) port map (led(1), dbgo(0).error);
+ 
+-  dsugen : if CFG_DSU = 1 generate
++  dsugen : if CFG_DSU = 1 and CFG_NLEON /= 0 generate
+       dsu0 : dsu3         -- LEON3 Debug Support Unit
+       generic map (hindex => 2, haddr => 16#900#, hmask => 16#F00#,
+-         ncpu => CFG_NCPU, tbits => 30, tech => memtech, irq => 0, kbytes => CFG_ATBSZ)
++         ncpu => CFG_NLEON, tbits => 30, tech => memtech, irq => 0, kbytes => CFG_ATBSZ)
+       port map (rstn, clkm, ahbmi, ahbsi, ahbso(2), dbgo, dbgi, dsui, dsuo);
+       dsui.enable <= '1';
+       dsui_break_pad   : inpad  generic map (level => cmos, voltage => x18v, tech => padtech) port map (button(3), dsui.break);
+       dsuact_pad : outpad generic map (tech => padtech, level => cmos, voltage => x18v) port map (led(0), ndsuact);
+       ndsuact <= not dsuo.active;
+   end generate;
++  
++  rvuartgen : if CFG_AHB_UART = 1 and CFG_AHB_UART_RVEX = 1 generate
++    signal reset        : std_logic;
++    signal clk          : std_logic;
++    signal rx           : std_logic;
++    signal tx           : std_logic;
++    signal uart2dbg_bus : bus_mst2slv_type;
++    signal dbg2uart_bus : bus_slv2mst_type;
++    signal irq          : std_logic;
++  begin
++    
++    reset <= not rstn;
++    clk <= clkm;
++    rx <= dui.rxd;
++    duo.txd <= tx;
++    
++    -- Instantiate the AHB master for the debug UART.
++    rvex_uart_mst_inst: entity rvex.bus2ahb
++      generic map (
++        AHB_MASTER_INDEX  => CFG_NCPU,
++        AHB_VENDOR_ID     => VENDOR_TUDELFT,
++        AHB_DEVICE_ID     => TUDELFT_UART
++      )
++      port map (
++        reset             => reset,
++        clk               => clk,
++        bus2bridge        => uart2dbg_bus,
++        bridge2bus        => dbg2uart_bus,
++        bridge2ahb        => ahbmo(CFG_NCPU),
++        ahb2bridge        => ahbmi
++      );
++    
++    -- Instantiate the UART.
++    rvex_uart_inst: entity rvex.periph_uart
++      generic map (
++        F_CLK             => real(CPU_FREQ) * 1000.0,
++        F_BAUD            => 115200.0
++      )
++      port map (
++        reset             => reset,
++        clk               => clk,
++        clkEn             => '1',
++        rx                => rx,
++        tx                => tx,
++        bus2uart          => rvbsi(CFG_NRVEX),
++        uart2bus          => rvbso(CFG_NRVEX),
++        irq               => irq,
++        uart2dbg_bus      => uart2dbg_bus,
++        dbg2uart_bus      => dbg2uart_bus
++        
++      );
++    
++    -- We're only using the APB slot for the interrupt. We use the same
++    -- interrupt index as UART1, which can't coexist with this UART because
++    -- they would have the same external pins.
++    rvex_uart_apb: process (irq) is
++    begin
++      apbo(4) <= apb_none;
++      apbo(4).pirq <= (2 => irq, others => '0');
++    end process;
++    
++  end generate;
+ 
+   nodsu : if CFG_DSU = 0 generate
+     dsuo.tstop <= '0'; dsuo.active <= '0'; ahbso(2) <= ahbs_none;
+   end generate;
+ 
+   -- Debug UART
+-  dcomgen : if CFG_AHB_UART = 1 generate
++  dcomgen : if CFG_AHB_UART = 1 and CFG_AHB_UART_RVEX = 0 generate
+     dcom0 : ahbuart
+       generic map (hindex => CFG_NCPU, pindex => 7, paddr => 7)
+       port map (rstn, clkm, dui, duo, apbi, apbo(7), ahbmi, ahbmo(CFG_NCPU));
+@@ -522,6 +600,114 @@ begin
+   end generate;
+ 
+   nojtag : if CFG_AHB_JTAG = 0 generate apbo(CFG_NCPU+1) <= apb_none; end generate;
++  
++  
++----------------------------------------------------------------------
++---  r-VEX processor -------------------------------------------------
++----------------------------------------------------------------------
++  
++  -- Check rvex configuration.
++  assert CFG_RVEX_CFG.core.numLaneGroupsLog2 = CFG_RVEX_CFG.core.numContextsLog2
++    report "numLaneGroups must equal numContexts due to platform constraints"
++    severity failure;
++  
++  rvsys_gen: for i in 0 to CFG_NRVEX-1 generate
++    constant PIND : integer := CFG_NLEON + i * 2**CFG_RVEX_CFG.core.numLaneGroupsLog2;
++    constant PNUM : integer := 2**CFG_RVEX_CFG.core.numLaneGroupsLog2;
++  begin
++  
++    rvsys_inst: entity rvex.rvsys_grlib
++      generic map (
++        CFG                     => CFG_RVEX_CFG,
++        AHB_MASTER_INDEX_START  => PIND,
++        CHECK_MEM               => true,
++        CHECK_MEM_FILE          => "ram.srec"
++      )
++      port map (
++        clki                    => clkm,
++        rstn                    => rstn,
++        ahbmi                   => ahbmi,
++        ahbmo                   => ahbmo(PIND+PNUM-1 downto PIND),
++        ahbsi                   => ahbsi,
++        bus2dgb                 => rvbsi(i),
++        dbg2bus                 => rvbso(i),
++        irqi                    => irqi(PIND to PIND+PNUM-1),
++        irqo                    => irqo(PIND to PIND+PNUM-1)
++      );
++    
++  end generate;
++  
++----------------------------------------------------------------------
++---  r-VEX bus bridge ------------------------------------------------
++----------------------------------------------------------------------
++  
++  rvex_bus_bridge_block: block is
++    
++    signal reset        : std_logic;
++    signal clk          : std_logic;
++    
++    function addr_map return addrRangeAndMapping_array is
++      variable retval : addrRangeAndMapping_array(0 to N_RVB_SLAVES - 1);
++      variable i : natural;
++    begin
++      i := 0;
++      
++      for c in 0 to CFG_NRVEX - 1 loop
++        retval(i) := addrRangeAndMap(
++          match => X"D0" & std_logic_vector(to_unsigned(c, 4)) & "----" & "--------" & "--------"
++        );
++        i := i + 1;
++      end loop;
++      
++      if CFG_AHB_UART*CFG_AHB_UART_RVEX = 1 then
++        retval(i) := addrRangeAndMap(
++          match => X"D1" & "--------" & "--------" & "--------"
++        );
++        i := i + 1;
++      end if;
++      
++      return retval;
++    end function;
++    
++  begin
++    
++    reset <= not rstn;
++    clk <= clkm;
++    
++    -- Instantiate the bus bridge.
++    rvex_bus_bridge_inst: entity rvex.ahb2bus
++      generic map (
++        AHB_INDEX       => 9,
++        AHB_ADDR        => 16#D00#,
++        AHB_MASK        => 16#F00#,
++        AHB_VENDOR_ID   => VENDOR_TUDELFT,
++        AHB_DEVICE_ID   => TUDELFT_BRIDGE
++      )
++      port map (
++        reset           => reset,
++        clk             => clk,
++        ahb2bridge      => ahbsi,
++        bridge2ahb      => ahbso(9),
++        bridge2bus      => rvbmo,
++        bus2bridge      => rvbmi
++      );
++    
++    -- Instantiate the demuxer.
++    rvex_bus_bridge_demux: entity rvex.bus_demux
++      generic map (
++        ADDRESS_MAP     => addr_map
++      )
++      port map (
++        reset           => reset,
++        clk             => clk,
++        clkEn           => '1',
++        mst2demux       => rvbmo,
++        demux2mst       => rvbmi,
++        demux2slv       => rvbsi,
++        slv2demux       => rvbso
++      );
++    
++  end block;
+ 
+ ----------------------------------------------------------------------
+ ---  Memory controller  ----------------------------------------------
+@@ -564,7 +750,7 @@ begin
+     mig_gen : if (CFG_MIG_7SERIES = 1) generate
+       gen_mig : if (USE_MIG_INTERFACE_MODEL /= true) generate
+         ddrc : ahb2mig_7series generic map(
+-      hindex => 4, haddr => 16#400#, hmask => 16#F00#,
++      hindex => 4, haddr => 16#000#, hmask => 16#F00#, --TODO: check (haddr was haddr => 16#400#)
+       pindex => 4, paddr => 4,
+       SIM_BYPASS_INIT_CAL => SIM_BYPASS_INIT_CAL,
+       SIMULATION => SIMULATION, USE_MIG_INTERFACE_MODEL => USE_MIG_INTERFACE_MODEL)
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.4.1-b4156/designs/leon3-xilinx-vc707/Makefile work/Makefile
+--- ../../grlib/grlib-gpl-1.4.1-b4156/designs/leon3-xilinx-vc707/Makefile	2015-05-06 15:08:26.000000000 +0200
++++ work/Makefile	2015-06-01 14:18:58.351427719 +0200
+@@ -1,6 +1,6 @@
+ ### GRLIB general setup and extra target to clean software
+ include .config
+-GRLIB=../..
++GRLIB=../../../grlib/grlib-gpl-1.4.1-b4156
+ CLEAN=soft-clean
+ 
+ ### Xilinx Vivado device and board setup
+@@ -74,6 +74,7 @@ VHDLSYNFILES= config.vhd ahbram_sim.vhd
+ VHDLSIMFILES=testbench.vhd
+ 
+ TECHLIBS = unisim
++EXTRALIBS=../../../lib
+ SKIP_SIM_TECHLIBS = 1
+ 
+ LIBSKIP = pci pci/pcif core1553bbc core1553brm core1553brt gr1553 corePCIF \
+@@ -89,3 +90,6 @@ include $(GRLIB)/bin/Makefile
+ include $(GRLIB)/software/leon3/Makefile
+ 
+ ##################  project specific targets ##########################
++# Stop deleting logs!
++.SECONDARY:
++
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.4.1-b4156/designs/leon3-xilinx-vc707/testbench.vhd work/testbench.vhd
+--- ../../grlib/grlib-gpl-1.4.1-b4156/designs/leon3-xilinx-vc707/testbench.vhd	2015-05-06 15:12:28.000000000 +0200
++++ work/testbench.vhd	2015-06-01 14:19:30.455215444 +0200
+@@ -239,10 +239,10 @@ component leon3mp is
+     ddr3_cs_n       : out   std_logic_vector(0 downto 0);
+     ddr3_dm         : out   std_logic_vector(7 downto 0);
+     ddr3_odt        : out   std_logic_vector(0 downto 0);
+-    dsurx           : in    std_ulogic;
+-    dsutx           : out   std_ulogic;
+-    dsuctsn         : in    std_ulogic;
+-    dsurtsn         : out   std_ulogic;
++--    dsurx           : in    std_ulogic;
++--    dsutx           : out   std_ulogic;
++--    dsuctsn         : in    std_ulogic;
++--    dsurtsn         : out   std_ulogic;
+     button          : in    std_logic_vector(3 downto 0);
+     switch          : inout std_logic_vector(4 downto 0);
+     led             : out   std_logic_vector(6 downto 0);
