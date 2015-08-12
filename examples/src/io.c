@@ -1,5 +1,6 @@
 #include <ctype.h>
 #include <stdarg.h>
+#include "rvex.h"
 
 //#include <fcntl.h>
 # define SEEK_SET	0	/* Seek from beginning of file.  */
@@ -12,9 +13,9 @@ typedef unsigned char uint8_t;
 int fd_offset, fd_size;
 uint8_t *testfile;
 
-#define LOG_BUF_LEN	8192
+#define LOG_BUF_LEN	0x100000
 
-static char buf[1024];
+static char buf[4][1024];
 
 /* printk's without a loglevel use this.. */
 #define DEFAULT_MESSAGE_LOGLEVEL 4 /* KERN_WARNING */
@@ -23,15 +24,17 @@ static char buf[1024];
 #define MINIMUM_CONSOLE_LOGLEVEL 1 /* Minimum loglevel we let people use */
 #define DEFAULT_CONSOLE_LOGLEVEL 7 /* anything MORE serious than KERN_DEBUG */
 
-unsigned long log_size = 0;
+unsigned long log_size[4] = {0,0,0,0};
 struct wait_queue * log_wait = NULL;
 int console_loglevel = 8;/*DEFAULT_CONSOLE_LOGLEVEL;*/
 
 
 //__attribute__((section (".log"))) static char log_buf[LOG_BUF_LEN];
-static char *log_buf = (char*)0x08000000; //would like to do this in the linker, but I cannot specify the NOLOAD attribute here
-static unsigned long log_start = 0;
-static unsigned long logged_chars = 0;
+//static char *log_buf = (char*)0x01000000; //would like to do this in the linker, but I cannot specify the NOLOAD attribute here
+
+__attribute__((section (".bss"))) static char log_buf[4][LOG_BUF_LEN];
+static unsigned long log_start[4] = {0,0,0,0};
+static unsigned long logged_chars[4] = {0,0,0,0};
 
 
 void * memset(void * s,int c,int count)
@@ -366,24 +369,25 @@ int printf(const char *fmt, ...)
 	long flags;
 
 	va_start(args, fmt);
-	i = vsprintf(buf, fmt, args); /* hopefully i < sizeof(buf)-4 */
-	buf_end = buf + i;
+	i = vsprintf(buf[CR_CID], fmt, args); /* hopefully i < sizeof(buf)-4 */
+	buf_end = buf[CR_CID] + i;
 	va_end(args);
-	for (p = buf; p < buf_end; p++) {
+	for (p = buf[CR_CID]; p < buf_end; p++) {
 		msg = p;
 		for (; p < buf_end; p++) {
-			log_buf[(log_start+log_size) & (LOG_BUF_LEN-1)] = *p;
-			if (log_size < LOG_BUF_LEN)
-				log_size++;
+			log_buf[CR_CID][(log_start[CR_CID]+log_size[CR_CID]) & (LOG_BUF_LEN-1)] = *p;
+			if (log_size[CR_CID] < LOG_BUF_LEN)
+				log_size[CR_CID]++;
 			else {
-				log_start++;
-				log_start &= LOG_BUF_LEN-1;
+				log_start[CR_CID]++;
+				log_start[CR_CID] &= LOG_BUF_LEN-1;
 			}
-			logged_chars++;
+			logged_chars[CR_CID]++;
 			if (*p == '\n')
 				break;
 		}
-		puts(msg);
+
+		if (CR_CID == 0) puts(msg); //Lets have only thread 0 print to the UART to keep output readable. The rest will still write to their logbufs.
 	}
 	return i;
 }
