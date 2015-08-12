@@ -178,7 +178,7 @@ mov $r0.60 = 0
 ;;
 2:
   /* Initialize the stack pointer. */
-  c0  add     $r0.1       = $r0.12, __STACK_START
+  c0  sub     $r0.1       = __STACK_START, $r0.12
   ISSUE_2
 
   /* Call main. */
