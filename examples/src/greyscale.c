@@ -17,15 +17,7 @@ Note; we need to use another assembler when running on the xstsim simulator vers
 
 #define INTEGER
 
-#ifdef MICROBLAZE
-#include <stdio.h>
-#include "platform.h"
-#include "xparameters.h"
-#include <time.h>
-#include <xtmrctr.h>
-#else
 #include "rvex.h"
-#endif
 
 #define imageWidth 1920
 #define imageHeight 1080
@@ -169,38 +161,14 @@ char strbuf[12];
 
 int main()
 {
-#ifdef MICROBLAZE
-    init_platform();
 
-    XTmrCtr xps_timer_0;
-    XTmrCtr* timer_0 = &xps_timer_0;
-
-    unsigned int BeginTime;
-    unsigned int EndTime;
-    unsigned int Calibration;
-    unsigned int TimeRun;
-
-    XTmrCtr_Initialize(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-    XTmrCtr_Start(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-
-    BeginTime = XTmrCtr_GetValue(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-    EndTime = XTmrCtr_GetValue(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-    Calibration = EndTime - BeginTime;
-
-    //xil_printf("convolution starting, Calibration %d\n\r", Calibration);
-    print("Convolution starting\n\r");
-    sprintf(strbuf, "%d\n\r", Calibration);
-    print(strbuf);
-
-    unsigned int* framebuffer = (unsigned int*)0xc0400000;
-    unsigned int* image = (unsigned int*)0xc0800000;
-#else
     char strbuf[12];
 	unsigned int timerread;
     unsigned int* framebuffer = (unsigned int*)0x400000;
     unsigned int* image = (unsigned int*)0x800000;
 	puts("greyscale starting\n");
-#endif
+	init_vga();
+
     int i, x, y, filterX, filterY, imageX, imageY;
 
 #ifdef DEBUG
@@ -240,11 +208,7 @@ int main()
 #endif
 */
 
-#ifdef MICROBLAZE
-    BeginTime = XTmrCtr_GetValue(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-#else
 	timerread = CR_CNT;
-#endif
 
 	//Clear the output image
 	for (i = 0; i < (imageWidth*imageHeight); i++)
@@ -289,17 +253,6 @@ if(runs){
     } //runs
 #endif
 
-#ifdef MICROBLAZE
-    EndTime = XTmrCtr_GetValue(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-    TimeRun = EndTime - BeginTime;
-    //xil_printf("Finished in %d time units\n\r", TimeRun);
-
-    print("Finished\n\r");
-    sprintf(strbuf, "%d\n\r", TimeRun);
-    print(strbuf);
-
-    cleanup_platform();
-#endif
 
 	puts("Finished\n");
 	tohex(strbuf, CR_CNT - timerread);
