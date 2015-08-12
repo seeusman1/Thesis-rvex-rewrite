@@ -270,9 +270,9 @@ endif
 else
 FPLIB=libcfpi-st220.cc.a
 CFLAGS = -I$(GEN_EXAMPLES)/src -mcore=st220 -EB -fshort-double -fno-dismissible-load \
--fno-exceptions -mno-auto-prefetch -std=c99 $(INCLUDES)
+-fno-exceptions -mno-auto-prefetch -std=c99 -fno-builtin $(INCLUDES)
 ifeq ($(ISSUE_WIDTH), 8)
-CC=/shares/group/ce-rvex/tools/builds/open64_8issue_1MEM/bin/st200-gcc
+CC=/shares/group/ce-rvex/tools/builds/open64_8issue_16UNROLL/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O2
 else
