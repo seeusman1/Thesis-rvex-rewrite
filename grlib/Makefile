@@ -15,7 +15,7 @@ help:
 
 # Attempts to download grlib if it doesn't exist.
 grlib-gpl-%.tar.gz:
-	cp /data/grlib/$@ ./
+	wget ftp://ftp.tudelft.nl/pub/TUDelft/rvex/grlib/$@
 #	wget http://www.gaisler.com/products/grlib/$@
 
 # Extracts and patches grlib.
