@@ -15,23 +15,16 @@ Note; we need to use another assembler when running on the xstsim simulator vers
 #endif
 
 
-#ifdef MICROBLAZE
-#include <stdio.h>
-#include "platform.h"
-#include "xparameters.h"
-#include <time.h>
-#include <xtmrctr.h>
-#else
 #include "rvex.h"
-#endif
 
 //#define DEBUG
 
 /* The following code is from Iodev.org, modified for integer */
 #define filterWidth 3
 #define filterHeight 3
-#define imageWidth 49
-#define imageHeight 58
+#define imageWidth 640
+#define imageHeight 480
+
 //declare image buffers 
 //int image[imageWidth][imageHeight]; 
 //int result[imageWidth][imageHeight];
@@ -117,24 +110,23 @@ typedef struct {
 } LEON3_GRVGA_Regs_Map;
 
 
-
 void init_vga()
 {
 	LEON3_GRVGA_Regs_Map *regs = (LEON3_GRVGA_Regs_Map*)0x80000600;
 	int clk_sel = -1, func = 0, i;
 	struct fb_var_screeninfo init_data;
 	
-	init_data.xres =			800,
-    init_data.yres =			600,
-    init_data.xres_virtual =	800,
-    init_data.yres_virtual =	600,
-    init_data.pixclock = 	    25000,
-    init_data.left_margin =		88,
-    init_data.right_margin =	40,
-    init_data.upper_margin =	23,
-    init_data.lower_margin =	1,
-    init_data.hsync_len =		128,
-    init_data.vsync_len =		4,
+	init_data.xres =			640,
+    init_data.yres =			480,
+    init_data.xres_virtual =	640,
+    init_data.yres_virtual =	480,
+    init_data.pixclock = 	    40000,
+    init_data.left_margin =		48,
+    init_data.right_margin =	16,
+    init_data.upper_margin =	31,
+    init_data.lower_margin =	11,
+    init_data.hsync_len =		96,
+    init_data.vsync_len =		2,
 	
 	init_data.bits_per_pixel = 8;
 
@@ -199,12 +191,7 @@ int filter[filterWidth][filterHeight] =
 
 #ifdef BLUR
 #if filterWidth == 3
-int filter[filterWidth][filterHeight] =
-{
-     32, 32, 32,
-     32, 32, 32,
-     32, 32, 32
-};
+
 #else
 #if filterWidth == 5
 int filter[filterWidth][filterHeight] =
@@ -256,42 +243,23 @@ inline int min(int a, int b)
 	else return b;
 }
 
-    char strbuf[12];
+char strbuf[12];
 int main()
 {
-#ifdef MICROBLAZE
-    init_platform();
-
-    XTmrCtr xps_timer_0;
-    XTmrCtr* timer_0 = &xps_timer_0;
-
-    unsigned int BeginTime;
-    unsigned int EndTime;
-    unsigned int Calibration;
-    unsigned int TimeRun;
-
-    XTmrCtr_Initialize(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-    XTmrCtr_Start(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-
-    BeginTime = XTmrCtr_GetValue(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-    EndTime = XTmrCtr_GetValue(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-    Calibration = EndTime - BeginTime;
-
-    //xil_printf("convolution starting, Calibration %d\n\r", Calibration);
-    print("Convolution starting\n\r");
-    sprintf(strbuf, "%d\n\r", Calibration);
-    print(strbuf);
-
-    unsigned int* framebuffer = (unsigned int*)0xc0400000;
-    unsigned int* image = (unsigned int*)0xc0800000;
-#else
-    unsigned int* framebuffer = (unsigned int*)0x400000;
+    unsigned int* framebuffer = (unsigned int*)0x800000 + (imageWidth*imageHeight);
     unsigned int* image = (unsigned int*)0x800000;
     int timerread;
 	//puts("convolution starting\n");
-	init_vga();
-#endif
+	//init_vga();
+
     int i, x, y, filterX, filterY, imageX, imageY;
+
+	register int filter[filterWidth][filterHeight] =
+	{
+		 32, 32, 32,
+		 32, 32, 32,
+		 32, 32, 32
+	};
 
 #ifdef DEBUG
     int runs;
@@ -316,29 +284,28 @@ int main()
 		image[i] = 0x000000FF - (((i%640)/3)&0xff);
 	}
 */
-#ifdef MICROBLAZE
-    BeginTime = XTmrCtr_GetValue(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-#else
+
 	//timerread = CR_CNT;
-#endif
 
 	//Clear the output image
+/*	
 	#pragma unroll(4)
 	for (i = 0; i < (imageWidth*imageHeight); i++)
 		framebuffer[i] = 0;
-
+*/
     //load the image into the buffer
     //loadBMP("pics/photo3.bmp", image[0], imageWidth , imageHeight);
 #ifdef DEBUG
     for (runs = 0; runs < 2; runs++){
 #endif
     //apply the filter
-    for(y = 0; y < imageHeight; y++)
-    for(x = 0; x < imageWidth; x++)
+    for(y = filterHeight/2; y < imageHeight-(filterHeight/2); y++)
+    for(x = filterWidth /2; x < imageWidth -(filterWidth /2); x++)
     {
         int red = 0, green = 0, blue = 0;
 
         //multiply every value of the filter with corresponding image pixel
+/*
         for(filterX = 0; filterX < filterWidth; filterX++)
 //        #pragma unroll(4)
         for(filterY = 0; filterY < filterHeight; filterY++)
@@ -351,7 +318,46 @@ int main()
             red   += (((signed int)((image[imageX + (imageY*imageWidth)]>>16)&0xFF)) * filter[filterX][filterY])/256;
             green += (((signed int)((image[imageX + (imageY*imageWidth)]>> 8)&0xFF)) * filter[filterX][filterY])/256;
             blue  +=  (((signed int)(image[imageX + (imageY*imageWidth)]     &0xFF)) * filter[filterX][filterY])/256;
-
+*/
+			/*
+			 * We really want to keep the filter window in registers, so we write this out fully
+			 */
+            red   += (((signed int)((image[x-1 + (y-1*imageWidth)]>>16)&0xFF)) * filter[0][0])/256;
+            green += (((signed int)((image[x-1 + (y-1*imageWidth)]>> 8)&0xFF)) * filter[0][0])/256;
+            blue  +=  (((signed int)(image[x-1 + (y-1*imageWidth)]     &0xFF)) * filter[0][0])/256;
+            
+            red   += (((signed int)((image[x + (y-1*imageWidth)]>>16)&0xFF)) * filter[0][1])/256;
+            green += (((signed int)((image[x + (y-1*imageWidth)]>> 8)&0xFF)) * filter[0][1])/256;
+            blue  +=  (((signed int)(image[x + (y-1*imageWidth)]     &0xFF)) * filter[0][1])/256;
+            
+            red   += (((signed int)((image[x+1 + (y-1*imageWidth)]>>16)&0xFF)) * filter[0][2])/256;
+            green += (((signed int)((image[x+1 + (y-1*imageWidth)]>> 8)&0xFF)) * filter[0][2])/256;
+            blue  +=  (((signed int)(image[x+1 + (y-1*imageWidth)]     &0xFF)) * filter[0][2])/256;
+            
+            red   += (((signed int)((image[x-1 + (y*imageWidth)]>>16)&0xFF)) * filter[1][0])/256;
+            green += (((signed int)((image[x-1 + (y*imageWidth)]>> 8)&0xFF)) * filter[1][0])/256;
+            blue  +=  (((signed int)(image[x-1 + (y*imageWidth)]     &0xFF)) * filter[1][0])/256;
+            
+            red   += (((signed int)((image[x + (y*imageWidth)]>>16)&0xFF)) * filter[1][1])/256;
+            green += (((signed int)((image[x + (y*imageWidth)]>> 8)&0xFF)) * filter[1][1])/256;
+            blue  +=  (((signed int)(image[x + (y*imageWidth)]     &0xFF)) * filter[1][1])/256;
+            
+            red   += (((signed int)((image[x+1 + (y*imageWidth)]>>16)&0xFF)) * filter[1][2])/256;
+            green += (((signed int)((image[x+1 + (y*imageWidth)]>> 8)&0xFF)) * filter[1][2])/256;
+            blue  +=  (((signed int)(image[x+1 + (y*imageWidth)]     &0xFF)) * filter[1][2])/256;
+            
+            red   += (((signed int)((image[x-1 + (y+1*imageWidth)]>>16)&0xFF)) * filter[2][0])/256;
+            green += (((signed int)((image[x-1 + (y+1*imageWidth)]>> 8)&0xFF)) * filter[2][0])/256;
+            blue  +=  (((signed int)(image[x-1 + (y+1*imageWidth)]     &0xFF)) * filter[2][0])/256;
+            
+            red   += (((signed int)((image[x + (y+1*imageWidth)]>>16)&0xFF)) * filter[2][1])/256;
+            green += (((signed int)((image[x + (y+1*imageWidth)]>> 8)&0xFF)) * filter[2][1])/256;
+            blue  +=  (((signed int)(image[x + (y+1*imageWidth)]     &0xFF)) * filter[2][1])/256;
+            
+            red   += (((signed int)((image[x+1 + (y+1*imageWidth)]>>16)&0xFF)) * filter[2][2])/256;
+            green += (((signed int)((image[x+1 + (y+1*imageWidth)]>> 8)&0xFF)) * filter[2][2])/256;
+            blue  +=  (((signed int)(image[x+1 + (y+1*imageWidth)]     &0xFF)) * filter[2][2])/256;
+			
 #ifdef DEBUG
 if(runs){
             puts("Old RGB:\n");
@@ -372,7 +378,7 @@ if(runs){
 }
 #endif
 
-        }
+//        }
 #ifdef DEBUG
 if(runs){
         puts("RGB values:\n");
@@ -401,21 +407,10 @@ if(runs){
     } //runs
 #endif
 
-#ifdef MICROBLAZE
-    EndTime = XTmrCtr_GetValue(timer_0, XPAR_AXI_TIMER_0_DEVICE_ID);
-    TimeRun = EndTime - BeginTime;
-    //xil_printf("Finished in %d time units\n\r", TimeRun);
 
-    print("Finished\n\r");
-    sprintf(strbuf, "%d\n\r", TimeRun);
-    print(strbuf);
-
-    cleanup_platform();
-#else
 	//puts("Finished\n");
 	//tohex(strbuf, CR_CNT - timerread);
 	//puts(strbuf);
-#endif
 
     return 0;
 }
