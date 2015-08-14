@@ -167,10 +167,10 @@
 // Scratch-pad registers. No hardware function, just places to store words in.
 // RET is intended to be used for the main() return value to test for success
 // or failure of a program.
-#define CR_SCRP_ADDR            CREG_ADDR_CTXT(0x50)
-#define CR_SCRP2_ADDR           CREG_ADDR_CTXT(0x54)
-#define CR_SCRP3_ADDR           CREG_ADDR_CTXT(0x58)
-#define CR_SCRP4_ADDR           CREG_ADDR_CTXT(0x5C)
+#define CR_SCRP_ADDR            CREG_ADDR_CTXT(0x58)
+#define CR_SCRP2_ADDR           CREG_ADDR_CTXT(0x5C)
+#define CR_SCRP3_ADDR           CREG_ADDR_CTXT(0x60)
+#define CR_SCRP4_ADDR           CREG_ADDR_CTXT(0x64)
 #define CR_RET_ADDR             CREG_ADDR_CTXT(0x34)
 #define CR_SCRP                 CREG_UINT32_RW(CR_SCRP_ADDR)
 #define CR_SCRP2                CREG_UINT32_RW(CR_SCRP2_ADDR)
@@ -184,21 +184,30 @@
 #define CR_C_CYC_ADDR           CREG_ADDR_CTXT(0x3C)
 #define CR_C_CYC                CREG_UINT32_RW(CR_C_CYC_ADDR)
 
+// Upper 32 bits of cycle counter.
+#define CR_C_CYCH_ADDR          CREG_ADDR_CTXT(0x40)
+#define CR_C_CYCH               CREG_UINT32_RW(CR_C_CYCH_ADDR)
+
+// Saved upper 32 bits of cycle counter. The upper 32 bits of the cycle counter
+// are saved to this register whenever the lower 32 bits are read.
+#define CR_C_CYCHS_ADDR         CREG_ADDR_CTXT(0x44)
+#define CR_C_CYCHS              CREG_UINT32_RW(CR_C_CYCHS_ADDR)
+
 // Context stall cycle counter, counts cycles wherein the context is non-idle
 // and stalled. Writing to the register clears it.
-#define CR_C_STALL_ADDR         CREG_ADDR_CTXT(0x40)
+#define CR_C_STALL_ADDR         CREG_ADDR_CTXT(0x48)
 #define CR_C_STALL              CREG_UINT32_RW(CR_C_STALL_ADDR)
 
 // Committed bundle counter. Writing to the register clears it.
-#define CR_C_BUN_ADDR           CREG_ADDR_CTXT(0x44)
+#define CR_C_BUN_ADDR           CREG_ADDR_CTXT(0x4C)
 #define CR_C_BUN                CREG_UINT32_RW(CR_C_BUN_ADDR)
 
 // Committed syllable counter. Writing to the register clears it.
-#define CR_C_SYL_ADDR           CREG_ADDR_CTXT(0x48)
+#define CR_C_SYL_ADDR           CREG_ADDR_CTXT(0x50)
 #define CR_C_SYL                CREG_UINT32_RW(CR_C_SYL_ADDR)
 
 // Committed NOP syllable counter. Writing to the register clears it.
-#define CR_C_NOP_ADDR           CREG_ADDR_CTXT(0x4C)
+#define CR_C_NOP_ADDR           CREG_ADDR_CTXT(0x54)
 #define CR_C_NOP                CREG_UINT32_RW(CR_C_NOP_ADDR)
 
 /*****************************************************************************/
