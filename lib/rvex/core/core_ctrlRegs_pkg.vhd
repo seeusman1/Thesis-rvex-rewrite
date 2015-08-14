@@ -108,7 +108,7 @@ package core_ctrlRegs_pkg is
   -- register file. The specified range must be identical to or a subset of
   -- 128..255 inclusive, but may be changed otherwise.
   constant CRG_CTXT_WORD_OFFSET : natural := 128;
-  constant CRG_CTXT_WORD_COUNT  : natural := 24;
+  constant CRG_CTXT_WORD_COUNT  : natural := 26;
   
   -----------------------------------------------------------------------------
   -- Control register map specification
@@ -148,14 +148,16 @@ package core_ctrlRegs_pkg is
   constant CR_DCR2    : natural := CRG_CTXT_WORD_OFFSET + 13; -- Debug control register 2.
   constant CR_CRR     : natural := CRG_CTXT_WORD_OFFSET + 14; -- Configuration request register.
   constant CR_C_CYC   : natural := CRG_CTXT_WORD_OFFSET + 15; -- Non-idle cycle counter.
-  constant CR_C_STALL : natural := CRG_CTXT_WORD_OFFSET + 16; -- Non-idle stall counter.
-  constant CR_C_BUN   : natural := CRG_CTXT_WORD_OFFSET + 17; -- Committed bundle counter.
-  constant CR_C_SYL   : natural := CRG_CTXT_WORD_OFFSET + 18; -- Committed syllable counter.
-  constant CR_C_NOP   : natural := CRG_CTXT_WORD_OFFSET + 19; -- Committed NOP counter.
-  constant CR_SCRP    : natural := CRG_CTXT_WORD_OFFSET + 20; -- Scratch-pad register 1.
-  constant CR_SCRP2   : natural := CRG_CTXT_WORD_OFFSET + 21; -- Scratch-pad register 2.
-  constant CR_SCRP3   : natural := CRG_CTXT_WORD_OFFSET + 22; -- Scratch-pad register 3.
-  constant CR_SCRP4   : natural := CRG_CTXT_WORD_OFFSET + 23; -- Scratch-pad register 4.
+  constant CR_C_CYCH  : natural := CRG_CTXT_WORD_OFFSET + 16; -- Non-idle cycle counter high bits.
+  constant CR_C_CYCHS : natural := CRG_CTXT_WORD_OFFSET + 17; -- Non-idle cycle counter saved high bits.
+  constant CR_C_STALL : natural := CRG_CTXT_WORD_OFFSET + 18; -- Non-idle stall counter.
+  constant CR_C_BUN   : natural := CRG_CTXT_WORD_OFFSET + 19; -- Committed bundle counter.
+  constant CR_C_SYL   : natural := CRG_CTXT_WORD_OFFSET + 20; -- Committed syllable counter.
+  constant CR_C_NOP   : natural := CRG_CTXT_WORD_OFFSET + 21; -- Committed NOP counter.
+  constant CR_SCRP    : natural := CRG_CTXT_WORD_OFFSET + 22; -- Scratch-pad register 1.
+  constant CR_SCRP2   : natural := CRG_CTXT_WORD_OFFSET + 23; -- Scratch-pad register 2.
+  constant CR_SCRP3   : natural := CRG_CTXT_WORD_OFFSET + 24; -- Scratch-pad register 3.
+  constant CR_SCRP4   : natural := CRG_CTXT_WORD_OFFSET + 25; -- Scratch-pad register 4.
   
   -- Byte addresses for byte-aligned fields.
   constant CR_TC      : natural := 4*CR_CCR   + 0; -- Trap cause.
@@ -316,6 +318,24 @@ package core_ctrlRegs_pkg is
     permissions   : in    creg_perm_type    -- Bus/processor permissions.
   );
   
+  -- Generates a counter register. The counter reg can be cleared by writing to
+  -- it, or using the clear input. The counter will stay at max value rather
+  -- than overflowing so overflows can be detected.
+  procedure creg_makeCounterOverflow(
+    l2c           : inout logic2creg_array;
+    c2l           : inout creg2logic_array;
+    wordAddr      : in    natural;          -- Word address of the register.
+    overflow      : out   std_logic;        -- Indicates that the counter has overflowed.
+    highBit       : in    natural := 31;    -- High bit index of the counter.
+    lowBit        : in    natural := 0;     -- Low bit index of the counter.
+    clear         : in    std_logic := '0'; -- External clear input.
+    inc           : in    std_logic := '0'; -- Single increment bit.
+    inc_vect      : in    std_logic_vector := ""; -- Additional increment bits in vector form.
+    enable        : in    std_logic := '1'; -- Increment enable bit.
+    clamp         : in    boolean := true;  -- Overflow behavior: clamp or modulo.
+    permissions   : in    creg_perm_type := READ_WRITE -- Bus/processor permissions (to clear register).
+  );
+
   -- Generates a counter register. The counter reg can be cleared by writing to
   -- it, or using the clear input. The counter will stay at max value rather
   -- than overflowing so overflows can be detected.
@@ -496,12 +516,13 @@ package body core_ctrlRegs_pkg is
   end creg_makeNormalRegister;
   
   -- Generates a counter register. The counter reg can be cleared by writing to
-  -- it, or using the clear input. The counter will stay at max value rather
-  -- than overflowing so overflows can be detected.
-  procedure creg_makeCounter(
+  -- it, or using the clear input. Has an overflow output so overflows can be
+  -- detected.
+  procedure creg_makeCounterOverflow(
     l2c           : inout logic2creg_array;
     c2l           : inout creg2logic_array;
     wordAddr      : in    natural;          -- Word address of the register.
+    overflow      : out   std_logic;        -- Indicates that the counter has overflowed.
     highBit       : in    natural := 31;    -- High bit index of the counter.
     lowBit        : in    natural := 0;     -- Low bit index of the counter.
     clear         : in    std_logic := '0'; -- External clear input.
@@ -553,7 +574,31 @@ package body core_ctrlRegs_pkg is
     -- Write the new counter value.
     l2c(wordAddr).writeEnable(highBit downto lowBit) := (others => ena);
     l2c(wordAddr).writeData(highBit downto lowBit) := std_logic_vector(count(highBit-lowBit downto 0));
+
+    overflow := count(highBit-lowBit+1);
     
+  end creg_makeCounterOverflow;
+
+  -- Generates a counter register. The counter reg can be cleared by writing to
+  -- it, or using the clear input. The counter will stay at max value rather
+  -- than overflowing so overflows can be detected.
+  procedure creg_makeCounter(
+    l2c           : inout logic2creg_array;
+    c2l           : inout creg2logic_array;
+    wordAddr      : in    natural;          -- Word address of the register.
+    highBit       : in    natural := 31;    -- High bit index of the counter.
+    lowBit        : in    natural := 0;     -- Low bit index of the counter.
+    clear         : in    std_logic := '0'; -- External clear input.
+    inc           : in    std_logic := '0'; -- Single increment bit.
+    inc_vect      : in    std_logic_vector := ""; -- Additional increment bits in vector form.
+    enable        : in    std_logic := '1'; -- Increment enable bit.
+    clamp         : in    boolean := true;  -- Overflow behavior: clamp or modulo.
+    permissions   : in    creg_perm_type := READ_WRITE -- Bus/processor permissions (to clear register).
+  ) is
+    variable overflow : std_logic := '0';
+  begin
+    creg_makeCounterOverflow(l2c,c2l,wordAddr, overflow, highBit, lowBit,clear, inc,
+                             inc_vect, enable, clamp, permissions);
   end creg_makeCounter;
   
   -- Hardwires the specified range to a certain value.

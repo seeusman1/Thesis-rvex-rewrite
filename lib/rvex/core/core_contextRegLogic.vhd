@@ -327,6 +327,7 @@ begin -- architecture
     variable enteringDebugTrap  : std_logic;
     variable countClear         : std_logic;
     variable bundleCommit       : std_logic;
+    variable cycOverflow        : std_logic;
   begin
     l2c := (others => HW2REG_DEFAULT);
     c2l := creg2cxreg;
@@ -900,6 +901,10 @@ begin -- architecture
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_CYC |                         cycle counter                         |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_CYCH                     cycle counter high bits                    |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_CYCHS                 cycle counter saved high bits                 |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_STALL                         stall counter                         |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_BUN |                   committed bundle counter                    |
@@ -910,7 +915,8 @@ begin -- architecture
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     --
     -- These registers will increment until they reach 0xFFFFFFFF when certain
-    -- events occur. C_CYC will increment every cycle while idle is low.
+    -- events occur, except for C_CYC, C_CYCH and C_CYCHS, which will overflow.
+    -- C_CYC will increment every cycle while idle is low.
     -- C_STALL does the same as C_CYC, but only when stall is high. Thus, their
     -- difference can be used to determine the number of active cycles. C_BUN
     -- counts the number of active cycles in which an instruction was
@@ -920,6 +926,12 @@ begin -- architecture
     -- instruction, this is incremented by the number of syllables which were
     -- committed (which may be dependent on configuration). C_NOP does the same
     -- as C_SYL, but only counts NOP syllables.
+    --
+    -- C_CYCH is represents the upper 32 bits of the cycle counter. It is
+    -- incremented whenever C_CYC overflows. C_CYCHS is the saved version of
+    -- C_CYCH. Whenever C_CYC is read, C_CYCH is saved to C_CYCHS in order to
+    -- ensure consistency when reading the two different registers in different
+    -- cycles.
     --
     -- When any of the counters are written to, they are reset to 0. The
     -- written value is ignored for all but bit 0 of C_CYC; when that bit is
@@ -933,10 +945,25 @@ begin -- architecture
                or rctrl2cxreg_reset;
     
     -- Make the cycle counter.
-    creg_makeCounter(l2c, c2l, CR_C_CYC, 31, 0,
+    creg_makeCounterOverflow(l2c, c2l, CR_C_CYC, cycOverflow, 31, 0,
       clear         => countClear,
       inc           => not cxplif2cxreg_idle_r,
-      permissions   => READ_WRITE
+      permissions   => READ_WRITE,
+      clamp         => false
+    );
+
+    -- Make the high bits of the cycle counter.
+    creg_makeCounter(l2c, c2l, CR_C_CYCH, 31, 0,
+      clear         => countClear,
+      inc           => not cxplif2cxreg_idle_r and cycOverflow,
+      permissions   => READ_WRITE,
+      clamp         => false
+    );
+
+    -- Generate the save logic for the high bits of the cycle counter.
+    creg_makeSaveRestoreLogic(l2c, c2l, CR_C_CYCH, CR_C_CYCHS, 31, 0,
+      save          => c2l(CR_C_CYC).busRead,
+      restore       => '0'
     );
     
     -- Make the stall counter.
