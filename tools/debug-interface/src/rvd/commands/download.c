@@ -214,7 +214,7 @@ int runDownload(commandLineArgs_t *args) {
     ptr = pageBuffer;
     curAddress = i.address;
     while (remain) {
-      int count;
+      int count = 0;
       
       // Write to the file.
       if (ft == FT_STRAIGHT) {

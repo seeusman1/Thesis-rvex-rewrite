@@ -185,7 +185,7 @@ int runUpload(commandLineArgs_t *args) {
       
       // Read into the buffer.
       while (remain) {
-        int count;
+        int count = 0;
         
         if (ft == FT_STRAIGHT) {
           
