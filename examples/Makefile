@@ -274,7 +274,7 @@ CFLAGS = -I$(GEN_EXAMPLES)/src -mcore=st220 -EB -fshort-double -fno-dismissible-
 ifeq ($(ISSUE_WIDTH), 8)
 CC=/shares/group/ce-rvex/tools/builds/open64_8issue_16UNROLL/bin/st200-gcc
 ifeq ($(DEBUG), false)
-CFLAGS += -O2
+CFLAGS += -O3 -CG:LAO_activation=0
 else
 CFLAGS += -g
 endif
