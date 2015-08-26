@@ -9,8 +9,8 @@
 //#define DEBUG
 
 
-#define imageWidth 1920
-#define imageHeight 1080
+#define imageWidth 16
+#define imageHeight 16
 
 
 extern inline int max(int a, int b);
@@ -24,7 +24,7 @@ int main_greyscale(int start_height, int end_height)
     unsigned int* image = (unsigned int*)0x800000;
     int i, x, y, filterX, filterY, imageX, imageY;
     
-  	puts("greyscale starting\n");
+  	//puts("greyscale starting\n");
 
 #ifdef DEBUG
     int runs;
@@ -104,7 +104,7 @@ if(runs){
 #endif
 
 
-	puts("Finished\n");
+	//puts("Finished\n");
 
     return 0;
 }

@@ -96,7 +96,7 @@ int main_convolution(int start_height, int end_height)
     volatile int timerread;
     int i, x, y, filterX, filterY, imageX, imageY;
     
-    puts("convolution starting\n");
+    //puts("convolution starting\n");
 
 #ifdef DEBUG
     int runs;
@@ -193,7 +193,7 @@ if(runs){
     } //runs
 #endif
 
-    puts("Finished\n\r");
+    //puts("Finished\n\r");
 
 
     return 0;

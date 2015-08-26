@@ -143,16 +143,25 @@ int run_program(char program, int nr_threads);
 void merge();
 
 int running_flags;
+int finished_flags[4];
 
-volatile char program_choice = '\0';
-volatile char  nr_threads = 0;
+//volatile char program_choice = '\0';
+//volatile char  nr_threads = 0;
+
+volatile char program_choice = 'c';
+volatile char  nr_threads = 3;
+
+
+char strbuf[12];
 
 int main(int argc, char* argv[])
 {
-	puts("starting dispatch program\n");
+	//puts("starting dispatch program\n");
 	char inputchar;
+	int i;
 	int core_ID = get_core_ID();
-	
+
+/*
 	if (core_ID == 0)
 	{
 		nr_threads = -1;
@@ -161,13 +170,13 @@ int main(int argc, char* argv[])
 	}
 	
 	//get user's choice from UART
-	while (1) 
-	{
+	//while (1) 
+	//{
 		while (program_choice != 'm' && program_choice != 'r' && program_choice != 'c' && program_choice != 'g')
 		{
 			if (core_ID == 0)
 			{
-				puts("Program to run (\"m\" for Mandelbrot, \"r\"for Raytracer, \"c\" for Convolution, \"g\" for Greyscale): \n");
+				//puts("Program to run (\"m\" for Mandelbrot, \"r\"for Raytracer, \"c\" for Convolution, \"g\" for Greyscale): \n");
 				inputchar = getchar();
 				program_choice = inputchar;
 			}
@@ -177,12 +186,12 @@ int main(int argc, char* argv[])
 		{
 			if (core_ID == 0)
 			{
-				puts("Number of threads: (please specify a number between 1 and 4)\n");
+				//puts("Number of threads: (please specify a number between 1 and 4)\n");
 				inputchar = getchar();
 				nr_threads = inputchar - '0';
 			}
 		}
-
+*/
 		if (core_ID == 0)
 		{
 		switch (nr_threads){
@@ -204,18 +213,26 @@ int main(int argc, char* argv[])
 
 		running_flags |= (1<< core_ID); //flag that we are running
 		run_program(program_choice, nr_threads);
-		running_flags &= ~(1<<core_ID); //flag that we are finished
-		while (running_flags != 0) //keep merging into other contexts until all contexts are finished
+		//running_flags &= ~(1<<core_ID); //flag that we are finished
+		finished_flags[core_ID] = 1;
+		
+		
+		merge(); //give our processing resources to other threads that are still active
+		
+		
+		
+		//puts("current config:\n");
+		for (i = 0; i < 4; i++)
 		{
-			merge();
+			//putc('0' + (CR_CC>>(i*4)&0xf));
 		}
 		
 		//move back to context 0 in 8-issue;
-		CR_CRR = 0;
+		//CR_CRR = 0;
 		
-		program_choice = nr_threads = -1; //reset the vars so we must choose again
+		//program_choice = nr_threads = -1; //reset the vars so we must choose again
 	
-	}
+	//}
 
 }
 
@@ -226,7 +243,56 @@ void merge()
 	int new_config, tmp;
 	int cur_config = new_config = CR_CC;
 	int core_ID = (int)CR_CID;
+	int active_threadcnt;
+	int active_thread[4];
+
+/*
+	puts("current config:\n");
+	for (i = 0; i < 4; i++)
+	{
+		putc('0' + (cur_config>>(i*4)&0xf));
+	}
+	putc('\n');
+*/
+
+	/*
+	 * At this point, there can be either 3, 2 or 1 busy thread.
+	 * when 3, just merge into our neighbouring lanepair.
+	 * when 2, split the work over 2 4-issue cores.
+	 */
+	 
+	 active_threadcnt = 0;
+	 for (i = 0; i < nr_threads; i++)
+	 	if (!finished_flags[i])
+	 	{
+	 		active_thread[active_threadcnt] = i; 
+	 		active_threadcnt++;
+	 	}
+	 
+	 if (active_threadcnt == 3)
+	 {
+	 	switch (core_ID) //we know all the others are still active, choose the config that keeps the other contexts in their current lanes
+	 	{
+	 		case 0:
+	 			new_config = 0x3211; break;
+	 		case 1:
+	 			new_config = 0x3200; break;
+	 		case 2:
+	 			new_config = 0x3310; break;
+	 		default:
+	 			new_config = 0x2210; break;
+	 	}
+	}
+	else if (active_threadcnt == 2) //we don't know which others are active, get the ones from the active_thread array
+	{
+		new_config = ( (active_thread[1]<<12) | (active_thread[1]<<8) | (active_thread[0]<<4) | (active_thread[0]));
+	}
+	else //must be 1
+	{
+		new_config = ( (active_thread[0]<<12) | (active_thread[0]<<8) | (active_thread[0]<<4) | (active_thread[0]));
+	}
 	
+/* This shit doesn't work
 	//find a context that is still active and is not us
 	for (i = 0; i < 3; i++)
 	{
@@ -234,8 +300,9 @@ void merge()
 		if ( active_context != core_ID && active_context != 0x8) //skip disabled lanes
 			break;			
 	}
-	puts("found active context:\n");
-	putc('0'+active_context);
+	//puts("found active context:\n");
+	//putc('0'+active_context);
+	//putc('\n');
 	
 	//now assign all lanes that are assigned to us to that context
 	for (i = 0; i < 3; i++)
@@ -247,6 +314,19 @@ void merge()
 			new_config |= active_context << (i*4);
 		}
 	}
+*/
+/*
+	puts("new config:\n");
+	for (i = 0; i < 4; i++)
+	{
+		putc('0' + (new_config>>(i*4)&0xf));
+	}
+	putc('\n');
+*/
+
+	CR_CRR = new_config;
+	
+	__asm__("stop");
 	return;
 }
 
@@ -278,15 +358,16 @@ int run_program(char program, int nr_threads)
 	if (program == 'r') return main_Raytracer(start_height, end_height);
 	if (program == 'g') return main_greyscale(start_height, end_height);
 	if (program == 'c') return main_convolution(start_height, end_height);
-
+/*
 	if (program = 'd') { //program = dijkstra
 		int size = 100; //small = 20; large = 100;
-		if (size % NR_THREADS == 0) {
-			start = (size / NR_THREADS) * get_core_ID();
-			end = start + (size / NR_THREADS);
+		
+		if (size % nr_threads == 0) {
+			start = (size / nr_threads) * get_core_ID();
+			end = start + (size / nr_threads);
 		} else {
-			excess = size % NR_THREADS;
-			chunk = size / NR_THREADS;
+			excess = size % nr_threads;
+			chunk = size / nr_threads;
 			chunkPlus = chunk + 1;
 			if (get_core_ID() < excess) {
 				start = chunkPlus * get_core_ID();
@@ -297,6 +378,7 @@ int run_program(char program, int nr_threads)
 			}
 		}
 	}
+	*/
 
 }
 
