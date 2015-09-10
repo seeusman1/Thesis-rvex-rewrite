@@ -29,10 +29,10 @@ struct wait_queue * log_wait = NULL;
 int console_loglevel = 8;/*DEFAULT_CONSOLE_LOGLEVEL;*/
 
 
-//__attribute__((section (".log"))) static char log_buf[LOG_BUF_LEN];
+__attribute__((section (".log"))) static char log_buf[4][LOG_BUF_LEN];
 //static char *log_buf = (char*)0x01000000; //would like to do this in the linker, but I cannot specify the NOLOAD attribute here
 
-__attribute__((section (".bss"))) static char log_buf[4][LOG_BUF_LEN];
+//__attribute__((section (".bss"))) static char log_buf[4][LOG_BUF_LEN];
 static unsigned long log_start[4] = {0,0,0,0};
 static unsigned long logged_chars[4] = {0,0,0,0};
 
@@ -67,6 +67,7 @@ int strnlen(const char * s, int count)
 	return sc - s;
 }
 
+/*
 unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
 {
 	unsigned long result = 0,value;
@@ -91,6 +92,7 @@ unsigned long simple_strtoul(const char *cp,char **endp,unsigned int base)
 		*endp = (char *)cp;
 	return result;
 }
+*/
 
 /* we use this so that we can do without the ctype library */
 #define is_digit(c)	((c) >= '0' && (c) <= '9')
@@ -394,12 +396,13 @@ int printf(const char *fmt, ...)
 
 
 #ifdef IO_LINK_FILE
-extern int* _binary_GR19_pgm_start, _binary_GR19_pgm_end;
+//extern int* _binary_GR19_pgm_start, _binary_GR19_pgm_end;
+extern int* _binary_matrix_txt_start, _binary_matrix_txt_end;
 int open(char* path, int mode)
 {
 	fd_offset = 0;
-	fd_size = ((unsigned int)&_binary_GR19_pgm_end - (unsigned int)&_binary_GR19_pgm_start);
-	testfile = (uint8_t*)&_binary_GR19_pgm_start;
+	fd_size = ((unsigned int)&_binary_matrix_txt_end - (unsigned int)&_binary_matrix_txt_start);
+	testfile = (uint8_t*)&_binary_matrix_txt_start;
 	printf("open assume opening FILENAME at address 0x%08x, size %d bytes\n", testfile, fd_size);
 	return 0;
 }

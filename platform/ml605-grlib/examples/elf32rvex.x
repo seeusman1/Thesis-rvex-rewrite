@@ -56,7 +56,7 @@ SECTIONS
   */
   
   
-  .logbuf (NOLOAD):
+  .log (NOLOAD):
   {
    __LOG_BUF_START = .;
    *(.log)
