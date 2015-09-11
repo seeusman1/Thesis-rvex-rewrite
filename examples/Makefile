@@ -46,7 +46,7 @@ endif
 ifdef RVEXLIB_UCLIBC
 INCLUDES = -I/data/uCLinux/generic_binary/uCLinux/uClibc/include \
  -I/data/uCLinux/generic_binary/uCLinux/linux-2.0.x/include/ \
- -I/data/tools/st200/ST200R7.3.0/include/ $(FILENAMEDEF) \
+ -I/data/tools/st200/ST200R7.3.0/include/ \
  -I/data/tools/st200/ST200R7.3.0/target/core/st220
 LDFLAGS = --no-demangle /data/uCLinux/generic_binary/uCLinux/uClibc/lib/crt0.o \
  -L/data/uCLinux/generic_binary/uCLinux/uClibc/lib -lm -lc floatlib.o
@@ -57,14 +57,14 @@ DEFS+= IO_LINK_FILE
 INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
  -I/data/tools/st200/ST200R7.3.0/include/ \
  -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = GR19.elf --no-demangle  --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
+LDFLAGS = matrix.txt.elf -Telf32rvex.x --no-demangle  --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
 endif
 
 ifdef RVEXLIB_NEWLIB_NOFILE
 INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
  -I/data/tools/st200/ST200R7.3.0/include/ \
  -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = --no-demangle --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
+LDFLAGS = -Telf32rvex.x --no-demangle --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
 endif
 
 
