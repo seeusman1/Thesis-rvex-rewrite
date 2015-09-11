@@ -19,8 +19,10 @@
 #endif
 
 /*
-TODO: try using 2 threads and mem mapped registers to bypass the cache.
-That way we'll know for sure it is a cache problem.
+There is a problem with coherency in the cache.
+When the bypass flag is enabled it doesnt show up.
+Also with simple tests it seems to work correctly.
+But in this program, the threads will start to wait for each other.
 */
 
 //#define RESOURCE_SHARE
@@ -29,10 +31,6 @@ That way we'll know for sure it is a cache problem.
 float *A;
 short int *c, *l;
 
-/* Another problem; the cache first updates the line when performing a write to memory that is smaller than a word.
- * So the trick still doesn't work for cached memory. We'll have to abuse some non-cached memory location,
- * such as a memory-mapped control register for this.
- */
 volatile int *finished1 = (int*)0x80000604;
 volatile int *finished2 = (int*)0x80000608;
 volatile int initialized = 0;
@@ -54,7 +52,7 @@ void claim_lock()
 	ticket[thread_id] = max + 1;
 	entering[thread_id] = 0;
 	
-	printf("thread %d chose ticket %d\n", thread_id, max+1);
+	//printf("thread %d chose ticket %d\n", thread_id, max+1);
 	
 	for (i = 0; i < NTHREADS; i++)
 	{
@@ -66,7 +64,7 @@ void claim_lock()
 			while (ticket[i] && ((ticket[thread_id] > ticket[i]) || (ticket[thread_id] == ticket[i] && thread_id > i))) ;
 		}
 	}
-	printf("thread %d going into critical section\n", thread_id);
+	//printf("thread %d going into critical section\n", thread_id);
 }
 
 void free_lock()
@@ -321,7 +319,7 @@ void defineVectorZero(float *A, short int *c, short int *l){
 
 int main(int argc, char **argv){
 
-	FILE *input = fopen(argv[1], "r");
+
 	int idThread = CR_CID;
 	int totalThreads = NTHREADS;
 	
@@ -334,9 +332,6 @@ int main(int argc, char **argv){
 	vectorPosition = malloc(sizeof(short int)*N*2);
 	free_lock();
 	
-	CR_CRR = MULTI_CONFIG; //enable all contexts
-
-
 	/*Only master thread do this*/
 	if(idThread == MASTER){
 	
@@ -351,10 +346,12 @@ int main(int argc, char **argv){
 			c = (short int*)0x300000;
 			l = (short int*)0x400000;
 	*/
+			FILE *input = fopen(argv[1], "r");
 			povoaMatrix(input, A);	
 			defineVectorZero(A, l, c);
 			//initialized = 1;
 			//barrier = 1;
+			__asm__ volatile ("stop");
 			CR_CRR = MULTI_CONFIG; //enable all contexts
 	}
 	
@@ -366,7 +363,7 @@ int main(int argc, char **argv){
 
 
 	/* All threads do this --> workload calculation */
-	//calcWorkload(vectorPosition, idThread, totalThreads);
+	calcWorkload(vectorPosition, idThread, totalThreads);
 
 	
 	//all threads wait here to start the LU decomposition togheter
