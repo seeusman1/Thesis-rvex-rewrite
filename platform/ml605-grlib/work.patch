@@ -1,6 +1,5 @@
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/config.vhd	2015-04-24 14:45:35.749774019 +0200
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd
++++ work/config.vhd
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -37,7 +36,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
    constant CFG_ITBSZ : integer := 4;
    constant CFG_ATBSZ : integer := 4;
    constant CFG_LEON3FT_EN : integer := 0;
-@@ -73,6 +82,30 @@ package config is
+@@ -73,6 +82,32 @@ package config is
    constant CFG_LEON3_NETLIST: integer := 0;
    constant CFG_DISAS : integer := 0 + 0;
    constant CFG_PCLOW : integer := 2;
@@ -45,7 +44,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +  constant CFG_RVEX : integer := 1;
 +  constant CFG_NRVEX : integer := 1;
 +  constant CFG_RVEX_CFG : rvex_grlib_generic_config_type := rvex_grlib_cfg(
-+    
++
 +    -- Core configuration
 +    core => rvex_cfg(
 +      numLanesLog2          => 3,
@@ -55,20 +54,22 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +      limmhFromPreviousPair => 0,
 +      traceEnable           => 1
 +    ), core_valid => true,
-+    
++
 +    -- Cache configuration
 +    cache => cache_cfg(
 +      instrCacheLinesLog2 => 8, -- 8 kiB
 +      dataCacheLinesLog2  => 8  -- 1 KiB
 +    ), cache_valid => true
-+    
++
 +  );
++-- r-VEX PCIe support
++  constant CFG_AHB_PCIE : integer := 1;
 +-- Total number of processors
 +  constant CFG_NCPU : integer := CFG_NLEON + CFG_NRVEX * 2**CFG_RVEX_CFG.core.numLaneGroupsLog2;
  -- AMBA settings
    constant CFG_DEFMST : integer := (0);
    constant CFG_RROBIN : integer := 1;
-@@ -85,7 +118,8 @@ package config is
+@@ -85,7 +120,8 @@ package config is
    constant CFG_AHB_MONWAR : integer := 0;
    constant CFG_AHB_DTRACE : integer := 0;
  -- DSU UART
@@ -78,7 +79,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  -- JTAG based DSU interface
    constant CFG_AHB_JTAG : integer := 1;
  -- Ethernet DSU
-@@ -96,7 +130,7 @@ package config is
+@@ -96,7 +132,7 @@ package config is
    constant CFG_ETH_ENM : integer := 16#020789#;
    constant CFG_ETH_ENL : integer := 16#000123#;
  -- LEON2 memory controller
@@ -87,7 +88,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
    constant CFG_MCTRL_RAM8BIT : integer := 1;
    constant CFG_MCTRL_RAM16BIT : integer := 1;
    constant CFG_MCTRL_5CS : integer := 0;
-@@ -123,7 +157,7 @@ package config is
+@@ -123,7 +159,7 @@ package config is
    constant CFG_GRETH_FT : integer := 0;
    constant CFG_GRETH_EDCLFT : integer := 0;
  -- UART 1
@@ -96,9 +97,347 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
    constant CFG_UART1_FIFO : integer := 8;
  -- LEON3 interrupt controller
    constant CFG_IRQ3_ENABLE : integer := 1;
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/leon3mp.vhd	2015-04-24 14:15:34.328746497 +0200
+
+@@ -158,10 +194,10 @@ package config is
+  constant CFG_PCIE_SIM_MAS : integer := 0;
+  constant CFG_PCIEXPVID : integer := 16#0#;
+  constant CFG_PCIEXPDID : integer := 16#0#;
+-  constant CFG_NO_OF_LANES : integer := 1;
++  constant CFG_NO_OF_LANES : integer := 4;
+ -- GRLIB debugging
+   constant CFG_DUART : integer := 0;
+ -- Xilinx MIG DDR2 controller
+   constant CFG_MIG_DDR2 : integer := 1;
+-  constant CFG_MIG_CLK4 : integer := 16;
++  constant CFG_MIG_CLK4 : integer := 32;
+ end;
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp_mig39.ucf
++++ work/leon3mp_mig39.ucf
+@@ -1,10 +1,62 @@
++######################################################################################
++## PCI-express signals (copied from reference project)                              ##
++######################################################################################
++#------------------------
++# Clock and Reset Pinout
++#------------------------
++NET "pcie_dma_block.pcie_dma/pcie_ref_clk" TNM_NET = "SYSCLK" ;
++NET "*/pcie_clocking_i/clk_125" TNM_NET = "CLK_125" ;
++NET "*/TxOutClk_bufg" TNM_NET = "TXOUTCLKBUFG";
++
++TIMESPEC "TS_SYSCLK"  = PERIOD "SYSCLK" 250.00 MHz HIGH 50 % ;
++TIMESPEC "TS_CLK_125" = PERIOD "CLK_125" TS_SYSCLK*0.5 HIGH 50 %; # PRIORITY 100 ;
++TIMESPEC "TS_TXOUTCLKBUFG"  = PERIOD "TXOUTCLKBUFG" 250 MHz HIGH 50 %; # PRIORITY 100 ;
++
++NET "sys_reset_n" TIG;
++PIN "*/trn_reset_n_int_i.CLR" TIG ;
++PIN "*/trn_reset_n_i.CLR" TIG ;
++PIN "*/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
++
++#TIMESPEC "TS_TRNLNKUPN" = FROM FFS(*) TO FFS(trn_lnk_up_n_int_i) 4 ns;
++#TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS(trn_reset_n_i) 4 ns;
++TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS("pcie_dma_block.pcie_dma/user_reset") 8 ns;
++
++
++#-----------------------------------
++# PCIe Transceiver & Core Locations
++#-----------------------------------
++
++# PCIe Block Placement
++INST "*/pcie_2_0_i/pcie_block_i" LOC = PCIE_X0Y1;
++
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[0].GTX" LOC = GTXE1_X0Y15;
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[1].GTX" LOC = GTXE1_X0Y14;
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[2].GTX" LOC = GTXE1_X0Y13;
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[3].GTX" LOC = GTXE1_X0Y12;
++
++#------------------------
++# Clock and Reset Pinout
++#------------------------
++
++NET  sys_reset_n           LOC  = AE13 | IOSTANDARD = LVCMOS25 | NODELAY;
++
++# 250 MHz Reference Clock
++INST "pcie_dma_block.pcie_dma/pcie_refclk_ibuf" LOC = IBUFDS_GTXE1_X0Y4; # Implies pinout
++
++# MMCM Placment. This constraint selects the MMCM Placement
++INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
++
++######################################################################################
++## Other definitions                                                                ##
++######################################################################################
++
+ 
+ NET "clk_ref_p" TNM_NET = TNM_clk_ref;
+ TIMESPEC "TS_clk_ref" = PERIOD "TNM_clk_ref" 5 ns ;
+ 
+ NET "reset" IOSTANDARD = SSTL15;
+ NET "reset" LOC = "H10";
+-NET "errorn" LOC = "AD24";
++#NET "errorn" LOC = "AD24";
+ 
+ NET "address(0)"                      LOC = "AL8";    ## 29 on U4, A1 on U27
+ NET "address(1)"                      LOC = "AK8";    ## 25 on U4, B1 on U27
+@@ -104,7 +156,7 @@ NET "led(3)"                    LOC = "A
+ NET "led(4)"                    LOC = "AB23";   ## 2   on LED DS15, 5 on J62
+ NET "led(5)"                    LOC = "AG23";   ## 2   on LED DS14, 6 on J62
+ NET "led(6)"                    LOC = "AE24";   ## 2   on LED DS22, 7 on J62
+-#NET "led(7)"                    LOC = "AD24";   ## 2   on LED DS21, 8 on J62
++NET "led(7)"                    LOC = "AD24";   ## 2   on LED DS21, 8 on J62
+ 
+ NET "dvi_iic_scl"                   LOC = "AN10";   ## 2   on Q5, 15 on U38
+ NET "iic_scl_main"               LOC = "AK9";    ## 2   on Q19
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf
++++ work/leon3mp.ucf
+@@ -386,8 +386,8 @@ INST "ddr3ctrl/u_infrastructure/u_mmcm_a
+ 
+ #NET  "heartbeat"                LOC = "AC24";   # ML605 GPIO LED 1
+ #NET  "pll_lock"                 LOC = "AC22" ;  # ML605 GPIO LED 0
+-
+-
++
++
+ NET "address(0)"                      LOC = "AL8";    ## 29 on U4, A1 on U27
+ NET "address(1)"                      LOC = "AK8";    ## 25 on U4, B1 on U27
+ NET "address(2)"                      LOC = "AC9";    ## 24 on U4, C1 on U27
+@@ -435,7 +435,7 @@ NET "oen"                    LOC = "AA24
+ NET "alatch"                 LOC = "AC23";   ##           H1 on U27
+ NET "romsn"                    LOC = "Y24";    ## 30 on U4, B4 on U27 (U10 and switch S2.2 setting select either U4 or U27)
+ ##
+-
++
+ NET "erx_col"                       LOC = "AK13";   ## 114 on U80
+ NET "erx_crs"                       LOC = "AL13";   ## 115 on U80
+ NET "emdint"                       LOC = "AH14";   ## 32  on U80
+@@ -465,38 +465,36 @@ NET "etxd(5)"                      LOC =
+ NET "etxd(6)"                      LOC = "AE11";   ## 28  on U80
+ NET "etxd(7)"                      LOC = "AF11";   ## 29  on U80
+ NET "etx_er"                      LOC = "AH10";   ## 13  on U80
+-
++
+ NET "dsurx"                      LOC = "J24";    ## 24  on U34
+ NET "dsutx"                      LOC = "J25";    ## 25  on U34
+-
++
+ #NET "GPIO_DIP_SW1"                  LOC = "D22";    ## 1   on SW1 DIP switch (active-high)
+ #NET "GPIO_DIP_SW2"                  LOC = "C22";    ## 2   on SW1 DIP switch (active-high)
+ #NET "GPIO_DIP_SW3"                  LOC = "L21";    ## 3   on SW1 DIP switch (active-high)
+ #NET "GPIO_DIP_SW4"                  LOC = "L20";    ## 4   on SW1 DIP switch (active-high)
+ #NET "GPIO_DIP_SW5"                  LOC = "C18";    ## 5   on SW1 DIP switch (active-high)
+-NET "dsubre"                  LOC = "B18";    ## 6   on SW1 DIP switch (active-high)
++#NET "dsubre"                  LOC = "B18";    ## 6   on SW1 DIP switch (active-high)
+ #NET "GPIO_DIP_SW7"                  LOC = "K22";    ## 7   on SW1 DIP switch (active-high)
+ #NET "GPIO_DIP_SW8"                  LOC = "K21";    ## 8   on SW1 DIP switch (active-high)
+ ##
+-
++
+ NET "led(0)"                    LOC = "AC22";   ## 2   on LED DS12, 1 on J62
+ NET "led(1)"                    LOC = "AC24";   ## 2   on LED DS11, 2 on J62
+ NET "led(2)"                    LOC = "AE22";   ## 2   on LED DS9,  3 on J62
+ NET "led(3)"                    LOC = "AE23";   ## 2   on LED DS10, 4 on J62
+ NET "led(4)"                    LOC = "AB23";   ## 2   on LED DS15, 5 on J62
+-NET "led(4)"                    LOC = "AB23";   ## 2   on LED DS15, 5 on J62
+ NET "led(5)"                    LOC = "AG23";   ## 2   on LED DS14, 6 on J62
+-#NET "GPIO_LED_5"                    LOC = "AG23";   ## 2   on LED DS14, 6 on J62
+-#NET "GPIO_LED_6"                    LOC = "AE24";   ## 2   on LED DS22, 7 on J62
+-#NET "GPIO_LED_7"                    LOC = "AD24";   ## 2   on LED DS21, 8 on J62
+-
++NET "led(6)"                    LOC = "AE24";   ## 2   on LED DS22, 6 on J62
++NET "led(7)"                    LOC = "AD24";   ## 2   on LED DS21, 6 on J62
++
+ NET "dvi_iic_scl"                   LOC = "AN10";   ## 2   on Q5, 15 on U38
+ NET "iic_scl_main"               LOC = "AK9";    ## 2   on Q19
+ #NET "IIC_SCL_SFP"                   LOC = "AA34";   ## 2   on Q23
+ NET "dvi_iic_sda"                   LOC = "AP10";   ## 2   on Q6, 14 on U38
+ NET "iic_sda_main"               LOC = "AE9";    ## 2   on Q20
+ #NET "IIC_SDA_SFP"                   LOC = "AA33";   ## 2   on Q21
+-
++
+ NET "tft_lcd_data(0)"                        LOC = "AJ19";   ## 63 on U38 (thru series R111 47.5 ohm)
+ NET "tft_lcd_data(1)"                        LOC = "AH19";   ## 62 on U38 (thru series R110 47.5 ohm)
+ NET "tft_lcd_data(2)"                        LOC = "AM17";   ## 61 on U38 (thru series R109 47.5 ohm)
+@@ -516,7 +514,7 @@ NET "tft_lcd_reset_b"                LOC
+ NET "tft_lcd_vsync"                         LOC = "AD15";   ## 5  on U38 (thru series R114 47.5 ohm)
+ NET "tft_lcd_clk_n"                    LOC = "AC17";   ## 56 on U38
+ NET "tft_lcd_clk_p"                    LOC = "AC18";   ## 57 on U38
+-
++
+ #NET "SYSACE_CFGTDI"                 LOC = "AC8";    ## 81  on U19
+ NET "sysace_d(0)"                     LOC = "AM15";   ## 66  on U19
+ NET "sysace_d(1)"                     LOC = "AJ17";   ## 65  on U19
+@@ -539,52 +537,52 @@ NET "sysace_mpirq"                  LOC
+ NET "sysace_mpoe"                   LOC = "AL15";   ## 77  on U19
+ NET "sysace_mpwe"                   LOC = "AL14";   ## 76  on U19
+ NET "clk_33"              LOC = "AE16";   ## 93  on U19
+-NET "clk_33" PERIOD = 30.000 ;
+-OFFSET = IN : 20.000 : BEFORE clk_33 ;
+-OFFSET = OUT : 20.000 : AFTER clk_33 ;
+-
+-
+-NET "clkm" 		TNM_NET = "clkm";
+-NET "clk_ddr" 		TNM_NET = "clk_ddr";
+-
+-TIMESPEC "TS_clkm_clk_ddr" = FROM "clkm" TO "clk_ddr" TIG;
+-TIMESPEC "TS_clk_ddr_clkm" = FROM "clk_ddr" TO "clkm" TIG;
+-
+-NET "erx_clk" PERIOD = 8.000 ;
+-OFFSET = IN : 5.000 : BEFORE erx_clk ;
+-#OFFSET = IN : 2.000 : BEFORE erx_clk ;
+-
+-NET "etx_clk" PERIOD = 40.000 ;
+-OFFSET = OUT : 15.000 : AFTER etx_clk ;
+-OFFSET = IN : 8.000 : BEFORE etx_clk ;
+-
+-NET "etx_clk" MAXSKEW= 1.0 ns;
+-NET "erx_clk" MAXSKEW= 1.0 ns;
+-
+-#NET "egtx_clk" PERIOD = 8.000 ;
+-#OFFSET = OUT : 5.500 : AFTER egtx_clk;
+-#NET "egtx_clk" CLOCK_DEDICATED_ROUTE = FALSE;
+-
+-NET "gmiiclk_p"                 LOC = "H6";
+-NET "gmiiclk_n"                 LOC = "H5";
+-NET "gmiiclk_p" PERIOD = 8.000 ;
+-OFFSET = OUT : 12.000 : AFTER gmiiclk_p;
+-
+-////////////////////////////////////////////////////////////////////////////
+-// VGA clock
+-////////////////////////////////////////////////////////////////////////////
+-#NET "clkvga" TNM_NET = "clkvga" | PERIOD = 15.385;
+-#TIMESPEC "TSPLB_TFT25" = FROM "clkm" TO "clkvga" TIG;
+-#TIMESPEC "TSPLB_TFT40" = FROM "clkvga" TO "clkm" TIG;
+-
+-
+-
+-######################################################################################
+-## MMCM_ADV CONSTRAINTS                                                             ##
+-######################################################################################
+-
+-INST "uddr3ctrl/_infrastructure/u_mmcm_adv"      LOC = "MMCM_ADV_X0Y8"; #Banks 16, 26, 36
+-
++NET "clk_33" PERIOD = 30.000 ;
++OFFSET = IN : 20.000 : BEFORE clk_33 ;
++OFFSET = OUT : 20.000 : AFTER clk_33 ;
++
++
++NET "clkm" 		TNM_NET = "clkm";
++NET "clk_ddr" 		TNM_NET = "clk_ddr";
++
++TIMESPEC "TS_clkm_clk_ddr" = FROM "clkm" TO "clk_ddr" TIG;
++TIMESPEC "TS_clk_ddr_clkm" = FROM "clk_ddr" TO "clkm" TIG;
++
++NET "erx_clk" PERIOD = 8.000 ;
++OFFSET = IN : 5.000 : BEFORE erx_clk ;
++#OFFSET = IN : 2.000 : BEFORE erx_clk ;
++
++NET "etx_clk" PERIOD = 40.000 ;
++OFFSET = OUT : 15.000 : AFTER etx_clk ;
++OFFSET = IN : 8.000 : BEFORE etx_clk ;
++
++NET "etx_clk" MAXSKEW= 1.0 ns;
++NET "erx_clk" MAXSKEW= 1.0 ns;
++
++#NET "egtx_clk" PERIOD = 8.000 ;
++#OFFSET = OUT : 5.500 : AFTER egtx_clk;
++#NET "egtx_clk" CLOCK_DEDICATED_ROUTE = FALSE;
++
++NET "gmiiclk_p"                 LOC = "H6";
++NET "gmiiclk_n"                 LOC = "H5";
++NET "gmiiclk_p" PERIOD = 8.000 ;
++OFFSET = OUT : 12.000 : AFTER gmiiclk_p;
++
++////////////////////////////////////////////////////////////////////////////
++// VGA clock
++////////////////////////////////////////////////////////////////////////////
++#NET "clkvga" TNM_NET = "clkvga" | PERIOD = 15.385;
++#TIMESPEC "TSPLB_TFT25" = FROM "clkm" TO "clkvga" TIG;
++#TIMESPEC "TSPLB_TFT40" = FROM "clkvga" TO "clkm" TIG;
++
++
++
++######################################################################################
++## MMCM_ADV CONSTRAINTS                                                             ##
++######################################################################################
++
++INST "uddr3ctrl/_infrastructure/u_mmcm_adv"      LOC = "MMCM_ADV_X0Y8"; #Banks 16, 26, 36
++
+ # Constrain BUFR clocks used to synchronize data from IOB to fabric logic
+ # Note that ISE cannot infer this from other PERIOD constraints because
+ # of the use of OSERDES blocks in the BUFR clock generation path
+@@ -611,3 +609,63 @@ TIMESPEC "TS_clk_rsync_rise_to_fall_xst"
+ #INST "u_memc_ui_top/u_mem_intfc/phy_top0/u_phy_init/u_ff_phy_init_data_sel" TNM = "TNM_PHY_INIT_SEL";
+ #TIMESPEC "TS_MC_PHY_INIT_SEL" = FROM "TNM_PHY_INIT_SEL" TO FFS = 10 ns;  ## = "2.5ns * 4" ML605 single clock
+ 
++
++
++######################################################################################
++## DDR-PHY TIMEOUT BLOCK CONSTRAINTS                                                ##
++######################################################################################
++
++# Ignore timing on the following two signals. They cross clock domains, but are
++# treated as "external" asynchronous signals, so their timing is irrelevant.
++NET "reset_block/lockTimeoutRst" TIG;
++NET "reset_block/lockTimeout" TIG;
++
++
++
++######################################################################################
++## PCI-express signals (copied from reference project)                              ##
++######################################################################################
++#------------------------
++# Clock and Reset Pinout
++#------------------------
++NET "pcie_ref_clk" TNM_NET = "SYSCLK" ;
++NET "*/pcie_clocking_i/clk_125" TNM_NET = "CLK_125" ;
++NET "*/TxOutClk_bufg" TNM_NET = "TXOUTCLKBUFG";
++
++TIMESPEC "TS_SYSCLK"  = PERIOD "SYSCLK" 250.00 MHz HIGH 50 % ;
++TIMESPEC "TS_CLK_125" = PERIOD "CLK_125" TS_SYSCLK*0.5 HIGH 50 %; # PRIORITY 100 ;
++TIMESPEC "TS_TXOUTCLKBUFG"  = PERIOD "TXOUTCLKBUFG" 250 MHz HIGH 50 %; # PRIORITY 100 ;
++
++NET "sys_reset_n" TIG;
++PIN "*/trn_reset_n_int_i.CLR" TIG ;
++PIN "*/trn_reset_n_i.CLR" TIG ;
++PIN "*/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
++
++#TIMESPEC "TS_TRNLNKUPN" = FROM FFS(*) TO FFS(trn_lnk_up_n_int_i) 4 ns;
++#TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS(trn_reset_n_i) 4 ns;
++TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS(user_reset) 8 ns;
++
++
++#-----------------------------------
++# PCIe Transceiver & Core Locations
++#-----------------------------------
++
++# PCIe Block Placement
++INST "*/pcie_2_0_i/pcie_block_i" LOC = PCIE_X0Y1;
++
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[0].GTX" LOC = GTXE1_X0Y15;
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[1].GTX" LOC = GTXE1_X0Y14;
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[2].GTX" LOC = GTXE1_X0Y13;
++INST "*/pcie_2_0_i/pcie_gt_i/gtx_v6_i/no_of_lanes.GTXD[3].GTX" LOC = GTXE1_X0Y12;
++
++#------------------------
++# Clock and Reset Pinout
++#------------------------
++
++NET  sys_reset_n           LOC  = AE13 | IOSTANDARD = LVCMOS25 | NODELAY;
++
++# 250 MHz Reference Clock
++INST "pcie_refclk_ibuf" LOC = IBUFDS_GTXE1_X0Y4; # Implies pinout
++
++# MMCM Placment. This constraint selects the MMCM Placement
++INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd
++++ work/leon3mp.vhd
+@@ -18,7 +18,7 @@
+ --
+ --  You should have received a copy of the GNU General Public License
+ --  along with this program; if not, write to the Free Software
+---  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
++--  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ ------------------------------------------------------------------------------
+ 
+ library ieee;
 @@ -49,6 +49,15 @@ use work.pcie.all;
  -- pragma translate_off
  use gaisler.sim.all;
@@ -150,7 +489,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  
      -- Output signals to LEDs
 -    led       : out   std_logic_vector(6 downto 0)
-+    led       : out   std_logic_vector(6 downto 0) := (others => '0')
++    led       : out   std_logic_vector(7 downto 0) := (others => '0')
      );
  end;
  
@@ -165,42 +504,67 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  
    signal dsui : dsu_in_type;
    signal dsuo : dsu_out_type;
-@@ -245,9 +256,18 @@ architecture rtl of leon3mp is
-   constant VCO_FREQ  : integer := 1200000;                               -- MMCM VCO frequency in KHz
+@@ -204,6 +215,10 @@ architecture rtl of leon3mp is
+   signal phy_init_done : std_logic;
+   signal lerrorn        : std_logic;
+ 
++  -- PCIe reset signal
++  signal sys_reset_n_c   : std_logic;
++  signal sys_reset_n_buf : std_logic;
++
+   -- RS232 APB Uart
+   signal rxd1 : std_logic;
+   signal txd1 : std_logic;
+@@ -246,8 +261,35 @@ architecture rtl of leon3mp is
    constant CPU_FREQ   : integer := VCO_FREQ / CFG_MIG_CLK4;  -- cpu frequency in KHz
    constant I2C_FILTER : integer := (CPU_FREQ*5+50000)/100000+1;
--
-+  
+ 
 +  -- rvex bus master interface.
 +  signal rvbmo  : bus_mst2slv_type;
 +  signal rvbmi  : bus_slv2mst_type;
-+  
++
 +  -- rvex bus slave interfaces.
 +  constant N_RVB_SLAVES : integer := CFG_NRVEX + CFG_AHB_UART*CFG_AHB_UART_RVEX;
 +  signal rvbsi  : bus_mst2slv_array(0 to N_RVB_SLAVES - 1);
 +  signal rvbso  : bus_slv2mst_array(0 to N_RVB_SLAVES - 1);
-+  
++
++  -- Run control interfaces
++  signal rctrl2rv : rvex_rctrl2rv_array(CFG_NRVEX*(2**CFG_RVEX_CFG.core.numContextsLog2)-1 downto 0);
++  signal rv2rctrl : rvex_rv2rctrl_array(CFG_NRVEX*(2**CFG_RVEX_CFG.core.numContextsLog2)-1 downto 0);
++
++  signal pcie_rctrl2rv : rvex_rctrl2rv_array(CFG_NRVEX*(2**CFG_RVEX_CFG.core.numContextsLog2)-1 downto 0);
++  signal irq_rctrl2rv  : rvex_rctrl2rv_array(CFG_NRVEX*(2**CFG_RVEX_CFG.core.numContextsLog2)-1 downto 0);
++
  begin
--
-+  
+ 
++
++----------------------------------------------------------------------
++---  PCIe reset input buffer -----------------------------------------
++----------------------------------------------------------------------
++  perst_n_ibuf : IBUF
++    port map(
++      I     => sys_reset_n,
++      O     => sys_reset_n_c
++    );
++  sys_reset_n_buf <= sys_reset_n_c;
++
  ----------------------------------------------------------------------
  ---  Reset and Clock generation  -------------------------------------
  ----------------------------------------------------------------------
-@@ -258,9 +278,74 @@ begin
+@@ -258,9 +300,74 @@ begin
    erstn <= rstn;
  
    -- Glitch free reset that can be used for the Eth Phy and flash memory
--
++  reset_block: block is
+ 
 -  rst0 : rstgen generic map (acthigh => 1)
 -    port map (reset, clkm, lock, rstn, rstraw);
-+  reset_block: block is
-+    
 +    signal lockTimeoutRst   : std_logic;
 +    signal lockTimeoutA     : unsigned(12 downto 0) := (others => '0');
 +    signal lockTimeoutB     : unsigned(13 downto 0) := (others => '0');
 +    signal lockTimeout      : std_logic;
 +    signal resetOrTimeout   : std_logic;
-+    
++
 +    -- lockTimeoutRst and lockTimeout cross two independent clock domains.
 +    -- Their timing is completely irrelevant because they're treated as
 +    -- asynchronous signals, so we need to disable timing checking for these
@@ -210,12 +574,12 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +    attribute KEEP                    : string;
 +    attribute KEEP of lockTimeoutRst  : signal is "TRUE";
 +    attribute KEEP of lockTimeout     : signal is "TRUE";
-+    
++
 +  begin
-+    
++
 +    -- Generate reset signal for the clock lock/PHY init timeout.
 +    lockTimeoutRst <= reset or lock;
-+    
++
 +    -- Generate the lock/PHY timeout counters. Use the clkace 33 MHz clock
 +    -- signal for this instead of clkm, because clkace always runs, whereas
 +    -- clkm comes from an MMCM in the MIG, which is reset when we generate
@@ -243,10 +607,10 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +        end if;
 +      end if;
 +    end process;
-+    
-+    -- Combine the incoming reset signal with the lock timeout.
-+    resetOrTimeout <= reset or lockTimeout;
-+    
++
++    -- Combine the incoming reset signal with the lock timeout and the PCIe reset signal.
++    resetOrTimeout <= reset or lockTimeout or (not sys_reset_n_buf);
++
 +    -- Original reset generator.
 +    rst0 : rstgen
 +      generic map (
@@ -259,21 +623,23 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +        rstout    => rstn,
 +        rstoutraw => rstraw
 +      );
-+    
++
 +  end block;
  
  ----------------------------------------------------------------------
  ---  AHB CONTROLLER --------------------------------------------------
-@@ -270,7 +355,7 @@ begin
+@@ -269,8 +376,8 @@ begin
+   ahb0 : ahbctrl
      generic map (defmast => CFG_DEFMST, split => CFG_SPLIT,
                   rrobin  => CFG_RROBIN, ioaddr => CFG_AHBIO, ioen => 1,
-                  nahbm => CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE+CFG_PCIEXP,
+-                 nahbm => CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE+CFG_PCIEXP,
 -                 nahbs => 9)
++                 nahbm => CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE+CFG_PCIEXP+2*CFG_AHB_PCIE,
 +                 nahbs => 10)
      port map (rstn, clkm, ahbmi, ahbmo, ahbsi, ahbso);
  
  ----------------------------------------------------------------------
-@@ -279,7 +364,7 @@ begin
+@@ -279,7 +386,7 @@ begin
  
    -- LEON3 processor
    nosh : if CFG_GRFPUSH = 0 generate
@@ -282,7 +648,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
        l3ft : if CFG_LEON3FT_EN /= 0 generate
          leon3ft0 : leon3ft		-- LEON3 processor
          generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU*(1-CFG_GRFPUSH), CFG_V8,
-@@ -287,7 +372,7 @@ begin
+@@ -287,7 +394,7 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -291,7 +657,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
  	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
          port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
-@@ -301,7 +386,7 @@ begin
+@@ -301,7 +408,7 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -300,7 +666,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  	  CFG_DFIXED, CFG_SCAN, CFG_MMU_PAGE)
          port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
      		irqi(i), irqo(i), dbgi(i), dbgo(i));
-@@ -310,7 +395,7 @@ begin
+@@ -310,7 +417,7 @@ begin
    end generate;
  
    sh : if CFG_GRFPUSH = 1 generate
@@ -309,7 +675,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
        l3ft : if CFG_LEON3FT_EN /= 0 generate
          leon3ft0 : leon3ftsh		-- LEON3 processor
          generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU, CFG_V8,
-@@ -318,7 +403,7 @@ begin
+@@ -318,7 +425,7 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -318,7 +684,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
  	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
          port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
-@@ -332,30 +417,36 @@ begin
+@@ -332,30 +439,36 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -361,7 +727,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  
        dsui.enable <= '1';
        led(2) <= dsuo.active;
-@@ -366,10 +457,73 @@ begin
+@@ -366,10 +479,73 @@ begin
    end generate;
  
    -- Debug UART
@@ -380,12 +746,12 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +    signal dbg2uart_bus : bus_slv2mst_type;
 +    signal irq          : std_logic;
 +  begin
-+    
++
 +    reset <= not rstn;
 +    clk <= clkm;
 +    rx <= dui.rxd;
 +    duo.txd <= tx;
-+    
++
 +    -- Instantiate the AHB master for the debug UART.
 +    rvex_uart_mst_inst: entity rvex.bus2ahb
 +      generic map (
@@ -401,7 +767,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +        bridge2ahb        => ahbmo(CFG_NCPU),
 +        ahb2bridge        => ahbmi
 +      );
-+    
++
 +    -- Instantiate the UART.
 +    rvex_uart_inst: entity rvex.periph_uart
 +      generic map (
@@ -419,9 +785,9 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +        irq               => irq,
 +        uart2dbg_bus      => uart2dbg_bus,
 +        dbg2uart_bus      => dbg2uart_bus
-+        
++
 +      );
-+    
++
 +    -- We're only using the APB slot for the interrupt. We use the same
 +    -- interrupt index as UART1, which can't coexist with this UART because
 +    -- they would have the same external pins.
@@ -430,29 +796,29 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +      apbo(4) <= apb_none;
 +      apbo(4).pirq <= (2 => irq, others => '0');
 +    end process;
-+    
++
 +  end generate;
 +  dbguartgen : if CFG_AHB_UART = 1 generate
      dsurx_pad : inpad generic map (level => cmos, voltage => x25v, tech  => padtech) port map (dsurx, dui.rxd);
      dsutx_pad : outpad generic map (level => cmos, voltage => x25v, tech => padtech) port map (dsutx, duo.txd);
      led(0) <= not dui.rxd;
-@@ -384,6 +538,113 @@ begin
+@@ -384,6 +560,238 @@ begin
    end generate;
  
  ----------------------------------------------------------------------
 +---  r-VEX processor -------------------------------------------------
 +----------------------------------------------------------------------
-+  
++
 +  -- Check rvex configuration.
 +  assert CFG_RVEX_CFG.core.numLaneGroupsLog2 = CFG_RVEX_CFG.core.numContextsLog2
 +    report "numLaneGroups must equal numContexts due to platform constraints"
 +    severity failure;
-+  
++
 +  rvsys_gen: for i in 0 to CFG_NRVEX-1 generate
 +    constant PIND : integer := CFG_NLEON + i * 2**CFG_RVEX_CFG.core.numLaneGroupsLog2;
 +    constant PNUM : integer := 2**CFG_RVEX_CFG.core.numLaneGroupsLog2;
 +  begin
-+  
++
 +    rvsys_inst: entity rvex.rvsys_grlib
 +      generic map (
 +        CFG                     => CFG_RVEX_CFG,
@@ -468,49 +834,82 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +        ahbsi                   => ahbsi,
 +        bus2dgb                 => rvbsi(i),
 +        dbg2bus                 => rvbso(i),
-+        irqi                    => irqi(PIND to PIND+PNUM-1),
-+        irqo                    => irqo(PIND to PIND+PNUM-1)
++        rctrl2rv                => rctrl2rv(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX),
++        rv2rctrl                => rv2rctrl(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX)
 +      );
-+    
++
++    irq_bridge_gen: if CFG_IRQ3_ENABLE /= 0 generate
++      irq_bridge_inst: entity rvex.irq_rctrl_bridge
++        generic map (
++          CFG                     => CFG_RVEX_CFG.core
++        )
++        port map (
++          rctrl2rv                => irq_rctrl2rv(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX),
++          rv2rctrl                => rv2rctrl(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX),
++          irqi                    => irqi(PIND to PIND+PNUM-1),
++          irqo                    => irqo(PIND to PIND+PNUM-1)
++        );
++    end generate;
++    irq_nobridge_gen: if CFG_IRQ3_ENABLE = 0 generate
++      irq_rctrl2rv_gen: for j in i*CFG_NRVEX to i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 generate
++        irq_rctrl2rv(j).run       <= '1';
++        irq_rctrl2rv(j).reset     <= '0';
++        irq_rctrl2rv(j).resetVect <= (others => '0');
++        irq_rctrl2rv(j).irq       <= '0';
++        irq_rctrl2rv(j).irqID     <= (others => '0');
++      end generate;
++    end generate;
++
++    rctrl_map_gen: for j in i*CFG_NRVEX to i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 generate
++    begin
++      rctrl2rv(j).run       <= irq_rctrl2rv(j).run;--pcie_rctrl2rv(j).run and irq_rctrl2rv(j).run;
++      rctrl2rv(j).reset     <= irq_rctrl2rv(j).reset;--pcie_rctrl2rv(j).reset or irq_rctrl2rv(j).reset;
++      rctrl2rv(j).resetVect <= irq_rctrl2rv(j).resetVect;-- when pcie_rctrl2rv(j).reset = '0' and irq_rctrl2rv(j).reset = '1' else
++                               --pcie_rctrl2rv(j).resetVect;
++
++      rctrl2rv(j).irq       <= irq_rctrl2rv(j).irq;
++      rctrl2rv(j).irqID     <= irq_rctrl2rv(j).irqID;
++    end generate;
++
 +  end generate;
-+  
++
 +----------------------------------------------------------------------
 +---  r-VEX bus bridge ------------------------------------------------
 +----------------------------------------------------------------------
-+  
++
 +  rvex_bus_bridge_block: block is
-+    
++
 +    signal reset        : std_logic;
 +    signal clk          : std_logic;
-+    
++
 +    function addr_map return addrRangeAndMapping_array is
 +      variable retval : addrRangeAndMapping_array(0 to N_RVB_SLAVES - 1);
 +      variable i : natural;
 +    begin
 +      i := 0;
-+      
++
 +      for c in 0 to CFG_NRVEX - 1 loop
 +        retval(i) := addrRangeAndMap(
 +          match => X"D0" & std_logic_vector(to_unsigned(c, 4)) & "----" & "--------" & "--------"
 +        );
 +        i := i + 1;
 +      end loop;
-+      
++
 +      if CFG_AHB_UART*CFG_AHB_UART_RVEX = 1 then
 +        retval(i) := addrRangeAndMap(
 +          match => X"D1" & "--------" & "--------" & "--------"
 +        );
 +        i := i + 1;
 +      end if;
-+      
++
 +      return retval;
 +    end function;
-+    
++
 +  begin
-+    
++
 +    reset <= not rstn;
 +    clk <= clkm;
-+    
++
 +    -- Instantiate the bus bridge.
 +    rvex_bus_bridge_inst: entity rvex.ahb2bus
 +      generic map (
@@ -528,7 +927,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +        bridge2bus      => rvbmo,
 +        bus2bridge      => rvbmi
 +      );
-+    
++
 +    -- Instantiate the demuxer.
 +    rvex_bus_bridge_demux: entity rvex.bus_demux
 +      generic map (
@@ -543,14 +942,106 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 +        demux2slv       => rvbsi,
 +        slv2demux       => rvbso
 +      );
-+    
++
 +  end block;
-+  
++
++----------------------------------------------------------------------
++---  r-VEX PCIe interface --------------------------------------------
++----------------------------------------------------------------------
++
++  pcie_dma_block: block is
++
++    signal reset        : std_logic;
++    signal clk          : std_logic;
++    signal dma2bus      : bus_mst2slv_array(1 downto 0);
++    signal bus2dma      : bus_slv2mst_array(1 downto 0);
++
++      -- temp signals
++    signal user_lnk_up    : std_logic;
++    signal user_reset     : std_logic;
++    signal buf : std_logic;
++
++  begin
++
++    reset <= not rstn;
++    clk <= clkm;
++
++    -- Instantiate the bus bridge for c2s.
++    ahb_bus_bridges: for i in 0 to 1 generate
++      ahb_bus_bridge_insts: entity rvex.bus2ahb
++        generic map (
++
++          -- Generic information as passed to grlib.dma2ahb.
++          AHB_MASTER_INDEX        => CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE+CFG_PCIEXP+i,
++          AHB_VENDOR_ID           => VENDOR_TUDELFT,
++          AHB_DEVICE_ID           => TUDELFT_RVEX,
++          AHB_VERSION             => 0,
++
++          -- rvex bus fault code used to indicate that an AHB bus error occured.
++          BUS_ERROR_CODE          => X"00000000",
++
++          -- rvex bus fault code used to indicate that an invalid rvex bus
++          -- request was issued.
++          REQ_ERROR_CODE          => X"00000001"
++
++        )
++        port map (
++
++          reset                   => reset,
++          clk                     => clk,
++          bus2bridge              => dma2bus(i),
++          bridge2bus              => bus2dma(i),
++          bridge2ahb              => ahbmo(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE+CFG_PCIEXP+i),
++          ahb2bridge              => ahbmi
++
++        );
++    end generate;
++
++
++    pcie_dma: entity work.dma
++    generic map (
++      NO_OF_LANES             => CFG_NO_OF_LANES,
++
++      NO_RVEX                 => CFG_NRVEX
++    )
++    port map (
++      reset                   => reset,
++
++      pcie_txp                => pci_exp_txp,
++      pcie_txn                => pci_exp_txn,
++      pcie_rxp                => pci_exp_rxp,
++      pcie_rxn                => pci_exp_rxn,
++
++      pcie_clk_p              => sys_clk_p,
++      pcie_clk_n              => sys_clk_n,
++
++      -- PCI Express slot PERST# reset signal
++      perst_n                 => sys_reset_n_c,
++
++      bus_clk                 => clkm,
++      bus2dma_c2s             => bus2dma(0),
++      dma2bus_c2s             => dma2bus(0),
++      bus2dma_s2c             => bus2dma(1),
++      dma2bus_s2c             => dma2bus(1),
++
++      rctrl_clk               => clkm,
++      rctrl2rv                => pcie_rctrl2rv,
++      rv2rctrl                => rv2rctrl,
++
++
++      user_lnk_up_out    => user_lnk_up,
++      user_reset_out     => user_reset
++    );
++
++    led(6) <= user_lnk_up;
++    led(7) <= user_reset;
++  end block;
++
 +----------------------------------------------------------------------
  ---  Memory controllers ----------------------------------------------
  ----------------------------------------------------------------------
  
-@@ -429,7 +690,7 @@ begin
+@@ -429,7 +837,7 @@ begin
  --  mig_gen : if (CFG_MIG_DDR2 = 1) generate
  
      ahb2mig0 : ahb2mig_ml605
@@ -559,9 +1050,150 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
      MHz => 400, Mbyte => 512, nosync => boolean'pos(CFG_MIG_CLK4=12)) --CFG_CLKDIV/12)
        port map (
      rst => rstn, clk_ahb => clkm, clk_ddr => clk_ddr,
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile work/Makefile
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile	2014-04-16 16:50:08.000000000 +0200
-+++ work/Makefile	2015-04-24 14:15:34.328746497 +0200
+@@ -478,12 +886,11 @@ begin
+     led(3)  <= phy_init_done;
+     led(4)  <= rstn;
+     led(5)  <= reset;
+-    led(6)  <= '0';
+     lock    <= phy_init_done; -- and cgo.clklock;
+ 
+ --    end generate;
+ --    noddr : if (CFG_DDR2SP+CFG_MIG_DDR2) = 0 generate lock <= cgo.clklock; end generate;
+- 
++
+ ----------------------------------------------------------------------
+ ---  System ACE I/F Controller ---------------------------------------
+ ----------------------------------------------------------------------
+@@ -525,15 +932,15 @@ EP: pcie_master_target_virtex
+     vendor_id        => CFG_PCIEXPVID,	 -- PCIE vendor ID
+     pcie_bar_mask    => 16#FFE#,
+     nsync            => 2,   -- 1 or 2 sync regs between clocks
+-    haddr            => 16#a00#,    
+-    hmask            => 16#fff#,   
+-    pindex           => 5,   
+-    paddr            => 5,   
++    haddr            => 16#a00#,
++    hmask            => 16#fff#,
++    pindex           => 5,
++    paddr            => 5,
+     pmask            => 16#fff#,
+-    Master           => CFG_PCIE_SIM_MAS,  
+-    lane_width       => CFG_NO_OF_LANES  
++    Master           => CFG_PCIE_SIM_MAS,
++    lane_width       => CFG_NO_OF_LANES
+           )
+-  port map( 
++  port map(
+     rst              => rstn,
+     clk              => clkm,
+     -- System Interface
+@@ -545,25 +952,25 @@ EP: pcie_master_target_virtex
+     pci_exp_txn      => pci_exp_txn,
+     pci_exp_rxp      => pci_exp_rxp,
+     pci_exp_rxn      => pci_exp_rxn,
+-    
+-    ahbso            => ahbso(8),        
+-    ahbsi            => ahbsi,         
+-    apbi             => apbi,	      
+-    apbo             => apbo(5),	      
++
++    ahbso            => ahbso(8),
++    ahbsi            => ahbsi,
++    apbi             => apbi,
++    apbo             => apbo(5),
+     ahbmi            => ahbmi,
+-    ahbmo            => ahbmo(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE)    
++    ahbmo            => ahbmo(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE)
+   );
+     end generate;
+ ------------------PCI-EXPRESS-Master-FIFO------------------------------------------
+ pcie_mf : if CFG_PCIE_TYPE = 3 generate	-- master with fifo and DMA
+ dma:pciedma
+-      generic map (fabtech => fabtech, memtech => memtech, dmstndx =>(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE), 
++      generic map (fabtech => fabtech, memtech => memtech, dmstndx =>(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE),
+ 	  dapbndx => 8, dapbaddr => 8,dapbirq => 8, blength => 12, abits => 21,
+ 	  device_id => CFG_PCIEXPDID, vendor_id => CFG_PCIEXPVID, pcie_bar_mask => 16#FFE#,
+ 	  slvndx => 8, apbndx => 5, apbaddr => 5, haddr => 16#A00#,hmask=> 16#FFF#,
+ 	  nsync => 2,lane_width => CFG_NO_OF_LANES)
+ 
+-port map( 
++port map(
+     rst          => rstn,
+     clk          => clkm,
+     -- System Interface
+@@ -575,7 +982,7 @@ port map(
+     pci_exp_txn  => pci_exp_txn,
+     pci_exp_rxp  => pci_exp_rxp,
+     pci_exp_rxn  => pci_exp_rxn,
+-    
++
+     dapbo        => apbo(8),
+     dahbmo       => ahbmo((CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE)),
+     apbi         => apbi,
+@@ -583,17 +990,17 @@ port map(
+     ahbmi        => ahbmi,
+     ahbsi        => ahbsi,
+     ahbso        => ahbso(8)
+-  
++
+   );
+     end generate;
+ ----------------------------------------------------------------------
+-pcie_mf_no_dma: if CFG_PCIE_TYPE = 2 generate	-- master with fifo 
++pcie_mf_no_dma: if CFG_PCIE_TYPE = 2 generate	-- master with fifo
+ EP:pcie_master_fifo_virtex
+-generic map (fabtech => fabtech, memtech => memtech, 
++generic map (fabtech => fabtech, memtech => memtech,
+    hslvndx => 8, abits => 21, device_id => CFG_PCIEXPDID, vendor_id => CFG_PCIEXPVID,
+    pcie_bar_mask => 16#FFE#, pindex => 5, paddr => 5,
+   haddr => 16#A00#, hmask => 16#FFF#, nsync => 2, lane_width => CFG_NO_OF_LANES)
+-port map( 
++port map(
+     rst          => rstn,
+     clk          => clkm,
+     -- System Interface
+@@ -605,11 +1012,11 @@ port map(
+     pci_exp_txn  => pci_exp_txn,
+     pci_exp_rxp  => pci_exp_rxp,
+     pci_exp_rxn  => pci_exp_rxn,
+-    
+-    ahbso        => ahbso(8),        
+-    ahbsi        => ahbsi,         
+-    apbi         => apbi,        
+-    apbo         => apbo(5)        
++
++    ahbso        => ahbso(8),
++    ahbsi        => ahbsi,
++    apbi         => apbi,
++    apbo         => apbo(5)
+   );
+ end generate;
+ ----------------------------------------------------------------------
+@@ -792,6 +1199,13 @@ end generate;
+       port map (emdc, etho.mdc);
+   end generate;
+ 
++  eth_out : if (CFG_GRETH /= 1) generate
++      emdc <= '0';
++      etx_en <= '0';
++      etx_er <= '0';
++      etxd <= (others => '0');
++  end generate;
++
+ -----------------------------------------------------------------------
+ ---  AHB ROM ----------------------------------------------------------
+ -----------------------------------------------------------------------
+@@ -832,7 +1246,7 @@ end generate;
+ ---  Drive unused bus elements  ---------------------------------------
+ -----------------------------------------------------------------------
+ 
+-  nam1 : for i in (CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP) to NAHBMST-1 generate
++  nam1 : for i in (CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE+CFG_PCIEXP+2*CFG_AHB_PCIE) to NAHBMST-1 generate
+     ahbmo(i) <= ahbm_none;
+   end generate;
+ 
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile
++++ work/Makefile
 @@ -1,5 +1,5 @@
  include .config
 -GRLIB=../..
@@ -577,8 +1209,11 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  VHDLOPTSYNFILES= \
  	mig_37/user_design/rtl/controller/arb_mux.vhd \
  	mig_37/user_design/rtl/controller/arb_row_col.vhd \
-@@ -69,65 +70,12 @@ VHDLOPTSYNFILES= \
- 	pcie/v6_pcie_v1_7/source/*.vhd \
+@@ -66,99 +67,61 @@ VHDLOPTSYNFILES= \
+ 	mig_37/user_design/rtl/ui/ui_rd_data.vhd \
+ 	mig_37/user_design/rtl/ui/ui_top.vhd \
+ 	mig_37/user_design/rtl/ui/ui_wr_data.vhd \
+-	pcie/v6_pcie_v1_7/source/*.vhd \
  	$(GRLIB)/lib/gaisler/pcie/pcie.vhd
  
 -ifeq ("$(CONFIG_PCIEXP_MASTER_TARGET)","y")
@@ -641,12 +1276,31 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  	mig/user_design/rtl/phy/*.v \
 -	mig/user_design/rtl/phy/*.v \
  	mig/user_design/rtl/ui/*.v \
- 	$$XILINX/verilog/src/glbl.v
+-	$$XILINX/verilog/src/glbl.v
++	$$XILINX/verilog/src/glbl.v \
++	pcie/pcie_v2_5/source/*.v \
++	../design/nw_dma/c2s_pkt_streaming_fifo.v \
++	../design/nw_dma/ref_inferred_shallow_ram.v \
++	../design/nw_dma/ref_tiny_fifo.v \
++	../design/nw_dma/ref_inferred_block_ram.v \
++	../design/nw_dma/ref_sc_fifo_shallow_ram.v  \
++	../design/nw_dma/s2c_pkt_streaming_fifo.v \
++	../design/nw_dma/s2c_pkt_streaming_fifo.v \
++	../design/nw_dma/model/dma_back_end_pkt_model.v \
++	../design/dma/packet_dma.v
  VHDLSYNFILES= \
-@@ -136,29 +84,18 @@ VHDLSYNFILES= \
++	../design/pcie/pcie_v2_5.vhd \
++	../design/dma/constants_pkg.vhd \
++	../design/dma/packet_dma.vhd \
++	../design/dma/c2s_bus_bridge.vhd \
++	../design/dma/s2c_bus_bridge.vhd \
++	../design/dma/registers.vhd \
++	../design/dma/dma.vhd \
+ 	ahb2mig_ml605.vhd config.vhd ahbrom.vhd \
+ 	svga2ch7301c.vhd gtxclk.vhd leon3mp.vhd
  
- VHDLSIMFILES=testbench.vhd
- 
+-VHDLSIMFILES=testbench.vhd
+-
 -ifeq ("$(CONFIG_PCIEXP_MASTER_TARGET)","y")
 -VHDLSIMFILES+=$(GRLIB)/lib/tech/unisim/ise/GTPA1_DUAL.vhd $(GRLIB)/lib/tech/unisim/ise/GTP_DUAL.vhd \
 -$(GRLIB)/lib/tech/unisim/ise/GTXE1.vhd $(GRLIB)/lib/tech/unisim/ise/GTX_DUAL.vhd \
@@ -658,15 +1312,27 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
 -$(GRLIB)/lib/tech/unisim/ise/PCIE_2_0.vhd $(GRLIB)/lib/tech/unisim/ise/PCIE_A1.vhd
 -endif
 -endif
--
++VERILOGSIMFILES = \
++	../design/tb/dsport/pcie_2_0_rport_v6.v \
++	../design/tb/dsport/pci_exp_usrapp_cfg.v \
++	../design/tb/dsport/pci_exp_usrapp_pl.v \
++	../design/tb/dsport/pci_exp_usrapp_tx.v \
++	../design/tb/dsport/pci_exp_usrapp_com.v \
++	../design/tb/dsport/pci_exp_usrapp_rx.v \
++	../design/tb/dsport/xilinx_pcie_2_0_rport_v6.v
++VHDLSIMFILES= \
++	../design/tb/pcie_tb.vhd \
++	testbench.vhd
+ 
  SIMTOP=testbench
  SDCFILE=default.sdc
  BITGEN=$(GRLIB)/boards/$(BOARD)/default.ut
  CLEAN=soft-clean migclean pcieclean
  TECHLIBS = secureip unisim
-+EXTRALIBS=../../../lib
- VLOGOPT= -O0
+-VLOGOPT= -O0
 -VCOMOPT= -explicit -O0 
++EXTRALIBS=../../../lib
++VLOGOPT= -O0 +incdir+../design/tb/include
 +VCOMOPT= -explicit -O0
  ifeq ("$(GRLIB_SIMULATOR)","ALDEC")
  VSIMOPT= +access +w -t ps -novopt +notimingchecks -L secureip_ver -L xilinxcorelib_ver -L unisims_ver glbl $(SIMTOP)
@@ -676,7 +1342,7 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  endif
  
  LIBSKIP = core1553bbc core1553brm core1553brt gr1553 corePCIF \
-@@ -175,6 +112,9 @@ include $(GRLIB)/software/leon3/Makefile
+@@ -175,6 +138,9 @@ include $(GRLIB)/software/leon3/Makefile
  
  ##################  project specific targets ##########################
  
@@ -686,15 +1352,404 @@ diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-
  mig_37 mig:
  	cp grlib_mig/mig.* .
  	coregen -b mig.xco -p mig.cgp
-diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd work/testbench.vhd
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/testbench.vhd	2015-04-24 14:15:34.329746497 +0200
-@@ -210,7 +210,7 @@ begin
+@@ -193,10 +159,11 @@ migclean:
+ 	-rm -rf tmp coregen* mig*
+ 
+ pcie:
+-	coregen -b pcie/pcie.xco -p pcie
+-	patch -p0 < pcie.diff
++	mkdir -p pcie
++	cp ../design/pcie/coregen.cgp pcie
++	coregen -b ../design/pcie/pcie.xco -p pcie
+ 
+ pcieclean:
+-	-rm -rf pcie/v6_pcie_v1_7* pcie/tmp pcie/coregen.cgc tx.dat rx.dat
++	-rm -rf pcie tx.dat rx.dat
+ 
+ .PHONY : pcie pcieclean
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/coregen.cgp
++++ work/pcie/coregen.cgp
+@@ -1,22 +0,0 @@
+-# Date: Wed Aug  8 14:52:14 2012
+-
+-SET addpads = false
+-SET asysymbol = true
+-SET busformat = BusFormatAngleBracketNotRipped
+-SET createndf = false
+-SET designentry = VHDL
+-SET device = xc6vlx240t
+-SET devicefamily = virtex6
+-SET flowvendor = Other
+-SET formalverification = false
+-SET foundationsym = false
+-SET implementationfiletype = Ngc
+-SET package = ff1156
+-SET removerpms = false
+-SET simulationfiles = Behavioral
+-SET speedgrade = -1
+-SET verilogsim = false
+-SET vhdlsim = true
+-SET workingdirectory = ./tmp/
+-
+-# CRC: efb42278
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/pcie.xco
++++ work/pcie/pcie.xco
+@@ -1,205 +0,0 @@
+-##############################################################
+-#
+-# Xilinx Core Generator version 13.2
+-# Date: Wed Aug  8 14:55:22 2012
+-#
+-##############################################################
+-#
+-#  This file contains the customisation parameters for a
+-#  Xilinx CORE Generator IP GUI. It is strongly recommended
+-#  that you do not manually alter this file as it may cause
+-#  unexpected and unsupported behavior.
+-#
+-##############################################################
+-#
+-#  Generated from component: xilinx.com:ip:v6_pcie:1.7
+-#
+-##############################################################
+-#
+-# BEGIN Project Options
+-SET addpads = false
+-SET asysymbol = true
+-SET busformat = BusFormatAngleBracketNotRipped
+-SET createndf = false
+-SET designentry = VHDL
+-SET device = xc6vlx240t
+-SET devicefamily = virtex6
+-SET flowvendor = Other
+-SET formalverification = false
+-SET foundationsym = false
+-SET implementationfiletype = Ngc
+-SET package = ff1156
+-SET removerpms = false
+-SET simulationfiles = Behavioral
+-SET speedgrade = -1
+-SET verilogsim = false
+-SET vhdlsim = true
+-# END Project Options
+-# BEGIN Select
+-SELECT Virtex-6_Integrated_Block_for_PCI_Express family Xilinx,_Inc. 1.7
+-# END Select
+-# BEGIN Parameters
+-CSET acceptable_l0s_latency=Maximum_of_64_ns
+-CSET acceptable_l1_latency=No_limit
+-CSET ack_nak_timeout_func=Absolute
+-CSET ack_nak_timeout_value=0000
+-CSET bar0_64bit=false
+-CSET bar0_enabled=true
+-CSET bar0_prefetchable=false
+-CSET bar0_scale=Megabytes
+-CSET bar0_size=2
+-CSET bar0_type=Memory
+-CSET bar1_64bit=false
+-CSET bar1_enabled=false
+-CSET bar1_prefetchable=false
+-CSET bar1_scale=Kilobytes
+-CSET bar1_size=2
+-CSET bar1_type=N/A
+-CSET bar2_64bit=false
+-CSET bar2_enabled=false
+-CSET bar2_prefetchable=false
+-CSET bar2_scale=Bytes
+-CSET bar2_size=128
+-CSET bar2_type=N/A
+-CSET bar3_64bit=false
+-CSET bar3_enabled=false
+-CSET bar3_prefetchable=false
+-CSET bar3_scale=Kilobytes
+-CSET bar3_size=2
+-CSET bar3_type=N/A
+-CSET bar4_64bit=false
+-CSET bar4_enabled=false
+-CSET bar4_prefetchable=false
+-CSET bar4_scale=Kilobytes
+-CSET bar4_size=2
+-CSET bar4_type=N/A
+-CSET bar5_enabled=false
+-CSET bar5_prefetchable=false
+-CSET bar5_scale=Kilobytes
+-CSET bar5_size=2
+-CSET bar5_type=N/A
+-CSET base_class_menu=Simple_communication_controllers
+-CSET buf_opt_bma=false
+-CSET cardbus_cis_pointer=00000000
+-CSET class_code_base=05
+-CSET class_code_interface=00
+-CSET class_code_sub=00
+-CSET component_name=v6_pcie_v1_7
+-CSET cost_table=1
+-CSET cpl_finite=false
+-CSET cpl_timeout_disable_sup=false
+-CSET cpl_timeout_range=Range_B
+-CSET d0_pme_support=true
+-CSET d0_power_consumed=0
+-CSET d0_power_consumed_factor=0
+-CSET d0_power_dissipated=0
+-CSET d0_power_dissipated_factor=0
+-CSET d1_pme_support=true
+-CSET d1_power_consumed=0
+-CSET d1_power_consumed_factor=0
+-CSET d1_power_dissipated=0
+-CSET d1_power_dissipated_factor=0
+-CSET d1_support=false
+-CSET d2_pme_support=true
+-CSET d2_power_consumed=0
+-CSET d2_power_consumed_factor=0
+-CSET d2_power_dissipated=0
+-CSET d2_power_dissipated_factor=0
+-CSET d2_support=false
+-CSET d3_power_consumed=0
+-CSET d3_power_consumed_factor=0
+-CSET d3_power_dissipated=0
+-CSET d3_power_dissipated_factor=0
+-CSET d3cold_pme_support=false
+-CSET d3hot_pme_support=true
+-CSET de_emph=0
+-CSET device_id=0007
+-CSET device_port_type=PCI_Express_Endpoint_device
+-CSET device_specific_initialization=false
+-CSET disable_tx_aspm_l0s=false
+-CSET dll_link_active_cap=false
+-CSET downstream_link_num=00
+-CSET dsn_enabled=true
+-CSET en_route_err_cor=false
+-CSET en_route_err_ftl=false
+-CSET en_route_err_nfl=false
+-CSET en_route_inta=false
+-CSET en_route_intb=false
+-CSET en_route_intc=false
+-CSET en_route_intd=false
+-CSET en_route_pm_pme=false
+-CSET en_route_pme_to=false
+-CSET en_route_pme_to_ack=false
+-CSET en_route_unlock=false
+-CSET enable_ack_nak_timer=false
+-CSET enable_lane_reversal=false
+-CSET enable_replay_timer=true
+-CSET enable_slot_clock_cfg=true
+-CSET expansion_rom_enabled=false
+-CSET expansion_rom_scale=Kilobytes
+-CSET expansion_rom_size=2
+-CSET ext_pci_cfg_space=false
+-CSET ext_pci_cfg_space_addr=3FF
+-CSET extended_tag_field=false
+-CSET force_no_scrambling=false
+-CSET hw_auton_spd_disable=false
+-CSET intx_generation=true
+-CSET io_base_limit_registers=Disabled
+-CSET legacy_interrupt=INTA
+-CSET link_speed=2.5_GT/s
+-CSET max_payload_size=128_bytes
+-CSET maximum_link_width=X8
+-CSET msi_64b=true
+-CSET msi_enabled=true
+-CSET msi_vec_mask=false
+-CSET msix_enabled=false
+-CSET msix_pba_bir=BAR_0
+-CSET msix_pba_offset=0
+-CSET msix_table_bir=BAR_0
+-CSET msix_table_offset=0
+-CSET msix_table_size=1
+-CSET multiple_message_capable=1_vector
+-CSET no_soft_reset=true
+-CSET pci_cfg_space=false
+-CSET pci_cfg_space_addr=3F
+-CSET pcie_blk_locn=X0Y0
+-CSET pcie_cap_slot_implemented=false
+-CSET pcie_debug_ports=false
+-CSET perf_level=Good
+-CSET phantom_functions=No_function_number_bits_used
+-CSET pipe_pipeline=None
+-CSET prefetchable_memory_base_limit_registers=Disabled
+-CSET rcb=64_byte
+-CSET ref_clk_freq=100_MHz
+-CSET replay_timeout_func=Add
+-CSET replay_timeout_value=0026
+-CSET revision_id=00
+-CSET root_cap_crs=false
+-CSET slot_cap_attn_butn=false
+-CSET slot_cap_attn_ind=false
+-CSET slot_cap_elec_interlock=false
+-CSET slot_cap_hotplug_cap=false
+-CSET slot_cap_hotplug_surprise=false
+-CSET slot_cap_mrl=false
+-CSET slot_cap_no_cmd_comp_sup=false
+-CSET slot_cap_physical_slot_num=0
+-CSET slot_cap_pwr_ctrl=false
+-CSET slot_cap_pwr_ind=false
+-CSET slot_cap_pwr_limit_scale=0
+-CSET slot_cap_pwr_limit_value=0
+-CSET sub_class_interface_menu=Generic_XT_compatible_serial_controller
+-CSET subsystem_id=0007
+-CSET subsystem_vendor_id=10EE
+-CSET trans_buf_pipeline=None
+-CSET trgt_link_speed=4'h1
+-CSET trim_tlp_digest=false
+-CSET upconfigure_capable=true
+-CSET user_clk_freq=250_default
+-CSET vc_cap_enabled=false
+-CSET vc_cap_reject_snoop=false
+-CSET vendor_id=10EE
+-CSET vsec_enabled=false
+-CSET xlnx_ref_board=ML_605
+-# END Parameters
+-GENERATE
+-# CRC: 1ab9c854
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd
++++ work/testbench.vhd
+@@ -18,7 +18,7 @@
+ --
+ --  You should have received a copy of the GNU General Public License
+ --  along with this program; if not, write to the Free Software
+---  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA 
++--  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ ------------------------------------------------------------------------------
+ 
+ library ieee;
+@@ -97,7 +97,7 @@ constant SIM_BYPASS_INIT_CAL : string :=
+   signal ddr3_ck_p     : std_logic_vector(CK_WIDTH-1 downto 0);
+   signal ddr3_ck_n     : std_logic_vector(CK_WIDTH-1 downto 0);
+ 
+-  
++
+   -- Debug support unit
+   signal dsubre     : std_ulogic;
+ 
+@@ -128,7 +128,7 @@ constant SIM_BYPASS_INIT_CAL : string :=
+   signal gmiiclk_n  : std_logic := '0';
+ 
+   -- Output signals for LEDs
+-  signal led       : std_logic_vector(6 downto 0);
++  signal led       : std_logic_vector(7 downto 0);
+ 
+ signal iic_scl_main, iic_sda_main : std_logic;
+ signal iic_scl_dvi, iic_sda_dvi : std_logic;
+@@ -151,9 +151,8 @@ signal clk_33          : std_ulogic := '
+ 
+ ---------------------pcie----------------------------------------------
+ signal cor_sys_reset_n : std_logic := '1';
+-signal ep_sys_clk_p    : std_logic;
+-signal ep_sys_clk_n    : std_logic;
+-signal rp_sys_clk      : std_logic;
++signal ep_sys_clk_p    : std_logic := '1';
++signal ep_sys_clk_n    : std_logic := '0';
+ 
+ signal cor_pci_exp_txn : std_logic_vector(CFG_NO_OF_LANES-1 downto 0);
+ signal cor_pci_exp_txp : std_logic_vector(CFG_NO_OF_LANES-1 downto 0);
+@@ -171,11 +170,14 @@ begin
+   gmiiclk_p    <= not gmiiclk_p after 4 ns;
+   gmiiclk_n    <= not gmiiclk_n after 4 ns;
+   clk_33       <= not clk_33 after 15 ns;
+-  rst        <= '1', '0' after 200 us;
++  ep_sys_clk_p <= not ep_sys_clk_p after 2 ns; -- 2 ns half cycle -> 250 MHz
++  ep_sys_clk_n <= not ep_sys_clk_n after 2 ns; -- 2 ns half cycle -> 250 MHz
++  rst        <= '1', '0' after 20 us;
+   rstn1      <= not rst;
++  cor_sys_reset_n <= not rst;
+   dsubre     <= '0';
+   urxd       <= 'H';
+-  
++
+   d3 : entity work.leon3mp
+     generic map (fabtech, memtech, padtech, disas, dbguart, pclow,
+                  SIM_BYPASS_INIT_CAL)
+@@ -208,9 +210,9 @@ begin
+       ddr3_dqs_n    => ddr3_dqs_n,
+       ddr3_ck_p     => ddr3_ck_p,
        ddr3_ck_n     => ddr3_ck_n,
-       
+-      
++
        -- Debug Unit
 -      dsubre    => dsubre,
 +      --dsubre    => dsubre,
  
        -- AHB Uart
        dsutx     => dsutx,
+@@ -235,34 +237,60 @@ begin
+       emdio     => emdio,
+ 
+       -- Output signals for LEDs
+-        iic_scl_main => iic_scl_main, 
++        iic_scl_main => iic_scl_main,
+ 	iic_sda_main => iic_sda_main,
+-        dvi_iic_scl => iic_scl_dvi, 
++        dvi_iic_scl => iic_scl_dvi,
+ 	dvi_iic_sda => iic_sda_dvi,
+-        tft_lcd_data => tft_lcd_data, 
+-	tft_lcd_clk_p => tft_lcd_clk_p, 
+-	tft_lcd_clk_n => tft_lcd_clk_n, 
++        tft_lcd_data => tft_lcd_data,
++	tft_lcd_clk_p => tft_lcd_clk_p,
++	tft_lcd_clk_n => tft_lcd_clk_n,
+ 	tft_lcd_hsync => tft_lcd_hsync,
+-        tft_lcd_vsync => tft_lcd_vsync, 
+-	tft_lcd_de => tft_lcd_de, 
++        tft_lcd_vsync => tft_lcd_vsync,
++	tft_lcd_de => tft_lcd_de,
+ 	tft_lcd_reset_b => tft_lcd_reset_b,
+-        clk_33 => clk_33, 
+-        sysace_mpa => sysace_mpa, 
+-	sysace_mpce => sysace_mpce, 
+-	sysace_mpirq => sysace_mpirq, 
++        clk_33 => clk_33,
++        sysace_mpa => sysace_mpa,
++	sysace_mpce => sysace_mpce,
++	sysace_mpirq => sysace_mpirq,
+ 	sysace_mpoe => sysace_mpoe,
+-        sysace_mpwe => sysace_mpwe, 
++        sysace_mpwe => sysace_mpwe,
+ 	sysace_d => sysace_d,
+         pci_exp_txp=> cor_pci_exp_txp,
+         pci_exp_txn=> cor_pci_exp_txn,
+         pci_exp_rxp=> cor_pci_exp_rxp,
+         pci_exp_rxn=> cor_pci_exp_rxn,
+-        sys_clk_p=> ep_sys_clk_p,   
++        sys_clk_p=> ep_sys_clk_p,
+         sys_clk_n=> ep_sys_clk_n,
+         sys_reset_n=> cor_sys_reset_n,
+         led => led
+       );
+ 
++  pcie: entity work.xilinx_pcie_tb
++    generic map (
++      REF_CLK_FREQ                            => 2, -- 0 - 100 MHz, 1 - 125 MHz,  2 - 250 MHz
++      PL_FAST_TRAIN                           => "TRUE",
++      LINK_CAP_MAX_LINK_WIDTH                 => 4, -- 1 - x1, 2 - x2, 4 - x4, 8 - x8
++      DEVICE_ID                               => 16#0007#,
++      LINK_CAP_MAX_LINK_SPEED                 => 1,
++      LINK_CTRL2_TARGET_LINK_SPEED            => 0,
++      DEV_CAP_MAX_PAYLOAD_SUPPORTED           => 0, -- 0 - 128B, 1 - 256B, 3 - 512B, 4 - 1024B
++      VC0_TX_LASTPACKET                       => 31,
++      VC0_RX_RAM_LIMIT                        => 16#7FF#,
++      VC0_CPL_INFINITE                        => "FALSE",
++      VC0_TOTAL_CREDITS_PD                    => 154,
++      VC0_TOTAL_CREDITS_CD                    => 154,
++      UPCONFIG_CAPABLE                        => "FALSE",
++      LINK_CAP_DLL_LINK_ACTIVE_REPORTING_CAP  => "TRUE"
++    )
++    port map (
++      sys_clk         => ep_sys_clk_p,
++      sys_reset_n     => cor_sys_reset_n,
++
++      pci_exp_rxp     => cor_pci_exp_txp,
++      pci_exp_txp     => cor_pci_exp_rxp,
++      pci_exp_rxn     => cor_pci_exp_txn,
++      pci_exp_txn     => cor_pci_exp_rxn
++    );
+ 
+   u1 : ddr3ram
+     generic map (
+@@ -296,7 +324,7 @@ begin
+       dqsn   => ddr3_dqs_n,
+       doload => led(3)
+       );
+-  
++
+   address(0) <= '0';
+   prom0 : for i in 0 to 1 generate
+       sr0 : sram generic map (index => i+4, abits => 24, fname => promfile)

@@ -49,6 +49,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <getopt.h>
+#include <sys/stat.h>
 
 #include "entry.h"
 #include "main.h"
@@ -78,6 +79,7 @@ int main(int argc, char **argv) {
   // Set command line option defaults.
   args.port = "/dev/ttyS0";
   args.baudrate  = 115200;
+  args.pcieCdev = NULL;
   args.appPort   = 21078;
   args.debugPort = 21079;
   args.foreground = 0;
@@ -88,6 +90,7 @@ int main(int argc, char **argv) {
     static struct option long_options[] = {
       {"port",     required_argument, 0, 'p'},
       {"baud",     required_argument, 0, 'b'},
+      {"pcie",     required_argument, 0, 'P'},
       {"app",      required_argument, 0, 'a'},
       {"debug",    required_argument, 0, 'd'},
       {"foreground",no_argument,      0, 'f'},
@@ -98,7 +101,7 @@ int main(int argc, char **argv) {
     
     int option_index = 0;
 
-    int c = getopt_long(argc, argv, "p:b:a:d:h", long_options, &option_index);
+    int c = getopt_long(argc, argv, "p:b:P:a:d:h", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -115,6 +118,26 @@ int main(int argc, char **argv) {
           printf("%s: invalid baud rate specified\n\n", argv[0]);
           usage(argv[0], 0);
           exit(EXIT_FAILURE);
+        }
+        break;
+
+      case 'P':
+        args.pcieCdev = optarg;
+        {
+          struct stat st;
+          if (stat(args.pcieCdev, &st) == -1) {
+            printf("%s: Couldn't stat PCIe character device %s.\n", argv[0],
+                args.pcieCdev);
+            perror(argv[0]);
+            printf("\n");
+            usage(argv[0], 0);
+            exit(EXIT_FAILURE);
+          } else if (!S_ISCHR(st.st_mode)) {
+            printf("%s: Path doesn't point to a character device: %s.\n\n", argv[0],
+                args.pcieCdev);
+            usage(argv[0], 0);
+            exit(EXIT_FAILURE);
+          }
         }
         break;
         
@@ -199,6 +222,9 @@ static void usage(char *progName, int verbose) {
     "  -p  --port <port>  Specify serial port file to connect to. Defaults to\n"
     "                     /dev/ttyS0.\n"
     "  -b  --baud <rate>  Specify baud rate to use. Defaults to 115200.\n"
+    "  -P  --pcie <dev>   Use the PCIe driver to communicate with device instead of\n"
+    "                     the UART connection. Specify the character device to use\n"
+    "                     to communicate with the driver.\n"
     "  -a  --app <port>   Listen on the specified TCP port for UART communication\n"
     "                     with application code. Defaults to port 21078.\n"
     "  -d  --debug <port> Listen on the specified TCP port for debugging commands.\n"

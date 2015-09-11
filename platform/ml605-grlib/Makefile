@@ -99,19 +99,19 @@ work: ../../grlib/grlib-gpl-1.3.7-b4144
 .PHONY: update-patch
 update-patch: clean
 	@cd work && $(MAKE) distclean
-	diff -rupN --exclude="ram.srec" ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/ work/ > work.patch ; true
+	diff -rupN --exclude="ram.srec" ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/ work/ | filterdiff --remove-timestamps > work.patch ; true
 
 # Cleans all grlib and rvex compilation intermediate files.
 .PHONY: clean
 clean: clean-ex
-	-cd work && $(MAKE) distclean scripts-clean migclean
+	-cd work && $(MAKE) distclean scripts-clean migclean pcieclean
 	rm -f work/*_beh.prj
 
 # Removes the entire working directory; use with care (because the work dir might contain
 # source files as well, which may not have been put in the patch file yet).
 .PHONY: very-clean
 very-clean: clean
-	rm -Ir work
+	rm -Irf work
 
 
 #------------------------------------------------------------------------------
@@ -131,6 +131,7 @@ sim-%: work compile-%
 		migclean\
 		scripts-clean\
 		mig39\
+		pcie\
 		install-secureip\
 		compile_xilinx_verilog_lib\
 		compile.vsim\
@@ -155,6 +156,7 @@ synth: work
 		scripts-clean\
 		migclean\
 		mig39\
+		pcie\
 		planahead
 
 # Shorthand for launching ISE.
@@ -163,6 +165,7 @@ ise: work
 		scripts-clean\
 		migclean\
 		mig39\
+		pcie\
 		ise-launch
 
 

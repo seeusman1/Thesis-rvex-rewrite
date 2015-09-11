@@ -104,7 +104,7 @@ static int flushTraceBuf(uint32_t address) {
  */
 int runTrace(commandLineArgs_t *args) {
   unsigned char pageBuffer[RVSRV_PAGE_SIZE];
-  value_t address;
+  value_t address = {0, 0};
   int f;
   int first;
   uint32_t traceByteCount;

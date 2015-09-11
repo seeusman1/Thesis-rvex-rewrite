@@ -56,15 +56,13 @@
 #include "main.h"
 #include "serial.h"
 #include "daemon.h"
+#include "parseReadWrite.h"
+#include "rvex_iface.h"
 #include "select.h"
 #include "tcpserv.h"
-#include "debugCommands.h"
-#include "debugReadWrite.h"
 
-/**
- * File descriptor for the serial port.
- */
-int tty = 0;
+#include "pcie/pcie.h"
+#include "uart/uart.h"
 
 /**
  * TCP server for sending data to and receiving data from the application code
@@ -76,6 +74,11 @@ tcpServer_t *appServer;
  * TCP server for debug requests.
  */
 tcpServer_t *debugServer;
+
+/**
+ * Interface to the rVEX device.
+ */
+static rvex_iface_t rvexIface;
 
 
 //-----------------------------------------------------------------------------
@@ -190,9 +193,27 @@ static int handleCommand(unsigned char *command, int clientID, int firstTime) {
     return 1;
     
   } else if (checkCommand(command, (const unsigned char *)"Read") || checkCommand(command, (const unsigned char *)"Write")) {
+
+    struct parse_rw_result res;
+    unsigned char *syntax_error;
     
-    // Handle read/write command.
-    if (handleReadWrite(command, clientID) < 0) {
+    // Parse read/write command.
+    int err = parseReadWrite(command, &res, &syntax_error);
+    if (err == 0) {
+      // Perform the write or read.
+      if (res.is_write) {
+        err = rvexIface.write(res.address, res.buffer, res.buf_size, clientID);
+        free(res.buffer);
+      } else {
+        err = rvexIface.read(res.address, res.buf_size, clientID);
+      }
+      if (err < 0) {
+        return -1;
+      }
+    } else if (err == 1) {
+      tcpServer_sendStr(debugServer, clientID, syntax_error);
+      free(syntax_error);
+    } else {
       return -1;
     }
     
@@ -357,7 +378,7 @@ static int handleDebugServer(void) {
  * application, and broadcasts data from the rvex application to all clients
  * connected to the application TCP server.
  */
-static int handleApplicationData(void) {
+static int handleApplicationData(int tty) {
   int clientID;
   int d;
   
@@ -390,13 +411,17 @@ static int handleApplicationData(void) {
 /**
  * Closes all file descriptors and connections.
  */
-static void cleanup(void) {
+static void cleanup(int *tty) {
   
   // Free memory used by the debug command queues.
-  debugCommands_free();
+  if(rvexIface.free) {
+    rvexIface.free();
+  }
   
   // Close the serial port connection.
-  serial_close(&tty);
+  if (*tty >= 0) {
+    serial_close(tty);
+  }
   
   // Close TCP servers.
   tcpServer_close(&appServer);
@@ -415,28 +440,30 @@ static void cleanup(void) {
 }
 
 /**
- * Fails gracefully if the parameter is negative.
+ * Fails gracefully if the parameter is 0.
  */
-#define CHECK(f) \
-  if ((f) < 0) { \
-    cleanup(); \
+#define CHECK_FALSE(f) \
+  if (!(f)) { \
+    cleanup(&tty); \
     return -1; \
   }
 
 /**
+ * Fails gracefully if the parameter is negative.
+ */
+#define CHECK(f) CHECK_FALSE((f) >= 0)
+
+/**
  * Fails gracefully if the parameter is null.
  */
-#define CHECKNULL(f) \
-  if (!(f)) { \
-    cleanup(); \
-    return -1; \
-  }
+#define CHECKNULL(f) CHECK_FALSE(f)
 
 /**
  * Runs the program. First opens the handle to the serial port, then starts
  * listening on the requested TCP ports and starts handling commands.
  */
 int run(const commandLineArgs_t *args) {
+  int tty;
   int busy;
   int terminated;
   
@@ -444,7 +471,16 @@ int run(const commandLineArgs_t *args) {
   CHECK(select_init());
   
   // Try to open the serial port.
-  CHECK(tty = serial_open(args->port, args->baudrate));
+  tty = serial_open(args->port, args->baudrate);
+  // Only fail when we are not using PCIe communication.
+  CHECK_FALSE(tty >= 0 || args->pcieCdev);
+
+  // Try to initalize the rvex interface.
+  if (args->pcieCdev) {
+    CHECK(init_pcie_iface(args->pcieCdev, &rvexIface));
+  } else {
+    CHECK(init_uart_iface(tty, &rvexIface));
+  }
   
   // Try to open the TCP servers.
   CHECKNULL(appServer = tcpServer_open(
@@ -485,7 +521,9 @@ int run(const commandLineArgs_t *args) {
     busy = 0;
     
     // Update the serial port (perform reads into our buffer).
-    serial_update(tty);
+    if (tty >= 0) {
+        serial_update(tty);
+    }
     
     // Update the TCP servers (accept incoming connections, perform reads into
     // our buffer).
@@ -499,13 +537,15 @@ int run(const commandLineArgs_t *args) {
     }
     
     // Handle debug command issue and replies.
-    CHECK(busy = debugCommands_update());
+    CHECK(busy = rvexIface.update());
     
-    // Handle application data.
-    CHECK(handleApplicationData());
+    if (tty >= 0) {
+      // Handle application data.
+      CHECK(handleApplicationData(tty));
     
-    // Flush the serial port (write pending data to the serial port).
-    serial_flush(tty);
+      // Flush the serial port (write pending data to the serial port).
+      serial_flush(tty);
+    }
     
     // Flush the TCP servers (write pending data to the sockets).
     tcpServer_flush(appServer);
@@ -523,7 +563,7 @@ int run(const commandLineArgs_t *args) {
   }
   
   // Clean up: close open file descriptors and deallocate memory.
-  cleanup();
+  cleanup(&tty);
   
   // Success.
   return 0;

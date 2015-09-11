@@ -69,6 +69,11 @@ typedef struct {
    * Baud rate to use when opening the serial port.
    */
   int baudrate;
+
+  /**
+   * Path to the PCIe driver character device. NULL when PCIe is not used.
+   */
+  char *pcieCdev;
   
   /**
    * TCP port to listen on for application-access connections.

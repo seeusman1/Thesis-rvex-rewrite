@@ -138,7 +138,7 @@ static int scanLiteral(const char **str, value_t *value) {
   // Scan the number.
   while (isxdigit(*ptr)) {
     char c = tolower(*ptr++);
-    int digit;
+    int digit = 0;
     if ((c >= '0') && (c <= '9')) {
       digit = c - '0';
     } else if ((c >= 'a') && (c <= 'f')) {

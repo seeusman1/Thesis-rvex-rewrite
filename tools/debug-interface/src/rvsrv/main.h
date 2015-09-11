@@ -53,11 +53,6 @@
 #include "tcpserv.h"
 
 /**
- * File descriptor for the serial port.
- */
-extern int tty;
-
-/**
  * TCP server for sending data to and receiving data from the application code
  * running on the rvex platform.
  */

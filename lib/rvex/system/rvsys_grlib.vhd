@@ -189,12 +189,11 @@ entity rvsys_grlib is
     bus2dgb                     : in  bus_mst2slv_type;
     dbg2bus                     : out bus_slv2mst_type;
     
-    -- Interrupt controller interface. This entity handles translation from the
-    -- LEON3 interrupt controller to the rvex interrupt control signals. Note
-    -- that each rvex context requires its own interrupt controller.
-    irqi                        : in  irq_in_vector(0 to 2**CFG.core.numContextsLog2-1);
-    irqo                        : out irq_out_vector(0 to 2**CFG.core.numContextsLog2-1)
-    
+
+    -- rvex interrupt/run control interface signals.
+    rctrl2rv                    : in  rvex_rctrl2rv_array(2**CFG.core.numContextsLog2-1 downto 0);
+    rv2rctrl                    : out rvex_rv2rctrl_array(2**CFG.core.numContextsLog2-1 downto 0)
+
   );
 end rvsys_grlib;
 
@@ -211,15 +210,6 @@ architecture Behavioral of rvsys_grlib is
   
   -- Soft reset signal from the APB bus.
   signal dbg_reset              : std_logic;
-  
-  -- rvex interrupt/run control interface signals.
-  signal rctrl2rv_irq           : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
-  signal rctrl2rv_irqID         : rvex_address_array(2**CFG.core.numContextsLog2-1 downto 0);
-  signal rv2rctrl_irqAck        : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
-  signal rctrl2rv_run           : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
-  signal rv2rctrl_idle          : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
-  signal rctrl2rv_reset         : std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
-  signal rctrl2rv_resetVect     : rvex_address_array(2**CFG.core.numContextsLog2-1 downto 0);
   
   -- Common cache interface signals.
   signal rv2cache_decouple      : std_logic_vector(2**CFG.core.numLaneGroupsLog2-1 downto 0);
@@ -335,13 +325,8 @@ begin -- architecture
         clkEn                     => clkEnCPU,
         
         -- Run control interface.
-        rctrl2rv_irq              => rctrl2rv_irq,
-        rctrl2rv_irqID            => rctrl2rv_irqID,
-        rv2rctrl_irqAck           => rv2rctrl_irqAck,
-        rctrl2rv_run              => rctrl2rv_run,
-        rv2rctrl_idle             => rv2rctrl_idle,
-        rctrl2rv_reset            => rctrl2rv_reset,
-        --rctrl2rv_resetVect        => rctrl2rv_resetVect,
+        rctrl2rv                  => rctrl2rv,
+        rv2rctrl                  => rv2rctrl,
         
         -- Common memory interface.
         rv2mem_decouple           => rv2cache_decouple,
@@ -752,32 +737,6 @@ begin -- architecture
       invalEnable         => bus2cache_invalEnable
       
     );
-  
-  -----------------------------------------------------------------------------
-  -- Interrupt controller bridge
-  -----------------------------------------------------------------------------
-  irq_bridge_gen: for ctxt in 2**CFG.core.numContextsLog2-1 downto 0 generate
-    
-    -- Because the rvex does not have an interrupt level register, we always
-    -- accept any incoming interrupt when the interrupt enable flag is set.
-    -- This means interrupts can nest just fine, but it's all or nothing. Note
-    -- that the other run control signals are also connected to the interrupt
-    -- controller appropriately, except for the run signal. The default
-    -- interrupt controller seems to have run hardwired such that only
-    -- processor 0 is ever enabled, so it wouldn't make much sense to connect
-    -- it.
-    rctrl2rv_irq(ctxt)        <= '0' when irqi(ctxt).irl = "0000" else '1';
-    rctrl2rv_irqID(ctxt)      <= X"0000000" & irqi(ctxt).irl;
-    rctrl2rv_run(ctxt)        <= '1'; --irqi(ctxt).run;
-    rctrl2rv_reset(ctxt)      <= irqi(ctxt).rst or irqi(ctxt).hrdrst;
-    rctrl2rv_resetVect(ctxt)  <= irqi(ctxt).rstvec & X"000";
-    irqo(ctxt).intack         <= rv2rctrl_irqAck(ctxt);
-    irqo(ctxt).irl            <= irqi(ctxt).irl;
-    irqo(ctxt).pwd            <= '0';
-    irqo(ctxt).fpen           <= '0';
-    irqo(ctxt).idle           <= rv2rctrl_idle(ctxt);
-    
-  end generate;
   
   -----------------------------------------------------------------------------
   -- Global control registers

@@ -54,6 +54,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
 
 #include "tcpserv.h"
 #include "select.h"
@@ -492,6 +493,10 @@ int tcpServer_flushClient(tcpServer_t *server, int clientID) {
   if ((!client) || (client->clientDesc < 0)) {
     return 0;
   }
+
+  // Enable TCP_NODELAY to significantly increase local transmission speed
+  int flag = 1;
+  setsockopt(client->clientDesc, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
   
   idx = 0;
   while (idx < client->txBufSize) {
@@ -510,6 +515,10 @@ int tcpServer_flushClient(tcpServer_t *server, int clientID) {
   
   // Reset the buffer.
   client->txBufSize = 0;
+
+  // Disable TCP_NODELAY
+  flag = 0;
+  setsockopt(client->clientDesc, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
   
   return 0;
 }
