@@ -17,11 +17,22 @@
 //#define DEBUG
 
 /* The following code is from Iodev.org, modified for integer */
-#define imageWidth 640
-#define imageHeight 480
+#define imageWidth   512
+#define imageHeight  512
 
-#define filterWidth 3
-#define filterHeight 3
+#define blockWidth   32
+#define blockHeight  32
+
+#if (imageWidth%blockWidth != 0)
+#error imageWidth needs to be a multiple of blockwidth
+#endif
+#if (imageHeight%blockHeight != 0)
+#error imageheight needs to be a multiple of blockheight
+#endif
+
+
+#define filterWidth   3
+#define filterHeight  3
 
 #define BLUR
 #if filterWidth == 3
@@ -327,6 +338,7 @@ puts("window:\n");
 	puts(strbuf);
 #endif //debug
 		 	//sort
+		 	#pragma unroll (4)
 		 	for (j = 0; j < 4; j++)
 		 	{
 		 		unsigned int tmp;

@@ -19,9 +19,8 @@
 /* The following code is from Iodev.org, modified for integer */
 #define filterWidth 3
 #define filterHeight 3
-#define imageWidth 640
-#define imageHeight 480
-
+#define imageWidth 64
+#define imageHeight 64
 
 //declare image buffers 
 //int image[imageWidth][imageHeight]; 
@@ -237,6 +236,10 @@ int main()
         	windowb[(filterX*filterWidth)+filterY] = (unsigned char)(image[imageX + (imageY*imageWidth)]&0xff);
         }
 */
+		/*
+		 * Maybe because of the register keyword, the compiler doesn't see the possible reuse. 
+		 * I'd have to explicitly write that out.
+		 */
 		window[0] = image[x-1 + (y-1*imageWidth)];
 		window[1] = image[x   + (y-1*imageWidth)];
 		window[2] = image[x+1 + (y-1*imageWidth)];
@@ -283,6 +286,7 @@ puts("window:\n");
 	puts(strbuf);
 #endif //debug
 		 	//sort
+		 	#pragma unroll (4)
 		 	for (j = 0; j < 4; j++)
 		 	{
 		 		unsigned int tmp;
@@ -366,7 +370,7 @@ puts("window sorted:\n");
 		 	//write channel into output
 		 	framebuffer[(y*imageWidth)+x] |= window[4]; //this assumes the output array has been cleared
 		 	
-		 	if (i ==2) break; //the rest is not necessary for the last channel
+		 	//if (i ==2) break; //the rest is not necessary for the last channel, but this doesn't speed up the code. I guess the compiler sees it.
 		 	
 		 	//remove current channel from window
 		 	window[0] &= ~currChan;

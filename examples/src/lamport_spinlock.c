@@ -1,7 +1,7 @@
 #include "rvex.h"
 
 #define NTHREADS 4
-#define ADDITIONS 999999
+#define ADDITIONS 25
 
 volatile int counter1;
 volatile int counter2;

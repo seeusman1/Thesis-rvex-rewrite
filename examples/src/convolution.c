@@ -22,8 +22,8 @@ Note; we need to use another assembler when running on the xstsim simulator vers
 /* The following code is from Iodev.org, modified for integer */
 #define filterWidth 3
 #define filterHeight 3
-#define imageWidth 640
-#define imageHeight 480
+#define imageWidth 64
+#define imageHeight 32
 
 //declare image buffers 
 //int image[imageWidth][imageHeight]; 
