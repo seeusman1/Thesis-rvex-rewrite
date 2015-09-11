@@ -178,7 +178,7 @@ package core_pkg is
     limmhFromNeighbor           => true,
     limmhFromPreviousPair       => false,
     reg63isLink                 => false,
-    cregStartAddress            => X"FFFFFF80",
+    cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
     unifiedStall                => true,
     traceEnable                 => false
