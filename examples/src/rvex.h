@@ -60,6 +60,31 @@
 #define CR_CNT_ADDR             CREG_GLOB_ADDR(0x010)
 #define CR_CNT                  CREG_UINT32_R(CR_CNT_ADDR)
 
+//Processor version register
+#define CR_PVR_ADDR				CREG_GLOB_ADDR(0x014)
+#define CR_PVR					CREG_UINT32_R(CR_PVR_ADDR)
+
+//Cache sizes register
+#define CR_CSR_ADDR				CREG_GLOB_ADDR(0x018)
+#define CR_CSR					CREG_UINT32_R(CR_CSR_ADDR)
+
+//Global scratch register
+#define CR_GSCR_ADDR			CREG_GLOB_ADDR(0x01C)
+#define CR_GSCR					CREG_UINT32_RW(CR_GSCR_ADDR)
+
+//Global scratch register
+#define CR_GSCR2_ADDR			CREG_GLOB_ADDR(0x020)
+#define CR_GSCR2				CREG_UINT32_RW(CR_GSCR2_ADDR)
+
+//Global scratch register
+#define CR_GSCR3_ADDR			CREG_GLOB_ADDR(0x024)
+#define CR_GSCR3				CREG_UINT32_RW(CR_GSCR3_ADDR)
+
+//Global scratch register
+#define CR_GSCR4_ADDR			CREG_GLOB_ADDR(0x028)
+#define CR_GSCR4				CREG_UINT32_RW(CR_GSCR4_ADDR)
+
+
 //-----------------------------------------------------------------------------
 // Context-specific registers. Refer to lib/rvex/core/core_contextRegLogic.vhd
 // for up-to-date documentation about the registers.
@@ -213,6 +238,39 @@
 // Committed NOP syllable counter. Writing to the register clears it.
 #define CR_C_NOP_ADDR           CREG_ADDR_CTXT(0x54)
 #define CR_C_NOP                CREG_UINT32_RW(CR_C_NOP_ADDR)
+
+//Instruction cache access counter.
+#define CR_C_IACC_ADDR			CREG_ADDR_CTXT(0x58)
+#define CR_C_IACC				CREG_UINT32_RW(CR_C_IACC_ADDR)
+
+//Instruction cache miss counter.
+#define CR_C_IMISS_ADDR			CREG_ADDR_CTXT(0x5C)
+#define CR_C_IMISS				CREG_UINT32_RW(CR_C_IMISS_ADDR)
+
+//Data cache read access counter
+#define CR_C_DRACC_ADDR			CREG_ADDR_CTXT(0x60)
+#define CR_C_DRACC				CREG_UINT32_RW(CR_C_DRACC_ADDR)
+
+//Data cache read miss counter
+#define CR_C_DRMISS_ADDR		CREG_ADDR_CTXT(0x64)
+#define CR_C_DRMISS				CREG_UINT32_RW(CR_C_DRMISS_ADDR)
+
+//Data cache write access counter
+#define CR_C_DWACC_ADDR			CREG_ADDR_CTXT(0x68)
+#define CR_C_DWACC				CREG_UINT32_RW(CR_C_DWACC_ADDR)
+
+//Data cache write miss counter
+#define CR_C_DWMISS_ADDR		CREG_ADDR_CTXT(0x6C)
+#define CR_C_DWMISS				CREG_UINT32_RW(CR_C_DWMISS_ADDR)
+
+//Data cache bypassed access counter
+#define CR_C_DBYPASS_ADDR		CREG_ADDR_CTXT(0x70)
+#define CR_C_DBYPASS			CREG_UINT32_RW(CR_C_DBYPASS_ADDR)
+
+//Data cache accesses with buffered write counter
+#define CR_C_DWBUF_ADDR			CREG_ADDR_CTXT(0x74)
+#define CR_C_DWBUF				CREG_UINT32_RW(CR_C_DWBUF_ADDR)
+
 
 /*****************************************************************************/
 /* Trap causes                                                               */
