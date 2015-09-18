@@ -102,13 +102,13 @@ package core_ctrlRegs_pkg is
   -- The specified range must be identical to or a subset of 0..63 inclusive,
   -- but may be changed otherwise.
   constant CRG_GLOB_WORD_OFFSET : natural := 0;
-  constant CRG_GLOB_WORD_COUNT  : natural := 5;
+  constant CRG_GLOB_WORD_COUNT  : natural := 11;
   
   -- Word offset and count for the context-specific portion of the control
   -- register file. The specified range must be identical to or a subset of
   -- 128..255 inclusive, but may be changed otherwise.
   constant CRG_CTXT_WORD_OFFSET : natural := 128;
-  constant CRG_CTXT_WORD_COUNT  : natural := 26;
+  constant CRG_CTXT_WORD_COUNT  : natural := 34;
   
   -----------------------------------------------------------------------------
   -- Control register map specification
@@ -129,6 +129,12 @@ package core_ctrlRegs_pkg is
   constant CR_CC      : natural := CRG_GLOB_WORD_OFFSET +  2; -- Current configuration register.
   constant CR_AFF     : natural := CRG_GLOB_WORD_OFFSET +  3; -- Cache/memory block affinity register.
   constant CR_CNT     : natural := CRG_GLOB_WORD_OFFSET +  4; -- CPU cycle counter.
+  constant CR_PVR     : natural := CRG_GLOB_WORD_OFFSET +  5; -- Processor version register
+  constant CR_CSR     : natural := CRG_GLOB_WORD_OFFSET +  6; -- Cache sizes register
+  constant CR_GSCR    : natural := CRG_GLOB_WORD_OFFSET +  7; -- Global scratch register
+  constant CR_GSCR2   : natural := CRG_GLOB_WORD_OFFSET +  8; -- Global scratch register
+  constant CR_GSCR3   : natural := CRG_GLOB_WORD_OFFSET +  9; -- Global scratch register
+  constant CR_GSCR4   : natural := CRG_GLOB_WORD_OFFSET + 10; -- Global scratch register
   
   -- Context-specific register word addresses. Refer to
   -- rvex_contextRegLogic.vhd for documentation about the registers.
@@ -154,10 +160,18 @@ package core_ctrlRegs_pkg is
   constant CR_C_BUN   : natural := CRG_CTXT_WORD_OFFSET + 19; -- Committed bundle counter.
   constant CR_C_SYL   : natural := CRG_CTXT_WORD_OFFSET + 20; -- Committed syllable counter.
   constant CR_C_NOP   : natural := CRG_CTXT_WORD_OFFSET + 21; -- Committed NOP counter.
-  constant CR_SCRP    : natural := CRG_CTXT_WORD_OFFSET + 22; -- Scratch-pad register 1.
-  constant CR_SCRP2   : natural := CRG_CTXT_WORD_OFFSET + 23; -- Scratch-pad register 2.
-  constant CR_SCRP3   : natural := CRG_CTXT_WORD_OFFSET + 24; -- Scratch-pad register 3.
-  constant CR_SCRP4   : natural := CRG_CTXT_WORD_OFFSET + 25; -- Scratch-pad register 4.
+  constant CR_C_IACC  : natural := CRG_CTXT_WORD_OFFSET + 22; -- Instruction cache access counter.
+  constant CR_C_IMISS : natural := CRG_CTXT_WORD_OFFSET + 23; -- Instruction cache miss counter.
+  constant CR_C_DRACC : natural := CRG_CTXT_WORD_OFFSET + 24; -- Data cache read access counter.
+  constant CR_C_DRMISS: natural := CRG_CTXT_WORD_OFFSET + 25; -- Data cache read miss counter.
+  constant CR_C_DWACC : natural := CRG_CTXT_WORD_OFFSET + 26; -- Data cache write access counter.
+  constant CR_C_DWMISS: natural := CRG_CTXT_WORD_OFFSET + 27; -- Data cache wrote miss counter.
+  constant CR_C_DBYPASS: natural := CRG_CTXT_WORD_OFFSET + 28; -- Data cache bypassed access counter.
+  constant CR_C_DWBUF : natural := CRG_CTXT_WORD_OFFSET + 29; -- Data cache access with pending write counter.
+  constant CR_SCRP    : natural := CRG_CTXT_WORD_OFFSET + 30; -- Scratch-pad register 1.
+  constant CR_SCRP2   : natural := CRG_CTXT_WORD_OFFSET + 31; -- Scratch-pad register 2.
+  constant CR_SCRP3   : natural := CRG_CTXT_WORD_OFFSET + 32; -- Scratch-pad register 3.
+  constant CR_SCRP4   : natural := CRG_CTXT_WORD_OFFSET + 33; -- Scratch-pad register 4.
   
   -- Byte addresses for byte-aligned fields.
   constant CR_TC      : natural := 4*CR_CCR   + 0; -- Trap cause.

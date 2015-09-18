@@ -54,6 +54,13 @@ all:BCRR                    { CREG_GLOB + 0x04 } # Debug bus reconfiguration req
 all:CC                      { CREG_GLOB + 0x08 } # Current configuration.
 all:AFF                     { CREG_GLOB + 0x0C } # Cache affinity.
 all:CNT                     { CREG_GLOB + 0x10 } # Cycle counter.
+all:PVR                     { CREG_GLOB + 0x14 } # Processor Version Register.
+all:CSR                     { CREG_GLOB + 0x18 } # Cache Sizes Register.
+all:GSCR                    { CREG_GLOB + 0x1C } # Global Scratch Register.
+all:GSCR2                   { CREG_GLOB + 0x20 } # Global Scratch Register 2.
+all:GSCR3                   { CREG_GLOB + 0x24 } # Global Scratch Register 3.
+all:GSCR4                   { CREG_GLOB + 0x28 } # Global Scratch Register 4.
+
 all:CCR                     { CREG_CTXT + 0x00 } # Context control register.
 all:TC                      { CREG_CTXT + 0x00 } # Trap cause (byte).
 all:BR                      { CREG_CTXT + 0x01 } # Branch registers (byte).
@@ -85,10 +92,18 @@ all:C_STALL                 { CREG_CTXT + 0x48 } # Non-idle stall counter.
 all:C_BUN                   { CREG_CTXT + 0x4C } # Committed bundle counter.
 all:C_SYL                   { CREG_CTXT + 0x50 } # Committed syllable counter.
 all:C_NOP                   { CREG_CTXT + 0x54 } # Committed NOP counter.
-all:SCRP                    { CREG_CTXT + 0x58 } # Scratch-pad register 1.
-all:SCRP2                   { CREG_CTXT + 0x5C } # Scratch-pad register 2.
-all:SCRP3                   { CREG_CTXT + 0x60 } # Scratch-pad register 3.
-all:SCRP4                   { CREG_CTXT + 0x64 } # Scratch-pad register 4.
+all:C_IACC                  { CREG_CTXT + 0x58 } # Instruction cache access counter.
+all:C_IMISS                 { CREG_CTXT + 0x5C } # Instruction cache miss counter.
+all:C_DRACC                 { CREG_CTXT + 0x60 } # Data cache read access counter.
+all:C_DRMISS                { CREG_CTXT + 0x64 } # Data cache read miss counter.
+all:C_DWACC                 { CREG_CTXT + 0x68 } # Data cache write access counter.
+all:C_DWMISS                { CREG_CTXT + 0x6C } # Data cache write miss counter.
+all:C_DBYPASS               { CREG_CTXT + 0x70 } # Data cache bypassed accesses counter.
+all:C_DWBUF                 { CREG_CTXT + 0x74 } # Data cache accesses with buffered write counter.
+all:SCRP                    { CREG_CTXT + 0x78 } # Scratch-pad register 1.
+all:SCRP2                   { CREG_CTXT + 0x7C } # Scratch-pad register 2.
+all:SCRP3                   { CREG_CTXT + 0x80 } # Scratch-pad register 3.
+all:SCRP4                   { CREG_CTXT + 0x84 } # Scratch-pad register 4.
 
 # This is called after a context change to set banking bits. Currently there
 # are no banking bits, so this does nothing.
@@ -171,11 +186,22 @@ all:WAIT_COMPLETE {
     printf("\033[1mPerformance counters for context %d:\033[0m\n", cur);
     set(cyc, readWord(C_CYC));
     set(total_cyc, total_cyc + cyc);
-    printf("            Active cycles = %u\n", cyc);
-    printf("           Stalled cycles = %u\n", readWord(C_STALL));
-    printf("   Committed bundle count = %u\n", readWord(C_BUN));
-    printf(" Committed syllable count = %u\n", readWord(C_SYL));
-    printf("      Committed NOP count = %u\n", readWord(C_NOP));
+    printf("             Active cycles = %u\n", cyc);
+    printf("        Active cycles high = %u\n", readWord(C_CYCHS));
+    printf("            Stalled cycles = %u\n", readWord(C_STALL));
+    printf("    Committed bundle count = %u\n", readWord(C_BUN));
+    printf("  Committed syllable count = %u\n", readWord(C_SYL));
+    printf("       Committed NOP count = %u\n", readWord(C_NOP));
+    printf("\n");
+    printf("\033[1mPerformance counters for cache block %d:\033[0m\n", cur);
+    printf("Instruction cache accesses = %u\n", readWord(C_IACC));
+    printf("  Instruction cache misses = %u\n", readWord(C_IMISS));
+    printf("  Data cache read accesses = %u\n", readWord(C_DRACC));
+    printf("    Data cache read misses = %u\n", readWord(C_DRMISS));
+    printf(" Data cache write accesses = %u\n", readWord(C_DWACC));
+    printf("   Data cache write misses = %u\n", readWord(C_DWMISS));
+    printf("Data cache bypass accesses = %u\n", readWord(C_DBYPASS));
+    printf("Data cache accesses with buffered write = %u\n", readWord(C_DWBUF));
     printf("\n");
     
     set(cur, cur + 1);

@@ -190,6 +190,9 @@ mov $r0.60 = 0
   /* Store the main return value in the designated scratchpad register. */
   c0  stb     CR_RET_ADDR[$r0.0] = $r0.3
 ;;
+  /* Load the processor total cycle counter into register 63. */
+  c0  ldw $r0.63 = CR_CNT_ADDR[$r0.0]
+;;
 #endif
   /* Stop this context. */
   c0  stop

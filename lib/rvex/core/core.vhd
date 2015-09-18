@@ -56,6 +56,7 @@ use rvex.core_intIface_pkg.all;
 use rvex.core_trap_pkg.all;
 use rvex.core_pipeline_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
+use rvex.cache_pkg.all;
 
 -- pragma translate_off
 use rvex.simUtils_pkg.all;
@@ -224,7 +225,8 @@ entity core is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type := rvex_cfg
+    CFG                         : rvex_generic_config_type := rvex_cfg;
+    CCFG                         : cache_generic_config_type := cache_cfg
     
   );
   port (
@@ -1042,7 +1044,8 @@ begin -- architecture
         cxreg2trace_memEn           => cxreg2trace_memEn(ctxt),
         cxreg2trace_regEn           => cxreg2trace_regEn(ctxt),
         cxreg2trace_cacheEn         => cxreg2trace_cacheEn(ctxt),
-        cxreg2trace_instrEn         => cxreg2trace_instrEn(ctxt)
+        cxreg2trace_instrEn         => cxreg2trace_instrEn(ctxt),
+        mem2rv_cacheStatus          => mem2rv_cacheStatus(ctxt)
         
       );
   end generate;
@@ -1052,7 +1055,8 @@ begin -- architecture
   -----------------------------------------------------------------------------
   gbreg_inst: entity rvex.core_globalRegLogic
     generic map (
-      CFG                           => CFG
+      CFG                           => CFG,
+      CCFG                          => CCFG
     )
     port map (
       

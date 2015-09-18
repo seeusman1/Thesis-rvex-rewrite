@@ -273,7 +273,9 @@ entity core_contextRegLogic is
     cxreg2trace_cacheEn         : out std_logic;
     
     -- Whether instructions (the raw syllables) should be traced. Active high.
-    cxreg2trace_instrEn         : out std_logic
+    cxreg2trace_instrEn         : out std_logic;
+    
+    mem2rv_cacheStatus          : in  rvex_cacheStatus_type := RVEX_CACHE_STATUS_IDLE
     
   );
 end core_contextRegLogic;
@@ -320,7 +322,7 @@ begin -- architecture
     cxplif2cxreg_linkWriteEnable, cxplif2cxreg_overridePC_ack,
     cxplif2cxreg_trapInfo, cxplif2cxreg_trapPoint, cxplif2cxreg_rfi,
     cxplif2cxreg_exDbgTrapInfo, cxplif2cxreg_resuming_ack, cxplif2cxreg_idle_r,
-    cxplif2cxreg_sylCommit_r, cxplif2cxreg_sylNop_r, cxplif2cxreg_stall_r
+    cxplif2cxreg_sylCommit_r, cxplif2cxreg_sylNop_r, cxplif2cxreg_stall_r, mem2rv_cacheStatus
   ) is
     variable l2c  : cxreg2creg_type;
     variable c2l  : creg2cxreg_type;
@@ -913,6 +915,22 @@ begin -- architecture
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_NOP |                     committed NOP counter                     |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_IACC|                    Instruction cache accesses                 |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_IMISS                    Instruction cache misses                   |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DRACC                      Data read accesses                       |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DRMISS                       Data read misses                       |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DWACC|                   Data cache write accesses                  |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DWMISS                   Data cache write misses                    |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DBYPASS                Data cache bypassed accesses                 |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DWBUF             Data cache accesses with pending write            |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     --
     -- These registers will increment until they reach 0xFFFFFFFF when certain
     -- events occur, except for C_CYC, C_CYCH and C_CYCHS, which will overflow.
@@ -1002,7 +1020,62 @@ begin -- architecture
       enable        => not cxplif2cxreg_stall_r,
       permissions   => READ_WRITE
     );
-	 
+
+    -- Make the Instruction cache access counter.
+    creg_makeCounter(l2c, c2l, CR_C_IACC, 31, 0,
+      clear         => countClear,
+      inc           => mem2rv_cacheStatus.instr_access,
+      permissions   => READ_WRITE
+    );
+
+    -- Make the Instruction cache miss counter.
+    creg_makeCounter(l2c, c2l, CR_C_IMISS, 31, 0,
+      clear         => countClear,
+      inc           => mem2rv_cacheStatus.instr_miss,
+      permissions   => READ_WRITE
+    );
+    
+    -- Make the Data cache read access counter.
+    creg_makeCounter(l2c, c2l, CR_C_DRACC, 31, 0,
+      clear         => countClear,
+      inc           => (mem2rv_cacheStatus.data_accessType(0) and not (mem2rv_cacheStatus.data_accessType(1))),
+      permissions   => READ_WRITE
+    );
+
+    -- Make the Data cache read miss counter.
+    creg_makeCounter(l2c, c2l, CR_C_DRMISS, 31, 0,
+      clear         => countClear,
+      inc           => (mem2rv_cacheStatus.data_accessType(0) and not (mem2rv_cacheStatus.data_accessType(1)) and mem2rv_cacheStatus.data_miss),
+      permissions   => READ_WRITE
+    );
+    
+    -- Make the Data cache write access counter.
+    creg_makeCounter(l2c, c2l, CR_C_DWACC, 31, 0,
+      clear         => countClear,
+      inc           => (mem2rv_cacheStatus.data_accessType(1)),
+      permissions   => READ_WRITE
+    );
+
+    -- Make the Data cache write miss counter.
+    creg_makeCounter(l2c, c2l, CR_C_DWMISS, 31, 0,
+      clear         => countClear,
+      inc           => (mem2rv_cacheStatus.data_accessType(1) and (mem2rv_cacheStatus.data_miss)),
+      permissions   => READ_WRITE
+    );
+    
+    -- Make the Data cache bypassed access counter.
+    creg_makeCounter(l2c, c2l, CR_C_DBYPASS, 31, 0,
+      clear         => countClear,
+      inc           => mem2rv_cacheStatus.data_bypass,
+      permissions   => READ_WRITE
+    );
+
+    -- Make the Data cache miss counter.
+    creg_makeCounter(l2c, c2l, CR_C_DWBUF, 31, 0,
+      clear         => countClear,
+      inc           => mem2rv_cacheStatus.data_writepending,
+      permissions   => READ_WRITE
+    );
     
     ---------------------------------------------------------------------------
     -- Scratch-pad registers (SCRP*)

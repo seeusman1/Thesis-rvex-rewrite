@@ -54,6 +54,7 @@ use rvex.utils_pkg.all;
 use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
+use rvex.cache_pkg.all;
 
 --=============================================================================
 -- This entity contains the specifications and logic for the control registers
@@ -65,8 +66,8 @@ entity core_globalRegLogic is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type
-    
+    CFG                         : rvex_generic_config_type;
+    CCFG                         : cache_generic_config_type
   );
   port (
     
@@ -260,6 +261,85 @@ begin -- architecture
       inc           => '1',
       clamp         => false,
       permissions   => READ_ONLY
+    );
+    
+    ---------------------------------------------------------------------------
+    -- Processor version register (PVR)
+    ---------------------------------------------------------------------------
+    -- 
+    --       |---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---|
+    -- PVR_l |  bundleAlign  |  numContexts  | numLaneGroups |    numLanes   |
+    --       |---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---|
+    --
+    --       |---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---|
+    -- PVR_h | U   L   P   F |numBreakpoints |memLaneRevIndex|multiplierLanes|
+    --       |---+---+---+---|---+---+---+---|---+---+---+---|---+---+---+---|
+    --
+    -- F - Forwarding
+    -- P - limmh from previous pair
+    -- L - r63 is link register
+    -- U - Unified trap
+    
+    -- Make the version register
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 3, 0, uint2vect(2**CFG.numLanesLog2,4));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 7, 4, uint2vect(2**CFG.numLaneGroupsLog2,4));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 11, 8, uint2vect(2**CFG.numContextsLog2,4));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 15, 12, uint2vect(2**CFG.bundleAlignLog2,4));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 19, 16, uint2vect(CFG.multiplierLanes,4));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 23, 20, uint2vect(CFG.memLaneRevIndex,4));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 27, 24, uint2vect(CFG.numBreakpoints,4));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 28, 28, uint2vect(bool2int(CFG.forwarding),1));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 29, 29, uint2vect(bool2int(CFG.limmhFromPreviousPair),1));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 30, 30, uint2vect(bool2int(CFG.reg63isLink),1));
+    creg_makeHardwiredField(l2c, c2l, CR_PVR, 31, 31, uint2vect(bool2int(CFG.unifiedStall),1));
+
+    ---------------------------------------------------------------------------
+    -- Cache sizes register
+    ---------------------------------------------------------------------------
+    -- 
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- CSR   |     Data cache size (KiB)     |  Instruction cache size (KiB) |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    --
+    
+    -- Make the Instruction cache size register
+    creg_makeHardwiredField(l2c, c2l, CR_CSR, 15, 0, std_logic_vector(to_unsigned(((2**CCFG.instrCacheLinesLog2)*(2**CFG.numLanesLog2)*4)/1024,16)));
+
+    -- Make the Data cache size register (nr of cache lines * linesize (4) * cacheblocks (4) )
+    creg_makeHardwiredField(l2c, c2l, CR_CSR, 31, 16, std_logic_vector(to_unsigned(((2**CCFG.dataCacheLinesLog2)*4*4)/1024,16)));
+    
+    
+    ---------------------------------------------------------------------------
+    -- Global Scratch-pad registers (GSCRP*)
+    ---------------------------------------------------------------------------
+    -- 
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- GSCR  |                           scratch 1                           |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- GSCR2 |                           scratch 2                           |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- GSCR3 |                           scratch 3                           |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- GSCR4 |                           scratch 4                           |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    --
+    -- Regular register with no effect on processor behavior.
+    
+    -- Make the registers.
+    creg_makeNormalRegister(l2c, c2l, CR_GSCR, 31, 0,
+      permissions   => READ_WRITE
+    );
+    
+    creg_makeNormalRegister(l2c, c2l, CR_GSCR2, 31, 0,
+      permissions   => READ_WRITE
+    );
+    
+    creg_makeNormalRegister(l2c, c2l, CR_GSCR3, 31, 0,
+      permissions   => READ_WRITE
+    );
+    
+    creg_makeNormalRegister(l2c, c2l, CR_GSCR4, 31, 0,
+      permissions   => READ_WRITE
     );
     
     ---------------------------------------------------------------------------
