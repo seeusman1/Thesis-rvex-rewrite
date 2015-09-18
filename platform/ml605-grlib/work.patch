@@ -58,7 +58,7 @@
 +    -- Cache configuration
 +    cache => cache_cfg(
 +      instrCacheLinesLog2 => 8, -- 8 kiB
-+      dataCacheLinesLog2  => 8  -- 1 KiB
++      dataCacheLinesLog2  => 10  -- 4 KiB
 +    ), cache_valid => true
 +
 +  );
@@ -834,8 +834,8 @@
 +        ahbsi                   => ahbsi,
 +        bus2dgb                 => rvbsi(i),
 +        dbg2bus                 => rvbso(i),
-+        rctrl2rv                => rctrl2rv(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX),
-+        rv2rctrl                => rv2rctrl(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX)
++        rctrl2rv                => rctrl2rv((i+1)*2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*2**CFG_RVEX_CFG.core.numContextsLog2),
++        rv2rctrl                => rv2rctrl((i+1)*2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*2**CFG_RVEX_CFG.core.numContextsLog2)
 +      );
 +
 +    irq_bridge_gen: if CFG_IRQ3_ENABLE /= 0 generate
@@ -844,14 +844,14 @@
 +          CFG                     => CFG_RVEX_CFG.core
 +        )
 +        port map (
-+          rctrl2rv                => irq_rctrl2rv(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX),
-+          rv2rctrl                => rv2rctrl(i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*CFG_NRVEX),
++          rctrl2rv                => irq_rctrl2rv((i+1)*2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*2**CFG_RVEX_CFG.core.numContextsLog2),
++          rv2rctrl                => rv2rctrl((i+1)*2**CFG_RVEX_CFG.core.numContextsLog2-1 downto i*2**CFG_RVEX_CFG.core.numContextsLog2),
 +          irqi                    => irqi(PIND to PIND+PNUM-1),
 +          irqo                    => irqo(PIND to PIND+PNUM-1)
 +        );
 +    end generate;
 +    irq_nobridge_gen: if CFG_IRQ3_ENABLE = 0 generate
-+      irq_rctrl2rv_gen: for j in i*CFG_NRVEX to i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 generate
++      irq_rctrl2rv_gen: for j in i*2**CFG_RVEX_CFG.core.numContextsLog2 to (i+1)*2**CFG_RVEX_CFG.core.numContextsLog2-1 generate
 +        irq_rctrl2rv(j).run       <= '1';
 +        irq_rctrl2rv(j).reset     <= '0';
 +        irq_rctrl2rv(j).resetVect <= (others => '0');
@@ -860,7 +860,7 @@
 +      end generate;
 +    end generate;
 +
-+    rctrl_map_gen: for j in i*CFG_NRVEX to i*CFG_NRVEX+2**CFG_RVEX_CFG.core.numContextsLog2-1 generate
++    rctrl_map_gen: for j in i*2**CFG_RVEX_CFG.core.numContextsLog2 to (i+1)*2**CFG_RVEX_CFG.core.numContextsLog2-1 generate
 +    begin
 +      rctrl2rv(j).run       <= irq_rctrl2rv(j).run;--pcie_rctrl2rv(j).run and irq_rctrl2rv(j).run;
 +      rctrl2rv(j).reset     <= irq_rctrl2rv(j).reset;--pcie_rctrl2rv(j).reset or irq_rctrl2rv(j).reset;
@@ -1001,7 +1001,7 @@
 +    pcie_dma: entity work.dma
 +    generic map (
 +      NO_OF_LANES             => CFG_NO_OF_LANES,
-+
++      NO_CONTEXTS             => 2**CFG_RVEX_CFG.core.numContextsLog2,
 +      NO_RVEX                 => CFG_NRVEX
 +    )
 +    port map (
