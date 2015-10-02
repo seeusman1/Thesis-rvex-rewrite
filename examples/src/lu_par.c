@@ -2,7 +2,16 @@
 #include <stdlib.h>
 #include "rvex.h"
 
-#define N 256  //define this according to the input size of matrix
+
+//#define SMALLSET
+#ifdef SMALLSET
+#define N 8
+#else
+#define N 100  //define this according to the input size of matrix
+#endif
+
+#include "lu_par.h"
+
 #define MASTER 0
 #define NTHREADS 4
 //#define MULTI_CONFIG 0x2100
@@ -18,6 +27,8 @@
 #define BARRIERVAL(Y) (((Y) << 24) | ((Y) << 16) | ((Y) << 8) | (Y) )
 #endif
 
+
+
 /*
 There is a problem with coherency in the cache.
 When the bypass flag is enabled it doesnt show up.
@@ -25,51 +36,99 @@ Also with simple tests it seems to work correctly.
 But in this program, the threads will start to wait for each other.
 */
 
-//#define RESOURCE_SHARE
+
+
+#define RESOURCE_SHARE
+//#define MASTERMERGE
+
+
+
+
+
 
 /*These variable should be shared among all threads*/
-float *A;
+//int *A; moved to lu_par.h
+
+
+
+
+
 short int *c, *l;
 
 volatile int *finished1 = (int*)0x80000604;
 volatile int *finished2 = (int*)0x80000608;
 volatile int initialized = 0;
-volatile int barrier = 0;
 
-volatile int entering[NTHREADS];
-volatile int ticket[NTHREADS];
+volatile int barrier[4];
+volatile int passedbarrier[4];
 
-void claim_lock()
+#define BYTES
+#ifdef BYTES
+volatile unsigned char entering[4][NTHREADS];
+volatile unsigned char ticket[4][NTHREADS];
+#else
+volatile int entering[4][NTHREADS];
+volatile int ticket[4][NTHREADS];
+#endif
+
+void merge(int barrierindex);
+
+void claim_lock(int l)
 {
 	int i, max;
 	int thread_id = CR_CID;
-	entering[thread_id] = 1;
+	entering[l][thread_id] = 1;
 	
 	for (i = 0, max = 0; i < NTHREADS; i++)
 	{
-		if (ticket[i] > max) max = ticket[i];
+		if (ticket[l][i] > max) max = ticket[l][i];
 	}
-	ticket[thread_id] = max + 1;
-	entering[thread_id] = 0;
-	
-	//printf("thread %d chose ticket %d\n", thread_id, max+1);
+	ticket[l][thread_id] = max + 1;
+	entering[l][thread_id] = 0;
 	
 	for (i = 0; i < NTHREADS; i++)
 	{
 		if (i != thread_id)
 		{
 			#pragma unroll(0)
-			while (entering[i]) ; //whait while other threads picks a turn
+			while (entering[l][i]) ; //whait while other threads picks a turn
 			#pragma unroll(0)
-			while (ticket[i] && ((ticket[thread_id] > ticket[i]) || (ticket[thread_id] == ticket[i] && thread_id > i))) ;
+			while (ticket[l][i] && ((ticket[l][thread_id] > ticket[l][i]) || (ticket[l][thread_id] == ticket[l][i] && thread_id > i))) ;			
 		}
 	}
-	//printf("thread %d going into critical section\n", thread_id);
 }
 
-void free_lock()
+void free_lock(int l)
 {
-	ticket[CR_CID] = 0;
+	ticket[l][CR_CID] = 0;
+}
+
+void waitbarrier(int i)
+{
+
+	#pragma unroll(0)
+	while (barrier[i] != BARRIERVAL(1)) ;
+	
+	claim_lock(1);
+	((char*)&passedbarrier[i])[CR_CID] = 1;
+	free_lock(1);
+	
+	//Master thread reset barrier
+	if (CR_CID == 0)
+	{
+		#pragma unroll(0)
+		while (passedbarrier[i] != BARRIERVAL(1)) ; //wait for all threads to pass the barrier
+		barrier[i] = 0;
+		passedbarrier[i] = 0;
+	}
+	
+}
+
+void signalbarrier(int i)
+{
+	claim_lock(0);
+	((char*)&barrier[i])[CR_CID] = 1;
+	free_lock(0);
 }
 
 void sleep(int t)
@@ -78,64 +137,51 @@ void sleep(int t)
 	#pragma unroll(0)
 	for (i = 0; i < t<<8; i++) ;
 }
-
-void povoaMatrix(FILE *input, float *A){
+/*
+void povoaMatrix(FILE *input, int *A){
 	int i, j;
 	for(i=0;i<N;i++){
 		for(j=0;j<N;j++){
-			fscanf(input, "%f", &A[(i*N)+j]);
+			fscanf(input, "%d", &A[(i*N)+j]);
 		}
 	}
 }
+*/
 
-
-void printMatrix(float *M){
+void printMatrix(int *M){
 	int i, j;
 	for(i=0;i<N;i++){
 		for(j=0;j<N;j++){
-			printf("%.2f\t", M[(i*N)+j]);
+			printf("%08d\t", M[(i*N)+j]);
 		}
 		printf("\n");
 	}
 }
 
-void LUdecomposition(float *A, short int *vectorPosition, int idThread, int totalThreads, short int *l, short int *c){
+void LUdecomposition(int *A, short int *vectorPosition, int idThread, int totalThreads, short int *l, short int *c){
 	
 		//these variables should be private to each thread
 		int i, j, k, iteracoes=0, pos;
-		float somatorio=0;
+		int somatorio=0;
 		
 
 		//only master thread compute the first line
 		if(idThread == MASTER){
-		#pragma unroll(0)
-		while (barrier != BARRIERVAL(6)) ;
-#ifdef RESOURCE_SHARE
+
+#if defined(RESOURCE_SHARE) || defined(MASTERMERGE)
 		CR_CRR = 0; //disable other contexts and claim all resources for ourselves
 #endif					
 			printf("Computing first line\n");
 				for(i=1;i<N;i++){
 						A[i*N] = A[i*N]/A[0];
 				}
-			barrier = BARRIERVAL(7);
-#ifdef RESOURCE_SHARE
+			barrier[1] = BARRIERVAL(1);
+#if defined(RESOURCE_SHARE) || defined(MASTERMERGE)
 		CR_CRR = MULTI_CONFIG;
 #endif
 		}
-		/*
-		else
-		{
-			sleep(10);
-		}
-		*/
-		
-		#pragma unroll(0)
-		while (barrier != BARRIERVAL(7)) ;
-		
-		claim_lock();
-		((char*)&barrier)[idThread] = 6; //to mark that all threads are passed the barrier
-		free_lock();
 
+		waitbarrier(1);
 
 
 		for(i=1;i<N;i++){
@@ -144,19 +190,20 @@ void LUdecomposition(float *A, short int *vectorPosition, int idThread, int tota
 
 				//Only master thread do this
 				if(idThread == MASTER){
-#ifdef RESOURCE_SHARE
+
+#if defined(RESOURCE_SHARE) || defined(MASTERMERGE)
 				CR_CRR = 0;
 #endif
 				#pragma unroll(0)
-				while (barrier != BARRIERVAL(6)) ;
-				printf("Computing somatorio\n");
+
+				printf("Computing somatorio %d\n", i);
 				somatorio = 0.0;
 				for(k=0;k<i;k++){
 					somatorio += A[(i*N)+k] * A[(k*N)+i];
 				}
 				A[(i*N)+i] = A[(i*N)+i] - somatorio;
-				barrier = BARRIERVAL(4);
-#ifdef RESOURCE_SHARE
+				barrier[2] = BARRIERVAL(1);
+#if defined(RESOURCE_SHARE) || defined(MASTERMERGE)
 				CR_CRR = MULTI_CONFIG;
 #endif
 				}
@@ -169,8 +216,7 @@ void LUdecomposition(float *A, short int *vectorPosition, int idThread, int tota
 				*/
 
 				//all threads wait until the end of the master thread operation
-				#pragma unroll(0)
-				while (barrier != BARRIERVAL(4)) ;
+				waitbarrier(2);
 				
 				//((char*)finished2)[idThread] = 0;
 				//#pragma unroll(0)
@@ -199,43 +245,34 @@ void LUdecomposition(float *A, short int *vectorPosition, int idThread, int tota
 								}
 						}
 				}
-				claim_lock();
-				((char*)&barrier)[idThread] = 5;
-				free_lock();
+				signalbarrier(3);
 
 #ifdef RESOURCE_SHARE
-		merge(5);
+		merge(3);
 #endif
-
 
 				//all threads wait until the end of operation	
-				#pragma unroll(0)			
-				while (barrier != BARRIERVAL(5)) ;
-				
-				claim_lock();
-				((char*)&barrier)[idThread] = 6; //to mark that all threads are passed the barrier
-				free_lock();
+				waitbarrier(3);
 
 #ifdef RESOURCE_SHARE
-		CR_CRR = MULTI_CONFIG;
+				CR_CRR = MULTI_CONFIG;
 #endif
-				
-
 				
 		}
 }
 
 void calcWorkload(short int *vectorPosition, int idThread, int totalThreads){
 		//All the variables should be private to each thread
-		int firstProcRow, firstProcCol, lastProcRow, lastProcCol, totalProcRowCol = totalThreads/2, proc, sum, cont, j, i, cinit, cfinal, rinit, rfinal, ir;
+		int firstProcRow, firstProcCol, lastProcRow, lastProcCol, totalProcRowCol = totalThreads/2;
+		int proc, sum, cont, j, i, cinit, cfinal, rinit, rfinal, ir;
 		firstProcRow = 0;
 		firstProcCol = totalThreads/2;
 		lastProcRow = (totalThreads/2)-1;
 		lastProcCol = totalThreads-1;
 
 		for(i=0;i<N;i++){
-				vectorPosition[(j*2)] = -1;
-				vectorPosition[(j*2)+1] = -1;
+				vectorPosition[(i*2)] = -1;
+				vectorPosition[(i*2)+1] = -1;
 		}
 
 		if(idThread < totalThreads/2){
@@ -300,7 +337,7 @@ void calcWorkload(short int *vectorPosition, int idThread, int totalThreads){
 		}
 }
 
-void defineVectorZero(float *A, short int *c, short int *l){
+void defineVectorZero(int *A, short int *c, short int *l){
 		int i, j, cont;
 		for(i=0;i<N;i++){
 				cont = 0;
@@ -328,30 +365,32 @@ int main(int argc, char **argv){
 	
 	/*This variable should be private to each thread*/
 	short int *vectorPosition;
-	claim_lock();
+	claim_lock(0);
 	vectorPosition = malloc(sizeof(short int)*N*2);
-	free_lock();
+	free_lock(0);
 	
 	/*Only master thread do this*/
 	if(idThread == MASTER){
 	
-			A = malloc(sizeof(float)*N*N);
-			c = malloc(sizeof(float)*N);
-			l = malloc(sizeof(float)*N);
+			claim_lock(0);
+			//A = malloc(sizeof(int)*N*N);
+			c = malloc(sizeof(int)*N);
+			l = malloc(sizeof(int)*N);
+			free_lock(0);
 			
-			printf("A 0x%x, c 0x%x, l 0x%x\n");
+			//printf("A 0x%x, c 0x%x, l 0x%x\n", A, c, l);
 	
 	/*
-			A = (float*)0x200000;
+			A = (int*)0x200000;
 			c = (short int*)0x300000;
 			l = (short int*)0x400000;
 	*/
-			FILE *input = fopen(argv[1], "r");
-			povoaMatrix(input, A);	
+			//FILE *input = fopen("niks", "r");
+			//povoaMatrix(input, A);	
 			defineVectorZero(A, l, c);
 			//initialized = 1;
 			//barrier = 1;
-			__asm__ volatile ("stop");
+			//__asm__ volatile ("stop");
 			CR_CRR = MULTI_CONFIG; //enable all contexts
 	}
 	
@@ -366,49 +405,58 @@ int main(int argc, char **argv){
 	calcWorkload(vectorPosition, idThread, totalThreads);
 
 	
-	//all threads wait here to start the LU decomposition togheter
+	//all threads wait here to start the LU decomposition together
 	//((char*)finished1)[idThread] = 1;
 	
-	claim_lock();
-	((char*)&barrier)[idThread] = 2;
-	free_lock();
+	signalbarrier(0);
 	
 #ifdef RESOURCE_SHARE
-	merge(2);
+	merge(0);
 #endif
 
-	#pragma unroll(0)
-	while (barrier != BARRIERVAL(2)) ;
-	
-	claim_lock();
-	((char*)&barrier)[idThread] = 6; //to mark that all threads are passed the barrier
-	free_lock();
+	waitbarrier(0);
 	
 #ifdef RESOURCE_SHARE
 	CR_CRR = MULTI_CONFIG;
 #endif
 
-
 	LUdecomposition(A, vectorPosition, idThread, totalThreads, l, c);
 
-//	if (idThread == MASTER) printMatrix(A); //To print a matrix, uncomment this line.
+	if (idThread == MASTER)
+	{
+	     //printMatrix(A); //To print a matrix, uncomment this line.
+	     //printf("cycle count: %u\n", CR_CNT);
+	}
 	
 	return 0;
 }
 
 
-void merge(char barrierval)
+void merge(int barrierindex)
 {
 	int i;
 	int active_context;
 	int new_config, tmp;
-	int cur_config = new_config = CR_CC;
+	int cur_config;
 	int core_ID = (int)CR_CID;
 	int active_threadcnt;
 	int active_thread[4];
-	
-	if (cur_config == 0) return; //don't need to merge when we're already in largest config (should check for 0, 0x1111, 0x2222 or 0x3333)
 
+	claim_lock(0);
+	
+	cur_config = CR_CC;
+	
+	//printf("thread %d in merge(), config is %04x\n", core_ID, cur_config);
+	
+	
+	
+	if (cur_config == 0 || cur_config == 0x1111 || cur_config == 0x2222 || cur_config == 0x3333) 
+	{
+		free_lock(0);
+		CR_CRR = 0x3210;
+		return;
+	}
+	
 /*
 	puts("current config:\n");
 	for (i = 0; i < 4; i++)
@@ -426,11 +474,13 @@ void merge(char barrierval)
 	 
 	 active_threadcnt = 0;
 	 for (i = 0; i < NTHREADS; i++)
-	 	if (((char*)&barrier)[i] != barrierval)
+	 	if (((unsigned char*)&barrier[barrierindex])[i] != 1)
 	 	{
 	 		active_thread[active_threadcnt] = i; 
 	 		active_threadcnt++;
 	 	}
+	 
+	 //printf("barrier %08x, barrierval %d, active_threadcnt %d\n",barrier, barrierval, active_threadcnt);
 	 
 	 if (active_threadcnt == 3)
 	 {
@@ -450,10 +500,11 @@ void merge(char barrierval)
 	{
 		new_config = ( (active_thread[1]<<12) | (active_thread[1]<<8) | (active_thread[0]<<4) | (active_thread[0]));
 	}
-	else //must be 1
+	else if (active_threadcnt == 1)
 	{
 		new_config = ( (active_thread[0]<<12) | (active_thread[0]<<8) | (active_thread[0]<<4) | (active_thread[0]));
 	}
+	else return; //must be 0, everyone has finished
 	
 /*
 	puts("new config:\n");
@@ -463,6 +514,8 @@ void merge(char barrierval)
 	}
 	putc('\n');
 */
+
+	free_lock(0);
 
 	CR_CRR = new_config;
 	
