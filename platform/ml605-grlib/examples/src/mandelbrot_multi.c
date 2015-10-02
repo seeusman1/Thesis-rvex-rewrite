@@ -31,7 +31,7 @@ void colorbar(unsigned int* memloc)
 }
 
 char str[12];
-unsigned int* framebuffer = (unsigned int*) 0x400000;
+unsigned int* framebuffer = (unsigned int*) 0x4000000;
 void color(int red, int green, int blue, int y, int x)
 {
 

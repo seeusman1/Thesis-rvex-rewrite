@@ -147,7 +147,7 @@ return retval;
 	/* Will contain the raw image */
 	//unsigned char img[4*WIDTH*HEIGHT];
 //	int *img = (int*)0x400000;
-	unsigned int *img = (unsigned int*)0x400000;
+	unsigned int *img = (unsigned int*)0x4000000;
 
 int main_Raytracer(int start_height, int end_height){
 

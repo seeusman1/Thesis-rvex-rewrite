@@ -20,11 +20,11 @@ extern inline int min(int a, int b);
 
 int main_greyscale(int start_height, int end_height)
 {
-    unsigned int* framebuffer = (unsigned int*)0x400000;
-    unsigned int* image = (unsigned int*)0x800000;
+    unsigned int* framebuffer = (unsigned int*)0x4000000;
+    unsigned int* image = (unsigned int*)0x8000000;
     int i, x, y, filterX, filterY, imageX, imageY;
     
-  	//puts("greyscale starting\n");
+  	puts("greyscale starting\n");
 
 #ifdef DEBUG
     int runs;

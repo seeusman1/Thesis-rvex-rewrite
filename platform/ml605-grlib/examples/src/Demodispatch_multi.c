@@ -118,7 +118,7 @@ void init_vga()
 					+ init_data.left_margin
 					+ init_data.hsync_len - 1);
 
-	regs->fb_pos = 0x400000;
+	regs->fb_pos = 0x4000000;
 	clk_sel = 0; //3 for modelsim, 0 for board
 	func = 3;
 	regs->status = ((clk_sel << 6) | (func << 4)) | 1;
@@ -145,11 +145,11 @@ void merge();
 int running_flags;
 int finished_flags[4];
 
-//volatile char program_choice = '\0';
-//volatile char  nr_threads = 0;
+volatile char program_choice = '\0';
+volatile char  nr_threads = 0;
 
-volatile char program_choice = 'c';
-volatile char  nr_threads = 3;
+//volatile char program_choice = 'M';
+//volatile char  nr_threads = 3;
 
 
 char strbuf[12];
@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
 	int i;
 	int core_ID = get_core_ID();
 
-/*
+
 	if (core_ID == 0)
 	{
 		nr_threads = -1;
@@ -170,13 +170,13 @@ int main(int argc, char* argv[])
 	}
 	
 	//get user's choice from UART
-	//while (1) 
-	//{
-		while (program_choice != 'm' && program_choice != 'r' && program_choice != 'c' && program_choice != 'g')
+	while (1) 
+	{
+		while (program_choice != 'm' && program_choice != 'r' && program_choice != 'c' && program_choice != 'g' && program_choice != 'M')
 		{
 			if (core_ID == 0)
 			{
-				//puts("Program to run (\"m\" for Mandelbrot, \"r\"for Raytracer, \"c\" for Convolution, \"g\" for Greyscale): \n");
+				puts("Program to run (\"m\" for Mandelbrot, \"r\"for Raytracer, \"c\" for Convolution, \"g\" for Greyscale, \"M\" for Median): \n");
 				inputchar = getchar();
 				program_choice = inputchar;
 			}
@@ -186,12 +186,12 @@ int main(int argc, char* argv[])
 		{
 			if (core_ID == 0)
 			{
-				//puts("Number of threads: (please specify a number between 1 and 4)\n");
+				puts("Number of threads: (please specify a number between 1 and 4)\n");
 				inputchar = getchar();
 				nr_threads = inputchar - '0';
 			}
 		}
-*/
+
 		if (core_ID == 0)
 		{
 		switch (nr_threads){
@@ -217,22 +217,22 @@ int main(int argc, char* argv[])
 		finished_flags[core_ID] = 1;
 		
 		
-		merge(); //give our processing resources to other threads that are still active
+		//merge(); //give our processing resources to other threads that are still active
 		
 		
 		
 		//puts("current config:\n");
-		for (i = 0; i < 4; i++)
-		{
+		//for (i = 0; i < 4; i++)
+		//{
 			//putc('0' + (CR_CC>>(i*4)&0xf));
-		}
+		//}
 		
 		//move back to context 0 in 8-issue;
-		//CR_CRR = 0;
+		CR_CRR = 0;
 		
-		//program_choice = nr_threads = -1; //reset the vars so we must choose again
+		program_choice = nr_threads = -1; //reset the vars so we must choose again
 	
-	//}
+	}
 
 }
 
@@ -358,6 +358,7 @@ int run_program(char program, int nr_threads)
 	if (program == 'r') return main_Raytracer(start_height, end_height);
 	if (program == 'g') return main_greyscale(start_height, end_height);
 	if (program == 'c') return main_convolution(start_height, end_height);
+	if (program == 'M') return main_median(start_height, end_height);
 /*
 	if (program = 'd') { //program = dijkstra
 		int size = 100; //small = 20; large = 100;
