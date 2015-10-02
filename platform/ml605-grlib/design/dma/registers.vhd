@@ -117,6 +117,7 @@ architecture behavioral of registers is
 
   --TODO: Generate an error if CORE_DATA_WIDTH != 64
   --TODO: Generate an error if CFG.numContextsLog > 8 or NO_RVEX > 8
+  --TODO: Instead of the above maybe give an error if NO_CONTEXTS * NO_RVEX > 64 or something.
 
   signal read_data   : std_logic_vector(0 to CORE_DATA_WIDTH-1);
   signal rd_data_out : std_logic_vector(0 to CORE_DATA_WIDTH-1);
@@ -254,15 +255,15 @@ begin
   rctrl_rvex_gen: for i in 0 to NO_RVEX-1 generate
     rctrl_context_gen: for j in 0 to NO_CONTEXTS-1 generate
       -- index the cores and contexts from the LSB first
-      rctrl2rv(i*NO_CONTEXTS+j).run       <= run(2)       (63-(i*8 + j));
-      rctrl2rv(i*NO_CONTEXTS+j).reset     <= reset_ctxt(2)(63-(i*8 + j));
-      rctrl2rv(i*NO_CONTEXTS+j).resetVect <= resetVect(2) (i*8 + j)(32 to 63);
+      rctrl2rv(i*NO_CONTEXTS+j).run       <= run(2)       (63-(i*NO_CONTEXTS + j));
+      rctrl2rv(i*NO_CONTEXTS+j).reset     <= reset_ctxt(2)(63-(i*NO_CONTEXTS + j));
+      rctrl2rv(i*NO_CONTEXTS+j).resetVect <= resetVect(2) (i*NO_CONTEXTS + j)(32 to 63);
 
       rctrl2rv(i*NO_CONTEXTS+j).irq       <= '0';
       rctrl2rv(i*NO_CONTEXTS+j).irqID     <= (others => '0');
 
-      idle(0)(63-(i*8 + j)) <= rv2rctrl(i*NO_CONTEXTS+j).idle;
-      done(0)(63-(i*8 + j)) <= rv2rctrl(i*NO_CONTEXTS+j).done;
+      idle(0)(63-(i*NO_CONTEXTS + j)) <= rv2rctrl(i*NO_CONTEXTS+j).idle;
+      done(0)(63-(i*NO_CONTEXTS + j)) <= rv2rctrl(i*NO_CONTEXTS+j).done;
     end generate;
   end generate;
 
