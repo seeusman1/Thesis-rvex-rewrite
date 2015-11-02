@@ -74,7 +74,7 @@ int main(void) {
     for (task = 1; task < 4; task++) {
       
       // Initialize the stack pointer.
-      saved_SPs[task] = ((unsigned int)&__STACK_START) + task*0x1000;
+      saved_SPs[task] = ((unsigned int)&__STACK_START) - task*0x1000;
       
       // Allocate the frame.
       saved_SPs[task] -= TRACEREG_SZ;
