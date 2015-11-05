@@ -227,7 +227,8 @@ package core_pipeline_pkg is
   --  - S_MEM >= max(S_RD + L_RD, S_ALU + L_ALU1)
   --  - L_MEM >= 1 (because of the control registers)
   constant S_MEM    : natural := 4;
-  constant L_MEM    : natural := 1;
+  constant L_MEM    : natural := 1; 
+  --strangely, increasing this does not improve timing, it impairs it (using minimal config)
   
   -- Breakpoint unit stage and latency.
   -- Requirements:
