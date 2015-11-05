@@ -65,7 +65,7 @@
  `define CH1_S2C_BD_COUNT 4
 
  // Enable DMA channels connected to APP-0 which is the network path
- `define CH0
+ //`define CH0
 
  // Enable DMA channels connected to APP-1 which is the memory path
  //`define CH1

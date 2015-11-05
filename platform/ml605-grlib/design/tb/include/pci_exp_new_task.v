@@ -1185,29 +1185,29 @@ task TSK_DCR_CONFIG;
     end
    end
 
- always@(posedge comp.trn_clk)
-  begin
-   if((dma_disabled_flag_ch0 ==1'b1) && (dma_disabled_flag_ch1 == 1'b1)) begin
-    TSK_TX_CLK_EAT(100);
-    $display("===========================================");
-    $display("\t \t Simulation Summary \n");
- `ifdef CH0
-    $display("[%t] Total Packets Transmitted over XAUI Path (APP-0) = %0d", $time,packet_trans_ch0);
-    $display("[%t] Total Descriptors Used in S2C Direction (APP-0) = %0d", $time,`CH0_S2C_BD_COUNT);
-    $display("[%t] Total Packets Received over XAUI Path (APP-0) = %0d", $time,chnl0_index);
- `endif
-
- `ifdef CH1
-    $display("[%t] Total Packets Transmitted over Rawdata Path (APP-1) = %0d", $time,packet_trans_ch1);
-    $display("[%t] Total Descriptors Used in S2C Direction (APP-1) = %0d", $time,`CH1_S2C_BD_COUNT);
-    $display("[%t] Total Packets Received over Rawdata Path (APP-1) = %0d", $time,chnl1_index);
- `endif
-
-    $display("\n\t \t End of Simulation \t \t");
-    $display("===========================================");
-    $finish(2);
-   end
- end
+// always@(posedge comp.trn_clk)
+//  begin
+//   if((dma_disabled_flag_ch0 ==1'b1) && (dma_disabled_flag_ch1 == 1'b1)) begin
+//    TSK_TX_CLK_EAT(100);
+//    $display("===========================================");
+//    $display("\t \t Simulation Summary \n");
+// `ifdef CH0
+//    $display("[%t] Total Packets Transmitted over XAUI Path (APP-0) = %0d", $time,packet_trans_ch0);
+//    $display("[%t] Total Descriptors Used in S2C Direction (APP-0) = %0d", $time,`CH0_S2C_BD_COUNT);
+//    $display("[%t] Total Packets Received over XAUI Path (APP-0) = %0d", $time,chnl0_index);
+// `endif
+//
+// `ifdef CH1
+//    $display("[%t] Total Packets Transmitted over Rawdata Path (APP-1) = %0d", $time,packet_trans_ch1);
+//    $display("[%t] Total Descriptors Used in S2C Direction (APP-1) = %0d", $time,`CH1_S2C_BD_COUNT);
+//    $display("[%t] Total Packets Received over Rawdata Path (APP-1) = %0d", $time,chnl1_index);
+// `endif
+//
+//    $display("\n\t \t End of Simulation \t \t");
+//    $display("===========================================");
+//    $finish(2);
+//   end
+// end
 
  /************************************************************
  Task : TSK_PACKET_SPANNING
