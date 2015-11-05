@@ -54,7 +54,7 @@ use rvex.utils_pkg.all;
 use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
-use rvex.cache_pkg.all;
+--use rvex.cache_pkg.all;
 
 --=============================================================================
 -- This entity contains the specifications and logic for the control registers
@@ -66,8 +66,8 @@ entity core_globalRegLogic is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type;
-    CCFG                         : cache_generic_config_type
+    CFG                         : rvex_generic_config_type
+    --CCFG                         : cache_generic_config_type
   );
   port (
     
@@ -303,44 +303,11 @@ begin -- architecture
     --
     
     -- Make the Instruction cache size register
-    creg_makeHardwiredField(l2c, c2l, CR_CSR, 15, 0, std_logic_vector(to_unsigned(((2**CCFG.instrCacheLinesLog2)*(2**CFG.numLanesLog2)*4)/1024,16)));
+    --creg_makeHardwiredField(l2c, c2l, CR_CSR, 15, 0, std_logic_vector(to_unsigned(((2**CCFG.instrCacheLinesLog2)*(2**CFG.numLanesLog2)*4)/1024,16)));
 
     -- Make the Data cache size register (nr of cache lines * linesize (4) * cacheblocks (4) )
-    creg_makeHardwiredField(l2c, c2l, CR_CSR, 31, 16, std_logic_vector(to_unsigned(((2**CCFG.dataCacheLinesLog2)*4*4)/1024,16)));
+    --creg_makeHardwiredField(l2c, c2l, CR_CSR, 31, 16, std_logic_vector(to_unsigned(((2**CCFG.dataCacheLinesLog2)*4*4)/1024,16)));
     
-    
-    ---------------------------------------------------------------------------
-    -- Global Scratch-pad registers (GSCRP*)
-    ---------------------------------------------------------------------------
-    -- 
-    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- GSCR  |                           scratch 1                           |
-    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- GSCR2 |                           scratch 2                           |
-    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- GSCR3 |                           scratch 3                           |
-    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- GSCR4 |                           scratch 4                           |
-    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    --
-    -- Regular register with no effect on processor behavior.
-    
-    -- Make the registers.
-    creg_makeNormalRegister(l2c, c2l, CR_GSCR, 31, 0,
-      permissions   => READ_WRITE
-    );
-    
-    creg_makeNormalRegister(l2c, c2l, CR_GSCR2, 31, 0,
-      permissions   => READ_WRITE
-    );
-    
-    creg_makeNormalRegister(l2c, c2l, CR_GSCR3, 31, 0,
-      permissions   => READ_WRITE
-    );
-    
-    creg_makeNormalRegister(l2c, c2l, CR_GSCR4, 31, 0,
-      permissions   => READ_WRITE
-    );
     
     ---------------------------------------------------------------------------
     -- Forward control signals

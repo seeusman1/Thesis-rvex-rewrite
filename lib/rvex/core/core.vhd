@@ -226,7 +226,7 @@ entity core is
     
     -- Configuration.
     CFG                         : rvex_generic_config_type := rvex_cfg;
-    CCFG                         : cache_generic_config_type := cache_cfg
+    --CCFG                         : cache_generic_config_type := cache_cfg
     
   );
   port (
@@ -1055,8 +1055,8 @@ begin -- architecture
   -----------------------------------------------------------------------------
   gbreg_inst: entity rvex.core_globalRegLogic
     generic map (
-      CFG                           => CFG,
-      CCFG                          => CCFG
+      CFG                           => CFG
+      --CCFG                          => CCFG
     )
     port map (
       
