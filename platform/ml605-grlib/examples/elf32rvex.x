@@ -7,7 +7,7 @@ ENTRY(_start)
 MEMORY
 {
         ram         : ORIGIN = 0x00000000,          LENGTH = 128M
-        log			: ORIGIN = 0x08000000,			LENGTH = 128M
+        log			: ORIGIN = 0x02000000,			LENGTH = 128M
 }
 /*  Many sections come in three flavours.  There is the 'real' section,
     like ".data".  Then there are the per-procedure or per-variable
