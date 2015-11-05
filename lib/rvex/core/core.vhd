@@ -225,7 +225,7 @@ entity core is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type := rvex_cfg;
+    CFG                         : rvex_generic_config_type := rvex_cfg
     --CCFG                         : cache_generic_config_type := cache_cfg
     
   );
