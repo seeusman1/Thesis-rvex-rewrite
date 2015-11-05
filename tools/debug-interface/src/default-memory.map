@@ -187,7 +187,7 @@ all:WAIT_COMPLETE {
     set(cyc, readWord(C_CYC));
     set(total_cyc, total_cyc + cyc);
     printf("             Active cycles = %u\n", cyc);
-    printf("        Active cycles high = %u\n", readWord(C_CYCHS));
+    printf("        Active cycles high = %u\n", readWord(C_CYCH));
     printf("            Stalled cycles = %u\n", readWord(C_STALL));
     printf("    Committed bundle count = %u\n", readWord(C_BUN));
     printf("  Committed syllable count = %u\n", readWord(C_SYL));
@@ -209,6 +209,8 @@ all:WAIT_COMPLETE {
   printf(" Sum of all active cycles = \033[1m%u\033[0m\n", total_cyc);
   printf(" (this is the total cycle count if contexts are never active at the same time)\n\n");
   
+  set(cur, 0);
+  printf("Processor cycle count = \033[1m%u\033[0m\n", readWordPreload(CREG_GPREG + (63*4)));
 }
 
 
