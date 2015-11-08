@@ -56,7 +56,7 @@ use rvex.core_intIface_pkg.all;
 use rvex.core_trap_pkg.all;
 use rvex.core_pipeline_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
-use rvex.cache_pkg.all;
+--use rvex.cache_pkg.all;
 
 -- pragma translate_off
 use rvex.simUtils_pkg.all;
