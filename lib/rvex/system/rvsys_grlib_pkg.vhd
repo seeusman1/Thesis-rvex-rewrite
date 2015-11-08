@@ -72,6 +72,8 @@ package rvsys_grlib_pkg is
     
   end record;
   
+  type rvex_grlib_generic_config_array is array (natural range <>) of rvex_grlib_generic_config_type;
+  
   -- Default rvex core configuration.
   constant RVEX_GRLIB_DEFAULT_CONFIG : rvex_grlib_generic_config_type := (
     core                        => RVEX_DEFAULT_CONFIG,
