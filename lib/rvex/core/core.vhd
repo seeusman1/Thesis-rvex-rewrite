@@ -225,7 +225,8 @@ entity core is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type := rvex_cfg
+    CFG                         : rvex_generic_config_type := rvex_cfg;
+    coreID                      : natural := 0
     --CCFG                         : cache_generic_config_type := cache_cfg
     
   );
@@ -983,7 +984,7 @@ begin -- architecture
     cxreg_inst: entity rvex.core_contextRegLogic
       generic map (
         CFG                         => CFG,
-        CONTEXT_INDEX               => ctxt
+        CONTEXT_INDEX               => ctxt + coreID
       )
       port map (
         

@@ -315,7 +315,8 @@ begin -- architecture
     -- Instantiate the rvex core.
     rvex_inst: entity rvex.core
       generic map (
-        CFG                       => CFG.core
+        CFG                       => CFG.core,
+        coreID                    => AHB_MASTER_INDEX_START
       )
       port map (
         
