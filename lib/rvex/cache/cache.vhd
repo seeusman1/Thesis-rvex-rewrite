@@ -67,7 +67,10 @@ entity cache is
     RCFG                        : rvex_generic_config_type := rvex_cfg;
     
     -- Cache configuration.
-    CCFG                        : cache_generic_config_type := cache_cfg
+    CCFG                        : cache_generic_config_type := cache_cfg(
+      instrCacheLinesLog2 => 9, -- 512*32 = 16 kiB per core
+      dataCacheLinesLog2  => 11  -- 2048*4 = 8 kiB per core
+    )
     
   );
   port (
