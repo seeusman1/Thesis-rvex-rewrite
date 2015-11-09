@@ -91,7 +91,7 @@ help: work
 work: ../../grlib/grlib-gpl-1.3.7-b4144
 	cp -r ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605 .
 	mv ./leon3-xilinx-ml605 ./work
-	cd work && dos2unix *.ucf && patch -p1 < ../work.patch
+	cd work && patch -p1 < ../work.patch
 
 # Updates the patchfile based upon the differences between the grlib base
 # project and the current contents of work. Kind of the inverse operation of
@@ -111,7 +111,7 @@ clean: clean-ex
 # source files as well, which may not have been put in the patch file yet).
 .PHONY: very-clean
 very-clean: clean
-	rm -Ir work
+	rm -Irf work
 
 
 #------------------------------------------------------------------------------
