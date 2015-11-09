@@ -279,14 +279,19 @@ else
 CFLAGS += -g
 endif
 else ifeq ($(ISSUE_WIDTH), 4)
-CC=/shares/group/ce-rvex/tools/builds/open64_4issue_stopbit/bin/st200-gcc
+CC=/shares/group/ce-rvex/tools/builds/open64_4issue/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3
 else
 CFLAGS += -g
 endif
 else
-error
+CC=/shares/group/ce-rvex/tools/builds/open64_2issue/bin/st200-gcc
+ifeq ($(DEBUG), false)
+CFLAGS += -O3 -CG:LAO_activation=0
+else
+CFLAGS += -g
+endif
 endif
 endif
 
