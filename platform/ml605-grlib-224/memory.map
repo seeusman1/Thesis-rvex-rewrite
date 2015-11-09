@@ -1,14 +1,28 @@
 
 # Number of contexts in the core.
-all: _NUM_CONTEXTS           { 8 }
+all: _NUM_CONTEXTS           { 3 }
 
 # Memory map as seen from the debugging interface.
-all: MEM                     { 0x00000000 }
-all: CREG                    { 0xD0000000 }
-all: PLATFORM                { 0xD0000400 }
-all: CACHE                   { 0xD0000800 }
-all: MMU                     { 0xD0000C00 }
-all: _TRACE_ADDR             { 0xD0002000 }
+0: MEM                     { 0x00000000 }
+0: CREG                    { 0xD0000000 }
+0: PLATFORM                { 0xD0000400 }
+0: CACHE                   { 0xD0000800 }
+0: MMU                     { 0xD0000C00 }
+0: _TRACE_ADDR             { 0xD0002000 }
+
+1: MEM                     { 0x00000000 }
+1: CREG                    { 0xD0100000 }
+1: PLATFORM                { 0xD0100400 }
+1: CACHE                   { 0xD0100800 }
+1: MMU                     { 0xD0100C00 }
+1: _TRACE_ADDR             { 0xD0102000 }
+
+2: MEM                     { 0x00000000 }
+2: CREG                    { 0xD0200000 }
+2: PLATFORM                { 0xD0200400 }
+2: CACHE                   { 0xD0200800 }
+2: MMU                     { 0xD0200C00 }
+2: _TRACE_ADDR             { 0xD0202000 }
 
 # Flushes the cache.
 all: FLUSH_CACHE {
