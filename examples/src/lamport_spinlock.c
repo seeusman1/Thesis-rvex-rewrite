@@ -40,7 +40,7 @@ void claim_lock(int l)
 	
 	for (i = 0, max = 0; i < NTHREADS; i++)
 	{
-		if (ticket[l][i] > max) max = ticket[i];
+		if (ticket[l][i] > max) max = ticket[l][i];
 	}
 	ticket[l][thread_id] = max + 1;
 	entering[l][thread_id] = 0;
