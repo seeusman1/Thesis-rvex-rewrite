@@ -1,0 +1,52 @@
+
+This directory contains configuration files for some key components of the core.
+The idea is that these files can be used to generate as many different things as
+possible, though not everything is possible at this time.
+
+Running make will first of all patch source code. Then it will try to regenerate
+the PDF documentation, which may fail if you don't have all the required LaTeX
+packages installed.
+
+--------------------------------------------------------------------------------
+cxreg.tex and gbreg.tex
+--------------------------------------------------------------------------------
+Describes the context control registers and the global control registers of the
+core.
+
+  Completely specifies:
+   - TODO: Default memory map for rvd
+   - TODO: C header/assembly include files (rvex.h)
+   - TODO: Documentation
+  
+  Only specifies addresses, not the bitfields or functionality:
+   - TODO: VHDL core
+   - TODO: Simulator
+
+--------------------------------------------------------------------------------
+opcodes.tex
+--------------------------------------------------------------------------------
+Describes the rvex instruction set.
+
+  Completely specifies:
+   - TODO: VHDL core
+   - TODO: Simulator
+   - TODO: Documentation
+  
+  Does NOT specify:
+   - binutils
+   - compilers
+
+--------------------------------------------------------------------------------
+traps.tex
+--------------------------------------------------------------------------------
+Describes the hardware traps.
+
+  Completely specifies:
+   - TODO: Default memory map for rvd
+   - TODO: C header/assembly include files (rvex.h)
+   - TODO: Documentation
+  
+  Only specifies ID constants for each trap (not functionality):
+   - TODO: VHDL core*
+   - TODO: Simulator
+

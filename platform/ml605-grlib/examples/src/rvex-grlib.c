@@ -1,8 +1,5 @@
 #include "rvex.h"
-
-#define UART_BASE 0xD1000000
-#define UART_DATA (*((volatile unsigned char *)(UART_BASE)))
-#define UART_STAT (*((volatile unsigned char *)(UART_BASE+4)))
+#include "platform.h"
 
 /**
  * Prints a character to whatever platform the program is compiled for, if the

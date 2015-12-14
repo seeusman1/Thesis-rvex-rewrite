@@ -217,11 +217,6 @@ package core_opcodeAlu_pkg is
     intResultMux                : aluIntResultMux_type;
     brResultMux                 : aluBrResultMux_type;
     
-    -- Signals only used in simulation, determining which of the two outputs
-    -- of the ALU is actually meaningful.
-    intResultValid              : boolean;
-    brResultValid               : boolean;
-    
   end record;
   
   -- Array type.
@@ -243,9 +238,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BITWISE,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => PASS
   );
   
   -- Simply forward operand 2.
@@ -259,9 +252,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => OP_SEL,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- Default values for the branch unit control signals.
@@ -281,9 +272,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- 32 bit addition, pre-shift operand 1 by 1 bit.
@@ -297,9 +286,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- 32 bit addition, pre-shift operand 1 by 2 bits.
@@ -313,9 +300,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- 32 bit addition, pre-shift operand 1 by 3 bits.
@@ -329,9 +314,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- 32 bit addition, pre-shift operand 1 by 4 bits.
@@ -345,9 +328,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- 32 bit subtraction (operand2 - operand1).
@@ -361,9 +342,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- 32 bit addition with carry in and out.
@@ -377,9 +356,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => CARRY_OUT,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CARRY_OUT
   );
   
   -- Division step:
@@ -396,9 +373,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => DIVS,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => DIVS
   );
   
   -----------------------------------------------------------------------------
@@ -415,9 +390,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BITWISE,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- result := ~op1 & op2
@@ -431,9 +404,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BITWISE,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- result := op1 | op2
@@ -447,9 +418,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BITWISE,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- result := ~op1 | op2
@@ -463,9 +432,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BITWISE,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- result := op1 ^ op2
@@ -479,9 +446,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BITWISE,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- result := op1 | (1 << op2)
@@ -495,9 +460,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BITWISE,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- result := op1 & ~(1 << op2)
@@ -511,9 +474,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BITWISE,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- result := op1 & (1 << op2) != 0
@@ -527,9 +488,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BOOL,
-    brResultMux                 => TBIT,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => TBIT
   );
   
   -- result := op1 & (1 << op2) == 0
@@ -543,9 +502,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BOOL,
-    brResultMux                 => TBITF,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => TBITF
   );
   
   -----------------------------------------------------------------------------
@@ -562,9 +519,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BOOL,
-    brResultMux                 => LOGIC_AND,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => LOGIC_AND
   );
   
   -- result := op1 || op2;
@@ -578,9 +533,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BOOL,
-    brResultMux                 => LOGIC_OR,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => LOGIC_OR
   );
   
   -- result := !(op1 && op2);
@@ -594,9 +547,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BOOL,
-    brResultMux                 => LOGIC_NAND,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => LOGIC_NAND
   );
   
   -- result := !(op1 || op2);
@@ -610,9 +561,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => BOOL,
-    brResultMux                 => LOGIC_NOR,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => LOGIC_NOR
   );
   
   -----------------------------------------------------------------------------
@@ -629,9 +578,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => OP_SEL,
-    brResultMux                 => CMP_GE,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => CMP_GE
   );
   
   -- Select maximum value, unsigned arithmetic.
@@ -645,9 +592,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => OP_SEL,
-    brResultMux                 => CMP_GE,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => CMP_GE
   );
   
   -- Select minimum value, signed arithmetic.
@@ -661,9 +606,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => OP_SEL,
-    brResultMux                 => CMP_LE,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => CMP_LE
   );
   
   -- Select minimum value, unsigned arithmetic.
@@ -677,9 +620,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => OP_SEL,
-    brResultMux                 => CMP_LE,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => CMP_LE
   );
   
   -- Select operand1 when branch input is high, operand2 when low.
@@ -693,9 +634,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => OP_SEL,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- Select operand2 when branch input is high, operand1 when low.
@@ -709,9 +648,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => OP_SEL,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -----------------------------------------------------------------------------
@@ -728,9 +665,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '1',
     compare                     => '0',
     intResultMux                => SHIFTER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- Signed arithmetic shift right.
@@ -744,9 +679,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => SHIFTER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- Unsigned arithmetic/logical shift right.
@@ -760,9 +693,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => SHIFTER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -----------------------------------------------------------------------------
@@ -779,9 +710,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => CLZ,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -----------------------------------------------------------------------------
@@ -798,9 +727,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- Sign extend halfword to word.
@@ -814,9 +741,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- Zero extend byte to word.
@@ -830,9 +755,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -- Zero extend halfword to word.
@@ -846,9 +769,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '0',
     intResultMux                => ADDER,
-    brResultMux                 => PASS,
-    intResultValid              => true,
-    brResultValid               => false
+    brResultMux                 => PASS
   );
   
   -----------------------------------------------------------------------------
@@ -865,9 +786,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_EQ,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_EQ
   );
   
   -- result := operand1 != operand2
@@ -881,9 +800,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_NE,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_NE
   );
   
   -- result := operand1 >= operand2 (signed)
@@ -897,9 +814,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_GE,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_GE
   );
   
   -- result := operand1 >= operand2 (unsigned)
@@ -913,9 +828,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_GE,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_GE
   );
   
   -- result := operand1 > operand2 (signed)
@@ -929,9 +842,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_GT,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_GT
   );
   
   -- result := operand1 > operand2 (unsigned)
@@ -945,9 +856,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_GT,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_GT
   );
   
   -- result := operand1 <= operand2 (signed)
@@ -961,9 +870,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_LE,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_LE
   );
   
   -- result := operand1 <= operand2 (unsigned)
@@ -977,9 +884,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_LE,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_LE
   );
   
   -- result := operand1 < operand2 (signed)
@@ -993,9 +898,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_LT,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_LT
   );
   
   -- result := operand1 < operand2 (unsigned)
@@ -1009,9 +912,7 @@ package core_opcodeAlu_pkg is
     shiftLeft                   => '0',
     compare                     => '1',
     intResultMux                => BOOL,
-    brResultMux                 => CMP_LT,
-    intResultValid              => true,
-    brResultValid               => true
+    brResultMux                 => CMP_LT
   );
   
   
