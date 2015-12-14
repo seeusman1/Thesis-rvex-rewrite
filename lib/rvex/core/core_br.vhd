@@ -448,7 +448,7 @@ begin -- architecture
     -- Determine whether we're currently handling an RFI flush.
     rfiFlushInProgress := '0';
     for stage in S_BR+1 to S_MEM+1 loop
-      rfiFlushInProgress := rfiFlushInProgress or rfiFlush(stage);
+      rfiFlushInProgress := rfiFlushInProgress or rfiFlush_r(stage);
     end loop;
     
     -- Determine what to do next.
@@ -462,7 +462,7 @@ begin -- architecture
       noLimmPrefetch(S_BR) <= '0';
       
       -- pragma translate_off
-      if rfiFlush(S_MEM+1) = '1' then
+      if rfiFlush_r(S_MEM+1) = '1' then
         simReason <= to_rvs("RFI return");
       else
         simReason <= to_rvs("RFI flush");
