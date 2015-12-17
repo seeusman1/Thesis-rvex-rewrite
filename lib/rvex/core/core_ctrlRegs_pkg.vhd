@@ -102,13 +102,13 @@ package core_ctrlRegs_pkg is
   -- The specified range must be identical to or a subset of 0..63 inclusive,
   -- but may be changed otherwise.
   constant CRG_GLOB_WORD_OFFSET : natural := 0;
-  constant CRG_GLOB_WORD_COUNT  : natural := 11;
+  constant CRG_GLOB_WORD_COUNT  : natural := 12;
   
   -- Word offset and count for the context-specific portion of the control
   -- register file. The specified range must be identical to or a subset of
   -- 128..255 inclusive, but may be changed otherwise.
   constant CRG_CTXT_WORD_OFFSET : natural := 128;
-  constant CRG_CTXT_WORD_COUNT  : natural := 34;
+  constant CRG_CTXT_WORD_COUNT  : natural := 45;
   
   -----------------------------------------------------------------------------
   -- Control register map specification
@@ -129,12 +129,12 @@ package core_ctrlRegs_pkg is
   constant CR_CC      : natural := CRG_GLOB_WORD_OFFSET +  2; -- Current configuration register.
   constant CR_AFF     : natural := CRG_GLOB_WORD_OFFSET +  3; -- Cache/memory block affinity register.
   constant CR_CNT     : natural := CRG_GLOB_WORD_OFFSET +  4; -- CPU cycle counter.
-  constant CR_PVR     : natural := CRG_GLOB_WORD_OFFSET +  5; -- Processor version register
-  constant CR_CSR     : natural := CRG_GLOB_WORD_OFFSET +  6; -- Cache sizes register
-  constant CR_GSCR    : natural := CRG_GLOB_WORD_OFFSET +  7; -- Global scratch register
-  constant CR_GSCR2   : natural := CRG_GLOB_WORD_OFFSET +  8; -- Global scratch register
-  constant CR_GSCR3   : natural := CRG_GLOB_WORD_OFFSET +  9; -- Global scratch register
-  constant CR_GSCR4   : natural := CRG_GLOB_WORD_OFFSET + 10; -- Global scratch register
+  constant CR_PVR     : natural := CRG_GLOB_WORD_OFFSET +  6; -- Processor version register
+  constant CR_CSR     : natural := CRG_GLOB_WORD_OFFSET +  7; -- Cache sizes register
+  constant CR_GSCR    : natural := CRG_GLOB_WORD_OFFSET +  8; -- Global scratch register
+  constant CR_GSCR2   : natural := CRG_GLOB_WORD_OFFSET +  9; -- Global scratch register
+  constant CR_GSCR3   : natural := CRG_GLOB_WORD_OFFSET + 10; -- Global scratch register
+  constant CR_GSCR4   : natural := CRG_GLOB_WORD_OFFSET + 11; -- Global scratch register
   
   -- Context-specific register word addresses. Refer to
   -- rvex_contextRegLogic.vhd for documentation about the registers.
@@ -154,24 +154,22 @@ package core_ctrlRegs_pkg is
   constant CR_DCR2    : natural := CRG_CTXT_WORD_OFFSET + 13; -- Debug control register 2.
   constant CR_CRR     : natural := CRG_CTXT_WORD_OFFSET + 14; -- Configuration request register.
   constant CR_C_CYC   : natural := CRG_CTXT_WORD_OFFSET + 15; -- Non-idle cycle counter.
-  constant CR_C_CYCH  : natural := CRG_CTXT_WORD_OFFSET + 16; -- Non-idle cycle counter high bits.
-  constant CR_C_CYCHS : natural := CRG_CTXT_WORD_OFFSET + 17; -- Non-idle cycle counter saved high bits.
-  constant CR_C_STALL : natural := CRG_CTXT_WORD_OFFSET + 18; -- Non-idle stall counter.
+  constant CR_C_STALL : natural := CRG_CTXT_WORD_OFFSET + 17; -- Non-idle stall counter.
   constant CR_C_BUN   : natural := CRG_CTXT_WORD_OFFSET + 19; -- Committed bundle counter.
-  constant CR_C_SYL   : natural := CRG_CTXT_WORD_OFFSET + 20; -- Committed syllable counter.
-  constant CR_C_NOP   : natural := CRG_CTXT_WORD_OFFSET + 21; -- Committed NOP counter.
-  constant CR_C_IACC  : natural := CRG_CTXT_WORD_OFFSET + 22; -- Instruction cache access counter.
-  constant CR_C_IMISS : natural := CRG_CTXT_WORD_OFFSET + 23; -- Instruction cache miss counter.
-  constant CR_C_DRACC : natural := CRG_CTXT_WORD_OFFSET + 24; -- Data cache read access counter.
-  constant CR_C_DRMISS: natural := CRG_CTXT_WORD_OFFSET + 25; -- Data cache read miss counter.
-  constant CR_C_DWACC : natural := CRG_CTXT_WORD_OFFSET + 26; -- Data cache write access counter.
-  constant CR_C_DWMISS: natural := CRG_CTXT_WORD_OFFSET + 27; -- Data cache wrote miss counter.
-  constant CR_C_DBYPASS: natural := CRG_CTXT_WORD_OFFSET + 28; -- Data cache bypassed access counter.
-  constant CR_C_DWBUF : natural := CRG_CTXT_WORD_OFFSET + 29; -- Data cache access with pending write counter.
-  constant CR_SCRP    : natural := CRG_CTXT_WORD_OFFSET + 30; -- Scratch-pad register 1.
-  constant CR_SCRP2   : natural := CRG_CTXT_WORD_OFFSET + 31; -- Scratch-pad register 2.
-  constant CR_SCRP3   : natural := CRG_CTXT_WORD_OFFSET + 32; -- Scratch-pad register 3.
-  constant CR_SCRP4   : natural := CRG_CTXT_WORD_OFFSET + 33; -- Scratch-pad register 4.
+  constant CR_C_SYL   : natural := CRG_CTXT_WORD_OFFSET + 21; -- Committed syllable counter.
+  constant CR_C_NOP   : natural := CRG_CTXT_WORD_OFFSET + 23; -- Committed NOP counter.
+  constant CR_C_IACC  : natural := CRG_CTXT_WORD_OFFSET + 25; -- Instruction cache access counter.
+  constant CR_C_IMISS : natural := CRG_CTXT_WORD_OFFSET + 27; -- Instruction cache miss counter.
+  constant CR_C_DRACC : natural := CRG_CTXT_WORD_OFFSET + 29; -- Data cache read access counter.
+  constant CR_C_DRMISS: natural := CRG_CTXT_WORD_OFFSET + 31; -- Data cache read miss counter.
+  constant CR_C_DWACC : natural := CRG_CTXT_WORD_OFFSET + 33; -- Data cache write access counter.
+  constant CR_C_DWMISS: natural := CRG_CTXT_WORD_OFFSET + 35; -- Data cache wrote miss counter.
+  constant CR_C_DBYPASS: natural := CRG_CTXT_WORD_OFFSET + 37; -- Data cache bypassed access counter.
+  constant CR_C_DWBUF : natural := CRG_CTXT_WORD_OFFSET + 39; -- Data cache access with pending write counter.
+  constant CR_SCRP    : natural := CRG_CTXT_WORD_OFFSET + 41; -- Scratch-pad register 1.
+  constant CR_SCRP2   : natural := CRG_CTXT_WORD_OFFSET + 42; -- Scratch-pad register 2.
+  constant CR_SCRP3   : natural := CRG_CTXT_WORD_OFFSET + 43; -- Scratch-pad register 3.
+  constant CR_SCRP4   : natural := CRG_CTXT_WORD_OFFSET + 44; -- Scratch-pad register 4.
   
   -- Byte addresses for byte-aligned fields.
   constant CR_TC      : natural := 4*CR_CCR   + 0; -- Trap cause.
@@ -364,6 +362,17 @@ package core_ctrlRegs_pkg is
     inc_vect      : in    std_logic_vector := ""; -- Additional increment bits in vector form.
     enable        : in    std_logic := '1'; -- Increment enable bit.
     clamp         : in    boolean := true;  -- Overflow behavior: clamp or modulo.
+    permissions   : in    creg_perm_type := READ_WRITE -- Bus/processor permissions (to clear register).
+  );
+
+  procedure creg_makeCounter64(
+    l2c           : inout logic2creg_array;
+    c2l           : inout creg2logic_array;
+    wordAddr      : in    natural;          -- Word address of the register.
+    clear         : in    std_logic := '0'; -- External clear input.
+    inc           : in    std_logic := '0'; -- Single increment bit.
+    inc_vect      : in    std_logic_vector := ""; -- Additional increment bits in vector form.
+    enable        : in    std_logic := '1'; -- Increment enable bit.
     permissions   : in    creg_perm_type := READ_WRITE -- Bus/processor permissions (to clear register).
   );
   
@@ -615,6 +624,31 @@ package body core_ctrlRegs_pkg is
                              inc_vect, enable, clamp, permissions);
   end creg_makeCounter;
   
+  -- Generate two 32 bit counter registers. When the lower 32 bits overflow,
+  -- the upper 32 are incremented. The upper 32 bits are at address wordAddr+1.
+  procedure creg_makeCounter64(
+    l2c           : inout logic2creg_array;
+    c2l           : inout creg2logic_array;
+    wordAddr      : in    natural;          -- Word address of the register.
+    clear         : in    std_logic := '0'; -- External clear input.
+    inc           : in    std_logic := '0'; -- Single increment bit.
+    inc_vect      : in    std_logic_vector := ""; -- Additional increment bits in vector form.
+    enable        : in    std_logic := '1'; -- Increment enable bit.
+    permissions   : in    creg_perm_type := READ_WRITE -- Bus/processor permissions (to clear register).
+  ) is
+    variable overflow : std_logic := '0';
+  begin
+    creg_makeCounterOverflow(l2c, c2l, wordAddr, overflow, 31, 0, clear, inc,
+                             inc_vect, enable, false, permissions);
+    creg_makeCounter(l2c, c2l, wordAddr + 1, 31, 0,
+      clear         => clear,
+      inc           => overflow,
+      enable        => enable,
+      clamp         => false,
+      permissions   => permissions
+    );
+  end creg_makeCounter64;
+
   -- Hardwires the specified range to a certain value.
   procedure creg_makeHardwiredField(
     l2c           : inout logic2creg_array;

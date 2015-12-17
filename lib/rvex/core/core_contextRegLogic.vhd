@@ -909,27 +909,51 @@ begin -- architecture
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_STALL                         stall counter                         |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_STALLH                       stall counter high                     |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_BUN |                   committed bundle counter                    |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_BUNH|                 committed bundle counter high                 |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_SYL |                  committed syllable counter                   |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_SYLH|                committed syllable counter high                |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_NOP |                     committed NOP counter                     |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_NOPH|                  committed NOP counter high                   |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_IACC|                    Instruction cache accesses                 |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_IACCH                 Instruction cache accesses high               |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_IMISS                    Instruction cache misses                   |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_IMISSH                Instruction cache misses high                 |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_DRACC                      Data read accesses                       |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DRACCH                   Data read accesses high                    |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_DRMISS                       Data read misses                       |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DRMISSH                    Data read misses high                    |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_DWACC|                   Data cache write accesses                  |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DWACCH                Data cache write accesses high                |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     -- C_DWMISS                   Data cache write misses                    |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- C_DBYPASS                Data cache bypassed accesses                 |
+    -- C_DWMISSH               Data cache write misses high                  |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
-    -- C_DWBUF             Data cache accesses with pending write            |
+    -- C_DBYPASS               Data cache bypassed accesses                  |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DBYPASSH            Data cache bypassed accesses high               |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DWBUF            Data cache accesses with pending write             |
+    --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+    -- C_DWBUFH          Data cache accesses with pending write high         |
     --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
     --
     -- These registers will increment until they reach 0xFFFFFFFF when certain
@@ -963,32 +987,15 @@ begin -- architecture
                or rctrl2cxreg_reset;
     
     -- Make the cycle counter.
-    creg_makeCounterOverflow(l2c, c2l, CR_C_CYC, cycOverflow, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_CYC,
       clear         => countClear,
-      inc           => not cxplif2cxreg_idle_r,
-      permissions   => READ_WRITE,
-      clamp         => false
+      inc           => not cxplif2cxreg_idle_r
     );
 
-    -- Make the high bits of the cycle counter.
-    creg_makeCounter(l2c, c2l, CR_C_CYCH, 31, 0,
-      clear         => countClear,
-      inc           => not cxplif2cxreg_idle_r and cycOverflow,
-      permissions   => READ_WRITE,
-      clamp         => false
-    );
-
-    -- Generate the save logic for the high bits of the cycle counter.
-    creg_makeSaveRestoreLogic(l2c, c2l, CR_C_CYCH, CR_C_CYCHS, 31, 0,
-      save          => c2l(CR_C_CYC).busRead,
-      restore       => '0'
-    );
-    
     -- Make the stall counter.
-    creg_makeCounter(l2c, c2l, CR_C_STALL, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_STALL,
       clear         => countClear,
-      inc           => cxplif2cxreg_stall_r and not cxplif2cxreg_idle_r,
-      permissions   => READ_WRITE
+      inc           => cxplif2cxreg_stall_r and not cxplif2cxreg_idle_r
     );
     
     -- Make the committed bundle counter.
@@ -998,83 +1005,72 @@ begin -- architecture
         bundleCommit := '1';
       end if;
     end loop;
-    creg_makeCounter(l2c, c2l, CR_C_BUN, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_BUN,
       clear         => countClear,
       inc           => bundleCommit,
-      enable        => not cxplif2cxreg_stall_r,
-      permissions   => READ_WRITE
+      enable        => not cxplif2cxreg_stall_r
     );
     
     -- Make the committed syllable counter.
-    creg_makeCounter(l2c, c2l, CR_C_SYL, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_SYL,
       clear         => countClear,
       inc_vect      => cxplif2cxreg_sylCommit_r,
-      enable        => not cxplif2cxreg_stall_r,
-      permissions   => READ_WRITE
+      enable        => not cxplif2cxreg_stall_r
     );
     
     -- Make the committed NOP syllable counter.
-    creg_makeCounter(l2c, c2l, CR_C_NOP, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_NOP,
       clear         => countClear,
       inc_vect      => cxplif2cxreg_sylCommit_r and cxplif2cxreg_sylNop_r,
-      enable        => not cxplif2cxreg_stall_r,
-      permissions   => READ_WRITE
+      enable        => not cxplif2cxreg_stall_r
     );
 
     -- Make the Instruction cache access counter.
-    creg_makeCounter(l2c, c2l, CR_C_IACC, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_IACC,
       clear         => countClear,
       inc           => mem2rv_cacheStatus.instr_access,
-      permissions   => READ_WRITE
     );
 
     -- Make the Instruction cache miss counter.
-    creg_makeCounter(l2c, c2l, CR_C_IMISS, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_IMISS,
       clear         => countClear,
       inc           => mem2rv_cacheStatus.instr_miss,
-      permissions   => READ_WRITE
     );
     
     -- Make the Data cache read access counter.
-    creg_makeCounter(l2c, c2l, CR_C_DRACC, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_DRACC,
       clear         => countClear,
-      inc           => (mem2rv_cacheStatus.data_accessType(0) and not (mem2rv_cacheStatus.data_accessType(1))),
-      permissions   => READ_WRITE
+      inc           => (mem2rv_cacheStatus.data_accessType(0) and not (mem2rv_cacheStatus.data_accessType(1)))
     );
 
     -- Make the Data cache read miss counter.
-    creg_makeCounter(l2c, c2l, CR_C_DRMISS, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_DRMISS,
       clear         => countClear,
-      inc           => (mem2rv_cacheStatus.data_accessType(0) and not (mem2rv_cacheStatus.data_accessType(1)) and mem2rv_cacheStatus.data_miss),
-      permissions   => READ_WRITE
+      inc           => (mem2rv_cacheStatus.data_accessType(0) and not (mem2rv_cacheStatus.data_accessType(1)) and mem2rv_cacheStatus.data_miss)
     );
     
     -- Make the Data cache write access counter.
-    creg_makeCounter(l2c, c2l, CR_C_DWACC, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_DWACC,
       clear         => countClear,
-      inc           => (mem2rv_cacheStatus.data_accessType(1)),
-      permissions   => READ_WRITE
+      inc           => (mem2rv_cacheStatus.data_accessType(1))
     );
 
     -- Make the Data cache write miss counter.
-    creg_makeCounter(l2c, c2l, CR_C_DWMISS, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_DWMISS,
       clear         => countClear,
-      inc           => (mem2rv_cacheStatus.data_accessType(1) and (mem2rv_cacheStatus.data_miss)),
-      permissions   => READ_WRITE
+      inc           => (mem2rv_cacheStatus.data_accessType(1) and (mem2rv_cacheStatus.data_miss))
     );
     
     -- Make the Data cache bypassed access counter.
-    creg_makeCounter(l2c, c2l, CR_C_DBYPASS, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_DBYPASS,
       clear         => countClear,
-      inc           => mem2rv_cacheStatus.data_bypass,
-      permissions   => READ_WRITE
+      inc           => mem2rv_cacheStatus.data_bypass
     );
 
     -- Make the Data cache miss counter.
-    creg_makeCounter(l2c, c2l, CR_C_DWBUF, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_C_DWBUF,
       clear         => countClear,
-      inc           => mem2rv_cacheStatus.data_writepending,
-      permissions   => READ_WRITE
+      inc           => mem2rv_cacheStatus.data_writepending
     );
     
     ---------------------------------------------------------------------------

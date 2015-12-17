@@ -257,9 +257,8 @@ begin -- architecture
     -- 0xFFFFFFFF.
     
     -- Make the cycle counter.
-    creg_makeCounter(l2c, c2l, CR_CNT, 31, 0,
+    creg_makeCounter64(l2c, c2l, CR_CNT,
       inc           => '1',
-      clamp         => false,
       permissions   => READ_ONLY
     );
     
