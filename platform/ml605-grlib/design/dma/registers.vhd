@@ -96,24 +96,12 @@ entity registers is
     reg_wr_data             : in  std_logic_vector(0 to CORE_DATA_WIDTH-1);
     reg_rd_addr             : in  std_logic_vector(0 to REG_ADDR_WIDTH-1);
     reg_rd_be               : in  std_logic_vector(0 to CORE_BE_WIDTH-1);
-    reg_rd_data             : out std_logic_vector(0 to CORE_DATA_WIDTH-1);
-
-    ---------------------------------------------------------------------------
-    -- Run control interfaces
-    ---------------------------------------------------------------------------
-    rctrl_clk               : in  std_logic;
-    rctrl2rv                : out rvex_rctrl2rv_array(NO_CONTEXTS*NO_RVEX-1 downto 0);
-    rv2rctrl                : in  rvex_rv2rctrl_array(NO_CONTEXTS*NO_RVEX-1 downto 0)
+    reg_rd_data             : out std_logic_vector(0 to CORE_DATA_WIDTH-1)
   );
 end entity;
 
 architecture behavioral of registers is
   constant REG_IFACE_VERSION : integer := 1;
-
-  -- Registers are 64-bit. With a maximum of 8 contexts per processor we support 8 processor instances
-  type reg_array is array(natural range <>) of std_logic_vector(0 to CORE_DATA_WIDTH-1);
-  type addr_reg_array is array(natural range <>) of rvex_address_array(0 to NO_RVEX*NO_CONTEXTS-1);
-  type reg_array_array is array(natural range <>) of reg_array(0 to NO_RVEX*NO_CONTEXTS-1);
 
   --TODO: Generate an error if CORE_DATA_WIDTH != 64
   --TODO: Generate an error if CFG.numContextsLog > 8 or NO_RVEX > 8
@@ -122,58 +110,9 @@ architecture behavioral of registers is
   signal read_data   : std_logic_vector(0 to CORE_DATA_WIDTH-1);
   signal rd_data_out : std_logic_vector(0 to CORE_DATA_WIDTH-1);
 
-  signal run         : reg_array(0 to 2); -- dma2rvex
-  signal idle        : reg_array(0 to 2); -- rvex2dma
-  signal done        : reg_array(0 to 2); -- rvex2dma
-  signal reset_ctxt  : reg_array(0 to 2); -- dma2rvex
-  signal resetVect   : reg_array_array(0 to 2); -- dma2rvex
-
-  signal irq         : reg_array(0 to 2);
-  --signal irqAck       : std_logic_vector(0 to CORE_DATA_WIDTH-1);
-  signal irqID       : addr_reg_array(0 to 2);
-
-  function apply_write_mask(orig_data, wr_data, mask: std_logic_vector(0 to CORE_DATA_WIDTH-1))
-                            return std_logic_vector is
-  begin
-    return (orig_data AND NOT mask) OR (wr_data AND mask);
-  end apply_write_mask;
-
-  function apply_write_mask_32(orig_data, wr_data, mask: std_logic_vector(0 to 31))
-                               return std_logic_vector is
-  begin
-    return (orig_data AND NOT mask) OR (wr_data AND mask);
-  end apply_write_mask_32;
-
 begin
 
-  -- NB. We assume that all accesses are 64-bit, so ignore *_be
-  handle_reg_write: process(reg_wr_addr, reg_wr_en, reg_wr_data, reg_wr_be,
-                            run(1), reset_ctxt(1), resetVect(1)) is
-    variable mask : std_logic_vector(0 to CORE_DATA_WIDTH-1);
-    variable cur_vec : integer;
-  begin
-    for i in 0 to 7 loop
-      mask(i*8 to i*8+7) := (others => reg_wr_be(i));
-    end loop;
-
-    run(0) <= run(1);
-    reset_ctxt(0) <= reset_ctxt(1);
-    resetVect(0) <= resetVect(1);
-
-    if reg_wr_en = '1' then
-      case vect2uint(reg_wr_addr) is
-        when 16#9000#/8 => run(0)        <= apply_write_mask(run(1), reg_wr_data, mask);
-        when 16#9018#/8 => reset_ctxt(0) <= apply_write_mask(reset_ctxt(1), reg_wr_data, mask);
-        when others =>
-          if vect2uint(reg_wr_addr) >= 16#9200#/8 and vect2uint(reg_wr_addr) < (16#9200#/8 + NO_RVEX*NO_CONTEXTS) then
-            cur_vec := vect2uint(reg_wr_addr(REG_ADDR_WIDTH-6 to REG_ADDR_WIDTH-1));
-            resetVect(0)(cur_vec) <= apply_write_mask(resetVect(1)(cur_vec), reg_wr_data, mask);
-          end if;
-      end case;
-    end if;
-  end process;
-
-  handle_reg_read: process(reg_rd_addr, run(1), idle(2), done(2), reset_ctxt(1), resetVect(1)) is
+  handle_reg_read: process(reg_rd_addr) is
   begin
     case vect2uint(reg_rd_addr) is
       -- Interface version
@@ -181,16 +120,7 @@ begin
       -- Card configuration, top 32-bits is the amount of processors, lower 32-bits is the
       -- amount of contexts per processor
       when 16#8008#/8 => read_data <= uint2vect(NO_RVEX, 32) & uint2vect(NO_CONTEXTS, 32);
-      when 16#9000#/8 => read_data <= run(1);
-      when 16#9008#/8 => read_data <= idle(2);
-      when 16#9010#/8 => read_data <= done(2);
-      when 16#9018#/8 => read_data <= reset_ctxt(1);
-      when others =>
-        if vect2uint(reg_rd_addr) >= 16#9200#/8 and vect2uint(reg_rd_addr) < (16#9200#/8 + NO_RVEX*NO_CONTEXTS) then
-          read_data <= resetVect(1)(vect2uint(reg_rd_addr(REG_ADDR_WIDTH-6 to REG_ADDR_WIDTH-1)));
-        else
-          read_data <= (others => '0');
-        end if;
+      when others => read_data <= (others => '0');
     end case;
   end process;
   
@@ -198,77 +128,16 @@ begin
   begin
     if rising_edge(reg_clk) then
       if reset = '1' then
-        -- dma2rvex
-        run(1)       <= (others => '1');
-        reset_ctxt(1)     <= (others => '0');
-        resetVect(1) <= (others => (others => '0'));
-
-        -- rvex2dma
-        idle(2)      <= (others => '0');
-        done(2)      <= (others => '0');
-
         -- register interface
         rd_data_out  <= (others => '0');
       else
-        -- dma2rvex
-        run(1)       <= run(0);
-        reset_ctxt(1)     <= reset_ctxt(0);
-        resetVect(1) <= resetVect(0);
-
-        -- rvex2dma
-        idle(2)      <= idle(1);
-        done(2)      <= done(1);
-
         -- register interface
         rd_data_out  <= read_data;
       end if;
     end if;
   end process;
 
-  transition_rctrl_clk: process(rctrl_clk) is
-  begin
-    if rising_edge(rctrl_clk) then
-      if reset = '1' then
-        -- dma2rvex
-        run(2)       <= (others => '1');
-        reset_ctxt(2)     <= (others => '0');
-        resetVect(2) <= (others => (others => '0'));
-
-        -- rvex2dma
-        idle(1)      <= (others => '0');
-        done(1)      <= (others => '0');
-      else
-        -- dma2rvex
-        run(2)       <= run(1);
-        reset_ctxt(2)     <= reset_ctxt(1);
-        resetVect(2) <= resetVect(1);
-
-        -- rvex2dma
-        idle(1)      <= idle(0);
-        done(1)      <= done(0);
-      end if;
-    end if;
-  end process;
-
   reg_rd_data <= rd_data_out;
 
-  rctrl_rvex_gen: for i in 0 to NO_RVEX-1 generate
-    rctrl_context_gen: for j in 0 to NO_CONTEXTS-1 generate
-      -- index the cores and contexts from the LSB first
-      rctrl2rv(i*NO_CONTEXTS+j).run       <= run(2)       (63-(i*NO_CONTEXTS + j));
-      rctrl2rv(i*NO_CONTEXTS+j).reset     <= reset_ctxt(2)(63-(i*NO_CONTEXTS + j));
-      rctrl2rv(i*NO_CONTEXTS+j).resetVect <= resetVect(2) (i*NO_CONTEXTS + j)(32 to 63);
-
-      rctrl2rv(i*NO_CONTEXTS+j).irq       <= '0';
-      rctrl2rv(i*NO_CONTEXTS+j).irqID     <= (others => '0');
-
-      idle(0)(63-(i*NO_CONTEXTS + j)) <= rv2rctrl(i*NO_CONTEXTS+j).idle;
-      done(0)(63-(i*NO_CONTEXTS + j)) <= rv2rctrl(i*NO_CONTEXTS+j).done;
-    end generate;
-  end generate;
-
-  -- Define unconnected lines
-  idle(0)(0 to CORE_DATA_WIDTH-NO_RVEX*NO_CONTEXTS-1) <= (others => '0');
-  done(0)(0 to CORE_DATA_WIDTH-NO_RVEX*NO_CONTEXTS-1) <= (others => '0');
-
 end behavioral;
+

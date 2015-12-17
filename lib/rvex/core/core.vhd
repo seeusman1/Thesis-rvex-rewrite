@@ -268,8 +268,38 @@ entity core is
     ---------------------------------------------------------------------------
     -- Run control interface
     ---------------------------------------------------------------------------
-    rctrl2rv                    : in  rvex_rctrl2rv_array(2**CFG.numContextsLog2-1 downto 0);
-    rv2rctrl                    : out rvex_rv2rctrl_array(2**CFG.numContextsLog2-1 downto 0);
+    -- External interrupt request signal, active high.
+    rctrl2rv_irq                : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
+    
+    -- External interrupt identification. Guaranteed to be loaded in the trap
+    -- argument register in the same clkEn'd cycle where irqAck is high.
+    rctrl2rv_irqID              : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0) := (others => (others => '0'));
+    
+    -- External interrupt acknowledge signal, active high. Goes high for one
+    -- clkEn'abled cycle.
+    rv2rctrl_irqAck             : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Active high run signal. When released, the context will stop running as
+    -- soon as possible.
+    rctrl2rv_run                : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '1');
+    
+    -- Active high idle output. This is asserted when the core is no longer
+    -- doing anything.
+    rv2rctrl_idle               : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Active high context reset input. When high, the context control
+    -- registers (including PC, done and break flag) will be reset.
+    rctrl2rv_reset              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
+    
+    -- Reset vector. When the context or the entire core is reset, the PC
+    -- register will be set to this value.
+    rctrl2rv_resetVect          : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0) := CFG.resetVectors(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Active high done output. This is asserted when the context encounters
+    -- a stop syllable. Processing a stop signal also sets the BRK control
+    -- register, which stops the core. This bit can be reset by issuing a core
+    -- reset or by means of the debug interface.
+    rv2rctrl_done               : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Common memory interface
@@ -631,19 +661,6 @@ architecture Behavioral of core is
   signal cxreg2trace_regEn            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2trace_cacheEn          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2trace_instrEn          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-
-  -- Context pipeline interface <-> run control signals.
-  signal rctrl2cxplif_irq             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal rctrl2cxplif_irqID           : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cxplif2rctrl_irqAck          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal rctrl2cxplif_run             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal rctrl2cxplif_reset           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal cxplif2rctrl_idle            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-
-  -- Context register logic <-> run control signals.
-  signal rctrl2cxreg_reset            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal rctrl2cxreg_resetVect        : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-  signal cxreg2rctrl_done             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
   -----------------------------------------------------------------------------
   -- Simulation-only signals
@@ -753,12 +770,11 @@ begin -- architecture
       cxplif2cfg_blockReconfig      => cxplif2cfg_blockReconfig,
       
       -- External run control signals.
-      rctrl2cxplif_irq              => rctrl2cxplif_irq,
-      rctrl2cxplif_irqID            => rctrl2cxplif_irqID,
-      cxplif2rctrl_irqAck           => cxplif2rctrl_irqAck,
-      rctrl2cxplif_run              => rctrl2cxplif_run,
-      rctrl2cxplif_reset            => rctrl2cxplif_reset,
-      cxplif2rctrl_idle             => cxplif2rctrl_idle,
+      rctrl2cxplif_irq              => rctrl2rv_irq,
+      rctrl2cxplif_irqID            => rctrl2rv_irqID,
+      cxplif2rctrl_irqAck           => rv2rctrl_irqAck,
+      rctrl2cxplif_run              => rctrl2rv_run,
+      cxplif2rctrl_idle             => rv2rctrl_idle,
       
       -- Instruction memory interface.
       cxplif2ibuf_PCs               => cxplif2ibuf_PCs,
@@ -830,16 +846,6 @@ begin -- architecture
       pl2trace_data                 => pl2trace_data
       
     );
-
-    -- Connect run control signals to context pipelane interface
-    rctrcl_cxplif_connect: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
-      rctrl2cxplif_irq(ctxt)    <= rctrl2rv(ctxt).irq;
-      rctrl2cxplif_irqID(ctxt)  <= rctrl2rv(ctxt).irqID;
-      rctrl2cxplif_run(ctxt)    <= rctrl2rv(ctxt).run;
-      rctrl2cxplif_reset(ctxt)  <= rctrl2rv(ctxt).reset;
-      rv2rctrl(ctxt).irqAck     <= cxplif2rctrl_irqAck(ctxt);
-      rv2rctrl(ctxt).idle       <= cxplif2rctrl_idle(ctxt);
-    end generate;
   
   -----------------------------------------------------------------------------
   -- Instantiate the general purpose register file
@@ -999,9 +1005,9 @@ begin -- architecture
         cxreg2creg_reset            => cxreg2creg_reset(ctxt),
         
         -- Run control interface.
-        rctrl2cxreg_reset           => rctrl2rv(ctxt).reset,
-        rctrl2cxreg_resetVect       => rctrl2rv(ctxt).resetVect,
-        cxreg2rctrl_done            => rv2rctrl(ctxt).done,
+        rctrl2cxreg_reset           => rctrl2rv_reset(ctxt),
+        rctrl2cxreg_resetVect       => rctrl2rv_resetVect(ctxt),
+        cxreg2rctrl_done            => rv2rctrl_done(ctxt),
         
         -- Pipelane interface.
         cxplif2cxreg_stall          => cxplif2cxreg_stall(ctxt),

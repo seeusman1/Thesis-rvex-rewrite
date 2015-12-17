@@ -99,14 +99,7 @@ entity dma is
     bus2dma_c2s             : in  bus_slv2mst_type;
     dma2bus_c2s             : out bus_mst2slv_type;
     bus2dma_s2c             : in  bus_slv2mst_type;
-    dma2bus_s2c             : out bus_mst2slv_type;
-
-    ---------------------------------------------------------------------------
-    -- Run control interfaces
-    ---------------------------------------------------------------------------
-    rctrl_clk               : in std_logic;
-    rctrl2rv                : out rvex_rctrl2rv_array(NO_CONTEXTS*NO_RVEX-1 downto 0);
-    rv2rctrl                : in  rvex_rv2rctrl_array(NO_CONTEXTS*NO_RVEX-1 downto 0)
+    dma2bus_s2c             : out bus_mst2slv_type
   );
 end entity;
 
@@ -767,11 +760,7 @@ begin
       reg_wr_data             => reg_wr_data,
       reg_rd_addr             => reg_rd_addr,
       reg_rd_be               => reg_rd_be,
-      reg_rd_data             => reg_rd_data,
-
-      rctrl_clk               => bus_clk,
-      rctrl2rv                => rctrl2rv,
-      rv2rctrl                => rv2rctrl
+      reg_rd_data             => reg_rd_data
     );
 
   -- ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
