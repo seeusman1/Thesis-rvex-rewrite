@@ -2454,8 +2454,6 @@ begin -- architecture
     registerCtrlReg("CR_DCR2",  4*CR_DCR2);
     registerCtrlReg("CR_CRR",   4*CR_CRR);
     registerCtrlReg("CR_C_CYC", 4*CR_C_CYC);
-    registerCtrlReg("CR_C_CYCH", 4*CR_C_CYCH);
-    registerCtrlReg("CR_C_CYCHS", 4*CR_C_CYCHS);
     registerCtrlReg("CR_C_STALL",4*CR_C_STALL);
     registerCtrlReg("CR_C_BUN", 4*CR_C_BUN);
     registerCtrlReg("CR_C_SYL", 4*CR_C_SYL);

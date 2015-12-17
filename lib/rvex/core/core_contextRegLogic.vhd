@@ -1028,13 +1028,13 @@ begin -- architecture
     -- Make the Instruction cache access counter.
     creg_makeCounter64(l2c, c2l, CR_C_IACC,
       clear         => countClear,
-      inc           => mem2rv_cacheStatus.instr_access,
+      inc           => mem2rv_cacheStatus.instr_access
     );
 
     -- Make the Instruction cache miss counter.
     creg_makeCounter64(l2c, c2l, CR_C_IMISS,
       clear         => countClear,
-      inc           => mem2rv_cacheStatus.instr_miss,
+      inc           => mem2rv_cacheStatus.instr_miss
     );
     
     -- Make the Data cache read access counter.
