@@ -12,7 +12,8 @@ all: _TRACE_ADDR             { 0xD0002000 }
 
 # Flushes the cache.
 all: FLUSH_CACHE {
-  write(CACHE, 0x0f0f0000);
+  write(CACHE + 0x00, 0xF);
+  write(CACHE + 0x04, 0xF);
 }
 
 # This is evaluated when "rvd reset" is called.
