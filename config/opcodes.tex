@@ -1,0 +1,947 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                         INSTRUCTION DECODING TABLE                         %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This file describes the instructions encodings of the processor in a common
+% format. It can be compiled to the VHDL opcode table for the core, the C opcode
+% table for the simulator and the LaTeX documentation. It would be completely
+% amazing if binutils can use it too at some point.
+%
+% Since the documentation is intended to be compiled to LaTeX code, it somehow
+% made sense to use LaTeX syntax for the definition language. I'm sorry. The
+% file is interpreted by python though, not by LaTeX. Don't try to run this
+% through LaTeX directly...
+%
+% In order to not make your favorite editor's syntax highlighter spaz the fuck
+% out, no VHDL or C code is actually included here.
+
+% The VHDL package code which defines the table data types etc. is still in
+% /lib/rvex/core/core_opcode_pkg.vhd. This file must contain contains the text
+% "-- ### GENERATED FROM HERE ONWARDS ### --"; everything after this line will
+% be replaced when the update script is run.
+%
+% The following LaTeX-like commands are interpreted by python to define the
+% opcode table:
+%
+% \section{name} - starts a group of instructions in the documentation for
+%    readability. Any textual lines between \group and \syllable is interpreted
+%    as LaTeX documentation for the group.
+%
+% \syllable{opcode}{mnemonic}{syntax} - starts a syllable definition. The opcode
+%    should be a 9-bit binary string with dashes for don't cares, mapping to
+%    syllable bit 31..23. The value of the LSB is not really part of the opcode,
+%    but defines whether the instruction can be used with only a register for
+%    the second operand (0), only an immediate for the second operand (1), or
+%    both (-). In VHDL terms, this describes the contents of the "valid" field.
+%    The mnemonic is the name of the instruction. It will be made lowercase for
+%    the assembler syntax and uppercase for the documentation (when used without
+%    context). Finally, the syntax describes the assembler syntax of the
+%    syllable. In this, the following LaTeX-like commands may be used. The {}
+%    may be omitted.
+%
+%      .-------.--------.--------.-----------------------------.
+%      | Cmd   | Docs   | VHDL   | Encoded by bitfield         |
+%      |-------|--------|--------|-----------------------------|
+%      | \rd{} | $r0.d  | r#.%r1 | syl(22..17)                 |
+%      |-------|--------|--------|-----------------------------|
+%      | \rx{} | $r0.x  | r#.%r2 | syl(16..11)                 |
+%      |-------|--------|--------|-----------------------------|
+%      | \ry{} | $r0.y  | r#.%r3 | syl(10..5)  for imm_sw 0    |
+%      |       | imm    | %ih    | syl(10..2)  for imm_sw 1    |
+%      |-------|--------|--------|-----------------------------|
+%      | \rs{} | $r0.1  | r#.1   | -                           |
+%      |-------|--------|--------|-----------------------------|
+%      | \bd{} | $b0.d  | b#.%b2 | syl(19..17) for brFmt 0     |
+%      |       |        | b#.%b3 | syl(4..2)   for brFmt 1     |
+%      |-------|--------|--------|-----------------------------|
+%      | \bs{} | $b0.s  | b#.%b3 | syl(4..2)   for brFmt 0     |
+%      |       |        | b#.%b1 | syl(26..24) for brFmt 1     |
+%      |-------|--------|--------|-----------------------------|
+%      | \lr{} | $l0.0  | l#.0   | -                           |
+%      |-------|--------|--------|-----------------------------|
+%      | \of{} | offs   | %bt    | syl(23..5)                  |
+%      |-------|--------|--------|-----------------------------|
+%      | \sa{} |stackadj| %bi    | syl(23..5)                  |
+%      |-------|--------|--------|-----------------------------|
+%      | \lt{} | tgt    | %i1    | syl(27..25)                 |
+%      |-------|--------|--------|-----------------------------|
+%      | \li{} | imm    | %i2    | syl(24..2)                  |
+%      '-------'--------'--------'-----------------------------'
+%
+%    Any textual lines between \syllable and \group or the next \syllable is
+%    interpreted as LaTeX documentation for the syllable. These text sections
+%    may also use the commands in the table above inline, but the {} may NOT
+%    be omitted here.
+%
+% \class{x} - specifies the resource class. x should be ALU, MEM, MUL, BR or
+%    LIMMH.
+%
+% \datapath{member}{value}   - specifies a value for the datapath decoding table.
+% \alu{member}{value}        - specifies a value for the ALU decoding table.
+% \branch{member}{value}     - specifies a value for the branch unit decoding table.
+% \memory{member}{value}     - specifies a value for the memory unit decoding table.
+% \multiplier{member}{value} - specifies a value for the multiplier decoding table.
+%    Which members need to be specified and what values they can take depends
+%    first and foremost the VHDL code (core_opcode*_pkg.vhd). This is also their
+%    primary documentation source.
+%
+% \noasm{} - attribute which specifies that this syllable cannot be assembled.
+%    Used for LIMMH instructions. This will disable rendering the syntax in the
+%    documentation.
+% 
+% All commands other than \group and \syllable specify attributes for the
+% syllables. These are used to describe the characteristics and functionality
+% of the instructions. How they do this depends on where they are written with
+% respect to the \group and \syllable commands:
+%
+%  - Attributes specified before the first \group command are interpreted as
+%    the default. All groups will inherit these attributes.
+%
+%  - Attributes specified between \group and the first \syllable in the group
+%    determine the group defaults, overriding the global defaults. All syllables
+%    within the group will inherit these attributes.
+%
+%
+%===============================================================================
+% Default attributes
+%===============================================================================
+
+% Default class is ALU.
+\class{ALU}
+
+% Refer to the datapath schematic diagram in core_opcodeDatapath_pkg.vhd for
+% documentation of the following attributes.
+\datapath{funcSel}{ALU}
+\datapath{gpRegWE}{'0'}
+\datapath{linkWE}{'0'}
+\datapath{brRegWE}{'0'}
+\datapath{allBrRegsWE}{'0'}
+\datapath{stackOp}{'0'}
+\datapath{op1LinkReg}{'0'}
+\datapath{op3LinkReg}{'0'}
+\datapath{op3BranchRegs}{'0'}
+\datapath{brFmt}{'0'}
+\datapath{isLIMMH}{'0'}
+\datapath{isTrap}{'0'}
+\datapath{isNOP}{'0'}
+
+% Refer to the structure and type declarations in core_opcodeAlu_pkg.vhd for
+% documentation of the following attributes.
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{ZERO}
+\alu{opBrMux}{PASS}
+\alu{divs}{'0'}
+\alu{unsignedOp}{'0'}
+\alu{bitwiseOp}{BITW_OR}
+\alu{shiftLeft}{'0'}
+\alu{compare}{'0'}
+\alu{intResultMux}{BITWISE}
+\alu{brResultMux}{PASS}
+
+% Refer to the structure and type declarations in core_opcodeBranch_pkg.vhd for
+% documentation of the following attributes.
+\branch{isBranchInstruction}{'0'}
+\branch{branchIfTrue}{'0'}
+\branch{branchIfFalse}{'0'}
+\branch{branchToLink}{'0'}
+\branch{link}{'0'}
+\branch{stop}{'0'}
+\branch{RFI}{'0'}
+
+% Refer to the structure and type declarations in core_opcodeMemory_pkg.vhd for
+% documentation of the following attributes.
+\memory{isMemoryInstruction}{'0'}
+\memory{readEnable}{'0'}
+\memory{writeEnable}{'0'}
+\memory{unsignedOp}{'0'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+
+% Refer to the structure and type declarations in core_opcodeMultiplier_pkg.vhd
+% for documentation of the following attributes.
+\multiplier{isMultiplyInstruction}{'0'}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op1unsigned}{'0'}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{op2unsigned}{'0'}
+\multiplier{resultSel}{PASS}
+
+%===============================================================================
+\section{ALU arithmetic instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\alu{intResultMux}{ADDER}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+
+%-------------------------------------------------------------------------------
+\syllable{01100010-}{ADD}{\rd = \rx, \ry}
+Performs a 32-bit addition.
+
+%-------------------------------------------------------------------------------
+\syllable{01101011-}{SH1ADD}{\rd = \rx, \ry}
+\alu{op1Mux}{SHL1}
+32 bit addition, operand 1 shifted left by one before adding.
+
+%-------------------------------------------------------------------------------
+\syllable{01101100-}{SH2ADD}{\rd = \rx, \ry}
+\alu{op1Mux}{SHL2}
+32 bit addition, operand 1 shifted left by two before adding.
+
+%-------------------------------------------------------------------------------
+\syllable{01101101-}{SH3ADD}{\rd = \rx, \ry}
+\alu{op1Mux}{SHL3}
+32 bit addition, operand 1 shifted left by three before adding.
+
+%-------------------------------------------------------------------------------
+\syllable{01101110-}{SH4ADD}{\rd = \rx, \ry}
+\alu{op1Mux}{SHL4}
+32 bit addition, operand 1 shifted left by four before adding.
+
+%-------------------------------------------------------------------------------
+\syllable{01111---0}{ADDCG}{\rd, \bd = \bs, \rx, \ry}
+\datapath{brFmt}{'1'}
+\datapath{brRegWE}{'1'}
+\alu{opBrMux}{PASS}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CARRY_OUT}
+32-bit addition with carry in and out.
+
+%-------------------------------------------------------------------------------
+\syllable{00011010-}{SUB}{\rd = \ry, \rx}
+\alu{op1Mux}{EXTEND32INV}
+\alu{opBrMux}{TRUE}
+Subtract operand 1 from operand 2.
+
+%-------------------------------------------------------------------------------
+\syllable{01110---0}{DIVS}{\rd, \bd = \bs, \rx, \ry}
+\datapath{brFmt}{'1'}
+\datapath{brRegWE}{'1'}
+\alu{op1Mux}{SHL1}
+\alu{opBrMux}{PASS}
+\alu{divs}{'1'}
+\alu{brResultMux}{DIVS}
+Division step:
+  tmp := op1 << 1 | opBr
+  result := op1(31) ? (tmp + op2) : (tmp - op2)
+  branch result := op1(31)
+
+%===============================================================================
+\section{ALU barrel shifter instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{intResultMux}{SHIFTER}
+
+%-------------------------------------------------------------------------------
+\syllable{01101111-}{SHL}{\rd = \rx, \ry}
+\alu{unsignedOp}{'1'}
+\alu{shiftLeft}{'1'}
+Arithmetic/logical shift left.
+
+%-------------------------------------------------------------------------------
+\syllable{00011000-}{SHR}{\rd = \rx, \ry}
+Signed arithmetic shift right.
+
+%-------------------------------------------------------------------------------
+\syllable{00011001-}{SHRU}{\rd = \rx, \ry}
+\alu{unsignedOp}{'1'}
+Unsigned arithmetic/logical shift right.
+
+%===============================================================================
+\section{ALU bitwise instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{intResultMux}{BITWISE}
+
+%-------------------------------------------------------------------------------
+\syllable{01100011-}{AND}{\rd = \rx, \ry}
+\alu{bitwiseOp}{BITW_AND}
+Bitwise AND.
+
+%-------------------------------------------------------------------------------
+\syllable{01100100-}{ANDC}{\rd = \rx, \ry}
+\alu{op1Mux}{EXTEND32INV}
+\alu{bitwiseOp}{BITW_AND}
+Bitwise AND, with operand 1 one's-complemented.
+
+%-------------------------------------------------------------------------------
+\syllable{01101001-}{OR}{\rd = \rx, \ry}
+\alu{bitwiseOp}{BITW_OR}
+Bitwise OR.
+
+%-------------------------------------------------------------------------------
+\syllable{01101010-}{ORC}{\rd = \rx, \ry}
+\alu{op1Mux}{EXTEND32INV}
+\alu{bitwiseOp}{BITW_OR}
+Bitwise OR, with operand 1 one's complemented.
+
+%-------------------------------------------------------------------------------
+\syllable{00011111-}{XOR}{\rd = \rx, \ry}
+\alu{bitwiseOp}{BITW_XOR}
+Bitwise XOR.
+
+%===============================================================================
+\section{ALU single-bit instructions}
+%===============================================================================
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+
+%-------------------------------------------------------------------------------
+\syllable{00101100-}{SBIT}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{opBrMux}{TRUE}
+\alu{bitwiseOp}{SET_BIT}
+\alu{intResultMux}{BITWISE}
+Copy operand 1, while setting the bit indexed by the immediate.
+
+%-------------------------------------------------------------------------------
+\syllable{00101101-}{SBITF}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{opBrMux}{FALSE}
+\alu{bitwiseOp}{SET_BIT}
+\alu{intResultMux}{BITWISE}
+Copy operand 1, while clearing the bit indexed by the immediate.
+
+%-------------------------------------------------------------------------------
+\syllable{01011100-}{TBIT}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{intResultMux}{BOOL}
+\alu{brResultMux}{TBIT}
+Copies the bit in operand 1 indexed by the immediate to a general
+purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01011101-}{TBIT}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{intResultMux}{BOOL}
+\alu{brResultMux}{TBIT}
+Copies the bit in operand 1 indexed by the immediate to a branch
+register.
+
+%-------------------------------------------------------------------------------
+\syllable{01011110-}{TBITF}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{intResultMux}{BOOL}
+\alu{brResultMux}{TBITF}
+Inverts and copies the bit in operand 1 indexed by the immediate
+to a general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01011111-}{TBITF}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{intResultMux}{BOOL}
+\alu{brResultMux}{TBITF}
+Inverts and copies the bit in operand 1 indexed by the immediate
+to a branch register.
+
+%===============================================================================
+\section{ALU boolean instructions}
+%===============================================================================
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{intResultMux}{BOOL}
+
+%-------------------------------------------------------------------------------
+\syllable{01011010-}{ANDL}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{LOGIC_AND}
+Operand1 && operand2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01011011-}{ANDL}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{LOGIC_AND}
+Operand1 && operand2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01011000-}{ORL}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{LOGIC_OR}
+Operand1 || operand2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01011001-}{ORL}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{LOGIC_OR}
+Operand1 || operand2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01010100-}{NANDL}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{LOGIC_NAND}
+!(operand1 && operand2) -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01010101-}{NANDL}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{LOGIC_NAND}
+!(operand1 && operand2) -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01010110-}{NORL}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{LOGIC_NOR}
+!(operand1 || operand2) -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01010111-}{NORL}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{LOGIC_NOR}
+!(operand1 || operand2) -> branch register.
+
+%===============================================================================
+\section{ALU compare instructions}
+%===============================================================================
+\alu{op1Mux}{EXTEND32INV}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{TRUE}
+\alu{compare}{'1'}
+\alu{intResultMux}{BOOL}
+
+%-------------------------------------------------------------------------------
+\syllable{01000000-}{CMPEQ}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{CMP_EQ}
+Operand 1 == operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01000001-}{CMPEQ}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_EQ}
+Operand 1 == operand 2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01000010-}{CMPGE}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{CMP_GE}
+Operand 1 >= operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01000011-}{CMPGE}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_GE}
+Operand 1 >= operand 2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01000100-}{CMPGEU}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GE}
+Unsigned operand 1 >= operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01000101-}{CMPGEU}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GE}
+Unsigned operand 1 >= operand 2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01000110-}{CMPGT}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{CMP_GT}
+Operand 1 > operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01000111-}{CMPGT}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_GT}
+Operand 1 > operand 2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01001000-}{CMPGTU}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GT}
+Unsigned operand 1 > operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01001001-}{CMPGTU}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GT}
+Unsigned operand 1 > operand 2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01001010-}{CMPLE}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{CMP_LE}
+Operand 1 <= operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01001011-}{CMPLE}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_LE}
+Operand 1 <= operand 2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01001100-}{CMPLEU}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LE}
+Unsigned operand 1 <= operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01001101-}{CMPLEU}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LE}
+Unsigned operand 1 <= operand 2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01001110-}{CMPLT}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{CMP_LT}
+Operand 1 < operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01001111-}{CMPLT}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_LT}
+Operand 1 < operand 2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01010000-}{CMPLTU}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LT}
+Unsigned operand 1 < operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01010001-}{CMPLTU}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LT}
+Unsigned operand 1 < operand 2 -> branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01010010-}{CMPNE}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\alu{brResultMux}{CMP_NE}
+Operand 1 != operand 2 -> general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{01010011-}{CMPNE}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_NE}
+Operand 1 != operand 2 -> branch register.
+
+%===============================================================================
+\section{ALU selection instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'}
+\alu{op1Mux}{EXTEND32INV}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{TRUE}
+\alu{intResultMux}{OP_SEL}
+
+%-------------------------------------------------------------------------------
+\syllable{01100101-}{MAX}{\rd = \rx, \ry}
+\alu{compare}{'1'}
+\alu{brResultMux}{CMP_GE}
+Computes maximum of the input operands using signed arithmetic.
+
+%-------------------------------------------------------------------------------
+\syllable{01100110-}{MAXU}{\rd = \rx, \ry}
+\alu{compare}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GE}
+Computes maximum of the input operands using unsigned arithmetic.
+
+%-------------------------------------------------------------------------------
+\syllable{01100111-}{MIN}{\rd = \rx, \ry}
+\alu{compare}{'1'}
+\alu{brResultMux}{CMP_LE}
+Computes minimum of the input operands using signed arithmetic.
+
+%-------------------------------------------------------------------------------
+\syllable{01101000-}{MINU}{\rd = \rx, \ry}
+\alu{compare}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LE}
+Computes minimum of the input operands using unsigned arithmetic.
+
+%-------------------------------------------------------------------------------
+\syllable{00111----}{SLCT}{\rd = \bs, \rx, \ry}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{PASS}
+Select: opBr ? op1 : op2.
+
+%-------------------------------------------------------------------------------
+\syllable{00110----}{SLCTF}{\rd = \bs, \rx, \ry}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{INVERT}
+Select: opBr ? op2 : op1.
+
+%===============================================================================
+\section{ALU type conversion instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\alu{op2Mux}{ZERO}
+\alu{intResultMux}{ADDER}
+
+%-------------------------------------------------------------------------------
+\syllable{000110110}{SXTB}{\rd = \rx}
+\alu{op1Mux}{EXTEND8}
+Sign extend operand 1 from byte to word.
+
+%-------------------------------------------------------------------------------
+\syllable{000111000}{SXTH}{\rd = \rx}
+\alu{op1Mux}{EXTEND16}
+Sign extend operand 1 from halfword to word.
+
+%-------------------------------------------------------------------------------
+\syllable{000111010}{ZXTB}{\rd = \rx}
+\alu{op1Mux}{EXTEND8}
+\alu{unsignedOp}{'1'}
+Zero extend operand 1 from byte to word.
+
+%-------------------------------------------------------------------------------
+\syllable{000111100}{ZXTH}{\rd = \rx}
+\alu{op1Mux}{EXTEND16}
+\alu{unsignedOp}{'1'}
+Zero extend operand 1 from halfword to word.
+
+%===============================================================================
+\section{ALU miscellaneous instructions}
+%===============================================================================
+
+%-------------------------------------------------------------------------------
+\syllable{01100000-}{NOP}{}
+\datapath{isNOP}{'1'}
+Performs no operation.
+
+%-------------------------------------------------------------------------------
+\syllable{100100010}{CLZ}{\rd = \rx}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{intResultMux}{CLZ}
+Count leading zeroes in operand 1.
+
+%-------------------------------------------------------------------------------
+\syllable{00001011-}{MOVTL}{\lr = \ry}
+\datapath{linkWE}{'1'}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{intResultMux}{OP_SEL}
+Copy general purpose register/immediate to link register.
+
+%-------------------------------------------------------------------------------
+\syllable{000011000}{MOVFL}{\rx = \lr}
+\datapath{gpRegWE}{'1'}
+\datapath{op1LinkReg}{'1'}
+\alu{op1Mux}{EXTEND32},
+\alu{op2Mux}{ZERO},
+\alu{bitwiseOp}{BITW_OR},
+\alu{intResultMux}{BITWISE},
+Copy link register to general purpose register.
+
+%-------------------------------------------------------------------------------
+\syllable{10010000-}{TRAP}{\rx, \ry}
+\datapath{isTrap}{'1'}
+Software trap. First parameter is the trap argument, second parameter is the
+trap cause byte.
+
+%===============================================================================
+\section{Multiply instructions}
+%===============================================================================
+\class{MUL}
+\datapath{funcSel}{MUL}
+\datapath{gpRegWE}{'1'}
+\multiplier{isMultiplyInstruction}{'1'}
+
+%-------------------------------------------------------------------------------
+\syllable{00000000-}{MPYLL}{\rd = \rx, \ry}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed low 16 x low 16 bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000001-}{MPYLLU}{\rd = \rx, \ry}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned low 16 x low 16 bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000010-}{MPYLH}{\rd = \rx, \ry}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed low 16 (s1) x high 16 (s2) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000011-}{MPYLHU}{\rd = \rx, \ry}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned low 16 (s1) x high 16 (s2) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000100-}{MPYHH}{\rd = \rx, \ry}
+\multiplier{op1sel}{HIGH_HALF}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed high 16 x high 16 bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000101-}{MPYHHU}{\rd = \rx, \ry}
+\multiplier{op1sel}{HIGH_HALF}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned high 16 x high 16 bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000110-}{MPYL}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed low 16 (s2) x 32 (s1) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000111-}{MPYLU}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned low 16 (s2) x 32 (s1) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00001000-}{MPYH}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed high 16 (s2) x 32 (s1) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00001001-}{MPYHU}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned high 16 (s2) x 32 (s1) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00001010-}{MPYHS}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{SHL16}
+Multiply signed high 16 (s2) x 32 (s1) bits, shift left 16.
+
+%-------------------------------------------------------------------------------
+\syllable{10010010-}{MPYLHUS}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{SHR32}
+Multiply unsigned low 16 (s2) x signed 32 (s1) bits, shift right 32.
+
+%-------------------------------------------------------------------------------
+\syllable{10010011-}{MPYHHS}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{SHR16}
+Multiply signed high 16 (s2) x 32 (s1) bits, shift right 16.
+
+%===============================================================================
+\section{Memory instructions}
+%===============================================================================
+\class{MEM}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{intResultMux}{ADDER}
+\memory{isMemoryInstruction}{'1'}
+
+%-------------------------------------------------------------------------------
+\syllable{000011011}{LDW}{\lr = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{linkWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+Load word from memory, send to link register.
+
+%-------------------------------------------------------------------------------
+\syllable{000100001}{LDW}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+Load word from memory.
+
+%-------------------------------------------------------------------------------
+\syllable{000100011}{LDH}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_HALFWORD}
+Load signed halfword from memory.
+
+%-------------------------------------------------------------------------------
+\syllable{000100101}{LDHU}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{unsignedOp}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_HALFWORD}
+Load unsigned halfword from memory.
+
+%-------------------------------------------------------------------------------
+\syllable{000100111}{LDB}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Load signed byte from memory.
+
+%-------------------------------------------------------------------------------
+\syllable{000101001}{LDBU}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{unsignedOp}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Load unsigned byte from memory.
+
+%-------------------------------------------------------------------------------
+\syllable{001011101}{LDBR}{\ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{allBrRegsWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{unsignedOp}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Load byte from memory, send to branch register file.
+
+%-------------------------------------------------------------------------------
+\syllable{000011101}{STW}{\ry[\rx] = \lr}
+\datapath{op3LinkReg}{'1'}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+Store word in memory, from link register.
+
+%-------------------------------------------------------------------------------
+\syllable{000101011}{STW}{\ry[\rx] = \rd}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+Store word in memory.
+
+%-------------------------------------------------------------------------------
+\syllable{000101101}{STH}{\ry[\rx] = \rd}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_HALFWORD}
+Store halfword in memory.
+
+%-------------------------------------------------------------------------------
+\syllable{000101111}{STB}{\ry[\rx] = \rd}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Store byte in memory.
+
+%-------------------------------------------------------------------------------
+\syllable{001011111}{STBR}{\ry[\rx]}
+\datapath{op3BranchRegs}{'1'}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Store byte in memory, from branch register file.
+
+%===============================================================================
+\section{Branch instructions}
+%===============================================================================
+\class{BR}
+\branch{isBranchInstruction}{'1'}
+\branch{branchIfTrue}{'1'}
+\branch{branchIfFalse}{'1'}
+
+%-------------------------------------------------------------------------------
+\syllable{00100000-}{GOTO}{\of}
+Unconditional jump.
+
+%-------------------------------------------------------------------------------
+\syllable{00100001-}{IGOTO}{\lr}
+\branch{branchToLink}{'1'}
+IGOTO: unconditional jump to link register.
+
+%-------------------------------------------------------------------------------
+\syllable{00100010-}{CALL}{\lr = \of}
+\datapath{funcSel}{'PCP1'}
+\datapath{linkWE}{'1'}
+\branch{link}{'1'}
+CALL: unconditional jump and link.
+
+%-------------------------------------------------------------------------------
+\syllable{00100011-}{ICALL}{\lr = \lr}
+\datapath{funcSel}{'PCP1'}
+\datapath{linkWE}{'1'}
+\branch{branchToLink}{'1'}
+\branch{link}{'1'}
+ICALL: unconditional jump to link register and link.
+
+%-------------------------------------------------------------------------------
+\syllable{00100100-}{BR}{\bs, \of}
+\branch{branchIfFalse}{'0'}
+BR: branch if true.
+
+%-------------------------------------------------------------------------------
+\syllable{00100101-}{BRF}{\bs, \of}
+\branch{branchIfTrue}{'0'}
+BRF: branch if false.
+
+%-------------------------------------------------------------------------------
+\syllable{00100110-}{RETURN}{\rs = \rs, \sa, \lr}
+\datapath{gpRegWE}{'1'}
+\datapath{stackOp}{'1'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{intResultMux}{ADDER}
+\branch{branchToLink}{'1'}
+RETURN: return from function call, add immediate to stack pointer.
+
+%-------------------------------------------------------------------------------
+\syllable{00100111-}{RFI}{\rs = \rs, \sa}
+\datapath{gpRegWE}{'1'}
+\datapath{stackOp}{'1'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{intResultMux}{ADDER}
+\branch{branchIfTrue}{'0'}
+\branch{branchIfFalse}{'0'}
+\branch{RFI}{'1'}
+RFI: return from trap.
+
+%-------------------------------------------------------------------------------
+\syllable{00101000-}{STOP}{}
+\branch{branchIfTrue}{'0'}
+\branch{branchIfFalse}{'0'}
+\branch{stop}{'1'}
+STOP: stop execution and set done flag.
+
+%===============================================================================
+\section{Long immediate instructions}
+%===============================================================================
+
+%-------------------------------------------------------------------------------
+\syllable{1000-----}{LIMMH}{\lt, \li}
+\class{LIMMH}
+\datapath{isLIMMH}{'1'}
+\noasm{}
+Forward immediate to other syllable.

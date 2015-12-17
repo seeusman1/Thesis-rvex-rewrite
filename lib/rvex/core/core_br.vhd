@@ -350,6 +350,13 @@ architecture Behavioral of core_br is
 begin -- architecture
 --=============================================================================
   
+  -- Some things in here will not work properly if S_BR equals 2. They're
+  -- marked with FIXMEs.
+  assert S_BR > 2
+    report "S_BR has to be 3 or more or the branch unit might misbehave, " &
+           "depending on the rest of the system."
+    severity failure;
+  
   -----------------------------------------------------------------------------
   -- Generate internal control signals
   -----------------------------------------------------------------------------
@@ -417,9 +424,9 @@ begin -- architecture
     
     -- Set trap information defaults.
     br2cxplif_trapInfo(S_BR)      <= pl2br_trapToHandleInfo(S_BR);
-    traceTrapInfo(S_IF)     <= pl2br_trapToHandleInfo(S_BR);
+    traceTrapInfo(S_IF)           <= pl2br_trapToHandleInfo(S_BR);
     br2cxplif_trapPoint(S_BR)     <= pl2br_trapToHandlePoint(S_BR);
-    traceTrapPoint(S_IF)    <= pl2br_trapToHandlePoint(S_BR);
+    traceTrapPoint(S_IF)          <= pl2br_trapToHandlePoint(S_BR);
     br2cxplif_exDbgTrapInfo(S_BR) <= pl2br_trapToHandleInfo(S_BR);
     
     -- Don't try to fetch the previous instruction first by default.
@@ -441,11 +448,11 @@ begin -- architecture
     -- Determine whether we're currently handling an RFI flush.
     rfiFlushInProgress := '0';
     for stage in S_BR+1 to S_MEM+1 loop
-      rfiFlushInProgress := rfiFlushInProgress or rfiFlush(stage);
+      rfiFlushInProgress := rfiFlushInProgress or rfiFlush_r(stage);
     end loop;
     
     -- Determine what to do next.
-    if rfiFlushInProgress = '1' then
+    if rfiFlushInProgress = '1' then -- FIXME: this will not work properly if S_BR = 2!
       
       -- Set the next PC to the trap return address.
       nextPCsrc(S_BR) <= NEXT_PC_TRAP_RETURN;
@@ -455,7 +462,7 @@ begin -- architecture
       noLimmPrefetch(S_BR) <= '0';
       
       -- pragma translate_off
-      if rfiFlush(S_MEM+1) = '1' then
+      if rfiFlush_r(S_MEM+1) = '1' then
         simReason <= to_rvs("RFI return");
       else
         simReason <= to_rvs("RFI flush");
@@ -555,7 +562,7 @@ begin -- architecture
       
       -- RFI instruction. Jump to the trap return address (stored in the trap
       -- point context control register) and set the RFI flag high for the
-      -- control register restore logic.
+      -- control register restore logic, committed in S_MEM.
       nextPCsrc(S_BR) <= NEXT_PC_TRAP_RETURN;
       br2pl_rfi(S_BR) <= '1';
       
@@ -616,15 +623,22 @@ begin -- architecture
         -- pragma translate_on
       end if;
       
-      -- Fetch the previous instruction first if it's possible that there's
-      -- relevant LIMMH instructions there.
+      -- Branch targets should always point to the start of an instruction if
+      -- the program is sane. Therefore, we do not need to fetch the preceding
+      -- instruction, even if we're not sure if the target marks the start of
+      -- an instruction based on alignment alone.
       noLimmPrefetch(S_BR) <= '1';
       
     elsif run(S_BR) = '0' or pl2br_trapPending(S_BR) = '1' then
       
       -- Halt the core. We need to "branch" to the current instruction
       -- constantly while the core is halted to maintain the current value of
-      -- the PC register.
+      -- the PC register. In the case of a pending trap, we halt only to
+      -- prevent unnecessary instruction fetches while the pipeline is being
+      -- flushed. Recall that trapPending only means that there is a trap
+      -- somewhere in the pipeline; once it reaches the end, the trap handling
+      -- system a few cases above will take priority over this case and handle
+      -- the trap.
       nextPCsrc(S_BR) <= NEXT_PC_CURRENT;
       
       -- pragma translate_off
@@ -641,9 +655,10 @@ begin -- architecture
       
     elsif run_r(S_BR) = '0' then
       
-      -- (Re)start the core. We need to actively jump to the context PC
-      -- register in order to start at that address and not the address
-      -- immediately following.
+      -- Because of priority stuff, run(S_BR) has to be '1', so this marks a
+      -- restart. To do so, we need to actively jump to the context PC register
+      -- instead of normal program flow, in order to start at that address and
+      -- not PC register + 1.
       nextPCsrc(S_BR) <= NEXT_PC_CURRENT;
       
       -- Fetch the previous instruction first if it's possible that there's
@@ -696,7 +711,14 @@ begin -- architecture
   -- Determine whether we're branching or not.
   branching(S_BR) <= '1' when nextPCsrc(S_BR) /= NEXT_PC_NORMAL else '0';
   
-  -- Determine the PC which is to be fetched.
+  -- Determine the PC which is to be fetched. If we're branching, this should
+  -- be the next PC, rounded down, in order to get the first part of the
+  -- instruction or, if the PC happens to be aligned, the whole instruction.
+  -- The rounding part is ommitted because the LSBs are ignored by the
+  -- instruction buffer anyway. In any other case, we need PC+1 rounded
+  -- upwards to the next alignment point. This program counter is not as easily
+  -- generated because rounding up can generate a carry, so the value is
+  -- computed in parallel to the normal program counter in the pipeline.
   fetch_pc_mux: process (
     branching, nextPC, pl2br_PC_plusSbitFetch
   ) is
@@ -750,7 +772,9 @@ begin -- architecture
       nextPC_v := nextPC(S_IF) and mask;
       
       -- If the branch target is not even aligned to a lane group, we
-      -- definitely need two cycles.
+      -- definitely need two cycles. Note that this can never happen when stop
+      -- bits are disabled, because the alignment code above will always align
+      -- nextPC_v to a lane group size or more.
       if unsigned(nextPC_v(groupSizeLog2-1 downto 0)) /= 0 then
         doubleFetch(S_IF) <= '1';
       end if;
@@ -996,7 +1020,7 @@ begin -- architecture
     br2cxplif_brkValid(S_IF)          <= brkptEnable(S_IF);
     
     -- Drive cancel/invalidate signals.
-    br2cxplif_imemCancel(S_IF+L_IF)   <= branching(S_BR);
+    br2cxplif_imemCancel(S_IF+L_IF)   <= branching(S_BR); -- FIXME: this is not correct if S_BR = 2!
     br2cxplif_invalUntilBR(S_BR)      <= branching(S_BR);
     
     -- Drive branch signalling signal for the instruction buffer.

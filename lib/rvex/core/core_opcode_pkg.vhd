@@ -141,8 +141,7 @@ package core_opcode_pkg is
   --   "%b3" --> Bit 4..2 in unsigned decimal.
   --   "%bi" --> Bit 23..5 in signed decimal (rfi/return stack offset).
   --   "%bt" --> Next PC + bit 23..5 in hex (branch target).
-  --   "r#"  --> General purpose register for some cluster.
-  --   "b#"  --> Branch register for some cluster.
+  --   "#"   --> Cluster identifier (maps to 0).
   constant OPCODE_TABLE : opcodeTable_type := (
     
     ---------------------------------------------------------------------------
@@ -1044,7 +1043,7 @@ package core_opcode_pkg is
       syntax_imm => "rfi r#.1 = r#.1, %bi                              ",
       valid => "11",
       datapathCtrl => DP_CTRL_BR_SP,
-      aluCtrl => ALU_CTRL_NOP,
+      aluCtrl => ALU_CTRL_ADD,
       branchCtrl => BRANCH_CTRL_RFI,
       memoryCtrl => MEMORY_CTRL_NOP,
       multiplierCtrl => MUL_CTRL_NOP

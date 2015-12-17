@@ -5,3 +5,4 @@ bus_ramBlock.vhd
 bus_arbiter.vhd
 bus_demux.vhd
 bus_crossClock.vhd
+bus_stage.vhd
