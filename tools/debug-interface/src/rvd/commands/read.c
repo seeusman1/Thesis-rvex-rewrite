@@ -214,8 +214,7 @@ int runRead(commandLineArgs_t *args) {
           break;
           
         case 1:
-          fprintf(stderr,
-            "Context %d: read 0x%0*X from address 0x%08X.\n",
+          printf("Context %d: read 0x%0*X from address 0x%08X.\n",
             ctxt,
             size * 2,
             value,
