@@ -109,7 +109,7 @@ endif
 
 # Compiler to use, must be HP, GCC or ST200. Default = HP.
 ifndef COMPILER
-COMPILER = O64
+COMPILER = HP
 endif
 
 # Whether LIMMH from previous syllable pair is supported by the core
