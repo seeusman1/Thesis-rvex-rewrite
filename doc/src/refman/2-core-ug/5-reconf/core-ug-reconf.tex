@@ -1,0 +1,293 @@
+
+\clearpage
+\section{Reconfiguration and sleeping}
+\label{sec:core-ug-reconf}
+
+The process in which the \rvex{} processor switches between one large core and
+more smaller cores is called reconfiguration. Reconfigurations may be requested
+by the software running on the processor or the debugging interface by writing
+the requested configuration to a control register. The reconfiguration
+controller will then temporarily stop all contexts which will be affected by the
+reconfiguration, commit the new configuration, and (re)start any contexts which
+are part of the new configuration but are currently stopped.
+
+\subsection{Configuration word encoding}
+\label{sec:core-ug-reconf-word}
+
+A configuration is described by means of a single register at most 32-bits in
+size. The actual size depends on the design-time configuration of the core; in
+particular, the number of lane groups and the number of contexts.
+
+In the configuration word, each nibble (group of 4 bits, represented by a single
+hexadecimal digit) maps to a lane group. The nibble signifies the context which
+is to be run on that lane group. Disabling a lane group to save power is also
+possible, by selecting `context' eight. This will never map to an actual
+context, as the maximum amount of hardware contexts supported by the design-time
+configuration system is also eight, and numbering starts at zero.
+
+Obviously, not all 4.2 billion 32-bit values represent valid configurations.
+Configuration words must adhere to the following rules.
+
+\begin{itemize}
+
+\item The nibbles for existing pipelane groups may be set to either zero through 
+the number of hardware contexts minus one to select a context, or eight to 
+disable the pipelane group. For instance, the configuration word 0x7777 is
+illegal on an \rvex{} processor which does not support eight hardware contexts.
+Configuration words like 0x9999 are reserved for future configurations, such as
+fault tolerant duplicate and triplicate modes.
+
+\item The nibbles for non-existant pipelane groups must be set to zero. For 
+instance, the configuration word 0x88880000 is illegal for an \rvex{} processor 
+which is design-time configured to only support 4 lane groups, even though it 
+may make more sense than the configuration word which was probably the intention 
+here, which is simply zero.
+
+\item Any context may only be mapped to a power-of-two of contiguous pipelane
+groups. For instance, configuration words 0x1118 and 0x1231 are illegal, because
+the mapping for context 1 violates these rules.
+
+\item A set of pipelane groups mapped to a single context must be aligned.
+Mathematically, the index of the first pipelane group in the set must be
+divisible by the cardinality of the set. For instance, the configuration word
+0x0112 is illegal, because the mapping for context 1 is improperly aligned.
+
+\end{itemize}
+
+\noindent The reconfiguration controller will ensure that a configuration word 
+is valid before committing it to the processor. If an invalid configuration is 
+requested, the E flag in \creg{GSR} is set and the request is otherwise ignored.
+
+\subsection{Requesting a reconfiguration}
+\label{sec:core-ug-reconf-request}
+
+The following three mechanisms are available which can request reconfigurations.
+
+\begin{itemize}
+
+\item Writes to the \creg{CRR} context control register from a program running
+on the core. This section primarily deals with this mechanism.
+
+\item Writes to the \creg{BCRR} global control register from the debug bus. This
+mechanism is equivalent to the first, except it is triggered from outside the
+core.
+
+\item The sleep and wake-up system, as described in
+Section~{sec:core-ug-reconf-saw}.
+
+\end{itemize}
+
+\noindent Usually, when a reconfiguration is requested, the new configuration 
+will be committed within something in the order of tens of cycles, depending on 
+how long it takes the reconfiguration controller to pause the affected contexts. 
+However, a reconfiguration may also be rejected, either another context or the 
+bus is requesting a new configuration simultaneously and arbitration is lost, or 
+because the requested configuration is invalid. The following C function
+correctly deals with arbitration, and performs a best-effort attempt at
+detecting errors without using locks implemented in software.
+
+\begin{lstlisting}[numbers=none, basicstyle=\footnotesize, language=C]
+/**
+ * Requests a reconfiguration. Returns 1 if reconfiguration was successful,
+ * -1 if the requested configuration is invalid or 0 if it is not known
+ * whether the configuration was valid or not.
+ */
+int reconfigure(unsigned int newConfiguration) {
+    
+    // Extract our own context ID from the register file, which we will use
+    // to check if we won arbitration or not.
+    int ourselves = CR_CID;
+    
+    // Used to store the ID of the winning context after the request.
+    int winner;
+    
+    // Retry requesting the new configuration until we win arbitration.
+    do {
+        
+        // Request the new configuration.
+        CR_CRR = newConfiguration.
+        
+        // Load the GSR register for state information.
+        gsr = CR_GSR;
+        
+        // Extract the reconfiguration requester ID field from GSR.
+        int winner = (gsr & CR_GSR_RID_MASK) >> CR_GSR_RID_BIT;
+        
+    } while (winner != ourselves);
+    
+    // Busy-wait for reconfiguration to complete.
+    while (gsr & CR_GSR_B_MASK) {
+        gsr = CR_GSR;
+    }
+    
+    // If our context is still the one which was the last to request a
+    // reconfiguration, the error flag in GSR is also meant for us. If not,
+    // there is no way to tell if the configuration we requested was valid
+    // or not.
+    if (((gsr & CR_GSR_RID_MASK) >> CR_GSR_RID_BIT) != ourselves) {
+        return 0;
+    }
+    
+    // If the error flag is set, return -1.
+    if (gsr & CR_GSR_E_MASK) {
+        return -1;
+    }
+    
+    // Reconfiguration was successful.
+    return 1;
+    
+}
+\end{lstlisting}
+
+\subsection{Sleep and wake-up system}
+\label{sec:core-ug-reconf-saw}
+
+The sleep and wake-up system refers to two context control registers which only 
+exist on context zero, through which the processor can be set up to 
+automatically request a reconfiguration when the interrupt request input of 
+context zero is asserted. More specifically, the wakeup system will activate
+when all of the following conditions are met.
+
+\begin{itemize}
+\item The S flag in \creg{SAWC} is set.
+\item An interrupt is pending on context 0.
+\item Context 0 is not already active in the current configuration.
+\item There is no reconfiguration in progress.
+\end{itemize}
+
+\noindent When activated, the following actions are performed.
+
+\begin{itemize}
+\item A reconfiguration to the configuration stored in \creg{WCFG} is requested.
+\item \creg{WCFG} is set to the old configuration.
+\item The S flag in \creg{SAWC} is cleared.
+\end{itemize}
+
+\noindent This system may be used to save power which is otherwise wasted in an 
+idle loop, or to improve interrupt latency by dedicating hardware context zero 
+to only handling interrupts. These use cases are described below.
+
+\subsubsection{Power saving}
+\label{sec:core-ug-reconf-saw-power}
+
+To conserve power, the user may want to switch to a configuration where all 
+pipelane groups are idle until an interrupt occurs. This is called sleeping. On 
+an FPGA this is merely a proof of concept, but in an ASIC the amount of power 
+which might be saved by clock gating or powering down the computational 
+resources may be very significant. To go to sleep, the program should take the 
+following steps.
+
+\begin{enumerate}
+
+\item If other hardware contexts were running other tasks in parallel to
+context zero, which may be in a state in which the processor should not sleep,
+first request these tasks to pause gracefully. If necessary, request a
+reconfiguration to configuration zero, as described in 
+Section~\ref{sec:core-ug-reconf-request}. to disable all contexts except for 
+context zero.
+
+\item Disable interrupts using the I field in \creg{CCR}.
+
+\item If necessary, ensure that no interrupt occured before interrupts were
+disabled which should cause the processor to stay awake. If this did happen,
+take the appropriate actions, such as re-enabling interrupts, before attempting
+to sleep again.
+
+\item Copy \creg{CC}, the current configuration, to \creg{WCFG}, the wake-up
+configuration. This is an easy way to ensure that \creg{WCFG} will not contain
+an invalid configuration.
+
+\item Set the S flag in \creg{SAWC} to enable the wake-up system.
+
+\item Request a reconfiguration to the configuration where all pipelane groups 
+are disabled, for instance 0x8888 on a core which is design-time configured to 
+have four pipelane groups, as described in
+Section~\ref{sec:core-ug-reconf-request}.
+
+\item Busy-loop until the S flag in \creg{SAWC} is cleared. This ensures that
+the program will not continue until after the processor has finished sleeping.
+
+\item Enable interrupts using the I field in \creg{CCR} to service the
+interrupt. The fact that this is not done automatically also allows the
+interrupt request input to simply be used as a wake-up input in a simple system
+where no interrupts exist.
+
+\end{enumerate}
+
+\subsubsection{Decreasing interrupt latency}
+\label{sec:core-ug-reconf-saw-latency}
+
+To decrease interrupt latency, context zero may be used as a dedicated context
+for servicing interrupts. This prevents the context zero trap handler from
+having to save and restore the state of the processor as it was before the
+interrupt trap, as this information is not relevant. The other hardware contexts
+may be used to run the main program; the reconfiguration system is then used for
+hardware context switching.
+
+To initialize this system, the program should do the following in context zero.
+
+\begin{enumerate}
+
+\item Set up links to the trap and panic handlers for context 0 in \creg{TH} and
+\creg{PH}.
+
+\item Copy \creg{CC}, the current configuration, to \creg{WCFG}, the wake-up
+configuration. This is an easy way to ensure that \creg{WCFG} will not contain
+an invalid configuration.
+
+\item Set the S flag in \creg{SAWC} to enable the wake-up system.
+
+\item Request a reconfiguration as described in 
+Section~\ref{sec:core-ug-reconf-request}, to, for instance, 0x1111, if the main 
+program is to run in hardware context 1.
+
+\item Busy-loop until the S flag in \creg{SAWC} is cleared. This ensures that
+the program will not continue until after the first interrupt is requested.
+
+\item Set ready-for-trap and enable interrupts using the R and I fields in 
+\creg{CCR} to service the interrupt.
+
+\item Busy-loop forever to wait for the interrupt to be serviced.
+
+\end{enumerate}
+
+\noindent The other contexts can initialize in the usual manner. The context 0 
+trap handler should do the following.
+
+\begin{enumerate}
+
+\item Perform body of the regular trap handling tasks, i.e., everything except 
+for saving and restoring the context and executing \insn{RFI}.
+
+\item Set ready-for-trap and enable interrupts using the R and I fields in 
+\creg{CCR} to quickly service the next interrupt if one is already pending.
+Clear ready-for-trap and disable interrupts in the next cycle again; one cycle
+is enough for an interrupt to be handled.
+
+\item Store the contents of \creg{WCFG} in a temporary register.
+
+\item Copy \creg{CC}, the current configuration, to \creg{WCFG}, the wake-up
+configuration. This is an easy way to ensure that \creg{WCFG} will not contain
+an invalid configuration.
+
+\item Set the S flag in \creg{SAWC} to enable the wake-up system.
+
+\item Request a reconfiguration to the configuration as stored in the temporary
+register, as described in Section~\ref{sec:core-ug-reconf-request}.
+
+\item Busy-loop until the S flag in \creg{SAWC} is cleared. This ensures that
+the program will not continue until after the first interrupt is requested.
+
+\item Set ready-for-trap and enable interrupts using the R and I fields in 
+\creg{CCR} to service the interrupt.
+
+\item Busy-loop forever to wait for the interrupt to be serviced.
+
+\end{enumerate}
+
+
+
+\todo[inline]{Write more about the sleep and wake-up system}
+
+
+

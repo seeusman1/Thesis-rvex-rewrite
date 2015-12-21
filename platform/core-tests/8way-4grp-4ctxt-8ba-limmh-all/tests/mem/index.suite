@@ -6,5 +6,5 @@ integer.test
 -- Test branch store/loads (LDBR, STBR)
 branch.test
 
--- Test link register store/loads (LDL, STL)
+-- Test link register store/loads (LDW (link), STW (link))
 link.test

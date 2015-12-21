@@ -4,24 +4,28 @@ import interpreter
 import copy
 import bitfields
 
-def parse_opcodes(fname):
+def parse(fname):
     """Parses the opcodes.tex file.
     
     Arguments:
      - fname specifies the file to read.
       
-    The return value is a two-tuple.
+    The return value is a three-tuple.
     
-    First entry of the result two-tuple: list of dictionaries. These dicts have
+    First entry of the result three-tuple: list of dictionaries. These dicts have
     the following entries:
      - 'name': name of the group which this dict represents.
      - 'doc': LaTeX documentation for the group which this dict represents.
      - 'line_nr': line number of the group command.
      - 'syllables': list of syllables in this group.
     
-    The second entry of the result two-tuple is a list with 256 entries, mapping
+    The second entry of the result three-tuple is a list with 256 entries, mapping
     to the same syllable dicts which the 'syllables' entry of the other part of
     the result maps to.
+    
+    The third entry of the result three-tuple is a dictionary containing the
+    default syllable configuration, i.e. a full syllable specification except for
+    the 'name', 'syntax', 'opcode', 'doc' and 'line_nr' fields.
     
     Syllables are represented as another dict:
      - 'name': mnemonic for the syllable.
@@ -127,7 +131,88 @@ def parse_opcodes(fname):
             raise Exception('Unrecognized group command at ' +
                             fname + ':' + str(group['line_nr']))
     
-    return (sections, table)
+    return (sections, table, def_params)
+
+def get_brfmt(syl):
+    if 'brFmt' in syl['datapath']:
+        if syl['datapath']['brFmt'] == "'1'":
+            return 1
+    return 0
+
+def get_imm_sw(syl):
+    if '\\ry' in syl['syntax']:
+        # Output both.
+        imm_sws = [0, 1]
+    else:
+        # The value of imm_sw is don't care, so output once.
+        imm_sws = [0]
+    if syl['opcode'][8] == '0':
+        # Instruction doesn't support immediate mode.
+        imm_sws = [0]
+    elif syl['opcode'][8] == '1':
+        # Instruction doesn't support register mode.
+        imm_sws = [1]
+    return imm_sws
+
+def format_syntax(s, style, syl, imm_sw, require_curly_brackets=False):
+    """Formats the syntax definitions into a given style.
+    
+    Style may be 'plain', 'latex' or 'vhdl'."""
+    
+    # Figure out the right replacement table for 
+    if style == 'vhdl':
+        table = {
+            '\\rd': 'r#.%r1',
+            '\\rx': 'r#.%r2',
+            '\\ry': 'r#.%r3',
+            '\\rs': 'r#.1',
+            '\\bd': 'b#.%b2',
+            '\\bs': 'b#.%b3',
+            '\\lr': 'l#.0',
+            '\\of': '%bt',
+            '\\sa': '%bi',
+            '\\lt': '%i1',
+            '\\li': '%i2'
+        }
+        if imm_sw == 1:
+            table['\\ry'] = '%ih'
+        if get_brfmt(syl) == 1:
+            table['\\bd'] = 'b#.%b3'
+            table['\\bs'] = 'b#.%b1'
+    else:
+        table = {
+            '\\rd': '$r0.d',
+            '\\rx': '$r0.x',
+            '\\ry': '$r0.y',
+            '\\rs': '$r0.1',
+            '\\bd': '$b0.bd',
+            '\\bs': '$b0.bs',
+            '\\lr': '$l0.0',
+            '\\of': 'offs',
+            '\\sa': 'stackadj',
+            '\\lt': 'tgt',
+            '\\li': 'imm'
+        }
+        if imm_sw is None:
+            table['\\ry'] = '[$r0.y|imm]'
+        elif imm_sw == 1:
+            table['\\ry'] = 'imm'
+        if style == 'latex':
+            for cmd in table:
+                table[cmd] = '\code{' + table[cmd] + '}'
+            if imm_sw is None:
+                table['\\ry'] = '[ \code{$r0.y} | \code{imm} ]'
+            elif imm_sw == 1:
+                table['\\ry'] = '\code{imm}'
+    
+    # Apply replacements.
+    for cmd in table:
+        s = s.replace(cmd + '{}', table[cmd])
+    if not require_curly_brackets:
+        for cmd in table:
+            s = s.replace(cmd, table[cmd])
+    
+    return s
 
 def get_bitfields(syl, imm_sw):
     """Returns the bit format which describe the given syllable."""
@@ -138,26 +223,26 @@ def get_bitfields(syl, imm_sw):
             fields += [{
                 'range': str(31 - i),
                 'name': b,
-                'group': 'opcode'
+                'group': 'opcode' if i < 8 else 'imm_sw'
             }]
     if '\\rd' in syl['syntax']:
         fields += [{
             'range': '22..17',
-            'name': '$r0.d',
-            'group': '$r0.d'
+            'name': 'd',
+            'group': 'd'
         }]
     if '\\rx' in syl['syntax']:
         fields += [{
             'range': '16..11',
-            'name': '$r0.x',
-            'group': '$r0.x'
+            'name': 'x',
+            'group': 'x'
         }]
     if '\\ry' in syl['syntax']:
         if imm_sw == 0:
             fields += [{
                 'range': '10..5',
-                'name': '$r0.y',
-                'group': '$r0.y'
+                'name': 'y',
+                'group': 'y'
             }]
         else:
             fields += [{
@@ -169,37 +254,33 @@ def get_bitfields(syl, imm_sw):
             fields += [{
                 'range': '23',
                 'name': str(imm_sw),
-                'group': 'opcode'
+                'group': 'imm_sw'
             }]
-    brfmt = 0
-    if 'brFmt' in syl['datapath']:
-        if syl['datapath']['brFmt'] == "'1'":
-            brfmt = 1
     if '\\bd' in syl['syntax']:
-        if brfmt == 0:
+        if get_brfmt(syl) == 0:
             fields += [{
                 'range': '19..17',
-                'name': '$b0.d',
-                'group': '$b0.d'
+                'name': 'bd',
+                'group': 'bd'
             }]
         else:
             fields += [{
                 'range': '4..2',
-                'name': '$b0.d',
-                'group': '$b0.d'
+                'name': 'bd',
+                'group': 'bd'
             }]
     if '\\bs' in syl['syntax']:
-        if brfmt == 0:
+        if get_brfmt(syl) == 0:
             fields += [{
                 'range': '4..2',
-                'name': '$b0.s',
-                'group': '$b0.s'
+                'name': 'bs',
+                'group': 'bs'
             }]
         else:
             fields += [{
                 'range': '26..24',
-                'name': '$b0.s',
-                'group': '$b0.s'
+                'name': 'bs',
+                'group': 'bs'
             }]
     if '\\of' in syl['syntax']:
         fields += [{
@@ -232,7 +313,7 @@ def get_bitfields(syl, imm_sw):
     }]
     
     try:
-        fields = bitfields.parse(fields, {'name': '.........................................................'})
+        fields = bitfields.parse(fields, {'name': ''})
     except Exception as e:
         raise Exception('Some fields needed to describe ' + syl['name'] +
                         ' (line ' + str(syl['line_nr']) + ') overlap: ' +
@@ -240,34 +321,3 @@ def get_bitfields(syl, imm_sw):
     
     return fields
 
-sections, table = parse_opcodes('../opcodes.tex')
-
-print('|-:-:-:-+-:-:-:-|-:-:-:-+-:-:-:-|-:-:-:-+-:-:-:-|-:-:-:-+-:-:-:-|------|')
-prev_syl = None
-for opc, syl in enumerate(table):
-    if syl is None:
-        continue
-    if prev_syl is syl:
-        continue
-    prev_syl = syl
-    if '\\ry' in syl['syntax']:
-        imm_sws = [0, 1]
-    else:
-        imm_sws = [0]
-    if syl['opcode'][8] == '0':
-        imm_sws = [0]
-    elif syl['opcode'][8] == '1':
-        imm_sws = [1]
-    for i, imm_sw in enumerate(imm_sws):
-        if i != 0:
-            h = '    '
-        elif '-' in syl['opcode'][:8]:
-            h = '... '
-        else:
-            h = '0x%02X' % opc
-        fields = get_bitfields(syl, imm_sw)
-        print(bitfields.format_comment(
-            fields, '', header=False, footer=False)[:-1] + ' ' + h + ' | ' + syl['syntax'])
-    print('|-:-:-:-+-:-:-:-|-:-:-:-+-:-:-:-|-:-:-:-+-:-:-:-|-:-:-:-+-:-:-:-|------|')
-    
-    

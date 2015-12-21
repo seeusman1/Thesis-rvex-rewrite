@@ -13,7 +13,7 @@ init
 
 -- 0x000
 load    add r0.1 = r0.0, 42
-load    mtl l0.0 = r0.0
+load    movtl l0.0 = r0.0
 load    nop
 load    nop
 load    nop
@@ -28,8 +28,8 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stl 0[r0.0] = l0.0 -- Should be 0, still
-load    mtl l0.0 = r0.1 ;;
+load    stw 0[r0.0] = l0.0 -- Should be 0, still
+load    movtl l0.0 = r0.1 ;;
 
 -- 0x040
 load    add r0.1 = r0.0, 123
@@ -38,7 +38,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stl 0[r0.0] = l0.0 -- Should be 42 here.
+load    stw 0[r0.0] = l0.0 -- Should be 42 here.
 load    nop ;;
 
 -- 0x060
@@ -48,11 +48,11 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stl 0[r0.0] = l0.0 -- Should still be 42 here.
+load    stw 0[r0.0] = l0.0 -- Should still be 42 here.
 load    nop ;;
 
 -- 0x080
-load    mtl l0.0 = r0.1
+load    movtl l0.0 = r0.1
 load    nop
 load    nop
 load    nop
@@ -68,7 +68,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stl 0[r0.0] = l0.0 -- Should be 123 here.
+load    stw 0[r0.0] = l0.0 -- Should be 123 here.
 load    nop ;;
 
 -- 0x0C0
@@ -78,7 +78,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stl 0[r0.0] = l0.0 -- Should still be 123 here.
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
 load    nop ;;
 
 -- 0x0E0
@@ -88,7 +88,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stl 0[r0.0] = l0.0 -- Should still be 123 here.
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
 load    nop ;;
 
 -- 0x100
@@ -98,7 +98,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stl 0[r0.0] = l0.0 -- Should still be 123 here.
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
 load    nop ;;
 
 -- 0x120
@@ -108,7 +108,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stl 0[r0.0] = l0.0 -- Should still be 123 here.
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
 load    nop ;;
 
 -- 0x140
@@ -118,7 +118,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stl 0[r0.0] = l0.0 -- Should still be 123 here.
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
 load    stop ;;
 
 -- Run the test.

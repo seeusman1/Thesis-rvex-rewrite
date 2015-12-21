@@ -1,0 +1,97 @@
+\subsection{Registers}
+\label{sec:core-ug-isa-regs}
+
+The \rvex{} processor has five distinguishable register files. Each is described
+below.
+
+\subsubsection{General purpose registers}
+\label{sec:core-ug-isa-regs-gp}
+
+The \rvex{} core contains 64 32-bit general purpose registers for arithmetic.
+
+Register 0 is special, as it always reads as 0 when used by the processor.
+Writing to it does however work; the debug bus can read the latest value written
+to it. This allows the register to be used for debugging on rare occasions.
+
+Register 1 is intended to be used as the stack pointer. The \insn{RETURN} and
+\insn{RFI} instructions can add an immediate value to it for stack adjustment,
+but otherwise the register is not special.
+
+Register 63 can optionally be mapped to the link register at design time using
+generics. This allows arithmetic instructions to be performed on the link
+register without needing to use \insn{MOVFL} and \insn{MOVTL}, at the cost of a
+general purpose register.
+
+There are no explicit move or load immediate operations, as the following
+syllables are already capable of these operations.
+
+\begin{lstlisting}[numbers=none, basicstyle=\footnotesize, language=vexasm]
+c0 or $r0.dest = $r0.0, $r0.src        // Move src to dest
+c0 or $r0.dest = $r0.0, immediate      // Load immediate
+\end{lstlisting}
+
+\subsubsection{Branch registers}
+\label{sec:core-ug-isa-regs-br}
+
+The \rvex{} core contains 8 1-bit registers used for branch conditions, select
+instructions, divisions, and additions of values wider than 32 bits.
+
+All arithmetic operations which output a boolean value can write to either a
+general purpose register (in which case they will write 0 for false and 1 for
+true) or a branch register. These include all integer comparison operations and
+select boolean operations.
+
+Moving a branch register to another branch register cannot be done in a single
+cycle, but loading an immediate into a branch register or moving to or from a
+general purpose register can be done as follows.
+
+\begin{lstlisting}[numbers=none, basicstyle=\footnotesize, language=vexasm]
+c0 cmpeq $b0.dest = $r0.0, $r0.0       // Load true
+c0 cmpne $b0.dest = $r0.0, $r0.0       // Load false
+c0 cmpne $b0.dest = $r0.0, $r0.src     // Move general purpose to branch
+c0 slctf $r0.dest = $b0.src, $r0.0, 1  // Move branch to general purpose
+\end{lstlisting}
+
+Branch register can also not be loaded from or stored into memory on their own.
+However, to improve context switching speed slightly, the \insn{LDBR} and
+\insn{STBR} instructions are available. These load or store a byte containing
+all eight branch registers in a single syllable.
+
+\subsubsection{Link register}
+\label{sec:core-ug-isa-regs-lr}
+
+The link register is a 32-bit register used to store the return address when
+calling. It can also be used as the destination address for an unconditional
+indirect jump or call, in cases where the branch offset field is too small or
+when the jump target is determined at runtime.
+
+When general purpose register 63 is not mapped to the link register, the 
+\insn{MOVTL} and \insn{LDW} instructions can be used to load the link register 
+from a general purpose register or memory respectively. \insn{MOVFL} and 
+\insn{STW} perform the reverse operations.
+
+\subsubsection{Global and context control registers}
+\label{sec:core-ug-isa-regs-creg}
+
+These two register files contain special-purpose registers. The global control
+registers contain status information not related to any context, whereas the
+context control registers are context specific.
+
+The processor can access these register files through memory operations only. 
+All these accesses are single-cycle. 1 kiB of memory space has to be reserved 
+for this purpose, usually mapped to 0xFFFFFC00..0xFFFFFFFF. The location of the 
+block is design-time configurable. Note that it is impossible for the processor 
+to perform actual memory operations to this region, so the location of the block 
+should be chosen wisely.
+
+The global register file is read-only from the perspective of the program.
+The context register file is writable, but it should be noted that each program
+can only access its own hardware context register file. If an application
+requires that programs can write to the global register file or the other
+context register files, the debug bus can be made accessible by memory
+operations outside the core. In most platforms this happens coincidentally,
+as the processor can access the main bus of the platform, and the main bus is
+wired to the debug bus.
+ 
+For more information about the control registers, refer to
+Section~\ref{sec:core-ug-creg}.

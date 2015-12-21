@@ -34,7 +34,7 @@ load    add r0.11 = r0.11, r0.12 ;;
 
 -- 0x0040
 load    stw 0[r0.0] = r0.11
-load    mtl l0.0 = r0.63 ;;
+load    movtl l0.0 = r0.63 ;;
 
 -- 0x0048
 load    nop
@@ -52,7 +52,7 @@ load    stw 4[r0.0] = r0.0
 load    nop ;;
 
 -- 0x1010
-load    mtl l0.0 = r0.63
+load    movtl l0.0 = r0.63
 load    nop ;;
 
 -- 0x1018

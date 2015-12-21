@@ -1,3 +1,4 @@
+import re
 
 def parse_file(fname, cmds):
     """Parses a file with syntax similar to LaTeX commands.
@@ -42,19 +43,16 @@ def parse_file(fname, cmds):
         # Ignore indentation, trailing whitespace and comments.
         line = line.split('%')[0].strip()
         
-        # Ignore empty lines.
-        if line == '':
-            continue
-        
         # Try to recognize commands.
         cmd_name = None
         cmd_data = None
-        if line[0] == '\\':
-            for cmd in cmds:
-                if line.startswith('\\' + cmd):
-                    cmd_name = cmd
-                    cmd_data = cmds[cmd]
-                    break
+        if line != '':
+            if line[0] == '\\':
+                for cmd in cmds:
+                    if line.startswith('\\' + cmd):
+                        cmd_name = cmd
+                        cmd_data = cmds[cmd]
+                        break
         
         # If we didn't recognize a command, handle as text.
         if cmd_data is None:
@@ -85,7 +83,7 @@ def parse_file(fname, cmds):
                 args = []
         if len(args) != cmd_data[0]:
             raise Exception('\\' + cmd_name + ' expects ' + str(cmd_data[0]) +
-                            ' args but got ' + len(args) + ' at ' +
+                            ' args but got ' + str(len(args)) + ' at ' +
                             fname + ':' + str(line_nr))
         cmd = [cmd_name] + args
         
@@ -112,4 +110,32 @@ def parse_file(fname, cmds):
     
     return groups
 
-
+def generate(s, values={'n': None}, default='$%s$'):
+    """Replaces all instances of \<key in values>{<optional python code>}.
+    
+    Used for generating stuff in the configuration files, like lists of similar
+    registers. The above command, usually \n{} is then replaced with something
+    which makes sense based on context, i.e. on whether the list of similar
+    stuff is expanded or collapsed. To collapse a list, set the value of the
+    variable key name in values to None, it will then be replaced with the
+    format() string set by default. Otherwise, the value of the variable will
+    be expanded by default. The default may be overridden by embedding python
+    code between the curly brackets. This python code must return a string and
+    uses the values dictionary as locals.
+    """
+    for varname in values:
+        var = values[varname]
+        while True:
+            s = re.split(r'\\' + varname + r'\{((?:[^\\\}]|\\.)*)\}', s, 1)
+            if len(s) == 1:
+                s = s[0]
+                break
+            if s[1] == '':
+                if var is None:
+                    s = s[0] + (default % varname) + s[2]
+                else:
+                    s = s[0] + str(var) + s[2]
+            else:
+                s = s[0] + eval(s[1], {}, values) + s[2]
+    return s
+    

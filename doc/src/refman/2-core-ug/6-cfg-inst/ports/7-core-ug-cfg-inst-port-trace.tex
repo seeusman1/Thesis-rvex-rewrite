@@ -1,0 +1,37 @@
+
+\subsubsection{Trace interface}
+\label{sec:core-ug-cfg-inst-port-trace}
+
+The trace interface provides an optional write-only bus to some memory system or 
+peripheral, which the core may send trace information to. The trace system is 
+disabled by default and must be enabled in the \creg{DCR2} control register. In 
+addition, the trace unit hardware is only instantiated when \code{traceEnable} 
+is set in the \code{CFG} vector.
+
+\begin{itemize}
+
+\item \code{rv2trsink_push : out std_logic}
+
+When high, \code{rv2trsink_data} and \code{rv2trsink_end} are valid and should 
+be registered in the next cycle where \code{clkEn} is high.
+
+\vspace{1em}
+\item \code{rv2trsink_data : out rvex_byte_type}
+
+Trace data signal. Valid when \code{rv2trsink_push} is high.
+
+\vspace{1em}
+\item \code{rv2trsink_end : out std_logic}
+
+When high, this is the last byte of this trace packet. May be used to flush 
+buffers downstream, or may be ignored.
+
+\vspace{1em}
+\item \code{trsink2rv_busy : in  std_logic}
+
+When high while \code{rv2trsink_push} is high, the trace unit is stalled. While 
+stalled, \code{rv2trsink_push} will stay high and \code{rv2trsink_data} and 
+\code{rv2trsink_end} will remain stable.
+
+\end{itemize}
+

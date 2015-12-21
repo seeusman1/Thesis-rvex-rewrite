@@ -1,0 +1,39 @@
+
+\clearpage
+\section{Control registers}
+\label{sec:core-ug-creg}
+
+The \rvex{} processor has two control register files. These are the global 
+control register file (\code{gbreg}) and the context control register file 
+(\code{cxreg}).
+
+The \code{gbreg} file contains mostly status information, such as a general 
+purpose cycle counter, the current configuration vector and design-time 
+configuration information. While the debug bus has read/write access to 
+\code{gbreg}, the core can only read from it.
+
+For more information, refer to Section~\ref{sec:core-ug-isa-regs-creg}.
+
+%\subimport{1-gb/}{core-ug-creg-gb.tex}
+%\subimport{2-cx/}{core-ug-creg-cx.tex}
+
+\subsection{Global control registers}
+\label{sec:core-ug-creg-gb}
+
+The following table lists the global control registers of the \rvex{} processor. 
+The offsets listed are with respect to the control register base address. If you 
+are viewing this manual digitally, you can click the register mnemonics on the 
+right to jump to their documentation.
+
+\subimport{../../generated/}{gbreg.generated.tex}
+
+\subsection{Context control registers}
+\label{sec:core-ug-creg-cx}
+
+The following table lists the context control registers of the \rvex{} 
+processor. The offsets listed are with respect to the control register base 
+address. If you are viewing this manual digitally, you can click the register 
+mnemonics on the right to jump to their documentation.
+
+\subimport{../../generated/}{cxreg.generated.tex}
+
