@@ -10,7 +10,7 @@ required \code{std_logic} input signals. \code{clkEn} is an optional
 The core is clocked on the rising edge of \code{clk} while \code{clkEn} is high. 
 When a rising edge on \code{clk} occurs while \code{reset} is high, most
 components of the core will be reset, regardless of the state of \code{clkEn}.
-The only component of the core which is not reset by this is the general purpose
+The only component of the core that is not reset by this is the general purpose
 register file. This is because this register file is implemented using block
 RAMs, which have no physical reset input in Xilinx FPGAs.
 

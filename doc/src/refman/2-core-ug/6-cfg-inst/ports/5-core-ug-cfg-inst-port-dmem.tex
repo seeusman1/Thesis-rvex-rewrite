@@ -14,7 +14,7 @@ is defined by \code{L_MEM}, which is defined in \code{core_pipeline_pkg}.
   
 \item \code{rv2dmem_addr : out rvex_address_array(}\textit{number of lane groups - 1}\code{ downto 0)}
 
-Memory address which is to be accessed if \code{rv2dmem_readEnable} or 
+Memory address that is to be accessed if \code{rv2dmem_readEnable} or 
 \code{rv2dmem_writeEnable} is high. The two least significant bits of the 
 address will always be \code{"00"} and may be ignored. Note that a configurable 
 1 kiB block within this 4 GiB memory space is inaccessible, because it is 
@@ -69,7 +69,7 @@ lane groups. \code{dmem2rv_busFault} being high indicates that some kind of bus
 fault occured, for example if a memory access was made to unmapped memory.
 
 In either case, a \code{DMEM_FAULT} trap will be issued. The trap argument will 
-be set to the address which was requested.
+be set to the address that was requested.
 
 \todo[inline]{There is currently no way to distinguish between a data memory
 interface fault and a bus fault. A new trap should probably be added to the core

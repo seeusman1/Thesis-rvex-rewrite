@@ -50,7 +50,7 @@
 % 
 %  - \id{<identifier>}
 %    Gives a field an alternative name for the C/VHDL/rvd definitions. This only
-%    works for 8-bit and 16-bit fields which are properly aligned.
+%    works for 8-bit and 16-bit fields that are properly aligned.
 % 
 %  - Anything else:
 %    Any unrecognized line is used as a description for either the whole 
@@ -67,9 +67,9 @@ the debug bus.
 \field{31..24}{CAUSE}
 \debugCanWrite{}
 \id{TC}
-Trap cause. Set by to the trap cause by hardware when the trap handler is 
-called. Reset to 0 by hardware when an \insn{RFI} instruction is encountered. 
-Read-write by the debug bus, but the processor cannot write to this register.
+Trap cause. Set to the trap cause by hardware when the trap handler is called. 
+Reset to 0 by hardware when an \insn{RFI} instruction is encountered. Read-write 
+by the debug bus, but the processor cannot write to this register.
 
 \field{23..16}{BRANCH}
 \debugCanWrite{}
@@ -89,8 +89,8 @@ the trap or panic handlers. These must thus always point to code in hardware
 memory space. When \insn{RFI} is executed, the state is restored from
 \creg{SCCR}.
 
-In kernel mode, the register reads as \code{01}, while in user mode, it reads 
-as\code{10}. The only way to enter user mode is by writing the user mode command 
+In kernel mode, the register reads as \code{01}, while in user mode, it reads as 
+\code{10}. The only way to enter user mode is by writing the user mode command 
 to \creg{SCCR} and subsequently executing \insn{RFI}. Neither the core nor the 
 debug bus can write to this field directly.
 
@@ -105,7 +105,7 @@ is entered, the context switch trap is disabled. When \insn{RFI} is executed,
 the state is restored from \creg{SCCR}.
 
 When the context switch trap is enabled, this register reads as \code{01}. When 
-it is disabled, it reads as\code{10}. Both the core and the debug bus can write 
+it is disabled, it reads as \code{10}. Both the core and the debug bus can write 
 to this register. Writing \code{00} has no effect, writing \code{01} enables the 
 context switching trap, writing \code{10} disables it and writing \code{11} 
 toggles the state. This prevents the need for read-modify-write operations.
@@ -123,7 +123,7 @@ breakpoints are disabled. When \insn{RFI} is executed, the state is restored
 from \creg{SCCR}.
 
 When breakpoints are enabled, this register reads as \code{01}. When they are 
-disabled, it reads as\code{10}. Both the core and the debug bus can write to 
+disabled, it reads as \code{10}. Both the core and the debug bus can write to 
 this register. Writing \code{00} has no effect, writing \code{01} enables debug 
 traps, writing \code{10} disables them and writing \code{11} toggles the state. 
 This prevents the need for read-modify-write operations.
@@ -134,14 +134,14 @@ This prevents the need for read-modify-write operations.
 \reset{10}
 This register, named ready-for-trap, tentatively specifies if the processor is
 currently capable of servicing traps. However, since traps cannot be masked,
-any trap which occurs while ready-for-trap is cleared will cause a panic.
+any trap that occurs while ready-for-trap is cleared will cause a panic.
 Therefore, the only thing this register does in hardware is switch between the
 trap handler and panic handler address. When the core is reset or the trap
 service routine is entered, ready-for-trap is cleared. When \insn{RFI} is 
 executed, the state is restored from \creg{SCCR}.
 
 When ready-for-trap is set (trap handler selected), this register reads as 
-\code{01}. When it is cleared (panic handler selected), it reads as\code{10}. 
+\code{01}. When it is cleared (panic handler selected), it reads as \code{10}. 
 Both the core and the debug bus can write to this register. Writing \code{00} 
 has no effect, writing \code{01} sets ready-for-trap, writing \code{10} clears 
 it and writing \code{11} toggles the state. This prevents the need for 
@@ -156,7 +156,7 @@ core is reset or the trap service routine is entered, external interrupts are
 disabled. When \insn{RFI} is executed, the state is restored from \creg{SCCR}.
 
 When interrupts are enabled, this register reads as \code{01}. When they are 
-disabled, it reads as\code{10}. Both the core and the debug bus can write to 
+disabled, it reads as \code{10}. Both the core and the debug bus can write to 
 this register. Writing \code{00} has no effect, writing \code{01} enables 
 external interrupts, writing \code{10} disables them and writing \code{11} 
 toggles the state. This prevents the need for read-modify-write operations.
@@ -290,7 +290,7 @@ When a trap occurs, this register is set to the address of the start of the
 offending bundle. The address is in user space if the MMU was enabled when the
 trap occured. In addition, when \insn{RFI} is executed, the processor will jump
 back to this address to resume execution. This is the correct behavior for both
-external interrupts and traps which, after servicing, should return to the
+external interrupts and traps that, after servicing, should return to the
 previously offending instruction, such as a page fault.
 
 To support software context switching, the processor may write to this register
@@ -316,7 +316,7 @@ information.
 %===============================================================================
 
 \registergen{range(4)}{BR\n{}}{Breakpoint \n{}}{0x220}{4}
-These registers holds the addresses for the hardware breakpoints and/or
+These registers hold the addresses for the hardware breakpoints and/or
 watchpoints. These registers only exist up to how many break-/watchpoints are
 design-time configured to be supported by the processor. Breakpoints are
 configured in \creg{DCR}.
@@ -382,9 +382,9 @@ zero has no effect; this flag is cleared by hardware when the first instruction
 is successfully fetched. It can thus be used as an acknowledgement flag for
 resuming execution.
 
-In addition, debug traps are disabled for instructions which were fetched while
+In addition, debug traps are disabled for instructions that were fetched while
 this flag was set. This behavior allows the processor to step beyond the
-breakpoint which caused the processor to break, so there is no need to disable
+breakpoint that caused the processor to break, so there is no need to disable
 the triggered breakpoint in order to resume. This behavior is also used for
 single stepping; see below.
 
@@ -418,7 +418,7 @@ instruction is executed.
 
 \field{23..16}{CAUSE}
 
-Trap cause for debug traps which should be handled by the external debug system.
+Trap cause for debug traps that should be handled by the external debug system.
 This is set to the debug trap cause by hardware when the B flag is set due to a
 debug trap.
 
@@ -628,7 +628,7 @@ if the debug bus writes a 1 to \creg{CYC}.
 
 As long as neither \creg{SYL} nor \creg{NOP} are 0xFFFFFFFF,
 \creg{SYL}~/~(\creg{SYL} + \creg{NOP}) represents average fraction of syllables
-which are \insn{NOP}, i.e. the compression efficiency of the binary.
+that are \insn{NOP}, i.e. the compression efficiency of the binary.
 
 \field{31..0}{Committed NOP counter}
 \debugCanWrite{}
@@ -648,10 +648,10 @@ debug system.
 \register{RSC}{Requested software context}{0x260}
 \todo{The RSC register doesn't exist yet.}
 \emph{This register does not exist on context 0.} It is hardwired to
-\code{RSC}$n$ in hardware context 0, and represents the software context which
+\code{RSC}$n$ in hardware context 0, and represents the software context that
 should be loaded into our hardware context, if it is not already loaded. The
 encoding of the register is at the user's discretion, but it is intended that
-this points to a memory region which contains the to be loaded context.
+this points to a memory region that contains the to be loaded context.
 
 The contents of this register are controlled by hardware context 0, which is 
 expected to run the scheduler. When this value does not equal the value in 
@@ -719,7 +719,7 @@ of the B flag in \creg{DCR} for each other context. Writing a one to a bit is
 equivalent to writing a one to the R flag in \creg{DCR} for each other context.
 
 A scheduler running on context 0 may use this feature, combined with an
-interrupt controller which triggers an interrupt when the done output for any
+interrupt controller that triggers an interrupt when the done output for any
 other context has a rising edge, to support task yielding for cooperative
 scheduling. A yield will then be equivalent to a \insn{STOP} instruction, which
 will thus trigger an interrupt for the scheduler. The scheduler may then

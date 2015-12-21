@@ -3,7 +3,7 @@
 \label{sec:core-ug-isa-sbit}
 
 The stop bit system is the colloquial name for the binary compression algorithm
-which the core may be design-time configured to support. It refers to a bit
+that the core may be design-time configured to support. It refers to a bit
 present in every syllable, which, if set, marks the syllable as the last syllable
 in the current bundle. In contrast, when the stop bit system is not used, bundle
 boundaries are based on alignment; each bundle is expected to start on an
@@ -62,7 +62,7 @@ more.
 The \rvex{} processor core allows the designer to make a compromise between the
 large binary size without stop bits and the additional hardware needed with stop
 bits. Instead of simply supporting stop bits or not, the stop bit system is
-configured by specifying the bundle alignment boundaries which the core may
+configured by specifying the bundle alignment boundaries that the core may
 expect. When the bundle alignment boundaries equal the size of the maximum
 bundle size, stop bits are effectively disabled. When the alignment boundary is
 set to 32-bit words, stop bits are fully enabled. Midway configuration are

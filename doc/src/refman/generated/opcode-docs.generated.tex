@@ -50,7 +50,7 @@ $r0.d = $r0.x + [$r0.y|imm];
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Performs a 32 bit addition. \code{$r0.x} is first left-shifted by one.
+\noindent Performs a 32-bit addition. \code{$r0.x} is first left-shifted by one.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 $r0.d = ($r0.x << 1) + [$r0.y|imm];
@@ -75,7 +75,7 @@ $r0.d = ($r0.x << 1) + [$r0.y|imm];
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Performs a 32 bit addition. \code{$r0.x} is first left-shifted by two.
+\noindent Performs a 32-bit addition. \code{$r0.x} is first left-shifted by two.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 $r0.d = ($r0.x << 2) + [$r0.y|imm];
@@ -100,7 +100,7 @@ $r0.d = ($r0.x << 2) + [$r0.y|imm];
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Performs a 32 bit addition. \code{$r0.x} is first left-shifted by three.
+\noindent Performs a 32-bit addition. \code{$r0.x} is first left-shifted by three.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 $r0.d = ($r0.x << 3) + [$r0.y|imm];
@@ -125,7 +125,7 @@ $r0.d = ($r0.x << 3) + [$r0.y|imm];
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Performs a 32 bit addition. \code{$r0.x} is first left-shifted by four.
+\noindent Performs a 32-bit addition. \code{$r0.x} is first left-shifted by four.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 $r0.d = ($r0.x << 4) + [$r0.y|imm];
@@ -803,7 +803,7 @@ $b0.bd = !($r0.x || [$r0.y|imm]);
 
 \insndocsection{ALU compare instructions}
 The \rvex{} ALU supports all 32-bit possible integer comparison operations in a
-single cycle. The immediate version of \insn{CMPNE} which writes to a branch
+single cycle. The immediate version of \insn{CMPNE} that writes to a branch
 register is used to load an immediate branch register.
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -2253,7 +2253,7 @@ tmp |= $b0.7 << 7
 \end{lstlisting}
 
 \insndocsection{Branch instructions}
-The highest-indexed pipelane in every \rvex{} system (i.e., the pipelane which
+The highest-indexed pipelane in every \rvex{} system (i.e., the pipelane that
 the last syllable in a bundle maps to) contains a branch unit. This unit
 supports the flow control operations outlined below.
 
@@ -2305,7 +2305,7 @@ PCP1 += offs;
 \normalsize
 \end{minipage}\vskip 10pt
 \noindent Branches to the address in \code{$l0.0} unconditionally. This is used for branches
-to code which cannot be reached using the branch offset immediate.
+to code that cannot be reached using the branch offset immediate.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 PCP1 = $l0.0;
@@ -2351,7 +2351,7 @@ PCP1 += offs;
 \end{minipage}\vskip 10pt
 \noindent Branches to the address in \code{$l0.0} unconditionally, while storing \code{PC+1}
 in the link register. In other words, it essentially swaps \code{PC+1} and
-\code{$l0.0}. This is used for dynamic function calls or calls to functions which
+\code{$l0.0}. This is used for dynamic function calls or calls to functions that
 cannot be reached using the branch offset immediate method.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]

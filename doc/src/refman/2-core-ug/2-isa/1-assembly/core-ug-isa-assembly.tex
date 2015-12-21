@@ -14,13 +14,13 @@ start:
 \end{lstlisting}
 
 The first line represents a label, as it ends in a colon. Each non-empty line 
-which does not start with a semicolon and is not a label represents a syllable. 
+that does not start with a semicolon and is not a label represents a syllable. 
 The first part of the syllable, \code{c0}, is optional. It specifies the cluster 
-which the syllable belongs to. Since the \rvex{} processor currently does not 
+that the syllable belongs to. Since the \rvex{} processor currently does not 
 support clusters, only cluster zero is allowed if specified. The second part 
 represents the opcode of the syllable, defining the operation to be performed. 
-The third part is the parameter list. Anything which is written to is placed 
-before the equals sign, anything which is read is placed after. Finally, a 
+The third part is the parameter list. Anything that is written to is placed 
+before the equals sign, anything that is read is placed after. Finally, a 
 double semicolon is used to mark bundle boundaries.
 
 The syntax for a general purpose register is \code{$r0.}\textit{index}, where 

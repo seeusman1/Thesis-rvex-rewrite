@@ -50,7 +50,7 @@ after \code{rv2imem_fetch} is asserted if \code{rv2imem_cancel} and
 Optional block affinity input signal for reconfigurable caches. If used, it is 
 expected to have the same timing as the \code{imem2rv_instr} signal. Each lane 
 group has log(\textit{number of lane groups}) bits in this signal, forming an 
-unsigned integer which indexes the lane group which serviced the instruction 
+unsigned integer that indexes the lane group that serviced the instruction 
 read. When the processor wants to reconfigure, it may use this signal as a hint 
 to determine which program should be placed on which lane group next, assuming 
 that there will be fewer cache misses if the currently running application is 

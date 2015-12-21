@@ -49,11 +49,11 @@ This is the toplevel file for the \rvex{} processor.
 This package contains type definitions and constants relevant both in the core 
 internally and for the external interface of the core. In particular, it 
 contains the type specification for the \code{CFG} generic, and the 
-\code{rvex_cfg} subprogram which should be used to construct or modify it.
+\code{rvex_cfg} subprogram that should be used to construct or modify it.
 }
 
 \entity{Internal \rvex{} package}{-}{core_intIface_pkg.vhd}{
-This package contains all type specifications, constants and subprograms which 
+This package contains all type specifications, constants and subprograms that 
 are relevant only to the core files and do not belong in a specific file. This 
 file does not contain configuration constants, aside from the following 
 constants related to simulation performance: \code{GEN_VHDL_SIM_INFO}, 
@@ -77,7 +77,7 @@ statements are in place to check the configuration specified by
 }
 
 \entity{Pipeline configuration}{-}{core_pipeline_pkg.vhd}{
-This contains constants which define the timing and the number of stages of the 
+This contains constants that define the timing and the number of stages of the 
 pipeline. All stage definitions and latencies may be changed without breaking 
 functionality, as long as the requirements for each constant are complied with. 
 Assert statements in \code{core_pipelane.vhd} verify that the pipeline 
@@ -119,7 +119,7 @@ DSP core.
 \entitylbl{Breakpoint unit}{brku}{core_brku.vhd}{
 This entity matches the PC and memory access command against the up to four 
 enabled hardware breakpoint registers, and generates debug traps if there is a 
-match. It should only be instantiated in pipelanes which also have a memory 
+match. It should only be instantiated in pipelanes that also have a memory 
 unit.
 }
 
@@ -161,7 +161,7 @@ functions for use in \code{core_opcode_pkg.vhd}.
 }
 
 \entity{(Dis)assembler package}{-}{core_asDisas_pkg.vhd}{
-This package defines simulation/elaboration only subprograms which can perform 
+This package defines simulation/elaboration only subprograms that can perform 
 basic assembly and disassembly, used for the core unit test runner and the 
 simulation-only core state output signal.
 }
@@ -245,7 +245,7 @@ addresses of the registers are defined in \code{core_ctrlRegs_pkg.vhd}.
 }
 
 \entity{Ctrl. reg. map package}{-}{core_ctrlRegs_pkg.vhd}{
-This package defines the constants which determine the memory map of the core 
+This package defines the constants that determine the memory map of the core 
 control registers and several boilerplate subprograms used to generate certain 
 types of control registers with. All control register memory map related 
 constants prefixed with \code{CR_} can be changed without breaking code, as long 
@@ -333,7 +333,7 @@ simulation-only debug output signals.
 }
 
 \entitylbl{Trace data sink}{trsink}{-}{
-Abbreviation for the external system which the trace output data is sent to.
+Abbreviation for the external system that the trace output data is sent to.
 }
 
 \subsection{Coding style}
@@ -352,7 +352,7 @@ camelCase is used to indicate word boundaries within one level of hierarchy. For
 example, \code{core_ctrlRegs_bank} refers to a (register) bank for the control 
 registers for the \rvex{} core.
 
-\item Most signal names start with an underscore-terminated abbreviation which 
+\item Most signal names start with an underscore-terminated abbreviation, which
 indicates the source and destination entity. This identifier contains two entity 
 abbreviation codes separated by a \code{2}. The entity abbreviation codes are 
 defined at the top of \code{core.vhd} and are also listed in the previous
@@ -379,7 +379,7 @@ All \rvex{} core files start with \code{core_} to keep their names unique within
 the \code{rvex} package, which contains a number of supporting packages as well.
 
 \item Entity descriptions must clearly document the function of every port and
-generic which passes it by, \emph{especially} when the entity generates or uses
+generic that passes it by, \emph{especially} when the entity generates or uses
 the signal (as opposed to just routing it). All hope of future generations
 comprehending the code is lost when interfaces are not clear.
 

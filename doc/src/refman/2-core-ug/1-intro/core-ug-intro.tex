@@ -27,7 +27,7 @@ same bundle.
 When a VLIW processor executes a bundle, each syllable will be routed to its own 
 \textit{(pipe)lane}. Note the `a' in lane; this is not a typo for pipeline 
 (although each pipelane, confusingly, does contain its own pipeline). In other 
-words, the pipelane is the thing which contains the computational resources to 
+words, the pipelane is the thing that contains the computational resources to 
 execute a syllable.
 
 \subsection{Reconfiguration}
@@ -68,7 +68,7 @@ value at runtime, which would imply that each program should be compiled
 multiple times, for each bundle size possible with reconfiguration. This would 
 severely limit the usefulness of reconfiguration, as it would be extremely 
 difficult to reconfigure in the middle of program execution. At best, the 
-program counters would be the only things which would not match between the two 
+program counters would be the only things that would not match between the two 
 binaries.
 
 The solution to this problem is a \textit{generic binary}\todo{Reference to 
@@ -124,7 +124,7 @@ to complete.
 
 \item It is possible to heuristically predict whether or not either decoder
 will meet its deadline at its current execution speed before the deadline, in
-a way which does not cost an excessive amount of additional computation. This
+a way that does not cost an excessive amount of additional computation. This
 can be done, for example, by decoding audio and video a few frames in advance,
 and assuming that if the current frame is computationally intensive, the next
 one will probably be too (locality).

@@ -3,14 +3,14 @@
 \section{Traps and interrupts}
 \label{sec:core-ug-traps}
 
-There are many systems in a processor which need to be able to interrupt normal
+There are many systems in a processor that need to be able to interrupt normal
 program flow. For instance, an external interrupt may be requested, or a problem
 occured while trying to load a word from memory, such as a page fault. The
 naming conventions for such interruptions varies from processor to processor; in
 the \rvex{} processor all such interruptions are called traps. The word
-`interrupt' is reserved for the special trap which deals with external
+`interrupt' is reserved for the special trap that deals with external
 interrupts, i.e. asynchronous signals from outside the core. The word `fault' is
-used to refer to traps which signal that an instruction could not be executed.
+used to refer to traps that signal that an instruction could not be executed.
 
 \subsection{Trap sources}
 \label{sec:core-ug-traps-sources}
@@ -66,7 +66,7 @@ stopped hardware context is asserted.
 \label{sec:core-ug-traps-handlers}
 
 As stated above, most traps are handled by jumping to the so-called trap or
-panic handler. These handlers are simply subroutines which typically end with
+panic handler. These handlers are simply subroutines that typically end with
 either a \insn{RFI} or \insn{STOP} instruction. They should be pointed to by
 the \creg{TH} and \creg{PH} control registers; it is up to the initialization
 code to set up these links.
@@ -74,7 +74,7 @@ code to set up these links.
 The hardware switches between the trap and panic handlers based on the R flag
 in \creg{CCR}. The only hardware difference between them is that this flag
 always switches to the panic handler upon servicing a trap, such that a trap
-which immediately follows another trap will always be handled by the panic
+that immediately follows another trap will always be handled by the panic
 handler.
 
 The tentative difference between the two trap handlers is that one should 
@@ -83,7 +83,7 @@ operating system, kill the current process with the appropriate signal and
 context switch to another thread), and the other should not. The necessity of 
 such a difference can be best illustrated with a simple example.
 
-Consider a program which has just been trapped due to an interrupt. The first 
+Consider a program that has just been trapped due to an interrupt. The first 
 course of action in handling a trap must always be to save the state of the 
 running program, so the trap cause and argument registers can be examined. Now 
 consider that it is possible for these context-saving memory accesses to cause, 
@@ -104,15 +104,15 @@ What it comes down to, is that the trap handler may try to recover from a fault,
 handle an interrupt or breakpoint, etc., while the panic handler should simply
 display or log an error message if it can, and then stop execution or reset. The
 regular trap handler may also want to jump to the panic handler if it is posed
-with a fault trap which it cannot recover from.
+with a fault trap that it cannot recover from.
 
 \subsection{Trap identification}
 \label{sec:core-ug-traps-ids}
 
-In the \rvex{} processor, traps are identified not by the address which the 
+In the \rvex{} processor, traps are identified not by the address that the 
 processor branches to (as there are only two of these addresses, as described in 
 the previous section), but by the trap cause (\creg{TC}) and trap argument 
-(\creg{TA}) control registers. The former stores an 8-bit value which identifies 
+(\creg{TA}) control registers. The former stores an 8-bit value that identifies 
 the cause of the trap. The latter is a 32-bit register whose significance 
 depends on the trap cause.
 

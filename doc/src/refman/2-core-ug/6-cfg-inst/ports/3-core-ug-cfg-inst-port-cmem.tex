@@ -30,7 +30,7 @@ behavior of the memory ports on the \rvex{}.
 \begin{itemize}
 
 \item The PCs presented by the instruction memory ports will always be 
-contiguous and aligned for groups which are working together. The fetch and 
+contiguous and aligned for groups that are working together. The fetch and 
 cancel signals will always be equal.
 
 \item The \rvex{} assumes that the \code{mem2rv_blockReconfig} and 
@@ -111,9 +111,9 @@ cache miss.
 \code{data_access} should be set to \code{01} if a read access was performed,
 to \code{10} if a 32-bit write access was performed and to \code{11} if a
 partial write was performed. \code{00} logically means no operation. If an
-access was performed which bypassed the cache, \code{data_bypass} should be set.
-If an access was performed which caused a cache miss, \code{data_miss} should be
-set. If an access was performed by a cache block which had a nonempty write
+access was performed that bypassed the cache, \code{data_bypass} should be set.
+If an access was performed that caused a cache miss, \code{data_miss} should be
+set. If an access was performed by a cache block that had a nonempty write
 buffer when the request was made, \code{data_writePending} should be set.
 
 Note that these signals are very cache implementation dependent. They were

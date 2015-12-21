@@ -17,7 +17,7 @@ words. Seperate read instructions exist for reading 16-bit and 8-bit words in
 signed or unsigned mode. All $n$-bit accesses must be $n$-bit aligned. If an
 access is improperly aligned, a \code{MISALIGNED_ACCESS} trap will be caused.
 
-Note that a 1 kiB block must be defined at design time which the \rvex{}
-processor cannot access at all, because it is remapped to the control register
-file internally. Refer to Section~\ref{sec:core-ug-isa-regs-creg} for more
-information.
+Note that a 1 kiB block of the external memory space must be selected to be 
+remapped to the control register file internally. This prevents the processor 
+from being able to access the block. Refer to 
+Section~\ref{sec:core-ug-isa-regs-creg} for more information.

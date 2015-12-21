@@ -97,7 +97,7 @@ requested.
 Reconfiguration busy flag. While high, reconfiguration requests are ignored.
 \paragraph*{RID field, bits 11..8}
 Reconfiguration requester ID. When a configuration is requested, this field is
-set to the context ID of the context which requested the configuration, or to
+set to the context ID of the context that requested the configuration, or to
 0xF if the request was from the debug bus. This may be used by the
 reconfiguration sources to see if they have won arbitration. Refer to
 Section~\ref{sec:core-ug-reconf-request} for more information.
@@ -151,7 +151,7 @@ Section~\ref{sec:core-ug-reconf-word} for more information.
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill \hfill Debug \ } & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \\
 \end{tabular}
 \normalsize\vskip 6pt
-\noindent This register stores the cache block index (akin to a lane group) which most
+\noindent This register stores the cache block index (akin to a lane group) that most
 recently serviced an instruction fetch for a given context. This may be used for
 achieving the maximum possible instruction cache locality when reconfiguring.
 \paragraph*{AF7 field, bits 30..28}
@@ -213,7 +213,7 @@ monitoring.
 \normalsize\vskip 6pt
 \noindent \todo{The CNTH register doesn't exist yet.}
 Extension to the \creg{CNT} register. The order is illogical for a big endian
-system for compatibility with older code which assumes that this counter is only
+system for compatibility with older code that assumes that this counter is only
 32 bits wide. The high word of the counter value is latched whenever \creg{CNT}
 is read to avoid needing an atomic 64-bit read operation. Thus, \creg{CNT} must
 always be read before \creg{CNTH} is read.
@@ -264,10 +264,10 @@ routes.
 Each bit in these fields represents a possible \insn{LIMMH} forwarding route.
 The bit index within the field specifies the source syllable index, i.e. the
 \insn{LIMMH} syllable; $i = \left ( 2n, 2n+1 \right )$ is the index of the
-syllable which uses the immediate.
+syllable that uses the immediate.
 
 As an example, if bit 2 in \creg{BORROW4} (\creg{LIMC2}) is set, it means that
-the third syllable in a bundle (index 2) can be a \insn{LIMMH} instruction which
+the third syllable in a bundle (index 2) can be a \insn{LIMMH} instruction that
 forwards to the fifth syllable in a bundle (index 4).
 
 For the purpose of generic binaries, the configuration is repeated beyond the
@@ -310,7 +310,7 @@ within a bundle.
 \
 \paragraph*{SYL$4n$CAP field, bits 7..0, a.k.a. \creg{SYLiCAP}}
 \label{reg:SYLiCAP}
-Each bit within the field represents a functional unit or resource which is
+Each bit within the field represents a functional unit or resource that is
 available to syllable index $i$ within a bundle. The following encoding is used.
 
 \vskip 6 pt\noindent\begin{tabular}{|l|p{12cm}|}
@@ -368,8 +368,8 @@ from and write to the general purpose register file. Forwarding is taken into
 consideration, so the core may not actually write to the register file in the
 listed stages, but from the perspective of the software it seems to.
 
-From these values, the required number of bundles between an instruction which
-writes to a general purpose register and an instruction which reads from one can
+From these values, the required number of bundles between an instruction that
+writes to a general purpose register and an instruction that reads from one can
 be determined, being $stage_{commit} - stage_{read} - 1$.
 \paragraph*{MEMAR field, bits 27..24}
 Hardwired to the stage in which the memory unit reads its address operands from
@@ -503,7 +503,7 @@ branch and link registers.
 \end{tabular}
 \normalsize\vskip 6pt
 \noindent \todo{The EXT$n$ registers don't exist yet.}
-This register contains flags which specify the supported extensions and quirks
+This register contains flags that specify the supported extensions and quirks
 of the processor as per its design-time configuration.
 \paragraph*{T flag, bit 27}
 Defines whether the trace unit is available. The trace unit has its own
@@ -543,7 +543,7 @@ This flag is set when forwarding is enabled.
 \end{tabular}
 \normalsize\vskip 6pt
 \noindent \todo{The DCFG register doesn't exist yet.}
-This register is hardwired to the key parameters which define the size of the
+This register is hardwired to the key parameters that define the size of the
 processor, such as the number of pipelanes and the number of contexts.
 \paragraph*{BA field, bits 15..12}
 Specifies the minimum bundle alignment necessary. Specified as the alignment
@@ -581,7 +581,7 @@ Specifies the major version number of the \rvex{} processor in ASCII. This will
 most likely always be \code{'3'}.
 \paragraph*{CTAG0 field, bits 23..16, a.k.a. \creg{CTAG}}
 \label{reg:CTAG}
-First ASCII character in a string of 7 which identifies the core version,
+First ASCII character in a string of 7, which identify the core version,
 similar to how a license plate identifies a car. It is intended that a database
 will be set up which maps each tag to an immutable archive containing the source
 code for the core and a mutable errata/notes file.
@@ -625,7 +625,7 @@ idenfitication tag.
 Unique processor identifier within a multicore platform.
 \paragraph*{PTAG0 field, bits 23..16, a.k.a. \creg{PTAG}}
 \label{reg:PTAG}
-First ASCII character in a string of 7 which identifies the platform and bit
+First ASCII character in a string of 7, which identify the platform and bit
 file, similar to how a license plate identifies a car. It is intended that a
 database will be set up which maps each tag to an immutable archive containing
 the source code for the platform, synthesis logs and a bit file, as well as

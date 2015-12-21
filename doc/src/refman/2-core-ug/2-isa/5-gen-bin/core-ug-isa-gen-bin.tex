@@ -8,10 +8,10 @@ The vexparse stuff might also be wrong because I can't remember properly what
 I all added to it and what it could already do and I haven't looked into it yet.
 - Jeroen}
 
-Generic binaries are binaries which can be correctly run on different core 
+Generic binaries are binaries that can be correctly run on different core 
 configurations, even if the core reconfigures during execution. They were 
 introduced in Anthony's generic binary paper. \todo{Insert reference to Anthony's 
-generic binary paper} Typically, a generic binary refers to a binary which can 
+generic binary paper} Typically, a generic binary refers to a binary that can 
 be run with two pipelanes (2-way), four pipelanes (4-way) or eight pipelanes 
 (8-way).
 
@@ -28,7 +28,7 @@ imposes the even stricter requirement that branch syllables must always be the
 last syllable in a bundle.
 
 \item \emph{RAW hazards must be avoided in all runtime configurations.} That is,
-for example, a register which is written in one of the first two syllables may
+for example, a register that is written in one of the first two syllables may
 not be read in subsequent slots. This is because the old value of the register
 would be read in 8-way mode, but the newly written value would be read in 2-way
 mode.
@@ -47,7 +47,7 @@ this is not possible without further processing.
 
 There are two ways to process the assembly files to meet the requirements. The
 first one can be done by the assembler as well. If the \code{--autosplit} flag
-is passed, it will attempt to split bundles which it cannot schedule directly.
+is passed, it will attempt to split bundles that it cannot schedule directly.
 This solves most problems at the cost of runtime performance. Refer to Anthony's
 generic binary paper\todo{Insert reference to Anthony's generic binary paper}
 for more information.
@@ -59,7 +59,7 @@ syllables in a basic block\footnote{A basic block is a block of instructions
 with natural scheduling boundaries at the start and end of it. The prime example 
 of such boundaries are branch instructions.} from the assembly code, and then 
 completely reschedule all instructions. As a side effect, it will fix 
-hand-written assembly code which failed to take multiply and load instruction 
+hand-written assembly code that failed to take multiply and load instruction 
 delays into consideration.
 
 Being a python script, \code{vexparse} is much slower than the 

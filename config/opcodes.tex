@@ -74,7 +74,7 @@
 %    first and foremost the VHDL code (core_opcode*_pkg.vhd). This is also their
 %    primary documentation source.
 %
-% \noasm{} - attribute which specifies that this syllable cannot be assembled.
+% \noasm{} - attribute that specifies that this syllable cannot be assembled.
 %    Used for LIMMH instructions. This will disable rendering the syntax in the
 %    documentation.
 % 
@@ -185,7 +185,7 @@ two when used inthis way.
 %-------------------------------------------------------------------------------
 \syllable{01101011-}{SH1ADD}{\rd = \rx, \ry}
 \alu{op1Mux}{SHL1}
-Performs a 32 bit addition. \code{\rx} is first left-shifted by one.
+Performs a 32-bit addition. \code{\rx} is first left-shifted by one.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 \rd = (\rx << 1) + \ry;
@@ -194,7 +194,7 @@ Performs a 32 bit addition. \code{\rx} is first left-shifted by one.
 %-------------------------------------------------------------------------------
 \syllable{01101100-}{SH2ADD}{\rd = \rx, \ry}
 \alu{op1Mux}{SHL2}
-Performs a 32 bit addition. \code{\rx} is first left-shifted by two.
+Performs a 32-bit addition. \code{\rx} is first left-shifted by two.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 \rd = (\rx << 2) + \ry;
@@ -203,7 +203,7 @@ Performs a 32 bit addition. \code{\rx} is first left-shifted by two.
 %-------------------------------------------------------------------------------
 \syllable{01101101-}{SH3ADD}{\rd = \rx, \ry}
 \alu{op1Mux}{SHL3}
-Performs a 32 bit addition. \code{\rx} is first left-shifted by three.
+Performs a 32-bit addition. \code{\rx} is first left-shifted by three.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 \rd = (\rx << 3) + \ry;
@@ -212,7 +212,7 @@ Performs a 32 bit addition. \code{\rx} is first left-shifted by three.
 %-------------------------------------------------------------------------------
 \syllable{01101110-}{SH4ADD}{\rd = \rx, \ry}
 \alu{op1Mux}{SHL4}
-Performs a 32 bit addition. \code{\rx} is first left-shifted by four.
+Performs a 32-bit addition. \code{\rx} is first left-shifted by four.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 \rd = (\rx << 4) + \ry;
@@ -597,7 +597,7 @@ register.
 \alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
 
 The \rvex{} ALU supports all 32-bit possible integer comparison operations in a
-single cycle. The immediate version of \insn{CMPNE} which writes to a branch
+single cycle. The immediate version of \insn{CMPNE} that writes to a branch
 register is used to load an immediate branch register.
 
 %-------------------------------------------------------------------------------
@@ -1355,7 +1355,7 @@ tmp |= $b0.7 << 7
 \branch{branchIfTrue}{'1'}
 \branch{branchIfFalse}{'1'}
 
-The highest-indexed pipelane in every \rvex{} system (i.e., the pipelane which
+The highest-indexed pipelane in every \rvex{} system (i.e., the pipelane that
 the last syllable in a bundle maps to) contains a branch unit. This unit
 supports the flow control operations outlined below.
 
@@ -1383,7 +1383,7 @@ PCP1 += \of;
 \syllable{00100001-}{IGOTO}{\lr}
 \branch{branchToLink}{'1'}
 Branches to the address in \code{\lr} unconditionally. This is used for branches 
-to code which cannot be reached using the branch offset immediate.
+to code that cannot be reached using the branch offset immediate.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 PCP1 = \lr;
@@ -1410,7 +1410,7 @@ PCP1 += \of;
 \branch{link}{'1'}
 Branches to the address in \code{\lr} unconditionally, while storing \code{PC+1} 
 in the link register. In other words, it essentially swaps \code{PC+1} and 
-\code{\lr}. This is used for dynamic function calls or calls to functions which 
+\code{\lr}. This is used for dynamic function calls or calls to functions that 
 cannot be reached using the branch offset immediate method.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]

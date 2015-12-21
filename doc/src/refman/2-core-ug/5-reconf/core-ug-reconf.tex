@@ -7,8 +7,8 @@ The process in which the \rvex{} processor switches between one large core and
 more smaller cores is called reconfiguration. Reconfigurations may be requested
 by the software running on the processor or the debugging interface by writing
 the requested configuration to a control register. The reconfiguration
-controller will then temporarily stop all contexts which will be affected by the
-reconfiguration, commit the new configuration, and (re)start any contexts which
+controller will then temporarily stop all contexts that will be affected by the
+reconfiguration, commit the new configuration, and (re)start any contexts that
 are part of the new configuration but are currently stopped.
 
 \subsection{Configuration word encoding}
@@ -19,7 +19,7 @@ size. The actual size depends on the design-time configuration of the core; in
 particular, the number of lane groups and the number of contexts.
 
 In the configuration word, each nibble (group of 4 bits, represented by a single
-hexadecimal digit) maps to a lane group. The nibble signifies the context which
+hexadecimal digit) maps to a lane group. The nibble signifies the context that
 is to be run on that lane group. Disabling a lane group to save power is also
 possible, by selecting `context' eight. This will never map to an actual
 context, as the maximum amount of hardware contexts supported by the design-time
@@ -33,14 +33,14 @@ Configuration words must adhere to the following rules.
 \item The nibbles for existing pipelane groups may be set to either zero through 
 the number of hardware contexts minus one to select a context, or eight to 
 disable the pipelane group. For instance, the configuration word 0x7777 is
-illegal on an \rvex{} processor which does not support eight hardware contexts.
+illegal on an \rvex{} processor that does not support eight hardware contexts.
 Configuration words like 0x9999 are reserved for future configurations, such as
 fault tolerant duplicate and triplicate modes.
 
 \item The nibbles for non-existant pipelane groups must be set to zero. For 
 instance, the configuration word 0x88880000 is illegal for an \rvex{} processor 
-which is design-time configured to only support 4 lane groups, even though it 
-may make more sense than the configuration word which was probably the intention 
+that is design-time configured to only support 4 lane groups, even though it 
+may make more sense than the configuration word that was probably the intention 
 here, which is simply zero.
 
 \item Any context may only be mapped to a power-of-two of contiguous pipelane
@@ -61,18 +61,18 @@ requested, the E flag in \creg{GSR} is set and the request is otherwise ignored.
 \subsection{Requesting a reconfiguration}
 \label{sec:core-ug-reconf-request}
 
-The following three mechanisms are available which can request reconfigurations.
+There are three ways in which a reconfiguration can be requested.
 
 \begin{itemize}
 
-\item Writes to the \creg{CRR} context control register from a program running
+\item Writing to the \creg{CRR} context control register from a program running
 on the core. This section primarily deals with this mechanism.
 
-\item Writes to the \creg{BCRR} global control register from the debug bus. This
+\item Writing to the \creg{BCRR} global control register from the debug bus. This
 mechanism is equivalent to the first, except it is triggered from outside the
 core.
 
-\item The sleep and wake-up system, as described in
+\item Using the sleep and wake-up system, as described in
 Section~{sec:core-ug-reconf-saw}.
 
 \end{itemize}
@@ -120,7 +120,7 @@ int reconfigure(unsigned int newConfiguration) {
         gsr = CR_GSR;
     }
     
-    // If our context is still the one which was the last to request a
+    // If our context is still the one that was the last to request a
     // reconfiguration, the error flag in GSR is also meant for us. If not,
     // there is no way to tell if the configuration we requested was valid
     // or not.
@@ -142,7 +142,7 @@ int reconfigure(unsigned int newConfiguration) {
 \subsection{Sleep and wake-up system}
 \label{sec:core-ug-reconf-saw}
 
-The sleep and wake-up system refers to two context control registers which only 
+The sleep and wake-up system refers to two context control registers that only 
 exist on context zero, through which the processor can be set up to 
 automatically request a reconfiguration when the interrupt request input of 
 context zero is asserted. More specifically, the wakeup system will activate
@@ -163,7 +163,7 @@ when all of the following conditions are met.
 \item The S flag in \creg{SAWC} is cleared.
 \end{itemize}
 
-\noindent This system may be used to save power which is otherwise wasted in an 
+\noindent This system may be used to save power that is otherwise wasted in an 
 idle loop, or to improve interrupt latency by dedicating hardware context zero 
 to only handling interrupts. These use cases are described below.
 
@@ -173,7 +173,7 @@ to only handling interrupts. These use cases are described below.
 To conserve power, the user may want to switch to a configuration where all 
 pipelane groups are idle until an interrupt occurs. This is called sleeping. On 
 an FPGA this is merely a proof of concept, but in an ASIC the amount of power 
-which might be saved by clock gating or powering down the computational 
+that might be saved by clock gating or powering down the computational 
 resources may be very significant. To go to sleep, the program should take the 
 following steps.
 
@@ -189,7 +189,7 @@ context zero.
 \item Disable interrupts using the I field in \creg{CCR}.
 
 \item If necessary, ensure that no interrupt occured before interrupts were
-disabled which should cause the processor to stay awake. If this did happen,
+disabled that should cause the processor to stay awake. If this did happen,
 take the appropriate actions, such as re-enabling interrupts, before attempting
 to sleep again.
 
@@ -200,7 +200,7 @@ an invalid configuration.
 \item Set the S flag in \creg{SAWC} to enable the wake-up system.
 
 \item Request a reconfiguration to the configuration where all pipelane groups 
-are disabled, for instance 0x8888 on a core which is design-time configured to 
+are disabled, for instance 0x8888 on a core that is design-time configured to 
 have four pipelane groups, as described in
 Section~\ref{sec:core-ug-reconf-request}.
 

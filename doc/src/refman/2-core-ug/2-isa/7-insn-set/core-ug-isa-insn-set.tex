@@ -9,15 +9,15 @@ The \rvex{} instruction set consists of \instructioncount{} instructions. These
 instructions are defined by two bitfields in the syllable, called \code{opcode}
 and \code{imm_sw}. The \code{opcode} field is 8 bits in size, ranging from bit
 31 to 24 inclusive, allowing for 256 different operations to be performed.
-\code{imm_sw} is a single bit (bit 23) which specifies if the second operand is a
+\code{imm_sw} is a single bit (bit 23) that specifies if the second operand is a
 register or an immediate. This thus allows a total of 512 different
 instructions in theory.
 
 However, not all operations support both register and immediate mode. In
-addition, some instructions have operand fields which extend into the
+addition, some instructions have operand fields that extend into the
 \code{opcode}, requiring a single instruction to use multiple opcodes. Taking
 these things into consideration, the \rvex{} instruction set has
-\freeopcodecount{} \code{opcode}s which are not yet mapped.
+\freeopcodecount{} \code{opcode}s that are not yet mapped.
 
 There are two additional fields with a fixed function within the instruction
 set. The first is the stop bit, bit 1. This bit determines where the bundle

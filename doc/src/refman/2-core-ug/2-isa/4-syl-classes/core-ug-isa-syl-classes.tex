@@ -13,7 +13,7 @@ unlike the delay requirements, which it cannot detect. However, it is still
 important for the user to know them in order to be able to write assembly.
 
 It is also important that the assembler is configured in the same way as the
-core. If there are discrepancies, the assembler may still output binaries which
+core. If there are discrepancies, the assembler may still output binaries that
 the core cannot execute. If this happens, the core will produce an
 \trap{INVALID_OP} trap, with the index of the offending pipelane as the trap
 argument.
@@ -34,19 +34,19 @@ following can use their results.
 \subsubsection{Multiply class}
 \label{sec:core-ug-isa-syl-classes-mul}
 
-Multiply syllables are only allowed in lanes which are configured to have a
+Multiply syllables are only allowed in lanes that are configured to have a
 multiplier. This configuration is done at design time using generics. In the
 default configuration, every lane has a multiplication unit.
 
 In the default pipeline and forwarding configuration of the \rvex{}, multiply 
 instructions are two-cycle pipelined. That is, two bundle boundaries are needed 
-between the syllable producing the value and a syllable which uses it.
+between the syllable producing the value and a syllable that uses it.
 
 
 \subsubsection{Memory class}
 \label{sec:core-ug-isa-syl-classes-mem}
 
-Memory syllables are only allowed in lanes which are configured to have a memory 
+Memory syllables are only allowed in lanes that are configured to have a memory 
 unit. In addition, in most configurations, only one memory unit can be active 
 per context at a time, even if multiple are available. This is due to the fact 
 the data cache can only perform one operation per cycle per context. In theory, 
@@ -56,16 +56,16 @@ no toolchain support for this.
 
 In the default pipeline and forwarding configuration of the \rvex{}, memory load
 instructions are two-cycle pipelined. That is, two bundle boundaries are needed 
-between a load syllable and the first syllable which uses the value. However,
+between a load syllable and the first syllable that uses the value. However,
 there is no store to load delay; if a bundle with a load of a certain address
-immediately follows a bundle which stores a value at that address, the newly
+immediately follows a bundle that stores a value at that address, the newly
 written value is loaded.
 
 
 \subsubsection{Branch class}
 \label{sec:core-ug-isa-syl-classes-br}
 
-All syllables which affect the program counter are considered branch syllables. 
+All syllables that affect the program counter are considered branch syllables. 
 Only one branch syllable is permitted per cycle, and in almost all design-time 
 core configurations, it must be the last syllable in a bundle.
 
@@ -86,7 +86,7 @@ immediate outside the range -256..255 is to be specified. For this purpose,
 pipelane, but instead send 23 additional immediate bits to another lane, which 
 allows a 32-bit immediate to be used in a single cycle.
 
-Any ALU, multiply or memory syllable which supports an immediate can receive a
+Any ALU, multiply or memory syllable that supports an immediate can receive a
 long immediate. However, long immediates can \textit{not} be used to extend the
 branch offset field.
 
@@ -122,7 +122,7 @@ lane $n+2$. This is depicted in
 Figure~\ref{fig:core-ug-isa-syl-classes-limm-previous} for an 8-way \rvex{} 
 processor. However, due to limitations in the instruction fetch unit, this 
 system is incompatible with the stop bit system. For these reasons, it can only 
-be effectively used in cores with at least four lanes which are not configured 
+be effectively used in cores with at least four lanes that are not configured 
 to support stop bits.
 
 \begin{figure}[h!]

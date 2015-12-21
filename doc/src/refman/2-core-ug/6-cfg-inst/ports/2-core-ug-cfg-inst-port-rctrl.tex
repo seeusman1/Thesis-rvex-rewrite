@@ -34,7 +34,7 @@ time to propagate through the pipeline. The core will still assert
 \code{rv2rctrl_irqAck} upon entry of the trap service routine in this case. In 
 order to properly account for this behavior, interrupt controllers should ignore 
 \code{rv2rctrl_irqAck} if no interrupt is active, and there should be a special 
-\code{rctrl2rv_irqID} value which signals `no interrupt'. The trap service 
+\code{rctrl2rv_irqID} value that signals `no interrupt'. The trap service 
 routine should return to application code as soon as possible in this case.
 
 \vspace{1em}
@@ -42,9 +42,9 @@ routine should return to application code as soon as possible in this case.
 \item \code{rv2rctrl_idle : out std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
 
 When \code{rctrl2rv_run} is asserted low, the indexed context will stop 
-executing instructions as soon as possible. It will finish instructions which 
+executing instructions as soon as possible. It will finish instructions that 
 were already in the pipeline and have already committed data, and set the 
-program counter to point to the next instruction which should be issued for the 
+program counter to point to the next instruction that should be issued for the 
 program to resume correctly later. As soon as \code{rctrl2rv_run} is asserted
 high again, the context will resume, assuming there is nothing else preventing
 it from running. When \code{rctrl2rv_run} is not specified, it is tied to
