@@ -485,7 +485,7 @@
  OFFSET = OUT : 20.000 : AFTER clk_33 ;
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf
 +++ work/leon3mp.ucf
-@@ -1,544 +1,542 @@
+@@ -1,544 +1,543 @@
 -############################################################################
 -## 
 -##  Xilinx, Inc. 2006            www.xilinx.com 
@@ -1156,6 +1156,7 @@
 +NET  "ddr3_dqs_n(*)"                            IOSTANDARD = DIFF_SSTL15_T_DCI;
 +NET  "ddr3_ck_p(*)"                             IOSTANDARD = DIFF_SSTL15;
 +NET  "ddr3_ck_n(*)"                             IOSTANDARD = DIFF_SSTL15;
++NET  "ddr3_addr_13"             LOC=J15 | IOSTANDARD = SSTL15; # workaround for ML605 with 1GB SODIMM.
 +
 +################################################################################
 +##SAVE attributes to reserve the pins
@@ -1569,7 +1570,7 @@
  NET "clk_33" PERIOD = 30.000 ;
  OFFSET = IN : 20.000 : BEFORE clk_33 ;
  OFFSET = OUT : 20.000 : AFTER clk_33 ;
-@@ -585,29 +583,89 @@ OFFSET = OUT : 12.000 : AFTER gmiiclk_p;
+@@ -585,29 +584,89 @@ OFFSET = OUT : 12.000 : AFTER gmiiclk_p;
  
  INST "uddr3ctrl/_infrastructure/u_mmcm_adv"      LOC = "MMCM_ADV_X0Y8"; #Banks 16, 26, 36
  
@@ -1730,8 +1731,11 @@
  
      -- DDR3 memory
      ddr3_dq       : inout std_logic_vector(DQ_WIDTH-1 downto 0);
-@@ -92,7 +101,9 @@ entity leon3mp is
+@@ -90,9 +99,12 @@ entity leon3mp is
+     ddr3_dqs_n    : inout std_logic_vector(DQS_WIDTH-1 downto 0);
+     ddr3_ck_p     : out   std_logic_vector(CK_WIDTH-1 downto 0);
      ddr3_ck_n     : out   std_logic_vector(CK_WIDTH-1 downto 0);
++    ddr3_addr_13  : out   std_logic; -- workaround for ML605 with 1 GB SODIMM.
  
      -- Debug support unit
 -    dsubre    : in    std_ulogic;       -- Debug Unit break (connect to button)
@@ -1741,7 +1745,7 @@
  
      -- AHB Uart
      dsurx     : in    std_ulogic;
-@@ -150,7 +161,7 @@ entity leon3mp is
+@@ -150,7 +162,7 @@ entity leon3mp is
  
  
      -- Output signals to LEDs
@@ -1750,7 +1754,7 @@
      );
  end;
  
-@@ -179,8 +190,8 @@ architecture rtl of leon3mp is
+@@ -179,8 +191,8 @@ architecture rtl of leon3mp is
    signal irqi : irq_in_vector(0 to CFG_NCPU-1);
    signal irqo : irq_out_vector(0 to CFG_NCPU-1);
  
@@ -1761,7 +1765,7 @@
  
    signal dsui : dsu_in_type;
    signal dsuo : dsu_out_type;
-@@ -204,6 +215,10 @@ architecture rtl of leon3mp is
+@@ -204,6 +216,10 @@ architecture rtl of leon3mp is
    signal phy_init_done : std_logic;
    signal lerrorn        : std_logic;
  
@@ -1772,7 +1776,7 @@
    -- RS232 APB Uart
    signal rxd1 : std_logic;
    signal txd1 : std_logic;
-@@ -246,8 +261,28 @@ architecture rtl of leon3mp is
+@@ -246,8 +262,28 @@ architecture rtl of leon3mp is
    constant CPU_FREQ   : integer := VCO_FREQ / CFG_MIG_CLK4;  -- cpu frequency in KHz
    constant I2C_FILTER : integer := (CPU_FREQ*5+50000)/100000+1;
  
@@ -1801,8 +1805,11 @@
  ----------------------------------------------------------------------
  ---  Reset and Clock generation  -------------------------------------
  ----------------------------------------------------------------------
-@@ -258,9 +293,74 @@ begin
+@@ -256,11 +292,77 @@ begin
+   gnd <= '0';
+   alatch <= '0';
    erstn <= rstn;
++  ddr3_addr_13 <= '1'; -- workaround for ML605 with 1GB SODIMM.
  
    -- Glitch free reset that can be used for the Eth Phy and flash memory
 +  reset_block: block is
@@ -1878,7 +1885,7 @@
  
  ----------------------------------------------------------------------
  ---  AHB CONTROLLER --------------------------------------------------
-@@ -269,8 +369,8 @@ begin
+@@ -269,8 +371,8 @@ begin
    ahb0 : ahbctrl
      generic map (defmast => CFG_DEFMST, split => CFG_SPLIT,
                   rrobin  => CFG_RROBIN, ioaddr => CFG_AHBIO, ioen => 1,
@@ -1889,7 +1896,7 @@
      port map (rstn, clkm, ahbmi, ahbmo, ahbsi, ahbso);
  
  ----------------------------------------------------------------------
-@@ -279,7 +379,7 @@ begin
+@@ -279,7 +381,7 @@ begin
  
    -- LEON3 processor
    nosh : if CFG_GRFPUSH = 0 generate
@@ -1898,7 +1905,7 @@
        l3ft : if CFG_LEON3FT_EN /= 0 generate
          leon3ft0 : leon3ft		-- LEON3 processor
          generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU*(1-CFG_GRFPUSH), CFG_V8,
-@@ -287,7 +387,7 @@ begin
+@@ -287,7 +389,7 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -1907,7 +1914,7 @@
  	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
  	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
          port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
-@@ -301,7 +401,7 @@ begin
+@@ -301,7 +403,7 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -1916,7 +1923,7 @@
  	  CFG_DFIXED, CFG_SCAN, CFG_MMU_PAGE)
          port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
      		irqi(i), irqo(i), dbgi(i), dbgo(i));
-@@ -310,7 +410,7 @@ begin
+@@ -310,7 +412,7 @@ begin
    end generate;
  
    sh : if CFG_GRFPUSH = 1 generate
@@ -1925,7 +1932,7 @@
        l3ft : if CFG_LEON3FT_EN /= 0 generate
          leon3ft0 : leon3ftsh		-- LEON3 processor
          generic map (i, fabtech, memtech, CFG_NWIN, CFG_DSU, CFG_FPU, CFG_V8,
-@@ -318,7 +418,7 @@ begin
+@@ -318,7 +420,7 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -1934,7 +1941,7 @@
  	  CFG_IUFT_EN, CFG_FPUFT_EN, CFG_CACHE_FT_EN, CFG_RF_ERRINJ,
  	  CFG_CACHE_ERRINJ, CFG_DFIXED, CFG_LEON3_NETLIST, CFG_SCAN, CFG_MMU_PAGE)
          port map (clkm, rstn, ahbmi, ahbmo(i), ahbsi, ahbso,
-@@ -332,30 +432,36 @@ begin
+@@ -332,30 +434,36 @@ begin
  	  CFG_ISETSZ, CFG_ILOCK, CFG_DCEN, CFG_DREPL, CFG_DSETS, CFG_DLINE, CFG_DSETSZ,
  	  CFG_DLOCK, CFG_DSNOOP, CFG_ILRAMEN, CFG_ILRAMSZ, CFG_ILRAMADDR, CFG_DLRAMEN,
            CFG_DLRAMSZ, CFG_DLRAMADDR, CFG_MMUEN, CFG_ITLBNUM, CFG_DTLBNUM, CFG_TLB_TYPE, CFG_TLB_REP,
@@ -1977,7 +1984,7 @@
  
        dsui.enable <= '1';
        led(2) <= dsuo.active;
-@@ -366,10 +472,73 @@ begin
+@@ -366,10 +474,73 @@ begin
    end generate;
  
    -- Debug UART
@@ -2052,7 +2059,7 @@
      dsurx_pad : inpad generic map (level => cmos, voltage => x25v, tech  => padtech) port map (dsurx, dui.rxd);
      dsutx_pad : outpad generic map (level => cmos, voltage => x25v, tech => padtech) port map (dsutx, duo.txd);
      led(0) <= not dui.rxd;
-@@ -384,6 +553,200 @@ begin
+@@ -384,6 +555,200 @@ begin
    end generate;
  
  ----------------------------------------------------------------------
@@ -2253,7 +2260,7 @@
  ---  Memory controllers ----------------------------------------------
  ----------------------------------------------------------------------
  
-@@ -429,7 +792,7 @@ begin
+@@ -429,7 +794,7 @@ begin
  --  mig_gen : if (CFG_MIG_DDR2 = 1) generate
  
      ahb2mig0 : ahb2mig_ml605
@@ -2262,7 +2269,7 @@
      MHz => 400, Mbyte => 512, nosync => boolean'pos(CFG_MIG_CLK4=12)) --CFG_CLKDIV/12)
        port map (
      rst => rstn, clk_ahb => clkm, clk_ddr => clk_ddr,
-@@ -478,12 +841,11 @@ begin
+@@ -478,12 +843,11 @@ begin
      led(3)  <= phy_init_done;
      led(4)  <= rstn;
      led(5)  <= reset;
@@ -2276,7 +2283,7 @@
  ----------------------------------------------------------------------
  ---  System ACE I/F Controller ---------------------------------------
  ----------------------------------------------------------------------
-@@ -525,15 +887,15 @@ EP: pcie_master_target_virtex
+@@ -525,15 +889,15 @@ EP: pcie_master_target_virtex
      vendor_id        => CFG_PCIEXPVID,	 -- PCIE vendor ID
      pcie_bar_mask    => 16#FFE#,
      nsync            => 2,   -- 1 or 2 sync regs between clocks
@@ -2299,7 +2306,7 @@
      rst              => rstn,
      clk              => clkm,
      -- System Interface
-@@ -545,25 +907,25 @@ EP: pcie_master_target_virtex
+@@ -545,25 +909,25 @@ EP: pcie_master_target_virtex
      pci_exp_txn      => pci_exp_txn,
      pci_exp_rxp      => pci_exp_rxp,
      pci_exp_rxn      => pci_exp_rxn,
@@ -2333,7 +2340,7 @@
      rst          => rstn,
      clk          => clkm,
      -- System Interface
-@@ -575,7 +937,7 @@ port map(
+@@ -575,7 +939,7 @@ port map(
      pci_exp_txn  => pci_exp_txn,
      pci_exp_rxp  => pci_exp_rxp,
      pci_exp_rxn  => pci_exp_rxn,
@@ -2342,7 +2349,7 @@
      dapbo        => apbo(8),
      dahbmo       => ahbmo((CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+CFG_SVGA_ENABLE)),
      apbi         => apbi,
-@@ -583,17 +945,17 @@ port map(
+@@ -583,17 +947,17 @@ port map(
      ahbmi        => ahbmi,
      ahbsi        => ahbsi,
      ahbso        => ahbso(8)
@@ -2364,7 +2371,7 @@
      rst          => rstn,
      clk          => clkm,
      -- System Interface
-@@ -605,11 +967,11 @@ port map(
+@@ -605,11 +969,11 @@ port map(
      pci_exp_txn  => pci_exp_txn,
      pci_exp_rxp  => pci_exp_rxp,
      pci_exp_rxn  => pci_exp_rxn,
@@ -2381,7 +2388,7 @@
    );
  end generate;
  ----------------------------------------------------------------------
-@@ -792,6 +1154,13 @@ end generate;
+@@ -792,6 +1156,13 @@ end generate;
        port map (emdc, etho.mdc);
    end generate;
  
@@ -2395,7 +2402,7 @@
  -----------------------------------------------------------------------
  ---  AHB ROM ----------------------------------------------------------
  -----------------------------------------------------------------------
-@@ -832,7 +1201,7 @@ end generate;
+@@ -832,7 +1203,7 @@ end generate;
  ---  Drive unused bus elements  ---------------------------------------
  -----------------------------------------------------------------------
  
