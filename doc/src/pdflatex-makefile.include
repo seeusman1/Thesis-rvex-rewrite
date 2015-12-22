@@ -19,7 +19,7 @@
 ###           # do something...
 ###
 
-PDFLATEX	?= pdflatex -halt-on-error -file-line-error
+PDFLATEX	?= pdflatex -halt-on-error -file-line-error $(LATEXFLAGS)
 BIBTEX		?= bibtex
 
 ifneq ($(QUIET),)
@@ -147,7 +147,7 @@ pdf-distclean: pdf-clean
 
 pdf-clean:
 	$(RM) $(foreach T,$(TARGETS), \
-		$(T).out $(T).blg $(T).bbl \
+		$(T).out $(T).blg \
 		$(T).lof $(T).lot $(T).toc $(T).idx \
 		$(T).nav $(T).snm $(T).vtc) \
 		$(REVDEPS) $(AUXFILES) $(LOGFILES) \

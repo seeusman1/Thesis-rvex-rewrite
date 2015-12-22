@@ -14,13 +14,18 @@ Describes the context control registers and the global control registers of the
 core.
 
   Completely specifies:
-   - TODO: Default memory map for rvd
-   - TODO: C header/assembly include files (rvex.h)
-   - TODO: Documentation
+   - C header/assembly include files (rvex.h)
+   - Documentation
+  
+  TODO:
+   - Default memory map for rvd
   
   Only specifies addresses, not the bitfields or functionality:
-   - TODO: VHDL core
-   - TODO: Simulator
+   - Nothing yet :(
+  
+  TODO:
+   - VHDL core
+   - Simulator
 
 --------------------------------------------------------------------------------
 opcodes.tex
@@ -28,13 +33,15 @@ opcodes.tex
 Describes the rvex instruction set.
 
   Completely specifies:
-   - TODO: VHDL core
-   - TODO: Simulator
-   - TODO: Documentation
+   - VHDL core
+   - Documentation
+  
+  TODO:
+   - Simulator
   
   Does NOT specify:
-   - binutils
-   - compilers
+   - Binutils
+   - Compilers
 
 --------------------------------------------------------------------------------
 traps.tex
@@ -42,11 +49,16 @@ traps.tex
 Describes the hardware traps.
 
   Completely specifies:
-   - TODO: Default memory map for rvd
-   - TODO: C header/assembly include files (rvex.h)
-   - TODO: Documentation
+   - C header/assembly include files (rvex.h)
+   - Documentation
+  
+  TODO:
+   - Default memory map for rvd
   
   Only specifies ID constants for each trap (not functionality):
-   - TODO: VHDL core*
-   - TODO: Simulator
+   - Nothing yet :(
+  
+  TODO:
+   - VHDL core
+   - Simulator
 

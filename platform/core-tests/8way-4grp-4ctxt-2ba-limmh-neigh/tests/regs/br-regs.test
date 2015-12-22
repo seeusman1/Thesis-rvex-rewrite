@@ -22,7 +22,7 @@ load    cmpeq b0.7 = r0.0, 0 ;;
 fillnops 0x100
 
 -- 0x100
-load    stbr 0[r0.0] = b0
+load    stbr 0[r0.0]
 load    cmpeq b0.7 = r0.0, 1 ;; -- This should not be executed before STBR.
 
 -- 0x108 -- 0b10011100
@@ -39,7 +39,7 @@ load    cmpeq b0.2 = r0.0, 0 ;;
 fillnops 0x200
 
 -- 0x200
-load    stbr 1[r0.0] = b0
+load    stbr 1[r0.0]
 load    stop ;;
 
 -- Run the test.

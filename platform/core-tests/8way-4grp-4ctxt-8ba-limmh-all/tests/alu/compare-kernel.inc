@@ -65,7 +65,7 @@ load      nop
 load      nop
 load      nop
 load      nop
-load      stbr 0[r0.0] = b0
+load      stbr 0[r0.0]
 load      nop ;;
 
 load      nop
@@ -152,7 +152,7 @@ load      nop
 load      nop
 load      nop
 load      nop
-load      stbr 0[r0.0] = b0
+load      stbr 0[r0.0]
 load      nop ;;
 
 load      nop

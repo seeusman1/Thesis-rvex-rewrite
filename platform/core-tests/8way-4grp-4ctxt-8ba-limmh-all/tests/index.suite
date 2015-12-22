@@ -7,7 +7,7 @@
 sanity.test
 
 -- Test register files and forwarding. This also kind of tests ADD, CMPEQ,
--- STBR, MTL and STL.
+-- STBR, MOVTL and STW (link).
 regs/index.suite
 
 -- Test LIMMH instructions.

@@ -1,0 +1,26 @@
+
+\subsubsection{Debug bus interface}
+\label{sec:core-ug-cfg-inst-port-debug}
+
+The debug bus provides an optional slave bus interface capable of accessing most of the registers within the core.
+
+\begin{itemize}
+  
+\item \code{dbg2rv_addr : in  rvex_address_type}
+\item \code{dbg2rv_readEnable : in std_logic}
+\item \code{dbg2rv_writeEnable : in std_logic}
+\item \code{dbg2rv_writeMask : in rvex_mask_type}
+\item \code{dbg2rv_writeData : in rvex_data_type}
+\item \code{rv2dbg_readData : out rvex_data_type}
+
+Debug interface bus. \code{dbg2rv_readEnable} and \code{dbg2rv_writeEnable} are 
+active high and should not be active at the same time. \code{rv2dbg_readData} is 
+valid one \code{clkEn}abled cycle after \code{dbg2rv_readEnable} is asserted and 
+contains the data read from \code{dbg2rv_addr} as it was while 
+\code{dbg2rv_readEnable} was asserted. \code{dbg2rv_writeMask}, 
+\code{dbg2rv_writeData} and \code{dbg2rv_addr} define the write request when 
+\code{dbg2rv_writeEnable} is asserted. All input signals are tied to \code{'0'} 
+when not specified.
+
+\end{itemize}
+

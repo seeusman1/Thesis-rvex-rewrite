@@ -33,5 +33,5 @@ logical.test
 -- applications, i.e. a C compiler. I believe it was the HP one.
 div.test
 
--- Test MTL and MFL.
+-- Test MOVTL and MOVFL.
 link.test

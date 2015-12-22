@@ -27,7 +27,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stbr 0[r0.0] = b0
+load    stbr 0[r0.0]
 load    cmpeq b0.7 = r0.0, 1 ;; -- This should not be executed before STBR.
 
 -- 0x120 -- 0b10011100
@@ -50,7 +50,7 @@ load    nop
 load    nop
 load    nop
 load    nop
-load    stbr 1[r0.0] = b0
+load    stbr 1[r0.0]
 load    stop ;;
 
 -- Run the test.

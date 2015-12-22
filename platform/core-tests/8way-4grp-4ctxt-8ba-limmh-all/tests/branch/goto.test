@@ -40,7 +40,7 @@ load    stw 0[r0.0] = r0.10
 load    nop ;;
 
 -- 0x0060
-load    mtl l0.0 = r0.63
+load    movtl l0.0 = r0.63
 load    nop
 load    nop
 load    nop
@@ -81,7 +81,7 @@ load    stw 4[r0.0] = r0.0
 load    nop ;;
 
 -- 0x1020
-load    mtl l0.0 = r0.63
+load    movtl l0.0 = r0.63
 load    nop
 load    nop
 load    nop

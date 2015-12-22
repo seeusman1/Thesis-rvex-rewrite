@@ -127,7 +127,40 @@ def format_tex(fields):
     
     Returns the formatted string.
     """
-    pass
+    
+    s = ''
+    prev_group = None
+    for index, field in enumerate(fields):
+        
+        # Load the name of the field and its width (bit count).
+        name = field['name']
+        bitcount = field['upper_bit'] - field['lower_bit'] + 1
+        
+        # Determine a nice text size to use for the contents heuristically.
+        size = '\\tiny' if len(name) >= bitcount else '\\scriptsize'
+        
+        # Draw a border on the left if the previous group equals the current
+        # group.
+        group = None
+        if 'group' in field:
+            group = field['group']
+        left = ' '
+        if group is None or prev_group is None or group != prev_group:
+            left = '|'
+        prev_group = group
+        
+        # Draw a border on the right if this is the last field.
+        right = ' '
+        end = ' & '
+        if index == len(fields) - 1:
+            right = '|'
+            end = ''
+        
+        # Add the cell entry.
+        s += '\\multicolumn{%d}{%s@{}c@{}%s}{%s %s}%s' % (
+            bitcount, left, right, size, name, end)
+    
+    return s
 
 def format_tex_head():
     """Formats a LaTeX bitfield table header with bit indices.
@@ -136,7 +169,15 @@ def format_tex_head():
     
     Returns the formatted string.
     """
-    pass
+    
+    s = ''
+    for bit in reversed(range(32)):
+        s += '\\multicolumn{1}{%s@{}c@{}%s}{\\tiny%d}%s' % (
+            '|' if (bit % 8) == 7 else ' ',
+            '|' if bit == 0 else '',
+            bit,
+            '' if bit == 0 else ' & ')
+    return s
 
 def format_comment(fields, prefix, header=True, footer=True):
     """Formats the bitfield as a LaTeX table.
@@ -164,7 +205,7 @@ def format_comment(fields, prefix, header=True, footer=True):
         group = None
         if 'group' in field:
             group = field['group']
-        if group != prev_group or group is None:
+        if group is None or prev_group is None or group != prev_group:
             text += '|'
         else:
             text += ' '

@@ -713,9 +713,7 @@ begin -- architecture
   -- flags from the memories.
   mem_trap_info_gen: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
     
-    -- There is only one instruction memory fault. Note that the arg parameter
-    -- will be overwritten by the PC of the bundle which was being fetched in
-    -- the pipelane.
+    -- There is only one instruction memory fault.
     imem2ibuf_exception(laneGroup) <= (
       active => imem2rv_busFault(laneGroup),
       cause  => rvex_trap(RVEX_TRAP_FETCH_FAULT),

@@ -1,0 +1,97 @@
+
+\chapter{Introduction}
+\label{sec:introduction}
+
+This manual is intended to be used as a reference when working with the \rvex{} 
+reconfigurable VLIW processor ecosystem. The initial version was written in 
+parallel with X\todo{Jeroen's thesis title once one exists + reference}. Both 
+document essentially the same thing, but there are some key differences in their 
+intended audience and, thus, what they focus on.
+
+\begin{itemize}
+
+\item The thesis is intended for the scientific reader, who is expected to be
+interested primarily in the new concepts introduced in this version of the
+\rvex{} processor, and how they affect the system. As such, the thesis does not
+describe in detail the parts of the \rvex{} core that have little research
+value. It will instead provide external references for supplemental information.
+
+\item This manual is intended for readers who intend to work with the \rvex{} 
+processor or want to add onto it. It thus strives to provide detailed 
+documentation of all the parts of the system. In addition, external references 
+are intentionally kept to a minimum in favor of copying information, to prevent 
+the reader from having to constantly cross reference. Finally, the author hopes 
+that this document will be modified over time, to reflect additions and changes 
+made to the system. This is obviously not possible with a thesis.
+
+\end{itemize}
+
+\noindent While certainly possible, it is not intended that one reads this 
+manual linearly. That would be like reading a dictionary from A to Z. Instead,
+the reader is advised to search for information recursively, first and foremost
+using the table of contents. Failing that, each section starts with a basic
+introduction, briefly describing the contents of its subsections. If you are
+reading this document digitally, references will be clickable to allow you to
+quickly jump to the parts you are interested in. In addition, almost all
+syllables, control registers and traps are clickable as well, to jump to their
+documentation.
+
+\section{Organization}
+\label{sec:introduction-org}
+
+The \hyperref[sec:core-ug]{second chapter} doubles as an introduction to the 
+\rvex{} processor architecture and a reference manual for those who intend to 
+use the core. The \hyperref[sec:core-int]{third chapter} documents the internal 
+workings of the \rvex{} processor core, intended for those who intend to modify 
+or add to the core. The \hyperref[sec:cache]{fourth chapter} is similar, but 
+instead documents the reconfigurable cache. The \hyperref[sec:bus]{fifth 
+chapter} documents the bus system used within the \rvex{} system to tie 
+components together. The \hyperref[sec:debug]{sixth chapter} documents the debug 
+support UART peripheral. The \hyperref[sec:platforms]{seventh chapter} documents 
+the \rvex{} platforms, the colloquial name for the hardware systems that tie 
+the previously described components together. The \hyperref[sec:host]{eight 
+chapter} descibes the host software systems, focussing primarily on the build 
+system, the simulator and the debug communication link with the hardware. 
+Finally, \hyperref[sec:target]{ninth chapter} describes the general purpose 
+software that has been written for the \rvex{} processor so far.
+
+
+
+
+% \todo{This shit is old...}
+% 
+% The \rvex{} core is an optionally runtime-reconfigurable VLIW processor based on 
+% the HP VEX architecture. Aside from being runtime-reconfigurable, the core has 
+% several design-time configurable parameters by means of generics, and many more 
+% are available through package constants. A coarse list of configuration 
+% parameters is listed below; this list is not exhaustive.
+% 
+% \begin{itemize}
+%   
+%   \item Runtime-reconfigurable parameters\footnote{The degree in which these parameters are configurable depends on design-time configuration of the core.}:
+%   \begin{itemize}
+%     \item Number of lanes active.
+%     \item Context to lane mapping: multiple contexts can be run at once, or a single context can run on all lanes.
+%   \end{itemize}
+%   
+%   \item Design-time-configurable parameters through generics:
+%   \begin{itemize}
+%     \item Number of lanes: 2, 4, 8 or 16.
+%     \item Number of hardware contexts (to switch between and/or run in parallel): 1, 2, 4, 8 or 16.
+%     \item Number of lane groups; determines the degree of reconfigurability.
+%     \item Lane resource configuration: each lane within a group can optionally have a multiplier, and it is configurable which lane within the group has a memory interface and which can handle branch operations.
+%     \item Long immediate forwarding options.
+%     \item Whether forwarding logic is instantiated or not.
+%   \end{itemize}
+%   
+%   \item Design-time-configurable parameters through package constants:
+%   \begin{itemize}
+%     \item Instruction set and opcode mapping\footnote{Modifications to the datapath require changes to behavioral VHDL code.}.
+%     \item Pipeline and forwarding configuration, including memory bus latency: the timing of all functional units within the pipeline can be changed as much as the functional units permit, to augment the timing characteristics of the core without changing behavioral VHDL code.
+%   \end{itemize}
+% 
+% \end{itemize}
+% 
+% todo: short history about the core; previous versions and references
+% 
+% This document serves as basic documentation for the \rvex{} core files in \code{/lib/rvex/core}. More detailed (and probably more up-to-date) documentation can be found in the VHDL source code itself. This document does not provide documentation for the support packages within the \code{rvex} library.

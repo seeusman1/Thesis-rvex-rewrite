@@ -1,12 +1,13 @@
 
-TARGETS = core.pdf
+TARGETS = reference-manual.pdf
 
 all: $(TARGETS)
 
 clean:
 	rm -f $(TARGETS)
 
-core.pdf:
-	cd src/core && $(MAKE) all
-	cp src/core/core.pdf core.pdf
-	cd src/core && $(MAKE) clean
+.PHONY: reference-manual.pdf
+reference-manual.pdf:
+	cd src/refman && $(MAKE) clean all
+	cp src/refman/refman.pdf reference-manual.pdf
+	cd src/refman && $(MAKE) clean

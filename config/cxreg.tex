@@ -1,0 +1,747 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%                    CONTEXT CONTROL REGISTER DEFINITIONS                    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+% This file describes the context control register addresses and documentation.
+% Since the documentation is intended to be compiled to LaTeX code, it somehow
+% made sense to use LaTeX syntax for the definition language. I'm sorry. The
+% file is interpreted by python though, not by LaTeX. Don't try to run this
+% through LaTeX directly...
+%
+% The following LaTeX-like commands are interpreted by python to define the
+% control registers. They must be the only thing on a certain line aside from
+% (maybe) comments, otherwise they are interpreted as LaTeX documentation.
+% 
+%  - \register{<mnemonic>}{<name>}{<offset>}
+%    Starts a new register description. <name> is the title of the section.
+%    <mnemonic> is the mnemonic of the register, excluding the CR_. The 
+%    mnemonic is also used to generate a label using \label{reg:<mnemonic>}.
+%    <offset> should be a hex number starting with 0x divisible by 4,
+%    representing the byte offset from the control registers base.
+% 
+%  - \registergen{<python range>}{<mnemonic>}{<name>}{<offset>}{<stride>}
+%    Same as \register, but specifies a list of registers. <python range> is
+%    executed as a python expression, expected to generate an iterable of
+%    integers. A register is generated for each of these iterations. The offset
+%    for each register is computed as <offset> + iter * <stride>. \n{} expands
+%    to the number when used inline in <mnemonic> and <name>. In the
+%    documentation it expands to $n$.
+% 
+%  - \field{<range>}{<mnemonic>}
+%    Defines a field in the current register. A range specification is either a 
+%    single bit index for a single-bit field, or of the form <from>..<to>, 
+%    where  <from> is the higher bit index, and both the <from> and <to> bit 
+%    are included in the range. <mnemonic> is used in the register graphic, so 
+%    make it as small as possible if the bitfield is small. It also needs to be
+%    a valid C and VHDL identifier.
+% 
+%  - \debugCanWrite{}
+%  - \coreCanWrite{}
+%    Sets the writable flag for the previously defined field. The {} is
+%    required!
+% 
+%  - \signed{}
+%    Marks a field as being signed. The default is unsigned.
+% 
+%  - \reset{<bit vector>}
+%    Sets the reset state of the previously defined field. If not specified, the
+%    reset state is assumed to be zero. The number of characters in <bit vector>
+%    must equal the number of bits in the field.
+% 
+%  - \id{<identifier>}
+%    Gives a field an alternative name for the C/VHDL/rvd definitions. This only
+%    works for 8-bit and 16-bit fields that are properly aligned.
+% 
+%  - Anything else:
+%    Any unrecognized line is used as a description for either the whole 
+%    register or a field in it.
+%
+%===============================================================================
+
+\register{CCR}{Main context control register}{0x200}
+The primary purpose of the context control register is to store the primary
+control flags of the processor, for example whether interrupts are enabled. In
+addition, it also stores the trap cause and exposes the branch register file to
+the debug bus.
+
+\field{31..24}{CAUSE}
+\debugCanWrite{}
+\id{TC}
+Trap cause. Set to the trap cause by hardware when the trap handler is called. 
+Reset to 0 by hardware when an \insn{RFI} instruction is encountered. Read-write 
+by the debug bus, but the processor cannot write to this register.
+
+\field{23..16}{BRANCH}
+\debugCanWrite{}
+\id{BR}
+Branch register file. Contains the current state of the branch registers. Only
+intended for use by the debug bus to see and modify the state of the branch
+register file. While the core is running, accessing this register is undefined
+due to it being dependent on the pipeline and forwarding state.
+
+\field{9..8}{K}
+\reset{01}
+This register selects between kernel mode and user mode. Currently, this flag 
+only controls whether the MMU is enabled; the \rvex{} processor does not have 
+any security features yet. In kernel mode, the MMU is bypassed; in user mode, it 
+is activated. Kernel mode is activated when the core is reset and when entering 
+the trap or panic handlers. These must thus always point to code in hardware 
+memory space. When \insn{RFI} is executed, the state is restored from
+\creg{SCCR}.
+
+In kernel mode, the register reads as \code{01}, while in user mode, it reads as 
+\code{10}. The only way to enter user mode is by writing the user mode command 
+to \creg{SCCR} and subsequently executing \insn{RFI}. Neither the core nor the 
+debug bus can write to this field directly.
+
+\field{7..6}{C}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+\todo{The C flag in CCR doesn't exist yet.}
+This register controls whether the context switch trap is enabled. It does not 
+exist on hardware context 0. When the core is reset or the trap service routine 
+is entered, the context switch trap is disabled. When \insn{RFI} is executed, 
+the state is restored from \creg{SCCR}.
+
+When the context switch trap is enabled, this register reads as \code{01}. When 
+it is disabled, it reads as \code{10}. Both the core and the debug bus can write 
+to this register. Writing \code{00} has no effect, writing \code{01} enables the 
+context switching trap, writing \code{10} disables it and writing \code{11} 
+toggles the state. This prevents the need for read-modify-write operations.
+
+Refer to \creg{RSC} for more information.
+
+\field{5..4}{B}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+This register controls whether breakpoints are enabled in self-hosted debug 
+mode. Its value is ignored in external debug mode. When the core is reset or the 
+trap service routine is entered due to a debug trap in self-hosted debug mode, 
+breakpoints are disabled. When \insn{RFI} is executed, the state is restored 
+from \creg{SCCR}.
+
+When breakpoints are enabled, this register reads as \code{01}. When they are 
+disabled, it reads as \code{10}. Both the core and the debug bus can write to 
+this register. Writing \code{00} has no effect, writing \code{01} enables debug 
+traps, writing \code{10} disables them and writing \code{11} toggles the state. 
+This prevents the need for read-modify-write operations.
+
+\field{3..2}{R}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+This register, named ready-for-trap, tentatively specifies if the processor is
+currently capable of servicing traps. However, since traps cannot be masked,
+any trap that occurs while ready-for-trap is cleared will cause a panic.
+Therefore, the only thing this register does in hardware is switch between the
+trap handler and panic handler address. When the core is reset or the trap
+service routine is entered, ready-for-trap is cleared. When \insn{RFI} is 
+executed, the state is restored from \creg{SCCR}.
+
+When ready-for-trap is set (trap handler selected), this register reads as 
+\code{01}. When it is cleared (panic handler selected), it reads as \code{10}. 
+Both the core and the debug bus can write to this register. Writing \code{00} 
+has no effect, writing \code{01} sets ready-for-trap, writing \code{10} clears 
+it and writing \code{11} toggles the state. This prevents the need for 
+read-modify-write operations.
+
+\field{1..0}{I}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+This register selects whether external interrupts are enabled or not. When the 
+core is reset or the trap service routine is entered, external interrupts are 
+disabled. When \insn{RFI} is executed, the state is restored from \creg{SCCR}.
+
+When interrupts are enabled, this register reads as \code{01}. When they are 
+disabled, it reads as \code{10}. Both the core and the debug bus can write to 
+this register. Writing \code{00} has no effect, writing \code{01} enables 
+external interrupts, writing \code{10} disables them and writing \code{11} 
+toggles the state. This prevents the need for read-modify-write operations.
+
+%===============================================================================
+
+\register{SCCR}{Saved context control register}{0x204}
+This register saves the state of the primary control flags of the processor when
+entering the trap service routine. When \insn{RFI} is executed, the state is
+restored from this register. In addition, this register contains the context ID,
+which contexts may read to identify themselves.
+
+\field{31..24}{ID}
+\reset{********}
+\id{CID}
+This field is hardwired to the context index. Programs running on the \rvex{}
+processor may use this field to determine which hardware context they are
+running on.
+
+\field{9..8}{K}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+When the trap service routine is entered, this register stores whether kernel
+the processor was in kernel mode or user mode. When \insn{RFI} is executed,
+the state is set to this value.
+
+Unlike the kernal mode field in \creg{CCR}, this field can be written. Writing 
+\code{00} has no effect, writing \code{01} enables external interrupts, writing 
+\code{10} disables them and writing \code{11} toggles the state. This prevents 
+the need for read-modify-write operations. Read behavior is identical to the
+K field in \creg{CCR}.
+
+\field{7..6}{C}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+\todo{The C flag in SCCR doesn't exist yet.}
+When the trap service routine is entered, this register stores whether the 
+context switching trap was enabled. When \insn{RFI} is executed, the state is 
+set to this value.
+
+Core and debug bus access behavior is identical to the C field in \creg{CCR}.
+
+\field{5..4}{B}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+When the trap service routine is entered, this register stores whether 
+self-hosted debug breakpoints were enabled. When \insn{RFI} is executed, the 
+state is set to this value.
+
+Core and debug bus access behavior is identical to the B field in \creg{CCR}.
+
+\field{3..2}{R}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+When the trap service routine is entered, this register stores whether 
+ready-for-trap was set. When \insn{RFI} is executed, the state is set to this
+value.
+
+Core and debug bus access behavior is identical to the R field in \creg{CCR}.
+
+\field{1..0}{I}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+When the trap service routine is entered, this register stores whether 
+interrupts were enabled. When \insn{RFI} is executed, the state is set to this
+value.
+
+Core and debug bus access behavior is identical to the I field in \creg{CCR}.
+
+%===============================================================================
+
+\register{LR}{Link register}{0x208}
+Contains the current link register (\texttt{\$l0.0}) value. Only intended for
+use by the debug bus. While the core is running, accessing this register is
+undefined due to it being dependent on the pipeline and forwarding state.
+
+\field{31..0}{Link register}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{PC}{Program counter}{0x20C}
+Contains the current program counter. Only intended for use by the debug bus.
+When the register is written by the debug bus, the jump flag in \creg{DCR} is
+set, to ensure that the branch unit properly jumps to the new PC. This works
+even if the processor is running.
+
+\field{31..0}{Program counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{TH}{Trap handler}{0x210}
+Contains the address of the trap service routine. This is where the processor
+will jump to if a trap occurs while ready-for-trap in \creg{CCR} is set. Even if
+the design contains an MMU, this should be a hardware address, as the MMU is
+disabled when a trap occurs.
+
+\field{31..0}{Trap handler}
+\debugCanWrite{}
+\coreCanWrite{}
+
+%===============================================================================
+
+\register{PH}{Panic handler}{0x214}
+Contains the address of the panic service routine. This is where the processor
+will jump to if a trap occurs while ready-for-trap in \creg{CCR} is NOT set.
+Even if the design contains an MMU, this should be a hardware address, as the
+MMU is disabled when a trap occurs.
+
+The difference between the trap and panic service routines, is that the trap
+service routine has all state information of the processor at its disposal. That
+is, if the trap is recoverable, the program can continue after the trap service
+routine completes. The panic service routine, however, should assume that the
+state information of the processor is incomplete. Refer to
+Section~\ref{sec:core-ug-traps} for more information.
+
+\field{31..0}{Panic handler}
+\debugCanWrite{}
+\coreCanWrite{}
+
+%===============================================================================
+
+\register{TP}{Trap point}{0x218}
+When a trap occurs, this register is set to the address of the start of the
+offending bundle. The address is in user space if the MMU was enabled when the
+trap occured. In addition, when \insn{RFI} is executed, the processor will jump
+back to this address to resume execution. This is the correct behavior for both
+external interrupts and traps that, after servicing, should return to the
+previously offending instruction, such as a page fault.
+
+To support software context switching, the processor may write to this register
+to change the resumption address. \insn{RFI} will then cause execution to be
+resumed in the new software context, assuming the rest of the processor state
+has been swapped in as well.
+
+\field{31..0}{Trap point}
+\debugCanWrite{}
+\coreCanWrite{}
+
+%===============================================================================
+
+\register{TA}{Trap argument}{0x21C}
+When a trap occurs, this register is set to the trap argument. The significance
+of this value depends on the trap, which can be identified from the trap cause
+field in \creg{CCR}. Refer to Section~\ref{sec:core-ug-traps} for more
+information.
+
+\field{31..0}{Trap argument}
+\debugCanWrite{}
+
+%===============================================================================
+
+\registergen{range(4)}{BR\n{}}{Breakpoint \n{}}{0x220}{4}
+These registers hold the addresses for the hardware breakpoints and/or
+watchpoints. These registers only exist up to how many break-/watchpoints are
+design-time configured to be supported by the processor. Breakpoints are
+configured in \creg{DCR}.
+
+\field{31..0}{Breakpoint \n{}}
+\debugCanWrite{}
+\coreCanWrite{}
+
+%===============================================================================
+
+\register{DCR}{Debug control register 1}{0x230}
+This register controls the debugging system of the \rvex{} processor.
+
+\field{31}{D}
+\debugCanWrite{}
+
+Done/reset flag. This bit is set by hardware when a \insn{STOP} instruction is 
+encountered. It is cleared when a one is written to the R or S flags.
+
+In addition, when a one is written to this flag, the control register file for 
+this context is completely reset, as if the external context reset signal was 
+asserted. Writing a zero has no effect. When combined with writing a one to the 
+external debug flag, the core starts in external debug mode, and when combined 
+with writing a one to B or the S flag, the core will stop execution before any 
+instruction is executed, allowing the user to single-step from the start of the 
+program.
+
+Note that breakpoint information will have to be reloaded when the context is 
+reset using this method.
+
+\field{30}{J}
+
+This bit is set by hardware when the debug bus writes to the PC register and is 
+cleared when the processor jumps to it. It can thus be used as an acknowledgement
+flag for jumping. The flag is read only.
+
+\field{28}{I}
+\debugCanWrite{}
+\reset{1}
+
+Internal debug flag. Complement of the external debug flag. When the debug bus 
+writes a one to this flag, the external debug flag is cleared, giving the
+processor control over debugging. Writing a zero has no effect.
+
+\field{27}{E}
+\debugCanWrite{}
+
+External debug flag. Complement of the internal debug flag. When the debug bus 
+writes a one to this flag, the external debug flag is set, enabling external
+debug mode. Writing a zero has no effect. While in external debug mode, debug
+traps cause the B flag to be set and the trap cause to be recorded in \creg{DCR}
+instead of the normal registers. This thus allows an external debugger to handle
+the debug traps instead, even if the processor is in the middle of a trap
+service routine and is not even ready for a trap. Writing a one to the R or the
+S flag is the equivalent of \insn{RFI} for the external debugging system.
+
+\field{26}{R}
+\debugCanWrite{}
+
+Resume flag. When the debug bus writes a one to this flag, the B flag is
+cleared, causing the processor to resume execution if it was halted. Writing a
+zero has no effect; this flag is cleared by hardware when the first instruction
+is successfully fetched. It can thus be used as an acknowledgement flag for
+resuming execution.
+
+In addition, debug traps are disabled for instructions that were fetched while
+this flag was set. This behavior allows the processor to step beyond the
+breakpoint that caused the processor to break, so there is no need to disable
+the triggered breakpoint in order to resume. This behavior is also used for
+single stepping; see below.
+
+\field{25}{S}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Step flag. This flag may be set by the debug bus by writing a one to it. Doing
+so will also cause the R flag to be set and the B flag to be cleared, causing
+the processor to resume execution if it was halted. Writing a zero has no
+effect. The processor can also set this flag, but only if the E flag is cleared,
+i.e., if the processor is in self-hosted debug mode.
+
+While set, any instruction will cause a step debug trap. However, as noted
+above, all debug traps are disabled for the first instruction fetched after
+execution resumes. They should also be disabled while in the trap service
+routine through the breakpoint enable field in \creg{CCR}. This allows both an
+external debugger and the self-hosted debug system to single-step.
+
+\field{24}{B}
+\debugCanWrite{}
+
+Break flag. When this flag is set, the context stops fetching instructions and
+flushes the pipeline, as it would if the external run signal is low or if a
+reconfiguration is pending. It effectively halts execution.
+
+This flag may be set by the debug bus by writing a one to it, in order to pause
+execution. Writing a zero has no effect. In addition, the flag is set by
+hardware when a debug trap occurs while the E flag is set and when a \insn{STOP}
+instruction is executed.
+
+\field{23..16}{CAUSE}
+
+Trap cause for debug traps that should be handled by the external debug system.
+This is set to the debug trap cause by hardware when the B flag is set due to a
+debug trap.
+
+\field{13..12}{BR3}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Breakpoint 3 control field. This field only exists if the core is design-time
+configured to support all four hardware breakpoints. See also BR0.
+
+\field{9..8}{BR2}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Breakpoint 2 control field. This field only exists if the core is design-time
+configured to support at least three hardware breakpoints. See also BR0.
+
+\field{5..4}{BR1}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Breakpoint 1 control field. This field only exists if the core is design-time
+configured to support at least two hardware breakpoints. See also BR0.
+
+\field{1..0}{BR0}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Breakpoint 0 control field. This field only exists if the core is design-time
+configured to support at least one hardware breakpoint.
+
+The core can only write to BR$n$ fields when the E flag is cleared, i.e. when
+self-hosted debug mode is selected. The encoding for the fields is as follows.
+
+\vskip 10pt\noindent\begin{tabularx}{\textwidth}{@{}l@{}X@{}}
+BR$n$ = \code{00}: & \ breakpoint/watchpoint disabled. \\
+BR$n$ = \code{01}: & \ breakpoint enabled. \\
+BR$n$ = \code{10}: & \ data write watchpoint enabled. \\
+BR$n$ = \code{11}: & \ data read/write watchpoint enabled. \\
+\end{tabularx}
+
+%===============================================================================
+
+\register{DCR2}{Debug control register 2}{0x234}
+This register controls the trace unit, if the core is design-time configured to
+support tracing. It also contains an 8-bit scratchpad register for communicating
+an execution result to the debug system.
+
+\field{31..24}{RESULT}
+\debugCanWrite{}
+\coreCanWrite{}
+\signed{}
+\id{RET}
+
+This field does not have a hardwired function. It is intended to be used to
+communicate the reason for executing a \insn{STOP} instruction to the debug
+system. The default \code{_start.s} file will write the \code{main()} return
+value to this register before stopping.
+
+\field{15}{t}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace trap
+information.
+
+\field{14}{m}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace memory/control
+register operations.
+
+\field{13}{r}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace register writes.
+
+\field{12}{c}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace cache
+performance information.
+
+\field{11}{i}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace all fetched
+instructions.
+
+\field{8}{e}
+\reset{*}
+
+Whether the core was design-time configured to support tracing.
+
+\field{7}{T}
+\debugCanWrite{}
+
+Setting this bit enables trap tracing if the E flag is set and the core is 
+design-time configured to support it.
+
+\field{6}{M}
+\debugCanWrite{}
+
+Setting this bit enables memory/control register tracing if the E flag is set 
+and the core is design-time configured to support it.
+
+\field{5}{R}
+\debugCanWrite{}
+
+Setting this bit enables register write tracing if the E flag is set and the 
+core is design-time configured to support it.
+
+\field{4}{C}
+\debugCanWrite{}
+
+Setting this bit enables cache performance tracing if the E flag is set and the 
+core is design-time configured to support it.
+
+\field{3}{I}
+\debugCanWrite{}
+
+Setting this bit causes all fetched instructions to be traced if the E flag is 
+set and the core is design-time configured to support it.
+
+\field{0}{E}
+\debugCanWrite{}
+
+Setting this bit enables tracing if the core is design-time configured to 
+support it. If no other bits are set, only branch origins and destinations are 
+traced.
+
+%===============================================================================
+
+\register{CRR}{Context reconfiguration request register}{0x238}
+This register may be written to by the core only. When it is written, a
+reconfiguration is requested. Refer to Section~\ref{sec:core-ug-reconf} for more
+information.
+
+\field{31..0}{Context reconfiguration request}
+\coreCanWrite{}
+
+%===============================================================================
+
+\register{CYC}{Cycle counter}{0x23C}
+This register will automatically increment every cycle while an instruction from
+this context is in the pipeline, even when the context is stalled. It will stop
+incrementing when it reaches 0xFFFFFFFF.
+
+When the debug bus writes to this register, the register is cleared. When it
+writes 1 to it, \creg{STALL}, \creg{BUN}, \creg{SYL} and \creg{NOP} will also be
+cleared, simultaneously.
+
+\field{31..0}{Cycle counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{STALL}{Stall cycle counter}{0x240}
+This register will automatically increment every cycle while an instruction from
+this context is in the pipeline and the context is stalled. It will stop
+incrementing when it reaches 0xFFFFFFFF. When the debug bus writes to this 
+register, the register is cleared. It will also be cleared if the debug bus
+writes a 1 to \creg{CYC}.
+
+As long as neither \creg{CYC} nor \creg{STALL} are 0xFFFFFFFF,
+\creg{CYC}~-~\creg{STALL} represents the number of active cycles.
+
+\field{31..0}{Stall cycle counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{BUN}{Committed bundle counter}{0x244}
+This register will automatically increment whenever the results of executing a
+bundle are committed. It will stop incrementing when it reaches 0xFFFFFFFF. When
+the debug bus writes to this register, the register is cleared. It will also be 
+cleared if the debug bus writes a 1 to \creg{CYC}.
+
+As long as neither \creg{CYC}, \creg{STALL} nor \creg{BUN} are 0xFFFFFFFF,
+\creg{CYC}~-~\creg{STALL}~-~\creg{BUN} represents the number of cycles spent
+doing pipeline flushes, for example due to traps or the branch delay slot.
+
+\field{31..0}{Committed bundle counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{SYL}{Committed syllable counter}{0x248}
+This register will automatically increment whenever the results of executing a
+non-\insn{NOP} syllable are committed. It will stop incrementing when it reaches
+0xFFFFFFFF. When the debug bus writes to this register, the register is cleared.
+It will also be cleared if the debug bus writes a 1 to \creg{CYC}.
+
+As long as neither \creg{BUN} nor \creg{SYL} are 0xFFFFFFFF,
+\creg{SYL}~/~\creg{BUN} represents average instruction-level parallelism since
+the registers were cleared.
+
+\field{31..0}{Committed syllable counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{NOP}{Committed NOP counter}{0x24C}
+This register will automatically increment whenever a \insn{NOP} syllable is
+committed. It will stop incrementing when it reaches 0xFFFFFFFF. When the debug
+bus writes to this register, the register is cleared. It will also be cleared
+if the debug bus writes a 1 to \creg{CYC}.
+
+As long as neither \creg{SYL} nor \creg{NOP} are 0xFFFFFFFF,
+\creg{SYL}~/~(\creg{SYL} + \creg{NOP}) represents average fraction of syllables
+that are \insn{NOP}, i.e. the compression efficiency of the binary.
+
+\field{31..0}{Committed NOP counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\registergen{range(1, 5)}{SCRP\n{}}{Scratchpad register \n{}}{0x24C}{4}
+Scratch pad registers. May be used at the discretion of the application and/or
+debug system.
+
+\field{31..0}{Scratchpad register \n{}}
+\debugCanWrite{}
+\coreCanWrite{}
+
+%===============================================================================
+
+\register{RSC}{Requested software context}{0x260}
+\todo{The RSC register doesn't exist yet.}
+\emph{This register does not exist on context 0.} It is hardwired to
+\code{RSC}$n$ in hardware context 0, and represents the software context that
+should be loaded into our hardware context, if it is not already loaded. The
+encoding of the register is at the user's discretion, but it is intended that
+this points to a memory region that contains the to be loaded context.
+
+The contents of this register are controlled by hardware context 0, which is 
+expected to run the scheduler. When this value does not equal the value in 
+\code{CSC} and context switching is enabled in \creg{CCR}, the 
+\trap{CONTEXT_SWITCH} trap is caused. Refer to its documentation in
+Section~\ref{sec:core-ug-traps} for more information.
+
+\field{31..0}{Requested software context}
+\reset{11111111111111111111111111111111}
+
+%===============================================================================
+
+\registergen{range(1, 8)}{RSC\n{}}{Requested swctxt on hwctxt \n{}}{0x260}{8}
+\todo{The RSC\n{} registers don't exist yet.}
+\emph{This register only exists on context 0, and only if the core is
+design-time configured to support hardware context \n{}.} This register is 
+hardwired to \creg{RSC} in hardware context \n{}. Refer to \creg{RSC} for more
+information.
+
+\field{31..0}{Requested swctxt on hwctxt \n{}}
+\coreCanWrite{}
+\debugCanWrite{}
+\reset{11111111111111111111111111111111}
+
+%===============================================================================
+
+\register{CSC}{Current software context}{0x264}
+\todo{The CSC register doesn't exist yet.}
+\emph{This register does not exist on context 0.} It is hardwired to
+\code{CSC}$n$ in hardware context 0. The value in this register should be set
+to the value in \creg{RSC} by the \trap{CONTEXT_SWITCH} trap.
+
+\field{31..0}{Current software context}
+\coreCanWrite{}
+\debugCanWrite{}
+\reset{11111111111111111111111111111111}
+
+%===============================================================================
+
+\registergen{range(1, 8)}{CSC\n{}}{Current swctxt on hwctxt \n{}}{0x264}{8}
+\todo{The CSC\n{} registers don't exist yet.}
+\emph{This register only exists on context 0, and only if the core is
+design-time configured to support hardware context \n{}.} This register is 
+hardwired to \creg{CSC} in hardware context \n{}. Refer to \creg{CSC} for more
+information.
+
+\field{31..0}{Current swctxt on hwctxt \n{}}
+\reset{11111111111111111111111111111111}
+
+%===============================================================================
+
+\register{SAWC}{Sleep and wake-up control register}{0x2A0}
+\todo{The SAWC register doesn't exist yet.}
+\emph{This register only exists on context 0.} This register contains special 
+control features for sleeping (reconfiguring to a configuration with all lane 
+groups disabled) and waking up other hardware contexts.
+
+\field{7..1}{Running}
+\debugCanWrite{}
+\coreCanWrite{}
+This field contains a bit for every other context, i.e., not all of these bits
+will be available if the core is not configured to support all eight hardware
+contexts. When reading this register, each bit represents the ones complement
+of the B flag in \creg{DCR} for each other context. Writing a one to a bit is
+equivalent to writing a one to the R flag in \creg{DCR} for each other context.
+
+A scheduler running on context 0 may use this feature, combined with an
+interrupt controller that triggers an interrupt when the done output for any
+other context has a rising edge, to support task yielding for cooperative
+scheduling. A yield will then be equivalent to a \insn{STOP} instruction, which
+will thus trigger an interrupt for the scheduler. The scheduler may then
+switch out the software context and subsequently restart the hardware context
+using these flags.
+
+\field{0}{S}
+\debugCanWrite{}
+\coreCanWrite{}
+Sleep flag. This enables or disables the sleep and wake-up system. Refer to
+Section~\ref{sec:core-ug-reconf-saw} for more information.
+
+%===============================================================================
+
+\register{WCFG}{Wakeup configuration}{0x2A4}
+\todo{The WCFG register doesn't exist yet.}
+\emph{This register only exists on context 0.} This configuration register is 
+used in conjunction with the S flag in \creg{SAWC}. Refer to
+Section~\ref{sec:core-ug-reconf-saw} for more information.
+
+\field{31..0}{Wakeup configuration}
+\coreCanWrite{}
+\debugCanWrite{}
+
+%===============================================================================

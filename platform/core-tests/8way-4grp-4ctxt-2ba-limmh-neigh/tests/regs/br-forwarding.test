@@ -20,42 +20,42 @@ load    cmpeq b0.6 = r0.0, 1
 load    cmpeq b0.7 = r0.0, 1 ;;
 
 -- 0x020
-load    stbr 0[r0.0] = b0
+load    stbr 0[r0.0]
 load    cmpeq b0.3 = r0.0, 0 ;;
 
 -- 0x028
-load    stbr 1[r0.0] = b0
+load    stbr 1[r0.0]
 load    cmpeq b0.5 = r0.0, 0 ;;
 
 -- 0x030
-load    stbr 2[r0.0] = b0
+load    stbr 2[r0.0]
 load    cmpeq b0.0 = r0.0, 0 ;;
 
 -- 0x038
-load    stbr 3[r0.0] = b0
+load    stbr 3[r0.0]
 load    cmpeq b0.2 = r0.0, 0 ;;
 
 -- 0x040
-load    stbr 4[r0.0] = b0
+load    stbr 4[r0.0]
 load    cmpeq b0.1 = r0.0, 0 ;;
 
 -- Skip ahead to make sure that things are stored correctly.
 fillnops 0x200
 
 -- 0x200
-load    stbr 5[r0.0] = b0
+load    stbr 5[r0.0]
 load    cmpeq b0.7 = r0.0, 0 ;;
 
 -- 0x208
-load    stbr 6[r0.0] = b0
+load    stbr 6[r0.0]
 load    cmpeq b0.4 = r0.0, 0 ;;
 
 -- 0x210
-load    stbr 7[r0.0] = b0
+load    stbr 7[r0.0]
 load    cmpeq b0.6 = r0.0, 0 ;;
 
 -- 0x218
-load    stbr 8[r0.0] = b0
+load    stbr 8[r0.0]
 load    stop ;;
 
 -- Run the test.
