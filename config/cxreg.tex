@@ -563,8 +563,8 @@ information.
 
 \register{CYC}{Cycle counter}{0x23C}
 This register will automatically increment every cycle while an instruction from
-this context is in the pipeline, even when the context is stalled. It will stop
-incrementing when it reaches 0xFFFFFFFF.
+this context is in the pipeline, even when the context is stalled. It will
+overflow when it reaches 0xFFFFFFFF.
 
 When the debug bus writes to this register, the register is cleared. When it
 writes 1 to it, \creg{STALL}, \creg{BUN}, \creg{SYL} and \creg{NOP} will also be
@@ -575,14 +575,23 @@ cleared, simultaneously.
 
 %===============================================================================
 
-\register{STALL}{Stall cycle counter}{0x240}
-This register will automatically increment every cycle while an instruction from
-this context is in the pipeline and the context is stalled. It will stop
-incrementing when it reaches 0xFFFFFFFF. When the debug bus writes to this 
-register, the register is cleared. It will also be cleared if the debug bus
-writes a 1 to \creg{CYC}.
+\register{CYCH}{Cycle counter high}{0x240}
+This register will automatically increment every time \creg{CYC} overflows. It
+will overflow when it reaches 0xFFFFFFFF.
 
-As long as neither \creg{CYC} nor \creg{STALL} are 0xFFFFFFFF,
+\field{31..0}{Cycle counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{STALL}{Stall cycle counter}{0x244}
+This register will automatically increment every cycle while an instruction from
+this context is in the pipeline and the context is stalled. It will overflow
+when it reaches 0xFFFFFFFF. When the debug bus writes to this register, the
+register is cleared. It will also be cleared if the debug bus writes a 1 to
+\creg{CYC}.
+
+As long as neither \creg{CYC} nor \creg{STALL} have overflowed,
 \creg{CYC}~-~\creg{STALL} represents the number of active cycles.
 
 \field{31..0}{Stall cycle counter}
@@ -590,13 +599,22 @@ As long as neither \creg{CYC} nor \creg{STALL} are 0xFFFFFFFF,
 
 %===============================================================================
 
-\register{BUN}{Committed bundle counter}{0x244}
+\register{STALLH}{Stall cycle counter high}{0x248}
+This register will automatically increment every time \creg{STALL} overflows. It
+will overflow when it reaches 0xFFFFFFFF.
+
+\field{31..0}{Stall cycle counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{BUN}{Committed bundle counter}{0x24C}
 This register will automatically increment whenever the results of executing a
-bundle are committed. It will stop incrementing when it reaches 0xFFFFFFFF. When
+bundle are committed. It will overflow when it reaches 0xFFFFFFFF. When
 the debug bus writes to this register, the register is cleared. It will also be 
 cleared if the debug bus writes a 1 to \creg{CYC}.
 
-As long as neither \creg{CYC}, \creg{STALL} nor \creg{BUN} are 0xFFFFFFFF,
+As long as neither \creg{CYC}, \creg{STALL} nor \creg{BUN} have overflowed,
 \creg{CYC}~-~\creg{STALL}~-~\creg{BUN} represents the number of cycles spent
 doing pipeline flushes, for example due to traps or the branch delay slot.
 
@@ -605,13 +623,22 @@ doing pipeline flushes, for example due to traps or the branch delay slot.
 
 %===============================================================================
 
-\register{SYL}{Committed syllable counter}{0x248}
+\register{BUNH}{Committed bundle counter high}{0x250}
+This register will automatically increment every time \creg{BUN} overflows. It
+will overflow when it reaches 0xFFFFFFFF.
+
+\field{31..0}{Committed bundle counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{SYL}{Committed syllable counter}{0x254}
 This register will automatically increment whenever the results of executing a
-non-\insn{NOP} syllable are committed. It will stop incrementing when it reaches
+non-\insn{NOP} syllable are committed. It will overflow when it reaches
 0xFFFFFFFF. When the debug bus writes to this register, the register is cleared.
 It will also be cleared if the debug bus writes a 1 to \creg{CYC}.
 
-As long as neither \creg{BUN} nor \creg{SYL} are 0xFFFFFFFF,
+As long as neither \creg{BUN} nor \creg{SYL} have overflowed,
 \creg{SYL}~/~\creg{BUN} represents average instruction-level parallelism since
 the registers were cleared.
 
@@ -620,13 +647,22 @@ the registers were cleared.
 
 %===============================================================================
 
-\register{NOP}{Committed NOP counter}{0x24C}
+\register{SYLH}{Committed syllable counter high}{0x258}
+This register will automatically increment every time \creg{SYL} overflows. It
+will overflow when it reaches 0xFFFFFFFF.
+
+\field{31..0}{Committed syllable counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{NOP}{Committed NOP counter}{0x25C}
 This register will automatically increment whenever a \insn{NOP} syllable is
-committed. It will stop incrementing when it reaches 0xFFFFFFFF. When the debug
+committed. It will overflow when it reaches 0xFFFFFFFF. When the debug
 bus writes to this register, the register is cleared. It will also be cleared
 if the debug bus writes a 1 to \creg{CYC}.
 
-As long as neither \creg{SYL} nor \creg{NOP} are 0xFFFFFFFF,
+As long as neither \creg{SYL} nor \creg{NOP} have overflowed,
 \creg{SYL}~/~(\creg{SYL} + \creg{NOP}) represents average fraction of syllables
 that are \insn{NOP}, i.e. the compression efficiency of the binary.
 
@@ -635,7 +671,145 @@ that are \insn{NOP}, i.e. the compression efficiency of the binary.
 
 %===============================================================================
 
-\registergen{range(1, 5)}{SCRP\n{}}{Scratchpad register \n{}}{0x24C}{4}
+\register{NOPH}{Committed syllable counter high}{0x260}
+This register will automatically increment every time \creg{NOP} overflows. It
+will overflow when it reaches 0xFFFFFFFF.
+
+\field{31..0}{Committed syllable counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{IACC}{Instruction cache access counter}{0x264}
+This register increments for every instruction cache access.
+
+\field{31..0}{Instruction cache access counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{IACCH}{Instruction cache access counter high}{0x268}
+This register increments every time \creg{IACC} overflows.
+
+\field{31..0}{Instruction cache access counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{IMISS}{Instruction cache miss counter}{0x26C}
+This register increments every time there is a miss in the instruction cache.
+
+\field{31..0}{Instruction cache miss counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{IMISSH}{Instruction cache miss counter high}{0x270}
+This register increments every time \creg{IMISS} overflows.
+
+\field{31..0}{Instruction cache miss counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DRACC}{Data cache read access counter}{0x274}
+This register increments every time there is a read access to the data cache.
+
+\field{31..0}{Data cache read access counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DRACCH}{Data cache read access counter high}{0x278}
+This register increments every time \creg{DRACC} overflows.
+
+\field{31..0}{Data cache read access counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DRMISS}{Data cache read miss counter}{0x27C}
+This register increments every time there is a read miss in the data cache.
+
+\field{31..0}{Data cache read miss counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DRMISSH}{Data cache read miss counter high}{0x280}
+This register increments every time \creg{DRMISS} overflows.
+
+\field{31..0}{Data cache read miss counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DWACC}{Data cache write access counter}{0x284}
+This register increments every time there is a write access to the data cache.
+
+\field{31..0}{Data cache write access counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DWACCH}{Data cache write access counter high}{0x288}
+This register increments every time \creg{DWACC} overflows.
+
+\field{31..0}{Data cache write access counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DWMISS}{Data cache write miss counter}{0x28C}
+This register increments every time there is a write miss in the data cache.
+
+\field{31..0}{Data cache write miss counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DWMISSH}{Data cache write miss counter high}{0x290}
+This register increments every time \creg{DWMISS} overflows.
+
+\field{31..0}{Data cache write miss counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DBYPASS}{Data cache bypass counter}{0x294}
+This register increments every time there is a bypassed access to the data cache.
+
+\field{31..0}{Data cache bypass counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DBYPASSH}{Data cache bypass counter high}{0x298}
+This register increments every time \creg{DBYPASS} overflows.
+
+\field{31..0}{Data cache bypass counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DWBUF}{Data cache write buffer counter}{0x29C}
+This register increments every time there is a write to the data cache while
+the write buffer is full.
+
+\field{31..0}{Data cache write buffer counter}
+\debugCanWrite{}
+
+%===============================================================================
+
+\register{DWBUFH}{Data cache write buffer counter high}{0x2A0}
+This register increments every time \creg{DWBUF} overflows.
+
+\field{31..0}{Data cache write buffer counter high}
+\debugCanWrite{}
+
+%===============================================================================
+
+\registergen{range(1, 5)}{SCRP\n{}}{Scratchpad register \n{}}{0x2A0}{4}
 Scratch pad registers. May be used at the discretion of the application and/or
 debug system.
 
@@ -645,7 +819,7 @@ debug system.
 
 %===============================================================================
 
-\register{RSC}{Requested software context}{0x260}
+\register{RSC}{Requested software context}{0x2B4}
 \todo{The RSC register doesn't exist yet.}
 \emph{This register does not exist on context 0.} It is hardwired to
 \code{RSC}$n$ in hardware context 0, and represents the software context that
@@ -664,7 +838,7 @@ Section~\ref{sec:core-ug-traps} for more information.
 
 %===============================================================================
 
-\registergen{range(1, 8)}{RSC\n{}}{Requested swctxt on hwctxt \n{}}{0x260}{8}
+\registergen{range(1, 8)}{RSC\n{}}{Requested swctxt on hwctxt \n{}}{0x2B4}{8}
 \todo{The RSC\n{} registers don't exist yet.}
 \emph{This register only exists on context 0, and only if the core is
 design-time configured to support hardware context \n{}.} This register is 
@@ -678,7 +852,7 @@ information.
 
 %===============================================================================
 
-\register{CSC}{Current software context}{0x264}
+\register{CSC}{Current software context}{0x2B8}
 \todo{The CSC register doesn't exist yet.}
 \emph{This register does not exist on context 0.} It is hardwired to
 \code{CSC}$n$ in hardware context 0. The value in this register should be set
@@ -691,7 +865,7 @@ to the value in \creg{RSC} by the \trap{CONTEXT_SWITCH} trap.
 
 %===============================================================================
 
-\registergen{range(1, 8)}{CSC\n{}}{Current swctxt on hwctxt \n{}}{0x264}{8}
+\registergen{range(1, 8)}{CSC\n{}}{Current swctxt on hwctxt \n{}}{0x2B8}{8}
 \todo{The CSC\n{} registers don't exist yet.}
 \emph{This register only exists on context 0, and only if the core is
 design-time configured to support hardware context \n{}.} This register is 
@@ -703,7 +877,7 @@ information.
 
 %===============================================================================
 
-\register{SAWC}{Sleep and wake-up control register}{0x2A0}
+\register{SAWC}{Sleep and wake-up control register}{0x2F4}
 \todo{The SAWC register doesn't exist yet.}
 \emph{This register only exists on context 0.} This register contains special 
 control features for sleeping (reconfiguring to a configuration with all lane 
@@ -734,7 +908,7 @@ Section~\ref{sec:core-ug-reconf-saw} for more information.
 
 %===============================================================================
 
-\register{WCFG}{Wakeup configuration}{0x2A4}
+\register{WCFG}{Wakeup configuration}{0x2F8}
 \todo{The WCFG register doesn't exist yet.}
 \emph{This register only exists on context 0.} This configuration register is 
 used in conjunction with the S flag in \creg{SAWC}. Refer to
@@ -745,3 +919,4 @@ Section~\ref{sec:core-ug-reconf-saw} for more information.
 \debugCanWrite{}
 
 %===============================================================================
+
