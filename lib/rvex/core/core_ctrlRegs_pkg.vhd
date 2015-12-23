@@ -365,6 +365,10 @@ package core_ctrlRegs_pkg is
     permissions   : in    creg_perm_type := READ_WRITE -- Bus/processor permissions (to clear register).
   );
 
+  -- Generate a 64-bit counter register. The two 32-bit halves are seperately
+  -- addressable on the bus. The counter overflows, and as of yet there is no
+  -- way to do atomic reads of both registers. The least significant bits are
+  -- at wordAddr, and the most significant bits are at wordAddr + 1.
   procedure creg_makeCounter64(
     l2c           : inout logic2creg_array;
     c2l           : inout creg2logic_array;
@@ -624,8 +628,10 @@ package body core_ctrlRegs_pkg is
                              inc_vect, enable, clamp, permissions);
   end creg_makeCounter;
   
-  -- Generate two 32 bit counter registers. When the lower 32 bits overflow,
-  -- the upper 32 are incremented. The upper 32 bits are at address wordAddr+1.
+  -- Generate a 64-bit counter register. The two 32-bit halves are seperately
+  -- addressable on the bus. The counter overflows, and as of yet there is no
+  -- way to do atomic reads of both registers. The least significant bits are
+  -- at wordAddr, and the most significant bits are at wordAddr + 1.
   procedure creg_makeCounter64(
     l2c           : inout logic2creg_array;
     c2l           : inout creg2logic_array;

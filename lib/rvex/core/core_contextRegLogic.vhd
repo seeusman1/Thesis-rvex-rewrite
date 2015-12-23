@@ -1065,7 +1065,7 @@ begin -- architecture
       inc           => mem2rv_cacheStatus.data_bypass
     );
 
-    -- Make the Data cache miss counter.
+    -- Make the Data cache write pending counter
     creg_makeCounter64(l2c, c2l, CR_C_DWBUF,
       clear         => countClear,
       inc           => mem2rv_cacheStatus.data_writepending

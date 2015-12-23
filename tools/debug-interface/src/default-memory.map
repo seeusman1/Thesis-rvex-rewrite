@@ -375,6 +375,40 @@ all:_STATE {
 
 }
 
+# This reads out the low and high values of all performance counters.
+all:_PERFORMANCE_COUNTERS {
+  SET_BANK;
+  
+  printf("Performance counters for context %d:\n", _CUR_CONTEXT);
+  
+  printf("              Active cycles = %u\n", readWord(C_CYC));
+  printf("         Active cycles high = %u\n", readWord(C_CYCH));
+  printf("             Stalled cycles = %u\n", readWord(C_STALL));
+  printf("             Stalled cycles = %u\n", readWord(C_STALLH));
+  printf("     Committed bundle count = %u\n", readWord(C_BUN));
+  printf("     Committed bundle count = %u\n", readWord(C_BUNH));
+  printf("   Committed syllable count = %u\n", readWord(C_SYL));
+  printf("   Committed syllable count = %u\n", readWord(C_SYLH));
+  printf("        Committed NOP count = %u\n", readWord(C_NOP));
+  printf("        Committed NOP count = %u\n", readWord(C_NOPH));
+  printf("        ICache access count = %u\n", readWord(C_IACC));
+  printf("        ICache access count = %u\n", readWord(C_IACCH));
+  printf("          ICache miss count = %u\n", readWord(C_IMISS));
+  printf("          ICache miss count = %u\n", readWord(C_IMISSH));
+  printf("          DCache read count = %u\n", readWord(C_DRACC));
+  printf("          DCache read count = %u\n", readWord(C_DRACCH));
+  printf("     DCache read miss count = %u\n", readWord(C_DRMISS));
+  printf("     DCache read miss count = %u\n", readWord(C_DRMISSH));
+  printf("         DCache write count = %u\n", readWord(C_DWACC));
+  printf("         DCache write count = %u\n", readWord(C_DWACCH));
+  printf("    DCache write miss count = %u\n", readWord(C_DWMISS));
+  printf("    DCache write miss count = %u\n", readWord(C_DWMISSH));
+  printf("        DCache bypass count = %u\n", readWord(C_DBYPASS));
+  printf("        DCache bypass count = %u\n", readWord(C_DBYPASSH));
+  printf("DCache buffered write count = %u\n", readWord(C_DWBUF));
+  printf("DCache buffered write count = %u\n", readWord(C_DWBUFH));
+}
+
 # Convert a core/gdb address to a debug bus address.
 all:_GDB_ADDR_R { _GDB_ADDR }
 all:_GDB_ADDR_W { _GDB_ADDR }
