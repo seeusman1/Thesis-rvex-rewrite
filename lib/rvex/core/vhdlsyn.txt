@@ -1,3 +1,4 @@
+core_version_pkg.vhd
 core_pkg.vhd
 core_pipeline_pkg.vhd
 core_ctrlRegs_pkg.vhd
