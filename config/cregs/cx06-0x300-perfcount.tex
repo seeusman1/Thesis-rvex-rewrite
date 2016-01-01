@@ -1,0 +1,147 @@
+%===============================================================================
+\register{CYC}{Cycle counter}{0x300}
+%===============================================================================
+
+This register will automatically increment every cycle while an instruction from
+this context is in the pipeline, even when the context is stalled.
+
+When the debug bus writes to this register, the register is cleared. When it
+writes 1 to it, \creg{STALL}, \creg{BUN}, \creg{SYL} and \creg{NOP} will also be
+cleared, simultaneously.
+
+\field{31..0}{Cycle counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{STALL}{Stall cycle counter}{0x308}
+%===============================================================================
+
+This register will automatically increment every cycle while an instruction from 
+this context is in the pipeline and the context is stalled. When the debug bus 
+writes to this register, the register is cleared. It will also be cleared if the 
+debug bus writes a 1 to \creg{CYC}.
+
+As long as neither \creg{CYC} nor \creg{STALL} have overflowed,
+\creg{CYC}~-~\creg{STALL} represents the number of active cycles.
+
+\field{31..0}{Stall cycle counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{BUN}{Committed bundle counter}{0x310}
+%===============================================================================
+
+This register will automatically increment whenever the results of executing a 
+bundle are committed. When the debug bus writes to this register, the register 
+is cleared. It will also be cleared if the debug bus writes a 1 to \creg{CYC}.
+
+As long as neither \creg{CYC}, \creg{STALL} nor \creg{BUN} have overflowed,
+\creg{CYC}~-~\creg{STALL}~-~\creg{BUN} represents the number of cycles spent
+doing pipeline flushes, for example due to traps or the branch delay slot.
+
+\field{31..0}{Committed bundle counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{SYL}{Committed syllable counter}{0x318}
+%===============================================================================
+
+This register will automatically increment whenever the results of executing a 
+non-\insn{NOP} syllable are committed. When the debug bus writes to this 
+register, the register is cleared. It will also be cleared if the debug bus 
+writes a 1 to \creg{CYC}.
+
+As long as neither \creg{BUN} nor \creg{SYL} have overflowed,
+\creg{SYL}~/~\creg{BUN} represents average instruction-level parallelism since
+the registers were cleared.
+
+\field{31..0}{Committed syllable counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{NOP}{Committed NOP counter}{0x320}
+%===============================================================================
+
+This register will automatically increment whenever a \insn{NOP} syllable is 
+committed. When the debug bus writes to this register, the register is cleared. 
+It will also be cleared if the debug bus writes a 1 to \creg{CYC}.
+
+As long as neither \creg{SYL} nor \creg{NOP} have overflowed,
+\creg{SYL}~/~(\creg{SYL} + \creg{NOP}) represents average fraction of syllables
+that are \insn{NOP}, i.e. the compression efficiency of the binary.
+
+\field{31..0}{Committed NOP counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{IACC}{Instruction cache access counter}{0x328}
+%===============================================================================
+
+This register increments for every instruction cache access.
+
+\field{31..0}{Instruction cache access counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{IMISS}{Instruction cache miss counter}{0x330}
+%===============================================================================
+
+This register increments every time there is a miss in the instruction cache.
+
+\field{31..0}{Instruction cache miss counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{DRACC}{Data cache read access counter}{0x338}
+%===============================================================================
+
+This register increments every time there is a read access to the data cache.
+
+\field{31..0}{Data cache read access counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{DRMISS}{Data cache read miss counter}{0x340}
+%===============================================================================
+
+This register increments every time there is a read miss in the data cache.
+
+\field{31..0}{Data cache read miss counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{DWACC}{Data cache write access counter}{0x348}
+%===============================================================================
+
+This register increments every time there is a write access to the data cache.
+
+\field{31..0}{Data cache write access counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{DWMISS}{Data cache write miss counter}{0x350}
+%===============================================================================
+
+This register increments every time there is a write miss in the data cache.
+
+\field{31..0}{Data cache write miss counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{DBYPASS}{Data cache bypass counter}{0x358}
+%===============================================================================
+
+This register increments every time there is a bypassed access to the data cache.
+
+\field{31..0}{Data cache bypass counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{DWBUF}{Data cache write buffer counter}{0x360}
+%===============================================================================
+
+This register increments every time there is a write to the data cache while
+the write buffer is full.
+
+\field{31..0}{Data cache write buffer counter}
+\debugCanWrite{}

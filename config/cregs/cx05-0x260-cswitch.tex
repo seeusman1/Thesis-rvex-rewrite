@@ -1,0 +1,62 @@
+%===============================================================================
+\register{RSC}{Requested software context}{0x260}
+%===============================================================================
+
+\todo{The RSC register doesn't exist yet.}
+\emph{This register does not exist on context 0.} It is hardwired to
+\code{RSC}$n$ in hardware context 0, and represents the software context that
+should be loaded into our hardware context, if it is not already loaded. The
+encoding of the register is at the user's discretion, but it is intended that
+this points to a memory region that contains the to be loaded context.
+
+The contents of this register are controlled by hardware context 0, which is 
+expected to run the scheduler. When this value does not equal the value in 
+\code{CSC} and context switching is enabled in \creg{CCR}, the 
+\trap{CONTEXT_SWITCH} trap is caused. Refer to its documentation in
+Section~\ref{sec:core-ug-traps} for more information.
+
+\field{31..0}{Requested software context}
+\reset{11111111111111111111111111111111}
+
+%===============================================================================
+\registergen{range(1, 8)}{RSC\n{}}{Requested swctxt on hwctxt \n{}}{0x260}{8}
+%===============================================================================
+
+\todo{The RSC\n{} registers don't exist yet.}
+\emph{This register only exists on context 0, and only if the core is
+design-time configured to support hardware context \n{}.} This register is 
+hardwired to \creg{RSC} in hardware context \n{}. Refer to \creg{RSC} for more
+information.
+
+\field{31..0}{Requested swctxt on hwctxt \n{}}
+\coreCanWrite{}
+\debugCanWrite{}
+\reset{11111111111111111111111111111111}
+
+%===============================================================================
+\register{CSC}{Current software context}{0x264}
+%===============================================================================
+
+\todo{The CSC register doesn't exist yet.}
+\emph{This register does not exist on context 0.} It is hardwired to
+\code{CSC}$n$ in hardware context 0. The value in this register should be set
+to the value in \creg{RSC} by the \trap{CONTEXT_SWITCH} trap.
+
+\field{31..0}{Current software context}
+\coreCanWrite{}
+\debugCanWrite{}
+\reset{11111111111111111111111111111111}
+
+%===============================================================================
+\registergen{range(1, 8)}{CSC\n{}}{Current swctxt on hwctxt \n{}}{0x264}{8}
+%===============================================================================
+
+\todo{The CSC\n{} registers don't exist yet.}
+\emph{This register only exists on context 0, and only if the core is
+design-time configured to support hardware context \n{}.} This register is 
+hardwired to \creg{CSC} in hardware context \n{}. Refer to \creg{CSC} for more
+information.
+
+\field{31..0}{Current swctxt on hwctxt \n{}}
+\reset{11111111111111111111111111111111}
+

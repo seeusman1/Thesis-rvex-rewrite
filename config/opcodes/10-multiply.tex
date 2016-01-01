@@ -1,0 +1,121 @@
+
+%===============================================================================
+\section{Multiply instructions}
+%===============================================================================
+\class{MUL}
+\datapath{funcSel}{MUL}
+\datapath{gpRegWE}{'1'}
+\datapath{isNOP}{'0'}
+\multiplier{isMultiplyInstruction}{'1'}
+
+\rvex{} pipelanes may be design-time configured to contain a multiplication
+unit. This unit supports 16x16 and 16x32 multiplications.
+
+In the default pipeline configuration, these instructions are pipelined by
+two cycles. That is, the result of a multiply instruction is not available yet
+in the subsequent instruction.
+
+\todo[inline]{Properly document the multiply instructions. This is a bit of a
+pain due to the fact that they make no sense to me at all.}
+
+%-------------------------------------------------------------------------------
+\syllable{00000000-}{MPYLL}{\rd = \rx, \ry}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed low 16 x low 16 bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000001-}{MPYLLU}{\rd = \rx, \ry}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned low 16 x low 16 bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000010-}{MPYLH}{\rd = \rx, \ry}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed low 16 (s1) x high 16 (s2) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000011-}{MPYLHU}{\rd = \rx, \ry}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned low 16 (s1) x high 16 (s2) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000100-}{MPYHH}{\rd = \rx, \ry}
+\multiplier{op1sel}{HIGH_HALF}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed high 16 x high 16 bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000101-}{MPYHHU}{\rd = \rx, \ry}
+\multiplier{op1sel}{HIGH_HALF}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned high 16 x high 16 bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000110-}{MPYL}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed low 16 (s2) x 32 (s1) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00000111-}{MPYLU}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned low 16 (s2) x 32 (s1) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00001000-}{MPYH}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{PASS}
+Multiply signed high 16 (s2) x 32 (s1) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00001001-}{MPYHU}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op1unsigned}{'1'}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{PASS}
+Multiply unsigned high 16 (s2) x 32 (s1) bits.
+
+%-------------------------------------------------------------------------------
+\syllable{00001010-}{MPYHS}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{SHL16}
+Multiply signed high 16 (s2) x 32 (s1) bits, shift left 16.
+
+%-------------------------------------------------------------------------------
+\syllable{10010010-}{MPYLHUS}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{op2unsigned}{'1'}
+\multiplier{resultSel}{SHR32}
+Multiply unsigned low 16 (s2) x signed 32 (s1) bits, shift right 32.
+
+%-------------------------------------------------------------------------------
+\syllable{10010011-}{MPYHHS}{\rd = \rx, \ry}
+\multiplier{op1sel}{WORD}
+\multiplier{op2sel}{HIGH_HALF}
+\multiplier{resultSel}{SHR16}
+Multiply signed high 16 (s2) x 32 (s1) bits, shift right 16.

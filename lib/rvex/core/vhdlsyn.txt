@@ -19,10 +19,8 @@ core_cfgCtrl.vhd
 core_forward.vhd
 core_contextPipelaneIFace.vhd
 core_contextRegLogic.vhd
-core_ctrlRegs_bank.vhd
 core_ctrlRegs_busSwitch.vhd
 core_ctrlRegs_contextLaneSwitch.vhd
-core_ctrlRegs_readPort.vhd
 core_ctrlRegs.vhd
 core_dmemSwitch.vhd
 core_globalRegLogic.vhd

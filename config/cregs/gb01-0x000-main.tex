@@ -1,0 +1,80 @@
+
+%===============================================================================
+\register{GSR}{Global status register}{0x000}
+%===============================================================================
+
+This register contains miscellaneous status information.
+
+\field{31}{R}
+\debugCanWrite{}
+Reset flag. The entire \rvex{} processor will be reset when the debug bus writes
+a one to this flag. Writing a zero has no effect.
+
+\field{13}{E}
+Reconfiguration error flag. This flag is set by hardware when an invalid
+configuration was requested. It is cleared once a valid configuration is
+requested.
+
+\field{12}{B}
+Reconfiguration busy flag. While high, reconfiguration requests are ignored.
+
+\field{11..8}{RID}
+Reconfiguration requester ID. When a configuration is requested, this field is
+set to the context ID of the context that requested the configuration, or to
+0xF if the request was from the debug bus. This may be used by the
+reconfiguration sources to see if they have won arbitration. Refer to
+Section~\ref{sec:core-ug-reconf-request} for more information.
+
+%===============================================================================
+\register{BCRR}{Bus reconfiguration request register}{0x004}
+%===============================================================================
+
+This register may be written to by the debug bus only. When it is written, a
+reconfiguration is requested. Refer to Sections~\ref{sec:core-ug-reconf-word}
+and \ref{sec:core-ug-reconf-request} for more information.
+
+\field{31..0}{Bus reconfiguration request}
+\debugCanWrite{}
+
+%===============================================================================
+\register{CC}{Current configuration register}{0x008}
+%===============================================================================
+
+This register is hardwired to the current configuration vector. Refer to
+Section~\ref{sec:core-ug-reconf-word} for more information.
+
+\field{31..0}{Current configuration}
+
+%===============================================================================
+\register{AFF}{Cache affinity register}{0x00C}
+%===============================================================================
+
+This register stores the cache block index (akin to a lane group) that most
+recently serviced an instruction fetch for a given context. This may be used for
+achieving the maximum possible instruction cache locality when reconfiguring.
+
+\field{30..28}{AF7}
+Instruction cache block affinity for context 7. Only exists if the core is
+configured to have eight hardware contexts and at least two lane groups.
+\field{26..24}{AF6}
+Instruction cache block affinity for context 6. Only exists if the core is
+configured to have eight hardware contexts and at least two lane groups.
+\field{22..20}{AF5}
+Instruction cache block affinity for context 5. Only exists if the core is
+configured to have eight hardware contexts and at least two lane groups.
+\field{18..16}{AF4}
+Instruction cache block affinity for context 4. Only exists if the core is
+configured to have eight hardware contexts and at least two lane groups.
+\field{14..12}{AF3}
+Instruction cache block affinity for context 3. Only exists if the core is
+configured to have at least four hardware contexts and at least two lane groups.
+\field{10..8}{AF2}
+Instruction cache block affinity for context 2. Only exists if the core is
+configured to have at least four hardware contexts and at least two lane groups.
+\field{6..4}{AF1}
+Instruction cache block affinity for context 1. Only exists if the core is
+configured to have at least two hardware contexts and at least two lane groups.
+\field{2..0}{AF0}
+Instruction cache block affinity for context 0. Only exists if the core is
+configured to have at least two lane groups.
+

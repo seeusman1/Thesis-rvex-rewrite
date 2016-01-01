@@ -1,0 +1,48 @@
+
+%===============================================================================
+\section{ALU barrel shifter instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\datapath{isNOP}{'0'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{intResultMux}{SHIFTER}
+
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+
+The \rvex{} ALU includes a barrel shifter. It should be noted that the shift
+amount input to the barrel shifter is 8-bit unsigned, not 32-bit as one might
+expect. That is, the upper 24 bits of the shift amount are discarded, and for
+instance a left shift by a negative amount will \emph{not} simply result in a
+right shift.
+
+%-------------------------------------------------------------------------------
+\syllable{01101111-}{SHL}{\rd = \rx, \ry}
+\alu{unsignedOp}{'1'}
+\alu{shiftLeft}{'1'}
+Performs a left-shift operation. Zeros are shifted in from the right.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx << \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00011000-}{SHR}{\rd = \rx, \ry}
+Performs a signed right-shift operation. That is, the sign bit of \code{\rx} is
+shifted in from the left.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx >> \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00011001-}{SHRU}{\rd = \rx, \ry}
+\alu{unsignedOp}{'1'}
+Performs an unsigned right-shift operation. That is, zeros are shifted in from
+the left.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned int)\rx >> \ry;
+\end{lstlisting}

@@ -1,0 +1,65 @@
+
+%===============================================================================
+\section{ALU bitwise instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\datapath{isNOP}{'0'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{intResultMux}{BITWISE}
+
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{opBrMux}{FALSE} % Only because legacy decoding did this.
+
+The \rvex{} ALU supports a subset of bitwise operations in a single cycle.
+
+%-------------------------------------------------------------------------------
+\syllable{01100011-}{AND}{\rd = \rx, \ry}
+\alu{bitwiseOp}{BITW_AND}
+Performs a bitwise \code{AND} operation.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx & \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01100100-}{ANDC}{\rd = \rx, \ry}
+\alu{op1Mux}{EXTEND32INV}
+\alu{bitwiseOp}{BITW_AND}
+Performs a bitwise \code{AND} operation, with the first operand one's
+complemented.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = ~\rx & \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01101001-}{OR}{\rd = \rx, \ry}
+\alu{bitwiseOp}{BITW_OR}
+Performs a bitwise \code{OR} operation. Notice that \insn{OR} instructions
+reduce to move or load immediate operations when \code{x} is set to 0.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx | \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01101010-}{ORC}{\rd = \rx, \ry}
+\alu{op1Mux}{EXTEND32INV}
+\alu{bitwiseOp}{BITW_OR}
+Performs a bitwise \code{OR} operation, with the first operand one's
+complemented. Notice that \insn{ORC} instructions reduce to one's complement
+when \code{y} or \code{imm} is set to 0.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = ~\rx | \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00011111-}{XOR}{\rd = \rx, \ry}
+\alu{bitwiseOp}{BITW_XOR}
+Performs a bitwise \code{XOR} operation.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx ^ \ry;
+\end{lstlisting}

@@ -1,0 +1,24 @@
+
+%===============================================================================
+\register{CNT}{Cycle counter register, low word}{0x010}
+%===============================================================================
+
+Cycle counter. This register is simply always incremented by one in hardware.
+Simply overflows when it reaches 0xFFFFFFFF. Its intended use is performance
+monitoring.
+
+\field{31..0}{Cycle counter low}
+
+%===============================================================================
+\register{CNTH}{Cycle counter register, high word}{0x014}
+%===============================================================================
+
+\todo{The CNTH register doesn't exist yet.}
+Extension to the \creg{CNT} register. The order is illogical for a big endian 
+system for compatibility with older code that assumes that this counter is only 
+32 bits wide. The high word of the counter value is latched whenever \creg{CNT} 
+is read to avoid needing an atomic 64-bit read operation. Thus, \creg{CNT} must 
+always be read before \creg{CNTH} is read.
+
+\field{31..0}{Cycle counter high}
+

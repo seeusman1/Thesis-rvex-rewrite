@@ -2,17 +2,16 @@ from __future__ import print_function
 
 from sys import argv
 from sys import exit
-import registers
-import traps
+import cregs.registers
+import traps.traps
 
 # Parse command line.
-if len(argv) != 5:
-    print('Usage: python rvex_h.py <gbreg.tex> <cxreg.tex> <traps.tex> <rvex.h>')
+if len(argv) != 4:
+    print('Usage: python rvex_h.py <regdir> <trapdir> <rvex.h>')
     exit(2)
-gbreg = argv[1]
-cxreg = argv[2]
-traps_fname = argv[3]
-rvex_h = argv[4]
+regdir = argv[1]
+trapdir = argv[2]
+rvex_h = argv[3]
 
 
 def print_def(f, key, value):
@@ -20,8 +19,8 @@ def print_def(f, key, value):
         key = key + ' ' * (31 - len(key))
     f.write('#define ' + key + ' ' + value + '\n')
 
-def print_reg_defs(f, fname):
-    regmap, regdoc = registers.parse(fname)
+def print_reg_defs(f, indir):
+    regmap, regdoc = cregs.registers.parse(indir)
     for ent in regdoc:
         if type(ent) is dict:
             f.write('// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n')
@@ -50,8 +49,8 @@ def print_reg_defs(f, fname):
         print_def(f, ent[0], "CREG_%s(%s_ADDR)" % (tcode, ent[0]))
         f.write('\n')
 
-def print_trap_defs(f, fname):
-    traptable, trapdoc = traps.parse(fname)
+def print_trap_defs(f, indir):
+    traptable, trapdoc = traps.traps.parse(indir)
     for index, trap in enumerate(traptable):
         if trap is None:
             continue
@@ -98,28 +97,13 @@ with open(rvex_h, 'w') as f:
 #define CREG_UINT8_RW(addr)     (*(      volatile unsigned char*)(addr))
 #define CREG_INT8_RW(addr)      (*(      volatile          char*)(addr))
 
-//-----------------------------------------------------------------------------
-// Global (shared) registers. Refer to lib/rvex/core/core_globalRegLogic.vhd
-// for up-to-date documentation about the registers.
-//-----------------------------------------------------------------------------
-
 """)
     
-    print_reg_defs(f, gbreg)
+    print_reg_defs(f, regdir)
     
-    # Write some comment stuff.
-    f.write("""//-----------------------------------------------------------------------------
-// Context-specific registers. Refer to lib/rvex/core/core_contextRegLogic.vhd
-// for up-to-date documentation about the registers.
-//-----------------------------------------------------------------------------
-
-""")
-    
-    print_reg_defs(f, cxreg)
-
-    f.write("""//-----------------------------------------------------------------------------
+    f.write("""// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Backwards-compatibility/convenience definitions
-//-----------------------------------------------------------------------------
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // This section can be changed in config/interpreter/rvex_h.py if necessary.
 
@@ -161,7 +145,7 @@ with open(rvex_h, 'w') as f:
 
 """)
     
-    print_trap_defs(f, traps_fname)
+    print_trap_defs(f, trapdir)
     
     f.write("""
 #endif

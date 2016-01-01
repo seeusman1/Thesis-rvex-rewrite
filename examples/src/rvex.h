@@ -29,11 +29,6 @@
 #define CREG_UINT8_RW(addr)     (*(      volatile unsigned char*)(addr))
 #define CREG_INT8_RW(addr)      (*(      volatile          char*)(addr))
 
-//-----------------------------------------------------------------------------
-// Global (shared) registers. Refer to lib/rvex/core/core_globalRegLogic.vhd
-// for up-to-date documentation about the registers.
-//-----------------------------------------------------------------------------
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Global status register
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -697,11 +692,6 @@
 #define CR_PVER0_PTAG6_ADDR             (CREG_BASE + 0x0FF)
 #define CR_PVER0_PTAG6                  CREG_UINT8_R(CR_PVER0_PTAG6_ADDR)
 
-//-----------------------------------------------------------------------------
-// Context-specific registers. Refer to lib/rvex/core/core_contextRegLogic.vhd
-// for up-to-date documentation about the registers.
-//-----------------------------------------------------------------------------
-
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Main context control register
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -921,244 +911,19 @@
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Context reconfiguration request register
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_CRR_ADDR                     (CREG_BASE + 0x238)
+#define CR_CRR_ADDR                     (CREG_BASE + 0x240)
 #define CR_CRR                          CREG_UINT32_RW(CR_CRR_ADDR)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Cycle counter
+// Wakeup configuration
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_CYC_ADDR                     (CREG_BASE + 0x23C)
-#define CR_CYC                          CREG_UINT32_R(CR_CYC_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Cycle counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_CYCH_ADDR                    (CREG_BASE + 0x240)
-#define CR_CYCH                         CREG_UINT32_R(CR_CYCH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Stall cycle counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_STALL_ADDR                   (CREG_BASE + 0x244)
-#define CR_STALL                        CREG_UINT32_R(CR_STALL_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Stall cycle counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_STALLH_ADDR                  (CREG_BASE + 0x248)
-#define CR_STALLH                       CREG_UINT32_R(CR_STALLH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Committed bundle counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_BUN_ADDR                     (CREG_BASE + 0x24C)
-#define CR_BUN                          CREG_UINT32_R(CR_BUN_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Committed bundle counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_BUNH_ADDR                    (CREG_BASE + 0x250)
-#define CR_BUNH                         CREG_UINT32_R(CR_BUNH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Committed syllable counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_SYL_ADDR                     (CREG_BASE + 0x254)
-#define CR_SYL                          CREG_UINT32_R(CR_SYL_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Committed syllable counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_SYLH_ADDR                    (CREG_BASE + 0x258)
-#define CR_SYLH                         CREG_UINT32_R(CR_SYLH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Committed NOP counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_NOP_ADDR                     (CREG_BASE + 0x25C)
-#define CR_NOP                          CREG_UINT32_R(CR_NOP_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Committed syllable counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_NOPH_ADDR                    (CREG_BASE + 0x260)
-#define CR_NOPH                         CREG_UINT32_R(CR_NOPH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Instruction cache access counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_IACC_ADDR                    (CREG_BASE + 0x264)
-#define CR_IACC                         CREG_UINT32_R(CR_IACC_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Instruction cache access counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_IACCH_ADDR                   (CREG_BASE + 0x268)
-#define CR_IACCH                        CREG_UINT32_R(CR_IACCH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Instruction cache miss counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_IMISS_ADDR                   (CREG_BASE + 0x26C)
-#define CR_IMISS                        CREG_UINT32_R(CR_IMISS_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Instruction cache miss counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_IMISSH_ADDR                  (CREG_BASE + 0x270)
-#define CR_IMISSH                       CREG_UINT32_R(CR_IMISSH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache read access counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DRACC_ADDR                   (CREG_BASE + 0x274)
-#define CR_DRACC                        CREG_UINT32_R(CR_DRACC_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache read access counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DRACCH_ADDR                  (CREG_BASE + 0x278)
-#define CR_DRACCH                       CREG_UINT32_R(CR_DRACCH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache read miss counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DRMISS_ADDR                  (CREG_BASE + 0x27C)
-#define CR_DRMISS                       CREG_UINT32_R(CR_DRMISS_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache read miss counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DRMISSH_ADDR                 (CREG_BASE + 0x280)
-#define CR_DRMISSH                      CREG_UINT32_R(CR_DRMISSH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache write access counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DWACC_ADDR                   (CREG_BASE + 0x284)
-#define CR_DWACC                        CREG_UINT32_R(CR_DWACC_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache write access counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DWACCH_ADDR                  (CREG_BASE + 0x288)
-#define CR_DWACCH                       CREG_UINT32_R(CR_DWACCH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache write miss counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DWMISS_ADDR                  (CREG_BASE + 0x28C)
-#define CR_DWMISS                       CREG_UINT32_R(CR_DWMISS_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache write miss counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DWMISSH_ADDR                 (CREG_BASE + 0x290)
-#define CR_DWMISSH                      CREG_UINT32_R(CR_DWMISSH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache bypass counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DBYPASS_ADDR                 (CREG_BASE + 0x294)
-#define CR_DBYPASS                      CREG_UINT32_R(CR_DBYPASS_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache bypass counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DBYPASSH_ADDR                (CREG_BASE + 0x298)
-#define CR_DBYPASSH                     CREG_UINT32_R(CR_DBYPASSH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache write buffer counter
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DWBUF_ADDR                   (CREG_BASE + 0x29C)
-#define CR_DWBUF                        CREG_UINT32_R(CR_DWBUF_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache write buffer counter high
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DWBUFH_ADDR                  (CREG_BASE + 0x2A0)
-#define CR_DWBUFH                       CREG_UINT32_R(CR_DWBUFH_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Scratchpad register $n$
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_SCRP1_ADDR                   (CREG_BASE + 0x2A4)
-#define CR_SCRP1                        CREG_UINT32_RW(CR_SCRP1_ADDR)
-
-#define CR_SCRP2_ADDR                   (CREG_BASE + 0x2A8)
-#define CR_SCRP2                        CREG_UINT32_RW(CR_SCRP2_ADDR)
-
-#define CR_SCRP3_ADDR                   (CREG_BASE + 0x2AC)
-#define CR_SCRP3                        CREG_UINT32_RW(CR_SCRP3_ADDR)
-
-#define CR_SCRP4_ADDR                   (CREG_BASE + 0x2B0)
-#define CR_SCRP4                        CREG_UINT32_RW(CR_SCRP4_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Requested software context
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_RSC_ADDR                     (CREG_BASE + 0x2B4)
-#define CR_RSC                          CREG_UINT32_R(CR_RSC_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Requested swctxt on hwctxt $n$
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_RSC1_ADDR                    (CREG_BASE + 0x2BC)
-#define CR_RSC1                         CREG_UINT32_RW(CR_RSC1_ADDR)
-
-#define CR_RSC2_ADDR                    (CREG_BASE + 0x2C4)
-#define CR_RSC2                         CREG_UINT32_RW(CR_RSC2_ADDR)
-
-#define CR_RSC3_ADDR                    (CREG_BASE + 0x2CC)
-#define CR_RSC3                         CREG_UINT32_RW(CR_RSC3_ADDR)
-
-#define CR_RSC4_ADDR                    (CREG_BASE + 0x2D4)
-#define CR_RSC4                         CREG_UINT32_RW(CR_RSC4_ADDR)
-
-#define CR_RSC5_ADDR                    (CREG_BASE + 0x2DC)
-#define CR_RSC5                         CREG_UINT32_RW(CR_RSC5_ADDR)
-
-#define CR_RSC6_ADDR                    (CREG_BASE + 0x2E4)
-#define CR_RSC6                         CREG_UINT32_RW(CR_RSC6_ADDR)
-
-#define CR_RSC7_ADDR                    (CREG_BASE + 0x2EC)
-#define CR_RSC7                         CREG_UINT32_RW(CR_RSC7_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Current software context
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_CSC_ADDR                     (CREG_BASE + 0x2B8)
-#define CR_CSC                          CREG_UINT32_RW(CR_CSC_ADDR)
-
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Current swctxt on hwctxt $n$
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_CSC1_ADDR                    (CREG_BASE + 0x2C0)
-#define CR_CSC1                         CREG_UINT32_R(CR_CSC1_ADDR)
-
-#define CR_CSC2_ADDR                    (CREG_BASE + 0x2C8)
-#define CR_CSC2                         CREG_UINT32_R(CR_CSC2_ADDR)
-
-#define CR_CSC3_ADDR                    (CREG_BASE + 0x2D0)
-#define CR_CSC3                         CREG_UINT32_R(CR_CSC3_ADDR)
-
-#define CR_CSC4_ADDR                    (CREG_BASE + 0x2D8)
-#define CR_CSC4                         CREG_UINT32_R(CR_CSC4_ADDR)
-
-#define CR_CSC5_ADDR                    (CREG_BASE + 0x2E0)
-#define CR_CSC5                         CREG_UINT32_R(CR_CSC5_ADDR)
-
-#define CR_CSC6_ADDR                    (CREG_BASE + 0x2E8)
-#define CR_CSC6                         CREG_UINT32_R(CR_CSC6_ADDR)
-
-#define CR_CSC7_ADDR                    (CREG_BASE + 0x2F0)
-#define CR_CSC7                         CREG_UINT32_R(CR_CSC7_ADDR)
+#define CR_WCFG_ADDR                    (CREG_BASE + 0x248)
+#define CR_WCFG                         CREG_UINT32_RW(CR_WCFG_ADDR)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Sleep and wake-up control register
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_SAWC_ADDR                    (CREG_BASE + 0x2F4)
+#define CR_SAWC_ADDR                    (CREG_BASE + 0x24C)
 #define CR_SAWC                         CREG_UINT32_RW(CR_SAWC_ADDR)
 
 #define CR_SAWC_Running_BIT             1
@@ -1168,14 +933,161 @@
 #define CR_SAWC_S_MASK                  0x00000001
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Wakeup configuration
+// Scratchpad register $n$
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_WCFG_ADDR                    (CREG_BASE + 0x2F8)
-#define CR_WCFG                         CREG_UINT32_RW(CR_WCFG_ADDR)
+#define CR_SCRP1_ADDR                   (CREG_BASE + 0x250)
+#define CR_SCRP1                        CREG_UINT32_RW(CR_SCRP1_ADDR)
 
-//-----------------------------------------------------------------------------
+#define CR_SCRP2_ADDR                   (CREG_BASE + 0x254)
+#define CR_SCRP2                        CREG_UINT32_RW(CR_SCRP2_ADDR)
+
+#define CR_SCRP3_ADDR                   (CREG_BASE + 0x258)
+#define CR_SCRP3                        CREG_UINT32_RW(CR_SCRP3_ADDR)
+
+#define CR_SCRP4_ADDR                   (CREG_BASE + 0x25C)
+#define CR_SCRP4                        CREG_UINT32_RW(CR_SCRP4_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Requested software context
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_RSC_ADDR                     (CREG_BASE + 0x260)
+#define CR_RSC                          CREG_UINT32_R(CR_RSC_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Current software context
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_CSC_ADDR                     (CREG_BASE + 0x264)
+#define CR_CSC                          CREG_UINT32_RW(CR_CSC_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Requested swctxt on hwctxt $n$
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_RSC1_ADDR                    (CREG_BASE + 0x268)
+#define CR_RSC1                         CREG_UINT32_RW(CR_RSC1_ADDR)
+
+#define CR_RSC2_ADDR                    (CREG_BASE + 0x270)
+#define CR_RSC2                         CREG_UINT32_RW(CR_RSC2_ADDR)
+
+#define CR_RSC3_ADDR                    (CREG_BASE + 0x278)
+#define CR_RSC3                         CREG_UINT32_RW(CR_RSC3_ADDR)
+
+#define CR_RSC4_ADDR                    (CREG_BASE + 0x280)
+#define CR_RSC4                         CREG_UINT32_RW(CR_RSC4_ADDR)
+
+#define CR_RSC5_ADDR                    (CREG_BASE + 0x288)
+#define CR_RSC5                         CREG_UINT32_RW(CR_RSC5_ADDR)
+
+#define CR_RSC6_ADDR                    (CREG_BASE + 0x290)
+#define CR_RSC6                         CREG_UINT32_RW(CR_RSC6_ADDR)
+
+#define CR_RSC7_ADDR                    (CREG_BASE + 0x298)
+#define CR_RSC7                         CREG_UINT32_RW(CR_RSC7_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Current swctxt on hwctxt $n$
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_CSC1_ADDR                    (CREG_BASE + 0x26C)
+#define CR_CSC1                         CREG_UINT32_R(CR_CSC1_ADDR)
+
+#define CR_CSC2_ADDR                    (CREG_BASE + 0x274)
+#define CR_CSC2                         CREG_UINT32_R(CR_CSC2_ADDR)
+
+#define CR_CSC3_ADDR                    (CREG_BASE + 0x27C)
+#define CR_CSC3                         CREG_UINT32_R(CR_CSC3_ADDR)
+
+#define CR_CSC4_ADDR                    (CREG_BASE + 0x284)
+#define CR_CSC4                         CREG_UINT32_R(CR_CSC4_ADDR)
+
+#define CR_CSC5_ADDR                    (CREG_BASE + 0x28C)
+#define CR_CSC5                         CREG_UINT32_R(CR_CSC5_ADDR)
+
+#define CR_CSC6_ADDR                    (CREG_BASE + 0x294)
+#define CR_CSC6                         CREG_UINT32_R(CR_CSC6_ADDR)
+
+#define CR_CSC7_ADDR                    (CREG_BASE + 0x29C)
+#define CR_CSC7                         CREG_UINT32_R(CR_CSC7_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Cycle counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_CYC_ADDR                     (CREG_BASE + 0x300)
+#define CR_CYC                          CREG_UINT32_R(CR_CYC_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Stall cycle counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_STALL_ADDR                   (CREG_BASE + 0x308)
+#define CR_STALL                        CREG_UINT32_R(CR_STALL_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Committed bundle counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_BUN_ADDR                     (CREG_BASE + 0x310)
+#define CR_BUN                          CREG_UINT32_R(CR_BUN_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Committed syllable counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_SYL_ADDR                     (CREG_BASE + 0x318)
+#define CR_SYL                          CREG_UINT32_R(CR_SYL_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Committed NOP counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_NOP_ADDR                     (CREG_BASE + 0x320)
+#define CR_NOP                          CREG_UINT32_R(CR_NOP_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Instruction cache access counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_IACC_ADDR                    (CREG_BASE + 0x328)
+#define CR_IACC                         CREG_UINT32_R(CR_IACC_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Instruction cache miss counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_IMISS_ADDR                   (CREG_BASE + 0x330)
+#define CR_IMISS                        CREG_UINT32_R(CR_IMISS_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Data cache read access counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_DRACC_ADDR                   (CREG_BASE + 0x338)
+#define CR_DRACC                        CREG_UINT32_R(CR_DRACC_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Data cache read miss counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_DRMISS_ADDR                  (CREG_BASE + 0x340)
+#define CR_DRMISS                       CREG_UINT32_R(CR_DRMISS_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Data cache write access counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_DWACC_ADDR                   (CREG_BASE + 0x348)
+#define CR_DWACC                        CREG_UINT32_R(CR_DWACC_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Data cache write miss counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_DWMISS_ADDR                  (CREG_BASE + 0x350)
+#define CR_DWMISS                       CREG_UINT32_R(CR_DWMISS_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Data cache bypass counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_DBYPASS_ADDR                 (CREG_BASE + 0x358)
+#define CR_DBYPASS                      CREG_UINT32_R(CR_DBYPASS_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Data cache write buffer counter
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_DWBUF_ADDR                   (CREG_BASE + 0x360)
+#define CR_DWBUF                        CREG_UINT32_R(CR_DWBUF_ADDR)
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Backwards-compatibility/convenience definitions
-//-----------------------------------------------------------------------------
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 // This section can be changed in config/interpreter/rvex_h.py if necessary.
 

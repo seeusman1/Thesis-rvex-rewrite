@@ -1,0 +1,87 @@
+
+%===============================================================================
+\section{ALU single-bit instructions}
+%===============================================================================
+\datapath{isNOP}{'0'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+
+The \rvex{} ALU supports several bitfield operations in a single cycle. Note
+that the bit selection logic follows the same rules as the shift amount in the
+barrel shifter. That is, only the least significant byte of the bit selection
+operand is used to select the bit, the rest is ignored.
+
+%-------------------------------------------------------------------------------
+\syllable{00101100-}{SBIT}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{opBrMux}{TRUE}
+\alu{bitwiseOp}{SET_BIT}
+\alu{intResultMux}{BITWISE}
+Sets a given bit in a 32-bit integer.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx | (1 << \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00101101-}{SBITF}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{opBrMux}{FALSE}
+\alu{bitwiseOp}{SET_BIT}
+\alu{intResultMux}{BITWISE}
+Clears a given bit in a 32-bit integer.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx & ~(1 << \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01011100-}{TBIT}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{intResultMux}{BOOL}
+\alu{brResultMux}{TBIT}
+Copies a given bit to an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (\rx & (1 << \ry)) != 0;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01011101-}{TBIT}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{intResultMux}{BOOL}
+\alu{brResultMux}{TBIT}
+Copies a given bit to a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = (\rx & (1 << \ry)) != 0;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01011110-}{TBITF}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{intResultMux}{BOOL}
+\alu{brResultMux}{TBITF}
+Copies the complement of a given bit to an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (\rx & (1 << \ry)) == 0;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01011111-}{TBITF}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{intResultMux}{BOOL}
+\alu{brResultMux}{TBITF}
+Copies the complement of a given bit to a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = (\rx & (1 << \ry)) == 0;
+\end{lstlisting}

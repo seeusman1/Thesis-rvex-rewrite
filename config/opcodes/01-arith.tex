@@ -1,0 +1,122 @@
+
+%===============================================================================
+\section{ALU arithmetic instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\datapath{isNOP}{'0'}
+\alu{intResultMux}{ADDER}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+
+The \rvex{} ALU has a 32-bit adder for arithmetic. Some exotic instructions are
+available to make efficient multiplications by small constants and to speed up
+software divisions.
+
+%-------------------------------------------------------------------------------
+\syllable{01100010-}{ADD}{\rd = \rx, \ry}
+Performs a 32-bit addition. Notice that \insn{ADD} instructions may be used as
+move or load immediate operations when \code{x} is set to 0. While the \insn{OR}
+instruction is often used instead, there is no functional difference between the
+two when used inthis way.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx + \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01101011-}{SH1ADD}{\rd = \rx, \ry}
+\alu{op1Mux}{SHL1}
+Performs a 32-bit addition. \code{\rx} is first left-shifted by one.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (\rx << 1) + \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01101100-}{SH2ADD}{\rd = \rx, \ry}
+\alu{op1Mux}{SHL2}
+Performs a 32-bit addition. \code{\rx} is first left-shifted by two.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (\rx << 2) + \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01101101-}{SH3ADD}{\rd = \rx, \ry}
+\alu{op1Mux}{SHL3}
+Performs a 32-bit addition. \code{\rx} is first left-shifted by three.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (\rx << 3) + \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01101110-}{SH4ADD}{\rd = \rx, \ry}
+\alu{op1Mux}{SHL4}
+Performs a 32-bit addition. \code{\rx} is first left-shifted by four.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (\rx << 4) + \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00011010-}{SUB}{\rd = \ry, \rx}
+\alu{op1Mux}{EXTEND32INV}
+\alu{opBrMux}{TRUE}
+Performs a 32-bit subtraction. Note that, unlike all other instructions, the
+immediate must be specified first. This allows \insn{SUB} to be used to subtract
+a register from an immediate.
+
+Notice that \insn{SUB} reduces to two's complement negation when \code{x} or
+\code{imm} equal zero.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \ry + \rx;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01111---0}{ADDCG}{\rd, \bd = \bs, \rx, \ry}
+\datapath{brFmt}{'1'}
+\datapath{brRegWE}{'1'}
+\alu{opBrMux}{PASS}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CARRY_OUT}
+Primitive for additions of integers wider than 32 bits. Addition is performed by
+first setting a scratch branch register to false using \insn{NEQ} for the carry
+input. Then \insn{ADDCG} can be used to add up words together one by one with
+increasing significance, using the scratch branch register for the carry chain.
+
+Subtractions can be performed by setting the carry input to 1 using \insn{EQ}
+and ones-complementing one of the inputs using \insn{XOR}.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+long long tmp = \rx + \ry + (\bs ? 1 : 0);
+\rd = (int)tmp;
+\bd = (tmp & 0x100000000) != 0;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01110---0}{DIVS}{\rd, \bd = \bs, \rx, \ry}
+\datapath{brFmt}{'1'}
+\datapath{brRegWE}{'1'}
+\alu{op1Mux}{SHL1}
+\alu{opBrMux}{PASS}
+\alu{divs}{'1'}
+\alu{brResultMux}{DIVS}
+Primitive for integer divisions, used in conjunction with \insn{ADDCG}.
+\todo[inline]{Figure out how divisions work so it can be explained here.}
+
+Notice that \insn{DIVS} reduces to rotate left by one through a branch register
+when \code{y} is zero. This may be used for for shift left by one
+operations on integers wider than 32 bits.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+int tmp = (\rx << 1) | (\bs ? 1 : 0);
+bool flag = (\rx & 0x80000000) != 0;
+\rd = flag ? (tmp + \ry) : (tmp - \ry);
+\bd = flag;
+\end{lstlisting}

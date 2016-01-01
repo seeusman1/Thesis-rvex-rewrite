@@ -1,0 +1,15 @@
+
+%===============================================================================
+\section{Long immediate instructions}
+%===============================================================================
+\datapath{isNOP}{'0'}
+
+%-------------------------------------------------------------------------------
+\syllable{1000-----}{LIMMH}{\lt, \li}
+\class{LIMMH}
+\datapath{isLIMMH}{'1'}
+\noasm{}
+This special instruction forwards \code{\li} to lane \code{\lt}. Actually, only
+the least significant bit of \code{\lt} is used by the processor, to distinguish
+between the two possible long immediate forwarding paths. Refer to
+Section~\ref{sec:core-ug-isa-syl-classes-limm} for more information.

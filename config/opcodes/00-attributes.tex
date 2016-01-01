@@ -1,0 +1,65 @@
+
+%===============================================================================
+% This file specifies the default attributes for each instruction. Each may be
+% overridden per group or per instruction.
+%===============================================================================
+
+% Default class is ALU.
+\class{ALU}
+
+% Refer to the datapath schematic diagram in core_opcodeDatapath_pkg.vhd for
+% documentation of the following attributes.
+\datapath{funcSel}{ALU}
+\datapath{gpRegWE}{'0'}
+\datapath{linkWE}{'0'}
+\datapath{brRegWE}{'0'}
+\datapath{allBrRegsWE}{'0'}
+\datapath{stackOp}{'0'}
+\datapath{op1LinkReg}{'0'}
+\datapath{op3LinkReg}{'0'}
+\datapath{op3BranchRegs}{'0'}
+\datapath{brFmt}{'0'}
+\datapath{isLIMMH}{'0'}
+\datapath{isTrap}{'0'}
+\datapath{isNOP}{'1'}
+
+% Refer to the structure and type declarations in core_opcodeAlu_pkg.vhd for
+% documentation of the following attributes.
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{ZERO}
+\alu{opBrMux}{PASS}
+\alu{divs}{'0'}
+\alu{unsignedOp}{'0'}
+\alu{bitwiseOp}{BITW_OR}
+\alu{shiftLeft}{'0'}
+\alu{compare}{'0'}
+\alu{intResultMux}{BITWISE}
+\alu{brResultMux}{PASS}
+
+% Refer to the structure and type declarations in core_opcodeBranch_pkg.vhd for
+% documentation of the following attributes.
+\branch{isBranchInstruction}{'0'}
+\branch{branchIfTrue}{'0'}
+\branch{branchIfFalse}{'0'}
+\branch{branchToLink}{'0'}
+\branch{link}{'0'}
+\branch{stop}{'0'}
+\branch{RFI}{'0'}
+
+% Refer to the structure and type declarations in core_opcodeMemory_pkg.vhd for
+% documentation of the following attributes.
+\memory{isMemoryInstruction}{'0'}
+\memory{readEnable}{'0'}
+\memory{writeEnable}{'0'}
+\memory{unsignedOp}{'0'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+
+% Refer to the structure and type declarations in core_opcodeMultiplier_pkg.vhd
+% for documentation of the following attributes.
+\multiplier{isMultiplyInstruction}{'0'}
+\multiplier{op1sel}{LOW_HALF}
+\multiplier{op1unsigned}{'0'}
+\multiplier{op2sel}{LOW_HALF}
+\multiplier{op2unsigned}{'0'}
+\multiplier{resultSel}{PASS}
+

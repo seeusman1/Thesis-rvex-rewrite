@@ -1,15 +1,17 @@
 from __future__ import print_function
 
-import interpreter
+import common.interpreter
+import common.bitfields
 import copy
-import bitfields
 import pprint
+interpreter = common.interpreter
+bitfields = common.bitfields
 
-def parse(fname):
-    """Parses the traps.tex file.
+def parse(indir):
+    """Parses the traps .tex files.
     
     Arguments:
-     - fname specifies the file to read.
+     - indir specifies the directory in which to look for .tex files.
       
     The return value is a two-tuple.
     
@@ -29,13 +31,14 @@ def parse(fname):
        $n$.
      - 'doc': multiline LaTeX documentation of the trap (group). \n{} is
        replaced with $n$.
-     - 'line_nr': the line number on which the trap (group) was defined.
+     - 'origin': the line number and filename on which the trap (group) was
+       defined.
      - 'traps': list of trap identifiers (indexing in the first entry of the
        result) of associated traps.
     """
     
     # Parse the file.
-    traps = interpreter.parse_file(fname, {
+    traps = interpreter.parse_files(indir, {
         'trap': (3, True),
         'trapgen': (4, True),
         'description': (1, False),
@@ -55,7 +58,7 @@ def parse(fname):
 \insn{RFI} instruction is executed, the trap cause register (cause field in 
 \creg{CCR}) will be reset to 0, so an external debug system can always determine 
 what a program is doing, unless nested traps are utilized.""",
-        'line_nr': '-1',
+        'origin': '-1',
         'traps': [0]
     }]
     
@@ -74,13 +77,13 @@ what a program is doing, unless nested traps are utilized.""",
                 title = trap['cmd'][3].strip()
             else:
                 raise Exception('Internal error: unknown trap command ' +
-                                trap['cmd'][0] + ' on line ' + str(trap['line_nr']))
+                                trap['cmd'][0] + ' on line ' + trap['origin'])
         except ValueError:
             raise Exception('Start index could not be parsed on line ' +
-                            str(trap['line_nr']))
+                            trap['origin'])
         if start_index == 0:
             raise Exception('Trap index 0 is reserved for "no trap" on line ' +
-                            + str(trap['line_nr']))
+                            + trap['origin'])
         
         # Insert the traps into the table.
         ids = []
@@ -89,7 +92,7 @@ what a program is doing, unless nested traps are utilized.""",
             if traptable[index] is not None:
                 raise Exception('Multiple definitions for trap index ' +
                                 str(index) + ', defined on line ' +
-                                + str(trap['line_nr']))
+                                + trap['origin'])
             ids += [index]
             traptable[index] = {
                 'mnemonic': mnemonic.replace('\\n{}', str(n))
@@ -103,14 +106,14 @@ what a program is doing, unless nested traps are utilized.""",
                     traptable[index]['interrupt'] = 'interrupt'
                 else:
                     raise Exception('Internal error: unknown trap modifier ' +
-                                    mod[0] + ' on line ' + str(trap['line_nr']))
+                                    mod[0] + ' on line ' + trap['origin'])
         
         # Add documentation for this trap (group).
         trapdoc += [{
             'name': title.replace('\\n{}', '$n$'),
             'mnemonic': mnemonic.replace('\\n{}', '$n$'),
             'doc': trap['doc'].replace('\\n{}', '$n$'),
-            'line_nr': trap['line_nr'],
+            'origin': trap['origin'],
             'traps': ids
         }]
     

@@ -1,0 +1,149 @@
+
+%===============================================================================
+\section{Branch instructions}
+%===============================================================================
+\class{BR}
+\datapath{isNOP}{'0'}
+\branch{isBranchInstruction}{'1'}
+\branch{branchIfTrue}{'1'}
+\branch{branchIfFalse}{'1'}
+
+The highest-indexed pipelane in every \rvex{} system (i.e., the pipelane that
+the last syllable in a bundle maps to) contains a branch unit. This unit
+supports the flow control operations outlined below.
+
+Branch offsets are signed immediates relative to the next program counter
+(\code{PC+1}). Because there are certain alignment requirements to program
+counters, the lower two or three bits of the offset are not actually included
+in the bitfield. Whether this value is two or three depends on the value of the
+\code{BRANCH_OFFS_SHIFT} constant defined in \code{core_intIface_pkg.vhd}; it
+is three by default. It must be set to two to support branching to the start of
+any bundle when stop bits are fully enabled. This must then also be updated in
+the assembler.
+
+Note that branch offsets and the stack adjust immediate are not eligible for 
+long immediate instructions.
+
+%-------------------------------------------------------------------------------
+\syllable{00100000-}{GOTO}{\of}
+Branches to \code{PC+1} + \code{\of} unconditionally.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+PCP1 += \of;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00100001-}{IGOTO}{\lr}
+\branch{branchToLink}{'1'}
+Branches to the address in \code{\lr} unconditionally. This is used for branches 
+to code that cannot be reached using the branch offset immediate.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+PCP1 = \lr;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00100010-}{CALL}{\lr = \of}
+\datapath{funcSel}{PCP1}
+\datapath{linkWE}{'1'}
+\branch{link}{'1'}
+Branches to \code{PC+1} + \code{\of} unconditionally, while storing \code{PC+1} 
+in the link register. This is used for function calls.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\lr = PCP1;
+PCP1 += \of;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00100011-}{ICALL}{\lr = \lr}
+\datapath{funcSel}{PCP1}
+\datapath{linkWE}{'1'}
+\branch{branchToLink}{'1'}
+\branch{link}{'1'}
+Branches to the address in \code{\lr} unconditionally, while storing \code{PC+1} 
+in the link register. In other words, it essentially swaps \code{PC+1} and 
+\code{\lr}. This is used for dynamic function calls or calls to functions that 
+cannot be reached using the branch offset immediate method.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+unsigned int tmp = \lr;
+\lr = PCP1;
+PCP1 = tmp;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00100100-}{BR}{\bs, \of}
+\branch{branchIfFalse}{'0'}
+Branches to \code{PC+1} + \code{\of} only if \code{\bs} is true. This 
+instruction performs no operation if \code{\bs} is false.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+PCP1 += \bs ? \of : 0;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00100101-}{BRF}{\bs, \of}
+\branch{branchIfTrue}{'0'}
+Branches to \code{PC+1} + \code{\of} only if \code{\bs} is false. This 
+instruction performs no operation if \code{\bs} is true.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+PCP1 += \bs ? 0 : \of;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00100110-}{RETURN}{\rs = \rs, \sa, \lr}
+\datapath{gpRegWE}{'1'}
+\datapath{stackOp}{'1'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+\alu{intResultMux}{ADDER}
+\branch{branchToLink}{'1'}
+Returns from a function by branching to \code{\lr} unconditionally, while adding 
+\code{\sa} to \code{\rs}. \code{\sa} is interpreted as a signed immediate. This
+allows final stack pointer adjustment and returning to be done with a single
+syllable.
+
+Notice that this instruction is identical to \insn{IGOTO}, except for the fact 
+that \insn{IGOTO} does not access \code{\rs}.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rs += \sa;
+PCP1 = \lr;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00100111-}{RFI}{\rs = \rs, \sa}
+\datapath{gpRegWE}{'1'}
+\datapath{stackOp}{'1'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+\alu{intResultMux}{ADDER}
+\branch{branchIfTrue}{'0'}
+\branch{branchIfFalse}{'0'}
+\branch{RFI}{'1'}
+Returns from a trap service routine by branching to \creg{TP} unconditionally 
+and restoring \creg{SCCR} to \creg{CCR}, while adding \code{\sa} to \code{\rs}. 
+\code{\sa} is interpreted as a signed immediate. This allows final stack pointer 
+adjustment and returning to be done with a single syllable.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rs += \sa;
+CR_CCR = CR_SCCR;
+PCP1 = CR_TP;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00101000-}{STOP}{}
+\branch{branchIfTrue}{'0'}
+\branch{branchIfFalse}{'0'}
+\branch{stop}{'1'}
+Causes a \trap{STOP} trap to occur during execution of the next instruction.
+The \trap{STOP} trap will cause the B flag in \creg{DCR} to be set, which will
+stop execution. Thus, the processor will be stopped after the bundle in which
+the \insn{STOP} instruction resides is executed.

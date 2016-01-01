@@ -1,0 +1,257 @@
+
+%===============================================================================
+\section{ALU compare instructions}
+%===============================================================================
+\datapath{isNOP}{'0'}
+\alu{op1Mux}{EXTEND32INV}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{TRUE}
+\alu{compare}{'1'}
+\alu{intResultMux}{BOOL}
+
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+
+The \rvex{} ALU supports all 32-bit possible integer comparison operations in a
+single cycle. The immediate version of \insn{CMPNE} that writes to a branch
+register is used to load an immediate branch register.
+
+%-------------------------------------------------------------------------------
+\syllable{01000000-}{CMPEQ}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{CMP_EQ}
+Determines whether the first operand is equal to the second operand and stores
+the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx == \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01000001-}{CMPEQ}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_EQ}
+Determines whether the first operand is equal to the second operand and stores
+the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = \rx == \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01000010-}{CMPGE}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{CMP_GE}
+Determines whether the first operand is greater than or equal to the second
+operand and stores the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx >= \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01000011-}{CMPGE}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_GE}
+Determines whether the first operand is greater than or equal to the second
+operand and stores the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = \rx >= \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01000100-}{CMPGEU}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GE}
+Determines whether the first operand is greater than or equal to the second
+operand in unsigned arithmetic and stores the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned int)\rx >= (unsigned int)\ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01000101-}{CMPGEU}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GE}
+Determines whether the first operand is greater than or equal to the second
+operand in unsigned arithmetic and stores the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = (unsigned int)\rx >= (unsigned int)\ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01000110-}{CMPGT}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{CMP_GT}
+Determines whether the first operand is greater than the second operand and
+stores the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx > \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01000111-}{CMPGT}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_GT}
+Determines whether the first operand is greater than the second operand and
+stores the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = \rx > \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01001000-}{CMPGTU}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GT}
+Determines whether the first operand is greater than the second operand in
+unsigned arithmetic and stores the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned int)\rx > (unsigned int)\ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01001001-}{CMPGTU}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GT}
+Determines whether the first operand is greater than the second operand in
+unsigned arithmetic and stores the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = (unsigned int)\rx > (unsigned int)\ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01001010-}{CMPLE}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{CMP_LE}
+Determines whether the first operand is less than or equal to the second
+operand and stores the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx <= \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01001011-}{CMPLE}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_LE}
+Determines whether the first operand is less than or equal to the second
+operand and stores the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = \rx <= \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01001100-}{CMPLEU}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LE}
+Determines whether the first operand is less than or equal to the second
+operand in unsigned arithmetic and stores the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned int)\rx <= (unsigned int)\ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01001101-}{CMPLEU}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LE}
+Determines whether the first operand is less than or equal to the second
+operand in unsigned arithmetic and stores the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = (unsigned int)\rx <= (unsigned int)\ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01001110-}{CMPLT}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{CMP_LT}
+Determines whether the first operand is less than the second operand and stores
+the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx <= \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01001111-}{CMPLT}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_LT}
+Determines whether the first operand is less than the second operand and stores
+the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = \rx <= \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01010000-}{CMPLTU}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LT}
+Determines whether the first operand is less than the second operand in unsigned
+arithmetic and stores the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned int)\rx <= (unsigned int)\ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01010001-}{CMPLTU}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LT}
+Determines whether the first operand is less than the second operand in unsigned
+arithmetic and stores the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = (unsigned int)\rx <= (unsigned int)\ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01010010-}{CMPNE}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{CMP_NE}
+Determines whether the first operand is not equal to the second operand and
+stores the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx != \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01010011-}{CMPNE}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{CMP_NE}
+Determines whether the first operand is not equal to the second operand and
+stores the result in a branch register.
+
+Notice that the immediate version of \insn{CMPNE} reduces to a load immediate
+operation for branch registers when \code{x} is zero.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = \rx != \ry;
+\end{lstlisting}

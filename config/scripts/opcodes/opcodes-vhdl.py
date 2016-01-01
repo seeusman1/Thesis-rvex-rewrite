@@ -3,18 +3,19 @@ from __future__ import print_function
 from sys import argv
 from sys import exit
 import opcodes
-import bitfields
+import common.bitfields
+bitfields = common.bitfields
 
 # Parse command line.
 if len(argv) != 4:
-    print('Usage: python opcodes-vhdl.py <infile.tex> <template.vhd> <outfile.vhd>')
+    print('Usage: python opcodes-vhdl.py <opcodes> <template.vhd> <outfile.vhd>')
     exit(2)
-infile = argv[1]
+indir = argv[1]
 templatefile = argv[2]
 outfile = argv[3]
 
 # Parse the opcode configuration file.
-sections, table, def_params = opcodes.parse(infile)
+sections, table, def_params = opcodes.parse(indir)
 
 # Read the non-generated part of the file, i.e. everything until the "generated
 # from here" line plus two subsequent lines.

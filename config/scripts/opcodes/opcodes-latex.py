@@ -3,19 +3,20 @@ from __future__ import print_function
 from sys import argv
 from sys import exit
 import opcodes
-import bitfields
+import common.bitfields
+bitfields = common.bitfields
 
 # Parse command line.
 if len(argv) != 5:
-    print('Usage: python opcodes-latex.py <infile.tex> <stats.tex> <table.tex> <docs.tex>')
+    print('Usage: python opcodes-latex.py <opcodes> <stats.tex> <table.tex> <docs.tex>')
     exit(2)
-infile = argv[1]
+indir = argv[1]
 stats_outfile = argv[2]
 table_outfile = argv[3]
 doc_outfile = argv[4]
 
 # Parse the opcode configuration file.
-sections, table, def_params = opcodes.parse(infile)
+sections, table, def_params = opcodes.parse(indir)
 
 # Generate the table. While doing so, count the number of instructions and the
 # number of free opcodes.

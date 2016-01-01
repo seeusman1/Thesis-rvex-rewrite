@@ -1,0 +1,108 @@
+
+%===============================================================================
+\section{ALU boolean instructions}
+%===============================================================================
+\datapath{isNOP}{'0'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{intResultMux}{BOOL}
+
+\alu{opBrMux}{FALSE} % Only because legacy decoding did this.
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+
+As well as supporting many bitwise operations, the \rvex{} ALU also supports
+some boolean operations in a single cycle. The boolean operations are defined in
+the same way as C boolean operations are defined. That is, the value 0
+represents false, and any other value represents true.
+
+%-------------------------------------------------------------------------------
+\syllable{01011010-}{ANDL}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{LOGIC_AND}
+Performs a boolean \code{AND} operation and stores the result in an integer
+register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx && \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01011011-}{ANDL}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{LOGIC_AND}
+Performs a boolean \code{AND} operation and stores the result in a branch
+register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = \rx && \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01011000-}{ORL}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{LOGIC_OR}
+Performs a boolean \code{OR} operation and stores the result in an integer
+register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \rx || \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01011001-}{ORL}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{LOGIC_OR}
+Performs a boolean \code{OR} operation and stores the result in a branch
+register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = \rx || \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01010100-}{NANDL}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{LOGIC_NAND}
+Performs a boolean \code{NAND} operation and stores the result in an integer
+register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = !(\rx && \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01010101-}{NANDL}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{LOGIC_NAND}
+Performs a boolean \code{NAND} operation and stores the result in a branch
+register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = !(\rx && \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01010110-}{NORL}{\rd = \rx, \ry}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{brResultMux}{LOGIC_NOR}
+Performs a boolean \code{NOR} operation and stores the result in an integer
+register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = !(\rx || \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01010111-}{NORL}{\bd = \rx, \ry}
+\datapath{brRegWE}{'1'}
+\alu{brResultMux}{LOGIC_NOR}
+Performs a boolean \code{NOR} operation and stores the result in a branch
+register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\bd = !(\rx || \ry);
+\end{lstlisting}

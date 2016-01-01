@@ -1,0 +1,61 @@
+
+The .tex files in this folder describe the context and global control registers 
+and documentation thereof.Because the documentation is in LaTeX, the syntax of 
+these files is also LaTeX-like, to be able to use editors with LaTeX syntax 
+highlighting.
+
+Files are ordered by their filename alphabetically before being passed to the
+interpreter. This order only matters if a single register is described amongst
+multiple files. Documentation is generated based on the addresses.
+
+The following LaTeX-like commands are interpreted by python to define the
+control registers. They must be the only thing on a certain line aside from
+(maybe) comments, otherwise they are interpreted as LaTeX documentation.
+
+ - \register{<mnemonic>}{<name>}{<offset>}
+   Starts a new register description. <name> is the title of the section.
+   <mnemonic> is the mnemonic of the register, excluding the CR_. The 
+   mnemonic is also used to generate a label using \label{reg:<mnemonic>}.
+   <offset> should be a hex number starting with 0x divisible by 4,
+   representing the byte offset from the control registers base. Global
+   registers should be within the 0x000..0x0FF range, context registers
+   should be within 0x200..0x3FF. 0x100..0x1FF is reserved for the general
+   purpose register file.
+
+ - \registergen{<python range>}{<mnemonic>}{<name>}{<offset>}{<stride>}
+   Same as \register, but specifies a list of registers. <python range> is
+   executed as a python expression, expected to generate an iterable of
+   integers. A register is generated for each of these iterations. The offset
+   for each register is computed as <offset> + iter * <stride>. \n{} expands
+   to the number when used inline in <mnemonic> and <name>. In the
+   documentation it expands to $n$.
+
+ - \field{<range>}{<mnemonic>}
+   Defines a field in the current register. A range specification is either a 
+   single bit index for a single-bit field, or of the form <from>..<to>, 
+   where  <from> is the higher bit index, and both the <from> and <to> bit 
+   are included in the range. <mnemonic> is used in the register graphic, so 
+   make it as small as possible if the bitfield is small. It also needs to be
+   a valid C and VHDL identifier.
+
+ - \debugCanWrite{}
+ - \coreCanWrite{}
+   Sets the writable flag for the previously defined field. The {} is
+   required!
+
+ - \signed{}
+   Marks a field as being signed. The default is unsigned.
+
+ - \reset{<bit vector>}
+   Sets the reset state of the previously defined field. If not specified, the
+   reset state is assumed to be zero. The number of characters in <bit vector>
+   must equal the number of bits in the field.
+
+ - \id{<identifier>}
+   Gives a field an alternative name for the C/VHDL/rvd definitions. This only
+   works for 8-bit and 16-bit fields that are properly aligned.
+
+ - Anything else:
+   Any unrecognized line is used as a description for either the whole 
+   register or a field in it.
+ 

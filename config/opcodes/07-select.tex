@@ -1,0 +1,84 @@
+
+%===============================================================================
+\section{ALU selection instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'}
+\datapath{isNOP}{'0'}
+\alu{op1Mux}{EXTEND32INV}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{TRUE}
+\alu{intResultMux}{OP_SEL}
+
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+
+The \rvex{} ALU has single-cycle instructions for conditional moves and
+computation of the minimum and maximum of two integer values.
+
+%-------------------------------------------------------------------------------
+\syllable{00111----}{SLCT}{\rd = \bs, \rx, \ry}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{PASS}
+Conditional move.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \bs ? \rx : \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00110----}{SLCTF}{\rd = \bs, \rx, \ry}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{INVERT}
+Conditional move, with operands swapped with respect to \insn{SLCT}.
+
+Notice that the immediate version of \insn{SLCTF} reduces to a move from a
+branch register to an integer register when \code{x} is 0 and \code{y} is 1.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \bs ? \ry : \rx;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01100101-}{MAX}{\rd = \rx, \ry}
+\alu{compare}{'1'}
+\alu{brResultMux}{CMP_GE}
+Computes maximum of the input operands using signed arithmetic.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (\rx >= \ry) : \rx ? \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01100110-}{MAXU}{\rd = \rx, \ry}
+\alu{compare}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_GE}
+Computes maximum of the input operands using unsigned arithmetic.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = ((unsigned int)\rx >= (unsigned int)\ry) : \rx ? \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01100111-}{MIN}{\rd = \rx, \ry}
+\alu{compare}{'1'}
+\alu{brResultMux}{CMP_LE}
+Computes minimum of the input operands using signed arithmetic.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (\rx <= \ry) : \rx ? \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{01101000-}{MINU}{\rd = \rx, \ry}
+\alu{compare}{'1'}
+\alu{unsignedOp}{'1'}
+\alu{brResultMux}{CMP_LE}
+Computes minimum of the input operands using unsigned arithmetic.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = ((unsigned int)\rx <= (unsigned int)\ry) : \rx ? \ry;
+\end{lstlisting}

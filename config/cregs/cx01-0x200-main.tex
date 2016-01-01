@@ -1,0 +1,266 @@
+
+%===============================================================================
+\register{CCR}{Main context control register}{0x200}
+%===============================================================================
+
+The primary purpose of the context control register is to store the primary
+control flags of the processor, for example whether interrupts are enabled. In
+addition, it also stores the trap cause and exposes the branch register file to
+the debug bus.
+
+\field{31..24}{CAUSE}
+\debugCanWrite{}
+\id{TC}
+Trap cause. Set to the trap cause by hardware when the trap handler is called. 
+Reset to 0 by hardware when an \insn{RFI} instruction is encountered. Read-write 
+by the debug bus, but the processor cannot write to this register.
+
+\field{23..16}{BRANCH}
+\debugCanWrite{}
+\id{BR}
+Branch register file. Contains the current state of the branch registers. Only
+intended for use by the debug bus to see and modify the state of the branch
+register file. While the core is running, accessing this register is undefined
+due to it being dependent on the pipeline and forwarding state.
+
+\field{9..8}{K}
+\reset{01}
+This register selects between kernel mode and user mode. Currently, this flag 
+only controls whether the MMU is enabled; the \rvex{} processor does not have 
+any security features yet. In kernel mode, the MMU is bypassed; in user mode, it 
+is activated. Kernel mode is activated when the core is reset and when entering 
+the trap or panic handlers. These must thus always point to code in hardware 
+memory space. When \insn{RFI} is executed, the state is restored from
+\creg{SCCR}.
+
+In kernel mode, the register reads as \code{01}, while in user mode, it reads as 
+\code{10}. The only way to enter user mode is by writing the user mode command 
+to \creg{SCCR} and subsequently executing \insn{RFI}. Neither the core nor the 
+debug bus can write to this field directly.
+
+\field{7..6}{C}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+\todo{The C flag in CCR doesn't exist yet.}
+This register controls whether the context switch trap is enabled. It does not 
+exist on hardware context 0. When the core is reset or the trap service routine 
+is entered, the context switch trap is disabled. When \insn{RFI} is executed, 
+the state is restored from \creg{SCCR}.
+
+When the context switch trap is enabled, this register reads as \code{01}. When 
+it is disabled, it reads as \code{10}. Both the core and the debug bus can write 
+to this register. Writing \code{00} has no effect, writing \code{01} enables the 
+context switching trap, writing \code{10} disables it and writing \code{11} 
+toggles the state. This prevents the need for read-modify-write operations.
+
+Refer to \creg{RSC} for more information.
+
+\field{5..4}{B}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+This register controls whether breakpoints are enabled in self-hosted debug 
+mode. Its value is ignored in external debug mode. When the core is reset or the 
+trap service routine is entered due to a debug trap in self-hosted debug mode, 
+breakpoints are disabled. When \insn{RFI} is executed, the state is restored 
+from \creg{SCCR}.
+
+When breakpoints are enabled, this register reads as \code{01}. When they are 
+disabled, it reads as \code{10}. Both the core and the debug bus can write to 
+this register. Writing \code{00} has no effect, writing \code{01} enables debug 
+traps, writing \code{10} disables them and writing \code{11} toggles the state. 
+This prevents the need for read-modify-write operations.
+
+\field{3..2}{R}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+This register, named ready-for-trap, tentatively specifies if the processor is
+currently capable of servicing traps. However, since traps cannot be masked,
+any trap that occurs while ready-for-trap is cleared will cause a panic.
+Therefore, the only thing this register does in hardware is switch between the
+trap handler and panic handler address. When the core is reset or the trap
+service routine is entered, ready-for-trap is cleared. When \insn{RFI} is 
+executed, the state is restored from \creg{SCCR}.
+
+When ready-for-trap is set (trap handler selected), this register reads as 
+\code{01}. When it is cleared (panic handler selected), it reads as \code{10}. 
+Both the core and the debug bus can write to this register. Writing \code{00} 
+has no effect, writing \code{01} sets ready-for-trap, writing \code{10} clears 
+it and writing \code{11} toggles the state. This prevents the need for 
+read-modify-write operations.
+
+\field{1..0}{I}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+This register selects whether external interrupts are enabled or not. When the 
+core is reset or the trap service routine is entered, external interrupts are 
+disabled. When \insn{RFI} is executed, the state is restored from \creg{SCCR}.
+
+When interrupts are enabled, this register reads as \code{01}. When they are 
+disabled, it reads as \code{10}. Both the core and the debug bus can write to 
+this register. Writing \code{00} has no effect, writing \code{01} enables 
+external interrupts, writing \code{10} disables them and writing \code{11} 
+toggles the state. This prevents the need for read-modify-write operations.
+
+%===============================================================================
+\register{SCCR}{Saved context control register}{0x204}
+%===============================================================================
+
+This register saves the state of the primary control flags of the processor when
+entering the trap service routine. When \insn{RFI} is executed, the state is
+restored from this register. In addition, this register contains the context ID,
+which contexts may read to identify themselves.
+
+\field{31..24}{ID}
+\reset{********}
+\id{CID}
+This field is hardwired to the context index. Programs running on the \rvex{}
+processor may use this field to determine which hardware context they are
+running on.
+
+\field{9..8}{K}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+When the trap service routine is entered, this register stores whether kernel
+the processor was in kernel mode or user mode. When \insn{RFI} is executed,
+the state is set to this value.
+
+Unlike the kernal mode field in \creg{CCR}, this field can be written. Writing 
+\code{00} has no effect, writing \code{01} enables external interrupts, writing 
+\code{10} disables them and writing \code{11} toggles the state. This prevents 
+the need for read-modify-write operations. Read behavior is identical to the
+K field in \creg{CCR}.
+
+\field{7..6}{C}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+\todo{The C flag in SCCR doesn't exist yet.}
+When the trap service routine is entered, this register stores whether the 
+context switching trap was enabled. When \insn{RFI} is executed, the state is 
+set to this value.
+
+Core and debug bus access behavior is identical to the C field in \creg{CCR}.
+
+\field{5..4}{B}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+When the trap service routine is entered, this register stores whether 
+self-hosted debug breakpoints were enabled. When \insn{RFI} is executed, the 
+state is set to this value.
+
+Core and debug bus access behavior is identical to the B field in \creg{CCR}.
+
+\field{3..2}{R}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+When the trap service routine is entered, this register stores whether 
+ready-for-trap was set. When \insn{RFI} is executed, the state is set to this
+value.
+
+Core and debug bus access behavior is identical to the R field in \creg{CCR}.
+
+\field{1..0}{I}
+\debugCanWrite{}
+\coreCanWrite{}
+\reset{10}
+When the trap service routine is entered, this register stores whether 
+interrupts were enabled. When \insn{RFI} is executed, the state is set to this
+value.
+
+Core and debug bus access behavior is identical to the I field in \creg{CCR}.
+
+%===============================================================================
+\register{LR}{Link register}{0x208}
+%===============================================================================
+
+Contains the current link register (\texttt{\$l0.0}) value. Only intended for
+use by the debug bus. While the core is running, accessing this register is
+undefined due to it being dependent on the pipeline and forwarding state.
+
+\field{31..0}{Link register}
+\debugCanWrite{}
+
+%===============================================================================
+\register{PC}{Program counter}{0x20C}
+%===============================================================================
+
+Contains the current program counter. Only intended for use by the debug bus.
+When the register is written by the debug bus, the jump flag in \creg{DCR} is
+set, to ensure that the branch unit properly jumps to the new PC. This works
+even if the processor is running.
+
+\field{31..0}{Program counter}
+\debugCanWrite{}
+
+%===============================================================================
+\register{TH}{Trap handler}{0x210}
+%===============================================================================
+
+Contains the address of the trap service routine. This is where the processor
+will jump to if a trap occurs while ready-for-trap in \creg{CCR} is set. Even if
+the design contains an MMU, this should be a hardware address, as the MMU is
+disabled when a trap occurs.
+
+\field{31..0}{Trap handler}
+\debugCanWrite{}
+\coreCanWrite{}
+
+%===============================================================================
+\register{PH}{Panic handler}{0x214}
+%===============================================================================
+
+Contains the address of the panic service routine. This is where the processor
+will jump to if a trap occurs while ready-for-trap in \creg{CCR} is NOT set.
+Even if the design contains an MMU, this should be a hardware address, as the
+MMU is disabled when a trap occurs.
+
+The difference between the trap and panic service routines, is that the trap
+service routine has all state information of the processor at its disposal. That
+is, if the trap is recoverable, the program can continue after the trap service
+routine completes. The panic service routine, however, should assume that the
+state information of the processor is incomplete. Refer to
+Section~\ref{sec:core-ug-traps} for more information.
+
+\field{31..0}{Panic handler}
+\debugCanWrite{}
+\coreCanWrite{}
+
+%===============================================================================
+\register{TP}{Trap point}{0x218}
+%===============================================================================
+
+When a trap occurs, this register is set to the address of the start of the
+offending bundle. The address is in user space if the MMU was enabled when the
+trap occured. In addition, when \insn{RFI} is executed, the processor will jump
+back to this address to resume execution. This is the correct behavior for both
+external interrupts and traps that, after servicing, should return to the
+previously offending instruction, such as a page fault.
+
+To support software context switching, the processor may write to this register
+to change the resumption address. \insn{RFI} will then cause execution to be
+resumed in the new software context, assuming the rest of the processor state
+has been swapped in as well.
+
+\field{31..0}{Trap point}
+\debugCanWrite{}
+\coreCanWrite{}
+
+%===============================================================================
+\register{TA}{Trap argument}{0x21C}
+%===============================================================================
+
+When a trap occurs, this register is set to the trap argument. The significance
+of this value depends on the trap, which can be identified from the trap cause
+field in \creg{CCR}. Refer to Section~\ref{sec:core-ug-traps} for more
+information.
+
+\field{31..0}{Trap argument}
+\debugCanWrite{}
+

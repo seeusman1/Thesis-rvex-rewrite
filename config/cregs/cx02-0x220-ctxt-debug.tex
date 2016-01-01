@@ -1,0 +1,239 @@
+%===============================================================================
+\registergen{range(4)}{BR\n{}}{Breakpoint \n{}}{0x220}{4}
+%===============================================================================
+
+These registers hold the addresses for the hardware breakpoints and/or
+watchpoints. These registers only exist up to how many break-/watchpoints are
+design-time configured to be supported by the processor. Breakpoints are
+configured in \creg{DCR}.
+
+\field{31..0}{Breakpoint \n{}}
+\debugCanWrite{}
+\coreCanWrite{}
+
+%===============================================================================
+\register{DCR}{Debug control register 1}{0x230}
+%===============================================================================
+
+This register controls the debugging system of the \rvex{} processor.
+
+\field{31}{D}
+\debugCanWrite{}
+
+Done/reset flag. This bit is set by hardware when a \insn{STOP} instruction is 
+encountered. It is cleared when a one is written to the R or S flags.
+
+In addition, when a one is written to this flag, the control register file for 
+this context is completely reset, as if the external context reset signal was 
+asserted. Writing a zero has no effect. When combined with writing a one to the 
+external debug flag, the core starts in external debug mode, and when combined 
+with writing a one to B or the S flag, the core will stop execution before any 
+instruction is executed, allowing the user to single-step from the start of the 
+program.
+
+Note that breakpoint information will have to be reloaded when the context is 
+reset using this method.
+
+\field{30}{J}
+
+This bit is set by hardware when the debug bus writes to the PC register and is 
+cleared when the processor jumps to it. It can thus be used as an acknowledgement
+flag for jumping. The flag is read only.
+
+\field{28}{I}
+\debugCanWrite{}
+\reset{1}
+
+Internal debug flag. Complement of the external debug flag. When the debug bus 
+writes a one to this flag, the external debug flag is cleared, giving the
+processor control over debugging. Writing a zero has no effect.
+
+\field{27}{E}
+\debugCanWrite{}
+
+External debug flag. Complement of the internal debug flag. When the debug bus 
+writes a one to this flag, the external debug flag is set, enabling external
+debug mode. Writing a zero has no effect. While in external debug mode, debug
+traps cause the B flag to be set and the trap cause to be recorded in \creg{DCR}
+instead of the normal registers. This thus allows an external debugger to handle
+the debug traps instead, even if the processor is in the middle of a trap
+service routine and is not even ready for a trap. Writing a one to the R or the
+S flag is the equivalent of \insn{RFI} for the external debugging system.
+
+\field{26}{R}
+\debugCanWrite{}
+
+Resume flag. When the debug bus writes a one to this flag, the B flag is
+cleared, causing the processor to resume execution if it was halted. Writing a
+zero has no effect; this flag is cleared by hardware when the first instruction
+is successfully fetched. It can thus be used as an acknowledgement flag for
+resuming execution.
+
+In addition, debug traps are disabled for instructions that were fetched while
+this flag was set. This behavior allows the processor to step beyond the
+breakpoint that caused the processor to break, so there is no need to disable
+the triggered breakpoint in order to resume. This behavior is also used for
+single stepping; see below.
+
+\field{25}{S}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Step flag. This flag may be set by the debug bus by writing a one to it. Doing
+so will also cause the R flag to be set and the B flag to be cleared, causing
+the processor to resume execution if it was halted. Writing a zero has no
+effect. The processor can also set this flag, but only if the E flag is cleared,
+i.e., if the processor is in self-hosted debug mode.
+
+While set, any instruction will cause a step debug trap. However, as noted
+above, all debug traps are disabled for the first instruction fetched after
+execution resumes. They should also be disabled while in the trap service
+routine through the breakpoint enable field in \creg{CCR}. This allows both an
+external debugger and the self-hosted debug system to single-step.
+
+\field{24}{B}
+\debugCanWrite{}
+
+Break flag. When this flag is set, the context stops fetching instructions and
+flushes the pipeline, as it would if the external run signal is low or if a
+reconfiguration is pending. It effectively halts execution.
+
+This flag may be set by the debug bus by writing a one to it, in order to pause
+execution. Writing a zero has no effect. In addition, the flag is set by
+hardware when a debug trap occurs while the E flag is set and when a \insn{STOP}
+instruction is executed.
+
+\field{23..16}{CAUSE}
+
+Trap cause for debug traps that should be handled by the external debug system.
+This is set to the debug trap cause by hardware when the B flag is set due to a
+debug trap.
+
+\field{13..12}{BR3}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Breakpoint 3 control field. This field only exists if the core is design-time
+configured to support all four hardware breakpoints. See also BR0.
+
+\field{9..8}{BR2}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Breakpoint 2 control field. This field only exists if the core is design-time
+configured to support at least three hardware breakpoints. See also BR0.
+
+\field{5..4}{BR1}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Breakpoint 1 control field. This field only exists if the core is design-time
+configured to support at least two hardware breakpoints. See also BR0.
+
+\field{1..0}{BR0}
+\debugCanWrite{}
+\coreCanWrite{}
+
+Breakpoint 0 control field. This field only exists if the core is design-time
+configured to support at least one hardware breakpoint.
+
+The core can only write to BR$n$ fields when the E flag is cleared, i.e. when
+self-hosted debug mode is selected. The encoding for the fields is as follows.
+
+\vskip 10pt\noindent\begin{tabularx}{\textwidth}{@{}l@{}X@{}}
+BR$n$ = \code{00}: & \ breakpoint/watchpoint disabled. \\
+BR$n$ = \code{01}: & \ breakpoint enabled. \\
+BR$n$ = \code{10}: & \ data write watchpoint enabled. \\
+BR$n$ = \code{11}: & \ data read/write watchpoint enabled. \\
+\end{tabularx}
+
+%===============================================================================
+\register{DCR2}{Debug control register 2}{0x234}
+%===============================================================================
+
+This register controls the trace unit, if the core is design-time configured to
+support tracing. It also contains an 8-bit scratchpad register for communicating
+an execution result to the debug system.
+
+\field{31..24}{RESULT}
+\debugCanWrite{}
+\coreCanWrite{}
+\signed{}
+\id{RET}
+
+This field does not have a hardwired function. It is intended to be used to
+communicate the reason for executing a \insn{STOP} instruction to the debug
+system. The default \code{_start.s} file will write the \code{main()} return
+value to this register before stopping.
+
+\field{15}{t}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace trap
+information.
+
+\field{14}{m}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace memory/control
+register operations.
+
+\field{13}{r}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace register writes.
+
+\field{12}{c}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace cache
+performance information.
+
+\field{11}{i}
+\reset{*}
+
+Whether the core was design-time configured to be able to trace all fetched
+instructions.
+
+\field{8}{e}
+\reset{*}
+
+Whether the core was design-time configured to support tracing.
+
+\field{7}{T}
+\debugCanWrite{}
+
+Setting this bit enables trap tracing if the E flag is set and the core is 
+design-time configured to support it.
+
+\field{6}{M}
+\debugCanWrite{}
+
+Setting this bit enables memory/control register tracing if the E flag is set 
+and the core is design-time configured to support it.
+
+\field{5}{R}
+\debugCanWrite{}
+
+Setting this bit enables register write tracing if the E flag is set and the 
+core is design-time configured to support it.
+
+\field{4}{C}
+\debugCanWrite{}
+
+Setting this bit enables cache performance tracing if the E flag is set and the 
+core is design-time configured to support it.
+
+\field{3}{I}
+\debugCanWrite{}
+
+Setting this bit causes all fetched instructions to be traced if the E flag is 
+set and the core is design-time configured to support it.
+
+\field{0}{E}
+\debugCanWrite{}
+
+Setting this bit enables tracing if the core is design-time configured to 
+support it. If no other bits are set, only branch origins and destinations are 
+traced.
+

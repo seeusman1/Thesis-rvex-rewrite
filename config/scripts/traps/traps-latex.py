@@ -6,13 +6,13 @@ import traps
 
 # Parse command line.
 if len(argv) != 3:
-    print('Usage: python traps-latex.py <infile.tex> <outfile.tex>')
+    print('Usage: python traps-latex.py <trapdir> <outfile.tex>')
     exit(2)
-infile = argv[1]
+indir = argv[1]
 outfile = argv[2]
 
 # Parse the input file.
-traptable, trapdoc = traps.parse(infile)
+traptable, trapdoc = traps.parse(indir)
 
 # Start writing to the output file.
 with open(outfile, 'w') as f:

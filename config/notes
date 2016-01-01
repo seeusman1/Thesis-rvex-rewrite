@@ -1,0 +1,117 @@
+
+THIS STUFF IS A WORK IN PROGRESS. BETTER TO NOT MODIFY SHIT HERE.
+
+
+
+ - All interfaces are converted to bit vectors of up to 64 bit.
+ - Interfaces are described in the configuration.
+ - Logic is inferred by means of if/elif/else blocks and assignments.
+ - Expressions for conditions and assignments are C-like; all data types behave like unsigned integers.
+ - Assignment high-order bits are discarded or zero-filled when necessary.
+ - Constant/variable/register names which start with an _ are prefixed with CR_<reg>_<field>. Stuff from
+   other fields can be accessed using the expanded notation.
+
+ - The python script makes the following things available for each field:
+    - constant _writeData
+    - constant _debugWriteEnable
+    - constant _coreWriteEnable
+    - variable _readData
+    - constant _debugReadEnable
+    - constant _coreReadEnable
+ - The python script also makes the CFG values available as constants for version regs etc.
+ - Finally, some special signals are made available:
+    - constant context: for context regs only, this specifies for which context we're generating stuff.
+ - All those things have as data type the full width of the field.
+ - _readData must be set to the current register value. There is one additional cycle delay before
+   it is forwarded to the core or debug bus.
+ - Only the things which are actually used are generated in VHDL and C code.
+ - Whether the field is writable is based upon whether the _writeEnable's are ever used.
+
+ - register assignments have the semantics of VHDL signals in a clocked process, i.e. if you write
+   to them, the write will commit in the next cycle. Multiple writes in the same cycle override
+   previous writes.
+ - variable assignment have the semantics of VHDL variables, i.e. assignments commit immediately.
+ - constants are actually just variables internally, but you're not allowed to assign them.
+ - The reset logic for registers is inferred automatically. During a full reset, the generated logic
+   is ignored
+
+
+global:
+
+  \interface{}
+    \ifaceInput{<type>}{<name>}
+    \ifaceOutput{<type>}{<name>}
+
+
+per field:
+
+  \declaration{}
+    \declRegister{<type>}{<name>}{<literal>}
+    \declVariable{<type>}{<name>}
+    \declConstant{<type>}{<name>}{<literal>}
+
+  \implementation{}
+  \resetimplementation{}
+    <name> = <expr>
+    \if{<expr>}
+    \elif{<expr>}
+    \else{}
+    \end{}
+    \literalVHDL{}
+    \literalC{}
+    \end{}
+
+<name>:
+  _([a-zA-Z0-9_]+)                                --> CR_<reg_mnemonic>_<field_mnemonic>_\1[<context>]
+  ([a-zA-Z0-9][a-zA-Z0-9_]*)                      --> \1[<context>]
+  _([a-zA-Z0-9_]+)\s*\[\s*([0-9]+)\s*\]           --> CR_<reg_mnemonic>_<field_mnemonic>_\1[\2]
+  ([a-zA-Z0-9][a-zA-Z0-9_]*)\s*\[\s*([0-9]+)\s*\] --> \1[\2]
+
+<literal>:
+  0x([0-9a-fA-F]*)                                --> hexadecimal
+  (([1-9][0-9]*)|0)                               --> decimal
+  0([0-7]+)                                       --> octal
+  0b([01]*)                                       --> binary
+
+<type>:
+  data                                            --> 32 bit (rvex_data_type)
+  address                                         --> 32 bit (rvex_address_type)
+  mask                                            --> 4 bit (rvex_mask_type)
+  byte                                            --> 8 bit (rvex_byte_type)
+  bit                                             --> 1 bit (std_logic)
+  ([1-9][0-9]*)                                   --> \1 bit (std_logic_vector)
+
+aside from those types there's an internal value for VHDL booleans
+
+<expr>:
+  make syntax tree using operators:
+    
+    x[i]   
+    
+    ~x     (w -> w)
+    !x     (w -> 1)
+    
+    l + r  (l x r -> max)
+    l - r  (l x r -> max)
+    
+    l < r  (l x r -> 1)
+    l > r  (l x r -> 1)
+    l <= r (l x r -> 1)
+    l >= r (l x r -> 1)
+    
+    l == r (l x r -> 1)
+    l != r (l x r -> 1)
+    
+    l & r  (w x w -> w)
+    
+    l ^ r  (w x w -> w)
+    
+    l | r  (w x w -> w)
+    
+    l && r (l x r -> 1)
+    
+    l ^^ r (l x r -> 1)
+    
+    l || r (l x r -> 1)
+
+to something from another field, 

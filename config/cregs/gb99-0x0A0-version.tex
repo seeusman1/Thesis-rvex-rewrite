@@ -1,163 +1,8 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                    CONTEXT CONTROL REGISTER DEFINITIONS                    %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% This file describes the context control register addresses and documentation.
-% Since the documentation is intended to be compiled to LaTeX code, it somehow
-% made sense to use LaTeX syntax for the definition language. I'm sorry. The
-% file is interpreted by python though, not by LaTeX. Don't try to run this
-% through LaTeX directly...
-%
-% The following LaTeX-like commands are interpreted by python to define the
-% control registers. They must be the only thing on a certain line aside from
-% (maybe) comments, otherwise they are interpreted as LaTeX documentation.
-% 
-%  - \register{<mnemonic>}{<name>}{<offset>}
-%    Starts a new register description. <name> is the title of the section.
-%    <mnemonic> is the mnemonic of the register, excluding the CR_. The 
-%    mnemonic is also used to generate a label using \label{reg:<mnemonic>}.
-%    <offset> should be a hex number starting with 0x divisible by 4,
-%    representing the byte offset from the control registers base.
-% 
-%  - \registergen{<python range>}{<mnemonic>}{<name>}{<offset>}{<stride>}
-%    Same as \register, but specifies a list of registers. <python range> is
-%    executed as a python expression, expected to generate an iterable of
-%    integers. A register is generated for each of these iterations. The offset
-%    for each register is computed as <offset> + iter * <stride>. \n{} expands
-%    to the number when used inline in <mnemonic> and <name>. In the
-%    documentation it expands to $n$.
-% 
-%  - \field{<range>}{<mnemonic>}
-%    Defines a field in the current register. A range specification is either a 
-%    single bit index for a single-bit field, or of the form <from>..<to>, 
-%    where  <from> is the higher bit index, and both the <from> and <to> bit 
-%    are included in the range. <mnemonic> is used in the register graphic, so 
-%    make it as small as possible if the bitfield is small. It also needs to be
-%    a valid C and VHDL identifier.
-% 
-%  - \debugCanWrite{}
-%  - \coreCanWrite{}
-%    Sets the writable flag for the previously defined field. The {} is
-%    required!
-% 
-%  - \signed{}
-%    Marks a field as being signed. The default is unsigned.
-% 
-%  - \reset{<bit vector>}
-%    Sets the reset state of the previously defined field. If not specified, the
-%    reset state is assumed to be zero. The number of characters in <bit vector>
-%    must equal the number of bits in the field.
-% 
-%  - \id{<identifier>}
-%    Gives a field an alternative name for the C/VHDL/rvd definitions. This only
-%    works for 8-bit and 16-bit fields that are properly aligned.
-% 
-%  - Anything else:
-%    Any unrecognized line is used as a description for either the whole 
-%    register or a field in it.
-%
-%===============================================================================
-
-\register{GSR}{Global status register}{0x000}
-This register contains miscellaneous status information.
-
-\field{31}{R}
-\debugCanWrite{}
-Reset flag. The entire \rvex{} processor will be reset when the debug bus writes
-a one to this flag. Writing a zero has no effect.
-
-\field{13}{E}
-Reconfiguration error flag. This flag is set by hardware when an invalid
-configuration was requested. It is cleared once a valid configuration is
-requested.
-
-\field{12}{B}
-Reconfiguration busy flag. While high, reconfiguration requests are ignored.
-
-\field{11..8}{RID}
-Reconfiguration requester ID. When a configuration is requested, this field is
-set to the context ID of the context that requested the configuration, or to
-0xF if the request was from the debug bus. This may be used by the
-reconfiguration sources to see if they have won arbitration. Refer to
-Section~\ref{sec:core-ug-reconf-request} for more information.
 
 %===============================================================================
-
-\register{BCRR}{Bus reconfiguration request register}{0x004}
-This register may be written to by the debug bus only. When it is written, a
-reconfiguration is requested. Refer to Sections~\ref{sec:core-ug-reconf-word}
-and \ref{sec:core-ug-reconf-request} for more information.
-
-\field{31..0}{Bus reconfiguration request}
-\debugCanWrite{}
-
-%===============================================================================
-
-\register{CC}{Current configuration register}{0x008}
-This register is hardwired to the current configuration vector. Refer to
-Section~\ref{sec:core-ug-reconf-word} for more information.
-
-\field{31..0}{Current configuration}
-
-%===============================================================================
-
-\register{AFF}{Cache affinity register}{0x00C}
-This register stores the cache block index (akin to a lane group) that most
-recently serviced an instruction fetch for a given context. This may be used for
-achieving the maximum possible instruction cache locality when reconfiguring.
-
-\field{30..28}{AF7}
-Instruction cache block affinity for context 7. Only exists if the core is
-configured to have eight hardware contexts and at least two lane groups.
-\field{26..24}{AF6}
-Instruction cache block affinity for context 6. Only exists if the core is
-configured to have eight hardware contexts and at least two lane groups.
-\field{22..20}{AF5}
-Instruction cache block affinity for context 5. Only exists if the core is
-configured to have eight hardware contexts and at least two lane groups.
-\field{18..16}{AF4}
-Instruction cache block affinity for context 4. Only exists if the core is
-configured to have eight hardware contexts and at least two lane groups.
-\field{14..12}{AF3}
-Instruction cache block affinity for context 3. Only exists if the core is
-configured to have at least four hardware contexts and at least two lane groups.
-\field{10..8}{AF2}
-Instruction cache block affinity for context 2. Only exists if the core is
-configured to have at least four hardware contexts and at least two lane groups.
-\field{6..4}{AF1}
-Instruction cache block affinity for context 1. Only exists if the core is
-configured to have at least two hardware contexts and at least two lane groups.
-\field{2..0}{AF0}
-Instruction cache block affinity for context 0. Only exists if the core is
-configured to have at least two lane groups.
-
-%===============================================================================
-
-\register{CNT}{Cycle counter register, low word}{0x010}
-Cycle counter. This register is simply always incremented by one in hardware.
-Simply overflows when it reaches 0xFFFFFFFF. Its intended use is performance
-monitoring.
-
-\field{31..0}{Cycle counter low}
-
-%===============================================================================
-
-\register{CNTH}{Cycle counter register, high word}{0x014}
-\todo{The CNTH register doesn't exist yet.}
-Extension to the \creg{CNT} register. The order is illogical for a big endian 
-system for compatibility with older code that assumes that this counter is only 
-32 bits wide. The high word of the counter value is latched whenever \creg{CNT} 
-is read to avoid needing an atomic 64-bit read operation. Thus, \creg{CNT} must 
-always be read before \creg{CNTH} is read.
-
-\field{31..0}{Cycle counter high}
-
-%===============================================================================
-% Version/configuration registers from here onwards. New stuff should be added
-% at the beginning or in the reserved spaces for sanity.
-%===============================================================================
-
 \registergen{reversed(range(8))}{LIMC\n{}}{Long immediate capability register \n{}}{0x0BC}{-4}
+%===============================================================================
+
 \todo{The LIMC\n{} registers don't exist yet.}
 This group of hardwired values represent the supported \insn{LIMMH} forwarding
 routes.
@@ -183,8 +28,9 @@ For the purpose of generic binaries, the configuration is repeated beyond the
 number of physically available lanes.
 
 %===============================================================================
-
 \registergen{reversed(range(4))}{SIC\n{}}{Syllable index capability register \n{}}{0x0CC}{-4}
+%===============================================================================
+
 \todo{The SIC\n{} registers don't exist yet.}
 This group of hardwired values represent the capabilities of each syllable
 within a bundle.
@@ -228,13 +74,15 @@ available to syllable index $i$ within a bundle. The following encoding is used.
 repeated beyond the number of physically available lanes.
 
 %===============================================================================
-
 \register{GPS1}{General purpose register delay register B}{0x0D0}
+%===============================================================================
+
 This register is reserved for future expansion.
 
 %===============================================================================
-
 \register{GPS0}{General purpose register delay register A}{0x0D4}
+%===============================================================================
+
 \todo{The GPS$n$ registers don't exist yet.}
 This register lists the key pipeline stages in which the core appears to read
 from and write to the general purpose register file. Forwarding is taken into
@@ -281,13 +129,15 @@ Hardwired to the stage in which the ALU appears to read its operands from the
 general purpose registers.
 
 %===============================================================================
-
 \register{SPS1}{Special delay register B}{0x0D8}
+%===============================================================================
+
 This register is reserved for future expansion.
 
 %===============================================================================
-
 \register{SPS0}{Special delay register A}{0x0DC}
+%===============================================================================
+
 \todo{The SPS$n$ registers don't exist yet.}
 This register serves a similar purpose as \creg{GPS0}, but instead of being only
 for the general purpose registers, these values represents the delay for branch
@@ -338,18 +188,21 @@ Hardwired to the stage in which the ALU appears to read its operands from the
 branch and link registers.
 
 %===============================================================================
-
 \register{EXT2}{Extension register 2}{0x0E0}
+%===============================================================================
+
 This register is reserved for future expansion.
 
 %===============================================================================
-
 \register{EXT1}{Extension register 1}{0x0E4}
+%===============================================================================
+
 This register is reserved for future expansion.
 
 %===============================================================================
-
 \register{EXT0}{Extension register 0}{0x0E8}
+%===============================================================================
+
 \todo{The EXT$n$ registers don't exist yet.}
 This register contains flags that specify the supported extensions and quirks
 of the processor as per its design-time configuration.
@@ -393,8 +246,9 @@ cleared, these registers are independent.
 This flag is set when forwarding is enabled.
 
 %===============================================================================
-
 \register{DCFG}{Design-time configuration register}{0x0EC}
+%===============================================================================
+
 \todo{The DCFG register doesn't exist yet.}
 This register is hardwired to the key parameters that define the size of the
 processor, such as the number of pipelanes and the number of contexts.
@@ -420,8 +274,9 @@ configuration words.
 Number of pipelanes in the design, minus one.
 
 %===============================================================================
-
 \register{CVER1}{Core version register 1}{0x0F0}
+%===============================================================================
+
 \todo{The CVER$n$ registers don't exist yet.}
 This register specifies the major version of the processor and, together with
 \creg{CVER0}, a 7-byte ASCII core version identification tag.
@@ -435,10 +290,10 @@ most likely always be \code{'3'}.
 \field{23..16}{CTAG0}
 \reset{0*******}
 \id{CTAG}
-First ASCII character in a string of 7, which identify the core version,
-similar to how a license plate identifies a car. It is intended that a database
-will be set up which maps each tag to an immutable archive containing the source
-code for the core and a mutable errata/notes file.
+First ASCII character in a string of seven characters, which together identify 
+the core version, similar to how a license plate identifies a car. It is 
+intended that a database will be set up which maps each tag to an immutable 
+archive containing the source code for the core and a mutable errata/notes file.
 
 \field{15..8}{CTAG1}
 \reset{0*******}
@@ -446,8 +301,9 @@ code for the core and a mutable errata/notes file.
 \reset{0*******}
 
 %===============================================================================
-
 \register{CVER0}{Core version register 0}{0x0F4}
+%===============================================================================
+
 Refer to \creg{CVER1} for more information.
 
 \field{31..24}{CTAG3}
@@ -460,8 +316,9 @@ Refer to \creg{CVER1} for more information.
 \reset{0*******}
 
 %===============================================================================
-
 \register{PVER1}{Platform version register 1}{0x0F8}
+%===============================================================================
+
 \todo{The PVER$n$ registers don't exist yet.}
 This register specifies the processor index within a platform and, together with
 \creg{PVER0}, uniquely identifies the platform using a 7-byte ASCII
@@ -475,11 +332,12 @@ Unique processor identifier within a multicore platform.
 \field{23..16}{PTAG0}
 \reset{0*******}
 \id{PTAG}
-First ASCII character in a string of 7, which identify the platform and bit
-file, similar to how a license plate identifies a car. It is intended that a
-database will be set up which maps each tag to an immutable archive containing
-the source code for the platform, synthesis logs and a bit file, as well as
-mutable \code{memory.map}, \code{rvex.h} and errata/notes files.
+First ASCII character in a string of seven characters, which together identify 
+the platform and bit file, similar to how a license plate identifies a car. It 
+is intended that a database will be set up which maps each tag to an immutable 
+archive containing the source code for the platform, synthesis logs and a bit 
+file, as well as mutable \code{memory.map}, \code{rvex.h} and errata/notes 
+files.
 
 \field{15..8}{PTAG1}
 \reset{0*******}
@@ -487,8 +345,9 @@ mutable \code{memory.map}, \code{rvex.h} and errata/notes files.
 \reset{0*******}
 
 %===============================================================================
-
 \register{PVER0}{Platform version register 0}{0x0FC}
+%===============================================================================
+
 Refer to \creg{PVER1} for more information.
 
 \field{31..24}{PTAG3}

@@ -1,0 +1,64 @@
+
+%===============================================================================
+\section{ALU miscellaneous instructions}
+%===============================================================================
+\datapath{isNOP}{'0'}
+
+%-------------------------------------------------------------------------------
+\syllable{01100000-}{NOP}{}
+\datapath{isNOP}{'1'}
+Performs no operation.
+
+%-------------------------------------------------------------------------------
+\syllable{100100010}{CLZ}{\rd = \rx}
+\datapath{gpRegWE}{'1'}
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE} % Only because legacy decoding did this.
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+\alu{intResultMux}{CLZ}
+This operations counts the number of leading zeros in the operand. That is, the
+value 0x80000000 returns 0 and the value 0 returns 32.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+unsigned int in = \rx;
+int out = 32;
+while (in) {
+  in >>= 1;
+  out--;
+}
+\rd = out;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{00001011-}{MOVTL}{\lr = \ry}
+\datapath{linkWE}{'1'}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{intResultMux}{OP_SEL}
+Copies a general purpose register or immediate to the link register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\lr = \ry;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000011000}{MOVFL}{\rd = \lr}
+\datapath{gpRegWE}{'1'}
+\datapath{op1LinkReg}{'1'}
+\alu{op1Mux}{EXTEND32},
+\alu{op2Mux}{ZERO},
+\alu{bitwiseOp}{BITW_OR},
+\alu{intResultMux}{BITWISE},
+Copies the link register to a general purpose register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = \lr;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{10010000-}{TRAP}{\rx, \ry}
+\datapath{isTrap}{'1'}
+Software trap. The first parameter is the trap argument, while the second
+parameter is the trap cause byte.

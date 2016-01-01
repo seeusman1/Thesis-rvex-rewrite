@@ -151,23 +151,48 @@ entity core_ctrlRegs is
     gpreg2creg_readData         : in  rvex_data_type;
     
     ---------------------------------------------------------------------------
-    -- Global register logic interface
+    -- Debug bus <-> global control register interface
     ---------------------------------------------------------------------------
-    -- Interface for the global register logic.
-    gbreg2creg                  : in  gbreg2creg_type;
-    creg2gbreg                  : out creg2gbreg_type;
+    -- Global control register address. Only bits 7..0 are used.
+    creg2gbreg_dbgAddr          : out rvex_address_type;
+    
+    -- Write command.
+    creg2gbreg_dbgWriteEnable   : out std_logic;
+    creg2gbreg_dbgWriteMask     : out rvex_mask_type;
+    creg2gbreg_dbgWriteData     : out rvex_data_type;
+    
+    -- Read command and reply.
+    creg2gbreg_dbgReadEnable    : out std_logic;
+    gbreg2creg_dbgReadData      : in  rvex_data_type;
     
     ---------------------------------------------------------------------------
-    -- Context register logic interface
+    -- Core <-> global control register interface
     ---------------------------------------------------------------------------
-    -- Interface for the context register logic.
-    cxreg2creg                  : in  cxreg2creg_array(2**CFG.numContextsLog2-1 downto 0);
-    creg2cxreg                  : out creg2cxreg_array(2**CFG.numContextsLog2-1 downto 0);
+    -- Global control register address. Only bits 7..0 are used.
+    creg2gbreg_coreAddr         : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Resets the context control register file. Hardware and bus writes going
-    -- on in the same cycle take precedence, allowing the context to reset
-    -- directly into debug mode.
-    cxreg2creg_reset            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0)
+    -- Read command and reply.
+    creg2gbreg_coreReadEnable   : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    gbreg2creg_coreReadData     : in  rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Core/debug bus <-> context control register interface
+    ---------------------------------------------------------------------------
+    -- Global control register address. Only bits 8..0 are used.
+    creg2cxreg_addr             : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Origin of the context control register command. '0' for core access, '1'
+    -- for debug access.
+    creg2cxreg_origin           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Write command.
+    creg2cxreg_writeEnable      : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    creg2cxreg_writeMask        : out rvex_mask_array(2**CFG.numContextsLog2-1 downto 0);
+    creg2cxreg_writeData        : out rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Read command and reply.
+    creg2cxreg_readEnable       : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2creg_readData         : in  rvex_data_array(2**CFG.numContextsLog2-1 downto 0)
     
   );
 end core_ctrlRegs;
@@ -180,30 +205,27 @@ architecture Behavioral of core_ctrlRegs is
   -- 
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   --
-  --                    .----o----o----o------.
-  --                    v    v    v    v      |
-  --                  .---..---..---..---. .-----.
-  --                  |rpt||rpt||rpt||rpt| |glob.|
-  --                  '---''---''---''---' '-----'
+  --                             gbreg
+  --                   -------------------------
   --                    ^    ^    ^    ^      ^
   --                    |    |    |    |      |
   --                    |    |    |    |      v
   --                    |    |    |    |    .-S-.
-  --       debug <------+----+----+----+--->M x S<---> gpreg
+  --       debug <------+----+----+----+--->M x S<-------------->| gpreg
   --                    |    |    |    |    '-S-'
   --                    v    |    |    |      |
-  --                  .-S-.  |    |    |    .-M-.     .----.     .------.
-  --      memu 0 <--->M x S<-+----+----+----M m S<--->|    |<--->|ctxt 0|
-  --                  '---'  v    |    |    '---'     |    |     '------'
-  --                       .-S-.  |    |              |    |     .------.
-  --      memu 1 <-------->M x S<-+----+------------->|    |<--->|ctxt 1|
-  --                       '---'  |    |              |ctxt|     '------'
-  --                            .-S-.  |              | sw.|     .------.
-  --      memu 2 <------------->M x s<-+------------->|    |<--->|ctxt 2|
-  --                            '---'  |              |    |     '------'
-  --                                 .-S-.            |    |     .------.
-  --      memu 3 <------------------>M x s<---------->|    |<--->|ctxt 3|
-  --                                 '---'            '----'     '------'
+  --                  .-S-.  |    |    |    .-M-.     .----.
+  --      memu 0 <--->M x S<-+----+----+----M m S<--->|    |<--->|
+  --                  '---'  v    |    |    '---'     |    |     |
+  --                       .-S-.  |    |              |    |     |
+  --      memu 1 <-------->M x S<-+----+------------->|    |<--->|
+  --                       '---'  |    |              |ctxt|     | cxreg
+  --                            .-S-.  |              | sw.|     |
+  --      memu 2 <------------->M x s<-+------------->|    |<--->|
+  --                            '---'  |              |    |     |
+  --                                 .-S-.            |    |     |
+  --      memu 3 <------------------>M x s<---------->|    |<--->|
+  --                                 '---'            '----'
   --
   -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
   --
@@ -306,34 +328,9 @@ architecture Behavioral of core_ctrlRegs is
   signal ctxtBus_readEnable         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal ctxtBus_readData           : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
   
-  -- Local copy of the global register signal from registers to control logic,
-  -- which we need to instantiate the extra read ports.
-  signal creg2gbreg_s               : creg2gbreg_type;
-  
 --=============================================================================
 begin -- architecture
 --=============================================================================
-  
-  -----------------------------------------------------------------------------
-  -- Check configuration
-  -----------------------------------------------------------------------------
-  assert CRG_SIZE_WORDS = 256 and CRG_SIZE_BLOG2 = 10
-    report "The size of the control/debug register file is hardcoded to 1kiB "
-         & "in core_ctrlRegs.vhd, but the constants in core_ctrlRegs_pkg.vhd "
-         & "specify otherwise."
-    severity failure;
-  
-  assert CRG_GLOB_WORD_OFFSET >= 0 and CRG_GLOB_WORD_OFFSET + CRG_GLOB_WORD_COUNT <= 64
-    report "The global control register count/range specified in "
-         & "core_ctrlRegs_pkg.vhd extends beyond the hardcoded values in "
-         & "in core_ctrlRegs.vhd."
-    severity failure;
-  
-  assert CRG_CTXT_WORD_OFFSET >= 128 and CRG_CTXT_WORD_OFFSET + CRG_CTXT_WORD_COUNT <= 256
-    report "The global control register count/range specified in "
-         & "core_ctrlRegs_pkg.vhd extends beyond the hardcoded values in "
-         & "in core_ctrlRegs.vhd."
-    severity failure;
   
   -----------------------------------------------------------------------------
   -- Generate global/context/gpreg bus switch logic
@@ -456,64 +453,21 @@ begin -- architecture
   dbgBus_gpreg_addr(31 downto 11) <= (others => '0');
   
   -----------------------------------------------------------------------------
-  -- Instantiate the global control registers
+  -- Connect to the the global control registers
   -----------------------------------------------------------------------------
-  global_reg_bank: entity rvex.core_ctrlRegs_bank
-    generic map (
-      OFFSET                    => CRG_GLOB_WORD_OFFSET,
-      NUM_WORDS                 => CRG_GLOB_WORD_COUNT
-    )
-    port map (
-      
-      -- System control.
-      reset                     => reset,
-      clk                       => clk,
-      clkEn                     => clkEn,
-      
-      -- Bus interface.
-      addr                      => dbgBus_glob_addr,
-      origin                    => '1', -- Debug bus access.
-      writeEnable               => dbgBus_glob_writeEnable,
-      writeMask                 => dbgBus_glob_writeMask,
-      writeData                 => dbgBus_glob_writeData,
-      readEnable                => dbgBus_glob_readEnable,
-      readData                  => dbgBus_glob_readData,
-      
-      -- Hardware interface.
-      logic2creg                => gbreg2creg,
-      creg2logic                => creg2gbreg_s,
-      logic2creg_reset          => '0'
-      
-    );
+  -- Connect the debug bus access port.
+  creg2gbreg_dbgAddr            <= dbgBus_glob_addr;
+  creg2gbreg_dbgWriteEnable     <= dbgBus_glob_writeEnable;
+  creg2gbreg_dbgWriteMask       <= dbgBus_glob_writeMask;
+  creg2gbreg_dbgWriteData       <= dbgBus_glob_writeData;
+  creg2gbreg_dbgReadEnable      <= dbgBus_glob_readEnable;
+  dbgBus_glob_readData          <= gbreg2creg_dbgReadData;
   
-  -- Forward the local hardware output to the global control register logic.
-  creg2gbreg <= creg2gbreg_s;
-  
-  -- Instantiate the extra read ports for each lane group/memory unit.
-  global_reg_bank_port_gen: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
-    global_reg_bank_port: entity rvex.core_ctrlRegs_readPort
-      generic map (
-        OFFSET                  => CRG_GLOB_WORD_OFFSET,
-        NUM_WORDS               => CRG_GLOB_WORD_COUNT
-      )
-      port map (
-        
-        -- System control.
-        reset                   => reset,
-        clk                     => clk,
-        clkEn                   => clkEn,
-        
-        -- Register interface.
-        creg2logic              => creg2gbreg_s,
-        
-        -- Read port.
-        addr                    => grpBus_glob_addr(laneGroup),
-        readEnable              => grpBus_glob_readEnable(laneGroup),
-        readData                => grpBus_glob_readData(laneGroup)
-        
-      );
-  end generate;
-  
+  -- Connect the core access ports.
+  creg2gbreg_coreAddr           <= grpBus_glob_addr;
+  creg2gbreg_coreReadEnable     <= grpBus_glob_readEnable;
+  grpBus_glob_readData          <= gbreg2creg_coreReadData;
+    
   -----------------------------------------------------------------------------
   -- Generate claim signal and stall output
   -----------------------------------------------------------------------------
@@ -631,37 +585,15 @@ begin -- architecture
     );
   
   -----------------------------------------------------------------------------
-  -- Instantiate the context control registers
+  -- Connect to the the context control registers
   -----------------------------------------------------------------------------
-  context_reg_bank_gen: for ctxt in 2**CFG.numContextsLog2-1 downto 0 generate
-    context_reg_bank: entity rvex.core_ctrlRegs_bank
-      generic map (
-        OFFSET                    => CRG_CTXT_WORD_OFFSET,
-        NUM_WORDS                 => CRG_CTXT_WORD_COUNT
-      )
-      port map (
-        
-        -- System control.
-        reset                     => reset,
-        clk                       => clk,
-        clkEn                     => clkEn,
-        
-        -- Bus interface.
-        addr                      => ctxtBus_addr(ctxt),
-        origin                    => dbg_claim,
-        writeEnable               => ctxtBus_writeEnable(ctxt),
-        writeMask                 => ctxtBus_writeMask(ctxt),
-        writeData                 => ctxtBus_writeData(ctxt),
-        readEnable                => ctxtBus_readEnable(ctxt),
-        readData                  => ctxtBus_readData(ctxt),
-        
-        -- Hardware interface.
-        logic2creg                => cxreg2creg(ctxt),
-        creg2logic                => creg2cxreg(ctxt),
-        logic2creg_reset          => cxreg2creg_reset(ctxt)
-        
-      );
-  end generate;
+  creg2cxreg_addr               <= ctxtBus_addr;
+  creg2cxreg_origin             <= (others => dbg_claim);
+  creg2cxreg_writeEnable        <= ctxtBus_writeEnable;
+  creg2cxreg_writeMask          <= ctxtBus_writeMask;
+  creg2cxreg_writeData          <= ctxtBus_writeData;
+  creg2cxreg_readEnable         <= ctxtBus_readEnable;
+  ctxtBus_readData              <= cxreg2creg_readData;
   
 end Behavioral;
 

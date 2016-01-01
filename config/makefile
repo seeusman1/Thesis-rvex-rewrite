@@ -7,12 +7,16 @@ ENSURE_DIR = mkdir -p
 RM_DIR = rm -rf
 
 # Path configuration.
-SCRIPTS = interpreter
+SCRIPTS = scripts
+SCRIPTS_COMMON = $(SCRIPTS)/common
 TEMP = temp
 CORE_LIB = ../lib/rvex/core
 DOCS = ../doc/src/refman/generated
 RVEX_H = ../examples/src/rvex.h
 MEMORY_MAP = ../tools/debug-interface/core-regs.map
+
+# Set python search path.
+PYTHONP = PYTHONPATH=$(SCRIPTS) $(PYTHON)
 
 # Define how to generate everything.
 .PHONY: all
@@ -34,26 +38,29 @@ all: $(TEMP)
 	@echo ""
 	@echo "Cleaning up..."
 	@$(RM_DIR) $(TEMP)
-	@$(RM) $(SCRIPTS)/*.pyc
+	@$(RM) $(SCRIPTS)/common/*.pyc
+	@$(RM) $(SCRIPTS)/cregs/*.pyc
+	@$(RM) $(SCRIPTS)/opcodes/*.pyc
+	@$(RM) $(SCRIPTS)/traps/*.pyc
 	@echo ""
 	@echo "Trying to rebuild reference manual..."
 	cd $(DOCS)/../../.. && $(MAKE)
 
-$(TEMP): opcodes.tex gbreg.tex cxreg.tex traps.tex $(SCRIPTS)
+.PHONY: $(TEMP)
+$(TEMP): cregs/*.tex opcodes/*.tex traps/*.tex $(SCRIPTS)
 	@echo "Parsing input..."
 	@$(ENSURE_DIR) $(TEMP)
-	$(PYTHON) $(SCRIPTS)/opcodes-latex.py opcodes.tex \
+	$(PYTHONP) $(SCRIPTS)/opcodes/opcodes-latex.py opcodes \
 		$(TEMP)/opcode-stats.generated.tex \
 		$(TEMP)/opcode-table.generated.tex \
 		$(TEMP)/opcode-docs.generated.tex
-	$(PYTHON) $(SCRIPTS)/opcodes-vhdl.py opcodes.tex $(CORE_LIB)/core_opcode_pkg.vhd \
+	$(PYTHONP) $(SCRIPTS)/opcodes/opcodes-vhdl.py opcodes $(CORE_LIB)/core_opcode_pkg.vhd \
 		$(TEMP)/core_opcode_pkg.vhd
-	$(PYTHON) $(SCRIPTS)/registers-latex.py gbreg.tex \
-		$(TEMP)/gbreg.generated.tex
-	$(PYTHON) $(SCRIPTS)/registers-latex.py cxreg.tex \
+	$(PYTHONP) $(SCRIPTS)/cregs/registers-latex.py cregs \
+		$(TEMP)/gbreg.generated.tex \
 		$(TEMP)/cxreg.generated.tex
-	$(PYTHON) $(SCRIPTS)/traps-latex.py traps.tex \
+	$(PYTHONP) $(SCRIPTS)/traps/traps-latex.py traps \
 		$(TEMP)/traps.generated.tex
-	$(PYTHON) $(SCRIPTS)/rvex_h.py gbreg.tex cxreg.tex traps.tex \
+	$(PYTHONP) $(SCRIPTS)/common/rvex_h.py cregs traps \
 		$(TEMP)/rvex.h
 	

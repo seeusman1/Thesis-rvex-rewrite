@@ -1,0 +1,53 @@
+
+%===============================================================================
+\section{ALU type conversion instructions}
+%===============================================================================
+\datapath{gpRegWE}{'1'}
+\datapath{isNOP}{'0'}
+\alu{op2Mux}{ZERO}
+\alu{intResultMux}{ADDER}
+
+\datapath{brFmt}{'1'} % Only because legacy decoding did this.
+\alu{opBrMux}{FALSE} % Only because legacy decoding did this.
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+
+The \rvex{} ALU is capable of supporting typecasts from 32-bit integers to
+16-bit and 8-bit integers in a single cycle.
+
+%-------------------------------------------------------------------------------
+\syllable{000110110}{SXTB}{\rd = \rx}
+\alu{op1Mux}{EXTEND8}
+Performs sign extension for an 8-bit value.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (char)\rx;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000111000}{SXTH}{\rd = \rx}
+\alu{op1Mux}{EXTEND16}
+Performs sign extension for a 16-bit value.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (short)\rx;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000111010}{ZXTB}{\rd = \rx}
+\alu{op1Mux}{EXTEND8}
+\alu{unsignedOp}{'1'}
+Performs zero extension for an 8-bit value.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned char)\rx;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000111100}{ZXTH}{\rd = \rx}
+\alu{op1Mux}{EXTEND16}
+\alu{unsignedOp}{'1'}
+Performs zero extension for a 16-bit value.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned short)\rx;
+\end{lstlisting}

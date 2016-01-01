@@ -1,0 +1,183 @@
+
+%===============================================================================
+\section{Memory instructions}
+%===============================================================================
+\class{MEM}
+\datapath{isNOP}{'0'}
+\alu{op1Mux}{EXTEND32}
+\alu{op2Mux}{EXTEND32}
+\alu{opBrMux}{FALSE}
+\alu{intResultMux}{ADDER}
+\memory{isMemoryInstruction}{'1'}
+
+\alu{bitwiseOp}{BITW_AND} % Only because legacy decoding did this.
+
+Some \rvex{} pipelanes have a memory unit. The memory unit supports byte,
+halfword and word operations. Sign or zero extension is part of the byte and
+halfword load instructions.
+
+The addressing mode is always register $+$ immediate. Note that attempts to read
+misaligned memory locations will fail with a \trap{MISALIGNED_ACCESS} trap.
+
+In the default pipeline configuration, these instructions are pipelined by
+two cycles. That is, the result of a memory load instruction is not available
+yet in the subsequent instruction. However, the current cache and core guarantee
+that a memory write to address $x$ immediately followed by a memory read from
+address $x$ returns the newly written value.
+
+%-------------------------------------------------------------------------------
+\syllable{000100001}{LDW}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+Loads a 32-bit word from memory.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = *(int*)(\rx + \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000100011}{LDH}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_HALFWORD}
+Loads a 16-bit halfword from memory and sign-extends it.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = *(short*)(\rx + \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000100101}{LDHU}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{unsignedOp}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_HALFWORD}
+Loads a 16-bit halfword from memory and zero-extends it.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = *(unsigned short*)(\rx + \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000100111}{LDB}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Loads a byte from memory and sign-extends it.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = *(char*)(\rx + \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000101001}{LDBU}{\rd = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{gpRegWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{unsignedOp}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Loads a byte from memory and zero-extends it.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = *(unsigned char*)(\rx + \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000011011}{LDW}{\lr = \ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{linkWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+Loads a word from memory. The result is written to the link register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\lr = *(int*)(\rx + \ry);
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{001011101}{LDBR}{\ry[\rx]}
+\datapath{funcSel}{MEM}
+\datapath{allBrRegsWE}{'1'}
+\memory{readEnable}{'1'}
+\memory{unsignedOp}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Loads a byte from memory. The result is written to the entire branch register
+file at once. This is intended to improve context switching performance
+somewhat.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+char tmp = *(char*)(\rx + \ry);
+$b0.0 = tmp & 1;
+$b0.1 = tmp & 2;
+$b0.2 = tmp & 4;
+$b0.3 = tmp & 8;
+$b0.4 = tmp & 16;
+$b0.5 = tmp & 32;
+$b0.6 = tmp & 64;
+$b0.7 = tmp & 128;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000101011}{STW}{\ry[\rx] = \rd}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+Stores a 32-bit word into memory.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+*(int*)(\rx + \ry) = \rd;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000101101}{STH}{\ry[\rx] = \rd}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_HALFWORD}
+Stores a 16-bit halfword into memory.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+*(short*)(\rx + \ry) = \rd;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000101111}{STB}{\ry[\rx] = \rd}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Stores a byte into memory.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+*(char*)(\rx + \ry) = \rd;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{000011101}{STW}{\ry[\rx] = \lr}
+\datapath{op3LinkReg}{'1'}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_WORD}
+Store word in memory, from link register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+*(int*)(\rx + \ry) = \lr;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\syllable{001011111}{STBR}{\ry[\rx]}
+\datapath{op3BranchRegs}{'1'}
+\memory{writeEnable}{'1'}
+\memory{accessSizeBLog2}{ACCESS_SIZE_BYTE}
+Store byte in memory, from branch register file.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+char tmp = $b0.0;
+tmp |= $b0.1 << 1
+tmp |= $b0.2 << 2
+tmp |= $b0.3 << 3
+tmp |= $b0.4 << 4
+tmp |= $b0.5 << 5
+tmp |= $b0.6 << 6
+tmp |= $b0.7 << 7
+*(char*)(\rx + \ry) = tmp
+\end{lstlisting}

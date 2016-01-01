@@ -1,14 +1,16 @@
 from __future__ import print_function
 
-import interpreter
+import common.interpreter
+import common.bitfields
 import copy
-import bitfields
+interpreter = common.interpreter
+bitfields = common.bitfields
 
-def parse(fname):
-    """Parses the opcodes.tex file.
+def parse(indir):
+    """Parses the opcodes .tex files.
     
     Arguments:
-     - fname specifies the file to read.
+     - indir specifies the directory in which to look for .tex files.
       
     The return value is a three-tuple.
     
@@ -16,7 +18,7 @@ def parse(fname):
     the following entries:
      - 'name': name of the group which this dict represents.
      - 'doc': LaTeX documentation for the group which this dict represents.
-     - 'line_nr': line number of the group command.
+     - 'origin': line number and filename of the group command.
      - 'syllables': list of syllables in this group.
     
     The second entry of the result three-tuple is a list with 256 entries, mapping
@@ -25,7 +27,7 @@ def parse(fname):
     
     The third entry of the result three-tuple is a dictionary containing the
     default syllable configuration, i.e. a full syllable specification except for
-    the 'name', 'syntax', 'opcode', 'doc' and 'line_nr' fields.
+    the 'name', 'syntax', 'opcode', 'doc' and 'origin' fields.
     
     Syllables are represented as another dict:
      - 'name': mnemonic for the syllable.
@@ -33,7 +35,7 @@ def parse(fname):
      - 'opcode': 9-bit binary string with dashes for don't cares defining opcode,
                  mapping to syllable bit 31..23
      - 'doc': LaTeX documentation for the syllable.
-     - 'line_nr': line number of the syllable command.
+     - 'origin': line number and filename of the syllable command.
      - 'class': resource class string.
      - 'noasm': set to True if \noasm{} was specified, False otherwise.
      - 'datapath': dict with datapath control key-value pairs.
@@ -44,7 +46,7 @@ def parse(fname):
     """
     
     # Parse the file.
-    groups = interpreter.parse_file(fname, {
+    groups = interpreter.parse_files(indir, {
         'section': (1, True),
         'syllable': (3, True),
         'class': (1, False),
@@ -85,30 +87,30 @@ def parse(fname):
             sections += [{
                 'name': group['cmd'][1].strip(),
                 'doc': group['doc'],
-                'line_nr': group['line_nr'],
+                'origin': group['origin'],
                 'syllables': []
             }]
         elif group['cmd'][0] == 'syllable':
             if len(sections) == 0:
                 raise Exception('syllable defined before the first section at ' +
-                            fname + ':' + str(group['line_nr']))
+                            group['origin'])
             syllable = copy.deepcopy(group_params)
             apply_params(syllable, group)
             
             opcode = group['cmd'][1].strip()
             if len(opcode) != 9:
                 raise Exception('Number of bits in opcode must be 9 at ' +
-                            fname + ':' + str(group['line_nr']))
+                            group['origin'])
             for c in opcode:
                 if c not in ['0', '1', '-']:
                     raise Exception('Invalid character in opcode at ' +
-                                fname + ':' + str(group['line_nr']))
+                                group['origin'])
             
             syllable['name'] = group['cmd'][2].strip().upper()
             syllable['syntax'] = group['cmd'][2].strip().lower() + ' ' + group['cmd'][3].strip()
             syllable['opcode'] = opcode
             syllable['doc'] = group['doc']
-            syllable['line_nr'] = group['line_nr']
+            syllable['origin'] = group['origin']
             
             # Add syllable to the latest defined section.
             sections[-1]['syllables'] += [syllable]
@@ -124,12 +126,12 @@ def parse(fname):
                 else:
                     if table[x] is not None:
                         raise Exception(('Conflict for opcode 0x%02X at ' % x) +
-                                        fname + ':' + str(group['line_nr']))
+                                        group['origin'])
                     else:
                         table[x] = syllable
         else:
             raise Exception('Unrecognized group command at ' +
-                            fname + ':' + str(group['line_nr']))
+                            group['origin'])
     
     return (sections, table, def_params)
 
@@ -316,7 +318,7 @@ def get_bitfields(syl, imm_sw):
         fields = bitfields.parse(fields, {'name': ''})
     except Exception as e:
         raise Exception('Some fields needed to describe ' + syl['name'] +
-                        ' (line ' + str(syl['line_nr']) + ') overlap: ' +
+                        ' (line ' + str(syl['origin']) + ') overlap: ' +
                         str(e))
     
     return fields

@@ -1,0 +1,92 @@
+
+The .tex files in this folder describe the instructions encodings of the 
+processor and documentation for each instruction. Because the documentation is 
+in LaTeX, the syntax of these files is also LaTeX-like, to be able to use 
+editors with LaTeX syntax highlighting.
+
+Files are ordered by their filename alphabetically before being passed to the
+interpreter. This order may matter for some commands and, obviously,
+documentation.
+
+The following LaTeX-like commands are interpreted by python to define the traps. 
+They must be the only thing on a certain line aside from (maybe) comments, 
+otherwise they are interpreted as LaTeX documentation.
+
+\section{name} - starts a group of instructions in the documentation for
+   readability. Any textual lines between \group and \syllable is interpreted
+   as LaTeX documentation for the group.
+
+\syllable{opcode}{mnemonic}{syntax} - starts a syllable definition. The opcode
+   should be a 9-bit binary string with dashes for don't cares, mapping to
+   syllable bit 31..23. The value of the LSB is not really part of the opcode,
+   but defines whether the instruction can be used with only a register for
+   the second operand (0), only an immediate for the second operand (1), or
+   both (-). In VHDL terms, this describes the contents of the "valid" field.
+   The mnemonic is the name of the instruction. It will be made lowercase for
+   the assembler syntax and uppercase for the documentation (when used without
+   context). Finally, the syntax describes the assembler syntax of the
+   syllable. In this, the following LaTeX-like commands may be used. The {}
+   may be omitted.
+
+     .-------.--------.--------.-----------------------------.
+     | Cmd   | Docs   | VHDL   | Encoded by bitfield         |
+     |-------|--------|--------|-----------------------------|
+     | \rd{} | $r0.d  | r#.%r1 | syl(22..17)                 |
+     |-------|--------|--------|-----------------------------|
+     | \rx{} | $r0.x  | r#.%r2 | syl(16..11)                 |
+     |-------|--------|--------|-----------------------------|
+     | \ry{} | $r0.y  | r#.%r3 | syl(10..5)  for imm_sw 0    |
+     |       | imm    | %ih    | syl(10..2)  for imm_sw 1    |
+     |-------|--------|--------|-----------------------------|
+     | \rs{} | $r0.1  | r#.1   | -                           |
+     |-------|--------|--------|-----------------------------|
+     | \bd{} | $b0.bd | b#.%b2 | syl(19..17) for brFmt 0     |
+     |       |        | b#.%b3 | syl(4..2)   for brFmt 1     |
+     |-------|--------|--------|-----------------------------|
+     | \bs{} | $b0.bs | b#.%b3 | syl(4..2)   for brFmt 0     |
+     |       |        | b#.%b1 | syl(26..24) for brFmt 1     |
+     |-------|--------|--------|-----------------------------|
+     | \lr{} | $l0.0  | l#.0   | -                           |
+     |-------|--------|--------|-----------------------------|
+     | \of{} | offs   | %bt    | syl(23..5)                  |
+     |-------|--------|--------|-----------------------------|
+     | \sa{} |stackadj| %bi    | syl(23..5)                  |
+     |-------|--------|--------|-----------------------------|
+     | \lt{} | tgt    | %i1    | syl(27..25)                 |
+     |-------|--------|--------|-----------------------------|
+     | \li{} | imm    | %i2    | syl(24..2)                  |
+     '-------'--------'--------'-----------------------------'
+
+   Any textual lines between \syllable and \group or the next \syllable is
+   interpreted as LaTeX documentation for the syllable. These text sections
+   may also use the commands in the table above inline, but the {} may NOT
+   be omitted here.
+
+\class{x} - specifies the resource class. x should be ALU, MEM, MUL, BR or
+   LIMMH.
+
+\datapath{member}{value}   - specifies a value for the datapath decoding table.
+\alu{member}{value}        - specifies a value for the ALU decoding table.
+\branch{member}{value}     - specifies a value for the branch unit decoding table.
+\memory{member}{value}     - specifies a value for the memory unit decoding table.
+\multiplier{member}{value} - specifies a value for the multiplier decoding table.
+   Which members need to be specified and what values they can take depends
+   first and foremost the VHDL code (core_opcode*_pkg.vhd). This is also their
+   primary documentation source.
+
+\noasm{} - attribute that specifies that this syllable cannot be assembled.
+   Used for LIMMH instructions. This will disable rendering the syntax in the
+   documentation.
+
+All commands other than \group and \syllable specify attributes for the
+syllables. These are used to describe the characteristics and functionality
+of the instructions. How they do this depends on where they are written with
+respect to the \group and \syllable commands:
+
+ - Attributes specified before the first \group command are interpreted as
+   the default. All groups will inherit these attributes.
+
+ - Attributes specified between \group and the first \syllable in the group
+   determine the group defaults, overriding the global defaults. All syllables
+   within the group will inherit these attributes.
+

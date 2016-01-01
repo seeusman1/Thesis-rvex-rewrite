@@ -1,0 +1,62 @@
+
+%===============================================================================
+\register{CRR}{Context reconfiguration request register}{0x240}
+%===============================================================================
+
+This register may be written to by the core only. When it is written, a
+reconfiguration is requested. Refer to Section~\ref{sec:core-ug-reconf} for more
+information.
+
+\field{31..0}{Context reconfiguration request}
+\coreCanWrite{}
+
+%===============================================================================
+%\register{...}{...}{0x244}
+%===============================================================================
+% Reserved for a control register for reconfiguration flags if it's ever needed.
+
+%===============================================================================
+\register{WCFG}{Wakeup configuration}{0x248}
+%===============================================================================
+
+\todo{The WCFG register doesn't exist yet.}
+\emph{This register only exists on context 0.} This configuration register is 
+used in conjunction with the S flag in \creg{SAWC}. Refer to
+Section~\ref{sec:core-ug-reconf-saw} for more information.
+
+\field{31..0}{Wakeup configuration}
+\coreCanWrite{}
+\debugCanWrite{}
+
+%===============================================================================
+\register{SAWC}{Sleep and wake-up control register}{0x24C}
+%===============================================================================
+
+\todo{The SAWC register doesn't exist yet.}
+\emph{This register only exists on context 0.} This register contains special 
+control features for sleeping (reconfiguring to a configuration with all lane 
+groups disabled) and waking up other hardware contexts.
+
+\field{7..1}{Running}
+\debugCanWrite{}
+\coreCanWrite{}
+This field contains a bit for every other context, i.e., not all of these bits
+will be available if the core is not configured to support all eight hardware
+contexts. When reading this register, each bit represents the ones complement
+of the B flag in \creg{DCR} for each other context. Writing a one to a bit is
+equivalent to writing a one to the R flag in \creg{DCR} for each other context.
+
+A scheduler running on context 0 may use this feature, combined with an
+interrupt controller that triggers an interrupt when the done output for any
+other context has a rising edge, to support task yielding for cooperative
+scheduling. A yield will then be equivalent to a \insn{STOP} instruction, which
+will thus trigger an interrupt for the scheduler. The scheduler may then
+switch out the software context and subsequently restart the hardware context
+using these flags.
+
+\field{0}{S}
+\debugCanWrite{}
+\coreCanWrite{}
+Sleep flag. This enables or disables the sleep and wake-up system. Refer to
+Section~\ref{sec:core-ug-reconf-saw} for more information.
+
