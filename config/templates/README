@@ -7,3 +7,11 @@ in the generation process.
 rvex.h supported commands:
   @CREGS: replaced with control register definitions.
   @TRAPS: replaced with trap cause definitions.
+
+core_*RegLogic.vhd supported commands:
+  @PORT_DECL:  replaced with port definitions.
+  @REG_DECL:   replaced with register signal definitions.
+  @VAR_DECL:   replaced with variable and constant definitions.
+  @REG_RESET:  replaced with register signal reset code.
+  @IMPL:       replaced with implementation code.
+  @RESET_IMPL: replaced with context-reset implementation code.

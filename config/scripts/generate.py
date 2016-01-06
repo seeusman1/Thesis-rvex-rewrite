@@ -35,7 +35,7 @@ regs = cregs.registers.parse(dirs['regdir'])
 import traps.traps
 trps = traps.traps.parse(dirs['trapdir'])
 
-# TODO: pipeline configuration
+# TODO: Parse pipeline configuration.
 
 
 #-------------------------------------------------------------------------------
@@ -45,18 +45,26 @@ print('Generating VHDL code...')
 
 # Generate core_opcode_pkg.vhd.
 import opcodes.opcodes_vhdl
-opcodes.opcodes_vhdl.run(opc, dirs)
+opcodes.opcodes_vhdl.generate(opc, dirs)
 
-# TODO: core_trap_pkg.vhd
-# TODO: control register stuff
-# TODO: pipeline configuration
+# Generate core_ctrlRegs_pkg.vhd.
+import cregs.core_ctrlRegs_pkg
+cregs.core_ctrlRegs_pkg.generate(regs, dirs)
+
+# Generate core_globalRegLogic.vhd and core_contextRegLogic.vhd.
+import cregs.core_regLogic
+cregs.core_regLogic.generate(regs, dirs)
+
+# TODO: Generate core_trap_pkg.vhd.
+
+# TODO: Generate core_pipeline_pkg.vhd.
 
 
 #-------------------------------------------------------------------------------
 # Simulator source generation
 #-------------------------------------------------------------------------------
 
-# TODO: everything
+# TODO
 
 
 #-------------------------------------------------------------------------------
@@ -74,7 +82,7 @@ headers.rvex_h.generate(regs, trps, dirs)
 #-------------------------------------------------------------------------------
 print('Generating memory.map files...')
 
-# TODO: everything
+# TODO
 
 
 #-------------------------------------------------------------------------------
@@ -84,14 +92,14 @@ print('Generating LaTeX documentation...')
 
 # Generate opcode documentation.
 import opcodes.opcodes_latex
-opcodes.opcodes_latex.run(opc, dirs)
+opcodes.opcodes_latex.generate(opc, dirs)
 
 # Generate control register documentation.
 import cregs.registers_latex
-cregs.registers_latex.run(regs, dirs)
+cregs.registers_latex.generate(regs, dirs)
 
 # Generate trap documentation.
 import traps.traps_latex
-traps.traps_latex.run(trps, dirs)
+traps.traps_latex.generate(trps, dirs)
 
 # TODO: instruction delays

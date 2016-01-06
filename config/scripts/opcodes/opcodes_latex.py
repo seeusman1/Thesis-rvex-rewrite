@@ -6,7 +6,7 @@ import opcodes
 import common.bitfields
 bitfields = common.bitfields
 
-def run(opc, dirs):
+def generate(opc, dirs):
     # Parse the opcode configuration file.
     sections      = opc['sections']
     table         = opc['table']

@@ -13,64 +13,7 @@ from code_environment import *
 def parse(indir):
     """Parses the control register .tex files.
     
-    Arguments:
-     - indir specifies the directory to read files from.
-      
-    The return value is a two-tuple.
-    
-    The first entry of the result is a list with 256 entries, each containing 
-    either a dictionary describing a register, or None. The list index
-    represents the word address of the register. The register description
-    dictionary contains the following entries:
-     - 'offset': byte offset from the start of the register map.
-     - 'mnemonic': name of the register.
-     - 'fields': a list of dictionaries conforming to requirements of a
-       normalized bitfield (see bitfields.py), possibly containing the following
-       additional dictionary entries:
-        - 'doc': LaTeX multiline documentation for the field.
-        - 'reset': string with as many entries as there are bits in the field,
-          defining the reset value for each bit. Will be prefixed with zeros to
-          get to the right length.
-        - 'debug': if this key exists, the debug bus may write to the field.
-        - 'core': if this key exists, the core may write to the field.
-     - 'ctxt': key only exists if this register is context specific.
-     - 'glob': key only exists if this register is global.
-    
-    The second entry is a list of dictionaries and two-tuples. Each dictionary
-    contains the following entries:
-     - 'title': LaTeX title of the register (set).
-     - 'doc': LaTeX multiline documentation for the register (set) as a whole.
-     - 'registers': a list of dictionaries of the following form:
-        - 'offset': byte offset from the start of the register map.
-        - 'mnemonic': name of the register with \n{} expanded to the index.
-        - 'fields': same as above.
-     - 'fields': same as above.
-     - 'ctxt': key only exists if this register definition includes context
-       specific registers.
-     - 'glob': key only exists if this register definition includes global
-       registers.
-    The two-tuples are key-type-value mappings belonging to the previously
-    specified register (dictionary). The tuple maps from a mnemonic to an
-    integer value, which should be made available to programs through rvex.h,
-    the debug interface through core.map and the VHDL code through
-    core_ctrlRegs_pkg.vhd. The following mappings are defined:
-     - "CR_<mnemonic>" -> byte offset of a register w.r.t. the control
-       register file vector.
-     - "CR_<mnemonic>_<field>" -> byte offset of an aligned 16-bit field
-       within a 32-bit register.
-     - "CR_<mnemonic>_<field>" -> byte offset of an aligned 8-bit field
-       within a 32-bit register.
-     - "CR_<mnemonic>_<field>_BIT" -> start offset of a field within a register.
-     - "CR_<mnemonic>_<field>_MASK" -> bitmask of a field within a register.
-    The type part of the tuple (second element) may be:
-     - '<core><debug><signedness><size>': element if a byte offset, pointing to
-       a field or a register. <core> is 'W' if the core can write to any part of
-       the field, and 'R' otherwise. Idem for <debug>. <signedness> is 'S' or
-       'U' depending on whether the field is signed or not. <size> is 'W' for
-       32-bit, 'H' for 16-bit and 'B' for 8-bit.
-     - 'bit': element is a bit offset.
-     - 'mask': element is a 32-bit bitmask.
-    
+    TODO: write documentation.
     """
     
     result = {}
@@ -79,13 +22,14 @@ def parse(indir):
     cmds = interpreter.parse_files(indir, {
         
         # Interface declarations.
-        'interface':     (0, True),
-        'ifaceGroup':    (1, True),  # (name), documentation
-        'ifaceSubGroup': (0, True),  # documentation
-        'ifaceIn':       (3, False), # (unit, name, type)
-        'ifaceOut':      (3, False), # (unit, name, type)
-        'ifaceInCtxt':   (3, False), # (unit, name, type)
-        'ifaceOutCtxt':  (3, False), # (unit, name, type)
+        'contextInterface': (0, True),
+        'globalInterface':  (0, True),
+        'ifaceGroup':       (1, True),  # (name), documentation
+        'ifaceSubGroup':    (0, True),  # documentation
+        'ifaceIn':          (3, False), # (unit, name, type)
+        'ifaceOut':         (4, False), # (unit, name, type, reset value expression)
+        'ifaceInCtxt':      (3, False), # (unit, name, type)
+        'ifaceOutCtxt':     (4, False), # (unit, name, type, reset value expression)
         
         # Implementation templates.
         'defineTemplate': (2, True), # (name, param_list)
@@ -102,7 +46,7 @@ def parse(indir):
         
         # Field declarations.
         'declaration': (0, True),
-        'declRegister': (3, False),  # (name, type, reset value)
+        'declRegister': (3, False),  # (name, type, reset value expression)
         'declVariable': (2, False),  # (name, type)
         'declConstant': (3, False),  # (name, type, value)
         
@@ -116,9 +60,9 @@ def parse(indir):
     cmds = interpreter.hierarchy(cmds, [
         
         (None,
-            ['interface*', 'register*', 'registergen*']),
+            ['contextInterface*', 'globalInterface*', 'register*', 'registergen*']),
         
-        (['interface'],
+        (['contextInterface', 'globalInterface'],
             ['ifaceGroup*']),
         
         (['ifaceGroup'],
@@ -135,18 +79,15 @@ def parse(indir):
         
     ])['subcmds']
     
-    # Set up a variable environment.
-    env = Environment()
+    # Parse global register file interface.
+    gbiface, gbenv = parse_iface(
+        [cmd for cmd in cmds if cmd['cmd'][0] == 'globalInterface'])
+    result['gbiface'] = gbiface
     
-    # Parse interface-related commands.
-    iface = parse_iface(
-        [cmd for cmd in cmds if cmd['cmd'][0] == 'interface'])
-    result['iface'] = iface
-    
-    # Add the interface stuff to the environment.
-    for el in iface:
-        if el[0] == 'ob':
-            env.declare(el[1])
+    # Parse context register file interface.
+    cxiface, cxenv = parse_iface(
+        [cmd for cmd in cmds if cmd['cmd'][0] == 'contextInterface'])
+    result['cxiface'] = cxiface
     
     # Extract register commands from the command list.
     regcmds = [cmd for cmd in cmds
@@ -173,12 +114,15 @@ def parse(indir):
 def parse_iface(ifacecmds):
     """Flattens the interface command tree into a list of tuples for easy code
     output. Also does type parsing and name checking, so this might throw
-    exceptions for the user. The output is a list of these tuples:
+    exceptions for the user. The output is a two-tuple.
     
+    The first entry is list of these tuples:
     ('group', name) -> should map to the comment header for a signal group.
     ('doc', doc)    -> should map to a bit of documentation.
     ('space', None) -> should map to an empty line.
     ('ob' ob)       -> maps to an input or output Object.
+    
+    The second entry is an Environment() populated with the interface objects.
     """
     
     iface = []
@@ -220,7 +164,12 @@ def parse_iface(ifacecmds):
                     
                 iface += [('space', None)]
     
-    return iface
+    env = Environment()
+    for el in iface:
+        if el[0] == 'ob':
+            env.declare(el[1])
+    
+    return (iface, env)
 
 
 def parse_bitfields(regcmd):
@@ -600,6 +549,13 @@ def check_reg_names(regmap):
                                 (fnam, rerr))
             fnams.add(fnam)
             
+            # While we're checking stuff anyway, also throw an error when
+            # resetImplementation is specified for global registers.
+            if 'glob' in reg and len(field['resimpl']) != 0:
+                raise Exception(('Reset implementation specified for field %s' +
+                                'in global register %s. Only context ' +
+                                'registers support this.') % (fnam, rerr))
+            
             # Check alternate IDs.
             for anam in field['alt_ids']:
                 if not re.match(r'[A-Z0-9]+$', anam):
@@ -626,10 +582,11 @@ def gen_defs(regdoc):
         - char 2: 'S' for signed, 'U' for unsigned.
         - char 3: 'W' for 32-bit, 'H' for 16-bit, 'B' for 8-bit.
      - offs is the byte offset of the register.
-    ('field', name, shift, mask) -> a field definition:
+    ('field', name, low, mask, high) -> a field definition:
      - name is the CR_<reg>_<field> definition name.
-     - shift is the low order bit index of the field.
+     - low is the low order bit index of the field.
      - mask is the unshifted bitmask for the field.
+     - high is the high order bit index of the field.
     """
     
     defs = []
@@ -668,30 +625,26 @@ def gen_defs(regdoc):
             for field in fields:
                 if 'defined' not in field:
                     continue
-                fnam = rnam + field['name']
+                fnam = rnam + '_' + field['name']
                 
                 # Compute field metrics.
-                shift = field['lower_bit']
-                mask = (1 << field['upper_bit'] + 1) - 1
-                mask -= (1 << field['lower_bit']) - 1
-                size = field['upper_bit'] - field['lower_bit'] + 1
+                low = field['lower_bit']
+                high = field['upper_bit']
+                mask = (1 << high + 1) - 1
+                mask -= (1 << low) - 1
+                size = high - low + 1
                 core = 'W' if 'core' in field else 'R'
                 debug = 'W' if 'debug' in field else 'R'
                 signedness = 'S' if 'signed' in field else 'U'
                 sizename = 'H' if size == 16 else 'B'
                 fieldtyp = core + debug + signedness + sizename
-                foffs = reg['offset'] + 3 - (shift // 8)
+                foffs = reg['offset'] + 3 - (low // 8)
                 
                 # Output the field definition.
-                defs += [(
-                    'field',
-                    fnam,
-                    shift,
-                    mask)
-                ]
+                defs += [('field', fnam, low, mask, high)]
                 
                 # Output alternate IDs.
-                if size in [16, 8] and shift % size == 0:
+                if size in [16, 8] and low % size == 0:
                     for alt_id in field['alt_ids']:
                         defs += [(
                             'reg',

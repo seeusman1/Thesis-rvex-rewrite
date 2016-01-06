@@ -3,7 +3,7 @@ from __future__ import print_function
 import common.bitfields
 bitfields = common.bitfields
 
-def run(regs, dirs):
+def generate(regs, dirs):
     regmap = regs['regmap']
     regdoc = regs['regdoc']
     globoutfile = dirs['outdir'] + '/gbreg.generated.tex'

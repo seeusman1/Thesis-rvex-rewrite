@@ -1,5 +1,5 @@
 
-def run(traps, dirs):
+def generate(traps, dirs):
     traptable = traps['table']
     trapdoc = traps['doc']
     outfile = dirs['outdir'] + '/traps.generated.tex'

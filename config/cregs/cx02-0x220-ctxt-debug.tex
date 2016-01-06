@@ -29,7 +29,7 @@ asserted. Writing a zero has no effect. When combined with writing a one to the
 external debug flag, the core starts in external debug mode, and when combined 
 with writing a one to B or the S flag, the core will stop execution before any 
 instruction is executed, allowing the user to single-step from the start of the 
-program.
+program. This works because I, E, S and B are not affected by a context reset.
 
 Note that breakpoint information will have to be reloaded when the context is 
 reset using this method.
@@ -53,7 +53,8 @@ flag for jumping. The flag is read only.
 \reset{1}
 Internal debug flag. Complement of the external debug flag. When the debug bus 
 writes a one to this flag, the external debug flag is cleared, giving the
-processor control over debugging. Writing a zero has no effect.
+processor control over debugging. Writing a zero has no effect. This flag is not
+affected by a context reset; it is only reset when the entire core is reset.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
@@ -62,13 +63,16 @@ processor control over debugging. Writing a zero has no effect.
 \field{27}{E}
 %-------------------------------------------------------------------------------
 External debug flag. Complement of the internal debug flag. When the debug bus 
-writes a one to this flag, the external debug flag is set, enabling external
-debug mode. Writing a zero has no effect. While in external debug mode, debug
-traps cause the B flag to be set and the trap cause to be recorded in \creg{DCR}
-instead of the normal registers. This thus allows an external debugger to handle
-the debug traps instead, even if the processor is in the middle of a trap
-service routine and is not even ready for a trap. Writing a one to the R or the
-S flag is the equivalent of \insn{RFI} for the external debugging system.
+writes a one to this flag, the external debug flag is set, enabling external 
+debug mode. Writing a zero has no effect. This flag is not affected by a context 
+reset; it is only reset when the entire core is reset.
+
+While in external debug mode, debug traps cause the B flag to be set and the 
+trap cause to be recorded in \creg{DCR} instead of the normal registers. This 
+thus allows an external debugger to handle the debug traps instead, even if the 
+processor is in the middle of a trap service routine and is not even ready for a 
+trap. Writing a one to the R or the S flag is the equivalent of \insn{RFI} for 
+the external debugging system. 
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
@@ -98,7 +102,8 @@ Step flag. This flag may be set by the debug bus by writing a one to it. Doing
 so will also cause the R flag to be set and the B flag to be cleared, causing
 the processor to resume execution if it was halted. Writing a zero has no
 effect. The processor can also set this flag, but only if the E flag is cleared,
-i.e., if the processor is in self-hosted debug mode.
+i.e., if the processor is in self-hosted debug mode. This flag is not affected 
+by a context reset; it is only reset when the entire core is reset.
 
 While set, any instruction will cause a step debug trap. However, as noted
 above, all debug traps are disabled for the first instruction fetched after
@@ -114,7 +119,8 @@ external debugger and the self-hosted debug system to single-step.
 %-------------------------------------------------------------------------------
 Break flag. When this flag is set, the context stops fetching instructions and
 flushes the pipeline, as it would if the external run signal is low or if a
-reconfiguration is pending. It effectively halts execution.
+reconfiguration is pending. It effectively halts execution. This flag is not 
+affected by a context reset; it is only reset when the entire core is reset.
 
 This flag may be set by the debug bus by writing a one to it, in order to pause
 execution. Writing a zero has no effect. In addition, the flag is set by

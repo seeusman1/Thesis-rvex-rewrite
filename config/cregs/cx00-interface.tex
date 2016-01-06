@@ -1,5 +1,5 @@
 
-\interface{}
+\contextInterface{}
 
 %===============================================================================
 \ifaceGroup{Run control interface}
@@ -15,7 +15,7 @@ Reset vector. When the context or the entire core is reset, the PC register will
 be set to this value.
     
 \ifaceSubGroup{}
-\ifaceOutCtxt{rctrl}{done}{bit}
+\ifaceOutCtxt{rctrl}{done}{bit}{0}
 Active high done output. This is asserted when the context encounters a stop 
 syllable. Processing a stop signal also sets the BRK control register, which 
 stops the core. This bit can be reset by issuing a core reset or by means of the 
@@ -56,7 +56,7 @@ register should be set.
 Write data and enable signal for each branch register.
     
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{brReadData}{brRegData}
+\ifaceOutCtxt{cxplif}{brReadData}{brRegData}{0}
 Current state of the branch registers.
     
 \ifaceSubGroup{}
@@ -65,7 +65,7 @@ Current state of the branch registers.
 Write data and enable signal for the link register.
     
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{linkReadData}{data}
+\ifaceOutCtxt{cxplif}{linkReadData}{data}{0}
 Current state of the link register.
 
 %===============================================================================
@@ -77,11 +77,11 @@ Next value for the PC register. This is written when stall is low and overridePC
 is not asserted.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{currentPC}{address}
+\ifaceOutCtxt{cxplif}{currentPC}{address}{resetVect}
 Current value of the PC register.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{overridePC}{bit}
+\ifaceOutCtxt{cxplif}{overridePC}{bit}{0}
 \ifaceInCtxt{cxplif}{overridePC_ack}{bit}
 The overridePC flag is set when the debug bus writes to the context registers or 
 when the context or processor is reset. This is reset when overridePC_ack is 
@@ -93,7 +93,7 @@ or state.
 \ifaceGroup{Pipelane interface: trap handling}
 %===============================================================================
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{trapHandler}{address}
+\ifaceOutCtxt{cxplif}{trapHandler}{address}{0}
 Current trap handler. When the application has marked that it is not currently 
 capable of accepting a trap, this is set to the panic handler register instead.
 
@@ -109,7 +109,7 @@ should clear the ready-for-trap and interrupt- enable bits, as well as the
 debug-trap-enable bit if the trap cause maps to a debug trap.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{trapReturn}{address}
+\ifaceOutCtxt{cxplif}{trapReturn}{address}{0}
 Connected to the current value of the trap point register. Used by the branch 
 unit as the return address for the RFI instruction.
 
@@ -119,28 +119,28 @@ RFI flag. When high, the saved control register value should be restored and the
 trap cause field should be set to 0.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{handlingDebugTrap}{bit}
+\ifaceOutCtxt{cxplif}{handlingDebugTrap}{bit}{0}
 Set when the current value of the trap cause register maps to a debug trap. This 
 is used by the branch unit to disable breakpoints for the first instruction 
 executed after the debug trap returns.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{interruptEnable}{bit}
+\ifaceOutCtxt{cxplif}{interruptEnable}{bit}{0}
 Current value of the interrupt-enable flag in the control register.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{debugTrapEnable}{bit}
+\ifaceOutCtxt{cxplif}{debugTrapEnable}{bit}{0}
 Current value of the debug-trap-enable flag in the control register.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{breakpoints_addr_0}{address}
-\ifaceOutCtxt{cxplif}{breakpoints_addr_1}{address}
-\ifaceOutCtxt{cxplif}{breakpoints_addr_2}{address}
-\ifaceOutCtxt{cxplif}{breakpoints_addr_3}{address}
-\ifaceOutCtxt{cxplif}{breakpoints_cfg_0}{twoBit}
-\ifaceOutCtxt{cxplif}{breakpoints_cfg_1}{twoBit}
-\ifaceOutCtxt{cxplif}{breakpoints_cfg_2}{twoBit}
-\ifaceOutCtxt{cxplif}{breakpoints_cfg_3}{twoBit}
+\ifaceOutCtxt{cxplif}{breakpoints_addr_0}{address}{0}
+\ifaceOutCtxt{cxplif}{breakpoints_addr_1}{address}{0}
+\ifaceOutCtxt{cxplif}{breakpoints_addr_2}{address}{0}
+\ifaceOutCtxt{cxplif}{breakpoints_addr_3}{address}{0}
+\ifaceOutCtxt{cxplif}{breakpoints_cfg_0}{twoBit}{0}
+\ifaceOutCtxt{cxplif}{breakpoints_cfg_1}{twoBit}{0}
+\ifaceOutCtxt{cxplif}{breakpoints_cfg_2}{twoBit}{0}
+\ifaceOutCtxt{cxplif}{breakpoints_cfg_3}{twoBit}{0}
 Current hardware breakpoint configuration. The cfg fields have the following
 encoding:
  - 00 -> breakpoint disabled.
@@ -154,7 +154,7 @@ control register generator does not support structures.
 \ifaceGroup{Pipelane interface: external debug control signals}
 %===============================================================================
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{extDebug}{bit}
+\ifaceOutCtxt{cxplif}{extDebug}{bit}{0}
 Whether debug traps are to be handled normally or by halting execution for 
 debugging through the external bebug bus.
 
@@ -166,16 +166,16 @@ trap cause should be stored in the debug control register and the BRK flag in
 the debug control register should be set.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{brk}{bit}
+\ifaceOutCtxt{cxplif}{brk}{bit}{0}
 BRK flag from the debug control register. When high, the core should be halted.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{stepping}{bit}
+\ifaceOutCtxt{cxplif}{stepping}{bit}{0}
 Stepping mode flag from the debug control register. When high, executing any 
 instruction which has the brkValid flag set should cause a step trap.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{resuming}{bit}
+\ifaceOutCtxt{cxplif}{resuming}{bit}{0}
 \ifaceInCtxt{cxplif}{resuming_ack}{bit}
 Resuming flag. This is set when the BRK flag is cleared by the debug bus. It is 
 cleared when the resumed bit is high while stall is low. While high, issued 
@@ -186,8 +186,8 @@ traps are ignored.
 \ifaceGroup{Interface with configuration logic}
 %===============================================================================
 \ifaceSubGroup{}
-\ifaceOutCtxt{cfg}{requestData_r}{data}
-\ifaceOutCtxt{cfg}{requestEnable}{bit}
+\ifaceOutCtxt{cfg}{requestData_r}{data}{0}
+\ifaceOutCtxt{cfg}{requestEnable}{bit}{0}
 Each nibble in the data word corresponds to a pipelane group, of which bit 3 
 specifies whether the pipelane group should be disabled (high) or enabled (low) 
 and, if low, bit 2..0 specify the context it should run on. Bits which are not 
@@ -198,60 +198,29 @@ clkEn'd cycle BEFORE the data vector is. This is because the enable signal is
 connected to the bus write enable signal for the register and the data is 
 connected to the register output.
 
-\ifaceSubGroup{}
-\ifaceOut{cfg}{dbgRequestData_r}{data}
-\ifaceOut{cfg}{dbgRequestEnable}{bit}
-Same as above, but for the debug bus request instead of the context request.
-
-\ifaceSubGroup{}
-\ifaceIn{cfg}{currentCfg}{data}
-Current configuration, using the same encoding as the request data.
-    
-\ifaceSubGroup{}
-\ifaceIn{cfg}{busy}{bit}
-Configuration busy signal. When set, new configuration requests are not 
-accepted.
-    
-\ifaceSubGroup{}
-\ifaceIn{cfg}{error}{bit}
-Configuration error signal. This is set when the last configuration request was 
-erroneous.
-    
-\ifaceSubGroup{}
-\ifaceIn{cfg}{requesterID}{bit(3..0)}
-When reconfiguration is requested, this field is set to the index of the context 
-which requested the configuration, or all ones if the source was the debug bus.
-
-%===============================================================================
-\ifaceGroup{Interface with memory}
-%===============================================================================
-\ifaceSubGroup{}
-\ifaceIn{imem}{affinity}{data}
-Affinity signal from the memory.
-
 %===============================================================================
 \ifaceGroup{Trace control unit interface}
 %===============================================================================
 \ifaceSubGroup{}
-\ifaceOutCtxt{trace}{enable}{bit}
+\ifaceOutCtxt{trace}{enable}{bit}{0}
 Whether tracing should be enabled or not for each context. Active high.
     
 \ifaceSubGroup{}
-\ifaceOutCtxt{trace}{trapEn}{bit}
+\ifaceOutCtxt{trace}{trapEn}{bit}{0}
 Whether trap information should be traced. Active high.
     
 \ifaceSubGroup{}
-\ifaceOutCtxt{trace}{memEn}{bit}
+\ifaceOutCtxt{trace}{memEn}{bit}{0}
 Whether memory operations should be traced. Active high.
     
 \ifaceSubGroup{}
-\ifaceOutCtxt{trace}{regEn}{bit}
+\ifaceOutCtxt{trace}{regEn}{bit}{0}
 Whether register writes should be traced. Active high.
     
 \ifaceSubGroup{}
-\ifaceOutCtxt{trace}{cacheEn}{bit}
+\ifaceOutCtxt{trace}{cacheEn}{bit}{0}
 Whether cache performance information should be traced. Active high.
     
 \ifaceSubGroup{}
-\ifaceOutCtxt{trace}{instrEn}{bit}
+\ifaceOutCtxt{trace}{instrEn}{bit}{0}
 Whether instructions (the raw syllables) should be traced. Active high.

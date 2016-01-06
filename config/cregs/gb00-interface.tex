@@ -1,0 +1,45 @@
+
+\globalInterface{}
+
+%===============================================================================
+\ifaceGroup{Interface with configuration logic}
+%===============================================================================
+\ifaceSubGroup{}
+\ifaceOut{cfg}{requestData_r}{data}{0}
+\ifaceOut{cfg}{requestEnable}{bit}{0}
+Each nibble in the data word corresponds to a pipelane group, of which bit 3 
+specifies whether the pipelane group should be disabled (high) or enabled (low) 
+and, if low, bit 2..0 specify the context it should run on. Bits which are not 
+supported by the core (as specified in the CFG generic) should be written zero 
+or the request will be ignored (as specified by the error flag in the global 
+control register file). The enable signal is active high, and is valid one 
+clkEn'd cycle BEFORE the data vector is. This is because the enable signal is 
+connected to the bus write enable signal for the register and the data is 
+connected to the register output.
+
+\ifaceSubGroup{}
+\ifaceIn{cfg}{currentCfg}{data}
+Current configuration, using the same encoding as the request data.
+    
+\ifaceSubGroup{}
+\ifaceIn{cfg}{busy}{bit}
+Configuration busy signal. When set, new configuration requests are not 
+accepted.
+    
+\ifaceSubGroup{}
+\ifaceIn{cfg}{error}{bit}
+Configuration error signal. This is set when the last configuration request was 
+erroneous.
+    
+\ifaceSubGroup{}
+\ifaceIn{cfg}{requesterID}{bit(3..0)}
+When reconfiguration is requested, this field is set to the index of the context 
+which requested the configuration, or all ones if the source was the debug bus.
+
+%===============================================================================
+\ifaceGroup{Interface with memory}
+%===============================================================================
+\ifaceSubGroup{}
+\ifaceIn{imem}{affinity}{data}
+Affinity signal from the memory.
+

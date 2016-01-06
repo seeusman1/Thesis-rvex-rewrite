@@ -24,6 +24,9 @@ all: $(TEMP)
 	@echo ""
 	@echo "Configuring core..."
 	$(CP) $(TEMP)/core_opcode_pkg.vhd $(CORE_LIB)/core_opcode_pkg.vhd
+	$(CP) $(TEMP)/core_ctrlRegs_pkg.vhd $(CORE_LIB)/core_ctrlRegs_pkg.vhd
+	$(CP) $(TEMP)/core_globalRegLogic.vhd $(CORE_LIB)/core_globalRegLogic.vhd
+	$(CP) $(TEMP)/core_contextRegLogic.vhd $(CORE_LIB)/core_contextRegLogic.vhd
 	@echo ""
 	@echo "Configuring C/assembly headers..."
 	$(CP) $(TEMP)/rvex.h $(RVEX_H)
@@ -53,5 +56,3 @@ $(TEMP): cregs/*.tex opcodes/*.tex traps/*.tex $(SCRIPTS)
 	@$(ENSURE_DIR) $(TEMP)
 	$(PYTHONP) $(SCRIPTS)/generate.py opcodes cregs traps templates $(CORE_LIB) $(TEMP)
 
-test:
-	$(PYTHONP) $(SCRIPTS)/cregs/registers-test.py cregs
