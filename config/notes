@@ -114,4 +114,63 @@ aside from those types there's an internal value for VHDL booleans
     
     l || r (l x r -> 1)
 
-to something from another field, 
+;
+
+
+
+
+
+
+
+
+file = ( interface | register )*
+
+register = specification + documentation + ( field )*
+
+field = reset? + documentation? + declaration? + reset_impl? + impl
+
+
+
+\*interface
+\defineTemplate
+\register[gen]
+\field
+\declaration
+\*implementation
+  \iface*
+  \reset
+  \signed
+  \id
+  \decl*
+
+to
+
+\*interface
+  \iface*
+\defineTemplate
+\register[gen]
+\field
+\declaration
+\*implementation
+  \reset
+  \signed
+  \id
+  \decl*
+
+
+
+
+
+
+
+
+
+
+File structure:
+
+<interface declarations>
+<register declarations>
+  <documentation>
+  <field declarations>
+    <documentation>
+

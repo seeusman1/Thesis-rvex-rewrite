@@ -1,23 +1,18 @@
 from __future__ import print_function
 
-from sys import argv
-from sys import exit
-import registers
 import common.bitfields
 bitfields = common.bitfields
 
-# Parse command line.
-if len(argv) != 4:
-    print('Usage: python registers-latex.py <indir> <global.tex> <context.tex>')
-    exit(2)
-indir = argv[1]
-globoutfile = argv[2]
-ctxtoutfile = argv[3]
+def run(regs, dirs):
+    regmap = regs['regmap']
+    regdoc = regs['regdoc']
+    globoutfile = dirs['outdir'] + '/gbreg.generated.tex'
+    ctxtoutfile = dirs['outdir'] + '/cxreg.generated.tex'
 
-# Parse the input file.
-regmap, regdoc = registers.parse(indir)
+    # Write the output files.
+    output_file(globoutfile, regmap, regdoc, 'glob')
+    output_file(ctxtoutfile, regmap, regdoc, 'ctxt')
 
-# Define LaTeX table stuff.
 def print_reg_head(f, wrap=False):
     f.write('\\vskip -10 pt\\relax\\noindent\\footnotesize\n')
     f.write('\\begin{' + ('longtable' if wrap else 'tabular') + '}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}\n')
@@ -100,8 +95,6 @@ def output_file(outfile, regmap, regdoc, regtype):
         
         # Print the documentation for each register.
         for doc in regdoc:
-            if type(doc) is not dict:
-                continue
             if regtype not in doc:
                 continue
             
@@ -134,13 +127,10 @@ def output_file(outfile, regmap, regdoc, regtype):
                 else:
                     f.write('\\paragraph*{' + field['name'] + ' field, bits ' +
                         str(field['upper_bit']) + '..' + str(field['lower_bit']))
-                if 'alt_id' in field:
-                    f.write(', a.k.a. \creg{' + field['alt_id'] + '}')
+                if len(field['alt_ids']) > 0:
+                    f.write(', a.k.a. \\creg{' + '}, \\creg{'.join(field['alt_ids']) + '}')
                 f.write('}\n')
-                if 'alt_id' in field:
-                    f.write('\\label{reg:' + field['alt_id'] + '}\n')
+                for alt_id in field['alt_ids']:
+                    f.write('\\label{reg:' + alt_id + '}\n')
                 f.write(field['doc'] + '\n')
 
-# Write the output files.
-output_file(globoutfile, regmap, regdoc, 'glob')
-output_file(ctxtoutfile, regmap, regdoc, 'ctxt')

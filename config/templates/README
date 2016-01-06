@@ -1,0 +1,9 @@
+
+The files in this directory specify templates for the generated C/assembly
+header files. Lines which start with an @ symbol are replaced with generated
+content and a "generated" warning message is added to the start of the file
+in the generation process.
+
+rvex.h supported commands:
+  @CREGS: replaced with control register definitions.
+  @TRAPS: replaced with trap cause definitions.

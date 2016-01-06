@@ -7,7 +7,9 @@ Cycle counter. This register is simply always incremented by one in hardware.
 Simply overflows when it reaches 0xFFFFFFFF. Its intended use is performance
 monitoring.
 
-\field{31..0}{Cycle counter low}
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{CNT}
+\implementation{}
 
 %===============================================================================
 \register{CNTH}{Cycle counter register, high word}{0x014}
@@ -20,5 +22,7 @@ system for compatibility with older code that assumes that this counter is only
 is read to avoid needing an atomic 64-bit read operation. Thus, \creg{CNT} must 
 always be read before \creg{CNTH} is read.
 
-\field{31..0}{Cycle counter high}
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{CNTH}
+\implementation{}
 

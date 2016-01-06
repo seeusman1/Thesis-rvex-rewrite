@@ -7,11 +7,19 @@
 This group of hardwired values represent the supported \insn{LIMMH} forwarding
 routes.
 
+%-------------------------------------------------------------------------------
 \field{31..16}{BORROW\n{'$2n+1$' if n is None else str(2*n+1)}}
+%-------------------------------------------------------------------------------
 \reset{****************}
 \id{BORROW\n{'i' if n is None else str(2*n+1)}}
 \  % Force the title for this field to be generated in the documentation.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{15..0}{BORROW\n{'$2n$' if n is None else str(2*n)}}
+%-------------------------------------------------------------------------------
 \reset{****************}
 \id{BORROW\n{'i' if n is None else str(2*n)}}
 
@@ -27,6 +35,9 @@ forwards to the fifth syllable in a bundle (index 4).
 For the purpose of generic binaries, the configuration is repeated beyond the
 number of physically available lanes.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
 %===============================================================================
 \registergen{reversed(range(4))}{SIC\n{}}{Syllable index capability register \n{}}{0x0CC}{-4}
 %===============================================================================
@@ -35,19 +46,39 @@ number of physically available lanes.
 This group of hardwired values represent the capabilities of each syllable
 within a bundle.
 
+%-------------------------------------------------------------------------------
 \field{31..24}{SYL\n{'$4n+3$' if n is None else str(4*n+3)}CAP}
+%-------------------------------------------------------------------------------
 \reset{0000***1}
 \id{SYL\n{'i' if n is None else str(4*n+3)}CAP}
 \  % Force the title for this field to be generated in the documentation.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{23..16}{SYL\n{'$4n+2$' if n is None else str(4*n+2)}CAP}
+%-------------------------------------------------------------------------------
 \reset{0000***1}
 \id{SYL\n{'i' if n is None else str(4*n+2)}CAP}
 \  % Force the title for this field to be generated in the documentation.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{15..8}{SYL\n{'$4n+1$' if n is None else str(4*n+1)}CAP}
+%-------------------------------------------------------------------------------
 \reset{0000***1}
 \id{SYL\n{'i' if n is None else str(4*n+1)}CAP}
 \  % Force the title for this field to be generated in the documentation.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{7..0}{SYL\n{'$4n$' if n is None else str(4*n)}CAP}
+%-------------------------------------------------------------------------------
 \reset{0000***1}
 \id{SYL\n{'i' if n is None else str(4*n)}CAP}
 
@@ -73,6 +104,9 @@ available to syllable index $i$ within a bundle. The following encoding is used.
 \vskip 6 pt\noindent For the purpose of generic binaries, the configuration is 
 repeated beyond the number of physically available lanes.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
 %===============================================================================
 \register{GPS1}{General purpose register delay register B}{0x0D0}
 %===============================================================================
@@ -93,40 +127,75 @@ From these values, the required number of bundles between an instruction that
 writes to a general purpose register and an instruction that reads from one can
 be determined, being $stage_{commit} - stage_{read} - 1$.
 
+%-------------------------------------------------------------------------------
 \field{27..24}{MEMAR}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the memory unit reads its address operands from
 the general purpose registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{23..20}{MEMDC}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the memory unit appears to commit the data
 loaded from memory to the general purpose registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{19..16}{MEMDR}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the memory unit appears to read the data to be
 stored to memory from the general purpose registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{15..12}{MULC}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the multiplier appears to commit its result to
 the general purpose registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{11..8}{MULR}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the multiplier appears to read its operands from
 the general purpose registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{7..4}{ALUC}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the ALU appears to commit its result to the
 general purpose registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{3..0}{ALUR}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the ALU appears to read its operands from the
 general purpose registers.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
 
 %===============================================================================
 \register{SPS1}{Special delay register B}{0x0D8}
@@ -143,27 +212,49 @@ This register serves a similar purpose as \creg{GPS0}, but instead of being only
 for the general purpose registers, these values represents the delay for branch
 registers, the link register and memory.
 
+%-------------------------------------------------------------------------------
 \field{31..28}{MEMMC}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the memory unit actually commits the data from
 a store instruction to memory.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{27..24}{MEMMR}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the memory unit actually reads the data for a
 load operation from memory.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{23..20}{MEMDC}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the memory unit appears to commit the data
 loaded from memory to the link and branch registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{19..16}{MEMDR}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the memory unit appears to read the data to be
 stored to memory from the link and branch registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{15..12}{BRC}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the branch unit appears to commit the new
 program counter. This thus represents the number of branch delay slots. The next
@@ -172,20 +263,38 @@ thus the number of branch delay slots is $BRC - 2$. Note that the \rvex{}
 processor does not actually execute its branch delay slots; it is invalidated
 when a branch is taken.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{11..8}{BRR}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the branch unit appears to read its operands 
 from the branch and link registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{7..4}{ALUC}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the ALU appears to commit its result to the
 branch and link registers.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{3..0}{ALUR}
+%-------------------------------------------------------------------------------
 \reset{****}
 Hardwired to the stage in which the ALU appears to read its operands from the
 branch and link registers.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
 
 %===============================================================================
 \register{EXT2}{Extension register 2}{0x0E0}
@@ -207,43 +316,82 @@ This register is reserved for future expansion.
 This register contains flags that specify the supported extensions and quirks
 of the processor as per its design-time configuration.
 
+%-------------------------------------------------------------------------------
 \field{27}{T}
+%-------------------------------------------------------------------------------
 \reset{***}
 Defines whether the trace unit is available. The trace unit has its own
 capability flags in \creg{DCR2}.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{26..24}{BRK}
+%-------------------------------------------------------------------------------
 \reset{***}
 Defines the number of available hardware breakpoints.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{18}{C}
+%-------------------------------------------------------------------------------
 \reset{*}
 If set, cache-related performance counters exist.
-\todo[inline]{Define cache-related performance counters.}
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{17}{I}
+%-------------------------------------------------------------------------------
 \reset{*}
 If set, ILP-related performance counters \creg{C_BUN}, \creg{C_SYL} and \creg{C_NOP} exist.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{16}{P}
+%-------------------------------------------------------------------------------
 \reset{*}
 If set, performance counters \creg{C_CYC} and \creg{C_STALL} exist.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{2}{O}
+%-------------------------------------------------------------------------------
 \reset{*}
 This flag determines the unit in which the branch offset field is encoded. When
 this flag is cleared, the branch offset is encoded in 8-byte units. When it is
 set, the branch offset is encoded in 4-byte units.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{1}{L}
+%-------------------------------------------------------------------------------
 \reset{*}
 This flag is set when register \texttt{\$r0.63} is mapped to \texttt{\$l0.0}, to
 allow arithmetic to be performed on the link register directly. If it is
 cleared, these registers are independent.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{0}{F}
+%-------------------------------------------------------------------------------
 \reset{*}
 This flag is set when forwarding is enabled.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
 
 %===============================================================================
 \register{DCFG}{Design-time configuration register}{0x0EC}
@@ -253,25 +401,45 @@ This flag is set when forwarding is enabled.
 This register is hardwired to the key parameters that define the size of the
 processor, such as the number of pipelanes and the number of contexts.
 
+%-------------------------------------------------------------------------------
 \field{15..12}{BA}
+%-------------------------------------------------------------------------------
 \reset{****}
 Specifies the minimum bundle alignment necessary. Specified as the alignment
 size in 32-bit words minus 1. For example, if this value is 7, each bundle must
 start on a 128-byte boundary, as $(7 + 1) \cdot 32 = 128$.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{11..8}{NC}
+%-------------------------------------------------------------------------------
 \reset{****}
 Number of hardware contexts supported, minus one.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{7..4}{NG}
+%-------------------------------------------------------------------------------
 \reset{****}
 Number of pipelane groups supported, minus one. This determines the degree of
 reconfigurability. Together with NC, it fully specifies the number of valid
 configuration words.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{3..0}{NL}
+%-------------------------------------------------------------------------------
 \reset{****}
 Number of pipelanes in the design, minus one.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
 
 %===============================================================================
 \register{CVER1}{Core version register 1}{0x0F0}
@@ -281,13 +449,20 @@ Number of pipelanes in the design, minus one.
 This register specifies the major version of the processor and, together with
 \creg{CVER0}, a 7-byte ASCII core version identification tag.
 
+%-------------------------------------------------------------------------------
 \field{31..24}{VER}
+%-------------------------------------------------------------------------------
 \reset{00110011}
 \id{CVER}
 Specifies the major version number of the \rvex{} processor in ASCII. This will
 most likely always be \code{'3'}.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{23..16}{CTAG0}
+%-------------------------------------------------------------------------------
 \reset{0*******}
 \id{CTAG}
 First ASCII character in a string of seven characters, which together identify 
@@ -295,10 +470,18 @@ the core version, similar to how a license plate identifies a car. It is
 intended that a database will be set up which maps each tag to an immutable 
 archive containing the source code for the core and a mutable errata/notes file.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{15..8}{CTAG1}
 \reset{0*******}
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{7..0}{CTAG2}
 \reset{0*******}
+\implementation{}
 
 %===============================================================================
 \register{CVER0}{Core version register 0}{0x0F4}
@@ -306,14 +489,25 @@ archive containing the source code for the core and a mutable errata/notes file.
 
 Refer to \creg{CVER1} for more information.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..24}{CTAG3}
 \reset{0*******}
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{23..16}{CTAG4}
 \reset{0*******}
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{15..8}{CTAG5}
 \reset{0*******}
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{7..0}{CTAG6}
 \reset{0*******}
+\implementation{}
 
 %===============================================================================
 \register{PVER1}{Platform version register 1}{0x0F8}
@@ -324,12 +518,19 @@ This register specifies the processor index within a platform and, together with
 \creg{PVER0}, uniquely identifies the platform using a 7-byte ASCII
 idenfitication tag.
 
+%-------------------------------------------------------------------------------
 \field{31..24}{COID}
+%-------------------------------------------------------------------------------
 \reset{********}
 \id{COID}
 Unique processor identifier within a multicore platform.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{23..16}{PTAG0}
+%-------------------------------------------------------------------------------
 \reset{0*******}
 \id{PTAG}
 First ASCII character in a string of seven characters, which together identify 
@@ -339,10 +540,18 @@ archive containing the source code for the platform, synthesis logs and a bit
 file, as well as mutable \code{memory.map}, \code{rvex.h} and errata/notes 
 files.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{15..8}{PTAG1}
 \reset{0*******}
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{7..0}{PTAG2}
 \reset{0*******}
+\implementation{}
 
 %===============================================================================
 \register{PVER0}{Platform version register 0}{0x0FC}
@@ -350,12 +559,23 @@ files.
 
 Refer to \creg{PVER1} for more information.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..24}{PTAG3}
 \reset{0*******}
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{23..16}{PTAG4}
 \reset{0*******}
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{15..8}{PTAG5}
 \reset{0*******}
+\implementation{}
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{7..0}{PTAG6}
 \reset{0*******}
+\implementation{}
 

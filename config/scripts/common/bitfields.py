@@ -1,6 +1,15 @@
 import copy
 import pprint
 
+class FieldError(Exception):
+    
+    def __init__(self, message):
+        self.message = message
+    
+    def __str__(self):
+        return repr(self.message)
+
+
 def normalize(fields, empty={'name': ''}):
     """Normalizes 32-bit bitfield declarations.
     
@@ -25,29 +34,29 @@ def normalize(fields, empty={'name': ''}):
         
         # Do range checking.
         if field['lower_bit'] > field['upper_bit']:
-            raise Exception('Invalid 32-bit range ' + str(field['upper_bit']) +
-                            ' downto ' + str(field['lower_bit']) +
-                            ' for field ' + field['name'])
+            raise FieldError('Invalid 32-bit range ' + str(field['upper_bit']) +
+                             ' downto ' + str(field['lower_bit']) +
+                             ' for field ' + field['name'])
         if field['lower_bit'] < 0:
-            raise Exception('Invalid 32-bit range ' + str(field['upper_bit']) +
-                            ' downto ' + str(field['lower_bit']) +
-                            ' for field ' + field['name'])
+            raise FieldError('Invalid 32-bit range ' + str(field['upper_bit']) +
+                             ' downto ' + str(field['lower_bit']) +
+                             ' for field ' + field['name'])
         if field['upper_bit'] > 31:
-            raise Exception('Invalid 32-bit range ' + str(field['upper_bit']) +
-                            ' downto ' + str(field['lower_bit']) +
-                            ' for field ' + field['name'])
+            raise FieldError('Invalid 32-bit range ' + str(field['upper_bit']) +
+                             ' downto ' + str(field['lower_bit']) +
+                             ' for field ' + field['name'])
         
         # Try to assign the field to the bits it specifies.
         for i in range(field['lower_bit'], field['upper_bit']+1):
             
             # Check for overlapping fields first.
             if bits[i] is not empty:
-                raise Exception('Field ' + field['name'] + 
-                                ' (' + str(field['upper_bit']) +
-                                ' downto ' + str(field['lower_bit']) + ')' +
-                                ' overlaps with field ' + bits[i]['name'] +
-                                ' (' + str(bits[i]['upper_bit']) +
-                                ' downto ' + str(bits[i]['lower_bit']) + ')')
+                raise FieldError('Field ' + field['name'] + 
+                                 ' (' + str(field['upper_bit']) +
+                                 ' downto ' + str(field['lower_bit']) + ')' +
+                                 ' overlaps with field ' + bits[i]['name'] +
+                                 ' (' + str(bits[i]['upper_bit']) +
+                                 ' downto ' + str(bits[i]['lower_bit']) + ')')
             
             # No overlap, add to this bit.
             bits[i] = field
@@ -108,8 +117,8 @@ def parse(fields, empty={'name': ''}):
             field['upper_bit'] = int(r[0].strip())
             field['lower_bit'] = int(r[-1].strip())
         except ValueError:
-            raise Exception('Invalid range ' + str(r) +
-                            ' for field ' + field['name'])
+            raise FieldError('Invalid range ' + str(r) +
+                             ' for field ' + field['name'])
     
     # Return normalized range.
     return normalize(fields, empty)

@@ -1,5 +1,6 @@
 import re
 import os
+import copy
 
 def parse_files(indir, cmds):
     """Parses all .tex files in a directory (as if they were concatenated
@@ -9,19 +10,23 @@ def parse_files(indir, cmds):
      - indir specifies the directory to search.
      - cmds needs to be a dictionary specifying the recognized commands. Each
        unrecognized command will be treated as documentation. The keys of the
-       dictionary identify the command names. The entries are two-tuples, with
+       dictionary identify the command names. The entries are tuples, with
        the first entry stating the number of expected arguments and the second
-       being a boolean which specifies if it is a group command. If the
-       argument count of a recognized command is incorrect, an error will be
-       shown.
-      
+       being a boolean which specifies if it is a group command. A third entry
+       optionally specifies a dictionary with flags. If the argument count of a
+       recognized command is incorrect, an error will be shown.
+    
     The return value is a list of dictionaries. These dicts have the following
     entries:
      - 'cmd': list with the following structure: [cmd_name, arg1, arg2, ...]
-       Will be [''] for the first entry in the return value list.
+       Will be [''] for the first entry in the return value list, see below.
      - 'subcmds': list of non-group commands in the previously described format.
      - 'doc': documentation text.
-     - 'origin': group command filename and line number
+     - 'code': only if the 'code' flag is specified for a group command. This
+       contains a list of two-tuples, each representing a line of code. The
+       first entry of the tuple identifies the origin of the line, the second
+       specifies the contents of the line.
+     - 'origin': group command filename and line number.
     
     Documentation and commands appearing before the first group command will be
     put in the first list in the result list. This contains the same entries
@@ -50,10 +55,12 @@ def parse_files(indir, cmds):
         'origin': 'unknown'
     }]
     
-    for origin, line in content:
+    groupflags = {}
+    for origin, cline in content:
         
         # Ignore indentation, trailing whitespace and comments.
-        line = line.split('%')[0].strip()
+        cline = cline.split('%')[0].rstrip()
+        line = cline.strip()
         
         # Try to recognize commands.
         cmd_name = None
@@ -62,13 +69,16 @@ def parse_files(indir, cmds):
             if line[0] == '\\':
                 for cmd in cmds:
                     if line.startswith('\\' + cmd):
-                        cmd_name = cmd
-                        cmd_data = cmds[cmd]
-                        break
+                        if cmd_name is None or len(cmd) > len(cmd_name):
+                            cmd_name = cmd
+                            cmd_data = cmds[cmd]
         
-        # If we didn't recognize a command, handle as text.
+        # If we didn't recognize a command, handle as text or code.
         if cmd_data is None:
-            groups[-1]['doc'] += line + '\n'
+            if 'code' in groupflags:
+                groups[-1]['code'] += [(origin, cline)]
+            else:
+                groups[-1]['doc'] += cline + '\n'
             continue
         
         # Scan the arguments of the command.
@@ -100,14 +110,23 @@ def parse_files(indir, cmds):
         # Handle the command.
         if cmd_data[1]:
             
-            # Group command.
-            groups += [{
+            # Group command. Handle group flags if specified.
+            if len(cmd_data) >= 3:
+                groupflags = cmd_data[2]
+            else:
+                groupflags = {}
+        
+            # Add the group.
+            group = {
                 'cmd': cmd,
                 'subcmds': [],
                 'doc': '',
                 'origin': origin
-            }]
-        
+            }
+            if 'code' in groupflags:
+                group['code'] = []
+            groups += [group]
+            
         else:
             
             # Handle other commands.
@@ -119,6 +138,164 @@ def parse_files(indir, cmds):
         group['doc'] = group['doc'].strip()
     
     return groups
+
+def hierarchy(groups, hierarchy):
+    """Applies a hierarchical structure to a parsed file.
+    
+    groups has the same format as the output of parse_files. hierarchy must be
+    a list of two-tuples. Each two-tuple contains two lists, the first listing
+    parent command names, and the second listing child command names with a
+    multiplicity character appended:
+    
+        ? -> zero times or once
+        ! -> exactly once
+        * -> zero or more times
+        + -> one or more times
+    
+    The order in which commands are specified is left alone. The parent command 
+    name specification of the first two-tuple is ignored, and the child commands
+    are interpreted as the acceptable top-level commands.
+    
+    When there is ambiguity in which ancestor a subcommand belongs to, the
+    closest ancestor is chosen.
+    
+    The return value is a dictionary. The format is recursive. These dicts have 
+    the following entries:
+     - 'cmd': list with the following structure: [cmd_name, arg1, arg2, ...]
+       Will be [''] for the toplevel entry.
+     - 'subcmds': list of dictionaries with an identical format to what we're
+       describing here.
+     - 'doc': documentation text.
+     - 'origin': group command filename and line number.
+    """
+    
+    # First, undo the command grouping as performed by parse_files. That
+    # grouping is only used for documentation sections.
+    commands = []
+    for group in groups:
+        
+        # Add the group command to the list of commands.
+        command = group.copy()
+        command.pop('subcmds', None)
+        commands += [command]
+        
+        # Add its subcommands to the list of commands.
+        for subcmd in group['subcmds']:
+            commands += [{
+                'cmd': subcmd,
+                'doc': '',
+                'origin': command['origin']
+            }]
+    
+    # Generate the root command.
+    root = commands[0]
+    root['subcmds'] = []
+    
+    # Use a stack structure of three-tuples to represent where we are in the
+    # hierarchy. The first tuple entry is a reference to the current child
+    # command list, the second entry lists the allowed child commands, the third
+    # entry is a description of the parent node used in error messages.
+    stack = [(
+        root['subcmds'],
+        copy.deepcopy(hierarchy[0][1]),
+        'The document root'
+    )]
+    
+    def pop_stack(stack):
+        """Pops the topmost stack entry if child node requirements are met.
+        
+        If the stack was popped, None is returned. Otherwise, a string
+        containing a user-friendly error message is returned."""
+        patterns = stack[-1][1]
+        parent_desc = stack[-1][2]
+        
+        # See if all child requirements have been met.
+        for pattern in patterns:
+            multip = pattern[-1]
+            if multip == '+':
+                return '%s requires at least one \\%s command.' % (parent_desc, pattern[:-1])
+            elif multip == '!':
+                return '%s requires exactly one \\%s command.' % (parent_desc, pattern[:-1])
+        
+        # Pop the stack.
+        del stack[-1]
+        return None
+        
+    
+    # Loop over all commands in order. Ignore the first "command", which is just
+    # a placeholder for ungrouped documentation. We will deal with that in the
+    # end.
+    for command in commands[1:]:
+        cmd = command['cmd'][0]
+        origin = command['origin']
+        
+        while len(stack) > 0:
+            children = stack[-1][0]
+            patterns = stack[-1][1]
+            
+            # Match the command name against the currently allowed commands.
+            for i in range(len(patterns)):
+                name = patterns[i][:-1]
+                multip = patterns[i][-1]
+                
+                # Check if this pattern matches the command.
+                if name != cmd:
+                    continue
+                
+                # Pattern match, command fits here. Add the command to the child
+                # list.
+                children += [command]
+                
+                # Update the multiplicity if necessary.
+                if multip in ['?', '!']:
+                    del patterns[i]
+                elif multip == '+':
+                    patterns[i] = name + '*'
+                
+                # Find out if this command accepts child commands. If so, push
+                # its child list and child patterns onto the stack.
+                command['subcmds'] = []
+                for h in hierarchy[1:]:
+                    if cmd in h[0]:
+                        stack += [(
+                            command['subcmds'],
+                            copy.deepcopy(h[1]),
+                            '\\%s after line %s' % (cmd, origin)
+                        )]
+                        break
+                
+                # Break out of the pattern for loop.
+                break
+                
+            else:
+                # This command was not allowed as a child to the current parent.
+                # See if we can pop from the stack (the child nodes of the
+                # current parent adhere to the specification) to check if it's
+                # allowed for the next ancestor.
+                error = pop_stack(stack)
+                if error is not None:
+                    raise Exception('Misplaced \\%s after line %s, or %s' %
+                                    (cmd, origin, error))
+                continue
+            
+            # We only get here if we broke out of the pattern for loop after
+            # adding the command, so we need to break the while loop as well to
+            # go to the next command.
+            break
+            
+        else:
+            # We've depleted our options looking for a place to put this
+            # command. That means the command simply wasn't allowed here.
+            raise Exception('Misplaced \\%s after line %s.' % (cmd, origin))
+    
+    # Pop from the stack until it's empty, while checking whether the children
+    # of all parent nodes on the stack adhere to the specifications.
+    while len(stack) > 0:
+        error = pop_stack(stack)
+        if error is not None:
+            raise Exception(error)
+    
+    return root
 
 def generate(s, values={'n': None}, default='$%s$'):
     """Replaces all instances of \<key in values>{<optional python code>}.

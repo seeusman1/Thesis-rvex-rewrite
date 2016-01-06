@@ -8,7 +8,7 @@ the PDF documentation, which may fail if you don't have all the required LaTeX
 packages installed.
 
 --------------------------------------------------------------------------------
-cxreg.tex and gbreg.tex
+cregs
 --------------------------------------------------------------------------------
 Describes the context control registers and the global control registers of the
 core.
@@ -19,16 +19,11 @@ core.
   
   TODO:
    - Default memory map for rvd
-  
-  Only specifies addresses, not the bitfields or functionality:
-   - Nothing yet :(
-  
-  TODO:
    - VHDL core
    - Simulator
-
+  
 --------------------------------------------------------------------------------
-opcodes.tex
+opcodes
 --------------------------------------------------------------------------------
 Describes the rvex instruction set.
 
@@ -44,7 +39,7 @@ Describes the rvex instruction set.
    - Compilers
 
 --------------------------------------------------------------------------------
-traps.tex
+traps
 --------------------------------------------------------------------------------
 Describes the hardware traps.
 

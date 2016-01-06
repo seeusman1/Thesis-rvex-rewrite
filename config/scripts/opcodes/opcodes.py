@@ -12,22 +12,20 @@ def parse(indir):
     Arguments:
      - indir specifies the directory in which to look for .tex files.
       
-    The return value is a three-tuple.
+    The return value is a dictionary.
     
-    First entry of the result three-tuple: list of dictionaries. These dicts have
-    the following entries:
+    'sections': list of dictionaries. These dicts have the following entries:
      - 'name': name of the group which this dict represents.
      - 'doc': LaTeX documentation for the group which this dict represents.
      - 'origin': line number and filename of the group command.
      - 'syllables': list of syllables in this group.
     
-    The second entry of the result three-tuple is a list with 256 entries, mapping
-    to the same syllable dicts which the 'syllables' entry of the other part of
-    the result maps to.
+    'table': a list with 256 entries, mapping to the same syllable dicts which
+    the 'syllables' entry of the other part of the result maps to.
     
-    The third entry of the result three-tuple is a dictionary containing the
-    default syllable configuration, i.e. a full syllable specification except for
-    the 'name', 'syntax', 'opcode', 'doc' and 'origin' fields.
+    'def_params': a dictionary containing the default syllable configuration,
+    i.e. a full syllable specification except for the 'name', 'syntax',
+    'opcode', 'doc' and 'origin' fields.
     
     Syllables are represented as another dict:
      - 'name': mnemonic for the syllable.
@@ -133,7 +131,11 @@ def parse(indir):
             raise Exception('Unrecognized group command at ' +
                             group['origin'])
     
-    return (sections, table, def_params)
+    return {
+        'sections': sections,
+        'table': table,
+        'def_params': def_params
+    }
 
 def get_brfmt(syl):
     if 'brFmt' in syl['datapath']:

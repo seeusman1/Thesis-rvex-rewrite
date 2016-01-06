@@ -40,6 +40,8 @@ all: $(TEMP)
 	@$(RM_DIR) $(TEMP)
 	@$(RM) $(SCRIPTS)/common/*.pyc
 	@$(RM) $(SCRIPTS)/cregs/*.pyc
+	@$(RM) $(SCRIPTS)/funcparserlib/*.pyc
+	@$(RM) $(SCRIPTS)/headers/*.pyc
 	@$(RM) $(SCRIPTS)/opcodes/*.pyc
 	@$(RM) $(SCRIPTS)/traps/*.pyc
 	@echo ""
@@ -48,19 +50,8 @@ all: $(TEMP)
 
 .PHONY: $(TEMP)
 $(TEMP): cregs/*.tex opcodes/*.tex traps/*.tex $(SCRIPTS)
-	@echo "Parsing input..."
 	@$(ENSURE_DIR) $(TEMP)
-	$(PYTHONP) $(SCRIPTS)/opcodes/opcodes-latex.py opcodes \
-		$(TEMP)/opcode-stats.generated.tex \
-		$(TEMP)/opcode-table.generated.tex \
-		$(TEMP)/opcode-docs.generated.tex
-	$(PYTHONP) $(SCRIPTS)/opcodes/opcodes-vhdl.py opcodes $(CORE_LIB)/core_opcode_pkg.vhd \
-		$(TEMP)/core_opcode_pkg.vhd
-	$(PYTHONP) $(SCRIPTS)/cregs/registers-latex.py cregs \
-		$(TEMP)/gbreg.generated.tex \
-		$(TEMP)/cxreg.generated.tex
-	$(PYTHONP) $(SCRIPTS)/traps/traps-latex.py traps \
-		$(TEMP)/traps.generated.tex
-	$(PYTHONP) $(SCRIPTS)/common/rvex_h.py cregs traps \
-		$(TEMP)/rvex.h
-	
+	$(PYTHONP) $(SCRIPTS)/generate.py opcodes cregs traps templates $(CORE_LIB) $(TEMP)
+
+test:
+	$(PYTHONP) $(SCRIPTS)/cregs/registers-test.py cregs

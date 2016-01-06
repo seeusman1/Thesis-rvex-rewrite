@@ -13,20 +13,20 @@ def parse(indir):
     Arguments:
      - indir specifies the directory in which to look for .tex files.
       
-    The return value is a two-tuple.
+    The return value is a dictionary.
     
-    The first entry of the result is a list with 256 entries, each containing a
-    dictionary which describes a trap or None if no trap is defined. The index
-    is the trap idenitifier. The entries of this dictionary are as follows.
+    'table': a list with 256 entries, each containing a dictionary which
+    describes a trap or None if no trap is defined. The index is the trap
+    idenitifier. The entries of this dictionary are as follows.
      - 'mnemonic': the identifier of the trap.
      - 'description': the contents of the description command. Only \n{} is
        replaced in trapgen commands.
      - 'debug': if this key exists, this is a debug trap.
      - 'interrupt': if this key exists, this is an interrupt trap.
     
-    The second entry of the result is a list of dictionaries, representing the
-    \trap and \trapgen commands in the order in which they were specified. Each
-    dictionary contains the following entries.
+    'doc': a list of dictionaries, representing the \trap and \trapgen
+    commands in the order in which they were specified. Each dictionary contains
+    the following entries.
      - 'name': friendly name/title of the trap (group). \n{} is replaced with
        $n$.
      - 'doc': multiline LaTeX documentation of the trap (group). \n{} is
@@ -117,4 +117,4 @@ what a program is doing, unless nested traps are utilized.""",
             'traps': ids
         }]
     
-    return (traptable, trapdoc)
+    return {'table': traptable, 'doc': trapdoc}

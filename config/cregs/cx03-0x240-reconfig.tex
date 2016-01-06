@@ -7,8 +7,9 @@ This register may be written to by the core only. When it is written, a
 reconfiguration is requested. Refer to Section~\ref{sec:core-ug-reconf} for more
 information.
 
-\field{31..0}{Context reconfiguration request}
-\coreCanWrite{}
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{CRR}
+\implementation{}
 
 %===============================================================================
 %\register{...}{...}{0x244}
@@ -24,9 +25,9 @@ information.
 used in conjunction with the S flag in \creg{SAWC}. Refer to
 Section~\ref{sec:core-ug-reconf-saw} for more information.
 
-\field{31..0}{Wakeup configuration}
-\coreCanWrite{}
-\debugCanWrite{}
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{WCFG}
+\implementation{}
 
 %===============================================================================
 \register{SAWC}{Sleep and wake-up control register}{0x24C}
@@ -37,9 +38,9 @@ Section~\ref{sec:core-ug-reconf-saw} for more information.
 control features for sleeping (reconfiguring to a configuration with all lane 
 groups disabled) and waking up other hardware contexts.
 
-\field{7..1}{Running}
-\debugCanWrite{}
-\coreCanWrite{}
+%-------------------------------------------------------------------------------
+\field{7..1}{RUN}
+%-------------------------------------------------------------------------------
 This field contains a bit for every other context, i.e., not all of these bits
 will be available if the core is not configured to support all eight hardware
 contexts. When reading this register, each bit represents the ones complement
@@ -54,9 +55,14 @@ will thus trigger an interrupt for the scheduler. The scheduler may then
 switch out the software context and subsequently restart the hardware context
 using these flags.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}
+
+%-------------------------------------------------------------------------------
 \field{0}{S}
-\debugCanWrite{}
-\coreCanWrite{}
+%-------------------------------------------------------------------------------
 Sleep flag. This enables or disables the sleep and wake-up system. Refer to
 Section~\ref{sec:core-ug-reconf-saw} for more information.
 
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\implementation{}

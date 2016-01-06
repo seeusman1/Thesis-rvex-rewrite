@@ -15,8 +15,10 @@ expected to run the scheduler. When this value does not equal the value in
 \trap{CONTEXT_SWITCH} trap is caused. Refer to its documentation in
 Section~\ref{sec:core-ug-traps} for more information.
 
-\field{31..0}{Requested software context}
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{RSC}
 \reset{11111111111111111111111111111111}
+\implementation{}
 
 %===============================================================================
 \registergen{range(1, 8)}{RSC\n{}}{Requested swctxt on hwctxt \n{}}{0x260}{8}
@@ -28,10 +30,10 @@ design-time configured to support hardware context \n{}.} This register is
 hardwired to \creg{RSC} in hardware context \n{}. Refer to \creg{RSC} for more
 information.
 
-\field{31..0}{Requested swctxt on hwctxt \n{}}
-\coreCanWrite{}
-\debugCanWrite{}
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{RSC\n{}}
 \reset{11111111111111111111111111111111}
+\implementation{}
 
 %===============================================================================
 \register{CSC}{Current software context}{0x264}
@@ -42,10 +44,10 @@ information.
 \code{CSC}$n$ in hardware context 0. The value in this register should be set
 to the value in \creg{RSC} by the \trap{CONTEXT_SWITCH} trap.
 
-\field{31..0}{Current software context}
-\coreCanWrite{}
-\debugCanWrite{}
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{CSC}
 \reset{11111111111111111111111111111111}
+\implementation{}
 
 %===============================================================================
 \registergen{range(1, 8)}{CSC\n{}}{Current swctxt on hwctxt \n{}}{0x264}{8}
@@ -57,6 +59,8 @@ design-time configured to support hardware context \n{}.} This register is
 hardwired to \creg{CSC} in hardware context \n{}. Refer to \creg{CSC} for more
 information.
 
-\field{31..0}{Current swctxt on hwctxt \n{}}
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{CSC\n{}}
 \reset{11111111111111111111111111111111}
+\implementation{}
 
