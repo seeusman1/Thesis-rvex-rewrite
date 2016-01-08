@@ -5,9 +5,9 @@
 \ifaceGroup{Run control interface}
 %===============================================================================
 \ifaceSubGroup{}
-\ifaceInCtxt{rctrl}{reset}{bit}
-Active high context reset input. When high, the context control registers 
-(including PC, done and break flag) will be reset.
+\ifaceOutCtxt{rv}{reset}{bit}{0}
+Active high context reset output. This should be wired to the ctxtReset signal
+externally.
     
 \ifaceSubGroup{}
 \ifaceInCtxt{rctrl}{resetVect}{address}
@@ -98,9 +98,7 @@ Current trap handler. When the application has marked that it is not currently
 capable of accepting a trap, this is set to the panic handler register instead.
 
 \ifaceSubGroup{}
-\ifaceInCtxt{cxplif}{trapInfo_active}{bit}
-\ifaceInCtxt{cxplif}{trapInfo_cause}{trapCause}
-\ifaceInCtxt{cxplif}{trapInfo_arg}{address}
+\ifaceInCtxt{cxplif}{trapInfo}{trapInfo}
 \ifaceInCtxt{cxplif}{trapPoint}{address}
 Regular trap information. When the trap in trapInfo is active, the trap 
 information should be stored in the trap cause/arg registers. In addition, the 
@@ -132,15 +130,11 @@ Current value of the interrupt-enable flag in the control register.
 \ifaceOutCtxt{cxplif}{debugTrapEnable}{bit}{0}
 Current value of the debug-trap-enable flag in the control register.
 
+%===============================================================================
+\ifaceGroup{Pipelane interface: external debug control signals}
+%===============================================================================
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{breakpoints_addr_0}{address}{0}
-\ifaceOutCtxt{cxplif}{breakpoints_addr_1}{address}{0}
-\ifaceOutCtxt{cxplif}{breakpoints_addr_2}{address}{0}
-\ifaceOutCtxt{cxplif}{breakpoints_addr_3}{address}{0}
-\ifaceOutCtxt{cxplif}{breakpoints_cfg_0}{twoBit}{0}
-\ifaceOutCtxt{cxplif}{breakpoints_cfg_1}{twoBit}{0}
-\ifaceOutCtxt{cxplif}{breakpoints_cfg_2}{twoBit}{0}
-\ifaceOutCtxt{cxplif}{breakpoints_cfg_3}{twoBit}{0}
+\ifaceOutCtxt{cxplif}{breakpoints}{breakpointInfo}{addr[0]=0,addr[1]=0,addr[2]=0,addr[3]=0,cfg[0]=0,cfg[1]=0,cfg[2]=0,cfg[3]=0}
 Current hardware breakpoint configuration. The cfg fields have the following
 encoding:
  - 00 -> breakpoint disabled.
@@ -150,17 +144,13 @@ encoding:
 All these signals map to a single cregl2pl_breakpoint_info_type, but the
 control register generator does not support structures.
 
-%===============================================================================
-\ifaceGroup{Pipelane interface: external debug control signals}
-%===============================================================================
 \ifaceSubGroup{}
 \ifaceOutCtxt{cxplif}{extDebug}{bit}{0}
 Whether debug traps are to be handled normally or by halting execution for 
 debugging through the external bebug bus.
 
 \ifaceSubGroup{}
-\ifaceInCtxt{cxplif}{exDbgTrapInfo_active}{bit}
-\ifaceInCtxt{cxplif}{exDbgTrapInfo_cause}{trapCause}
+\ifaceInCtxt{cxplif}{exDbgTrapInfo}{trapInfo}
 External debug trap information. When the trap in exDbgTrapInfo is active, the 
 trap cause should be stored in the debug control register and the BRK flag in 
 the debug control register should be set.

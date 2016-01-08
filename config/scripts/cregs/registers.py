@@ -32,7 +32,7 @@ def parse(indir):
         'ifaceOutCtxt':     (4, False), # (unit, name, type, reset value expression)
         
         # Implementation templates.
-        'defineTemplate': (2, True), # (name, param_list)
+        'defineTemplate': (2, True, {'code': True}), # (name, param_list)
         
         # Register specification.
         'register': (3, True),       # (mnemonic, name, offset), documentation
@@ -75,17 +75,32 @@ def parse(indir):
             ['field*']),
         
         (['field'],
-            ['reset?', 'signed?', 'id*', 'declaration?', 'implementation!', 'resetImplementation?'])
+            ['reset?', 'signed?', 'id*', 'declaration?', 'implementation!', 'resetImplementation?']),
+        
+        (['declaration'],
+            ['declRegister*', 'declVariable*', 'declConstant*'])
         
     ])['subcmds']
     
+    # Construct the global constant variable environment which can be used by
+    # user code.
+    env = Environment()
+    env.declare(Object('', 'CFG', PredefinedConstant(CfgVectType())))
+    pipeline_stage_defs = ['S_FIRST', 'S_IF', 'L_IF', 'L_IF_MEM', 'S_PCP1',
+        'S_BTGT', 'S_STOP', 'S_LIMM', 'S_TRAP', 'S_RD', 'L_RD', 'S_SRD', 'S_FW',
+        'S_SFW', 'S_BR', 'S_ALU', 'L_ALU1', 'L_ALU2', 'L_ALU', 'S_MUL',
+        'L_MUL1', 'L_MUL2', 'L_MUL', 'S_MEM', 'L_MEM', 'S_BRK', 'L_BRK', 'S_WB',
+        'L_WB', 'S_SWB', 'S_LTRP', 'S_LAST']
+    for d in pipeline_stage_defs:
+        env.declare(Object('', d, PredefinedConstant(CfgVectType())))
+    
     # Parse global register file interface.
-    gbiface, gbenv = parse_iface(
+    gbiface, gbenv = parse_iface('gbreg', env,
         [cmd for cmd in cmds if cmd['cmd'][0] == 'globalInterface'])
     result['gbiface'] = gbiface
     
     # Parse context register file interface.
-    cxiface, cxenv = parse_iface(
+    cxiface, cxenv = parse_iface('cxreg', env,
         [cmd for cmd in cmds if cmd['cmd'][0] == 'contextInterface'])
     result['cxiface'] = cxiface
     
@@ -105,13 +120,35 @@ def parse(indir):
     # Check register and field name validity.
     check_reg_names(regmap)
     
-    # Generate definition list for headers.
+    # Generate register/field definition list for headers.
     result['defs'] = gen_defs(regdoc)
+    
+    # Gather all declarations.
+    result['gbdecl'] = []
+    result['cxdecl'] = []
+    for reg in regmap:
+        if reg is None:
+            continue
+        if 'glob' in reg:
+            regtyp = 'gb'
+        elif 'ctxt' in reg:
+            regtyp = 'cx'
+        else:
+            raise Exception('Unknown register type for CR_%s.' % reg['mnemonic'])
+        result[regtyp + 'decl'] += gather_declarations(reg)
+    for ob in result['gbdecl']:
+        gbenv.declare(ob)
+    for ob in result['cxdecl']:
+        cxenv.declare(ob)
+    
+    # Parse reset/init specifications.
+    gbenv.parse_init()
+    cxenv.parse_init()
     
     return result
 
 
-def parse_iface(ifacecmds):
+def parse_iface(unit, env, ifacecmds):
     """Flattens the interface command tree into a list of tuples for easy code
     output. Also does type parsing and name checking, so this might throw
     exceptions for the user. The output is a two-tuple.
@@ -120,7 +157,7 @@ def parse_iface(ifacecmds):
     ('group', name) -> should map to the comment header for a signal group.
     ('doc', doc)    -> should map to a bit of documentation.
     ('space', None) -> should map to an empty line.
-    ('ob' ob)       -> maps to an input or output Object.
+    ('ob', ob)      -> maps to an input or output Object.
     
     The second entry is an Environment() populated with the interface objects.
     """
@@ -138,33 +175,36 @@ def parse_iface(ifacecmds):
                 for portcmd in subgroupcmd['subcmds']:
                     origin = portcmd['origin']
                     
-                    # Parse type.
+                    # Parse type and init/reset specification.
                     try:
                         typ = parse_type(portcmd['cmd'][3])
                         if portcmd['cmd'][0] in ['ifaceInCtxt', 'ifaceOutCtxt']:
                             typ = PerCtxt(typ)
                         if portcmd['cmd'][0] in ['ifaceOut', 'ifaceOutCtxt']:
                             atyp = Output(typ)
+                            init = portcmd['cmd'][3]
                         else:
                             atyp = Input(typ)
+                            init = None
                     except TypError as e:
                         raise Exception('Type error in type %s, command \\%s{}, after line %s: %s' %
                                         (portcmd['cmd'][3], portcmd['cmd'][0], origin, str(e)))
                     
                     # Check name.
-                    fmt = 'creg2%s_%s' if portcmd['cmd'][0] in ['ifaceOut', 'ifaceOutCtxt'] else '%s2creg_%s'
+                    fmt = '%s2%%s_%%s' if portcmd['cmd'][0] in ['ifaceOut', 'ifaceOutCtxt'] else '%%s2%s_%%s'
+                    fmt %= unit
                     name = fmt % (portcmd['cmd'][1], portcmd['cmd'][2])
                     if not re.match(r'[a-zA-Z0-9][a-zA-Z0-9_]*$', name):
                         raise Exception('Name error in \\%s{} after line %s: invalid port name %s.' %
                                         (portcmd['cmd'][0], origin, name))
                     
                     # Make the object.
-                    ob = Object('', name, atyp, origin)
+                    ob = Object('', name, atyp, origin, init)
                     iface += [('ob', ob)]
                     
                 iface += [('space', None)]
     
-    env = Environment()
+    env = env.copy()
     for el in iface:
         if el[0] == 'ob':
             env.declare(el[1])
@@ -256,6 +296,7 @@ def parse_bitfield(fieldcmd):
         'doc':     fieldcmd['doc'],
         'origin':  fieldcmd['origin'],
         'alt_ids': [],
+        'decl':    [],
         'resimpl': [],
     }
     
@@ -654,3 +695,60 @@ def gen_defs(regdoc):
                         ]
     
     return defs
+
+
+def gather_declarations(reg):
+    """Returns a list of objects representing the declarations for the given
+    register."""
+    decls = []
+    for field in reg['fields']:
+        if 'defined' not in field:
+            continue
+        owner = ('cr_%s_%s' % (reg['mnemonic'], field['name'])).lower()
+        for declcmd in field['decl']:
+            
+            # Parse the declaration command.
+            origin   = declcmd['origin']
+            atypspec = declcmd['cmd'][0]
+            name     = declcmd['cmd'][1].strip()
+            typspec  = declcmd['cmd'][2].strip()
+            if len(declcmd['cmd']) >= 4:
+                init = declcmd['cmd'][3].strip()
+            else:
+                init = None
+            
+            # Check the name.
+            if not re.match(r'_[a-zA-Z0-9_]+', name):
+                raise Exception(('Invalid local name \'%s\' after line %s. ' +
+                                'Local names must start with an underscore.') %
+                                (name, origin))
+            
+            # Parse the type.
+            try:
+                typ = parse_type(typspec)
+            except TypError as e:
+                raise Exception('Error parsing type \'%s\' after line %s: %s' %
+                                (typspec, origin, str(e)))
+            
+            # If this is a context-specific field, make the type per context.
+            if 'ctxt' in reg:
+                typ = PerCtxt(typ)
+            
+            # Create the access type.
+            if atypspec == 'declRegister':
+                atyp = Register(typ)
+            elif atypspec == 'declVariable':
+                atyp = Variable(typ)
+            elif atypspec == 'declConstant':
+                atyp = Constant(typ)
+            else:
+                raise Exception('Unknown declaration command \\%s.' % atypspec)
+            
+            # Construct and add the object.
+            ob = Object(owner, name, atyp, origin, init)
+            decls.append(ob)
+    
+    return decls
+
+
+

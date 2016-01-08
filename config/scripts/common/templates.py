@@ -1,3 +1,4 @@
+import textwrap
 
 def generate_footer(lang, infile, outfile, footer):
     """Writes a generated VHDL file to outfile, taking the header from infile.
@@ -81,9 +82,10 @@ def _post_process(text, com_start, com_end):
     for i in range(len(text) - 1):
         text[i] = text[i].rstrip()
         if i % 10 == 0:
-            text[i] += (' ' * (79 - len(text[i])) +
+            text[i] += (' ' * (100 - len(text[i])) +
                 (' %s GENERATED %s' % (com_start, com_end)))
     return '\n'.join(text)
+
 
 def _comment_style(lang):
     com = {
@@ -95,4 +97,43 @@ def _comment_style(lang):
     if lang not in com:
         raise Exception('Unknown language %s.' + lang)
     return com[lang]
+
+
+def rewrap(s, length, prefix=''):
+    lines = s.split('\n')
+    pars = []
     
+    def last(l):
+        return 0 if len(l) == 0 else l[-1]
+    
+    def get(l, i):
+        return last(l) if i >= len(l) else l[i]
+    
+    par = []
+    hang = []
+    for line in lines:
+        ind = len(line) - len(line.lstrip())
+        if line == '' or ind < last(hang) or line.lstrip()[0:1] in ['-', '*']:
+            pars.append((''.join(par).rstrip(), hang))
+            par = []
+            hang = []
+        par.append(line.strip() + ' ')
+        hang.append(ind)
+    pars.append((''.join(par).rstrip(), hang))
+    
+    lines = []
+    for par, hang in pars:
+        for ind in hang:
+            par = textwrap.wrap(par, length-len(prefix)-ind)
+            if len(par) == 0:
+                par = ''
+                break
+            lines.append(ind*' ' + par[0])
+            par = '\n'.join(par[1:])
+        ind = last(hang)
+        par = textwrap.wrap(par, length-len(prefix)-ind)
+        lines += [ind*' ' + line for line in par]
+        
+    lines = [prefix + line for line in lines]
+    return '\n'.join(lines) + '\n'
+

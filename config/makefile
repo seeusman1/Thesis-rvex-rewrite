@@ -56,3 +56,5 @@ $(TEMP): cregs/*.tex opcodes/*.tex traps/*.tex $(SCRIPTS)
 	@$(ENSURE_DIR) $(TEMP)
 	$(PYTHONP) $(SCRIPTS)/generate.py opcodes cregs traps templates $(CORE_LIB) $(TEMP)
 
+test:
+	$(PYTHONP) $(SCRIPTS)/cregs/code_parse.py

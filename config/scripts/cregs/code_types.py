@@ -30,14 +30,6 @@ class Type(object):
         """Returns the C name of the type, or None if it does not exist."""
         return name(self)
     
-    def decl_c(self, name):
-        """Returns a C declaration for a variable of this type, or None if this
-        type cannot be declared."""
-        spec = self.name_c()
-        if spec is None:
-            return None
-        return '%s %s%s' % (spec[0], name, spec[1])
-        
     def index_range(self):
         """Returns the range of valid indices for this type, or None if this
         type cannot be indexed."""
@@ -65,6 +57,16 @@ class Type(object):
         """Returns True if this is a per-context type, or False if it is a
         global type."""
         return False
+    
+    def get_members(self):
+        """Returns a dictionary of all the members in this type if it is an
+        aggregate, or None otherwise."""
+        return None
+    
+    def member_type(self, member):
+        """Returns the type of an aggregate member of this type, i.e., something
+        after a dot. Returns None if the member does not exist."""
+        return None
 
     def __eq__(self, other):
         if isinstance(other, self.__class__):
@@ -121,23 +123,22 @@ class Bit(Type):
 class BitVector(Type):
     """Bit vector data type."""
     
-    def __init__(self, high, low):
-        self.high = high
-        self.low = low
+    def __init__(self, size):
+        self.size = size
     
     def name(self):
-        return 'bit(%d..%d)' % (self.high, self.low)
+        return 'bitvec%d' % (self.size)
         
     def name_vhdl(self):
-        return 'std_logic_vector(%d downto %d)' % (self.high, self.low)
+        return 'std_logic_vector(%d downto 0)' % (self.size-1)
     
     def name_c(self):
-        # Storage: first (high + 1 - low) LSBs determine value. All other bits
-        # should be ignored. Note that the low bit position is not encoded.
-        return 'uint64_t' if self.high > 31 else 'uint32_t'
+        # Storage: first size LSBs determine value. All other bits should be
+        # ignored. Note that the low bit position is not encoded.
+        return 'uint64_t' if self.size > 32 else 'uint32_t'
 
     def index_range(self):
-        return range(self.low, self.high+1)
+        return range(self.low, self.size)
     
     def index_type(self):
         return Bit()
@@ -146,31 +147,28 @@ class BitVector(Type):
         return True
     
     def slice_type(self, high, low):
-        return BitVector(high, low)
+        return BitVector(high - low + 1)
 
 
 class Unsigned(BitVector):
     """Unsigned data type. Used for add and subtract operations."""
     
     def name(self):
-        return 'unsigned(%d..%d)' % (self.high, self.low)
+        return 'unsigned%d' % (self.size)
         
     def name_vhdl(self):
-        return 'unsigned(%d downto %d)' % (self.high, self.low)
+        return 'unsigned(%d downto 0)' % (self.size-1)
     
     def slice_type(self, high, low):
-        return Unsigned(high, low)
+        return Unsigned(high - low + 1)
 
 
 class Byte(BitVector):
     """8-bit data data type."""
 
     def __init__(self):
-        BitVector.__init__(self, 7, 0)
+        BitVector.__init__(self, 8)
     
-    def name(self):
-        return 'byte'
-        
     def name_vhdl(self):
         return 'rvex_byte_type'
     
@@ -182,11 +180,8 @@ class Data(BitVector):
     """32-bit data data type."""
 
     def __init__(self):
-        BitVector.__init__(self, 31, 0)
+        BitVector.__init__(self, 32)
     
-    def name(self):
-        return 'data'
-        
     def name_vhdl(self):
         return 'rvex_data_type'
     
@@ -198,11 +193,8 @@ class Address(BitVector):
     """32-bit address type."""
 
     def __init__(self):
-        BitVector.__init__(self, 31, 0)
+        BitVector.__init__(self, 32)
     
-    def name(self):
-        return 'address'
-        
     def name_vhdl(self):
         return 'rvex_address_type'
     
@@ -214,11 +206,8 @@ class SylStatus(BitVector):
     """One bit for each possible pipelane, so 16 bits."""
 
     def __init__(self):
-        BitVector.__init__(self, 15, 0)
+        BitVector.__init__(self, 16)
     
-    def name(self):
-        return 'sylStatus'
-        
     def name_vhdl(self):
         return 'rvex_sylStatus_type'
     
@@ -230,11 +219,8 @@ class BrRegData(BitVector):
     """One bit for each branch register, so 8 bits."""
 
     def __init__(self):
-        BitVector.__init__(self, 7, 0)
+        BitVector.__init__(self, 8)
     
-    def name(self):
-        return 'brRegData'
-        
     def name_vhdl(self):
         return 'rvex_brRegData_type'
     
@@ -246,11 +232,8 @@ class TrapCause(BitVector):
     """Trap cause type."""
 
     def __init__(self):
-        BitVector.__init__(self, 7, 0)
+        BitVector.__init__(self, 8)
     
-    def name(self):
-        return 'trapCause'
-        
     def name_vhdl(self):
         return 'rvex_trap_type'
     
@@ -262,11 +245,8 @@ class TwoBit(BitVector):
     """Misc. 2-bit type."""
 
     def __init__(self):
-        BitVector.__init__(self, 1, 0)
+        BitVector.__init__(self, 2)
     
-    def name(self):
-        return 'twoBit'
-        
     def name_vhdl(self):
         return 'rvex_2bit_type'
     
@@ -278,10 +258,7 @@ class ThreeBit(BitVector):
     """Misc. 3-bit type."""
 
     def __init__(self):
-        BitVector.__init__(self, 2, 0)
-    
-    def name(self):
-        return 'threeBit'
+        BitVector.__init__(self, 3)
         
     def name_vhdl(self):
         return 'rvex_3bit_type'
@@ -294,17 +271,121 @@ class FourBit(BitVector):
     """Misc. 4-bit type."""
 
     def __init__(self):
-        BitVector.__init__(self, 4, 0)
+        BitVector.__init__(self, 4)
     
-    def name(self):
-        return 'fourBit'
-        
     def name_vhdl(self):
         return 'rvex_4bit_type'
     
     def name_vhdl_array(self):
         return 'rvex_4bit_array'
     
+
+class Aggregate(Type):
+    """Record/struct type. Aggregates may kind of contain arrays (although they
+    can only be indexed by decimal numbers, not even just any literal), but they
+    cannot contain PerCtxt() types. The members also need to be hardcoded as
+    subclasses of this type."""
+    
+    def __init__(self, members):
+        self.members = members
+    
+    def name(self):
+        return 'aggregate'
+        
+    def get_members(self):
+        return self.members
+    
+    def member_type(self, member):
+        member.split('.', 1)
+        if member[0] not in self.members:
+            return None
+        member_typ = self.members[member[0]]
+        if len(member) == 1:
+            return member_typ
+        else:
+            return member_typ.member_type(member[1])
+
+
+class TrapInfo(Aggregate):
+    """Trap information structure."""
+    
+    def __init__(self):
+        Aggregate.__init__(self, {
+            'active': Bit(),
+            'cause':  TrapCause(),
+            'arg':    Address()
+        })
+
+    def name_vhdl(self):
+        return 'trap_info_type'
+    
+    def name_vhdl_array(self):
+        return 'trap_info_array'
+
+    def name_c(self):
+        return 'trapInfo_t'
+    
+        
+class BreakpointInfo(Aggregate):
+    """Breakpoint information structure."""
+    
+    def __init__(self):
+        Aggregate.__init__(self, {
+            'addr[0]': Address(),
+            'addr[1]': Address(),
+            'addr[2]': Address(),
+            'addr[3]': Address(),
+            'cfg[0]': TwoBit(),
+            'cfg[1]': TwoBit(),
+            'cfg[2]': TwoBit(),
+            'cfg[3]': TwoBit()
+        })
+
+    def name_vhdl(self):
+        return 'cxreg2pl_breakpoint_info_type'
+    
+    def name_vhdl_array(self):
+        return 'cxreg2pl_breakpoint_info_array'
+
+    def name_c(self):
+        return 'breakpointInfo_t'
+    
+        
+def parse_type(text):
+    """Converts a textual type (using the language agnostic names) which can be
+    instantiated by the user into an internal Type. Raises a TypError if 
+    something goes wrong."""
+    
+    text = text.lower()
+    
+    SIMPLE_TYPES = {
+        'bit': Bit(),
+        'byte': Byte(),
+        'data': Data(),
+        'address': Address(),
+        'sylstatus': SylStatus(),
+        'brregdata': BrRegData(),
+        'trapcause': TrapCause(),
+        'twobit': TwoBit(),
+        'threebit': ThreeBit(),
+        'fourbit': FourBit(),
+        'trapinfo': TrapInfo(),
+        'breakpointinfo': BreakpointInfo()
+    }
+    if text in SIMPLE_TYPES:
+        return SIMPLE_TYPES[text]
+    elif text.startswith('bitvec'):
+        try:
+            size = int(text[6:])
+            if size > 64:
+                raise TypError('bit vectors greater than 64 bits are not supported')
+            elif size > 0:
+                return BitVector(size)
+        except ValueError:
+            pass
+    else:
+        raise TypError('unknown type \'%s\'' % text)
+
 
 class PerCtxt(Type):
     """Array data type for stuff which exists per context."""
@@ -332,55 +413,48 @@ class PerCtxt(Type):
     def exists_per_context(self):
         return True
 
+    def member_type(self, member):
+        return self.el_typ.member_type(member)
+    
     def __str__(self):
         return '%s per context' % self.name()
 
 
-SIMPLE_TYPES = {
-    'bit': Bit(),
-    'byte': Byte(),
-    'data': Data(),
-    'address': Address(),
-    'sylStatus': SylStatus(),
-    'brRegData': BrRegData(),
-    'trapCause': TrapCause(),
-    'twoBit': TwoBit(),
-    'threeBit': ThreeBit(),
-    'fourBit': FourBit()
-}
-
-
-def parse_type(text):
-    """Converts a textual type (using the language agnostic names) which can be
-    instantiated by the user into an internal Type. Raises a TypError if 
-    something goes wrong."""
+class CfgVectType(Aggregate):
     
-    # All whitespace in types is optional, so we can just remove all of it. This
-    # does mean that something like 'b i t' is arguably incorrectly accepted,
-    # but whatever.
-    text = re.sub(r'\s', '', text)
+    def __init__(self):
+        Aggregate.__init__(self, {
+            'numLanesLog2':          Natural(),
+            'numLaneGroupsLog2':     Natural(),
+            'numContextsLog2':       Natural(),
+            'genBundleSizeLog2':     Natural(),
+            'bundleAlignLog2':       Natural(),
+            'multiplierLanes':       Natural(),
+            'memLaneRevIndex':       Natural(),
+            'numBreakpoints':        Natural(),
+            'forwarding':            Boolean(),
+            'limmhFromNeighbor':     Boolean(),
+            'limmhFromPreviousPair': Boolean(),
+            'reg63isLink':           Boolean(),
+            'cregStartAddress':      Address(),
+            'resetVectors[0]':       Address(),
+            'resetVectors[1]':       Address(),
+            'resetVectors[2]':       Address(),
+            'resetVectors[3]':       Address(),
+            'resetVectors[4]':       Address(),
+            'resetVectors[5]':       Address(),
+            'resetVectors[6]':       Address(),
+            'resetVectors[7]':       Address(),
+            'unifiedStall':          Boolean(),
+            'traceEnable':           Boolean()
+        })
     
-    if text in SIMPLE_TYPES:
-        return SIMPLE_TYPES[text]
-    elif text.startswith('bit(') and text.endswith(')'):
-        text = text[4:-1].split('..')
-        if len(text) != 2:
-            raise TypError('range malformed')
-        try:
-            high = int(text[0])
-            low = int(text[1])
-        except ValueError:
-            raise TypError('range malformed')
-        if high < low:
-            raise TypError('range is invalid')
-        if low < 0:
-            raise TypError('range is invalid')
-        if high > 63:
-            raise TypError('ranges beyond 64 bits are not supported')
-        return BitVector(high, low)
-    else:
-        raise TypError('unknown type \'%s\'' % text)
-
+    def name_vhdl(self):
+        return 'rvex_generic_config_type'
+    
+    def name_c(self):
+        return 'cfgVect_t'
+    
 
 class AccessibleType(object):
     
@@ -416,6 +490,10 @@ class AccessibleType(object):
         in the implementation of the field which specified it)."""
         return False
     
+    def needs_init(self):
+        """Returns whether this access type needs a reset/init specification."""
+        return False
+    
     def __eq__(self, other):
         if isinstance(other, self.__class__):
             return self.__dict__ == other.__dict__
@@ -446,6 +524,9 @@ class Output(AccessibleType):
     
     def can_read(self):
         return False
+    
+    def needs_init(self):
+        return True
 
 
 class Register(AccessibleType):
@@ -453,6 +534,9 @@ class Register(AccessibleType):
     def name(self):
         return 'register'
     
+    def needs_init(self):
+        return True
+
 
 class Variable(AccessibleType):
     
@@ -469,6 +553,18 @@ class Variable(AccessibleType):
         return True
 
 class Constant(AccessibleType):
+    
+    def name(self):
+        return 'constant'
+    
+    def can_assign(self):
+        return False
+    
+    def needs_init(self):
+        return True
+
+
+class PredefinedConstant(AccessibleType):
     
     def name(self):
         return 'constant'

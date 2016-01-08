@@ -2,6 +2,14 @@
 \globalInterface{}
 
 %===============================================================================
+\ifaceGroup{Run control}
+%===============================================================================
+\ifaceSubGroup{}
+\ifaceOut{rv}{reset}{bit}{0}
+Reset output. This can be made high for one cycle by the debug bus writing a one
+to the MSB of GSR.
+
+%===============================================================================
 \ifaceGroup{Interface with configuration logic}
 %===============================================================================
 \ifaceSubGroup{}
@@ -32,7 +40,7 @@ Configuration error signal. This is set when the last configuration request was
 erroneous.
     
 \ifaceSubGroup{}
-\ifaceIn{cfg}{requesterID}{bit(3..0)}
+\ifaceIn{cfg}{requesterID}{bitvec3}
 When reconfiguration is requested, this field is set to the index of the context 
 which requested the configuration, or all ones if the source was the debug bus.
 

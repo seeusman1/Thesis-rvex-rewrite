@@ -1,6 +1,15 @@
 from code_types import *
 from code_environment import *
 
+class OutputError(Exception):
+    
+    def __init__(self, message):
+        self.message = message
+    
+    def __str__(self):
+        return repr(self.message)
+
+
 class Code(object):
     
     def __init__(self, vhdl, c):
@@ -38,13 +47,69 @@ class Expression(object):
         self.vhdl = vhdl
         self.c = c
         self.typ = typ
-
-    def pattern(self, vhdl, c):
-        return Code(vhdl % self.vhdl, c % self.c)
-
-    def cast(self, to_typ):
-        return cast(self, to_typ)
         
+
+def literal(value, typ):
+    """Returns a literal Expression with the given value and type."""
+    
+    if isinstance(typ, Boolean):
+        if value == 0:
+            return Expression('false', '0ull', typ)
+        else:
+            return Expression('true', '1ull', typ)
+    
+    if isinstance(typ, Natural):
+        value &= 0xFFFFFFFF
+        return Expression(str(value), str(value) + 'ull', typ)
+    
+    if isinstance(typ, Bit):
+        value &= 1
+        return Expression("'%s'" % str(value), str(value) + 'ull', typ)
+    
+    if isinstance(typ, BitVector):
+        siz = typ.high - typ.low + 1
+        value &= (1<<(siz+1))-1
+        return Expression(
+            ('"{0:0%db}"' % siz).format(value), str(value) + 'ull', typ)
+    
+    raise Exception('Don\'t know how to output literal for type %s.' % str(typ))
+    
+    
+
+def declare(ob):
+    """Generates the code for an object declaration."""
+    
+    obtype = ob.atyp.name()
+    
+    # Generate VHDL syntax.
+    if obtype == 'variable':
+        vhdl = 'variable %s' % ob.name
+    elif obtype == 'constant':
+        vhdl = 'constant %s' % ob.name
+    elif obtype == 'register':
+        vhdl = 'signal %s' % ob.name
+    else:
+        vhdl = ob.name
+    vhdl = vhdl + ' ' * (28 - len(vhdl)) + ': '
+    if obtype == 'input':
+        vhdl += 'in  '
+    elif obtype == 'output':
+        vhdl += 'out '
+    vhdl += ob.atyp.typ.name_vhdl()
+    # TODO: initialization
+    #if x:
+    #    vhdl += ' := ' + y
+    vhdl += ';'
+    
+    # Generate C syntax.
+    c = '%s %s' % (ob.atyp.typ.name_c(), ob.name)
+    # TODO: initialization
+    #if x:
+    #    c += ' = ' + y
+    c += ';'
+    
+    return Code([vhdl], [c])
+
 
 def access(ob, direction='r', ctxt=None, slic=None):
     """Generates an Expression for how to read from or write to object ob

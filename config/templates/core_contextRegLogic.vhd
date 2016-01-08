@@ -86,8 +86,8 @@ entity core_contextRegLogic is
     
     -- Active high global clock enable input.
     clkEn                       : in  std_logic;
-    @PORT_DECL
     
+    @PORT_DECL
     ---------------------------------------------------------------------------
     -- Interface with the control registers and bus logic
     ---------------------------------------------------------------------------

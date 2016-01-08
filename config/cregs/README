@@ -12,6 +12,54 @@ The following LaTeX-like commands are interpreted by python to define the
 control registers. They must be the only thing on a certain line aside from
 (maybe) comments, otherwise they are interpreted as LaTeX documentation.
 
+root
+ |- \contextInterface{}, \globalInterface{}
+ |   '- \ifaceGroup{title}
+ |       '- \ifaceSubGroup{}
+ |           |- ifaceIn{unit}{name}{type}
+ |           |- ifaceOut{unit}{name}{type}{reset}
+ |           |- ifaceInCtxt{unit}{name}{type}
+ |           '- ifaceOutCtxt{unit}{name}{type}{reset}
+ |- \defineTemplate{name}{parameter list}
+ '- \register{mnemonic}{name}{offset},
+    \registergen{python range}{mnemonic}{name}{offset}{stride}
+     '- \field{range}{mnemonic}
+         |- \reset{bit vector}
+         |- \signed{}
+         |- \id{identifier}
+         |- \declaration{}
+         |   |- \declRegister{name}{type}{reset}
+         |   |- \declVariable{name}{type}
+         |   '- \declConstant{name}{type}{reset}
+         |- \implementation{}
+         '- \resetImplementation{}
+
+ - \contextInterface{}
+ - \globalInterface{}
+   Describes the port map of the context register logic and the global register
+   logic. These may appear more than once in the configuration; their contents
+   will just be appended.
+ 
+ - \ifaceGroup{<title>}
+ - \ifaceSubGroup{}
+   Defines port groups for code readability. The toplevel group has a title,
+   both group commands will interpret the multiline text following the command
+   as comments to be put in the code.
+ 
+ - ifaceIn{<unit>}{<name>}{<type>}
+ - ifaceOut{<unit>}{<name>}{<type>}{<reset>}
+ - ifaceInCtxt{<unit>}{<name>}{<type>}
+ - ifaceOutCtxt{<unit>}{<name>}{<type>}{<reset>}
+   Defines a port. For inputs, the signal name will be "<unit>2cxreg_<name>" or
+   "<unit>2gbreg_<name>". For outputs it will be "cxreg2<unit>_<name>" or
+   "gbreg2<unit>_<name>". <type> is a type specification as defined later.
+   <reset> is a reset specification as defined later. The command name
+   determines whether the port is per-context or global and whether it is an
+   input or output.
+   
+ - \defineTemplate{<name>}{<parameter list>}
+   TODO
+
  - \register{<mnemonic>}{<name>}{<offset>}
    Starts a new register description. <name> is the title of the section.
    <mnemonic> is the mnemonic of the register, excluding the CR_. The 
@@ -38,24 +86,68 @@ control registers. They must be the only thing on a certain line aside from
    make it as small as possible if the bitfield is small. It also needs to be
    a valid C and VHDL identifier.
 
- - \debugCanWrite{}
- - \coreCanWrite{}
-   Sets the writable flag for the previously defined field. The {} is
-   required!
-
- - \signed{}
-   Marks a field as being signed. The default is unsigned.
-
  - \reset{<bit vector>}
    Sets the reset state of the previously defined field. If not specified, the
    reset state is assumed to be zero. The number of characters in <bit vector>
    must equal the number of bits in the field.
 
+ - \signed{}
+   Marks a field as being signed. The default is unsigned.
+
  - \id{<identifier>}
    Gives a field an alternative name for the C/VHDL/rvd definitions. This only
    works for 8-bit and 16-bit fields that are properly aligned.
+   
+ - \declaration{}
+   Specifies the local declaration section for this field implementation.
+   
+ - \declRegister{<name>}{<type>}{<reset>}
+ - \declVariable{<name>}{<type>}
+ - \declConstant{<name>}{<type>}{<reset>}
+   Specifies registers, variables or constants needed by the implementation
+   code. <name> must start with an underscore, and will expand to
+   "cr_<register-mnemonic>_<field-mnemonic><name>". <type> is a type
+   specification as defined later. <reset> is a reset specification as defined
+   later. The reset specification for constants just defines the initial value.
+   
+ - \implementation{}
+   Language-agnostic code section as defined below, executed every rising clock
+   edge with clkEn high and reset inactive.
+
+ - \resetImplementation{}
+   Language-agnostic code section as defined below, executed every rising clock
+   edge with clkEn high, the global reset is inactive, and the context-specific
+   reset is active. This allows register implementations to override a soft
+   context reset, for instance to make register values persistent in this case.
+   This is necessary for, for instance, the B flag in DCR, to allow the debugger
+   to reset the core without immediately starting execution. This command is
+   only allowed for context-specific registers.
 
  - Anything else:
    Any unrecognized line is used as a description for either the whole 
    register or a field in it.
  
+
+TYPE SPECIFICATIONS
+-------------------
+
+TODO
+
+
+RESET SPECIFICATIONS
+--------------------
+
+Registers, output ports and constants have reset specifications tied to them (in
+the case of a constant, this is just its initialization value).
+
+The reset specification for non-aggregate constants may only be a literal value.
+For non-aggregate registers and outputs, it may also be an input signal or a
+global constant of the same type. For aggregate types, the syntax is as follows:
+
+"<member1>=<reset1>,<member2>=<reset2>,<...>,<membern>=<resetn>"
+
+
+LANGUAGE-AGNOSTIC CODE SECTIONS
+-------------------------------
+
+TODO

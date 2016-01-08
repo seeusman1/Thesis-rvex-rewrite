@@ -81,8 +81,8 @@ entity core_globalRegLogic is
     
     -- Active high global clock enable input.
     clkEn                       : in  std_logic;
-    @PORT_DECL
 
+    @PORT_DECL
     ---------------------------------------------------------------------------
     -- Debug bus to global control register interface
     ---------------------------------------------------------------------------
