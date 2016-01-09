@@ -1,139 +1,112 @@
+"""Language-agnostic code and expression parser.
+
+Refer to the README file in the creg config folder for syntax information."""
 
 import re
-import code_types
 
+from code_ast import *
 from funcparserlib.lexer import *
 from funcparserlib.parser import *
 
-class ParseTree(object):
-    """Represents a parse tree."""
-    
-    def __init__(self, origin):
-        self.origin = origin
-    
-    def error(s):
-        raise Exception('Parse error on %s: %s.' % (self.origin, s))
-    
-
-class PTLiteral(ParseTree):
+class ASTLiteral(ASTLeaf):
     """Literal parse tree object."""
     
-    def __init__(self, literal):
-        ParseTree.__init__(self, literal.origin)
+    def __init__(self, tok):
+        ASTLeaf.__init__(self, tok.type, tok.value, tok.origin)
         
-        if literal.type == 'lit_true':
-            self.value = 1
-            self.typ = code_types.Boolean()
-            
-        elif literal.type == 'lit_false':
-            self.value = 0
-            self.typ = code_types.Boolean()
-            
-        elif literal.type == 'lit_nat':
-            self.value = int(literal.value, 0)
-            self.typ = code_types.Natural()
-            
-        elif literal.type == 'lit_bit':
-            self.value = int(literal.value[1], 0)
-            self.typ = code_types.Bit()
-            
-        elif literal.type == 'lit_vec':
-            v = literal.value.split('"')
-            t = v[0].lower()
-            bits_per_char = 4 if 'x' in t else 1
-            if v[1] == '':
-                self.value = 0
-            else:
-                self.value = int(v[1], 2**bits_per_char)
-            size = bits_per_char * len(v[1])
-            if 'u' in t:
-                self.typ = code_types.Unsigned(size)
-            else:
-                self.typ = code_types.BitVector(size)
-            
-        else:
-            raise Exception('Unknown literal type %s.' % literal.type)
-        
-    def __repr__(self):
-        return self.typ.name() + ':' + str(self.value)
 
-
-class PTReference(ParseTree):
+class ASTReference(ASTLeaf):
     """Reference parse tree object."""
     
-    def __init__(self, toks):
-        ParseTree.__init__(self, toks[0].origin)
-        self.name = toks[0].value
-        self.members = [x.value for x in toks[1]]
-        self.slic = None
-        if toks[2] is not None:
-            self.slic = toks[2].value
-    
-    def __repr__(self):
-        s = self.name + ''.join(['.' + x for x in self.members])
-        if self.slic is not None:
-            if type(self.slic) is tuple:
-                s += '[%s, %s]' % (str(self.slic[0]), str(self.slic[1]))
+    def __init__(self, tokens):
+        name = tokens[0].value
+        members = [x.value for x in tokens[1]]
+        slic = None
+        if tokens[2] is not None:
+            slic = tokens[2].value
+        
+        s = name + ''.join(['.' + x for x in members])
+        if slic is not None:
+            if type(slic) is tuple:
+                s += '[%s, %s]' % (slic[0], slic[1])
             else:
-                s += '[%s]' % str(self.slic)
-        return s
+                s += '[%s]' % slic
+        
+        ASTLeaf.__init__(self, 'reference', s, tokens[0].origin)
+        self['name'] = name
+        self['member'] = '.'.join(members) if len(members) > 0 else None
+        self['slic'] = slic
+    
+
+class ASTType(ASTLeaf):
+    """Type name parse tree object."""
+    
+    def __init__(self, tok):
+        ASTLeaf.__init__(self, 'type', tok.value, tok.origin)
+        
+
+class ASTCast(ASTNode):
+    """Expression parse tree object."""
+    
+    def __init__(self, type, expr):
+        ASTNode.__init__(self, 'cast', [type, expr])
+    
+    def __str__(self):
+        return '(%s)%s' % (self[0], self[1])
 
 
-class PTExpression(ParseTree):
+class ASTExpression(ASTNode):
     """Expression parse tree object."""
     
     def __init__(self, operator, operands):
-        
-        # Find out the origin of this expression.
         if len(operands) == 1:
-            ParseTree.__init__(self, operator.origin)
+            orig = operator.origin
         else:
-            ParseTree.__init__(self, operands[0].origin)
-        
-        self.operator = operator.value
-        self.operands = operands
+            orig = operands[0].origin
+        ASTNode.__init__(self, 'expr', operands)
+        self['op'] = operator.value
     
-    def __repr__(self):
-        if len(self.operands) == 1:
-            return str(self.operator) + str(self.operands[0])
+    def __str__(self):
+        if len(self) == 1:
+            return '%s%s' % (self['op'], self[0])
         else:
-            return '(%s %s %s)' % (
-                str(self.operands[0]),
-                str(self.operator),
-                str(self.operands[1]))
+            return '(%s %s %s)' % (self[0], self['op'], self[1])
 
 
-class PTBlock(ParseTree):
+class ASTBlock(ASTNode):
     """Block statement parse tree object."""
     
     def __init__(self, tokens, bare=False):
-        ParseTree.__init__(self, tokens[0].origin)
-        if bare:
-            self.statements = tokens
-        else:
-            self.statements = tokens[1]
+        ASTNode.__init__(self, 'block', tokens if bare else tokens[1])
+        if not bare:
+            self._orig = tokens[0].origin
     
-    def __repr__(self):
-        return ''.join([str(x) for x in self.statements])
+    def __str__(self):
+        s = ''.join([str(x) for x in self])
+        if self.parent is not None:
+            s = '{\n' + '\n'.join(['  ' + x for x in s.split('\n')]) + '}\n'
+        return s
 
 
-class PTAssignment(ParseTree):
+class ASTAssignment(ASTNode):
     """Assignment statement parse tree object."""
     
     def __init__(self, tokens):
-        ParseTree.__init__(self, tokens[0].origin)
-        self.lvalue = tokens[0]
-        self.rvalue = tokens[2]
+        ASTNode.__init__(self, 'assign', [tokens[0], tokens[2]])
     
-    def __repr__(self):
-        return str(self.lvalue) + ' = ' + str(self.rvalue) + ';\n'
+    def __str__(self):
+        return '%s = %s;\n' % (self[0], self[1])
 
 
-class PTConditional(ParseTree):
+class ASTConditional(ASTNode):
     """If/else statement parse tree object."""
     
     def __init__(self, tokens):
-        ParseTree.__init__(self, tokens[0].origin)
+        if tokens[5] is not None:
+            ASTNode.__init__(self, 'if', [tokens[2], tokens[4], tokens[5][1]])
+        else:
+            ASTNode.__init__(self, 'if', [tokens[2], tokens[4], ASTBlock([], True)])
+        self._orig = tokens[0].origin
         self.condition = tokens[2]
         self.true = tokens[4]
         if tokens[5] is not None:
@@ -141,97 +114,45 @@ class PTConditional(ParseTree):
         else:
             self.false = []
     
-    def __repr__(self):
-        true = '  ' + '\n  '.join(str(self.true).split('\n'))[:-2]
-        false = '  ' + '\n  '.join(str(self.false).split('\n'))[:-2]
-        return (
-            'if (' + str(self.condition) + ') {\n' + true +
-            '} else {\n' + false + '}\n')
+    def __str__(self):
+        s = 'if (' + str(self[0]) + ') '
+        s += '\n'.join(['  ' + x for x in str(self[1]).split('\n')])
+        if len(self) > 2:
+            s += 'else ' + '\n'.join(['  ' + x for x in str(self[2]).split('\n')])
+        return s
 
 
-class PTVerbatim(ParseTree):
+class ASTVerbForeign(ASTLeaf):
+    """Verbatim reference parse tree object."""
+    
+    def __init__(self, tokens):
+        val = ''.join([x.value for x in tokens])
+        ASTLeaf.__init__(self, 'foreign', val, tokens[0].origin)
+
+
+class ASTVerbRef(ASTLeaf):
+    """Verbatim reference parse tree object."""
+    
+    def __init__(self, tokens):
+        ASTLeaf.__init__(self, 'reference', tokens[1].value, tokens[0].origin)
+        self['name'] = tokens[1].value
+        self['member'] = None
+        self['slic'] = None
+    
+    def __str__(self):
+        return '@%s' % self.value
+
+
+class ASTVerbatim(ASTNode):
     """Verbatim statement parse tree object."""
     
     def __init__(self, tokens):
-        ParseTree.__init__(self, tokens[0].origin)
-        self.lang = tokens[0].value[2:]
-        self.contents = [('verbatim', tokens[1].value)]
-        for tok in tokens[2]:
-            self.contents.append(('name', tok[0].value))
-            self.contents.append(('verbatim', tok[1].value))
+        ASTNode.__init__(self, 'verbatim', tokens[1])
+        self._orig = tokens[0].origin
+        self['lang'] = tokens[0].value[2:]
     
-    def __repr__(self):
-        return '<?' + self.lang + ''.join([x[1] for x in self.contents]) + '?>'
-
-
-"""
-Literals
---------
- - true and false:        boolean
- - decimal number:        natural
- - 0 octal number:        natural
- - 0b binary number:      natural
- - 0x hexadecimal number: natural
- - '0' and '1':           bit
- - "0101":                bitvect
- - X"DEADBEEF":           bitvect
- - U"0101":               unsigned
- - UX"0101":              unsigned
-
-Note that there is no aggregate literal.
-
-
-References
-----------
-
-TODO
-
-
-Expressions
------------
-
-Precedence
- |                      .----------.----------.----------.----------.----------.
- V       Operand types: | boolean  | natural  | bit      | bitvect  | unsigned |
-----.-------------------+----------+----------+----------+----------+----------|
- () | typecast          | ...      | ...      | ...      | ...      | ...      |
- ~  | one's complement  |          | natural  | bit      | bitvect  | bitvect  |
- !  | boolean not       | boolean  | boolean  | bit      |          |          |
-----+-------------------+----------+----------+----------+----------+----------|
- *  | multiplication    |          | natural  |          |          |          |
- /  | division          |          | natural  |          |          |          |
- %  | modulo            |          | natural  |          |          |          |
-----+-------------------+----------+----------+----------+----------+----------|
- +  | addition          |          | natural  |          | unsigned | unsigned |
- -  | subtraction       |          | natural  |          | unsigned | unsigned |
- $  | concatenation     | bitvect  |          | bitvect  | bitvect  | bitvect  |
-----+-------------------+----------+----------+----------+----------+----------|
- << | shift left*       |          | natural  |          | unsigned | unsigned |
- >> | shift right*      |          | natural  |          | unsigned | unsigned |
-----+-------------------+----------+----------+----------+----------+----------|
- <= | less/equal        |          | boolean  |          | boolean  | boolean  |
- <  | less              |          | boolean  |          | boolean  | boolean  |
- >= | greater/equal     |          | boolean  |          | boolean  | boolean  |
- >  | greater           |          | boolean  |          | boolean  | boolean  |
-----+-------------------+----------+----------+----------+----------+----------|
- == | equal             | boolean  | boolean  | boolean  | boolean  | boolean  |
- != | not equal         | boolean  | boolean  | boolean  | boolean  | boolean  |
-----+-------------------+----------+----------+----------+----------+----------|
- &  | bitwise and       |          | natural  | bitvect  | bitvect  | bitvect  |
-----+-------------------+----------+----------+----------+----------+----------|
- ^  | bitwise xor       |          | natural  | bitvect  | bitvect  | bitvect  |
-----+-------------------+----------+----------+----------+----------+----------|
- |  | bitwise or        |          | natural  | bitvect  | bitvect  | bitvect  |
-----+-------------------+----------+----------+----------+----------+----------|
- && | boolean and       | boolean  | boolean  | bit      |          |          |
-----+-------------------+----------+----------+----------+----------+----------|
- ^^ | boolean xor       | boolean  | boolean  | bit      |          |          |
-----+-------------------+----------+----------+----------+----------+----------|
- || | boolean or        | boolean  | boolean  | bit      |          |          |
-----'-------------------'----------'----------'----------'----------'----------'
-
-*second operand must always be a natural.
-"""
+    def __str__(self):
+        return '<?' + self['lang'] + ''.join([str(x) for x in self]) + '?>'
 
 
 def parser_generate():
@@ -324,18 +245,7 @@ def parser_generate():
     
     def post_process_tokens(tokens, origins, print_cols):
         pptokens = []
-        foreign_tokens = []
         foreign = False
-        escape = False
-        
-        def flush_foreign(foreign_tokens, token):
-            if len(foreign_tokens) > 0:
-                pptokens.append(PPToken(foreign_tokens, origins, print_cols))
-            else:
-                pptokens.append(PPToken(Token(
-                    'verbatim', '', token.start, token.start
-                ), origins, print_cols))
-        
         for token in tokens:
             
             # Replace keywords and function names.
@@ -354,32 +264,14 @@ def parser_generate():
             
             # Exit foreign code.
             if token.type == 'verb_close':
-                escape = False
                 foreign = False
-                flush_foreign(foreign_tokens, token)
-                foreign_tokens = []
-            
-            if foreign:
-                if escape:
-                    escape = False
-                    pptokens.append(token)
-                
-                elif token.type == 'context': # the @ symbol
-                    escape = True
-                    flush_foreign(foreign_tokens, token)
-                    foreign_tokens = []
-                
-                else:
-                    foreign_tokens.append(token)
-                
-            elif token.type != 'space':
-                pptokens.append(token)
-            
-            # Enter foreign code.
-            if token.type == 'verb_open':
+            elif token.type == 'verb_open':
                 foreign = True
             
-        
+            # Save spacing if we're in foreign mode, trim it otherwise.
+            if foreign or token.type != 'space':
+                pptokens.append(token)
+            
         return pptokens
             
     
@@ -406,7 +298,7 @@ def parser_generate():
         tok.lit_nat   |
         tok.lit_bit   |
         tok.lit_vec
-    ) >> (lambda x : PTLiteral(x))
+    ) >> (lambda x : ASTLiteral(x))
     
     # Forward declaration for expressions, because we need it for slice
     # indexing.
@@ -461,7 +353,7 @@ def parser_generate():
         ref_name +
         many(ref_member) +
         maybe(ref_slice)
-    ) >> PTReference
+    ) >> ASTReference
     
     # Generate expressions.
     #  - Handle parentheses.
@@ -472,17 +364,20 @@ def parser_generate():
     def unary(toks):
         toks = toks[0] + [toks[1]]
         while len(toks) > 1:
-            toks[-2:] = [PTExpression(toks[-2], [toks[-1]])]
+            if isinstance(toks[-2], ASTType):
+                toks[-2:] = [ASTCast(toks[-2], toks[-1])]
+            else:
+                toks[-2:] = [ASTExpression(toks[-2], [toks[-1]])]
         return toks[0]
     
     def binary(toks):
         toks = [toks[0]] + toks[1]
         while len(toks) > 1:
-            toks[:2] = [PTExpression(toks[1][0], [toks[0], toks[1][1]])]
+            toks[:2] = [ASTExpression(toks[1][0], [toks[0], toks[1][1]])]
         return toks[0]
     
     #  - Handle all unary and binary operators in order of precedence.
-    cast = (tok.open + tok.name + tok.close) >> (lambda x : x[1])
+    cast = (tok.open + tok.name + tok.close) >> ASTType
     firstunop = True
     for spec in tokspec:
         toktyp = spec[0]
@@ -514,7 +409,7 @@ def parser_generate():
         tok.bl_open +
         statements +
         tok.bl_close
-    ) >> PTBlock
+    ) >> ASTBlock
     
     # Assignment statement.
     assign = (
@@ -522,7 +417,7 @@ def parser_generate():
         tok.assign +
         expression +
         tok.semicol
-    ) >> PTAssignment
+    ) >> ASTAssignment
     
     # Conditional statement.
     ifelse = (
@@ -535,18 +430,22 @@ def parser_generate():
             tok.key_else +
             statement
         )
-    ) >> PTConditional
+    ) >> ASTConditional
+    
+    # verbatim_tokens grabs any token which isn't used to break out of a
+    # verbatim environment.
+    verbatim_token = some(lambda tok: tok.type not in ['context', 'verb_close'])
+    verbatim_tokens = oneplus(verbatim_token) >> ASTVerbForeign
+    
+    # Translated references in a verbatim environment.
+    verbatim_ref = (tok.context + ref_name) >> ASTVerbRef
     
     # Verbatim statement.
     verbatim = (
         tok.verb_open +
-        tok.verbatim +
-        many(
-            tok.name +
-            tok.verbatim
-        ) +
+        many(verbatim_tokens | verbatim_ref) +
         tok.verb_close
-    ) >> PTVerbatim
+    ) >> ASTVerbatim
     
     # Any statement.
     statement.define(
@@ -576,7 +475,7 @@ def parser_generate():
             raise Exception('Garbage on input %s.' % fmt_place(e.place, origins, True))
         
         # Parse.
-        return PTBlock(toplevel.parse(tokens)[0], True)
+        return ASTBlock(toplevel.parse(tokens)[0], True)
     
     
     def parse_exp(exp, origin):
@@ -599,17 +498,20 @@ def parser_generate():
 
 parse, parse_exp = parser_generate()
 
-code = """
-if (a != b) {
-    a = a + b;
-} else x = y;
-"""
 
-code = """
-a = b + c;
-"""
+if __name__ == '__main__':
+    
+    #code = """
+    #if (a != b) {
+    #    a = a@2 + b;
+    #} else x = y;
+    #"""
 
-import pprint
-#pprint.pprint(parse_exp(code, '<internal>'))
-pprint.pprint(parse([('<internal>:%s' % i, s) for i, s in enumerate(code.split('\n'))]))
+    code = """
+    x[y]
+    """
+
+    import pprint
+    print(parse_exp(code, '<internal>').pp_ast())
+    #print(parse([('<internal>:%s' % i, s) for i, s in enumerate(code.split('\n'))]).pp_ast())
 

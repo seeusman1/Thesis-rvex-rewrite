@@ -129,25 +129,271 @@ root
  
 
 TYPE SPECIFICATIONS
--------------------
+===================
 
-TODO
+A type specification is just a type name. The following types are currently
+supported (hardcoded into scripts/cregs/code_types.py).
+
+ .----------------.-------------.--------------------------------.-------------------------------------.-------------------.
+ | Type name      | Internally  | VHDL global type               | VHDL per-context type               | C representation  |
+ |----------------+-------------+--------------------------------+-------------------------------------+-------------------|
+ | boolean        | boolean     | boolean                        | -                                   | uint32_t          |
+ | natural        | natural     | natural                        | -                                   | uint32_t          |
+ | bit            | bit         | std_logic                      | std_logic_vector(...)               | uint32_t          |
+ | bitvec<n>      | bitvec<n>   | std_logic_vector(n-1 downto 0) | -                                   | uint32_t/uint64_t |
+ | unsigned<n>    | unsigned<n> | unsigned(n-1 downto 0)         | -                                   | uint32_t/uint64_t |
+ | byte           | bitvec<8>   | rvex_byte_type                 | rvex_byte_array(...)                | uint32_t          |
+ | data           | bitvec<32>  | rvex_data_type                 | rvex_data_array(...)                | uint32_t          |
+ | address        | bitvec<32>  | rvex_address_type              | rvex_address_array(...)             | uint32_t          |
+ | sylstatus      | bitvec<16>  | rvex_sylStatus_type            | rvex_sylStatus_array(...)           | uint32_t          |
+ | brregdata      | bitvec<8>   | rvex_brRegData_type            | rvex_brRegData_array(...)           | uint32_t          |
+ | trapcause      | bitvec<8>   | rvex_trap_type                 | rvex_trap_array(...)                | uint32_t          |
+ | twobit         | bitvec<2>   | rvex_2bit_type                 | rvex_2bit_array(...)                | uint32_t          |
+ | threebit       | bitvec<3>   | rvex_3bit_type                 | rvex_3bit_array(...)                | uint32_t          |
+ | fourbit        | bitvec<4>   | rvex_4bit_type                 | rvex_4bit_array(...)                | uint32_t          |
+ | trapinfo       | aggregate   | trap_info_type                 | trap_info_array(...)                | trapInfo_t        |
+ | breakpointinfo | aggregate   | cxreg2pl_breakpoint_info_type  | cxreg2pl_breakpoint_info_array(...) | breakpointInfo_t  |
+ | -              | aggregate   | rvex_generic_config_type       | -                                   | cfgVect_t         |
+ '----------------'-------------'--------------------------------'-------------------------------------'-------------------'
+
+ - bitvec<n> and unsigned<> are only supported up to 64 bits. This is because
+   they are represented as uint32_t or uint64_t in C.
+ 
+ - The CFG vector type cannot be instantiated; it is provided as a built-in like
+   thing.
+   
+ - Types which have no per-context VHDL type cannot be instantiated per context.
+
+trapinfo aggregate members:
+ - active:                bit
+ - cause:                 trapcause
+ - arg:                   address
+
+breakpointinfo aggregate members:
+ - addr{0}:               address
+ - addr{1}:               address
+ - addr{2}:               address
+ - addr{3}:               address
+ - cfg{0}:                bitvec<2>
+ - cfg{1}:                bitvec<2>
+ - cfg{2}:                bitvec<2>
+ - cfg{3}:                bitvec<2>
+
+CFG vector members:
+ - numLanesLog2:          natural
+ - numLaneGroupsLog2:     natural
+ - numContextsLog2:       natural
+ - genBundleSizeLog2:     natural
+ - bundleAlignLog2:       natural
+ - multiplierLanes:       natural
+ - memLaneRevIndex:       natural
+ - numBreakpoints:        natural
+ - forwarding:            boolean
+ - limmhFromNeighbor:     boolean
+ - limmhFromPreviousPair: boolean
+ - reg63isLink:           boolean
+ - cregStartAddress:      address
+ - resetVectors{0}:       address
+ - resetVectors{1}:       address
+ - resetVectors{2}:       address
+ - resetVectors{3}:       address
+ - resetVectors{4}:       address
+ - resetVectors{5}:       address
+ - resetVectors{6}:       address
+ - resetVectors{7}:       address
+ - unifiedStall:          boolean
+ - traceEnable:           boolean
+
+TODO: these aggregate types should probably be read from a config file,
+especially because it's pretty easy to do so.
 
 
 RESET SPECIFICATIONS
---------------------
+====================
 
 Registers, output ports and constants have reset specifications tied to them (in
 the case of a constant, this is just its initialization value).
 
-The reset specification for non-aggregate constants may only be a literal value.
-For non-aggregate registers and outputs, it may also be an input signal or a
-global constant of the same type. For aggregate types, the syntax is as follows:
+The reset specification for non-aggregate constants may only be a literal value
+of the same type. For non-aggregate registers and outputs, it may also be an
+input signal or a global constant of the same type.
+
+For aggregate types, the syntax is as follows:
 
 "<member1>=<reset1>,<member2>=<reset2>,<...>,<membern>=<resetn>"
 
+For each individual member, the same rules apply. All members must be specified.
+
 
 LANGUAGE-AGNOSTIC CODE SECTIONS
--------------------------------
+===============================
 
-TODO
+Breaking out of the LaTeX environment
+-------------------------------------
+
+ - In order to facilitate breaking out of the usual LaTeX syntax highlighting in
+   capable highlighters, lines which start with \begin or \end are completely
+   ignored. This allows you to add \begin{lstlisting} and \end{lstlisting},
+   which at least break out of LaTeX highlighting in kate and kwrite.
+
+ - LaTeX style comments are ignored in code blocks, as % is used for modulo.
+   Instead, C-style comments are accepted.
+
+
+Templates
+---------
+
+Templates, defined using \defineTemplate, can be inserted using
+\<templatename>{[<arg0>]}[{<arg1>}[{<arg2>}...]]
+
+They're a mix between C preprocessor expansions and #include statements. They
+must be on their own line and will simply insert the template code where the
+template command line was (like #include), after running a simple
+search-and-replace for each argument (like expansions).
+
+
+Types
+-----
+
+The allowed types are specified in the type specification section further up in
+the file. When talking about types in this section, we'll use the internal type
+names.
+
+Types are coerced whenever possible to make operations work. The semantics are
+defined as follows:
+
+  bitvec<1>
+    ^   ^
+    |   |
+    |   v
+    |  bit  "0" <-> '0' <-> false; "1" <-> '1' <-> true
+    |   ^
+    |   |
+    v   v
+   boolean
+      ^
+      |     false <-> 0; true --> 1; nonzero --> true
+      v
+   natural
+      ^
+      |     unsigned value --> natural. The other direction needs an explicit
+      |     cast because a size is necessary.
+      |
+ unsigned<n>
+      ^
+      |     same value, different supported operations in VHDL
+      v
+  bitvec<n>
+
+
+In order to go from natural to bitvec<n> or unsigned<n>, a C-style typecast is
+required, because the size of the vector needs to be specified. When a natural
+does not fit in the vector, the higher-order bits will simply be thrown away.
+
+WARNING: because of coercion through the natural type, you can change the width
+of a vector by simply casting to that size. However, a natural is only 32-bits
+wide! Thus, you cannot go from a 64 bit vector to 48 bits for instance, because
+the upper 16 bits of the result will always be 0. Use verbatim code blocks or
+slices if you need to do this.
+
+
+Literals
+--------
+ - true and false:        boolean
+ - decimal number:        natural
+ - 0 octal number:        natural
+ - 0b binary number:      natural
+ - 0x hexadecimal number: natural
+ - '0' and '1':           bit
+ - "0101":                bitvect
+ - X"DEADBEEF":           bitvect
+ - U"0101":               unsigned
+ - UX"0101":              unsigned
+
+Note that there is no aggregate literal.
+
+
+Objects and references
+----------------------
+
+Objects need to be declared outside the code blocks using the \iface* and \decl*
+commands in their respective places. These objects can then be referenced as
+follows, both as lvalue and as rvalue:
+
+ - Reference name: [_a-zA-Z][_a-zA-Z0-9]*
+   
+ - If a reference starts with an _, cr_<regname>_<fieldname> is prefixed. This
+   is just syntactic sugar for accessing locals.
+   
+ - To explicitly specify a context for context-specific things, an @ symbol
+   and a natural literal may be appended (expressions, constants etc are not
+   allowed here). The only thing which you can put here which isn't a number is
+   \n{} in generated registers, as this is expanded to a number before parsing.
+   
+ - Member access for aggregate types is done by appending a . followed by the
+   member name. Rudimentary support is provided for array members using {} curly
+   brackets. Only natural literals and \n{} (in a \registergen environment) are
+   allowed in here.
+   
+ - VHDL-like bit indexes and slices are supported for unsigned<n> and bitvec<n>
+   types. Indexing a single bit is done by appending [<position>] to the end of
+   the reference, where <position> expects a natural-typed expression. Slicing
+   is done using [<position>, <size>], where <position> still expects an
+   expression, but <size> only supports natural-typed literals so the resulting
+   type is fixed to bitvec<size> or unsigned<size>.
+
+
+Access levels and scoping:
+
+ - Variables can only be read after they have been assigned.
+ 
+ - Variables are locally-scoped. That is, a variable in field x cannot be
+   accessed by field y. Registers must always be used for such communication.
+ 
+ - Outputs cannot be read; constants and inputs cannot be assigned.
+
+
+Expressions
+-----------
+
+Expressions are almost identical to C expressions, except that expressions with
+side effects are not included. The differences are:
+
+ - The added $ concatenation operator, mapping to the VHDL & operator. It is
+   emulated in generated C code. This is processed on the same precedence level
+   as + and - as it is in VHDL.
+ 
+ - Unlike in C, the && and || operators aren't just there to facilitate lazy
+   evaluation, as there are no side effects possible anyway. Instead, the only
+   difference with the bitwise operators is they they will first coerce their
+   operands to bit or boolean, similar to the difference between ! and ~.
+   
+ - ^^ is boolean xor, as I've never understood why it doesn't exist in C. It
+   is emulated in C using !left ^ !right.
+
+
+Statements
+----------
+
+The following statements are supported:
+
+ - reference = expression;
+   Assignment statement.
+ 
+ - if (<condition>) <statement>
+   Conditional statement.
+   
+ - if (<condition>) <statement> else <statement>
+   Conditional statement with else.
+ 
+ - { <statement>* }
+   C-style block statement.
+
+ - <?vhdl ... ?>
+   Verbatim VHDL statement. Anything in ... is copied into the resulting VHDL
+   implementation. The only exception is the @ symbol, which may be placed in
+   front of a reference name and optionally a context specifier. This allows
+   the reference to be expanded as it would be in language-agnostic code.
+
+ - <?c ... ?>
+   Verbatim C statement. Identical to the VHDL version, except for C output.

@@ -1,3 +1,6 @@
+"""Classes for each supported data type and access type (register, variable,
+port, etc.)."""
+
 import re
 
 class TypError(Exception):
@@ -359,7 +362,13 @@ def parse_type(text):
     text = text.lower()
     
     SIMPLE_TYPES = {
+        
+        # Primitive types.
+        'natural': Natural(),
+        'boolean': Boolean(),
         'bit': Bit(),
+        
+        # bitvec's with special names to permit VHDL arrays.
         'byte': Byte(),
         'data': Data(),
         'address': Address(),
@@ -369,8 +378,11 @@ def parse_type(text):
         'twobit': TwoBit(),
         'threebit': ThreeBit(),
         'fourbit': FourBit(),
+        
+        # Aggregate types.
         'trapinfo': TrapInfo(),
         'breakpointinfo': BreakpointInfo()
+        
     }
     if text in SIMPLE_TYPES:
         return SIMPLE_TYPES[text]
@@ -381,6 +393,15 @@ def parse_type(text):
                 raise TypError('bit vectors greater than 64 bits are not supported')
             elif size > 0:
                 return BitVector(size)
+        except ValueError:
+            pass
+    elif text.startswith('unsigned'):
+        try:
+            size = int(text[8:])
+            if size > 64:
+                raise TypError('unsigned vectors greater than 64 bits are not supported')
+            elif size > 0:
+                return Unsigned(size)
         except ValueError:
             pass
     else:
