@@ -7,6 +7,7 @@ import pprint
 interpreter = common.interpreter
 bitfields = common.bitfields
 
+from code_except import *
 from code_types import *
 from code_environment import *
 
@@ -134,7 +135,7 @@ def parse(indir):
         elif 'ctxt' in reg:
             regtyp = 'cx'
         else:
-            raise Exception('Unknown register type for CR_%s.' % reg['mnemonic'])
+            raise CodeError('Unknown register type for CR_%s.' % reg['mnemonic'])
         result[regtyp + 'decl'] += gather_declarations(reg)
     for ob in result['gbdecl']:
         gbenv.declare(ob)
@@ -186,16 +187,16 @@ def parse_iface(unit, env, ifacecmds):
                         else:
                             atyp = Input(typ)
                             init = None
-                    except TypError as e:
-                        raise Exception('Type error in type %s, command \\%s{}, after line %s: %s' %
-                                        (portcmd['cmd'][3], portcmd['cmd'][0], origin, str(e)))
+                    except CodeError as e:
+                        except_prefix(e, 'Type error in type %s, command \\%s{}, after line %s: ' %
+                                      (portcmd['cmd'][3], portcmd['cmd'][0], origin))
                     
                     # Check name.
                     fmt = '%s2%%s_%%s' if portcmd['cmd'][0] in ['ifaceOut', 'ifaceOutCtxt'] else '%%s2%s_%%s'
                     fmt %= unit
                     name = fmt % (portcmd['cmd'][1], portcmd['cmd'][2])
                     if not re.match(r'[a-zA-Z0-9][a-zA-Z0-9_]*$', name):
-                        raise Exception('Name error in \\%s{} after line %s: invalid port name %s.' %
+                        raise CodeError('Name error in \\%s{} after line %s: invalid port name %s.' %
                                         (portcmd['cmd'][0], origin, name))
                     
                     # Make the object.
@@ -233,8 +234,7 @@ def parse_bitfields(regcmd):
     try:
         fields = bitfields.parse(fields)
     except bitfields.FieldError as e:
-        raise Exception('Error while parsing bitfields for %s: %s' %
-                        (rerr, str(e)))
+        except_prefix(e, 'Error while parsing bitfields for %s: ' % rerr)
     
     # Perform some field post-processing now that the ranges have been
     # parsed.
@@ -255,7 +255,7 @@ def parse_bitfields(regcmd):
         # fields, so throw an error if IDs are specified for other fields.
         if 'defined' in field and len(field['alt_ids']) > 0:
             if (size not in [8, 16]) or (offset % size != 0):
-                raise Exception(('\\id{} command specified for field ' +
+                raise CodeError(('\\id{} command specified for field ' +
                                 'defined on line %s which is not an ' +
                                 'aligned byte or halfword register. ' +
                                 'This is not supported.') % field['origin'])
@@ -329,7 +329,7 @@ def parse_bitfield(fieldcmd):
             field['resimpl'] = modcmd['code']
         
         else:
-            raise Exception('Unimplemented field modifier command %s.' %
+            raise CodeError('Unimplemented field modifier command %s.' %
                             mcmd[0])
     
     return field
@@ -415,17 +415,17 @@ def parse_registers(regcmds):
                 try:
                     ns = list(eval(cmd['cmd'][1]))
                 except Exception as e:
-                    raise Exception('Error parsing python range %s: %s.' %
+                    raise CodeError('Error parsing python range %s: %s.' %
                                     (cmd['cmd'][1], str(e)))
                 mnem   = cmd['cmd'][2].strip()
                 title  = cmd['cmd'][3].strip()
                 offs   = int(cmd['cmd'][4].strip(), 0)
                 stride = int(cmd['cmd'][5].strip(), 0)
             else:
-                raise Exception('Unimplemented command %s on line %s.' %
+                raise CodeError('Unimplemented command %s on line %s.' %
                                 (cmd['cmd'][0], orig))
         except ValueError:
-            raise Exception('Offset or stride could not be parsed on line %s.' %
+            raise CodeError('Offset or stride could not be parsed on line %s.' %
                             orig)
         rerr = 'register CR_%s on line %s' % (mnem, orig)
         
@@ -433,10 +433,10 @@ def parse_registers(regcmds):
         for n in ns:
             roffs = offs + n * stride
             if reg_type(roffs) is None:
-                raise Exception('Invalid register offset 0x%03X in %s.' %
+                raise CodeError('Invalid register offset 0x%03X in %s.' %
                                 (roffs, rerr))
             if regmap[roffs // 4] is not None:
-                raise Exception('Overlapping register offsets')
+                raise CodeError('Overlapping register offsets')
         
         # Create the documentation dictionary and add it to the regdoc table:
         #  - List of sub-registers which we'll generate in a bit.
@@ -550,16 +550,16 @@ def check_reg_names(regmap):
         # Make sure the register mnemonic is valid.
         rnam = reg['mnemonic']
         if not re.match(r'[A-Z0-9]+$', rnam):
-            raise Exception(('Invalid register mnemonic %s on line %s. ' + 
+            raise CodeError(('Invalid register mnemonic %s on line %s. ' + 
                             'Only A-Z and 0-9 are permitted.') %
                             (rnam, reg['origin']))
         if len(rnam) > 8:
-            raise Exception(('Invalid register mnemonic %s on line %s. ' + 
+            raise CodeError(('Invalid register mnemonic %s on line %s. ' + 
                             'A mnemonic is supposed to be short... The ' +
                             'documentation template supports up to 8 ' +
                             'characters only.') % (rnam, reg['origin']))
         if rnam in rnams:
-            raise Exception('Duplicate register mnemonic %s on line %s.' %
+            raise CodeError('Duplicate register mnemonic %s on line %s.' %
                             (rnam, reg['origin']))
         rnams.add(rnam)
         
@@ -575,36 +575,36 @@ def check_reg_names(regmap):
             # Make sure the field mnemonic is valid.
             fnam = field['name']
             if not re.match(r'[A-Z0-9]+$', fnam):
-                raise Exception(('Invalid field mnemonic %s in %s.' + 
+                raise CodeError(('Invalid field mnemonic %s in %s.' + 
                                 'Only A-Z and 0-9 are permitted.')
                                 % (fnam, rerr))
             size = field['upper_bit'] - field['lower_bit'] + 1
             if len(fnam) > (size * 2) - 1 or len(fnam) > 8:
-                raise Exception(('Invalid field mnemonic %s in %s. ' + 
+                raise CodeError(('Invalid field mnemonic %s in %s. ' + 
                                 'A mnemonic is supposed to be short... The ' +
                                 'documentation template supports up to 8 ' +
                                 'characters max, and up to 2s-1 characters ' +
                                 'for bitcount s.') % (fnam, reg['origin']))
             if fnam in fnams:
-                raise Exception('Duplicate field mnemonic %s in %s.' %
+                raise CodeError('Duplicate field mnemonic %s in %s.' %
                                 (fnam, rerr))
             fnams.add(fnam)
             
             # While we're checking stuff anyway, also throw an error when
             # resetImplementation is specified for global registers.
             if 'glob' in reg and len(field['resimpl']) != 0:
-                raise Exception(('Reset implementation specified for field %s' +
+                raise CodeError(('Reset implementation specified for field %s' +
                                 'in global register %s. Only context ' +
                                 'registers support this.') % (fnam, rerr))
             
             # Check alternate IDs.
             for anam in field['alt_ids']:
                 if not re.match(r'[A-Z0-9]+$', anam):
-                    raise Exception(('Invalid field ID %s in %s. ' + 
+                    raise CodeError(('Invalid field ID %s in %s. ' + 
                                     'Only A-Z and 0-9 are permitted.') %
                                     (anam, rerr))
                 if anam in rnams:
-                    raise Exception(('Duplicate register mnemonic %s' +
+                    raise CodeError(('Duplicate register mnemonic %s' +
                                     'due to field ID in %s.') %
                                     (anam, rerr))
                 rnams.add(anam)
@@ -719,7 +719,7 @@ def gather_declarations(reg):
             
             # Check the name.
             if not re.match(r'_[a-zA-Z0-9_]+', name):
-                raise Exception(('Invalid local name \'%s\' after line %s. ' +
+                raise CodeError(('Invalid local name \'%s\' after line %s. ' +
                                 'Local names must start with an underscore.') %
                                 (name, origin))
             
@@ -727,7 +727,7 @@ def gather_declarations(reg):
             try:
                 typ = parse_type(typspec)
             except TypError as e:
-                raise Exception('Error parsing type \'%s\' after line %s: %s' %
+                raise CodeError('Error parsing type \'%s\' after line %s: %s' %
                                 (typspec, origin, str(e)))
             
             # If this is a context-specific field, make the type per context.
@@ -742,7 +742,7 @@ def gather_declarations(reg):
             elif atypspec == 'declConstant':
                 atyp = Constant(typ)
             else:
-                raise Exception('Unknown declaration command \\%s.' % atypspec)
+                raise CodeError('Unknown declaration command \\%s.' % atypspec)
             
             # Construct and add the object.
             ob = Object(owner, name, atyp, origin, init)

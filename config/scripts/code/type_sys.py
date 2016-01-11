@@ -1,16 +1,8 @@
-"""Classes for each supported data type and access type (register, variable,
-port, etc.)."""
+"""This module contains all the classes which represent the types available in
+the language-agnostic code."""
 
+from excepts import *
 import re
-
-class TypError(Exception):
-    
-    def __init__(self, message):
-        self.message = message
-    
-    def __str__(self):
-        return repr(self.message)
-
 
 class Type(object):
     """Represents a data type."""
@@ -18,6 +10,13 @@ class Type(object):
     def name(self):
         """Returns the language-agnostic name of the type."""
         return None
+        
+    def cls(self):
+        """Returns the language-agnostic type class. NOTE: a lot of code checks
+        whether a type is an instance of bitvec or unsigned by using
+        startswith(). Thus, don't ever make a new class which starts with one of
+        those words because shit will be on fire."""
+        return self.name()
         
     def name_vhdl(self):
         """Returns the VHDL name of the type, or None if it does not exist. A
@@ -33,27 +32,13 @@ class Type(object):
         """Returns the C name of the type, or None if it does not exist."""
         return name(self)
     
-    def index_range(self):
-        """Returns the range of valid indices for this type, or None if this
-        type cannot be indexed."""
-        return None
-    
-    def can_index(self):
-        """Returns whether this type can be indexed."""
-        return index_range(self) is not None
-    
-    def index_type(self):
-        """Returns the type which indexing will result in, or None if this
-        type cannot be indexed."""
-        return None
-
     def can_slice(self):
         """Returns whether this type can be sliced."""
         return False
     
-    def slice_type(self, high, low):
-        """Returns the type which slicing will result in with the given high and
-        low bounds, or None if this type cannot be sliced in this way."""
+    def slice_type(self, size):
+        """Returns the type which slicing will result in with the given size
+        bounds, or None if this type cannot be sliced in this way."""
         return None
     
     def exists_per_context(self):
@@ -66,13 +51,19 @@ class Type(object):
         aggregate, or None otherwise."""
         return None
     
+    def get_member_order(self):
+        """Returns a list of all the members in this type, before expanding
+        arrays, in the right order. This information is needed for constructing
+        C aggregate initializers."""
+        return None
+    
     def member_type(self, member):
         """Returns the type of an aggregate member of this type, i.e., something
         after a dot. Returns None if the member does not exist."""
         return None
 
     def __eq__(self, other):
-        if isinstance(other, self.__class__):
+        if type(self) is type(other):
             return self.__dict__ == other.__dict__
         else:
             return False
@@ -83,6 +74,19 @@ class Type(object):
     def __str__(self):
         return self.name()
 
+    def __repr__(self):
+        return 'Type(%s)' % self.name()
+
+
+def cls_size(cls):
+    """Returns the size of a type class."""
+    if cls.startswith('bitvec'):
+        return int(cls[6:])
+    elif cls.startswith('unsigned'):
+        return int(cls[8:])
+    else:
+        raise ValueError()
+
 
 class Boolean(Type):
     """Boolean/predicate data type, used for conditional statements."""
@@ -91,18 +95,18 @@ class Boolean(Type):
         return 'boolean'
         
     def name_c(self):
-        # Storage: 0 for false, 1 for true. All other values are ILLEGAL.
+        # Storage: 0 for false, 1 for true. All other values are illegal.
         return 'uint32_t'
 
 
 class Natural(Type):
-    """32-bit natural number data type, used for indexing operations."""
+    """31-bit natural number data type, used for indexing operations."""
 
     def name(self):
         return 'natural'
         
     def name_c(self):
-        # Storage: same as VHDL.
+        # Storage: 0..0x7FFFFFFF. All other values are illegal.
         return 'uint32_t'
 
 
@@ -132,6 +136,9 @@ class BitVector(Type):
     def name(self):
         return 'bitvec%d' % (self.size)
         
+    def cls(self):
+        return 'bitvec%d' % (self.size)
+    
     def name_vhdl(self):
         return 'std_logic_vector(%d downto 0)' % (self.size-1)
     
@@ -140,17 +147,17 @@ class BitVector(Type):
         # ignored. Note that the low bit position is not encoded.
         return 'uint64_t' if self.size > 32 else 'uint32_t'
 
-    def index_range(self):
-        return range(self.low, self.size)
-    
-    def index_type(self):
-        return Bit()
-
     def can_slice(self):
         return True
     
-    def slice_type(self, high, low):
-        return BitVector(high - low + 1)
+    def slice_type(self, size):
+        if size is None:
+            return Bit()
+        if size > self.size:
+            return None
+        if size < 1:
+            return None
+        return BitVector(size)
 
 
 class Unsigned(BitVector):
@@ -159,11 +166,20 @@ class Unsigned(BitVector):
     def name(self):
         return 'unsigned%d' % (self.size)
         
+    def cls(self):
+        return 'unsigned%d' % (self.size)
+    
     def name_vhdl(self):
         return 'unsigned(%d downto 0)' % (self.size-1)
     
-    def slice_type(self, high, low):
-        return Unsigned(high - low + 1)
+    def slice_type(self, size):
+        if size is None:
+            return Bit()
+        if size > self.size:
+            return None
+        if size < 1:
+            return None
+        return Unsigned(size)
 
 
 class Byte(BitVector):
@@ -171,6 +187,9 @@ class Byte(BitVector):
 
     def __init__(self):
         BitVector.__init__(self, 8)
+    
+    def name(self):
+        return 'byte'
     
     def name_vhdl(self):
         return 'rvex_byte_type'
@@ -185,6 +204,9 @@ class Data(BitVector):
     def __init__(self):
         BitVector.__init__(self, 32)
     
+    def name(self):
+        return 'data'
+    
     def name_vhdl(self):
         return 'rvex_data_type'
     
@@ -197,6 +219,9 @@ class Address(BitVector):
 
     def __init__(self):
         BitVector.__init__(self, 32)
+    
+    def name(self):
+        return 'address'
     
     def name_vhdl(self):
         return 'rvex_address_type'
@@ -211,6 +236,9 @@ class SylStatus(BitVector):
     def __init__(self):
         BitVector.__init__(self, 16)
     
+    def name(self):
+        return 'sylStatus'
+    
     def name_vhdl(self):
         return 'rvex_sylStatus_type'
     
@@ -223,6 +251,9 @@ class BrRegData(BitVector):
 
     def __init__(self):
         BitVector.__init__(self, 8)
+    
+    def name(self):
+        return 'brRegData'
     
     def name_vhdl(self):
         return 'rvex_brRegData_type'
@@ -237,6 +268,9 @@ class TrapCause(BitVector):
     def __init__(self):
         BitVector.__init__(self, 8)
     
+    def name(self):
+        return 'trapCause'
+    
     def name_vhdl(self):
         return 'rvex_trap_type'
     
@@ -249,6 +283,9 @@ class TwoBit(BitVector):
 
     def __init__(self):
         BitVector.__init__(self, 2)
+    
+    def name(self):
+        return 'twoBit'
     
     def name_vhdl(self):
         return 'rvex_2bit_type'
@@ -263,6 +300,9 @@ class ThreeBit(BitVector):
     def __init__(self):
         BitVector.__init__(self, 3)
         
+    def name(self):
+        return 'threeBit'
+    
     def name_vhdl(self):
         return 'rvex_3bit_type'
     
@@ -275,6 +315,9 @@ class FourBit(BitVector):
 
     def __init__(self):
         BitVector.__init__(self, 4)
+    
+    def name(self):
+        return 'fourBit'
     
     def name_vhdl(self):
         return 'rvex_4bit_type'
@@ -289,17 +332,43 @@ class Aggregate(Type):
     cannot contain PerCtxt() types. The members also need to be hardcoded as
     subclasses of this type."""
     
-    def __init__(self, members):
-        self.members = members
+    def __init__(self):
+        self.members = {}
+        self.member_order = []
+    
+    def add_entry(self, name, typ):
+        """Adds a scalar to the aggregate."""
+        name = name.lower()
+        if name in self.member_order:
+            raise CodeError(('duplicate entry name \'%s\' in \'%s\' aggregate ' +
+                            'definition.') % (name, self.name()))
+        self.member_order.append(name)
+        self.members[name] = typ
+    
+    def add_array(self, name, size, typ):
+        """Adds an array to the aggregate."""
+        name = name.lower()
+        if name in self.member_order:
+            raise CodeError(('duplicate entry name \'%s\' in \'%s\' aggregate ' +
+                            'definition.') % (name, self.name()))
+        self.member_order.append(name)
+        for i in range(size):
+            self.members['%s{%d}' % (name, i)] = typ
     
     def name(self):
         return 'aggregate'
         
+    def cls(self):
+        return 'aggregate %s' % self.name()
+    
     def get_members(self):
         return self.members
     
+    def get_member_order(self):
+        return self.member_order
+    
     def member_type(self, member):
-        member.split('.', 1)
+        member = member.lower().split(r'\.', 1)
         if member[0] not in self.members:
             return None
         member_typ = self.members[member[0]]
@@ -313,12 +382,14 @@ class TrapInfo(Aggregate):
     """Trap information structure."""
     
     def __init__(self):
-        Aggregate.__init__(self, {
-            'active': Bit(),
-            'cause':  TrapCause(),
-            'arg':    Address()
-        })
+        Aggregate.__init__(self)
+        self.add_entry('active', Bit())
+        self.add_entry('cause',  TrapCause())
+        self.add_entry('arg',    Address())
 
+    def name(self):
+        return 'trapInfo'
+    
     def name_vhdl(self):
         return 'trap_info_type'
     
@@ -333,17 +404,13 @@ class BreakpointInfo(Aggregate):
     """Breakpoint information structure."""
     
     def __init__(self):
-        Aggregate.__init__(self, {
-            'addr[0]': Address(),
-            'addr[1]': Address(),
-            'addr[2]': Address(),
-            'addr[3]': Address(),
-            'cfg[0]': TwoBit(),
-            'cfg[1]': TwoBit(),
-            'cfg[2]': TwoBit(),
-            'cfg[3]': TwoBit()
-        })
+        Aggregate.__init__(self)
+        self.add_array('addr', 4, Address())
+        self.add_array('cfg',  4, TwoBit())
 
+    def name(self):
+        return 'breakpointInfo'
+    
     def name_vhdl(self):
         return 'cxreg2pl_breakpoint_info_type'
     
@@ -356,7 +423,7 @@ class BreakpointInfo(Aggregate):
         
 def parse_type(text):
     """Converts a textual type (using the language agnostic names) which can be
-    instantiated by the user into an internal Type. Raises a TypError if 
+    instantiated by the user into an internal Type. Raises a CodeError if 
     something goes wrong."""
     
     text = text.lower()
@@ -390,7 +457,7 @@ def parse_type(text):
         try:
             size = int(text[6:])
             if size > 64:
-                raise TypError('bit vectors greater than 64 bits are not supported')
+                raise CodeError('bit vectors greater than 64 bits are not supported.')
             elif size > 0:
                 return BitVector(size)
         except ValueError:
@@ -399,13 +466,13 @@ def parse_type(text):
         try:
             size = int(text[8:])
             if size > 64:
-                raise TypError('unsigned vectors greater than 64 bits are not supported')
+                raise CodeError('unsigned vectors greater than 64 bits are not supported.')
             elif size > 0:
                 return Unsigned(size)
         except ValueError:
             pass
     else:
-        raise TypError('unknown type \'%s\'' % text)
+        raise CodeError('unknown type \'%s\'.' % text)
 
 
 class PerCtxt(Type):
@@ -414,10 +481,13 @@ class PerCtxt(Type):
     def __init__(self, el_typ):
         self.el_typ = el_typ
         if el_typ.name_vhdl_array() is None:
-            raise TypError('Cannot instantiate type ' + self.name() + ' per context.')
+            raise CodeError('cannot instantiate type ' + self.name() + ' per context.')
 
     def name(self):
         return self.el_typ.name()
+        
+    def cls(self):
+        return self.el_typ.cls()
         
     def name_vhdl(self):
         return '%s(2**CFG.numContextsLog2-1 downto 0)' % self.el_typ.name_vhdl_array()
@@ -425,18 +495,9 @@ class PerCtxt(Type):
     def name_c(self):
         return self.el_typ.name_c()
 
-    def index_range(self):
-        return range(8)
-    
-    def index_type(self):
-        return self.el_typ
-
     def exists_per_context(self):
         return True
 
-    def member_type(self, member):
-        return self.el_typ.member_type(member)
-    
     def __str__(self):
         return '%s per context' % self.name()
 
@@ -444,31 +505,26 @@ class PerCtxt(Type):
 class CfgVectType(Aggregate):
     
     def __init__(self):
-        Aggregate.__init__(self, {
-            'numLanesLog2':          Natural(),
-            'numLaneGroupsLog2':     Natural(),
-            'numContextsLog2':       Natural(),
-            'genBundleSizeLog2':     Natural(),
-            'bundleAlignLog2':       Natural(),
-            'multiplierLanes':       Natural(),
-            'memLaneRevIndex':       Natural(),
-            'numBreakpoints':        Natural(),
-            'forwarding':            Boolean(),
-            'limmhFromNeighbor':     Boolean(),
-            'limmhFromPreviousPair': Boolean(),
-            'reg63isLink':           Boolean(),
-            'cregStartAddress':      Address(),
-            'resetVectors[0]':       Address(),
-            'resetVectors[1]':       Address(),
-            'resetVectors[2]':       Address(),
-            'resetVectors[3]':       Address(),
-            'resetVectors[4]':       Address(),
-            'resetVectors[5]':       Address(),
-            'resetVectors[6]':       Address(),
-            'resetVectors[7]':       Address(),
-            'unifiedStall':          Boolean(),
-            'traceEnable':           Boolean()
-        })
+        Aggregate.__init__(self)
+        self.add_entry('numLanesLog2',          Natural())
+        self.add_entry('numLaneGroupsLog2',     Natural())
+        self.add_entry('numContextsLog2',       Natural())
+        self.add_entry('genBundleSizeLog2',     Natural())
+        self.add_entry('bundleAlignLog2',       Natural())
+        self.add_entry('multiplierLanes',       Natural())
+        self.add_entry('memLaneRevIndex',       Natural())
+        self.add_entry('numBreakpoints',        Natural())
+        self.add_entry('forwarding',            Boolean())
+        self.add_entry('limmhFromNeighbor',     Boolean())
+        self.add_entry('limmhFromPreviousPair', Boolean())
+        self.add_entry('reg63isLink',           Boolean())
+        self.add_entry('cregStartAddress',      Address())
+        self.add_array('resetVectors',       8, Address())
+        self.add_entry('unifiedStall',          Boolean())
+        self.add_entry('traceEnable',           Boolean())
+    
+    def name(self):
+        return 'cfgVect'
     
     def name_vhdl(self):
         return 'rvex_generic_config_type'

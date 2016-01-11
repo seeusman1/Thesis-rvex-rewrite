@@ -1,14 +1,7 @@
 import re
-from code_types import *
-from code_output import *
-
-class NamError(Exception):
-    
-    def __init__(self, message):
-        self.message = message
-    
-    def __str__(self):
-        return repr(self.message)
+from type_sys import *
+from back_end import *
+from excepts import *
 
 
 class Object(object):
@@ -21,7 +14,7 @@ class Object(object):
             name = owner + name
         
         if atyp.needs_init() and initspec is None:
-            raise Exception('%s %s needs an init/reset spec but does not have one.' %
+            raise CodeError('%s %s needs an init/reset spec but does not have one.' %
                             (atyp, name))
         
         self.owner = owner
@@ -30,7 +23,8 @@ class Object(object):
         self.origin = origin
         self.initspec = initspec
         self.init = None
-        self.decl = None
+        self.decl_vhdl = None
+        self.decl_c = None
         
         # Whether this object has ever been used.
         self.used = False
@@ -49,16 +43,16 @@ class Object(object):
         lang must be 'vhdl' or 'c'."""
         
         if self.atyp.needs_init() and self.init is None:
-            raise Exception('%s %s needs an init/reset spec but it has not been parsed yet.' %
+            raise CodeError('%s %s needs an init/reset spec but it has not been parsed yet.' %
                             (self.atyp, self.name))
-        if self.decl is None:
-            self.decl = declare(self)
+        if self.decl_vhdl is None:
+            self.decl_vhdl, self.decl_c = output_declaration(self)
         if lang == 'vhdl':
-            return self.decl.output_vhdl(0)
+            return self.decl_vhdl
         elif lang == 'c':
-            return self.decl.output_c(0)
+            return self.decl_c
         else:
-            raise Exception('Invalid language %s.' % lang)
+            raise CodeError('Invalid language %s.' % lang)
         
     def __str__(self):
         return '%s %s' % (self.atyp, self.name)
@@ -81,20 +75,20 @@ class Environment:
         return e
     
     def declare(self, ob):
-        """Adds an object to the environment. Raises a NamError if the name is
+        """Adds an object to the environment. Raises a CodeError if the name is
         already in use or if the name is invalid."""
         
         # Check whether the name is valid.
         if re.match(r'[a-zA-Z0-9][a-zA-Z0-9_]*$', ob.name) is None:
-            raise NamError('Illegal object name \'%s\', declared after line %s.' %
-                           (ob.name, ob.origin))
+            raise CodeError('Illegal object name \'%s\', declared after line %s.' %
+                            (ob.name, ob.origin))
         
         # Make sure the name is not already in use.
         if ob.name.lower() in self.objects:
             conflict = self.objects[ob.name.lower()]
-            raise NamError(('Name %s, declared after line %s, is already in use. ' +
-                           'Conflicts with %s, declared after line %s.') %
-                           (ob.name, ob.origin, conflict, conflict.origin))
+            raise CodeError(('Name %s, declared after line %s, is already in use. ' +
+                            'Conflicts with %s, declared after line %s.') %
+                            (ob.name, ob.origin, conflict, conflict.origin))
         
         # Add the object. Note that we use lower() to make names
         # case-insensitive. This is necessary to be compatible with VHDL.
@@ -122,12 +116,13 @@ class Environment:
         """Looks up a name. name is of the format [<owner>]_<name>[@<ctxt>].
         If <owner> is not specified, user is used. If <ctxt> is not specified,
         implicit_ctxt is used. If <ctxt> IS specified, but the lookup does not
-        resolve to a context-specific object, a NamError is raised. A NamError
+        resolve to a context-specific object, a CodeError is raised. A CodeError
         is also raised if the lookup failed entirely, or if <owner> != user for
         a local object.
         
         Returns a two-tuple: (object, ctxt). ctxt is always None for globals
-        and always an Expression for context-specific objects."""
+        and always an int or whatever was specified by set_implicit_ctxt() for
+        context-specific objects."""
         
         # Extract the explicit context from the name.
         name = name.split('@', 1)
@@ -143,40 +138,29 @@ class Environment:
         
         # Look up the variable.
         if name.lower() not in self.objects:
-            raise NamError('Undefined object \'%s\'.' % name)
+            raise CodeError('Undefined object \'%s\'.' % name)
         ob = self.objects[name.lower()]
         
         # Raise an error if this is a local and we're not the owner.
         if ob.atyp.is_local() and self.user.lower() != ob.owner.lower():
-            raise NamError('Cannot access local \'%s\' from %s.' %
-                           (ob.name, self.user))
+            raise CodeError('Cannot access local \'%s\' from %s.' %
+                            (ob.name, self.user))
         
         # Raise an error if a context is explicitly specified if this is a
         # global object.
         cxspec = ob.atyp.typ.exists_per_context()
         if not cxspec and ctxt is not None:
-            raise NamError('Cannot apply @ context selection syntax to ' +
-                           'global \'%s\'.' % ob.name)
+            raise CodeError('Cannot apply @ context selection syntax to ' +
+                            'global \'%s\'.' % ob.name)
         if cxspec and ctxt is None:
             ctxt = self.implicit_ctxt
             if ctxt is None:
-                raise NamError('Cannot access context-specific object ' +
-                               '\'%s\' without context.' % ob.name)
-        
-        # Look up the context if one is needed.
-        if ctxt is not None:
-            
-            # Get an Expression for ctxt.
-            ctxt = self.read(ctxt)
-            
-            # Typecast the Expression if needed.
-            ctxt = ctxt.cast(Natural())
+                raise CodeError('Cannot access context-specific object ' +
+                                '\'%s\' without context.' % ob.name)
         
         # Lookup successful.
         return (ob, ctxt)
 
-    def __str__(self):
+    def __repr__(self):
         return '\n'.join([str(self.objects[key]) for key in self.objects])
-    
-    __repr__ = __str__
 

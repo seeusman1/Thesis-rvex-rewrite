@@ -1,4 +1,7 @@
-"""Abstract syntax tree class."""
+"""This module defines the abstract syntax tree class, which is used for the
+intermediate representation."""
+
+from excepts import *
 
 class AST(object):
     
@@ -32,16 +35,7 @@ class AST(object):
         return self.annot[key]
     
     def __str__(self):
-        return self.value
-    
-    def replace(self, new):
-        """Replaces this AST node with a new version. new may be a single
-        ASTNode or a list of ASTNodes."""
-        if self.parent is None:
-            raise Exception('Cannot replace root node.')
-        if type(new) is not list:
-            new = [new]
-        self.parent.children[self.parent_idx:self.parent_idx+1] = new
+        return str(self.value)
     
     @property
     def origin(self):
@@ -51,6 +45,45 @@ class AST(object):
         if self._orig is None:
             return '<internal>'
         return self._orig
+    
+    def apply_dfs(self, fun):
+        """Applies a function of type x -> y to each node in the tree,
+        depth-first. If the function returns None, the tree is not modified. If
+        it returns a list of nodes, the node which it was applied to is replaced
+        with the returned list. This function returns the new version of the
+        node it was called upon, or the old version if it was not replaced."""
+        self._apply_dfs(fun)
+        ret = fun(self)
+        if ret is None:
+            return self
+        elif len(ret) == 1:
+            return ret[0]
+        else:
+            return ret
+        
+    def _apply_dfs(self, fun):
+        children = []
+        for child in self.children:
+            child._apply_dfs(fun)
+            ret = fun(child)
+            if ret is None:
+                children.append(child)
+            else:
+                children += ret
+        for i, child in enumerate(children):
+            child.parent = self
+            child.parent_idx = i
+        self.children = children
+        
+    def apply_xform_dfs(self, xform):
+        return self.apply_dfs(xform.proxy)
+    
+    
+    def generate(self, key):
+        """Generates code by applying str.format() to the attribute specified
+        by key, using the generate() output from subnodes as parameters."""
+        return self[key].format(*[x.generate(key) for x in self])
+    
     
     def pp_ast(self):
         """Pretty-prints the AST (returns as a string)."""
@@ -67,7 +100,10 @@ class AST(object):
             val = self.annot[key]
             tree.append(['%s --> %s' % (key, repr(val))])
         for child in self.children:
-            tree.append(child._pp_ast())
+            if hasattr(child, '_pp_ast'):
+                tree.append(child._pp_ast())
+            else:
+                tree.append(['ERROR: ' + repr(child)])
         for sublines in tree[:-1]:
             first = True
             for subline in sublines:
@@ -97,8 +133,6 @@ class ASTNode(AST):
     
     def __init__(self, type, children):
         for i, child in enumerate(children):
-            if child.parent is not None:
-                raise Exception('AST node already has a parent.')
             child.parent = self
             child.parent_idx = i
         
@@ -110,3 +144,16 @@ class ASTNode(AST):
         self.parent = None
         self.parent_idx = None
 
+
+class Transformation(object):
+    
+    def proxy(self, node):
+        try:
+            fun = getattr(self, node.node_type)
+        except AttributeError:
+            return None
+        try:
+            return fun(node)
+        except Exception as e:
+            except_prefix(e, 'error on %s: ' % node.origin)
+    

@@ -17,9 +17,9 @@ root
  |   '- \ifaceGroup{title}
  |       '- \ifaceSubGroup{}
  |           |- ifaceIn{unit}{name}{type}
- |           |- ifaceOut{unit}{name}{type}{reset}
+ |           |- ifaceOut{unit}{name}{type}{expr}
  |           |- ifaceInCtxt{unit}{name}{type}
- |           '- ifaceOutCtxt{unit}{name}{type}{reset}
+ |           '- ifaceOutCtxt{unit}{name}{type}{expr}
  |- \defineTemplate{name}{parameter list}
  '- \register{mnemonic}{name}{offset},
     \registergen{python range}{mnemonic}{name}{offset}{stride}
@@ -28,9 +28,9 @@ root
          |- \signed{}
          |- \id{identifier}
          |- \declaration{}
-         |   |- \declRegister{name}{type}{reset}
-         |   |- \declVariable{name}{type}
-         |   '- \declConstant{name}{type}{reset}
+         |   |- \declRegister{name}{type}{expr}
+         |   |- \declVariable{name}{type}{expr}
+         |   '- \declConstant{name}{type}{expr}
          |- \implementation{}
          '- \resetImplementation{}
 
@@ -47,15 +47,15 @@ root
    as comments to be put in the code.
  
  - ifaceIn{<unit>}{<name>}{<type>}
- - ifaceOut{<unit>}{<name>}{<type>}{<reset>}
+ - ifaceOut{<unit>}{<name>}{<type>}{<expr>}
  - ifaceInCtxt{<unit>}{<name>}{<type>}
- - ifaceOutCtxt{<unit>}{<name>}{<type>}{<reset>}
+ - ifaceOutCtxt{<unit>}{<name>}{<type>}{<expr>}
    Defines a port. For inputs, the signal name will be "<unit>2cxreg_<name>" or
    "<unit>2gbreg_<name>". For outputs it will be "cxreg2<unit>_<name>" or
    "gbreg2<unit>_<name>". <type> is a type specification as defined later.
-   <reset> is a reset specification as defined later. The command name
-   determines whether the port is per-context or global and whether it is an
-   input or output.
+   <expr> is an expression using only predefined constants, input signals and
+   literals. The command name determines whether the port is per-context or
+   global and whether it is an input or output.
    
  - \defineTemplate{<name>}{<parameter list>}
    TODO
@@ -101,14 +101,16 @@ root
  - \declaration{}
    Specifies the local declaration section for this field implementation.
    
- - \declRegister{<name>}{<type>}{<reset>}
- - \declVariable{<name>}{<type>}
- - \declConstant{<name>}{<type>}{<reset>}
+ - \declRegister{<name>}{<type>}{<expr>}
+ - \declVariable{<name>}{<type>}{<expr>}
+ - \declConstant{<name>}{<type>}{<expr>}
    Specifies registers, variables or constants needed by the implementation
    code. <name> must start with an underscore, and will expand to
    "cr_<register-mnemonic>_<field-mnemonic><name>". <type> is a type
-   specification as defined later. <reset> is a reset specification as defined
-   later. The reset specification for constants just defines the initial value.
+   specification as defined later. <expr> is an expression which defines the
+   constant, initial value or reset value, using only predefined constants for
+   a constant value, and only inputs or predefined constants for variables and
+   registers.
    
  - \implementation{}
    Language-agnostic code section as defined below, executed every rising clock
@@ -132,7 +134,7 @@ TYPE SPECIFICATIONS
 ===================
 
 A type specification is just a type name. The following types are currently
-supported (hardcoded into scripts/cregs/code_types.py).
+supported (hardcoded into scripts/code/type_classes.py).
 
  .----------------.-------------.--------------------------------.-------------------------------------.-------------------.
  | Type name      | Internally  | VHDL global type               | VHDL per-context type               | C representation  |
@@ -208,25 +210,8 @@ TODO: these aggregate types should probably be read from a config file,
 especially because it's pretty easy to do so.
 
 
-RESET SPECIFICATIONS
-====================
-
-Registers, output ports and constants have reset specifications tied to them (in
-the case of a constant, this is just its initialization value).
-
-The reset specification for non-aggregate constants may only be a literal value
-of the same type. For non-aggregate registers and outputs, it may also be an
-input signal or a global constant of the same type.
-
-For aggregate types, the syntax is as follows:
-
-"<member1>=<reset1>,<member2>=<reset2>,<...>,<membern>=<resetn>"
-
-For each individual member, the same rules apply. All members must be specified.
-
-
-LANGUAGE-AGNOSTIC CODE SECTIONS
-===============================
+LANGUAGE-AGNOSTIC CODE SECTIONS AND EXPRESSION
+==============================================
 
 Breaking out of the LaTeX environment
 -------------------------------------
@@ -291,9 +276,9 @@ required, because the size of the vector needs to be specified. When a natural
 does not fit in the vector, the higher-order bits will simply be thrown away.
 
 WARNING: because of coercion through the natural type, you can change the width
-of a vector by simply casting to that size. However, a natural is only 32-bits
+of a vector by simply casting to that size. However, a natural is only 31-bits
 wide! Thus, you cannot go from a 64 bit vector to 48 bits for instance, because
-the upper 16 bits of the result will always be 0. Use verbatim code blocks or
+the upper 17 bits of the result will always be 0. Use verbatim code blocks or
 slices if you need to do this.
 
 
@@ -311,6 +296,27 @@ Literals
  - UX"0101":              unsigned
 
 Note that there is no aggregate literal.
+
+
+Aggregates
+----------
+Aggregate types can be assigned and initialized using an aggregate/compound
+literal. The syntax is similar to VHDL aggregates:
+
+{
+  <name> => <expression>,
+  <name>{<array index literal>} => <expression>,
+  <name>{others} => <expression>,
+  others => <expression>
+}
+
+Unlike in VHDL, 'others' can assign any kind of combination of types, as long as
+the expression can be coerced to each member type. For instance, the aggregate
+{others => 0} will initialize any aggregate which does not itself contain
+another aggregate to all zeros.
+
+Aggregate literals can not be used anywhere in an expression like C compound
+literals can: aggregates can only be assigned directly to an object.
 
 
 Objects and references
