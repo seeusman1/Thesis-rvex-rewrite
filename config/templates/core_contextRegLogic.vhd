@@ -55,6 +55,7 @@ use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
 use rvex.core_trap_pkg.all;
+use rvex.core_pipeline_pkg.all;
 
 --=============================================================================
 -- This entity contains the specifications and logic for the control registers
@@ -113,33 +114,45 @@ end core_contextRegLogic;
 --=============================================================================
 architecture Behavioral of core_contextRegLogic is
 --=============================================================================
+  @LIB_FUNCS
   
+  -- Generated registers.
   @REG_DECL
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
   
-  gbregs: process (clk) is
-    @VAR_DECL
-  begin
-    if rising_edge(clk) then
-      for c in 0 to 2**CFG.numContextsLog2-1 loop
+  cxreg_gen: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
+    cxregs: process (clk) is
+      @VAR_DECL
+    begin
+      if rising_edge(clk) then
+        
+        -- Set readData to 0 by default.
+        cxreg2creg_readData(ctxt) <= (others => '0');
+        
         if reset = '1' then
+          
+          -- Reset all registers and ports.
           @REG_RESET
-          cxreg2creg_readData(c) <= (others => '0');
+          
         elsif clkEn = '1' then
-          if ctxtReset(c) = '1' then
+          if ctxtReset(ctxt) = '1' then
+            
+            -- Reset all registers and ports.
             @REG_RESET
-            cxreg2creg_readData(c) <= (others => '0');
+            
+            -- Special reset stuff.
             @RESET_IMPL
+            
           else
             @IMPL
           end if;
         end if;
-      end loop;
-    end if;
-  end process;
+      end if;
+    end process;
+  end generate;
   
 end Behavioral;
 

@@ -487,7 +487,7 @@ class PerCtxt(Type):
         return self.el_typ.name()
         
     def cls(self):
-        return self.el_typ.cls()
+        return self.el_typ.cls() + ' per context'
         
     def name_vhdl(self):
         return '%s(2**CFG.numContextsLog2-1 downto 0)' % self.el_typ.name_vhdl_array()
@@ -497,7 +497,7 @@ class PerCtxt(Type):
 
     def exists_per_context(self):
         return True
-
+    
     def __str__(self):
         return '%s per context' % self.name()
 
@@ -557,18 +557,9 @@ class AccessibleType(object):
         """Returns whether this access type can be read."""
         return True
     
-    def can_read_before_assign(self):
-        """Returns whether this access type can be read before it is
-        assigned."""
-        return self.can_read()
-    
     def is_local(self):
         """Returns whether this access type can only be accessed locally (as in,
         in the implementation of the field which specified it)."""
-        return False
-    
-    def needs_init(self):
-        """Returns whether this access type needs a reset/init specification."""
         return False
     
     def __eq__(self, other):
@@ -602,18 +593,12 @@ class Output(AccessibleType):
     def can_read(self):
         return False
     
-    def needs_init(self):
-        return True
-
 
 class Register(AccessibleType):
     
     def name(self):
         return 'register'
     
-    def needs_init(self):
-        return True
-
 
 class Variable(AccessibleType):
     
@@ -623,11 +608,9 @@ class Variable(AccessibleType):
     def vhdl_assign_type(self):
         return ':='
     
-    def can_read_before_assign(self):
-        return False
-
     def is_local(self):
         return True
+
 
 class Constant(AccessibleType):
     
@@ -637,9 +620,6 @@ class Constant(AccessibleType):
     def can_assign(self):
         return False
     
-    def needs_init(self):
-        return True
-
 
 class PredefinedConstant(AccessibleType):
     

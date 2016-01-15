@@ -7,9 +7,9 @@ import pprint
 interpreter = common.interpreter
 bitfields = common.bitfields
 
-from code_except import *
-from code_types import *
-from code_environment import *
+from code.excepts import *
+from code.type_sys import *
+from code.environment import *
 
 def parse(indir):
     """Parses the control register .tex files.
@@ -48,7 +48,7 @@ def parse(indir):
         # Field declarations.
         'declaration': (0, True),
         'declRegister': (3, False),  # (name, type, reset value expression)
-        'declVariable': (2, False),  # (name, type)
+        'declVariable': (3, False),  # (name, type, init)
         'declConstant': (3, False),  # (name, type, value)
         
         # Field implementation.
@@ -93,17 +93,20 @@ def parse(indir):
         'L_MUL1', 'L_MUL2', 'L_MUL', 'S_MEM', 'L_MEM', 'S_BRK', 'L_BRK', 'S_WB',
         'L_WB', 'S_SWB', 'S_LTRP', 'S_LAST']
     for d in pipeline_stage_defs:
-        env.declare(Object('', d, PredefinedConstant(CfgVectType())))
+        env.declare(Object('', d, PredefinedConstant(Natural())))
     
     # Parse global register file interface.
     gbiface, gbenv = parse_iface('gbreg', env,
         [cmd for cmd in cmds if cmd['cmd'][0] == 'globalInterface'])
     result['gbiface'] = gbiface
+    result['gbenv'] = gbenv
     
     # Parse context register file interface.
     cxiface, cxenv = parse_iface('cxreg', env,
         [cmd for cmd in cmds if cmd['cmd'][0] == 'contextInterface'])
     result['cxiface'] = cxiface
+    result['cxenv'] = cxenv
+    cxenv.set_implicit_ctxt('ctxt')
     
     # Extract register commands from the command list.
     regcmds = [cmd for cmd in cmds
@@ -142,10 +145,6 @@ def parse(indir):
     for ob in result['cxdecl']:
         cxenv.declare(ob)
     
-    # Parse reset/init specifications.
-    gbenv.parse_init()
-    cxenv.parse_init()
-    
     return result
 
 
@@ -176,14 +175,14 @@ def parse_iface(unit, env, ifacecmds):
                 for portcmd in subgroupcmd['subcmds']:
                     origin = portcmd['origin']
                     
-                    # Parse type and init/reset specification.
+                    # Parse type.
                     try:
                         typ = parse_type(portcmd['cmd'][3])
                         if portcmd['cmd'][0] in ['ifaceInCtxt', 'ifaceOutCtxt']:
                             typ = PerCtxt(typ)
                         if portcmd['cmd'][0] in ['ifaceOut', 'ifaceOutCtxt']:
                             atyp = Output(typ)
-                            init = portcmd['cmd'][3]
+                            init = portcmd['cmd'][4]
                         else:
                             atyp = Input(typ)
                             init = None
@@ -485,14 +484,16 @@ def parse_registers(regcmds):
             fields_n = []
             for field in fields:
                 field_n = field.copy()
+                gen_values = {'n': n}
                 if 'doc' in field_n:
                     del field_n['doc']
                 field_n['name'] = interpreter.generate(
-                    field_n['name'], values={'n': n}, default='%s')
+                    field_n['name'], values=gen_values, default='%s')
                 if 'defined' in field_n:
                     field_n['alt_ids'] = [
-                        interpreter.generate(x, values={'n': n}, default='%s')
+                        interpreter.generate(x, values=gen_values, default='%s')
                         for x in field_n['alt_ids']]
+                field_n['gen_values'] = gen_values
                 fields_n += [field_n]
             
             # Create the register dictionary.
@@ -717,6 +718,11 @@ def gather_declarations(reg):
             else:
                 init = None
             
+            # Generate the name and init spec in case there's \n{} in there.
+            name = interpreter.generate(name, values=field['gen_values'], default='%s')
+            if init is not None:
+                init = interpreter.generate(init, values=field['gen_values'], default='%s')
+            
             # Check the name.
             if not re.match(r'_[a-zA-Z0-9_]+', name):
                 raise CodeError(('Invalid local name \'%s\' after line %s. ' +
@@ -730,12 +736,11 @@ def gather_declarations(reg):
                 raise CodeError('Error parsing type \'%s\' after line %s: %s' %
                                 (typspec, origin, str(e)))
             
-            # If this is a context-specific field, make the type per context.
-            if 'ctxt' in reg:
-                typ = PerCtxt(typ)
-            
-            # Create the access type.
+            # Create the access type. If the type is a register and this is a
+            # context-specific field, make the type per-context.
             if atypspec == 'declRegister':
+                if 'ctxt' in reg:
+                    typ = PerCtxt(typ)
                 atyp = Register(typ)
             elif atypspec == 'declVariable':
                 atyp = Variable(typ)

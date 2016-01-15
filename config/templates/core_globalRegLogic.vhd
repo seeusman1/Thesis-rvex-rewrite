@@ -54,6 +54,8 @@ use rvex.utils_pkg.all;
 use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
+use rvex.core_trap_pkg.all;
+use rvex.core_pipeline_pkg.all;
 
 --=============================================================================
 -- This entity contains the specifications and logic for the control registers
@@ -114,7 +116,9 @@ end core_globalRegLogic;
 --=============================================================================
 architecture Behavioral of core_globalRegLogic is
 --=============================================================================
+  @LIB_FUNCS
   
+  -- Generated registers.
   @REG_DECL
   
 --=============================================================================
@@ -125,10 +129,16 @@ begin -- architecture
     @VAR_DECL
   begin
     if rising_edge(clk) then
+    
+      -- Set readData to 0 by default.
+      gbreg2creg_dbgReadData <= (others => '0');
+      gbreg2creg_coreReadData <= (others => (others => '0'));
+      
       if reset = '1' then
-        gbreg2creg_dbgReadData <= (others => '0');
-        gbreg2creg_coreReadData <= (others => (others => '0'));
+        
+        -- Reset all registers and ports.
         @REG_RESET
+        
       elsif clkEn = '1' then
         @IMPL
       end if;

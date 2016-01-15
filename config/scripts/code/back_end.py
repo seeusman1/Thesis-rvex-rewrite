@@ -76,11 +76,9 @@ end int2bool;
 
 
 
-def generate_declaration(ob, init=None):
-    """Generates the code for an object declaration. init optionally specifies
-    a two-tuple with the VHDL and C code for the object initializer. The result
-    is a two-tuple with the VHDL declaration in the first entry and the C
-    declaration in the second."""
+def generate_declaration_vhdl(ob, init=None):
+    """Generates the code for a VHDL object declaration. If ob is a constant,
+    init should be set to a string representing the value."""
     
     obtype = ob.atyp.name()
     
@@ -99,17 +97,9 @@ def generate_declaration(ob, init=None):
     elif obtype == 'output':
         vhdl += 'out '
     vhdl += ob.atyp.typ.name_vhdl()
-    if init is not None:
-        vhdl += ' := ' + init(0)
-    vhdl += ';\n'
-    
-    # Generate C syntax.
-    c = '%s %s' % (ob.atyp.typ.name_c(), ob.name)
-    if init is not None:
-        c += ' = ' + init(1)
-    c += ';\n'
-    
-    return (vhdl, c)
+    if obtype == 'constant':
+        vhdl += ' := %s' % init
+    return vhdl + ';\n'
 
 
 def generate_literal(val, typ):
@@ -172,7 +162,10 @@ def generate_aggregate(members, typ):
             continue
         
         # Append array initializer opening.
+        vhdl.append('%s => (\n' % partial)
+        vhdl.append('')
         c.append('/* %s */ {{\n' % partial)
+        c.append('')
         
         i = 0
         while True:
@@ -183,7 +176,7 @@ def generate_aggregate(members, typ):
             nothing = False
             
             # Append array initializer entry.
-            vhdl.append('%s(%d) => ' % (partial, i))
+            vhdl.append('%d => ' % i)
             vhdl.append(code[0])
             vhdl.append(',\n')
             c.append('/* %d */ ' % i)
@@ -193,6 +186,8 @@ def generate_aggregate(members, typ):
             i += 1
         
         # Replace the last comma with the closing bracket.
+        vhdl[-1] = '\n)'
+        vhdl.append(', \n')
         c[-1] = '\n}}'
         c.append(', \n')
         
@@ -881,44 +876,39 @@ def generate_expr(operator, operands):
     raise CodeError('unknown operator %s.' % operator)
 
 
+def generate_assignment(atyp, slic=False, size=None):
+    """Generates an assignment statement. atyp should be the access type of the
+    lvalue, needed to determine whether to use a <= or a := in VHDL. If slic is
+    False (default), the entire lvalue, represented as {0}, will be set to {1}.
+    If slic is True and size is None, index {2} of lvalue {0} will be set to
+    {1}. Finally, if size is an integer, a slice of that size within lvalue {0},
+    starting at {2}, will be set to {0}."""
+    
+    # Generate VHDL.
+    vhdl = '{0}'
+    if slic:
+        if size is None:
+            vhdl += '({2})'
+        else:
+            vhdl += '(({2})+%d downto {2})' % (size-1)
+    vhdl = '%s %s {1};\n' % (vhdl, atyp.vhdl_assign_type())
+    
+    # Generate C.
+    if not slic:
+        c = '{0} = {1};\n'
+    elif size is None:
+        c = ('if (1) {\n' +
+             'uint64_t __shift = {2};\n' +
+             '{0} &= ~(1ull << __shift);\n' +
+             '{0} |= (({1})&1) << __shift;\n' +
+             '}\n')
+    else:
+        c = ('if (1) {\n' +
+             'uint64_t __shift = {2};\n' +
+             'uint64_t __mask = 0x%Xull << __shift;\n' % ((1 << size) - 1) +
+             '{0} &= ~__mask;\n' +
+             '{0} |= (({1})<<__shift)&__mask;\n' +
+             '}\n')
+    
+    return (vhdl, c)
 
-# TODO BELOW
-
-#def assign(ob, expr, ctxt=None, slic=None):
-#    """Generates a Code object for how to assign expr (Expression) to object ob
-#    (Object) from context ctxt (Expression or None) using the given slice
-#    (Expression, (Expression, Expression) or None). No type or name checks are
-#    performed at this point."""
-#    
-#    # Get the object name in both languages.
-#    e = write(ob, ctxt)
-#    vhdl = e.vhdl
-#    c = e.c
-#    
-#    # Handle VHDL slice and assignment type.
-#    if slic is not None:
-#        if type(slic) is tuple:
-#            vhdl = '%s(%s downto %s)' % (vhdl, slic[0].vhdl, slic[1].vhdl)
-#        else:
-#            vhdl = '%s(%s)' % (vhdl, slic.vhdl)
-#    vhdl = ['%s %s %s;' % (vhdl, ob.atyp.vhdl_assign_type(), expr.vhdl)]
-#    
-#    # Emulate slices in C.
-#    if slic is None:
-#        c = ['%s = %s;' % (c, expr.c)]
-#    elif type(slic) is tuple:
-#        c = ['if (1) {',
-#             '  uint32_t __shift = %s;' % slic[1].c,
-#             '  uint64_t __mask = ((1ull<<((%s)+1ull-__shift))-1ull) << __shift;' % slic[0].c,
-#             '  %s &= ~__mask;' % c,
-#             '  %s |= ((%s)<<__shift)&__mask;' % (c, expr.c),
-#             '}']
-#    else:
-#        c = ['if (1) {',
-#             '  uint64_t __shift = %s;' % slic.c,
-#             '  %s &= ~(1ull << __shift);' % c,
-#             '  %s |= ((%s)&1) << __shift;' % (c, expr.c),
-#             '}']
-#    
-#    return Code(vhdl, c)
-#

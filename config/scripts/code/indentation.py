@@ -45,7 +45,6 @@ def rule_gen(tokspec):
     def rules(line, plvl):
         lowest = plvl
         for token in tokenize(line):
-            print(repr(token.value) + ' = ' + repr(token.type))
             val = token.type
             plvl += val[0]
             lowest = min(lowest, plvl + val[1])

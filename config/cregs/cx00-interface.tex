@@ -77,7 +77,7 @@ Next value for the PC register. This is written when stall is low and overridePC
 is not asserted.
 
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{currentPC}{address}{resetVect}
+\ifaceOutCtxt{cxplif}{currentPC}{address}{rctrl2cxreg_resetVect}
 Current value of the PC register.
 
 \ifaceSubGroup{}
@@ -134,7 +134,7 @@ Current value of the debug-trap-enable flag in the control register.
 \ifaceGroup{Pipelane interface: external debug control signals}
 %===============================================================================
 \ifaceSubGroup{}
-\ifaceOutCtxt{cxplif}{breakpoints}{breakpointInfo}{0}
+\ifaceOutCtxt{cxplif}{breakpoints}{breakpointInfo}{{others => 0}}
 Current hardware breakpoint configuration. The cfg fields have the following
 encoding:
  - 00 -> breakpoint disabled.

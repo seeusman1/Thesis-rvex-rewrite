@@ -2,7 +2,8 @@ import re
 from type_sys import *
 from back_end import *
 from excepts import *
-
+from transform import *
+import copy
 
 class Object(object):
     
@@ -13,47 +14,18 @@ class Object(object):
         if name.startswith('_') and owner is not None:
             name = owner + name
         
-        if atyp.needs_init() and initspec is None:
-            raise CodeError('%s %s needs an init/reset spec but does not have one.' %
-                            (atyp, name))
-        
         self.owner = owner
         self.name = name
         self.atyp = atyp
         self.origin = origin
         self.initspec = initspec
-        self.init = None
-        self.decl_vhdl = None
-        self.decl_c = None
         
         # Whether this object has ever been used.
         self.used = False
         
         # Whether this object has ever been assigned.
         self.assigned = False
-        
-    def parse_init(self, env):
-        """Parses the init/reset specification."""
-        # TODO
-        pass
-    
-    def get_decl(self, lang):
-        """Returns the object declaration code in the given language.
-        
-        lang must be 'vhdl' or 'c'."""
-        
-        if self.atyp.needs_init() and self.init is None:
-            raise CodeError('%s %s needs an init/reset spec but it has not been parsed yet.' %
-                            (self.atyp, self.name))
-        if self.decl_vhdl is None:
-            self.decl_vhdl, self.decl_c = output_declaration(self)
-        if lang == 'vhdl':
-            return self.decl_vhdl
-        elif lang == 'c':
-            return self.decl_c
-        else:
-            raise CodeError('Invalid language %s.' % lang)
-        
+                
     def __str__(self):
         return '%s %s' % (self.atyp, self.name)
     
@@ -64,14 +36,23 @@ class Environment:
     
     def __init__(self):
         self.objects = {}
+        self.object_order = []
         self.implicit_ctxt = None
         self.user = ''
+        self.access_checks = []
     
     def copy(self):
         e = Environment()
         e.objects = self.objects.copy()
+        e.object_order = copy.copy(self.object_order)
         e.implicit_ctxt = self.implicit_ctxt
         e.user = self.user
+        e.access_checks = copy.copy(self.access_checks)
+        return e
+    
+    def with_access_check(self, fun):
+        e = self.copy()
+        e.access_checks.append(fun)
         return e
     
     def declare(self, ob):
@@ -93,14 +74,7 @@ class Environment:
         # Add the object. Note that we use lower() to make names
         # case-insensitive. This is necessary to be compatible with VHDL.
         self.objects[ob.name.lower()] = ob
-    
-    def parse_init(self):
-        """Parses the reset/init specifications for all objects which need
-        it."""
-        for name in self.objects:
-            ob = self.objects[name]
-            if ob.atyp.needs_init():
-                ob.parse_init(self)
+        self.object_order.append(ob)
     
     def set_implicit_ctxt(self, ctxt):
         """Sets the context which is implicitely accessed by per-context
@@ -138,25 +112,31 @@ class Environment:
         
         # Look up the variable.
         if name.lower() not in self.objects:
-            raise CodeError('Undefined object \'%s\'.' % name)
+            raise CodeError('undefined object \'%s\'.' % name)
         ob = self.objects[name.lower()]
         
         # Raise an error if this is a local and we're not the owner.
         if ob.atyp.is_local() and self.user.lower() != ob.owner.lower():
-            raise CodeError('Cannot access local \'%s\' from %s.' %
+            raise CodeError('cannot access local \'%s\' from %s.' %
                             (ob.name, self.user))
         
         # Raise an error if a context is explicitly specified if this is a
         # global object.
         cxspec = ob.atyp.typ.exists_per_context()
         if not cxspec and ctxt is not None:
-            raise CodeError('Cannot apply @ context selection syntax to ' +
+            raise CodeError('cannot apply @ context selection syntax to ' +
                             'global \'%s\'.' % ob.name)
         if cxspec and ctxt is None:
             ctxt = self.implicit_ctxt
             if ctxt is None:
-                raise CodeError('Cannot access context-specific object ' +
+                raise CodeError('cannot access context-specific object ' +
                                 '\'%s\' without context.' % ob.name)
+        
+        # Run additional access checks.
+        for fun in self.access_checks:
+            if not fun(ob):
+                raise CodeError('object \'%s\' may not be used here.' %
+                                ob.name)
         
         # Lookup successful.
         return (ob, ctxt)

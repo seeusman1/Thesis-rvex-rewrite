@@ -72,7 +72,7 @@ def transform_expression(exp, origin, typ, gen_values, env, source, single_line=
         # Parse the expression.
         ast = parse_exp(exp, origin, gen_values)
         if debug:
-            print('Pretty-printed:\n    %s\n', str(ast))
+            print('Pretty-printed:\n    %s\n' % str(ast))
             print('AST:')
             print(ast.pp_ast())
             print('')
@@ -116,6 +116,57 @@ def transform_expression(exp, origin, typ, gen_values, env, source, single_line=
         
     except Exception as e:
         except_prefix(e, source)
+
+
+def transform_assignment(ob, exp, origin, gen_values, env, source):
+    """Shorthand for generating an assignment statement.
+    
+     - ob: the object to assign to.
+     - exp: the platform-agnostic expression to assign.
+     - gen_values: a dictionary from generator name (for instance 'n' for \n{})
+       to its numeric value.
+     - env: specifies the variable environment.
+     - source: should be a string which identifies where this block of code came
+       from, for instance a register/field name, ending in a colon and a space.
+       It is prefixed to all error messages to make the source of the error
+       easier to find.
+    
+    NOTE: there are no checks for whether we're allowed to assign to the given
+    object. These should be checked by the callee if applicable.
+    
+    Returns a two-tuple, with the VHDL code in the first entry and the C code in
+    the second.
+    """
+    
+    try:
+        
+        # Determine the context to use.
+        if ob.atyp.typ.exists_per_context():
+            ctxt = env.implicit_ctxt
+            if ctxt is None:
+                raise CodeError(('object \'%s\' exists per context, but no ' +
+                                'context is known.') % ob.name)
+            typ = ob.atyp.typ.el_typ
+        else:
+            ctxt = None
+            typ = ob.atyp.typ
+        
+        # Generate the reference.
+        ref = generate_reference(ob, ctxt, 'w')
+        
+        # Generate the assignment syntax.
+        assign = generate_assignment(ob.atyp)
+        
+    except Exception as e:
+        except_prefix(e, source)
+    
+    # Generate the expression.
+    exp = transform_expression(
+        exp, origin, typ, gen_values, env, source)
+    
+    # Perform formatting.
+    return (assign[0].format(ref[0], exp[0]),
+            assign[1].format(ref[1], exp[1]))
 
 
 class Resolve(Transformation):
