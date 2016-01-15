@@ -2,6 +2,9 @@
 import re
 from funcparserlib.lexer import *
 
+# FIXME: multiline comments and verbatim stuff is not handled very well or not
+# handled at all...
+
 def indentify(code, lang):
     """Attempts to apply decent indentation levels to code without
     indentation."""
@@ -59,8 +62,8 @@ def rule_gen(tokspec):
 vhdl_indentation_rules = rule_gen([
     
     # Tokens which should increase indentation level.
-    ((1, 0),  (r'\(',)),
-    ((1, 0),  (r'if(?!\w)', re.IGNORECASE)),
+    ((1,  0), (r'\(',)),
+    ((1,  0), (r'if(?!\w)', re.IGNORECASE)),
     
     # Tokens which should decrease indentation level.
     ((-1, 0), (r'\)',)),
@@ -71,34 +74,34 @@ vhdl_indentation_rules = rule_gen([
     ((0, -1), (r'else(?!\w)', re.IGNORECASE)),
     
     # Stuff which shouldn't change indentation level.
-    ((0, 0),  (r'--@user--(.(?!--@generated--))*--@generated--', re.MULTILINE + re.DOTALL)),
-    ((0, 0),  (r'--.*(?=\n)', re.MULTILINE)),
-    ((0, 0),  (r'"[^"]*"',)),
+    ((0,  0), (r'--@user--(.(?!--@generated--))*--@generated--', re.MULTILINE + re.DOTALL)),
+    ((0,  0), (r'--.*(?=\n)', re.MULTILINE)),
+    ((0,  0), (r'"[^"]*"',)),
     
     # Stuff to make parsing a little faster.
-    ((0, 0),  (r'\w+',)),
-    ((0, 0),  (r'\s+', re.MULTILINE)),
-    ((0, 0),  (r'.', re.DOTALL)),
+    ((0,  0), (r'\w+',)),
+    ((0,  0), (r'\s+', re.MULTILINE)),
+    ((0,  0), (r'.', re.DOTALL)),
     
 ])
 
 c_indentation_rules = rule_gen([
     
     # Tokens which should increase indentation level.
-    ((1, 0),  (r'[\(\[\{]',)),
+    ((1,  0), (r'[\(\[\{]',)),
     
     # Tokens which should decrease indentation level.
     ((-1, 0), (r'[\)\]\}]',)),
     
     # Stuff which shouldn't change indentation level.
-    ((0, 0),  (r'/\*@user\*/(.(?!/\*@generated\*/))*/\*@generated\*/', re.MULTILINE + re.DOTALL)),
-    ((0, 0),  (r'//.*(?=\n)', re.MULTILINE)),
-    ((0, 0),  (r'/\*((?!\*/).)*\*/', re.MULTILINE + re.DOTALL)),
+    ((0,  0), (r'/\*@user\*/(.(?!/\*@generated\*/))*/\*@generated\*/', re.MULTILINE + re.DOTALL)),
+    ((0,  0), (r'//.*(?=\n)', re.MULTILINE)),
+    ((0,  0), (r'/\*((?!\*/).)*\*/', re.MULTILINE + re.DOTALL)),
     
     # Stuff to make parsing a little faster.
-    ((0, 0),  (r'\w+',)),
-    ((0, 0),  (r'\s+', re.MULTILINE)),
-    ((0, 0),  (r'.', re.DOTALL)),
+    ((0,  0), (r'\w+',)),
+    ((0,  0), (r'\s+', re.MULTILINE)),
+    ((0,  0), (r'.', re.DOTALL)),
     
 ])
 

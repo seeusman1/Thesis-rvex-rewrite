@@ -162,16 +162,10 @@ class ASTConditional(ASTNode):
     
     def __init__(self, tokens):
         if tokens[5] is not None:
-            ASTNode.__init__(self, 'if', [tokens[2], tokens[4], tokens[5][1]])
+            ASTNode.__init__(self, 'ifelse', [tokens[2], tokens[4], tokens[5][1]])
         else:
-            ASTNode.__init__(self, 'if', [tokens[2], tokens[4], ASTBlock([], True)])
+            ASTNode.__init__(self, 'ifelse', [tokens[2], tokens[4], ASTBlock([], True)])
         self._orig = tokens[0].origin
-        self.condition = tokens[2]
-        self.true = tokens[4]
-        if tokens[5] is not None:
-            self.false = tokens[5][1]
-        else:
-            self.false = []
     
     def __str__(self):
         s = 'if (' + str(self[0]) + ') '
@@ -194,9 +188,10 @@ class ASTVerbRef(ASTLeaf):
     
     def __init__(self, tokens):
         ASTLeaf.__init__(self, 'reference', tokens[1].value, tokens[0].origin)
+        self['dir'] = 'r' if tokens[0].value == '@read' else 'w'
     
     def __str__(self):
-        return '@%s' % self.value
+        return ('@read %s' if self['dir'] == 'r' else '@lvalue %s') % self.value
 
 
 class ASTVerbatim(ASTNode):
@@ -233,6 +228,11 @@ def parser_generate():
         ('lit_nat',   (r'([1-9][0-9]*)|(0(([Xx][0-9a-fA-F]+)|([Bb][0-1]+)|([0-7]*)))',)),
         ('lit_bit',   (r"'[01]'",)),
         ('lit_vec',   (r'[Uu]?(("[01]*")|([Xx]"[0-9a-fA-F]*"))',)),
+        
+        # Verbatim @ commands. -------------------------------------------------
+        # (these need to be defined before the 'context' token)
+        ('verb_read', (r'@read',)),                  # Read reference command.
+        ('verb_lval', (r'@lvalue',)),                # lvalue reference command.
         
         # References. ----------------------------------------------------------
         ('name',      (r'[_a-zA-Z][_a-zA-Z0-9]*',)), # Object or function name.
@@ -522,11 +522,15 @@ def parser_generate():
     
     # verbatim_tokens grabs any token which isn't used to break out of a
     # verbatim environment.
-    verbatim_token = some(lambda tok: tok.type not in ['context', 'verb_close'])
+    verbatim_token = some(lambda tok: not tok.type.startswith('verb_'))
     verbatim_tokens = oneplus(verbatim_token) >> ASTVerbForeign
     
     # Translated references in a verbatim environment.
-    verbatim_ref = (tok.context + ref_name) >> ASTVerbRef
+    verbatim_ref = (
+        (tok.verb_read | tok.verb_lval) +
+        skip(many(tok.space)) +
+        ref_name
+    ) >> ASTVerbRef
     
     # Verbatim statement.
     verbatim = (

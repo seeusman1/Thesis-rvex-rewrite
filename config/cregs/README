@@ -58,7 +58,7 @@ root
    global and whether it is an input or output.
    
  - \defineTemplate{<name>}{<parameter list>}
-   TODO
+   NOT YET IMPLEMENTED
 
  - \register{<mnemonic>}{<name>}{<offset>}
    Starts a new register description. <name> is the title of the section.
@@ -107,14 +107,29 @@ root
    Specifies registers, variables or constants needed by the implementation
    code. <name> must start with an underscore, and will expand to
    "cr_<register-mnemonic>_<field-mnemonic><name>". <type> is a type
-   specification as defined later. <expr> is an expression which defines the
+   specification as defined later, or it may 'field', which maps to a bitvec
+   with the same size as the field. <expr> is an expression which defines the
    constant, initial value or reset value, using only predefined constants for
    a constant value, and only inputs or predefined constants for variables and
    registers.
    
  - \implementation{}
    Language-agnostic code section as defined below, executed every rising clock
-   edge with clkEn high and reset inactive.
+   edge with clkEn high and reset inactive. The following variables are
+   predefined to interface with the core and debug busses:
+   
+    - _write:      bitvec<field size>
+    - _wmask:      bitvec<field size>
+    - _wmask_dbg:  bitvec<field size>
+    - _wmask_core: bitvec<field size>
+    - _read:       bitvec<field size>
+   
+   write_mask is just a shorthand for (write_mask_dbg | write_mask_core), which
+   may be used if the origin of the write command doesn't matter. As an example
+   of how to use these, a simple register could be made as follows:
+   
+     _reg = (_reg & ~_wmask) | (_write & _wmask);
+     _read = _reg;
 
  - \resetImplementation{}
    Language-agnostic code section as defined below, executed every rising clock
@@ -227,6 +242,8 @@ Breaking out of the LaTeX environment
 
 Templates
 ---------
+
+NOT YET IMPLEMENTED, SPECIFICATION ONLY:
 
 Templates, defined using \defineTemplate, can be inserted using
 \<templatename>{[<arg0>]}[{<arg1>}[{<arg2>}...]]
@@ -397,9 +414,34 @@ The following statements are supported:
 
  - <?vhdl ... ?>
    Verbatim VHDL statement. Anything in ... is copied into the resulting VHDL
-   implementation. The only exception is the @ symbol, which may be placed in
-   front of a reference name and optionally a context specifier. This allows
-   the reference to be expanded as it would be in language-agnostic code.
+   implementation. The only exception is the @ symbol, followed by some command.
+   See the section on verbatim @ commands below.
 
  - <?c ... ?>
    Verbatim C statement. Identical to the VHDL version, except for C output.
+
+
+Verbatim @ commands
+-------------------
+
+These commands can be used in a verbatim environment:
+
+@read <name>
+@read <name>@<context>
+@lvalue <name>
+@lvalue <name>@<context>
+
+They are replaced with the equivalent of <name> or <name>@<context> in
+language-agnostic code. This syntax exists for the following reasons:
+
+ - You can use the _local syntax this way.
+ - The parser keeps track of which variables are used and assigned to here and
+   there, for documentation reasons.
+ - Using this syntax you don't need to know how the objects are actually
+   implemented in VHDL and in the simulator. For instance, a context register
+   read will map to cxrq[<context>]-><name> in C, not <name>[<context>] as you
+   may have expected.
+
+You should always use this syntax to access objects, unless you REALLY know what
+you're doing and this syntax is somehow not expressive enough.
+

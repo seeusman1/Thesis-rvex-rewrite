@@ -10,6 +10,21 @@ bitfields = common.bitfields
 from code.excepts import *
 from code.type_sys import *
 from code.environment import *
+from code.transform import *
+
+
+# Global register size configuration.
+gbreg_start = 0
+gbreg_size_log2 = 8
+gbreg_size = 1 << gbreg_size_log2
+
+# Context register size configuration.
+cxreg_start = 512
+cxreg_size_log2 = 9
+cxreg_size = 1 << cxreg_size_log2
+
+# NOTE: simply changing the above constants will probably not be enough to
+# change the size of the register files. You can try though.
 
 def parse(indir):
     """Parses the control register .tex files.
@@ -108,6 +123,20 @@ def parse(indir):
     result['cxenv'] = cxenv
     cxenv.set_implicit_ctxt('ctxt')
     
+    # Add bus access "constants" to the environments. They are not actually
+    # constants but variables. They are expected by the field implementation
+    # code.
+    gbenv.declare(Object('', 'bus_writeData', PredefinedConstant(Data())))
+    gbenv.declare(Object('', 'bus_writeMaskDbg', PredefinedConstant(Data())))
+    gbenv.declare(Object('', 'bus_wordAddr', PredefinedConstant(Unsigned(gbreg_size_log2))))
+    result['gbreg_size_log2'] = gbreg_size_log2
+    
+    cxenv.declare(Object('', 'bus_writeData', PredefinedConstant(Data())))
+    cxenv.declare(Object('', 'bus_writeMaskDbg', PredefinedConstant(Data())))
+    cxenv.declare(Object('', 'bus_writeMaskCore', PredefinedConstant(Data())))
+    cxenv.declare(Object('', 'bus_wordAddr', PredefinedConstant(Unsigned(cxreg_size_log2))))
+    result['cxreg_size_log2'] = cxreg_size_log2
+    
     # Extract register commands from the command list.
     regcmds = [cmd for cmd in cmds
                if cmd['cmd'][0] in ['register', 'registergen']]
@@ -127,7 +156,7 @@ def parse(indir):
     # Generate register/field definition list for headers.
     result['defs'] = gen_defs(regdoc)
     
-    # Gather all declarations.
+    # Gather all declarations and compile [reset] implementation code.
     result['gbdecl'] = []
     result['cxdecl'] = []
     for reg in regmap:
@@ -139,11 +168,8 @@ def parse(indir):
             regtyp = 'cx'
         else:
             raise CodeError('Unknown register type for CR_%s.' % reg['mnemonic'])
-        result[regtyp + 'decl'] += gather_declarations(reg)
-    for ob in result['gbdecl']:
-        gbenv.declare(ob)
-    for ob in result['cxdecl']:
-        cxenv.declare(ob)
+        result[regtyp + 'decl'] += gather_declarations_and_compile(
+            reg, result[regtyp + 'env'], {'gb': gbreg_size, 'cx': cxreg_size}[regtyp])
     
     return result
 
@@ -530,9 +556,9 @@ def reg_type(offset):
        that this is a context control register.
      - Otherwise, None is returned.
     """
-    if offset in xrange(0x000, 0x100, 4):
+    if offset in xrange(gbreg_start, gbreg_start + gbreg_size, 4):
         return 'glob'
-    elif offset in xrange(0x200, 0x400, 4):
+    elif offset in xrange(cxreg_start, cxreg_start + cxreg_size, 4):
         return 'ctxt'
     else:
         return None
@@ -698,14 +724,51 @@ def gen_defs(regdoc):
     return defs
 
 
-def gather_declarations(reg):
+def gather_declarations_and_compile(reg, env, addr_mod):
     """Returns a list of objects representing the declarations for the given
     register."""
+    
+    # Declaration list.
     decls = []
+    
+    # VHDL/C implementation code for this register.
+    vhdli = []
+    ci = []
+    
+    # VHDL/C reset implementation code for this register.
+    vhdlr = []
+    cr = []
+    
+    # Read value for the register.
+    read_vals = []
+    
+    # Add the per-field stuff.
     for field in reg['fields']:
+        size = field['upper_bit'] - field['lower_bit'] + 1
         if 'defined' not in field:
+            read_vals.append('"' + '0' * size + '"')
             continue
         owner = ('cr_%s_%s' % (reg['mnemonic'], field['name'])).lower()
+        offset = field['lower_bit']
+        field_typ = BitVector(size)
+        fdecls = []
+        
+        # Add internal declarations to our local list.
+        def d(name, value):
+            fdecls.append(Object(
+                owner, name, Variable(field_typ), '<internal>',
+                value.format('[%d, %d]' % (offset, size), str((reg['offset'] % addr_mod) // 4))))
+        d('_write', 'bus_writeData{0}')
+        d('_wmask_dbg', 'bus_writeMaskDbg{0} & (bit)(bus_wordAddr == {1})')
+        if 'ctxt' in reg:
+            d('_wmask_core', 'bus_writeMaskCore{0} & (bit)(bus_wordAddr == {1})')
+            d('_wmask', '(bus_writeMaskDbg{0} | bus_writeMaskCore{0}) & (bit)(bus_wordAddr == {1})')
+        else:
+            d('_wmask', 'bus_writeMaskDbg{0} & (bit)(bus_wordAddr == {1})')
+        read_val = Object(owner, '_read', GlobalVariable(field_typ), '<internal>', '0')
+        fdecls.append(read_val)
+        
+        # Add user declarations to our local list.
         for declcmd in field['decl']:
             
             # Parse the declaration command.
@@ -731,7 +794,10 @@ def gather_declarations(reg):
             
             # Parse the type.
             try:
-                typ = parse_type(typspec)
+                if typspec == 'field':
+                    typ = field_typ
+                else:
+                    typ = parse_type(typspec)
             except TypError as e:
                 raise CodeError('Error parsing type \'%s\' after line %s: %s' %
                                 (typspec, origin, str(e)))
@@ -750,8 +816,78 @@ def gather_declarations(reg):
                 raise CodeError('Unknown declaration command \\%s.' % atypspec)
             
             # Construct and add the object.
-            ob = Object(owner, name, atyp, origin, init)
-            decls.append(ob)
+            fdecls.append(Object(owner, name, atyp, origin, init))
+        
+        # Make a local environment and add all declarations to it. Add only
+        # constant and register declarations to the global environment.
+        envi = env.copy()
+        envi.set_user(owner)
+        for fdecl in fdecls:
+            envi.declare(fdecl)
+            if not isinstance(fdecl.atyp, Variable):
+                env.declare(fdecl)
+        
+        # Compile the normal implementation.
+        fvhdli, fci = transform_code(
+            field['impl'], {}, field['gen_values'], envi,
+            'In implementation of field %s: ' % owner.upper())
+        
+        # Append initialization code for used variables.
+        def access_check(ob):
+            if isinstance(ob.atyp, PredefinedConstant):
+                return True
+            if isinstance(ob.atyp, Constant):
+                return True
+            if isinstance(ob.atyp, Input):
+                return True
+            return False
+        for ob in fdecls:
+            if isinstance(ob.atyp, Variable) and ob.used:
+                vhdl, c = transform_assignment(
+                    ob, ob.initspec, ob.origin, field['gen_values'],
+                    env.with_access_check(access_check),
+                    'In initialization of variable \'%s\': ' % ob.name)
+                vhdli.append(vhdl)
+                ci.append(c)
+        
+        # Append the compiled implementation code.
+        vhdli.append(fvhdli)
+        ci.append(fci)
+        
+        # Compile the reset implementation.
+        envr = env.copy()
+        envr.set_user(owner)
+        fvhdlr, fcr = transform_code(
+            field['resimpl'], {}, field['gen_values'], envr,
+            'In reset implementation of field %s: ' % owner.upper())
+        
+        # Append the compiled reset implementation code.
+        vhdlr.append(fvhdlr)
+        cr.append(fcr)
+        
+        # Add only the declarations which were used or assigned to the result
+        # declaration list.
+        for fdecl in fdecls:
+            if fdecl.used or fdecl.assigned:
+                decls.append(fdecl)
+        
+        if read_val.assigned:
+            read_vals.append(read_val.name)
+        else:
+            read_vals.append('"' + '0' * size + '"')
+    
+    # Add code for the 32-bit read value of the whole register.
+    read_vhdl, read_c = transform_expression(
+        '$'.join(read_vals), '<internal>', Data(), {}, env,
+        'In read value for register CR_%s: ' % reg['mnemonic'], True)
+    
+    # Add the compiled code to the register.
+    reg['read_vhdl'] = read_vhdl
+    reg['read_c'] = read_c
+    reg['impl_vhdl'] = ''.join(vhdli)
+    reg['impl_c'] = ''.join(ci)
+    reg['resimpl_vhdl'] = ''.join(vhdlr)
+    reg['resimpl_c'] = ''.join(cr)
     
     return decls
 

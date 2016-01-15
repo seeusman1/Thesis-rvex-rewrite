@@ -897,18 +897,26 @@ def generate_assignment(atyp, slic=False, size=None):
     if not slic:
         c = '{0} = {1};\n'
     elif size is None:
-        c = ('if (1) {\n' +
+        c = ('if (1) {{\n' +
              'uint64_t __shift = {2};\n' +
              '{0} &= ~(1ull << __shift);\n' +
              '{0} |= (({1})&1) << __shift;\n' +
-             '}\n')
+             '}}\n')
     else:
-        c = ('if (1) {\n' +
+        c = ('if (1) {{\n' +
              'uint64_t __shift = {2};\n' +
              'uint64_t __mask = 0x%Xull << __shift;\n' % ((1 << size) - 1) +
              '{0} &= ~__mask;\n' +
              '{0} |= (({1})<<__shift)&__mask;\n' +
-             '}\n')
+             '}}\n')
     
     return (vhdl, c)
 
+
+def generate_ifelse():
+    """Generates the code for an if/else statement. Returns a two-tuple with a
+    VHDL code in the first entry and a C code in the second. {0} represents the
+    condition expression, {1} represents the true block, {2} the false block."""
+    return ('if ({0}) then\n{1} else\n{2} end if;\n',
+            'if ({0}) {{\n{1}}} else {{\n{2}}}\n')
+    

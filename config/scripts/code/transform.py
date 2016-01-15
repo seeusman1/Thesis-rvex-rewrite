@@ -9,41 +9,6 @@ from environment import *
 from excepts import *
 from indentation import *
 
-def transform_code(code, templates, gen_values, env, source):
-    """Converts a block of language-agnostic code (statements) to VHDL and C.
-    
-     - code: must be a list of two-tuples, wherein the first entry is a string
-       identifying the origin of the source code line specified in the second
-      entry.
-     - templates: TODO
-     - gen_values: a dictionary from generator name (for instance 'n' for \n{})
-       to its numeric value.
-     - env: specifies the variable environment.
-     - source: should be a string which identifies where this block of code came
-       from, for instance a register/field name, ending in a colon and a space.
-       It is prefixed to all error messages to make the source of the error
-       easier to find.
-    
-    Returns a two-tuple, with the VHDL code in the first entry and the C code in
-    the second.
-    """
-    try:
-        
-        # Expand templates.
-        # TODO
-        
-        # Parse the code.
-        ast = parse(code, gen_values)
-        print(ast.pp_ast())
-        
-        # Resolve literals and references.
-        ast = ast.apply_xform_dfs(Resolve(env))
-        print(ast.pp_ast())
-        
-    except Exception as e:
-        except_prefix(e, source)
-
-
 def transform_expression(exp, origin, typ, gen_values, env, source, single_line=False, debug=False):
     """Converts a block of language-agnostic code (statements) to VHDL and C.
     
@@ -167,6 +132,82 @@ def transform_assignment(ob, exp, origin, gen_values, env, source):
     # Perform formatting.
     return (assign[0].format(ref[0], exp[0]),
             assign[1].format(ref[1], exp[1]))
+
+
+def transform_code(code, templates, gen_values, env, source, debug=False):
+    """Converts a block of language-agnostic code (statements) to VHDL and C.
+    
+     - code: must be a list of two-tuples, wherein the first entry is a string
+       identifying the origin of the source code line specified in the second
+      entry.
+     - templates: TODO
+     - gen_values: a dictionary from generator name (for instance 'n' for \n{})
+       to its numeric value.
+     - env: specifies the variable environment.
+     - source: should be a string which identifies where this block of code came
+       from, for instance a register/field name, ending in a colon and a space.
+       It is prefixed to all error messages to make the source of the error
+       easier to find.
+    
+    Returns a two-tuple, with the VHDL code in the first entry and the C code in
+    the second.
+    """
+    try:
+        
+        # Print debug message.
+        if debug:
+            print('%s%s: parsing code:\n    %s\n\n' %
+                  (source, code[0][0], '\n    '.join(x[1] for x in code)))
+        
+        # Expand templates.
+        # TODO
+        if debug:
+            print('After template expansion:\n    %s\n\n' %
+                  ('\n    '.join(x[1] for x in code)))
+        
+        # Parse the code.
+        ast = parse(code, gen_values)
+        if debug:
+            print('Pretty-printed:\n%s\n' % indentify(str(ast), 'c'))
+            print('AST:')
+            print(ast.pp_ast())
+            print('')
+        
+        # Resolve literals and references.
+        ast = ast.apply_xform_dfs(Resolve(env))
+        if debug:
+            print('AST after resolving:')
+            print(ast.pp_ast())
+            print('')
+        
+        # Generate statements.
+        ast = ast.apply_xform_dfs(GenerateStmt())
+        if debug:
+            print('AST after generating:')
+            print(ast.pp_ast())
+            print('')
+        
+        # Merge all the generated bits of code together.
+        vhdl = ast.generate('vhdl')
+        c = ast.generate('c')
+        
+        # Pretty-print the output.
+        vhdl = indentify(vhdl, 'vhdl')
+        c = indentify(c, 'c')
+        
+        # Print and return result.
+        if debug:
+            print('Generated VHDL code:')
+            print(vhdl)
+            print('')
+            print('Generated C code:')
+            print(c)
+            print('')
+        
+        return (vhdl, c)
+    
+    except Exception as e:
+        except_prefix(e, source)
 
 
 class Resolve(Transformation):
@@ -431,4 +472,104 @@ class GenerateExpr(Transformation):
     def expr(self, node):
         node['vhdl'], node['c'], node['typ'] = generate_expr(
             node['op'], [x['typ'] for x in node.children])
+
+
+class GenerateLValue(Transformation):
+    """Generates an lvalue reference."""
+    
+    def reference(self, node):
+        # Check that we have the priviliges to assign to this object and mark
+        # that we've written to it.
+        ob = node['ob']
+        if not ob.atyp.can_assign():
+            raise CodeError('cannot assign to %s object \'%s\'.' % (ob.atyp.name(), ob.name))
+        ob.assigned = True
+        node['vhdl'], node['c'] = generate_reference(ob, node['ctxt'], 'w')
+        
+        # Set the access type.
+        node['atyp'] = ob.atyp
+    
+    def member(self, node):
+        node['vhdl'], node['c'] = generate_member(node['member'])
+        
+        # Propagate the access type.
+        node['atyp'] = node[0]['atyp']
+    
+    def slice(self, node):
+        # Generate the index expression and append it to the parent, not to
+        # ourselves.
+        exp = generate_expression_ast(node[1], Natural())
+        del node.children[1]
+        node.parent.children.append(exp)
+        
+        # Move the slice mode information to the parent as well.
+        node.parent['slic'] = True
+        node.parent['size'] = node['size']
+        del node['size']
+        
+        # The code for a slice should just be a copy of the object reference.
+        node['vhdl'] = node['c'] = '{0}'
+        
+        # Propagate the access type.
+        node['atyp'] = node[0]['atyp']
+
+
+class GenerateStmt(Transformation):
+    """Generates all code in a statement AST. 'vhdl' and 'c' annotations are
+    added to each expected node, and 'typ' annotations are added where they do
+    not already exist."""
+    
+    def block(self, node):
+        # Just concatenate all children.
+        fmt = []
+        for i in range(len(node.children)):
+            fmt.append('{%d}' % i)
+        fmt = ''.join(fmt)
+        node['vhdl'] = fmt
+        node['c'] = fmt
+        
+    def assign(self, node):
+        node['slic'] = False
+        node['size'] = None
+        node.children[0] = node[0].apply_xform_dfs(GenerateLValue())
+        node.children[1] = generate_expression_ast(node[1], node[0]['typ'])
+        node['vhdl'], node['c'] = generate_assignment(
+            node[0]['atyp'], node['slic'], node['size'])
+        
+    def ifelse(self, node):
+        node.children[0] = generate_expression_ast(node[0], Boolean())
+        node['vhdl'], node['c'] = generate_ifelse()
+        
+    def verbatim(self, node):
+        verb = []
+        for n in node:
+            if n.node_type == 'foreign':
+                verb.append(n.value)
+            elif n.node_type == 'reference':
+                ob = n['ob']
+                d = n['dir']
+                if d == 'r':
+                    if not ob.atyp.can_read():
+                        raise CodeError('cannot read from %s object \'%s\'.' % (ob.atyp.name(), ob.name))
+                    ob.used = True
+                elif d == 'w':
+                    if not ob.atyp.can_assign():
+                        raise CodeError('cannot assign to %s object \'%s\'.' % (ob.atyp.name(), ob.name))
+                    ob.assigned = True
+                else:
+                    raise CodeError('invalid direction: %s.' % d)
+                code = generate_reference(ob, n['ctxt'], d)
+                verb.append(code[{'vhdl': 0, 'c': 1}[node['lang']]])
+            else:
+                raise CodeError('unknown AST in verbatim node: %s.' % n.node_type)
+        verb = ''.join(verb).rstrip()
+        
+        outnode = ASTLeaf('verbatim', '', node.origin)
+        if node['lang'] == 'vhdl':
+            outnode['vhdl'] = '--@user--\n%s\n--@generated--\n' % verb
+            outnode['c'] = ''
+        else:
+            outnode['vhdl'] = ''
+            outnode['c'] = '/*@user*/\n%s\n/*@generated*/\n' % verb
+        return [outnode]
 

@@ -66,7 +66,7 @@ entity core_contextRegLogic is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type
+    CFG                         : rvex_generic_config_type := rvex_cfg
     
   );
   port (
@@ -92,7 +92,7 @@ entity core_contextRegLogic is
     ---------------------------------------------------------------------------
     -- Interface with the control registers and bus logic
     ---------------------------------------------------------------------------
-    -- Global control register address. Only bits 8..0 are used.
+    -- Global control register address. Only bits 8..2 are used.
     creg2cxreg_addr             : in  rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
     
     -- Origin of the context control register command. '0' for core access, '1'
@@ -125,7 +125,16 @@ begin -- architecture
   
   cxreg_gen: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
     cxregs: process (clk) is
+      
+      -- Static variables and constants.
+      variable bus_writeData     : rvex_data_type;
+      variable bus_writeMaskDbg  : rvex_data_type;
+      variable bus_writeMaskCore : rvex_data_type;
+      variable bus_wordAddr      : unsigned(6 downto 0);
+      
+      -- Generated variables and constants.
       @VAR_DECL
+      
     begin
       if rising_edge(clk) then
         
@@ -143,11 +152,34 @@ begin -- architecture
             -- Reset all registers and ports.
             @REG_RESET
             
-            -- Special reset stuff.
+            -- Generated special reset stuff.
             @RESET_IMPL
             
           else
+            
+            -- Setup the bus write command variables which are expected by the
+            -- generated code.
+            bus_writeData := creg2cxreg_writeData(ctxt);
+            bus_writeMaskDbg := (
+              31 downto 24 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(3) and creg2cxreg_origin(ctxt),
+              23 downto 16 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(2) and creg2cxreg_origin(ctxt),
+              15 downto  8 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(1) and creg2cxreg_origin(ctxt),
+               7 downto  0 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(0) and creg2cxreg_origin(ctxt)
+            );
+            bus_writeMaskCore := (
+              31 downto 24 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(3) and not creg2cxreg_origin(ctxt),
+              23 downto 16 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(2) and not creg2cxreg_origin(ctxt),
+              15 downto  8 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(1) and not creg2cxreg_origin(ctxt),
+               7 downto  0 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(0) and not creg2cxreg_origin(ctxt)
+            );
+            bus_wordAddr := unsigned(creg2cxreg_addr(ctxt)(8 downto 2));
+            
+            -- Generated register implementation code.
             @IMPL
+            
+            -- Bus read mux.
+            @BUS_READ
+            
           end if;
         end if;
       end if;

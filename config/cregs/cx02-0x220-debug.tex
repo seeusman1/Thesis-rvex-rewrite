@@ -205,7 +205,11 @@ system. The default \code{_start.s} file will write the \code{main()} return
 value to this register before stopping.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{byte}{0xFF}
 \implementation{}
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
 
 %-------------------------------------------------------------------------------
 \field{15}{U}

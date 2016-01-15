@@ -600,6 +600,15 @@ class Register(AccessibleType):
         return 'register'
     
 
+class GlobalVariable(AccessibleType):
+    
+    def name(self):
+        return 'variable'
+    
+    def vhdl_assign_type(self):
+        return ':='
+
+
 class Variable(AccessibleType):
     
     def name(self):

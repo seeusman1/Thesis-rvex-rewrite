@@ -126,7 +126,15 @@ begin -- architecture
 --=============================================================================
   
   gbregs: process (clk) is
+    
+    -- Static variables and constants.
+    variable bus_writeData     : rvex_data_type;
+    variable bus_writeMaskDbg  : rvex_data_type;
+    variable bus_wordAddr      : unsigned(5 downto 0);
+    
+    -- Generated variables and constants.
     @VAR_DECL
+    
   begin
     if rising_edge(clk) then
     
@@ -140,7 +148,24 @@ begin -- architecture
         @REG_RESET
         
       elsif clkEn = '1' then
+        
+        -- Setup the bus write command variables which are expected by the
+        -- generated code.
+        bus_writeData := creg2gbreg_dbgWriteData(ctxt);
+        bus_writeMaskDbg := (
+            31 downto 24 => creg2gbreg_dbgWriteEnable(ctxt) and creg2gbreg_dbgWriteMask(ctxt)(3),
+            23 downto 16 => creg2gbreg_dbgWriteEnable(ctxt) and creg2gbreg_dbgWriteMask(ctxt)(2),
+            15 downto  8 => creg2gbreg_dbgWriteEnable(ctxt) and creg2gbreg_dbgWriteMask(ctxt)(1),
+            7 downto  0 => creg2gbreg_dbgWriteEnable(ctxt) and creg2gbreg_dbgWriteMask(ctxt)(0)
+        );
+        bus_wordAddr := unsigned(creg2gbreg_dbgAddr(ctxt)(8 downto 2));
+        
+        -- Generated register implementation code.
         @IMPL
+        
+        -- Bus read muxes.
+        @BUS_READ
+        
       end if;
     end if;
   end process;
