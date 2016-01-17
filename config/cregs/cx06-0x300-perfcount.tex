@@ -1,160 +1,139 @@
 %===============================================================================
-\register{CYC}{Cycle counter}{0x300}
+\perfCounter{CYC}{Cycle counter}{0x300}
 %===============================================================================
 
-This register will automatically increment every cycle while an instruction from
-this context is in the pipeline, even when the context is stalled.
-
-When the debug bus writes to this register, the register is cleared. When it
-writes 1 to it, \creg{STALL}, \creg{BUN}, \creg{SYL} and \creg{NOP} will also be
-cleared, simultaneously.
+This performance counter increments every cycle while an instruction from this 
+context is in the pipeline, even when the context is stalled.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{CYC}
+% Don't forget about the reset stuff which still needs to be added to the
+% generator!
 \implementation{}
 
 %===============================================================================
-\register{STALL}{Stall cycle counter}{0x308}
+\perfCounter{STALL}{Stall cycle counter}{0x308}
 %===============================================================================
 
-This register will automatically increment every cycle while an instruction from 
-this context is in the pipeline and the context is stalled. When the debug bus 
-writes to this register, the register is cleared. It will also be cleared if the 
-debug bus writes a 1 to \creg{CYC}.
-
-As long as neither \creg{CYC} nor \creg{STALL} have overflowed,
-\creg{CYC}~-~\creg{STALL} represents the number of active cycles.
+This performance counter increments every cycle while an instruction from this 
+context is in the pipeline and the context is stalled. As long as neither 
+\creg{CYC} nor \creg{STALL} have overflowed, \creg{CYC}~-~\creg{STALL} 
+represents the number of active cycles.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{STALL}
 \implementation{}
 
 %===============================================================================
-\register{BUN}{Committed bundle counter}{0x310}
+\perfCounter{BUN}{Committed bundle counter}{0x310}
 %===============================================================================
 
-This register will automatically increment whenever the results of executing a 
-bundle are committed. When the debug bus writes to this register, the register 
-is cleared. It will also be cleared if the debug bus writes a 1 to \creg{CYC}.
-
-As long as neither \creg{CYC}, \creg{STALL} nor \creg{BUN} have overflowed,
-\creg{CYC}~-~\creg{STALL}~-~\creg{BUN} represents the number of cycles spent
-doing pipeline flushes, for example due to traps or the branch delay slot.
+This performance counter increments whenever the results of executing a bundle 
+are committed. As long as neither \creg{CYC}, \creg{STALL} nor \creg{BUN} have 
+overflowed, \creg{CYC}~-~\creg{STALL}~-~\creg{BUN} represents the number of 
+cycles spent doing pipeline flushes, for example due to traps or the branch 
+delay slot.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{BUN}
 \implementation{}
 
 %===============================================================================
-\register{SYL}{Committed syllable counter}{0x318}
+\perfCounter{SYL}{Committed syllable counter}{0x318}
 %===============================================================================
 
-This register will automatically increment whenever the results of executing a 
-non-\insn{NOP} syllable are committed. When the debug bus writes to this 
-register, the register is cleared. It will also be cleared if the debug bus 
-writes a 1 to \creg{CYC}.
-
-As long as neither \creg{BUN} nor \creg{SYL} have overflowed,
-\creg{SYL}~/~\creg{BUN} represents average instruction-level parallelism since
-the registers were cleared.
+This performance counter increments whenever the results of executing a 
+non-\insn{NOP} syllable are committed. As long as neither \creg{BUN} nor 
+\creg{SYL} have overflowed, \creg{SYL}~/~\creg{BUN} represents average 
+instruction-level parallelism since the registers were cleared.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{SYL}
 \implementation{}
 
 %===============================================================================
-\register{NOP}{Committed NOP counter}{0x320}
+\perfCounter{NOP}{Committed NOP counter}{0x320}
 %===============================================================================
 
-This register will automatically increment whenever a \insn{NOP} syllable is 
-committed. When the debug bus writes to this register, the register is cleared. 
-It will also be cleared if the debug bus writes a 1 to \creg{CYC}.
-
-As long as neither \creg{SYL} nor \creg{NOP} have overflowed,
-\creg{SYL}~/~(\creg{SYL} + \creg{NOP}) represents average fraction of syllables
+This performance counter increments whenever a \insn{NOP} syllable is committed. 
+As long as neither \creg{SYL} nor \creg{NOP} have overflowed, 
+\creg{SYL}~/~(\creg{SYL} + \creg{NOP}) represents average fraction of syllables 
 that are \insn{NOP}, i.e. the compression efficiency of the binary.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{NOP}
 \implementation{}
 
 %===============================================================================
-\register{IACC}{Instruction cache access counter}{0x328}
+\perfCounter{IACC}{Instruction cache access counter}{0x328}
 %===============================================================================
 
-This register increments for every instruction cache access.
+This performance counter increments for every instruction cache access.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{IACC}
 \implementation{}
 
 %===============================================================================
-\register{IMISS}{Instruction cache miss counter}{0x330}
+\perfCounter{IMISS}{Instruction cache miss counter}{0x330}
 %===============================================================================
 
-This register increments every time there is a miss in the instruction cache.
+This performance counter increments every time there is a miss in the 
+instruction cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{IMISS}
 \implementation{}
 
 %===============================================================================
-\register{DRACC}{Data cache read access counter}{0x338}
+\perfCounter{DRACC}{Data cache read access counter}{0x338}
 %===============================================================================
 
-This register increments every time there is a read access to the data cache.
+This performance counter increments every time there is a read access to the 
+data cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{DRACC}
 \implementation{}
 
 %===============================================================================
-\register{DRMISS}{Data cache read miss counter}{0x340}
+\perfCounter{DRMISS}{Data cache read miss counter}{0x340}
 %===============================================================================
 
-This register increments every time there is a read miss in the data cache.
+This performance counter increments every time there is a read miss in the data 
+cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{DRMISS}
 \implementation{}
 
 %===============================================================================
-\register{DWACC}{Data cache write access counter}{0x348}
+\perfCounter{DWACC}{Data cache write access counter}{0x348}
 %===============================================================================
 
-This register increments every time there is a write access to the data cache.
+This performance counter increments every time there is a write access to the 
+data cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{DWACC}
 \implementation{}
 
 %===============================================================================
-\register{DWMISS}{Data cache write miss counter}{0x350}
+\perfCounter{DWMISS}{Data cache write miss counter}{0x350}
 %===============================================================================
 
-This register increments every time there is a write miss in the data cache.
+This performance counter increments every time there is a write miss in the data 
+cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{DWMISS}
 \implementation{}
 
 %===============================================================================
-\register{DBYPASS}{Data cache bypass counter}{0x358}
+\perfCounter{DBYPASS}{Data cache bypass counter}{0x358}
 %===============================================================================
 
-This register increments every time there is a bypassed access to the data cache.
+This performance counter increments every time there is a bypassed access to the 
+data cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{DBYPASS}
 \implementation{}
 
 %===============================================================================
-\register{DWBUF}{Data cache write buffer counter}{0x360}
+\perfCounter{DWBUF}{Data cache write buffer counter}{0x360}
 %===============================================================================
 
-This register increments every time there is a write to the data cache while
-the write buffer is full.
+This performance counter increments every time there is a write to the data 
+cache while the write buffer is full.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{DWBUF}
 \implementation{}

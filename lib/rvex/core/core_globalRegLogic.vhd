@@ -129,6 +129,16 @@ entity core_globalRegLogic is
     imem2gbreg_affinity         : in  rvex_data_type;
 
     ---------------------------------------------------------------------------
+    -- Misc.
+    ---------------------------------------------------------------------------                      -- GENERATED --
+    -- Core ID generic, passed as a port because of limitations in the register
+    -- generator.
+    rv2gbreg_coreID             : in  rvex_byte_type;
+
+    -- ASCII platform tag code for the platform version registers.
+    rv2gbreg_platformTag        : in  std_logic_vector(55 downto 0);
+
+    ---------------------------------------------------------------------------
     -- Debug bus to global control register interface
     ---------------------------------------------------------------------------                      -- GENERATED --
     -- Global control register address. Only bits 7..0 are used.
@@ -238,109 +248,193 @@ begin -- architecture
     variable bus_wordAddr      : unsigned(5 downto 0);
 
     -- Generated variables and constants.
+    variable cr_gsr_r_read      : std_logic_vector(0 downto 0);
+    variable cr_gsr_e_read      : std_logic_vector(0 downto 0);
+    variable cr_gsr_b_read      : std_logic_vector(0 downto 0);                                      -- GENERATED --
+    variable cr_gsr_rid_read    : std_logic_vector(3 downto 0);
+    variable cr_bcrr_bcrr_read  : std_logic_vector(31 downto 0);
+    variable cr_cc_cc_read      : std_logic_vector(31 downto 0);
+    variable cr_aff_af_read     : std_logic_vector(31 downto 0);
+    variable cr_cnt_cnt_read    : std_logic_vector(31 downto 0);
+    variable cr_cnth_cnth_read  : std_logic_vector(23 downto 0);
+    variable cr_cnth_cnt_read   : std_logic_vector(7 downto 0);
+    variable cr_limc7_borrow15_read: std_logic_vector(15 downto 0);
+    variable cr_limc7_borrow14_read: std_logic_vector(15 downto 0);
+    variable cr_limc6_borrow13_read: std_logic_vector(15 downto 0);                                  -- GENERATED --
+    variable cr_limc6_borrow12_read: std_logic_vector(15 downto 0);
+    variable cr_limc5_borrow11_read: std_logic_vector(15 downto 0);
+    variable cr_limc5_borrow10_read: std_logic_vector(15 downto 0);
+    variable cr_limc4_borrow9_read: std_logic_vector(15 downto 0);
+    variable cr_limc4_borrow8_read: std_logic_vector(15 downto 0);
+    variable cr_limc3_borrow7_read: std_logic_vector(15 downto 0);
+    variable cr_limc3_borrow6_read: std_logic_vector(15 downto 0);
+    variable cr_limc2_borrow5_read: std_logic_vector(15 downto 0);
+    variable cr_limc2_borrow4_read: std_logic_vector(15 downto 0);
+    variable cr_limc1_borrow3_read: std_logic_vector(15 downto 0);                                   -- GENERATED --
+    variable cr_limc1_borrow2_read: std_logic_vector(15 downto 0);
+    variable cr_limc0_borrow1_read: std_logic_vector(15 downto 0);
+    variable cr_limc0_borrow0_read: std_logic_vector(15 downto 0);
+    variable cr_sic3_syl15cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic3_syl14cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic3_syl13cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic3_syl12cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic2_syl11cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic2_syl10cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic2_syl9cap_read: std_logic_vector(7 downto 0);                                     -- GENERATED --
+    variable cr_sic2_syl8cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic1_syl7cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic1_syl6cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic1_syl5cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic1_syl4cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic0_syl3cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic0_syl2cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic0_syl1cap_read: std_logic_vector(7 downto 0);
+    variable cr_sic0_syl0cap_read: std_logic_vector(7 downto 0);
+    variable cr_gps0_memar_read : std_logic_vector(3 downto 0);                                      -- GENERATED --
+    variable cr_gps0_memdc_read : std_logic_vector(3 downto 0);
+    variable cr_gps0_memdr_read : std_logic_vector(3 downto 0);
+    variable cr_gps0_mulc_read  : std_logic_vector(3 downto 0);
+    variable cr_gps0_mulr_read  : std_logic_vector(3 downto 0);
+    variable cr_gps0_aluc_read  : std_logic_vector(3 downto 0);
+    variable cr_gps0_alur_read  : std_logic_vector(3 downto 0);
+    variable cr_sps0_memmc_read : std_logic_vector(3 downto 0);
+    variable cr_sps0_memmr_read : std_logic_vector(3 downto 0);
+    variable cr_sps0_memdc_read : std_logic_vector(3 downto 0);
+    variable cr_sps0_memdr_read : std_logic_vector(3 downto 0);                                      -- GENERATED --
+    variable cr_sps0_brc_read   : std_logic_vector(3 downto 0);
+    variable cr_sps0_brr_read   : std_logic_vector(3 downto 0);
+    variable cr_sps0_aluc_read  : std_logic_vector(3 downto 0);
+    variable cr_sps0_alur_read  : std_logic_vector(3 downto 0);
+    variable cr_ext0_t_read     : std_logic_vector(0 downto 0);
+    variable cr_ext0_brk_read   : std_logic_vector(2 downto 0);
+    variable cr_ext0_c_read     : std_logic_vector(0 downto 0);
+    variable cr_ext0_p_read     : std_logic_vector(2 downto 0);
+    variable cr_ext0_o_read     : std_logic_vector(0 downto 0);
+    variable cr_ext0_l_read     : std_logic_vector(0 downto 0);                                      -- GENERATED --
+    variable cr_ext0_f_read     : std_logic_vector(0 downto 0);
+    variable cr_dcfg_ba_read    : std_logic_vector(3 downto 0);
+    variable cr_dcfg_nc_read    : std_logic_vector(3 downto 0);
+    variable cr_dcfg_ng_read    : std_logic_vector(3 downto 0);
+    variable cr_dcfg_nl_read    : std_logic_vector(3 downto 0);
+    variable cr_cver1_ver_read  : std_logic_vector(7 downto 0);
+    variable cr_cver1_ctag0_read: std_logic_vector(7 downto 0);
+    variable cr_cver1_ctag1_read: std_logic_vector(7 downto 0);
+    variable cr_cver1_ctag2_read: std_logic_vector(7 downto 0);
+    variable cr_cver0_ctag3_read: std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_cver0_ctag4_read: std_logic_vector(7 downto 0);
+    variable cr_cver0_ctag5_read: std_logic_vector(7 downto 0);
+    variable cr_cver0_ctag6_read: std_logic_vector(7 downto 0);
+    variable cr_pver1_coid_read : std_logic_vector(7 downto 0);
+    variable cr_pver1_ptag0_read: std_logic_vector(7 downto 0);
+    variable cr_pver1_ptag1_read: std_logic_vector(7 downto 0);
+    variable cr_pver1_ptag2_read: std_logic_vector(7 downto 0);
+    variable cr_pver0_ptag3_read: std_logic_vector(7 downto 0);
+    variable cr_pver0_ptag4_read: std_logic_vector(7 downto 0);
+    variable cr_pver0_ptag5_read: std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_pver0_ptag6_read: std_logic_vector(7 downto 0);
 
   begin
-    if rising_edge(clk) then                                                                         -- GENERATED --
+    if rising_edge(clk) then
 
       -- Set readData to 0 by default.
       gbreg2creg_dbgReadData <= (others => '0');
       gbreg2creg_coreReadData <= (others => (others => '0'));
 
-      if reset = '1' then
+      if reset = '1' then                                                                            -- GENERATED --
 
         -- Reset all registers and ports.
         gbreg2rv_reset <= bool2bit(int2bool(0));
-        gbreg2cfg_requestData <= std_logic_vector(to_unsigned(0, 32));                               -- GENERATED --
+        gbreg2cfg_requestData <= std_logic_vector(to_unsigned(0, 32));
         gbreg2cfg_requestEnable <= bool2bit(int2bool(0));
 
       elsif clkEn = '1' then
 
         -- Setup the bus write command variables which are expected by the
-        -- generated code.
+        -- generated code.                                                                           -- GENERATED --
         bus_writeData := creg2gbreg_dbgWriteData;
         bus_writeMaskDbg := (
             31 downto 24 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(3),
-            23 downto 16 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(2),                -- GENERATED --
+            23 downto 16 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(2),
             15 downto  8 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(1),
             7 downto  0 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(0)
         );
         bus_wordAddr := unsigned(creg2gbreg_dbgAddr(7 downto 2));
 
-        -- Generated register implementation code.
+        -- Generated register implementation code.                                                   -- GENERATED --
 
         -- Bus read muxes.
         case creg2gbreg_dbgAddr(7 downto 2) is
-          when "000000" => gbreg2creg_dbgReadData <= (((((bitvec_lit("0")) & (bitvec_lit("00000000000000000"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0000"))) & (bitvec_lit("00000000")); -- GENERATED --
+          when "000000" => gbreg2creg_dbgReadData <= (((((bitvec_lit("0")) & (bitvec_lit("00000000000000000"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0000"))) & (bitvec_lit("00000000"));
           when "000001" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
           when "000010" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
           when "000011" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
           when "000100" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
-          when "000101" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
-          when "101000" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
+          when "000101" => gbreg2creg_dbgReadData <= (bitvec_lit("000000000000000000000000")) & (bitvec_lit("00000000"));
+          when "101000" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000")); -- GENERATED --
           when "101001" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
           when "101010" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
           when "101011" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
-          when "101100" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000")); -- GENERATED --
+          when "101100" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
           when "101101" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
           when "101110" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
           when "101111" => gbreg2creg_dbgReadData <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
           when "110000" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
           when "110001" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
-          when "110010" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
+          when "110010" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000")); -- GENERATED --
           when "110011" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
           when "110100" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
           when "110101" => gbreg2creg_dbgReadData <= (((((((bitvec_lit("0000")) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"));
-          when "110110" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000"); -- GENERATED --
+          when "110110" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
           when "110111" => gbreg2creg_dbgReadData <= (((((((bitvec_lit("0000")) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"));
           when "111000" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
           when "111001" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
-          when "111010" => gbreg2creg_dbgReadData <= ((((((((((bitvec_lit("0000")) & (bitvec_lit("0"))) & (bitvec_lit("000"))) & (bitvec_lit("00000"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0000000000000"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0"));
+          when "111010" => gbreg2creg_dbgReadData <= (((((((((bitvec_lit("0000")) & (bitvec_lit("0"))) & (bitvec_lit("000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0"))) & (bitvec_lit("000"))) & (bitvec_lit("0000000000000"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0"));
           when "111011" => gbreg2creg_dbgReadData <= ((((bitvec_lit("0000000000000000")) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"));
-          when "111100" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
+          when "111100" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000")); -- GENERATED --
           when "111101" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
           when "111110" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
           when "111111" => gbreg2creg_dbgReadData <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
-          when others => gbreg2creg_dbgReadData <= (others => '0');                                  -- GENERATED --
+          when others => gbreg2creg_dbgReadData <= (others => '0');
         end case;
         for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
           case creg2gbreg_coreAddr(laneGroup)(7 downto 2) is
             when "000000" => gbreg2creg_coreReadData(laneGroup) <= (((((bitvec_lit("0")) & (bitvec_lit("00000000000000000"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0000"))) & (bitvec_lit("00000000"));
             when "000001" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
-            when "000010" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
+            when "000010" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000"); -- GENERATED --
             when "000011" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
             when "000100" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
-            when "000101" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
-            when "101000" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000")); -- GENERATED --
+            when "000101" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("000000000000000000000000")) & (bitvec_lit("00000000"));
+            when "101000" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
             when "101001" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
             when "101010" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
             when "101011" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
             when "101100" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
             when "101101" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
-            when "101110" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
+            when "101110" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000")); -- GENERATED --
             when "101111" => gbreg2creg_coreReadData(laneGroup) <= (bitvec_lit("0000000000000000")) & (bitvec_lit("0000000000000000"));
             when "110000" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
             when "110001" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
-            when "110010" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000")); -- GENERATED --
+            when "110010" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
             when "110011" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
             when "110100" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
             when "110101" => gbreg2creg_coreReadData(laneGroup) <= (((((((bitvec_lit("0000")) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"));
             when "110110" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
             when "110111" => gbreg2creg_coreReadData(laneGroup) <= (((((((bitvec_lit("0000")) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"));
-            when "111000" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
+            when "111000" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000"); -- GENERATED --
             when "111001" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
-            when "111010" => gbreg2creg_coreReadData(laneGroup) <= ((((((((((bitvec_lit("0000")) & (bitvec_lit("0"))) & (bitvec_lit("000"))) & (bitvec_lit("00000"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0000000000000"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0"));
+            when "111010" => gbreg2creg_coreReadData(laneGroup) <= (((((((((bitvec_lit("0000")) & (bitvec_lit("0"))) & (bitvec_lit("000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0"))) & (bitvec_lit("000"))) & (bitvec_lit("0000000000000"))) & (bitvec_lit("0"))) & (bitvec_lit("0"))) & (bitvec_lit("0"));
             when "111011" => gbreg2creg_coreReadData(laneGroup) <= ((((bitvec_lit("0000000000000000")) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"))) & (bitvec_lit("0000"));
-            when "111100" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000")); -- GENERATED --
+            when "111100" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
             when "111101" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
             when "111110" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
             when "111111" => gbreg2creg_coreReadData(laneGroup) <= (((bitvec_lit("00000000")) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"))) & (bitvec_lit("00000000"));
             when others => gbreg2creg_coreReadData(laneGroup) <= (others => '0');
           end case;
-        end loop;
+        end loop;                                                                                    -- GENERATED --
 
       end if;
     end if;
-  end process;                                                                                       -- GENERATED --
+  end process;
 
 end Behavioral;
 

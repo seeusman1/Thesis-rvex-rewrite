@@ -16,7 +16,7 @@
 \cline{2-33}
 \multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x010}} & \multicolumn{32}{@{}c@{}|}{\tiny CNT} & \hspace{0.6 mm} \normalsize\creg{CNT}\footnotesize \\
 \cline{2-33}
-\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x014}} & \multicolumn{32}{@{}c@{}|}{\tiny CNTH} & \hspace{0.6 mm} \normalsize\creg{CNTH}\footnotesize \\
+\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x014}} & \multicolumn{24}{@{}c@{}|}{\tiny CNTH} & \multicolumn{8}{@{}c@{}|}{\tiny CNT} & \hspace{0.6 mm} \normalsize\creg{CNTH}\footnotesize \\
 \cline{2-33}
 \multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{...}} & \multicolumn{32}{@{}c@{}|}{\tiny\textit{Unused}} & \\
 \cline{2-33}
@@ -56,7 +56,7 @@
 \cline{2-33}
 \multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x0E4}} & \multicolumn{32}{@{}c@{}|}{\tiny } & \hspace{0.6 mm} \normalsize\creg{EXT1}\footnotesize \\
 \cline{2-33}
-\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x0E8}} & \multicolumn{4}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny T} & \multicolumn{3}{@{}c@{}|}{\tiny BRK} & \multicolumn{5}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny C} & \multicolumn{1}{@{}c@{}|}{\tiny I} & \multicolumn{1}{@{}c@{}|}{\tiny P} & \multicolumn{13}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny O} & \multicolumn{1}{@{}c@{}|}{\tiny L} & \multicolumn{1}{@{}c@{}|}{\tiny F} & \hspace{0.6 mm} \normalsize\creg{EXT0}\footnotesize \\
+\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x0E8}} & \multicolumn{4}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny T} & \multicolumn{3}{@{}c@{}|}{\tiny BRK} & \multicolumn{4}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny C} & \multicolumn{3}{@{}c@{}|}{\tiny P} & \multicolumn{13}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny O} & \multicolumn{1}{@{}c@{}|}{\tiny L} & \multicolumn{1}{@{}c@{}|}{\tiny F} & \hspace{0.6 mm} \normalsize\creg{EXT0}\footnotesize \\
 \cline{2-33}
 \multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x0EC}} & \multicolumn{16}{@{}c@{}|}{\tiny } & \multicolumn{4}{@{}c@{}|}{\tiny BA} & \multicolumn{4}{@{}c@{}|}{\tiny NC} & \multicolumn{4}{@{}c@{}|}{\tiny NG} & \multicolumn{4}{@{}c@{}|}{\tiny NL} & \hspace{0.6 mm} \normalsize\creg{DCFG}\footnotesize \\
 \cline{2-33}
@@ -156,7 +156,7 @@ recently serviced an instruction fetch for a given context. This may be used for
 achieving the maximum possible instruction cache locality when reconfiguring.
 
 Each nibble represents a lane group. The nibble value is the context index.
-\subsubsection{\code{CR_CNT} - Cycle counter register, low word}
+\subsubsection{\code{CR_CNT} - Cycle counter register}
 \label{reg:CNT}
 \label{reg:CNT}
 \vskip -10 pt\relax\noindent\footnotesize
@@ -172,9 +172,10 @@ Each nibble represents a lane group. The nibble value is the context index.
 \end{tabular}
 \normalsize\vskip 6pt
 \noindent Cycle counter. This register is simply always incremented by one in hardware.
-Simply overflows when it reaches 0xFFFFFFFF. Its intended use is performance
-monitoring.
-\subsubsection{\code{CR_CNTH} - Cycle counter register, high word}
+Simply overflows when it reaches 0xFFFFFFFF. Its intended use is to monitor
+real time. As an indication, this register overflows approximately every 85
+seconds at 50 MHz.
+\subsubsection{\code{CR_CNTH} - Cycle counter register high}
 \label{reg:CNTH}
 \label{reg:CNTH}
 \vskip -10 pt\relax\noindent\footnotesize
@@ -182,19 +183,19 @@ monitoring.
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
 \multicolumn{1}{@{}l@{}|}{\scriptsize Offset \ } & \multicolumn{1}{@{}c@{}}{\tiny31} & \multicolumn{1}{@{}c@{}}{\tiny30} & \multicolumn{1}{@{}c@{}}{\tiny29} & \multicolumn{1}{@{}c@{}}{\tiny28} & \multicolumn{1}{@{}c@{}}{\tiny27} & \multicolumn{1}{@{}c@{}}{\tiny26} & \multicolumn{1}{@{}c@{}}{\tiny25} & \multicolumn{1}{@{}c@{}|}{\tiny24} & \multicolumn{1}{@{}c@{}}{\tiny23} & \multicolumn{1}{@{}c@{}}{\tiny22} & \multicolumn{1}{@{}c@{}}{\tiny21} & \multicolumn{1}{@{}c@{}}{\tiny20} & \multicolumn{1}{@{}c@{}}{\tiny19} & \multicolumn{1}{@{}c@{}}{\tiny18} & \multicolumn{1}{@{}c@{}}{\tiny17} & \multicolumn{1}{@{}c@{}|}{\tiny16} & \multicolumn{1}{@{}c@{}}{\tiny15} & \multicolumn{1}{@{}c@{}}{\tiny14} & \multicolumn{1}{@{}c@{}}{\tiny13} & \multicolumn{1}{@{}c@{}}{\tiny12} & \multicolumn{1}{@{}c@{}}{\tiny11} & \multicolumn{1}{@{}c@{}}{\tiny10} & \multicolumn{1}{@{}c@{}}{\tiny9} & \multicolumn{1}{@{}c@{}|}{\tiny8} & \multicolumn{1}{@{}c@{}}{\tiny7} & \multicolumn{1}{@{}c@{}}{\tiny6} & \multicolumn{1}{@{}c@{}}{\tiny5} & \multicolumn{1}{@{}c@{}}{\tiny4} & \multicolumn{1}{@{}c@{}}{\tiny3} & \multicolumn{1}{@{}c@{}}{\tiny2} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}|}{\tiny0} & \\
 \cline{2-33}
-\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x014}} & \multicolumn{32}{@{}c@{}|}{\tiny CNTH} & \hspace{0.6 mm} \normalsize\creg{CNTH}\footnotesize \\
+\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x014}} & \multicolumn{24}{@{}c@{}|}{\tiny CNTH} & \multicolumn{8}{@{}c@{}|}{\tiny CNT} & \hspace{0.6 mm} \normalsize\creg{CNTH}\footnotesize \\
 \cline{2-33}
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill Reset \ } & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \\
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill Core \ } & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \\
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill Debug \ } & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \\
 \end{tabular}
 \normalsize\vskip 6pt
-\noindent \todo{The CNTH register doesn't exist yet.}
-Extension to the \creg{CNT} register. The order is illogical for a big endian
-system for compatibility with older code that assumes that this counter is only
-32 bits wide. The high word of the counter value is latched whenever \creg{CNT}
-is read to avoid needing an atomic 64-bit read operation. Thus, \creg{CNT} must
-always be read before \creg{CNTH} is read.
+\noindent This register extends the \creg{CNT} register by 24 bits. The low byte is equal
+to the high byte of \creg{CNT}, similar to the performance counters, which
+allows the same algorithm to be used in order to read the value. Refer to
+Section~\ref{sec:core-ug-creg-perf} for more information. Note however, that
+unlike the other performance counters, this register always exists, regardless
+of the design-time configured performance counter width.
 \subsubsection{\code{CR_LIMCn} - Long immediate capability register $n$}
 \label{reg:LIMC7}
 \label{reg:LIMC6}
@@ -473,9 +474,9 @@ branch and link registers.
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
 \multicolumn{1}{@{}l@{}|}{\scriptsize Offset \ } & \multicolumn{1}{@{}c@{}}{\tiny31} & \multicolumn{1}{@{}c@{}}{\tiny30} & \multicolumn{1}{@{}c@{}}{\tiny29} & \multicolumn{1}{@{}c@{}}{\tiny28} & \multicolumn{1}{@{}c@{}}{\tiny27} & \multicolumn{1}{@{}c@{}}{\tiny26} & \multicolumn{1}{@{}c@{}}{\tiny25} & \multicolumn{1}{@{}c@{}|}{\tiny24} & \multicolumn{1}{@{}c@{}}{\tiny23} & \multicolumn{1}{@{}c@{}}{\tiny22} & \multicolumn{1}{@{}c@{}}{\tiny21} & \multicolumn{1}{@{}c@{}}{\tiny20} & \multicolumn{1}{@{}c@{}}{\tiny19} & \multicolumn{1}{@{}c@{}}{\tiny18} & \multicolumn{1}{@{}c@{}}{\tiny17} & \multicolumn{1}{@{}c@{}|}{\tiny16} & \multicolumn{1}{@{}c@{}}{\tiny15} & \multicolumn{1}{@{}c@{}}{\tiny14} & \multicolumn{1}{@{}c@{}}{\tiny13} & \multicolumn{1}{@{}c@{}}{\tiny12} & \multicolumn{1}{@{}c@{}}{\tiny11} & \multicolumn{1}{@{}c@{}}{\tiny10} & \multicolumn{1}{@{}c@{}}{\tiny9} & \multicolumn{1}{@{}c@{}|}{\tiny8} & \multicolumn{1}{@{}c@{}}{\tiny7} & \multicolumn{1}{@{}c@{}}{\tiny6} & \multicolumn{1}{@{}c@{}}{\tiny5} & \multicolumn{1}{@{}c@{}}{\tiny4} & \multicolumn{1}{@{}c@{}}{\tiny3} & \multicolumn{1}{@{}c@{}}{\tiny2} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}|}{\tiny0} & \\
 \cline{2-33}
-\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x0E8}} & \multicolumn{4}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny T} & \multicolumn{3}{@{}c@{}|}{\tiny BRK} & \multicolumn{5}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny C} & \multicolumn{1}{@{}c@{}|}{\tiny I} & \multicolumn{1}{@{}c@{}|}{\tiny P} & \multicolumn{13}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny O} & \multicolumn{1}{@{}c@{}|}{\tiny L} & \multicolumn{1}{@{}c@{}|}{\tiny F} & \hspace{0.6 mm} \normalsize\creg{EXT0}\footnotesize \\
+\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x0E8}} & \multicolumn{4}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny T} & \multicolumn{3}{@{}c@{}|}{\tiny BRK} & \multicolumn{4}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny C} & \multicolumn{3}{@{}c@{}|}{\tiny P} & \multicolumn{13}{@{}c@{}|}{\tiny } & \multicolumn{1}{@{}c@{}|}{\tiny O} & \multicolumn{1}{@{}c@{}|}{\tiny L} & \multicolumn{1}{@{}c@{}|}{\tiny F} & \hspace{0.6 mm} \normalsize\creg{EXT0}\footnotesize \\
 \cline{2-33}
-\multicolumn{1}{@{}l@{}}{\scriptsize \hfill Reset \ } & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \\
+\multicolumn{1}{@{}l@{}}{\scriptsize \hfill Reset \ } & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny0} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \multicolumn{1}{@{}c@{}}{\tiny*} & \\
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill Core \ } & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \\
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill Debug \ } & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \multicolumn{1}{@{}c@{}}{\tiny} & \\
 \end{tabular}
@@ -488,12 +489,12 @@ Defines whether the trace unit is available. The trace unit has its own
 capability flags in \creg{DCR2}.
 \paragraph*{BRK field, bits 26..24}
 Defines the number of available hardware breakpoints.
-\paragraph*{C flag, bit 18}
+\paragraph*{C flag, bit 19}
 If set, cache-related performance counters exist.
-\paragraph*{I flag, bit 17}
-If set, ILP-related performance counters \creg{C_BUN}, \creg{C_SYL} and \creg{C_NOP} exist.
-\paragraph*{P flag, bit 16}
-If set, performance counters \creg{C_CYC} and \creg{C_STALL} exist.
+\paragraph*{P field, bits 18..16}
+This field represents the size in bytes of all performance counters except
+\creg{CNT}, which is always 64-bit. Refer to Section~\ref{sec:core-ug-creg-perf}
+for more information.
 \paragraph*{O flag, bit 2}
 This flag determines the unit in which the branch offset field is encoded. When
 this flag is cleared, the branch offset is encoded in 8-byte units. When it is

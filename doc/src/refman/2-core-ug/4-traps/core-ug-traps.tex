@@ -34,8 +34,8 @@ trap causes the processor to jump to the trap or panic handler.
 
 \item Context switch request. When the values in \creg{RSC} and \creg{CSC} do
 not match and the context switching system is enabled by means of the the C flag
-in \creg{CCR}, a \trap{CONTEXT_SWITCH} trap will be generated. This trap causes
-the processor to jump to the trap or panic handler.
+in \creg{CCR}, a \trap{SOFT_CTXT_SWITCH} trap will be generated. This trap
+causes the processor to jump to the trap or panic handler.
 
 \item Breakpoints/debug traps. When a hardware or software breakpoint is hit 
 while breakpoints are enabled through the B flag in \creg{CCR}, the processor 

@@ -303,6 +303,7 @@ entity core_pipelanes is
     cxreg2cxplif_interruptEnable: in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_debugTrapEnable: in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cxplif_softCtxtSwitch : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_extDebug       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     cxplif2cxreg_exDbgTrapInfo  : out trap_info_array(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cxplif_brk            : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
@@ -359,6 +360,7 @@ architecture Behavioral of core_pipelanes is
   signal cxplif2br_handlingDebugTrap: std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2pl_debugTrapEnable  : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2brku_breakpoints    : cxreg2pl_breakpoint_info_array(2**CFG.numLanesLog2-1 downto 0);
+  signal cxplif2pl_softCtxtSwitch   : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal cxplif2brku_stepping       : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal pl2cxplif2_sylCommit       : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal pl2cxplif2_sylNop          : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
@@ -555,6 +557,7 @@ begin -- architecture
         cxplif2br_handlingDebugTrap(S_BR) => cxplif2br_handlingDebugTrap(lane),
         cxplif2pl_debugTrapEnable(S_MEM)  => cxplif2pl_debugTrapEnable(lane),
         cxplif2brku_breakpoints(S_BRK)    => cxplif2brku_breakpoints(lane),
+        cxplif2pl_softCtxtSwitch(S_MEM)   => cxplif2pl_softCtxtSwitch(lane),
         cxplif2brku_stepping(S_BRK)       => cxplif2brku_stepping(lane),
         
         -- Performance counter status signals.
@@ -664,6 +667,7 @@ begin -- architecture
       cxplif2br_handlingDebugTrap       => cxplif2br_handlingDebugTrap,
       cxplif2pl_debugTrapEnable         => cxplif2pl_debugTrapEnable,
       cxplif2brku_breakpoints           => cxplif2brku_breakpoints,
+      cxplif2pl_softCtxtSwitch          => cxplif2pl_softCtxtSwitch,
       cxplif2brku_stepping              => cxplif2brku_stepping,
       
       -- Pipelane interface: performance counter status signals.
@@ -720,6 +724,7 @@ begin -- architecture
       cxreg2cxplif_interruptEnable      => cxreg2cxplif_interruptEnable,
       cxreg2cxplif_debugTrapEnable      => cxreg2cxplif_debugTrapEnable,
       cxreg2cxplif_breakpoints          => cxreg2cxplif_breakpoints,
+      cxreg2cxplif_softCtxtSwitch       => cxreg2cxplif_softCtxtSwitch,
 
       -- Context register interface: external debug control signals.
       cxreg2cxplif_extDebug             => cxreg2cxplif_extDebug,

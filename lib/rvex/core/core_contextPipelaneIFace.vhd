@@ -250,6 +250,9 @@ entity core_contextPipelaneIFace is
     -- Current breakpoint information.
     cxplif2brku_breakpoints     : out cxreg2pl_breakpoint_info_array(2**CFG.numLanesLog2-1 downto 0);
     
+    -- Soft context switch trap request signals to the pipelanes.
+    cxplif2pl_softCtxtSwitch    : out std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+    
     -- Current value of the stepping flag in the debug control register. When
     -- high, a step trap must be triggered if there is no other trap and
     -- breakpoints are enabled.
@@ -422,6 +425,9 @@ entity core_contextPipelaneIFace is
 
     -- Current hardware breakpoint configuration.
     cxreg2cxplif_breakpoints    : in  cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Soft context switch trap request signals from the control registers.
+    cxreg2cxplif_softCtxtSwitch : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
 
     ---------------------------------------------------------------------------
     -- Context register interface: external debug control signals
@@ -539,6 +545,7 @@ architecture Behavioral of core_contextPipelaneIFace is
   signal handlingDebugTrap_mux  : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal debugTrapEnable_mux    : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal breakpoints_mux        : cxreg2pl_breakpoint_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal softCtxtSwitch_mux     : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal stepping_mux           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   signal resuming_mux           : std_logic_vector  (2**CFG.numLaneGroupsLog2-1 downto 0);
   
@@ -932,6 +939,8 @@ begin -- architecture
     cxplif2pl_debugTrapEnable(lane)   <= debugTrapEnable_mux(laneGroup)
                                       or extDebug_mux(laneGroup); -- Always enable debug traps in external debug mode.
     cxplif2brku_breakpoints(lane)     <= breakpoints_mux(laneGroup);
+    cxplif2pl_softCtxtSwitch(lane)    <= softCtxtSwitch_mux(laneGroup)
+                                      when laneIndex = 0 else '0'; -- Only need this in one pipelane per group.
     cxplif2brku_stepping(lane)        <= stepping_mux(laneGroup);
     
   end generate;
@@ -1019,6 +1028,7 @@ begin -- architecture
     handlingDebugTrap_mux(laneGroup)  <= cxreg2cxplif_handlingDebugTrap(ctxt) when active = '1' else '0';
     debugTrapEnable_mux(laneGroup)    <= cxreg2cxplif_debugTrapEnable(ctxt)   when active = '1' else '0';
     breakpoints_mux(laneGroup)        <= cxreg2cxplif_breakpoints(ctxt);
+    softCtxtSwitch_mux(laneGroup)     <= cxreg2cxplif_softCtxtSwitch(ctxt)    when active = '1' else '0';
     stepping_mux(laneGroup)           <= cxreg2cxplif_stepping(ctxt)          when active = '1' else '0';
     resuming_mux(laneGroup)           <= cxreg2cxplif_resuming(ctxt)          when active = '1' else '0';
     

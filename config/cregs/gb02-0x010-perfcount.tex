@@ -1,28 +1,31 @@
 
 %===============================================================================
-\register{CNT}{Cycle counter register, low word}{0x010}
+\register{CNT}{Cycle counter register}{0x010}
 %===============================================================================
 
 Cycle counter. This register is simply always incremented by one in hardware.
-Simply overflows when it reaches 0xFFFFFFFF. Its intended use is performance
-monitoring.
+Simply overflows when it reaches 0xFFFFFFFF. Its intended use is to monitor
+real time. As an indication, this register overflows approximately every 85
+seconds at 50 MHz.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{CNT}
 \implementation{}
 
 %===============================================================================
-\register{CNTH}{Cycle counter register, high word}{0x014}
+\register{CNTH}{Cycle counter register high}{0x014}
 %===============================================================================
 
-\todo{The CNTH register doesn't exist yet.}
-Extension to the \creg{CNT} register. The order is illogical for a big endian 
-system for compatibility with older code that assumes that this counter is only 
-32 bits wide. The high word of the counter value is latched whenever \creg{CNT} 
-is read to avoid needing an atomic 64-bit read operation. Thus, \creg{CNT} must 
-always be read before \creg{CNTH} is read.
+This register extends the \creg{CNT} register by 24 bits. The low byte is equal
+to the high byte of \creg{CNT}, similar to the performance counters, which
+allows the same algorithm to be used in order to read the value. Refer to
+Section~\ref{sec:core-ug-creg-perf} for more information. Note however, that
+unlike the other performance counters, this register always exists, regardless
+of the design-time configured performance counter width.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{CNTH}
+\field{31..8}{CNTH}
+\implementation{}
+\field{7..0}{CNT}
 \implementation{}
 

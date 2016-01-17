@@ -2,7 +2,6 @@
 \register{RSC}{Requested software context}{0x260}
 %===============================================================================
 
-\todo{The RSC register doesn't exist yet.}
 \emph{This register does not exist on context 0.} It is hardwired to
 \code{RSC}$n$ in hardware context 0, and represents the software context that
 should be loaded into our hardware context, if it is not already loaded. The
@@ -12,19 +11,57 @@ this points to a memory region that contains the to be loaded context.
 The contents of this register are controlled by hardware context 0, which is 
 expected to run the scheduler. When this value does not equal the value in 
 \code{CSC} and context switching is enabled in \creg{CCR}, the 
-\trap{CONTEXT_SWITCH} trap is caused. Refer to its documentation in
+\trap{SOFT_CTXT_SWITCH} trap is caused. Refer to its documentation in
 Section~\ref{sec:core-ug-traps} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{RSC}
 \reset{11111111111111111111111111111111}
+\declaration{}
+\declRegister{_r}{data}{X"FFFFFFFF"}
 \implementation{}
+\begin{lstlisting}
+if (ctxt != 0) {
+    
+    // Handle bus access.
+    _read = _r;
+    
+}
+\end{lstlisting}
+
+%===============================================================================
+\register{CSC}{Current software context}{0x264}
+%===============================================================================
+
+\emph{This register does not exist on context 0.} It is hardwired to
+\code{CSC}$n$ in hardware context 0. The value in this register should be set
+to the value in \creg{RSC} by the \trap{SOFT_CTXT_SWITCH} trap.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{CSC}
+\reset{11111111111111111111111111111111}
+\declaration{}
+\declRegister{_r}{data}{X"FFFFFFFF"}
+\declRegister{_neq}{bit}{0}
+\implementation{}
+\begin{lstlisting}
+if (ctxt != 0) {
+    
+    // Handle bus access.
+    _r = (_r & ~_wmask) | (_write & _wmask);
+    _read = _r;
+    
+    // Compare CSC with RSC and register the signal.
+    _neq = (bit)(cr_csc_csc_r != cr_rsc_rsc_r);
+    
+}
+\end{lstlisting} % Request a context switch when CSC != RSC and CCR.C is set:
+\connect{cxreg2cxplif_softCtxtSwitch}{_neq & cr_ccr_c_r}
 
 %===============================================================================
 \registergen{range(1, 8)}{RSC\n{}}{Requested swctxt on hwctxt \n{}}{0x260}{8}
 %===============================================================================
 
-\todo{The RSC\n{} registers don't exist yet.}
 \emph{This register only exists on context 0, and only if the core is
 design-time configured to support hardware context \n{}.} This register is 
 hardwired to \creg{RSC} in hardware context \n{}. Refer to \creg{RSC} for more
@@ -34,26 +71,20 @@ information.
 \field{31..0}{RSC\n{}}
 \reset{11111111111111111111111111111111}
 \implementation{}
-
-%===============================================================================
-\register{CSC}{Current software context}{0x264}
-%===============================================================================
-
-\todo{The CSC register doesn't exist yet.}
-\emph{This register does not exist on context 0.} It is hardwired to
-\code{CSC}$n$ in hardware context 0. The value in this register should be set
-to the value in \creg{RSC} by the \trap{CONTEXT_SWITCH} trap.
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\field{31..0}{CSC}
-\reset{11111111111111111111111111111111}
-\implementation{}
+\begin{lstlisting}
+if ((ctxt == 0) && (\n{} < (1 << CFG.numContextsLog2))) {
+    
+    // Handle bus access.
+    cr_rsc_rsc_r@\n{} = (cr_rsc_rsc_r@\n{} & ~_wmask) | (_write & _wmask);
+    _read = cr_rsc_rsc_r@\n{};
+    
+}
+\end{lstlisting}
 
 %===============================================================================
 \registergen{range(1, 8)}{CSC\n{}}{Current swctxt on hwctxt \n{}}{0x264}{8}
 %===============================================================================
 
-\todo{The CSC\n{} registers don't exist yet.}
 \emph{This register only exists on context 0, and only if the core is
 design-time configured to support hardware context \n{}.} This register is 
 hardwired to \creg{CSC} in hardware context \n{}. Refer to \creg{CSC} for more
@@ -63,4 +94,12 @@ information.
 \field{31..0}{CSC\n{}}
 \reset{11111111111111111111111111111111}
 \implementation{}
+\begin{lstlisting}
+if ((ctxt == 0) && (\n{} < (1 << CFG.numContextsLog2))) {
+    
+    // Handle bus access.
+    _read = cr_csc_csc_r@\n{};
+    
+}
+\end{lstlisting}
 

@@ -73,7 +73,7 @@
 #define CR_AFF_AF_MASK                  0xFFFFFFFF                                                   /* GENERATED */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Cycle counter register, low word
+// Cycle counter register
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_CNT_ADDR                     (CREG_BASE + 0x010)
 #define CR_CNT                          CREG_UINT32_R(CR_CNT_ADDR)
@@ -82,349 +82,349 @@
 #define CR_CNT_CNT_MASK                 0xFFFFFFFF
                                                                                                      /* GENERATED */
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Cycle counter register, high word
+// Cycle counter register high
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_CNTH_ADDR                    (CREG_BASE + 0x014)
 #define CR_CNTH                         CREG_UINT32_R(CR_CNTH_ADDR)
 
-#define CR_CNTH_CNTH_BIT                0
-#define CR_CNTH_CNTH_MASK               0xFFFFFFFF
+#define CR_CNTH_CNTH_BIT                8
+#define CR_CNTH_CNTH_MASK               0xFFFFFF00
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       /* GENERATED */
+#define CR_CNTH_CNT_BIT                 0                                                            /* GENERATED */
+#define CR_CNTH_CNT_MASK                0x000000FF
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Long immediate capability register $n$
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_LIMC7_ADDR                   (CREG_BASE + 0x0A0)
 #define CR_LIMC7                        CREG_UINT32_R(CR_LIMC7_ADDR)
 
 #define CR_LIMC7_BORROW15_BIT           16
-#define CR_LIMC7_BORROW15_MASK          0xFFFF0000
+#define CR_LIMC7_BORROW15_MASK          0xFFFF0000                                                   /* GENERATED */
 
 #define CR_BORROW15_ADDR                (CREG_BASE + 0x0A1)
-#define CR_BORROW15                     CREG_UINT16_R(CR_BORROW15_ADDR)                              /* GENERATED */
+#define CR_BORROW15                     CREG_UINT16_R(CR_BORROW15_ADDR)
 
 #define CR_LIMC7_BORROW14_BIT           0
 #define CR_LIMC7_BORROW14_MASK          0x0000FFFF
 
 #define CR_BORROW14_ADDR                (CREG_BASE + 0x0A3)
 #define CR_BORROW14                     CREG_UINT16_R(CR_BORROW14_ADDR)
-
+                                                                                                     /* GENERATED */
 #define CR_LIMC6_ADDR                   (CREG_BASE + 0x0A4)
 #define CR_LIMC6                        CREG_UINT32_R(CR_LIMC6_ADDR)
-                                                                                                     /* GENERATED */
+
 #define CR_LIMC6_BORROW13_BIT           16
 #define CR_LIMC6_BORROW13_MASK          0xFFFF0000
 
 #define CR_BORROW13_ADDR                (CREG_BASE + 0x0A5)
 #define CR_BORROW13                     CREG_UINT16_R(CR_BORROW13_ADDR)
 
-#define CR_LIMC6_BORROW12_BIT           0
+#define CR_LIMC6_BORROW12_BIT           0                                                            /* GENERATED */
 #define CR_LIMC6_BORROW12_MASK          0x0000FFFF
 
-#define CR_BORROW12_ADDR                (CREG_BASE + 0x0A7)                                          /* GENERATED */
+#define CR_BORROW12_ADDR                (CREG_BASE + 0x0A7)
 #define CR_BORROW12                     CREG_UINT16_R(CR_BORROW12_ADDR)
 
 #define CR_LIMC5_ADDR                   (CREG_BASE + 0x0A8)
 #define CR_LIMC5                        CREG_UINT32_R(CR_LIMC5_ADDR)
 
 #define CR_LIMC5_BORROW11_BIT           16
-#define CR_LIMC5_BORROW11_MASK          0xFFFF0000
+#define CR_LIMC5_BORROW11_MASK          0xFFFF0000                                                   /* GENERATED */
 
 #define CR_BORROW11_ADDR                (CREG_BASE + 0x0A9)
-#define CR_BORROW11                     CREG_UINT16_R(CR_BORROW11_ADDR)                              /* GENERATED */
+#define CR_BORROW11                     CREG_UINT16_R(CR_BORROW11_ADDR)
 
 #define CR_LIMC5_BORROW10_BIT           0
 #define CR_LIMC5_BORROW10_MASK          0x0000FFFF
 
 #define CR_BORROW10_ADDR                (CREG_BASE + 0x0AB)
 #define CR_BORROW10                     CREG_UINT16_R(CR_BORROW10_ADDR)
-
+                                                                                                     /* GENERATED */
 #define CR_LIMC4_ADDR                   (CREG_BASE + 0x0AC)
 #define CR_LIMC4                        CREG_UINT32_R(CR_LIMC4_ADDR)
-                                                                                                     /* GENERATED */
+
 #define CR_LIMC4_BORROW9_BIT            16
 #define CR_LIMC4_BORROW9_MASK           0xFFFF0000
 
 #define CR_BORROW9_ADDR                 (CREG_BASE + 0x0AD)
 #define CR_BORROW9                      CREG_UINT16_R(CR_BORROW9_ADDR)
 
-#define CR_LIMC4_BORROW8_BIT            0
+#define CR_LIMC4_BORROW8_BIT            0                                                            /* GENERATED */
 #define CR_LIMC4_BORROW8_MASK           0x0000FFFF
 
-#define CR_BORROW8_ADDR                 (CREG_BASE + 0x0AF)                                          /* GENERATED */
+#define CR_BORROW8_ADDR                 (CREG_BASE + 0x0AF)
 #define CR_BORROW8                      CREG_UINT16_R(CR_BORROW8_ADDR)
 
 #define CR_LIMC3_ADDR                   (CREG_BASE + 0x0B0)
 #define CR_LIMC3                        CREG_UINT32_R(CR_LIMC3_ADDR)
 
 #define CR_LIMC3_BORROW7_BIT            16
-#define CR_LIMC3_BORROW7_MASK           0xFFFF0000
+#define CR_LIMC3_BORROW7_MASK           0xFFFF0000                                                   /* GENERATED */
 
 #define CR_BORROW7_ADDR                 (CREG_BASE + 0x0B1)
-#define CR_BORROW7                      CREG_UINT16_R(CR_BORROW7_ADDR)                               /* GENERATED */
+#define CR_BORROW7                      CREG_UINT16_R(CR_BORROW7_ADDR)
 
 #define CR_LIMC3_BORROW6_BIT            0
 #define CR_LIMC3_BORROW6_MASK           0x0000FFFF
 
 #define CR_BORROW6_ADDR                 (CREG_BASE + 0x0B3)
 #define CR_BORROW6                      CREG_UINT16_R(CR_BORROW6_ADDR)
-
+                                                                                                     /* GENERATED */
 #define CR_LIMC2_ADDR                   (CREG_BASE + 0x0B4)
 #define CR_LIMC2                        CREG_UINT32_R(CR_LIMC2_ADDR)
-                                                                                                     /* GENERATED */
+
 #define CR_LIMC2_BORROW5_BIT            16
 #define CR_LIMC2_BORROW5_MASK           0xFFFF0000
 
 #define CR_BORROW5_ADDR                 (CREG_BASE + 0x0B5)
 #define CR_BORROW5                      CREG_UINT16_R(CR_BORROW5_ADDR)
 
-#define CR_LIMC2_BORROW4_BIT            0
+#define CR_LIMC2_BORROW4_BIT            0                                                            /* GENERATED */
 #define CR_LIMC2_BORROW4_MASK           0x0000FFFF
 
-#define CR_BORROW4_ADDR                 (CREG_BASE + 0x0B7)                                          /* GENERATED */
+#define CR_BORROW4_ADDR                 (CREG_BASE + 0x0B7)
 #define CR_BORROW4                      CREG_UINT16_R(CR_BORROW4_ADDR)
 
 #define CR_LIMC1_ADDR                   (CREG_BASE + 0x0B8)
 #define CR_LIMC1                        CREG_UINT32_R(CR_LIMC1_ADDR)
 
 #define CR_LIMC1_BORROW3_BIT            16
-#define CR_LIMC1_BORROW3_MASK           0xFFFF0000
+#define CR_LIMC1_BORROW3_MASK           0xFFFF0000                                                   /* GENERATED */
 
 #define CR_BORROW3_ADDR                 (CREG_BASE + 0x0B9)
-#define CR_BORROW3                      CREG_UINT16_R(CR_BORROW3_ADDR)                               /* GENERATED */
+#define CR_BORROW3                      CREG_UINT16_R(CR_BORROW3_ADDR)
 
 #define CR_LIMC1_BORROW2_BIT            0
 #define CR_LIMC1_BORROW2_MASK           0x0000FFFF
 
 #define CR_BORROW2_ADDR                 (CREG_BASE + 0x0BB)
 #define CR_BORROW2                      CREG_UINT16_R(CR_BORROW2_ADDR)
-
+                                                                                                     /* GENERATED */
 #define CR_LIMC0_ADDR                   (CREG_BASE + 0x0BC)
 #define CR_LIMC0                        CREG_UINT32_R(CR_LIMC0_ADDR)
-                                                                                                     /* GENERATED */
+
 #define CR_LIMC0_BORROW1_BIT            16
 #define CR_LIMC0_BORROW1_MASK           0xFFFF0000
 
 #define CR_BORROW1_ADDR                 (CREG_BASE + 0x0BD)
 #define CR_BORROW1                      CREG_UINT16_R(CR_BORROW1_ADDR)
 
-#define CR_LIMC0_BORROW0_BIT            0
+#define CR_LIMC0_BORROW0_BIT            0                                                            /* GENERATED */
 #define CR_LIMC0_BORROW0_MASK           0x0000FFFF
 
-#define CR_BORROW0_ADDR                 (CREG_BASE + 0x0BF)                                          /* GENERATED */
+#define CR_BORROW0_ADDR                 (CREG_BASE + 0x0BF)
 #define CR_BORROW0                      CREG_UINT16_R(CR_BORROW0_ADDR)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Syllable index capability register $n$
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_SIC3_ADDR                    (CREG_BASE + 0x0C0)
-#define CR_SIC3                         CREG_UINT32_R(CR_SIC3_ADDR)
+#define CR_SIC3                         CREG_UINT32_R(CR_SIC3_ADDR)                                  /* GENERATED */
 
 #define CR_SIC3_SYL15CAP_BIT            24
-#define CR_SIC3_SYL15CAP_MASK           0xFF000000                                                   /* GENERATED */
+#define CR_SIC3_SYL15CAP_MASK           0xFF000000
 
 #define CR_SYL15CAP_ADDR                (CREG_BASE + 0x0C0)
 #define CR_SYL15CAP                     CREG_UINT8_R(CR_SYL15CAP_ADDR)
 
 #define CR_SIC3_SYL14CAP_BIT            16
 #define CR_SIC3_SYL14CAP_MASK           0x00FF0000
-
+                                                                                                     /* GENERATED */
 #define CR_SYL14CAP_ADDR                (CREG_BASE + 0x0C1)
 #define CR_SYL14CAP                     CREG_UINT8_R(CR_SYL14CAP_ADDR)
-                                                                                                     /* GENERATED */
+
 #define CR_SIC3_SYL13CAP_BIT            8
 #define CR_SIC3_SYL13CAP_MASK           0x0000FF00
 
 #define CR_SYL13CAP_ADDR                (CREG_BASE + 0x0C2)
 #define CR_SYL13CAP                     CREG_UINT8_R(CR_SYL13CAP_ADDR)
 
-#define CR_SIC3_SYL12CAP_BIT            0
+#define CR_SIC3_SYL12CAP_BIT            0                                                            /* GENERATED */
 #define CR_SIC3_SYL12CAP_MASK           0x000000FF
 
-#define CR_SYL12CAP_ADDR                (CREG_BASE + 0x0C3)                                          /* GENERATED */
+#define CR_SYL12CAP_ADDR                (CREG_BASE + 0x0C3)
 #define CR_SYL12CAP                     CREG_UINT8_R(CR_SYL12CAP_ADDR)
 
 #define CR_SIC2_ADDR                    (CREG_BASE + 0x0C4)
 #define CR_SIC2                         CREG_UINT32_R(CR_SIC2_ADDR)
 
 #define CR_SIC2_SYL11CAP_BIT            24
-#define CR_SIC2_SYL11CAP_MASK           0xFF000000
+#define CR_SIC2_SYL11CAP_MASK           0xFF000000                                                   /* GENERATED */
 
 #define CR_SYL11CAP_ADDR                (CREG_BASE + 0x0C4)
-#define CR_SYL11CAP                     CREG_UINT8_R(CR_SYL11CAP_ADDR)                               /* GENERATED */
+#define CR_SYL11CAP                     CREG_UINT8_R(CR_SYL11CAP_ADDR)
 
 #define CR_SIC2_SYL10CAP_BIT            16
 #define CR_SIC2_SYL10CAP_MASK           0x00FF0000
 
 #define CR_SYL10CAP_ADDR                (CREG_BASE + 0x0C5)
 #define CR_SYL10CAP                     CREG_UINT8_R(CR_SYL10CAP_ADDR)
-
+                                                                                                     /* GENERATED */
 #define CR_SIC2_SYL9CAP_BIT             8
 #define CR_SIC2_SYL9CAP_MASK            0x0000FF00
-                                                                                                     /* GENERATED */
+
 #define CR_SYL9CAP_ADDR                 (CREG_BASE + 0x0C6)
 #define CR_SYL9CAP                      CREG_UINT8_R(CR_SYL9CAP_ADDR)
 
 #define CR_SIC2_SYL8CAP_BIT             0
 #define CR_SIC2_SYL8CAP_MASK            0x000000FF
 
-#define CR_SYL8CAP_ADDR                 (CREG_BASE + 0x0C7)
+#define CR_SYL8CAP_ADDR                 (CREG_BASE + 0x0C7)                                          /* GENERATED */
 #define CR_SYL8CAP                      CREG_UINT8_R(CR_SYL8CAP_ADDR)
 
-#define CR_SIC1_ADDR                    (CREG_BASE + 0x0C8)                                          /* GENERATED */
+#define CR_SIC1_ADDR                    (CREG_BASE + 0x0C8)
 #define CR_SIC1                         CREG_UINT32_R(CR_SIC1_ADDR)
 
 #define CR_SIC1_SYL7CAP_BIT             24
 #define CR_SIC1_SYL7CAP_MASK            0xFF000000
 
 #define CR_SYL7CAP_ADDR                 (CREG_BASE + 0x0C8)
-#define CR_SYL7CAP                      CREG_UINT8_R(CR_SYL7CAP_ADDR)
+#define CR_SYL7CAP                      CREG_UINT8_R(CR_SYL7CAP_ADDR)                                /* GENERATED */
 
 #define CR_SIC1_SYL6CAP_BIT             16
-#define CR_SIC1_SYL6CAP_MASK            0x00FF0000                                                   /* GENERATED */
+#define CR_SIC1_SYL6CAP_MASK            0x00FF0000
 
 #define CR_SYL6CAP_ADDR                 (CREG_BASE + 0x0C9)
 #define CR_SYL6CAP                      CREG_UINT8_R(CR_SYL6CAP_ADDR)
 
 #define CR_SIC1_SYL5CAP_BIT             8
 #define CR_SIC1_SYL5CAP_MASK            0x0000FF00
-
+                                                                                                     /* GENERATED */
 #define CR_SYL5CAP_ADDR                 (CREG_BASE + 0x0CA)
 #define CR_SYL5CAP                      CREG_UINT8_R(CR_SYL5CAP_ADDR)
-                                                                                                     /* GENERATED */
+
 #define CR_SIC1_SYL4CAP_BIT             0
 #define CR_SIC1_SYL4CAP_MASK            0x000000FF
 
 #define CR_SYL4CAP_ADDR                 (CREG_BASE + 0x0CB)
 #define CR_SYL4CAP                      CREG_UINT8_R(CR_SYL4CAP_ADDR)
 
-#define CR_SIC0_ADDR                    (CREG_BASE + 0x0CC)
+#define CR_SIC0_ADDR                    (CREG_BASE + 0x0CC)                                          /* GENERATED */
 #define CR_SIC0                         CREG_UINT32_R(CR_SIC0_ADDR)
 
-#define CR_SIC0_SYL3CAP_BIT             24                                                           /* GENERATED */
+#define CR_SIC0_SYL3CAP_BIT             24
 #define CR_SIC0_SYL3CAP_MASK            0xFF000000
 
 #define CR_SYL3CAP_ADDR                 (CREG_BASE + 0x0CC)
 #define CR_SYL3CAP                      CREG_UINT8_R(CR_SYL3CAP_ADDR)
 
 #define CR_SIC0_SYL2CAP_BIT             16
-#define CR_SIC0_SYL2CAP_MASK            0x00FF0000
+#define CR_SIC0_SYL2CAP_MASK            0x00FF0000                                                   /* GENERATED */
 
 #define CR_SYL2CAP_ADDR                 (CREG_BASE + 0x0CD)
-#define CR_SYL2CAP                      CREG_UINT8_R(CR_SYL2CAP_ADDR)                                /* GENERATED */
+#define CR_SYL2CAP                      CREG_UINT8_R(CR_SYL2CAP_ADDR)
 
 #define CR_SIC0_SYL1CAP_BIT             8
 #define CR_SIC0_SYL1CAP_MASK            0x0000FF00
 
 #define CR_SYL1CAP_ADDR                 (CREG_BASE + 0x0CE)
 #define CR_SYL1CAP                      CREG_UINT8_R(CR_SYL1CAP_ADDR)
-
+                                                                                                     /* GENERATED */
 #define CR_SIC0_SYL0CAP_BIT             0
 #define CR_SIC0_SYL0CAP_MASK            0x000000FF
-                                                                                                     /* GENERATED */
+
 #define CR_SYL0CAP_ADDR                 (CREG_BASE + 0x0CF)
 #define CR_SYL0CAP                      CREG_UINT8_R(CR_SYL0CAP_ADDR)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // General purpose register delay register B
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_GPS1_ADDR                    (CREG_BASE + 0x0D0)
+#define CR_GPS1_ADDR                    (CREG_BASE + 0x0D0)                                          /* GENERATED */
 #define CR_GPS1                         CREG_UINT32_R(CR_GPS1_ADDR)
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       /* GENERATED */
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // General purpose register delay register A
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_GPS0_ADDR                    (CREG_BASE + 0x0D4)
 #define CR_GPS0                         CREG_UINT32_R(CR_GPS0_ADDR)
 
 #define CR_GPS0_MEMAR_BIT               24
-#define CR_GPS0_MEMAR_MASK              0x0F000000
+#define CR_GPS0_MEMAR_MASK              0x0F000000                                                   /* GENERATED */
 
 #define CR_GPS0_MEMDC_BIT               20
-#define CR_GPS0_MEMDC_MASK              0x00F00000                                                   /* GENERATED */
+#define CR_GPS0_MEMDC_MASK              0x00F00000
 
 #define CR_GPS0_MEMDR_BIT               16
 #define CR_GPS0_MEMDR_MASK              0x000F0000
 
 #define CR_GPS0_MULC_BIT                12
 #define CR_GPS0_MULC_MASK               0x0000F000
-
+                                                                                                     /* GENERATED */
 #define CR_GPS0_MULR_BIT                8
 #define CR_GPS0_MULR_MASK               0x00000F00
-                                                                                                     /* GENERATED */
+
 #define CR_GPS0_ALUC_BIT                4
 #define CR_GPS0_ALUC_MASK               0x000000F0
 
 #define CR_GPS0_ALUR_BIT                0
 #define CR_GPS0_ALUR_MASK               0x0000000F
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       /* GENERATED */
 // Special delay register B
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_SPS1_ADDR                    (CREG_BASE + 0x0D8)                                          /* GENERATED */
+#define CR_SPS1_ADDR                    (CREG_BASE + 0x0D8)
 #define CR_SPS1                         CREG_UINT32_R(CR_SPS1_ADDR)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Special delay register A
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_SPS0_ADDR                    (CREG_BASE + 0x0DC)
-#define CR_SPS0                         CREG_UINT32_R(CR_SPS0_ADDR)
+#define CR_SPS0                         CREG_UINT32_R(CR_SPS0_ADDR)                                  /* GENERATED */
 
 #define CR_SPS0_MEMMC_BIT               28
-#define CR_SPS0_MEMMC_MASK              0xF0000000                                                   /* GENERATED */
+#define CR_SPS0_MEMMC_MASK              0xF0000000
 
 #define CR_SPS0_MEMMR_BIT               24
 #define CR_SPS0_MEMMR_MASK              0x0F000000
 
 #define CR_SPS0_MEMDC_BIT               20
 #define CR_SPS0_MEMDC_MASK              0x00F00000
-
+                                                                                                     /* GENERATED */
 #define CR_SPS0_MEMDR_BIT               16
 #define CR_SPS0_MEMDR_MASK              0x000F0000
-                                                                                                     /* GENERATED */
+
 #define CR_SPS0_BRC_BIT                 12
 #define CR_SPS0_BRC_MASK                0x0000F000
 
 #define CR_SPS0_BRR_BIT                 8
 #define CR_SPS0_BRR_MASK                0x00000F00
 
-#define CR_SPS0_ALUC_BIT                4
+#define CR_SPS0_ALUC_BIT                4                                                            /* GENERATED */
 #define CR_SPS0_ALUC_MASK               0x000000F0
 
-#define CR_SPS0_ALUR_BIT                0                                                            /* GENERATED */
+#define CR_SPS0_ALUR_BIT                0
 #define CR_SPS0_ALUR_MASK               0x0000000F
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Extension register 2
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_EXT2_ADDR                    (CREG_BASE + 0x0E0)
-#define CR_EXT2                         CREG_UINT32_R(CR_EXT2_ADDR)
+#define CR_EXT2                         CREG_UINT32_R(CR_EXT2_ADDR)                                  /* GENERATED */
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Extension register 1                                                                              /* GENERATED */
+// Extension register 1
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_EXT1_ADDR                    (CREG_BASE + 0x0E4)
 #define CR_EXT1                         CREG_UINT32_R(CR_EXT1_ADDR)
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Extension register 0
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       /* GENERATED */
 #define CR_EXT0_ADDR                    (CREG_BASE + 0x0E8)
 #define CR_EXT0                         CREG_UINT32_R(CR_EXT0_ADDR)
-                                                                                                     /* GENERATED */
+
 #define CR_EXT0_T_BIT                   27
 #define CR_EXT0_T_MASK                  0x08000000
 
 #define CR_EXT0_BRK_BIT                 24
 #define CR_EXT0_BRK_MASK                0x07000000
 
-#define CR_EXT0_C_BIT                   18
-#define CR_EXT0_C_MASK                  0x00040000
-
-#define CR_EXT0_I_BIT                   17                                                           /* GENERATED */
-#define CR_EXT0_I_MASK                  0x00020000
+#define CR_EXT0_C_BIT                   19                                                           /* GENERATED */
+#define CR_EXT0_C_MASK                  0x00080000
 
 #define CR_EXT0_P_BIT                   16
-#define CR_EXT0_P_MASK                  0x00010000
+#define CR_EXT0_P_MASK                  0x00070000
 
 #define CR_EXT0_O_BIT                   2
 #define CR_EXT0_O_MASK                  0x00000004
@@ -924,44 +924,164 @@
 #define CR_CYC_ADDR                     (CREG_BASE + 0x300)
 #define CR_CYC                          CREG_UINT32_R(CR_CYC_ADDR)
 
-#define CR_CYC_CYC_BIT                  0
-#define CR_CYC_CYC_MASK                 0xFFFFFFFF
+#define CR_CYC_CYC3_BIT                 24
+#define CR_CYC_CYC3_MASK                0xFF000000
 
+#define CR_CYC_CYC2_BIT                 16
+#define CR_CYC_CYC2_MASK                0x00FF0000
+
+#define CR_CYC_CYC1_BIT                 8                                                            /* GENERATED */
+#define CR_CYC_CYC1_MASK                0x0000FF00
+
+#define CR_CYC_CYC0_BIT                 0
+#define CR_CYC_CYC0_MASK                0x000000FF
+
+#define CR_CYCH_ADDR                    (CREG_BASE + 0x304)
+#define CR_CYCH                         CREG_UINT32_R(CR_CYCH_ADDR)
+
+#define CR_CYCH_CYC6_BIT                24
+#define CR_CYCH_CYC6_MASK               0xFF000000                                                   /* GENERATED */
+
+#define CR_CYCH_CYC5_BIT                16
+#define CR_CYCH_CYC5_MASK               0x00FF0000
+
+#define CR_CYCH_CYC4_BIT                8
+#define CR_CYCH_CYC4_MASK               0x0000FF00
+
+#define CR_CYCH_CYC3_BIT                0
+#define CR_CYCH_CYC3_MASK               0x000000FF
+                                                                                                     /* GENERATED */
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Stall cycle counter
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_STALL_ADDR                   (CREG_BASE + 0x308)                                          /* GENERATED */
+#define CR_STALL_ADDR                   (CREG_BASE + 0x308)
 #define CR_STALL                        CREG_UINT32_R(CR_STALL_ADDR)
 
-#define CR_STALL_STALL_BIT              0
-#define CR_STALL_STALL_MASK             0xFFFFFFFF
+#define CR_STALL_STALL3_BIT             24
+#define CR_STALL_STALL3_MASK            0xFF000000
+
+#define CR_STALL_STALL2_BIT             16                                                           /* GENERATED */
+#define CR_STALL_STALL2_MASK            0x00FF0000
+
+#define CR_STALL_STALL1_BIT             8
+#define CR_STALL_STALL1_MASK            0x0000FF00
+
+#define CR_STALL_STALL0_BIT             0
+#define CR_STALL_STALL0_MASK            0x000000FF
+
+#define CR_STALLH_ADDR                  (CREG_BASE + 0x30C)
+#define CR_STALLH                       CREG_UINT32_R(CR_STALLH_ADDR)                                /* GENERATED */
+
+#define CR_STALLH_STALL6_BIT            24
+#define CR_STALLH_STALL6_MASK           0xFF000000
+
+#define CR_STALLH_STALL5_BIT            16
+#define CR_STALLH_STALL5_MASK           0x00FF0000
+
+#define CR_STALLH_STALL4_BIT            8
+#define CR_STALLH_STALL4_MASK           0x0000FF00
+                                                                                                     /* GENERATED */
+#define CR_STALLH_STALL3_BIT            0
+#define CR_STALLH_STALL3_MASK           0x000000FF
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Committed bundle counter
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_BUN_ADDR                     (CREG_BASE + 0x310)
-#define CR_BUN                          CREG_UINT32_R(CR_BUN_ADDR)                                   /* GENERATED */
+#define CR_BUN                          CREG_UINT32_R(CR_BUN_ADDR)
 
-#define CR_BUN_BUN_BIT                  0
-#define CR_BUN_BUN_MASK                 0xFFFFFFFF
+#define CR_BUN_BUN3_BIT                 24                                                           /* GENERATED */
+#define CR_BUN_BUN3_MASK                0xFF000000
+
+#define CR_BUN_BUN2_BIT                 16
+#define CR_BUN_BUN2_MASK                0x00FF0000
+
+#define CR_BUN_BUN1_BIT                 8
+#define CR_BUN_BUN1_MASK                0x0000FF00
+
+#define CR_BUN_BUN0_BIT                 0
+#define CR_BUN_BUN0_MASK                0x000000FF                                                   /* GENERATED */
+
+#define CR_BUNH_ADDR                    (CREG_BASE + 0x314)
+#define CR_BUNH                         CREG_UINT32_R(CR_BUNH_ADDR)
+
+#define CR_BUNH_BUN6_BIT                24
+#define CR_BUNH_BUN6_MASK               0xFF000000
+
+#define CR_BUNH_BUN5_BIT                16
+#define CR_BUNH_BUN5_MASK               0x00FF0000
+                                                                                                     /* GENERATED */
+#define CR_BUNH_BUN4_BIT                8
+#define CR_BUNH_BUN4_MASK               0x0000FF00
+
+#define CR_BUNH_BUN3_BIT                0
+#define CR_BUNH_BUN3_MASK               0x000000FF
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Committed syllable counter
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_SYL_ADDR                     (CREG_BASE + 0x318)
+#define CR_SYL_ADDR                     (CREG_BASE + 0x318)                                          /* GENERATED */
 #define CR_SYL                          CREG_UINT32_R(CR_SYL_ADDR)
-                                                                                                     /* GENERATED */
-#define CR_SYL_SYL_BIT                  0
-#define CR_SYL_SYL_MASK                 0xFFFFFFFF
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+#define CR_SYL_SYL3_BIT                 24
+#define CR_SYL_SYL3_MASK                0xFF000000
+
+#define CR_SYL_SYL2_BIT                 16
+#define CR_SYL_SYL2_MASK                0x00FF0000
+
+#define CR_SYL_SYL1_BIT                 8
+#define CR_SYL_SYL1_MASK                0x0000FF00                                                   /* GENERATED */
+
+#define CR_SYL_SYL0_BIT                 0
+#define CR_SYL_SYL0_MASK                0x000000FF
+
+#define CR_SYLH_ADDR                    (CREG_BASE + 0x31C)
+#define CR_SYLH                         CREG_UINT32_R(CR_SYLH_ADDR)
+
+#define CR_SYLH_SYL6_BIT                24
+#define CR_SYLH_SYL6_MASK               0xFF000000
+                                                                                                     /* GENERATED */
+#define CR_SYLH_SYL5_BIT                16
+#define CR_SYLH_SYL5_MASK               0x00FF0000
+
+#define CR_SYLH_SYL4_BIT                8
+#define CR_SYLH_SYL4_MASK               0x0000FF00
+
+#define CR_SYLH_SYL3_BIT                0
+#define CR_SYLH_SYL3_MASK               0x000000FF
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       /* GENERATED */
 // Committed NOP counter
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_NOP_ADDR                     (CREG_BASE + 0x320)
 #define CR_NOP                          CREG_UINT32_R(CR_NOP_ADDR)
 
-#define CR_NOP_NOP_BIT                  0                                                            /* GENERATED */
-#define CR_NOP_NOP_MASK                 0xFFFFFFFF
+#define CR_NOP_NOP3_BIT                 24
+#define CR_NOP_NOP3_MASK                0xFF000000
+
+#define CR_NOP_NOP2_BIT                 16
+#define CR_NOP_NOP2_MASK                0x00FF0000                                                   /* GENERATED */
+
+#define CR_NOP_NOP1_BIT                 8
+#define CR_NOP_NOP1_MASK                0x0000FF00
+
+#define CR_NOP_NOP0_BIT                 0
+#define CR_NOP_NOP0_MASK                0x000000FF
+
+#define CR_NOPH_ADDR                    (CREG_BASE + 0x324)
+#define CR_NOPH                         CREG_UINT32_R(CR_NOPH_ADDR)
+                                                                                                     /* GENERATED */
+#define CR_NOPH_NOP6_BIT                24
+#define CR_NOPH_NOP6_MASK               0xFF000000
+
+#define CR_NOPH_NOP5_BIT                16
+#define CR_NOPH_NOP5_MASK               0x00FF0000
+
+#define CR_NOPH_NOP4_BIT                8
+#define CR_NOPH_NOP4_MASK               0x0000FF00
+
+#define CR_NOPH_NOP3_BIT                0                                                            /* GENERATED */
+#define CR_NOPH_NOP3_MASK               0x000000FF
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Instruction cache access counter
@@ -969,44 +1089,164 @@
 #define CR_IACC_ADDR                    (CREG_BASE + 0x328)
 #define CR_IACC                         CREG_UINT32_R(CR_IACC_ADDR)
 
-#define CR_IACC_IACC_BIT                0
-#define CR_IACC_IACC_MASK               0xFFFFFFFF                                                   /* GENERATED */
+#define CR_IACC_IACC3_BIT               24
+#define CR_IACC_IACC3_MASK              0xFF000000                                                   /* GENERATED */
+
+#define CR_IACC_IACC2_BIT               16
+#define CR_IACC_IACC2_MASK              0x00FF0000
+
+#define CR_IACC_IACC1_BIT               8
+#define CR_IACC_IACC1_MASK              0x0000FF00
+
+#define CR_IACC_IACC0_BIT               0
+#define CR_IACC_IACC0_MASK              0x000000FF
+                                                                                                     /* GENERATED */
+#define CR_IACCH_ADDR                   (CREG_BASE + 0x32C)
+#define CR_IACCH                        CREG_UINT32_R(CR_IACCH_ADDR)
+
+#define CR_IACCH_IACC6_BIT              24
+#define CR_IACCH_IACC6_MASK             0xFF000000
+
+#define CR_IACCH_IACC5_BIT              16
+#define CR_IACCH_IACC5_MASK             0x00FF0000
+
+#define CR_IACCH_IACC4_BIT              8                                                            /* GENERATED */
+#define CR_IACCH_IACC4_MASK             0x0000FF00
+
+#define CR_IACCH_IACC3_BIT              0
+#define CR_IACCH_IACC3_MASK             0x000000FF
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Instruction cache miss counter
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_IMISS_ADDR                   (CREG_BASE + 0x330)
-#define CR_IMISS                        CREG_UINT32_R(CR_IMISS_ADDR)
+#define CR_IMISS                        CREG_UINT32_R(CR_IMISS_ADDR)                                 /* GENERATED */
 
-#define CR_IMISS_IMISS_BIT              0
-#define CR_IMISS_IMISS_MASK             0xFFFFFFFF
+#define CR_IMISS_IMISS3_BIT             24
+#define CR_IMISS_IMISS3_MASK            0xFF000000
+
+#define CR_IMISS_IMISS2_BIT             16
+#define CR_IMISS_IMISS2_MASK            0x00FF0000
+
+#define CR_IMISS_IMISS1_BIT             8
+#define CR_IMISS_IMISS1_MASK            0x0000FF00
                                                                                                      /* GENERATED */
+#define CR_IMISS_IMISS0_BIT             0
+#define CR_IMISS_IMISS0_MASK            0x000000FF
+
+#define CR_IMISSH_ADDR                  (CREG_BASE + 0x334)
+#define CR_IMISSH                       CREG_UINT32_R(CR_IMISSH_ADDR)
+
+#define CR_IMISSH_IMISS6_BIT            24
+#define CR_IMISSH_IMISS6_MASK           0xFF000000
+
+#define CR_IMISSH_IMISS5_BIT            16                                                           /* GENERATED */
+#define CR_IMISSH_IMISS5_MASK           0x00FF0000
+
+#define CR_IMISSH_IMISS4_BIT            8
+#define CR_IMISSH_IMISS4_MASK           0x0000FF00
+
+#define CR_IMISSH_IMISS3_BIT            0
+#define CR_IMISSH_IMISS3_MASK           0x000000FF
+
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache read access counter
+// Data cache read access counter                                                                    /* GENERATED */
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_DRACC_ADDR                   (CREG_BASE + 0x338)
 #define CR_DRACC                        CREG_UINT32_R(CR_DRACC_ADDR)
 
-#define CR_DRACC_DRACC_BIT              0
-#define CR_DRACC_DRACC_MASK             0xFFFFFFFF
+#define CR_DRACC_DRACC3_BIT             24
+#define CR_DRACC_DRACC3_MASK            0xFF000000
 
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       /* GENERATED */
+#define CR_DRACC_DRACC2_BIT             16
+#define CR_DRACC_DRACC2_MASK            0x00FF0000
+                                                                                                     /* GENERATED */
+#define CR_DRACC_DRACC1_BIT             8
+#define CR_DRACC_DRACC1_MASK            0x0000FF00
+
+#define CR_DRACC_DRACC0_BIT             0
+#define CR_DRACC_DRACC0_MASK            0x000000FF
+
+#define CR_DRACCH_ADDR                  (CREG_BASE + 0x33C)
+#define CR_DRACCH                       CREG_UINT32_R(CR_DRACCH_ADDR)
+
+#define CR_DRACCH_DRACC6_BIT            24                                                           /* GENERATED */
+#define CR_DRACCH_DRACC6_MASK           0xFF000000
+
+#define CR_DRACCH_DRACC5_BIT            16
+#define CR_DRACCH_DRACC5_MASK           0x00FF0000
+
+#define CR_DRACCH_DRACC4_BIT            8
+#define CR_DRACCH_DRACC4_MASK           0x0000FF00
+
+#define CR_DRACCH_DRACC3_BIT            0
+#define CR_DRACCH_DRACC3_MASK           0x000000FF                                                   /* GENERATED */
+
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Data cache read miss counter
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_DRMISS_ADDR                  (CREG_BASE + 0x340)
 #define CR_DRMISS                       CREG_UINT32_R(CR_DRMISS_ADDR)
 
-#define CR_DRMISS_DRMISS_BIT            0
-#define CR_DRMISS_DRMISS_MASK           0xFFFFFFFF
+#define CR_DRMISS_DRMISS3_BIT           24
+#define CR_DRMISS_DRMISS3_MASK          0xFF000000
+                                                                                                     /* GENERATED */
+#define CR_DRMISS_DRMISS2_BIT           16
+#define CR_DRMISS_DRMISS2_MASK          0x00FF0000
+
+#define CR_DRMISS_DRMISS1_BIT           8
+#define CR_DRMISS_DRMISS1_MASK          0x0000FF00
+
+#define CR_DRMISS_DRMISS0_BIT           0
+#define CR_DRMISS_DRMISS0_MASK          0x000000FF
+
+#define CR_DRMISSH_ADDR                 (CREG_BASE + 0x344)                                          /* GENERATED */
+#define CR_DRMISSH                      CREG_UINT32_R(CR_DRMISSH_ADDR)
+
+#define CR_DRMISSH_DRMISS6_BIT          24
+#define CR_DRMISSH_DRMISS6_MASK         0xFF000000
+
+#define CR_DRMISSH_DRMISS5_BIT          16
+#define CR_DRMISSH_DRMISS5_MASK         0x00FF0000
+
+#define CR_DRMISSH_DRMISS4_BIT          8
+#define CR_DRMISSH_DRMISS4_MASK         0x0000FF00                                                   /* GENERATED */
+
+#define CR_DRMISSH_DRMISS3_BIT          0
+#define CR_DRMISSH_DRMISS3_MASK         0x000000FF
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-// Data cache write access counter                                                                   /* GENERATED */
+// Data cache write access counter
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_DWACC_ADDR                   (CREG_BASE + 0x348)
 #define CR_DWACC                        CREG_UINT32_R(CR_DWACC_ADDR)
+                                                                                                     /* GENERATED */
+#define CR_DWACC_DWACC3_BIT             24
+#define CR_DWACC_DWACC3_MASK            0xFF000000
 
-#define CR_DWACC_DWACC_BIT              0
-#define CR_DWACC_DWACC_MASK             0xFFFFFFFF
+#define CR_DWACC_DWACC2_BIT             16
+#define CR_DWACC_DWACC2_MASK            0x00FF0000
+
+#define CR_DWACC_DWACC1_BIT             8
+#define CR_DWACC_DWACC1_MASK            0x0000FF00
+
+#define CR_DWACC_DWACC0_BIT             0                                                            /* GENERATED */
+#define CR_DWACC_DWACC0_MASK            0x000000FF
+
+#define CR_DWACCH_ADDR                  (CREG_BASE + 0x34C)
+#define CR_DWACCH                       CREG_UINT32_R(CR_DWACCH_ADDR)
+
+#define CR_DWACCH_DWACC6_BIT            24
+#define CR_DWACCH_DWACC6_MASK           0xFF000000
+
+#define CR_DWACCH_DWACC5_BIT            16
+#define CR_DWACCH_DWACC5_MASK           0x00FF0000                                                   /* GENERATED */
+
+#define CR_DWACCH_DWACC4_BIT            8
+#define CR_DWACCH_DWACC4_MASK           0x0000FF00
+
+#define CR_DWACCH_DWACC3_BIT            0
+#define CR_DWACCH_DWACC3_MASK           0x000000FF
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Data cache write miss counter
@@ -1014,33 +1254,105 @@
 #define CR_DWMISS_ADDR                  (CREG_BASE + 0x350)
 #define CR_DWMISS                       CREG_UINT32_R(CR_DWMISS_ADDR)
 
-#define CR_DWMISS_DWMISS_BIT            0
-#define CR_DWMISS_DWMISS_MASK           0xFFFFFFFF
+#define CR_DWMISS_DWMISS3_BIT           24
+#define CR_DWMISS_DWMISS3_MASK          0xFF000000
 
+#define CR_DWMISS_DWMISS2_BIT           16
+#define CR_DWMISS_DWMISS2_MASK          0x00FF0000
+
+#define CR_DWMISS_DWMISS1_BIT           8                                                            /* GENERATED */
+#define CR_DWMISS_DWMISS1_MASK          0x0000FF00
+
+#define CR_DWMISS_DWMISS0_BIT           0
+#define CR_DWMISS_DWMISS0_MASK          0x000000FF
+
+#define CR_DWMISSH_ADDR                 (CREG_BASE + 0x354)
+#define CR_DWMISSH                      CREG_UINT32_R(CR_DWMISSH_ADDR)
+
+#define CR_DWMISSH_DWMISS6_BIT          24
+#define CR_DWMISSH_DWMISS6_MASK         0xFF000000                                                   /* GENERATED */
+
+#define CR_DWMISSH_DWMISS5_BIT          16
+#define CR_DWMISSH_DWMISS5_MASK         0x00FF0000
+
+#define CR_DWMISSH_DWMISS4_BIT          8
+#define CR_DWMISSH_DWMISS4_MASK         0x0000FF00
+
+#define CR_DWMISSH_DWMISS3_BIT          0
+#define CR_DWMISSH_DWMISS3_MASK         0x000000FF
+                                                                                                     /* GENERATED */
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Data cache bypass counter
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-#define CR_DBYPASS_ADDR                 (CREG_BASE + 0x358)                                          /* GENERATED */
+#define CR_DBYPASS_ADDR                 (CREG_BASE + 0x358)
 #define CR_DBYPASS                      CREG_UINT32_R(CR_DBYPASS_ADDR)
 
-#define CR_DBYPASS_DBYPASS_BIT          0
-#define CR_DBYPASS_DBYPASS_MASK         0xFFFFFFFF
+#define CR_DBYPASS_DBYPASS3_BIT         24
+#define CR_DBYPASS_DBYPASS3_MASK        0xFF000000
+
+#define CR_DBYPASS_DBYPASS2_BIT         16                                                           /* GENERATED */
+#define CR_DBYPASS_DBYPASS2_MASK        0x00FF0000
+
+#define CR_DBYPASS_DBYPASS1_BIT         8
+#define CR_DBYPASS_DBYPASS1_MASK        0x0000FF00
+
+#define CR_DBYPASS_DBYPASS0_BIT         0
+#define CR_DBYPASS_DBYPASS0_MASK        0x000000FF
+
+#define CR_DBYPASSH_ADDR                (CREG_BASE + 0x35C)
+#define CR_DBYPASSH                     CREG_UINT32_R(CR_DBYPASSH_ADDR)                              /* GENERATED */
+
+#define CR_DBYPASSH_DBYPASS6_BIT        24
+#define CR_DBYPASSH_DBYPASS6_MASK       0xFF000000
+
+#define CR_DBYPASSH_DBYPASS5_BIT        16
+#define CR_DBYPASSH_DBYPASS5_MASK       0x00FF0000
+
+#define CR_DBYPASSH_DBYPASS4_BIT        8
+#define CR_DBYPASSH_DBYPASS4_MASK       0x0000FF00
+                                                                                                     /* GENERATED */
+#define CR_DBYPASSH_DBYPASS3_BIT        0
+#define CR_DBYPASSH_DBYPASS3_MASK       0x000000FF
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Data cache write buffer counter
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_DWBUF_ADDR                   (CREG_BASE + 0x360)
-#define CR_DWBUF                        CREG_UINT32_R(CR_DWBUF_ADDR)                                 /* GENERATED */
+#define CR_DWBUF                        CREG_UINT32_R(CR_DWBUF_ADDR)
 
-#define CR_DWBUF_DWBUF_BIT              0
-#define CR_DWBUF_DWBUF_MASK             0xFFFFFFFF
+#define CR_DWBUF_DWBUF3_BIT             24                                                           /* GENERATED */
+#define CR_DWBUF_DWBUF3_MASK            0xFF000000
+
+#define CR_DWBUF_DWBUF2_BIT             16
+#define CR_DWBUF_DWBUF2_MASK            0x00FF0000
+
+#define CR_DWBUF_DWBUF1_BIT             8
+#define CR_DWBUF_DWBUF1_MASK            0x0000FF00
+
+#define CR_DWBUF_DWBUF0_BIT             0
+#define CR_DWBUF_DWBUF0_MASK            0x000000FF                                                   /* GENERATED */
+
+#define CR_DWBUFH_ADDR                  (CREG_BASE + 0x364)
+#define CR_DWBUFH                       CREG_UINT32_R(CR_DWBUFH_ADDR)
+
+#define CR_DWBUFH_DWBUF6_BIT            24
+#define CR_DWBUFH_DWBUF6_MASK           0xFF000000
+
+#define CR_DWBUFH_DWBUF5_BIT            16
+#define CR_DWBUFH_DWBUF5_MASK           0x00FF0000
+                                                                                                     /* GENERATED */
+#define CR_DWBUFH_DWBUF4_BIT            8
+#define CR_DWBUFH_DWBUF4_MASK           0x0000FF00
+
+#define CR_DWBUFH_DWBUF3_BIT            0
+#define CR_DWBUFH_DWBUF3_MASK           0x000000FF
 
 
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Backwards-compatibility/convenience definitions
-// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       /* GENERATED */
 
-// This section can be changed in config/interpreter/rvex_h.py if necessary.                         /* GENERATED */
+// This section can be changed in config/interpreter/rvex_h.py if necessary.
 
 // Interrupt enable/disable bits in (S)CCR.
 #define CR_CCR_IEN                      (1 << CR_CCR_I_BIT)
@@ -1048,9 +1360,9 @@
 
 // Ready-for-trap enable/disable bits in (S)CCR.
 #define CR_CCR_RFT                      (1 << CR_CCR_R_BIT)
-#define CR_CCR_RFT_C                    (2 << CR_CCR_R_BIT)
+#define CR_CCR_RFT_C                    (2 << CR_CCR_R_BIT)                                          /* GENERATED */
 
-// Breakpoint enable/disable bits in (S)CCR (for self-hosted debug mode).                            /* GENERATED */
+// Breakpoint enable/disable bits in (S)CCR (for self-hosted debug mode).
 #define CR_CCR_BPE                      (1 << CR_CCR_B_BIT)
 #define CR_CCR_BPE_C                    (2 << CR_CCR_B_BIT)
 
@@ -1058,9 +1370,9 @@
 #define CR_CCR_CSW                      (1 << CR_CCR_C_BIT)
 #define CR_CCR_CSW_C                    (2 << CR_CCR_C_BIT)
 
-// Kernel mode enable/disable bits in (S)CCR
+// Kernel mode enable/disable bits in (S)CCR                                                         /* GENERATED */
 #define CR_CCR_KME                      (1 << CR_CCR_K_BIT)
-#define CR_CCR_KME_C                    (2 << CR_CCR_K_BIT)                                          /* GENERATED */
+#define CR_CCR_KME_C                    (2 << CR_CCR_K_BIT)
 
 // Shorthand notation for enabling/disabling interrupts/traps (in CCR).
 #define ENABLE_IRQ                      (CR_CCR = CR_CCR_IEN)
@@ -1068,9 +1380,9 @@
 #define ENABLE_TRAPS                    (CR_CCR = CR_CCR_RFT)
 #define DISABLE_TRAPS                   (CR_CCR = CR_CCR_RFT_C)
 #define ENABLE_CTXT_SWITCH              (CR_CCR = CR_CCR_CSW)
-#define DISABLE_CTXT_SWITCH             (CR_CCR = CR_CCR_CSW_C)
+#define DISABLE_CTXT_SWITCH             (CR_CCR = CR_CCR_CSW_C)                                      /* GENERATED */
 
-// Deprecated definitions for the first scratchpad register.                                         /* GENERATED */
+// Deprecated definitions for the first scratchpad register.
 #define CR_SCRP_ADDR                    CR_SCRP1_ADDR
 #define CR_SCRP                         CR_SCRP1
 
@@ -1078,9 +1390,9 @@
 /*****************************************************************************/
 /* Trap cause definitions                                                    */
 /*****************************************************************************/
-
+                                                                                                     /* GENERATED */
 #define TRAP_NONE                       0x00
-#define TRAP_INVALID_OP                 0x01                                                         /* GENERATED */
+#define TRAP_INVALID_OP                 0x01
 #define TRAP_MISALIGNED_BRANCH          0x02
 #define TRAP_FETCH_FAULT                0x03
 #define TRAP_MISALIGNED_ACCESS          0x04
@@ -1088,9 +1400,9 @@
 #define TRAP_LIMMH_FAULT                0x06
 #define TRAP_EXT_INTERRUPT              0x07
 #define TRAP_STOP                       0x08
-#define TRAP_CONTEXT_SWITCH             0x09
+#define TRAP_SOFT_CTXT_SWITCH           0x09                                                         /* GENERATED */
 #define TRAP_SOFT_DEBUG_0               0xF8
-#define TRAP_SOFT_DEBUG_1               0xF9                                                         /* GENERATED */
+#define TRAP_SOFT_DEBUG_1               0xF9
 #define TRAP_SOFT_DEBUG_2               0xFA
 #define TRAP_STEP_COMPLETE              0xFB
 #define TRAP_HW_BREAKPOINT_0            0xFC
@@ -1098,9 +1410,9 @@
 #define TRAP_HW_BREAKPOINT_2            0xFE
 #define TRAP_HW_BREAKPOINT_3            0xFF
 
-// The following definitions are for compatibility with the older, more verbose
+// The following definitions are for compatibility with the older, more verbose                      /* GENERATED */
 // definitions.
-#define RVEX_TRAP_NONE                  TRAP_NONE                                                    /* GENERATED */
+#define RVEX_TRAP_NONE                  TRAP_NONE
 #define RVEX_TRAP_INVALID_OP            TRAP_INVALID_OP
 #define RVEX_TRAP_MISALIGNED_BRANCH     TRAP_MISALIGNED_BRANCH
 #define RVEX_TRAP_FETCH_FAULT           TRAP_FETCH_FAULT
@@ -1108,9 +1420,9 @@
 #define RVEX_TRAP_DMEM_FAULT            TRAP_DMEM_FAULT
 #define RVEX_TRAP_LIMMH_FAULT           TRAP_LIMMH_FAULT
 #define RVEX_TRAP_EXT_INTERRUPT         TRAP_EXT_INTERRUPT
-#define RVEX_TRAP_STOP                  TRAP_STOP
-#define RVEX_TRAP_CONTEXT_SWITCH        TRAP_CONTEXT_SWITCH
-#define RVEX_TRAP_SOFT_DEBUG_0          TRAP_SOFT_DEBUG_0                                            /* GENERATED */
+#define RVEX_TRAP_STOP                  TRAP_STOP                                                    /* GENERATED */
+#define RVEX_TRAP_SOFT_CTXT_SWITCH      TRAP_SOFT_CTXT_SWITCH
+#define RVEX_TRAP_SOFT_DEBUG_0          TRAP_SOFT_DEBUG_0
 #define RVEX_TRAP_SOFT_DEBUG_1          TRAP_SOFT_DEBUG_1
 #define RVEX_TRAP_SOFT_DEBUG_2          TRAP_SOFT_DEBUG_2
 #define RVEX_TRAP_STEP_COMPLETE         TRAP_STEP_COMPLETE
@@ -1118,5 +1430,5 @@
 #define RVEX_TRAP_HW_BREAKPOINT_1       TRAP_HW_BREAKPOINT_1
 #define RVEX_TRAP_HW_BREAKPOINT_2       TRAP_HW_BREAKPOINT_2
 #define RVEX_TRAP_HW_BREAKPOINT_3       TRAP_HW_BREAKPOINT_3
-
+                                                                                                     /* GENERATED */
 #endif

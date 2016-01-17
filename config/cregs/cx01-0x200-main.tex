@@ -311,15 +311,18 @@ which contexts may read to identify themselves.
 \field{31..24}{ID}
 %-------------------------------------------------------------------------------
 \id{CID}
-This field is hardwired to the context index plus the core ID generic. Programs
-running on the \rvex{} processor may use this field to determine which hardware
-context they are running on.
+This field is hardwired to the context index. Programs running on the \rvex{}
+processor may use this field to determine which hardware context they are
+running on.
+
+Note that \creg{CID} is not unique in a multi-processor system. If a unique
+processor ID is needed in such a case, \creg{COID} should be used as well.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \reset{********}
 \implementation{}
 \begin{lstlisting}
-_read = rv2cxreg_coreID + ctxt;
+_read = ctxt;
 \end{lstlisting}
 
 %-------------------------------------------------------------------------------

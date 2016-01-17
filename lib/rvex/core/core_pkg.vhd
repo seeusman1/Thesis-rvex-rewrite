@@ -142,6 +142,13 @@ package core_pkg is
     -- Whether the trace unit should be instantiated.
     traceEnable                 : boolean;
     
+    -- Performance counter size in bytes. Only applies to the context-specific
+    -- counters. Up to 7 bytes are supported. The default is 4.
+    perfCountSize               : natural;
+    
+    -- Enables or disables the cache performance counters.
+    cachePerfCountEnable        : boolean;
+    
   end record;
   
   -- Default rvex core configuration.
@@ -161,7 +168,9 @@ package core_pkg is
     cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
     unifiedStall                => false,
-    traceEnable                 => false -- Work in progress.
+    traceEnable                 => false,
+    perfCountSize               => 4,
+    cachePerfCountEnable        => false
   );
   
   -- Minimal rvex core configuration.
@@ -181,7 +190,9 @@ package core_pkg is
     cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
     unifiedStall                => true,
-    traceEnable                 => false
+    traceEnable                 => false,
+    perfCountSize               => 0,
+    cachePerfCountEnable        => false
   );
   
   -- Generates a configuration for the rvex core. None of the parameters are
@@ -210,7 +221,9 @@ package core_pkg is
     cregStartAddress            : rvex_address_type := (others => '-');
     resetVectors                : rvex_address_array(7 downto 0) := (others => (others => '-'));
     unifiedStall                : integer := -1;
-    traceEnable                 : integer := -1
+    traceEnable                 : integer := -1;
+    perfCountSize               : integer := -1;
+    cachePerfCountEnable        : integer := -1
   ) return rvex_generic_config_type;
   
   -- Converts a lane index to a group index.
@@ -328,7 +341,9 @@ package body core_pkg is
     cregStartAddress            : rvex_address_type := (others => '-');
     resetVectors                : rvex_address_array(7 downto 0) := (others => (others => '-'));
     unifiedStall                : integer := -1;
-    traceEnable                 : integer := -1
+    traceEnable                 : integer := -1;
+    perfCountSize               : integer := -1;
+    cachePerfCountEnable        : integer := -1
   ) return rvex_generic_config_type is
     variable cfg  : rvex_generic_config_type;
   begin
@@ -357,6 +372,8 @@ package body core_pkg is
     if reg63isLink            >= 0 then cfg.reg63isLink           := int2bool(reg63isLink); end if;
     if unifiedStall           >= 0 then cfg.unifiedStall          := int2bool(unifiedStall); end if;
     if traceEnable            >= 0 then cfg.traceEnable           := int2bool(traceEnable); end if;
+    if perfCountSize          >= 0 then cfg.perfCountSize         := perfCountSize; end if;
+    if cachePerfCountEnable   >= 0 then cfg.cachePerfCountEnable  := int2bool(cachePerfCountEnable); end if;
     
     cfg.cregStartAddress := overrideStdLogicVect(cfg.cregStartAddress, cregStartAddress);
     for i in 0 to 7 loop

@@ -91,16 +91,24 @@ entity core_cfgCtrl is
     -- generic) should be written zero or the request will be ignored (as
     -- specified by the error flag in the global control register file).
     --
-    -- The enable signal is active high, and should be connected to the write
-    -- signal coming from the registers. This means that the enable signals are
-    -- high one clock cycle BEFORE the data register is updated, because the
-    -- enable signal triggers the update of the external register. When
-    -- multiple requests are made at once, the bus first take priority, after 
-    -- which the core contexts in increasing order.
+    -- The enable signal is active high. When multiple requests are made at
+    -- once, the bus first take priority, after which the core contexts in
+    -- increasing order.
     cxreg2cfg_requestData       : in  rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cfg_requestEnable     : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     gbreg2cfg_requestData       : in  rvex_data_type;
     gbreg2cfg_requestEnable     : in  std_logic;
+    
+    -- cxreg2cfg_wakeupEnable is high when the wakeup system is active, and
+    -- rctrl2cfg_irq_ct0 is high when it should activate.
+    -- cxreg2cfg_wakeupConfig represents the wakeup configuration word, using
+    -- the same encoding as the words above. When the wakeup system activates,
+    -- cxreg2cfg_wakeupAck will be high for one cycle. This should disable the
+    -- wakeup system.
+    cxreg2cfg_wakeupConfig      : in  rvex_data_type;
+    cxreg2cfg_wakeupEnable      : in  std_logic;
+    cfg2cxreg_wakeupAck         : out std_logic;
+    rctrl2cfg_irq_ct0           : in  std_logic;
     
     ---------------------------------------------------------------------------
     -- Configuration status outputs
@@ -215,6 +223,9 @@ architecture Behavioral of core_cfgCtrl is
   end function;
   constant CONFIGURATION_MASK   : rvex_data_type := determineConfigMask;
   
+  -- This is high when the wakeup system is requesting a reconfiguration.
+  signal wakeupActive           : std_logic;
+  
   -- This is high when any of the requestEnable inputs are high and busy_r is
   -- low.
   signal reconfigRequest        : std_logic;
@@ -288,16 +299,44 @@ begin -- architecture
 --=============================================================================
   
   -----------------------------------------------------------------------------
+  -- Handle the wakeup system
+  -----------------------------------------------------------------------------
+  wakeup_condition: process (
+    busy_r, cxreg2cfg_wakeupEnable, rctrl2cfg_irq_ct0, curConfiguration_r
+  ) is
+    variable active : std_logic;          
+  begin
+    
+    -- Activate when the system is enabled, there's an interrupt pending on
+    -- context 0 and we're not already reconfiguring.
+    active := cxreg2cfg_wakeupEnable and rctrl2cfg_irq_ct0 and not busy_r;
+    
+    -- Don't activate when context 0 is already running. This ensures that the
+    -- wakeup system can never disable itself while context 0 may still be
+    -- preparing to go to sleep.
+    for i in 2**CFG.numContextsLog2-1 downto 0 loop
+      if curConfiguration_r(i*4+3 downto i*4) = "0000" then
+        active := '0';
+      end if;
+    end loop;
+    
+    -- Forward the signal.
+    wakeupActive <= active;
+    cfg2cxreg_wakeupAck <= active;
+    
+  end process;
+  
+  -----------------------------------------------------------------------------
   -- Priority encoding among reconfiguration request inputs
   -----------------------------------------------------------------------------
   -- Generate the reconfigRequest signal. This is just a big or gate across the
   -- request enable signals.
   reconfig_request_gen: process (
-    busy_r, cxreg2cfg_requestEnable, gbreg2cfg_requestEnable
+    busy_r, cxreg2cfg_requestEnable, gbreg2cfg_requestEnable, wakeupActive
   ) is
   begin
     if busy_r = '0' then
-      reconfigRequest <= gbreg2cfg_requestEnable;
+      reconfigRequest <= gbreg2cfg_requestEnable or wakeupActive;
       for i in 2**CFG.numContextsLog2-1 downto 0 loop
         if cxreg2cfg_requestEnable(i) = '1' then
           reconfigRequest <= '1';
@@ -320,16 +359,15 @@ begin -- architecture
   
   -- Generate the priority encoder for the incoming requests.
   request_priority_encoder: process (
-    cxreg2cfg_requestEnable, gbreg2cfg_requestEnable
+    cxreg2cfg_requestEnable, gbreg2cfg_requestEnable, wakeupActive
   ) is
   begin
     
-    -- Use the bus ID as default value.
+    -- Use the bus ID as default value (lowest priority).
     requesterID <= "1111";
     
-    -- If there is no request from the bus, priority encode between the request
-    -- signals from the contexts, giving the highest priority to the lowest
-    -- indexed context.
+    -- Priority encode between the request signals from the contexts, giving
+    -- the highest priority to the lowest indexed context.
     if gbreg2cfg_requestEnable = '0' then
       for i in 2**CFG.numContextsLog2-1 downto 0 loop
         if cxreg2cfg_requestEnable(i) = '1' then
@@ -338,14 +376,22 @@ begin -- architecture
       end loop;
     end if;
     
+    -- If the wakeup system is active, select its ID (highest priority). This
+    -- MUST be the highest priority, because the wakeup system is not capable
+    -- of retrying in case it loses arbitration.
+    if wakeupActive = '1' then
+      requesterID <= "1000";
+    end if;
+    
   end process;
   
   -- Mux between the requested configuration vectors based on the priority
   -- encoder output.
   request_mux: process (
-    requesterID, cxreg2cfg_requestData, gbreg2cfg_requestData
+    requesterID, cxreg2cfg_requestData, gbreg2cfg_requestData,
+    cxreg2cfg_wakeupConfig
   ) is
-    variable sel : integer range 0 to 16;
+    variable sel : integer range 0 to 15;
   begin
     
     -- Convert the mux selection signal to something we can work with.
@@ -353,9 +399,11 @@ begin -- architecture
     
     -- Select the right data signal.
     if sel < 2**CFG.numContextsLog2 then
-      newConfiguration <= cxreg2cfg_requestData(sel);
+      newConfiguration <= cxreg2cfg_requestData(sel); -- From a context.
+    elsif sel < 12 then
+      newConfiguration <= cxreg2cfg_wakeupConfig; -- From the wakeup system.
     else
-      newConfiguration <= gbreg2cfg_requestData;
+      newConfiguration <= gbreg2cfg_requestData; -- From the debug bus.
     end if;
     
   end process;

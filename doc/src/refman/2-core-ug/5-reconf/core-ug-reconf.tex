@@ -195,9 +195,8 @@ to sleep again.
 
 \item Copy \creg{CC}, the current configuration, to \creg{WCFG}, the wake-up
 configuration. This is an easy way to ensure that \creg{WCFG} will not contain
-an invalid configuration.
-
-\item Set the S flag in \creg{SAWC} to enable the wake-up system.
+an invalid configuration. Writing to \creg{WCFG} also sets the S flag in
+\creg{SAWC} to enable the wake-up system.
 
 \item Request a reconfiguration to the configuration where all pipelane groups 
 are disabled, for instance 0x8888 on a core that is design-time configured to 
@@ -233,9 +232,8 @@ To initialize this system, the program should do the following in context zero.
 
 \item Copy \creg{CC}, the current configuration, to \creg{WCFG}, the wake-up
 configuration. This is an easy way to ensure that \creg{WCFG} will not contain
-an invalid configuration.
-
-\item Set the S flag in \creg{SAWC} to enable the wake-up system.
+an invalid configuration. Writing to \creg{WCFG} also sets the S flag in
+\creg{SAWC} to enable the wake-up system.
 
 \item Request a reconfiguration as described in 
 Section~\ref{sec:core-ug-reconf-request}, to, for instance, 0x1111, if the main 
@@ -268,9 +266,8 @@ is enough for an interrupt to be handled.
 
 \item Copy \creg{CC}, the current configuration, to \creg{WCFG}, the wake-up
 configuration. This is an easy way to ensure that \creg{WCFG} will not contain
-an invalid configuration.
-
-\item Set the S flag in \creg{SAWC} to enable the wake-up system.
+an invalid configuration. Writing to \creg{WCFG} also sets the S flag in
+\creg{SAWC} to enable the wake-up system.
 
 \item Request a reconfiguration to the configuration as stored in the temporary
 register, as described in Section~\ref{sec:core-ug-reconf-request}.

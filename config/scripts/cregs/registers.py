@@ -30,7 +30,8 @@ cxreg_size = 1 << cxreg_size_log2
 def parse(indir):
     """Parses the control register .tex files.
     
-    TODO: write documentation.
+    TODO: write documentation. NOTE: probably never gonna happen. Just read
+    through this function and read the docs of the other functions. It's fine.
     """
     
     result = {}
@@ -54,6 +55,7 @@ def parse(indir):
         # Register specification.
         'register': (3, True),       # (mnemonic, name, offset), documentation
         'registergen': (5, True),    # (python range, mnemonic, name, offset, stride), documentation
+        'perfCounter': (3, True),    # (mnemonic, name, offset), documentation
         
         # Field specification.
         'field': (2, True),          # (range, identifier), documentation
@@ -81,7 +83,8 @@ def parse(indir):
     cmds = interpreter.hierarchy(cmds, [
         
         (None,
-            ['contextInterface*', 'globalInterface*', 'register*', 'registergen*']),
+            ['contextInterface*', 'globalInterface*',
+             'register*', 'registergen*', 'perfCounter*']),
         
         (['contextInterface', 'globalInterface'],
             ['ifaceGroup*']),
@@ -95,6 +98,9 @@ def parse(indir):
         (['register', 'registergen'],
             ['field*']),
         
+        (['perfCounter'],
+            ['declaration?', 'implementation!']),
+        
         (['field'],
             ['reset?', 'signed?', 'id*', 'declaration?', 'connect*',
              'implementation!', 'resetImplementation?', 'finally?']),
@@ -107,7 +113,13 @@ def parse(indir):
     # Register parsing. --------------------------------------------------------
     # Extract register commands from the command list.
     regcmds = [cmd for cmd in cmds
-               if cmd['cmd'][0] in ['register', 'registergen']]
+               if cmd['cmd'][0] in ['register', 'registergen', 'perfCounter']]
+    
+    # Add some extra documentation to each performance counter.
+    for regcmd in regcmds:
+        if regcmd['cmd'][0] == 'perfCounter':
+            regcmd['doc'] += ('\n\nRefer to Section~\\ref{sec:core-ug-creg-perf} '+
+                'for more information about the structure of performance counters.\n')
     
     # Parse bitfields.
     for regcmd in regcmds:
@@ -226,6 +238,21 @@ def parse_bitfields(regcmd):
     rnam = regcmd['cmd'][2 if regcmd['cmd'][0] == 'registergen' else 1]
     rerr = 'register CR_%s defined on line %s' % (rnam, regcmd['origin'])
     
+    # Generate the fields for perfCounter commands.
+    if regcmd['cmd'][0] == 'perfCounter':
+        modcmds = regcmd['subcmds']
+        regcmd['subcmds'] = fcmds = []
+        for i in range(0, 4):
+            fcmds.append({
+                'cmd':     [
+                    'field',
+                    ['31..24', '23..16', '15..8', '7..0'][i],
+                    regcmd['cmd'][1] + str(3 - i)],
+                'doc':     '',
+                'origin':  regcmd['origin'],
+                'subcmds': modcmds if i == 3 else []
+            })
+    
     # Parse the field specifications.
     fields = [parse_bitfield(x) for x in regcmd['subcmds']]
         
@@ -293,15 +320,15 @@ def parse_bitfield(fieldcmd):
     # Extract the trivial stuff from the \field{} command and create a
     # field dictionary for it.
     fcmd = fieldcmd['cmd']
-    fnam = fcmd[2].strip()
     field = {
         'defined':  'defined',
         'range':    fcmd[1].strip(),
-        'name':     fnam,
+        'name':     fcmd[2].strip(),
         'doc':      fieldcmd['doc'],
         'origin':   fieldcmd['origin'],
         'alt_ids':  [],
         'decl':     [],
+        'impl':     [],
         'resimpl':  [],
         'finimpl':  [],
         'outconns': []
@@ -425,21 +452,30 @@ def parse_registers(regcmds):
         fields = cmd['fields']
         try:
             if cmd['cmd'][0] == 'register':
-                ns     = [0]
-                mnem   = cmd['cmd'][1].strip()
-                title  = cmd['cmd'][2].strip()
-                offs   = int(cmd['cmd'][3].strip(), 0)
-                stride = 0
+                ns      = [0]
+                mnem    = cmd['cmd'][1].strip()
+                title   = cmd['cmd'][2].strip()
+                offs    = int(cmd['cmd'][3].strip(), 0)
+                stride  = 0
+                counter = False
             elif cmd['cmd'][0] == 'registergen':
                 try:
                     ns = list(eval(cmd['cmd'][1]))
                 except Exception as e:
                     raise CodeError('Error parsing python range %s: %s.' %
                                     (cmd['cmd'][1], str(e)))
-                mnem   = cmd['cmd'][2].strip()
-                title  = cmd['cmd'][3].strip()
-                offs   = int(cmd['cmd'][4].strip(), 0)
-                stride = int(cmd['cmd'][5].strip(), 0)
+                mnem    = cmd['cmd'][2].strip()
+                title   = cmd['cmd'][3].strip()
+                offs    = int(cmd['cmd'][4].strip(), 0)
+                stride  = int(cmd['cmd'][5].strip(), 0)
+                counter = False
+            elif cmd['cmd'][0] == 'perfCounter':
+                ns      = [0, 1]
+                mnem    = cmd['cmd'][1].strip()
+                title   = cmd['cmd'][2].strip()
+                offs    = int(cmd['cmd'][3].strip(), 0)
+                stride  = 4
+                counter = True
             else:
                 raise CodeError('Unimplemented command %s on line %s.' %
                                 (cmd['cmd'][0], orig))
@@ -502,19 +538,63 @@ def parse_registers(regcmds):
             
             # Generate the fields.
             fields_n = []
-            for field in fields:
+            for field_idx, field in enumerate(fields):
                 field_n = field.copy()
-                gen_values = {'n': n}
-                if 'doc' in field_n:
-                    del field_n['doc']
-                field_n['name'] = interpreter.generate(
-                    field_n['name'], values=gen_values, default='%s')
-                if 'defined' in field_n:
-                    field_n['alt_ids'] = [
-                        interpreter.generate(x, values=gen_values, default='%s')
-                        for x in field_n['alt_ids']]
-                field_n['gen_values'] = gen_values
+                if counter:
+                    byte = 3-field_idx + n*3
+                    
+                    # The following is a bit magic... It's intended to disable
+                    # the high register entirely if the performance counter size
+                    # is configured to be 32-bit, even though the high register
+                    # normally mirrors byte 3. This saves a bit of logic, since
+                    # a single register is adequate for 4 bytes. (note that the
+                    # reason byte 3 is duplicated is to detect errors due to
+                    # non-atomic 64-bit reads.)
+                    min_size = byte + 1
+                    if n == 1 and byte == 3:
+                        min_size = 5
+                    field_n['name'] = mnem + str(byte)
+                    read = ('<internal>', 
+                        'if (CFG.perfCountSize >= %d)' % (min_size) +
+                        '  _read = cr_%s_%s0_r[%d, 8];' % (mnem, mnem, byte*8)
+                    )
+                    if byte == 0:
+                        obs = [
+                            ('declVariable', '_add',   'byte'),
+                            ('declRegister', '_add_r', 'byte'),
+                            ('declRegister', '_r',     'sevenByte')
+                        ]
+                        for ob in obs:
+                            field_n['decl'].append({
+                                'cmd': [ob[0], ob[1], ob[2], '0'],
+                                'doc': '',
+                                'origin': '<internal>',
+                                'subcmds': []
+                            })
+                        field_n['impl'].append(('<internal>', '_add_r = _add; _r = _r + _add_r;'))
+                        field_n['impl'].append(read)
+                    else:
+                        field_n['decl'] = []
+                        field_n['impl'] = [read]
+                    field_n['gen_values'] = {}
+                else:
+                    gen_values = {'n': n}
+                    if 'doc' in field_n:
+                        del field_n['doc']
+                    field_n['name'] = interpreter.generate(
+                        field_n['name'], values=gen_values, default='%s')
+                    if 'defined' in field_n:
+                        field_n['alt_ids'] = [
+                            interpreter.generate(x, values=gen_values, default='%s')
+                            for x in field_n['alt_ids']]
+                    field_n['gen_values'] = gen_values
                 fields_n += [field_n]
+            
+            # Generate the mnemonic.
+            if counter:
+                mnemn = mnem + ('H' if n == 1 else '')
+            else:
+                mnemn = interpreter.generate(mnem, values={'n': n}, default='%s')
             
             # Create the register dictionary.
             rtyp = reg_type(roffs)
@@ -522,7 +602,7 @@ def parse_registers(regcmds):
                 'doc':      doc,
                 'origin':   orig,
                 'offset':   roffs,
-                'mnemonic': interpreter.generate(mnem, values={'n': n}, default='%s'),
+                'mnemonic': mnemn,
                 'fields':   fields_n,
                 rtyp:       rtyp
             }
@@ -840,6 +920,7 @@ def load_declarations(reg, env, combinatorial_env, addr_mod):
         else:
             d('_wmask', 'bus_writeMaskDbg{0} & (bit)(bus_wordAddr == {1})')
         read_val = Object(owner, '_read', GlobalVariable(field_typ), '<internal>', '0')
+        read_val.used = True
         field['read_val'] = read_val
         fdecls.append(read_val)
         

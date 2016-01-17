@@ -509,6 +509,9 @@ entity core_pipelane is
     -- breakpoints are enabled.
     cxplif2brku_stepping        : in  std_logic_vector(S_BRK to S_BRK);
     
+    -- Soft context switch request signal, active high. This is already masked.
+    cxplif2pl_softCtxtSwitch    : in  std_logic_vector(S_MEM to S_MEM);
+    
     ---------------------------------------------------------------------------
     -- Performance counter status signals
     ---------------------------------------------------------------------------
@@ -2387,21 +2390,31 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Merge the debug traps with the regular traps, giving priority to the
     -- debug traps, if debug traps are enabled. This is done in the S_MEM
-    -- stage, such that when debugs are disabled by a memory write, they become
-    -- disabled from the instruction after the write onwards.
+    -- stage, such that when debug traps are disabled by a memory write, they
+    -- become disabled from the instruction after the write onwards.
     if cxplif2pl_debugTrapEnable(S_MEM) = '1' and s(S_MEM).valid = '1' then
       s(S_MEM).tr.trap := s(S_MEM).tr.debugTrap & s(S_MEM).tr.trap;
     end if;
     
-    -- Append external interrupt trap in S_MEM stage, for the same reason as
-    -- the debug traps. We only interrupt valid instructions so other traps
-    -- take precedence
+    -- Append the external interrupt trap in the S_MEM stage, for the same
+    -- reason as the debug traps. We only interrupt valid instructions so other
+    -- traps take precedence.
     if cxplif2pl_irq(S_MEM) = '1' and s(S_MEM).valid = '1' then
       s(S_MEM).tr.trap := s(S_MEM).tr.trap & (
         active => '1',
         cause  => rvex_trap(RVEX_TRAP_EXT_INTERRUPT),
         arg    => (others => '0') -- Argument is set in the exact cycle where
       );                          -- the trap handler is entered.
+    end if;
+    
+    -- Append the software context switch trap in the same way as the external
+    -- interrupt trap.
+    if cxplif2pl_softCtxtSwitch(S_MEM) = '1' and s(S_MEM).valid = '1' then
+      s(S_MEM).tr.trap := s(S_MEM).tr.trap & (
+        active => '1',
+        cause  => rvex_trap(RVEX_TRAP_SOFT_CTXT_SWITCH),
+        arg    => (others => '0')
+      );
     end if;
     
     -- Copy the current trap handler into the pipeline stage where it is valid,

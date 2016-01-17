@@ -326,6 +326,22 @@ class FourBit(BitVector):
         return 'rvex_4bit_array'
     
 
+class SevenByte(BitVector):
+    """Misc. 4-bit type."""
+
+    def __init__(self):
+        BitVector.__init__(self, 56)
+    
+    def name(self):
+        return 'sevenByte'
+    
+    def name_vhdl(self):
+        return 'rvex_7byte_type'
+    
+    def name_vhdl_array(self):
+        return 'rvex_7byte_array'
+    
+
 class Aggregate(Type):
     """Record/struct type. Aggregates may kind of contain arrays (although they
     can only be indexed by decimal numbers, not even just any literal), but they
@@ -431,24 +447,25 @@ def parse_type(text):
     SIMPLE_TYPES = {
         
         # Primitive types.
-        'natural': Natural(),
-        'boolean': Boolean(),
-        'bit': Bit(),
+        'natural':          Natural(),
+        'boolean':          Boolean(),
+        'bit':              Bit(),
         
         # bitvec's with special names to permit VHDL arrays.
-        'byte': Byte(),
-        'data': Data(),
-        'address': Address(),
-        'sylstatus': SylStatus(),
-        'brregdata': BrRegData(),
-        'trapcause': TrapCause(),
-        'twobit': TwoBit(),
-        'threebit': ThreeBit(),
-        'fourbit': FourBit(),
+        'byte':             Byte(),
+        'data':             Data(),
+        'address':          Address(),
+        'sylstatus':        SylStatus(),
+        'brregdata':        BrRegData(),
+        'trapcause':        TrapCause(),
+        'twobit':           TwoBit(),
+        'threebit':         ThreeBit(),
+        'fourbit':          FourBit(),
+        'sevenbyte':        SevenByte(),
         
         # Aggregate types.
-        'trapinfo': TrapInfo(),
-        'breakpointinfo': BreakpointInfo()
+        'trapinfo':         TrapInfo(),
+        'breakpointinfo':   BreakpointInfo()
         
     }
     if text in SIMPLE_TYPES:
@@ -522,6 +539,8 @@ class CfgVectType(Aggregate):
         self.add_array('resetVectors',       8, Address())
         self.add_entry('unifiedStall',          Boolean())
         self.add_entry('traceEnable',           Boolean())
+        self.add_entry('perfCountSize',         Natural())
+        self.add_entry('cachePerfCountEnable',  Boolean())
     
     def name(self):
         return 'cfgVect'

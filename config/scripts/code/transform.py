@@ -342,10 +342,10 @@ class Resolve(Transformation):
         typ = node[0]['typ']
         if not typ.can_slice():
             raise CodeError('type %s cannot be sliced.' % typ)
-        typ = typ.slice_type(node['size'])
-        if typ is None:
+        styp = typ.slice_type(node['size'])
+        if styp is None:
             raise CodeError('invalid slice mode for type %s.' % typ)
-        node['typ'] = typ
+        node['typ'] = styp
     
     # Typecast type resolution. ------------------------------------------------
     def cast_type(self, node):

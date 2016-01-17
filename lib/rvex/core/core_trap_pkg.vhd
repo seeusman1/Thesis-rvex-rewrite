@@ -152,6 +152,9 @@ package core_trap_pkg is
   -- Stop trap.
   constant RVEX_TRAP_STOP               : natural := 8;
   
+  -- Soft context switch request trap.
+  constant RVEX_TRAP_SOFT_CTXT_SWITCH   : natural := 9;
+  
   -- Debugging traps are positioned at the end of the range. We reserve 8 slots
   -- so the debug trap signal is easy to decode.
   constant RVEX_TRAP_SOFT_DEBUG_0       : natural := 2**RVEX_TRAP_CAUSE_SIZE - 8;
@@ -255,6 +258,13 @@ package core_trap_pkg is
     RVEX_TRAP_STOP => (
       name => "trap %c: stop request 2@, address/PC %x           ",
       isDebugTrap => '1',
+      isInterrupt => '0'
+    ),
+    
+    -- Soft context switch request trap.
+    RVEX_TRAP_SOFT_CTXT_SWITCH => (
+      name => "trap %c: soft ctxt sw. request@                   ",
+      isDebugTrap => '0',
       isInterrupt => '0'
     ),
     

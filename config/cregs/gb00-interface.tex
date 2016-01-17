@@ -48,3 +48,15 @@ which requested the configuration, or all ones if the source was the debug bus.
 \ifaceIn{imem}{affinity}{data}
 Affinity signal from the memory.
 
+%===============================================================================
+\ifaceGroup{Misc.}
+%===============================================================================
+\ifaceSubGroup{}
+\ifaceIn{rv}{coreID}{byte}
+Core ID generic, passed as a port because of limitations in the register
+generator.
+
+\ifaceSubGroup{}
+\ifaceIn{rv}{platformTag}{bitvec56}
+ASCII platform tag code for the platform version registers.
+

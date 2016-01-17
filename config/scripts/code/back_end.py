@@ -211,7 +211,15 @@ def generate_reference(ob, ctxt, direction='r'):
     # Generate VHDL syntax.
     vhdl = name
     if ctxt is not None:
-        vhdl = '%s(%s)' % (vhdl, ctxt)
+        
+        # Welp, here's some insanity. Modelsim and ISIM both invoke
+        # CRASH_AND_BURN when an out-of-range index is detected anywhere, even
+        # if it's guarded by a conditional statement. In order to not spam the
+        # modulo everywhere, we only spam it when ctxt is an integer literal.
+        try:
+            vhdl = '%s(%d mod 2**CFG.numContextsLog2)' % (vhdl, int(ctxt))
+        except ValueError:
+            vhdl = '%s(%s)' % (vhdl, ctxt)
     
     # Generate C syntax.
     if ob.atyp.name() in ['input', 'output']:
@@ -829,39 +837,49 @@ def generate_expr(operator, operands):
         # == and != can also be applied to aggregates of the same type. The
         # result is always a boolean.
         
-        # Determine the minimum number of bits needed to do the comparison.
-        s = 0
-        special = False
-        for i in range(2):
-            if opcls[i] in ['boolean', 'bit']:
-                s = max(s, 1)
-            elif opcls[i] in ['natural']:
-                s = max(s, 31)
-            elif opcls[i].startswith('bitvec') or opcls[i].startswith('unsigned'):
-                s = max(s, cls_size(opcls[i]))
-            elif operator in ['==', '!=']:
-                special = True
-            else:
-                raise CodeError('%s operator can not be applied to %s.'
-                                % (operator, operands[i]))
-        
-        vop = ['{0}', '{1}']
-        cop = ['{0}', '{1}']
-        if special:
+        # Handle natural x natural as a special case to prevent unnecessary
+        # casting to unsigneds, which are slower in VHDL simulation.
+        if (opcls[0] == 'natural') and (opcls[1] == 'natural'):
             
-            # Handle the special case for weird but identical types.
-            if operands[0] != operands[1]:
-                raise CodeError('cannot compare %s with %s.'
-                                % (operands[0], operands[1]))
+            # No need to do anything special in neither VHDL nor C.
+            vop = ['{0}', '{1}']
+            cop = ['{0}', '{1}']
             
         else:
             
-            # Coerce both operands to unsigned<s>.
+            # Determine the minimum number of bits needed to do the comparison.
+            s = 0
+            special = False
             for i in range(2):
-                vfmt, cfmt, operands[i] = generate_typecast(
-                    operands[i], 'unsigned%d' % s)
-                vop[i] = vfmt.format(vop[i])
-                cop[i] = cfmt.format(cop[i])
+                if opcls[i] in ['boolean', 'bit']:
+                    s = max(s, 1)
+                elif opcls[i] in ['natural']:
+                    s = max(s, 31)
+                elif opcls[i].startswith('bitvec') or opcls[i].startswith('unsigned'):
+                    s = max(s, cls_size(opcls[i]))
+                elif operator in ['==', '!=']:
+                    special = True
+                else:
+                    raise CodeError('%s operator can not be applied to %s.'
+                                    % (operator, operands[i]))
+            
+            vop = ['{0}', '{1}']
+            cop = ['{0}', '{1}']
+            if special:
+                
+                # Handle the special case for weird but identical types.
+                if operands[0] != operands[1]:
+                    raise CodeError('cannot compare %s with %s.'
+                                    % (operands[0], operands[1]))
+                
+            else:
+                
+                # Coerce both operands to unsigned<s>.
+                for i in range(2):
+                    vfmt, cfmt, operands[i] = generate_typecast(
+                        operands[i], 'unsigned%d' % s)
+                    vop[i] = vfmt.format(vop[i])
+                    cop[i] = cfmt.format(cop[i])
         
         # Generate code.
         vhdl = c = '({0}) %s ({1})' % operator

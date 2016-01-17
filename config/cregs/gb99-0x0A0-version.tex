@@ -336,7 +336,7 @@ Defines the number of available hardware breakpoints.
 \implementation{}
 
 %-------------------------------------------------------------------------------
-\field{18}{C}
+\field{19}{C}
 %-------------------------------------------------------------------------------
 \reset{*}
 If set, cache-related performance counters exist.
@@ -345,19 +345,12 @@ If set, cache-related performance counters exist.
 \implementation{}
 
 %-------------------------------------------------------------------------------
-\field{17}{I}
+\field{18..16}{P}
 %-------------------------------------------------------------------------------
-\reset{*}
-If set, ILP-related performance counters \creg{C_BUN}, \creg{C_SYL} and \creg{C_NOP} exist.
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\implementation{}
-
-%-------------------------------------------------------------------------------
-\field{16}{P}
-%-------------------------------------------------------------------------------
-\reset{*}
-If set, performance counters \creg{C_CYC} and \creg{C_STALL} exist.
+\reset{***}
+This field represents the size in bytes of all performance counters except
+\creg{CNT}, which is always 64-bit. Refer to Section~\ref{sec:core-ug-creg-perf}
+for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}

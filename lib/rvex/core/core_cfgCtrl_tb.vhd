@@ -94,6 +94,10 @@ architecture Behavioral of core_cfgCtrl_tb is
   signal cxreg2cfg_requestEnable     : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal gbreg2cfg_requestData       : rvex_data_type;
   signal gbreg2cfg_requestEnable     : std_logic;
+  signal cxreg2cfg_wakeupConfig      : rvex_data_type;
+  signal cxreg2cfg_wakeupEnable      : std_logic;
+  signal cfg2cxreg_wakeupAck         : std_logic;
+  signal rctrl2cfg_irq_ct0           : std_logic;
   signal cfg2gbreg_busy              : std_logic;
   signal cfg2gbreg_error             : std_logic;
   signal cfg2gbreg_requesterID       : std_logic_vector(3 downto 0);
@@ -135,6 +139,10 @@ begin
       cxreg2cfg_requestEnable     => cxreg2cfg_requestEnable,
       gbreg2cfg_requestData       => gbreg2cfg_requestData,
       gbreg2cfg_requestEnable     => gbreg2cfg_requestEnable,
+      cxreg2cfg_wakeupConfig      => cxreg2cfg_wakeupConfig,
+      cxreg2cfg_wakeupEnable      => cxreg2cfg_wakeupEnable,
+      cfg2cxreg_wakeupAck         => cfg2cxreg_wakeupAck,
+      rctrl2cfg_irq_ct0           => rctrl2cfg_irq_ct0,
       cfg2gbreg_busy              => cfg2gbreg_busy,
       cfg2gbreg_error             => cfg2gbreg_error,
       cfg2gbreg_requesterID       => cfg2gbreg_requesterID,
@@ -157,10 +165,13 @@ begin
   cxplif2cfg_blockReconfig <= (others => '0');
   mem2cfg_blockReconfig <= (others => '0');
   
-  -- Load default values into the requests from the contexts, we're not using
-  -- them in this testbench.
+  -- Load default values into the requests from the contexts and the wakeup
+  -- registers, we're not using them in this testbench.
   cxreg2cfg_requestData <= (others => (others => '0'));
   cxreg2cfg_requestEnable <= (others => '0');
+  cxreg2cfg_wakeupConfig <= (others => '0');
+  cxreg2cfg_wakeupEnable <= '0';
+  rctrl2cfg_irq_ct0 <= '0';
   
   -- Generate sync signal.
   process is

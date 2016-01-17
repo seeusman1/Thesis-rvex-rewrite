@@ -9,7 +9,20 @@ information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{CRR}
+\declaration{}
+\declRegister{_r}{data}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle bus access.
+_r = (_r & ~_wmask_core) | (_write & _wmask_core);
+_read = _r;
+
+// Forward the write enable bit as the request flag.
+cxreg2cfg_requestEnable = _wmask_core[0];
+
+\end{lstlisting}
+\connect{cxreg2cfg_requestData}{_r}
 
 %===============================================================================
 %\register{...}{...}{0x244}
@@ -20,14 +33,34 @@ information.
 \register{WCFG}{Wakeup configuration}{0x248}
 %===============================================================================
 
-\todo{The WCFG and SAWC.S flag don't do anything yet.}
 \emph{This register only exists on context 0.} This configuration register is 
 used in conjunction with the S flag in \creg{SAWC}. Refer to
 Section~\ref{sec:core-ug-reconf-saw} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{WCFG}
+\declaration{}
+\declRegister{_r}{data}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle bus access.
+_r = (_r & ~_wmask_core) | (_write & _wmask_core);
+_read = _r;
+
+// Set the sleep flag in SAWC when this register is written to.
+if (_wmask_core[0]) {
+    cr_sawc_s_r = '1';
+}
+
+// Load the current configuration when the wakeup system triggers. This allows
+// context 0 to restore the configuration which was automatically swapped out.
+if (cfg2cxreg_wakeupAck) {
+    _r = cfg2cxreg_currentConfig;
+}
+
+\end{lstlisting}
+\connect{cxreg2cfg_wakeupConfig}{_r}
 
 %===============================================================================
 \register{SAWC}{Sleep and wake-up control register}{0x24C}
@@ -58,7 +91,7 @@ using these flags.
 \implementation{}
 \begin{lstlisting}
 _read = 0;
-/*if (ctxt == 0) {
+if (ctxt == 0) {
     if (CFG.numContextsLog2 >= 1) {
         
         // Context 1.
@@ -124,7 +157,7 @@ _read = 0;
         _read[6] = ~cr_dcr_b_r@7;
         
     }
-}*/
+}
 \end{lstlisting}
 
 %-------------------------------------------------------------------------------
@@ -134,4 +167,19 @@ Sleep flag. This enables or disables the sleep and wake-up system. Refer to
 Section~\ref{sec:core-ug-reconf-saw} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle bus access.
+_r = (_r & ~_wmask_core) | (_write & _wmask_core);
+_read = _r;
+
+// Clear the sleep flag when the wakeup system triggers.
+if (cfg2cxreg_wakeupAck) {
+    _r = '0';
+}
+
+\end{lstlisting}
+\connect{cxreg2cfg_wakeupEnable}{_r}

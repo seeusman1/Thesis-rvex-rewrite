@@ -2,14 +2,6 @@
 \contextInterface{}
 
 %===============================================================================
-\ifaceGroup{Misc.}
-%===============================================================================
-\ifaceSubGroup{}
-\ifaceIn{rv}{coreID}{byte}
-Core ID generic, passed as a port because of limitations in the register
-generator.
-
-%===============================================================================
 \ifaceGroup{Run control interface}
 %===============================================================================
 \ifaceSubGroup{}
@@ -139,6 +131,12 @@ Current value of the interrupt-enable flag in the control register.
 \ifaceOutCtxt{cxplif}{debugTrapEnable}{bit}{0}
 Current value of the debug-trap-enable flag in the control register.
 
+\ifaceSubGroup{}
+\ifaceOutCtxt{cxplif}{softCtxtSwitch}{bit}{0}
+This signal is activated when RSC does not equal CSC and the software context
+switch trap is enabled in CCR. It should trigger an RVEX_TRAP_SOFT_CTXT_SWITCH
+in the S_MEM stage when high.
+
 %===============================================================================
 \ifaceGroup{Pipelane interface: external debug control signals}
 %===============================================================================
@@ -185,14 +183,29 @@ traps are ignored.
 \ifaceGroup{Interface with configuration logic}
 %===============================================================================
 \ifaceSubGroup{}
+\ifaceIn{cfg}{currentConfig}{data}
+Current configuration. Each nibble in the data word corresponds to a pipelane 
+group, of which bit 3 specifies whether the pipelane group should be disabled 
+(high) or enabled (low) and, if low, bit 2..0 specify the context it should run 
+on.
+
+\ifaceSubGroup{}
 \ifaceOutCtxt{cfg}{requestData}{data}{0}
 \ifaceOutCtxt{cfg}{requestEnable}{bit}{0}
-Each nibble in the data word corresponds to a pipelane group, of which bit 3 
-specifies whether the pipelane group should be disabled (high) or enabled (low) 
-and, if low, bit 2..0 specify the context it should run on. Bits which are not 
-supported by the core (as specified in the CFG generic) should be written zero 
-or the request will be ignored (as specified by the error flag in the global 
-control register file). The enable signal is active high.
+Manual configuration request signals. The data signal has the same encoding as 
+currentConfig. Bits which are not supported by the core (as specified in the CFG 
+generic) should be written zero or the request will be ignored (as specified by 
+the error flag in the global control register file). The enable signal is active 
+high.
+
+\ifaceSubGroup{}
+\ifaceOut{cfg}{wakeupConfig}{data}{0}
+\ifaceOut{cfg}{wakeupEnable}{bit}{0}
+\ifaceIn{cfg}{wakeupAck}{bit}
+Wakeup system configuration signals. wakeupConfig has the same encoding as
+currentConfig and requestData. When wakeupEnable is high, the wakeup system will
+request that configuration when the interrupt request line for context 0 is high
+and context 0 is not already running. When it does, wakeupAck will be high.
 
 %===============================================================================
 \ifaceGroup{Trace control unit interface}

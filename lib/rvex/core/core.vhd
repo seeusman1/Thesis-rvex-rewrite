@@ -227,9 +227,7 @@ entity core is
     -- Configuration.
     CFG                         : rvex_generic_config_type := rvex_cfg;
     
-    -- Offset to add to the context ID in the context control registers, as
-    -- well as the value to put in the core index register in the global
-    -- control registers.
+    -- This is used as the core index register in the global control registers.
     CORE_ID                     : natural := 0;
     
     -- Does the same thing as CORE_ID above (or well, they're added to each
@@ -661,6 +659,7 @@ architecture Behavioral of core is
   signal cxreg2cxplif_handlingDebugTrap:std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_interruptEnable : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_debugTrapEnable : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cxplif_softCtxtSwitch  : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_breakpoints     : cxreg2pl_breakpoint_info_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_extDebug        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_exDbgTrapInfo   : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
@@ -672,6 +671,9 @@ architecture Behavioral of core is
   -- Context register logic <-> configuration control signals.
   signal cxreg2cfg_requestData        : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cfg_requestEnable      : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cfg_wakeupConfig       : rvex_data_type;
+  signal cxreg2cfg_wakeupEnable       : std_logic;
+  signal cfg2cxreg_wakeupAck          : std_logic;
   
   -- Global register logic <-> configuration control signals.
   signal gbreg2cfg_requestData        : rvex_data_type;
@@ -861,6 +863,7 @@ begin -- architecture
       cxreg2cxplif_handlingDebugTrap=> cxreg2cxplif_handlingDebugTrap,
       cxreg2cxplif_interruptEnable  => cxreg2cxplif_interruptEnable,
       cxreg2cxplif_debugTrapEnable  => cxreg2cxplif_debugTrapEnable,
+      cxreg2cxplif_softCtxtSwitch   => cxreg2cxplif_softCtxtSwitch,
       cxreg2cxplif_breakpoints      => cxreg2cxplif_breakpoints,
       cxreg2cxplif_extDebug         => cxreg2cxplif_extDebug,
       cxplif2cxreg_exDbgTrapInfo    => cxplif2cxreg_exDbgTrapInfo,
@@ -1027,7 +1030,6 @@ begin -- architecture
   -- Instantiate the context-based control register logic
   -----------------------------------------------------------------------------
   ctxtReset <= rctrl2rv_reset or cxreg2rv_reset;
-  coreID_byte <= std_logic_vector(to_unsigned(CORE_ID + coreID, 8));
   trap_is_dbg_gen: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
     cxplif2cxreg_trapIsDebug(ctxt) <=
       rvex_isDebugTrap(cxplif2cxreg_trapInfo(ctxt));
@@ -1044,9 +1046,6 @@ begin -- architecture
       ctxtReset                     => ctxtReset,
       clk                           => clk,
       clkEn                         => clkEn,
-      
-      -- Misc.
-      rv2cxreg_coreID               => coreID_byte,
       
       -- Run control interface.
       cxreg2rv_reset                => cxreg2rv_reset,
@@ -1084,6 +1083,7 @@ begin -- architecture
       cxreg2cxplif_handlingDebugTrap=> cxreg2cxplif_handlingDebugTrap,
       cxreg2cxplif_interruptEnable  => cxreg2cxplif_interruptEnable,
       cxreg2cxplif_debugTrapEnable  => cxreg2cxplif_debugTrapEnable,
+      cxreg2cxplif_softCtxtSwitch   => cxreg2cxplif_softCtxtSwitch,
 
       -- Pipelane interface: external debug control signals.
       cxreg2cxplif_breakpoints      => cxreg2cxplif_breakpoints,
@@ -1095,8 +1095,12 @@ begin -- architecture
       cxplif2cxreg_resuming_ack     => cxplif2cxreg_resuming_ack,
 
       -- Interface with configuration logic.
+      cfg2cxreg_currentConfig       => cfg2any_configWord,
       cxreg2cfg_requestData         => cxreg2cfg_requestData,
       cxreg2cfg_requestEnable       => cxreg2cfg_requestEnable,
+      cxreg2cfg_wakeupConfig        => cxreg2cfg_wakeupConfig,
+      cxreg2cfg_wakeupEnable        => cxreg2cfg_wakeupEnable,
+      cfg2cxreg_wakeupAck           => cfg2cxreg_wakeupAck,
 
       -- Trace control unit interface.
       cxreg2trace_enable            => cxreg2trace_enable,
@@ -1130,12 +1134,11 @@ begin -- architecture
     end loop;
     imem2gbreg_affinity <= aff;
   end process;
+  coreID_byte <= std_logic_vector(to_unsigned(CORE_ID + coreID, 8));
   
   gbreg_inst: entity rvex.core_globalRegLogic
     generic map (
       CFG                           => CFG
-      --CORE_ID                       => CORE_ID + coreID,
-      --PLATFORM_TAG                  => PLATFORM_TAG
     )
     port map (
       
@@ -1158,6 +1161,10 @@ begin -- architecture
       -- Interface with memory.
       imem2gbreg_affinity           => imem2gbreg_affinity,
 
+      -- Misc.
+      rv2gbreg_coreID               => coreID_byte,
+      rv2gbreg_platformTag          => PLATFORM_TAG,
+      
       -- Debug bus to global control register interface.
       creg2gbreg_dbgAddr            => creg2gbreg_dbgAddr,
       creg2gbreg_dbgWriteEnable     => creg2gbreg_dbgWriteEnable,
@@ -1192,6 +1199,10 @@ begin -- architecture
       cxreg2cfg_requestEnable       => cxreg2cfg_requestEnable,
       gbreg2cfg_requestData         => gbreg2cfg_requestData,
       gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
+      cxreg2cfg_wakeupConfig        => cxreg2cfg_wakeupConfig,
+      cxreg2cfg_wakeupEnable        => cxreg2cfg_wakeupEnable,
+      cfg2cxreg_wakeupAck           => cfg2cxreg_wakeupAck,
+      rctrl2cfg_irq_ct0             => rctrl2rv_irq(0),
       
       -- Configuration status outputs.
       cfg2gbreg_busy                => cfg2gbreg_busy,
