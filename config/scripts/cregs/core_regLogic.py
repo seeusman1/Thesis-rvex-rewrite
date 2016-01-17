@@ -18,31 +18,32 @@ def generate(regs, dirs):
                 addr = 'creg2gbreg_dbgAddr(%d downto 2)' % (regs['gbreg_size_log2'] - 1),
                 data = 'gbreg2creg_dbgReadData',
             )]
-            bus_read.append('for group in 0 to 2**CFG.numLaneGroupsLog2-1 loop\n')
+            bus_read.append('for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop\n')
             bus_read.append('\n'.join(['  ' + x for x in bus_mux.format(
-                addr = 'creg2gbreg_coreAddr(group)(%d downto 2)' % (regs['gbreg_size_log2'] - 1),
-                data = 'gbreg2creg_coreReadData(group)',
+                addr = 'creg2gbreg_coreAddr(laneGroup)(%d downto 2)' % (regs['gbreg_size_log2'] - 1),
+                data = 'gbreg2creg_coreReadData(laneGroup)',
             ).split('\n')][:-1]) + '\n')
             bus_read.append('end loop;\n')
             bus_read = ''.join(bus_read)
         else:
             bus_read = busmux(reglist, regs['cxreg_size_log2'] - 2).format(
-                addr = 'creg2cxreg_addr(%d downto 2)' % (regs['gbreg_size_log2'] - 1),
-                data = 'cxreg2creg_readData',
+                addr = 'creg2cxreg_addr(ctxt)(%d downto 2)' % (regs['cxreg_size_log2'] - 1),
+                data = 'cxreg2creg_readData(ctxt)',
             )
         
         common.templates.generate('vhdl',
             dirs['tmpldir'] + '/core_%sRegLogic.vhd' % mode,
             dirs['outdir'] + '/core_%sRegLogic.vhd' % mode,
             {
-                'PORT_DECL':  ports(iface),
-                'LIB_FUNCS':  generate_vhdl_libfuncs(),
-                'REG_DECL':   decls(decl, env, True),
-                'VAR_DECL':   decls(decl, env, False),
-                'REG_RESET':  reset(iface, decl, env),
-                'IMPL':       impl(reglist),
-                'RESET_IMPL': impl(reglist, True),
-                'BUS_READ':   bus_read
+                'PORT_DECL':            ports(iface),
+                'LIB_FUNCS':            generate_vhdl_libfuncs(),
+                'REG_DECL':             decls(decl, env, True),
+                'VAR_DECL':             decls(decl, env, False),
+                'REG_RESET':            reset(iface, decl, env),
+                'IMPL':                 impl(reglist),
+                'RESET_IMPL':           impl(reglist, True),
+                'BUS_READ':             bus_read,
+                'OUTPUT_CONNECTIONS':   outconns(regs[mo + 'outconns'])
             })
 
 
@@ -137,6 +138,9 @@ def impl(reglist, reset=False):
     vhdl = []
     for reg in reglist:
         vhdl.append(reg[('res' if reset else '') + 'impl_vhdl'])
+    if not reset:
+        for reg in reglist:
+            vhdl.append(reg['finimpl_vhdl'])
     return ''.join(vhdl)
 
 
@@ -148,4 +152,11 @@ def busmux(reglist, addr_size, hi_fun=None):
         vhdl.append('  when "%s" => {data} <= %s;\n' % (addr, reg['read_vhdl']))
     vhdl.append('  when others => {data} <= (others => \'0\');\n')
     vhdl.append('end case;\n')
+    return ''.join(vhdl)
+
+
+def outconns(outconns):
+    vhdl = []
+    for key in outconns:
+        vhdl.append(outconns[key]['vhdl'])
     return ''.join(vhdl)

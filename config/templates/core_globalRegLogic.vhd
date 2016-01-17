@@ -151,14 +151,14 @@ begin -- architecture
         
         -- Setup the bus write command variables which are expected by the
         -- generated code.
-        bus_writeData := creg2gbreg_dbgWriteData(ctxt);
+        bus_writeData := creg2gbreg_dbgWriteData;
         bus_writeMaskDbg := (
-            31 downto 24 => creg2gbreg_dbgWriteEnable(ctxt) and creg2gbreg_dbgWriteMask(ctxt)(3),
-            23 downto 16 => creg2gbreg_dbgWriteEnable(ctxt) and creg2gbreg_dbgWriteMask(ctxt)(2),
-            15 downto  8 => creg2gbreg_dbgWriteEnable(ctxt) and creg2gbreg_dbgWriteMask(ctxt)(1),
-            7 downto  0 => creg2gbreg_dbgWriteEnable(ctxt) and creg2gbreg_dbgWriteMask(ctxt)(0)
+            31 downto 24 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(3),
+            23 downto 16 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(2),
+            15 downto  8 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(1),
+            7 downto  0 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(0)
         );
-        bus_wordAddr := unsigned(creg2gbreg_dbgAddr(ctxt)(8 downto 2));
+        bus_wordAddr := unsigned(creg2gbreg_dbgAddr(7 downto 2));
         
         -- Generated register implementation code.
         @IMPL

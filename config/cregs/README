@@ -32,7 +32,9 @@ root
          |   |- \declVariable{name}{type}{expr}
          |   '- \declConstant{name}{type}{expr}
          |- \implementation{}
-         '- \resetImplementation{}
+         |- \resetImplementation{}
+         |- \finally{}
+         '- \connect{output}{expr}
 
  - \contextInterface{}
  - \globalInterface{}
@@ -139,6 +141,21 @@ root
    This is necessary for, for instance, the B flag in DCR, to allow the debugger
    to reset the core without immediately starting execution. This command is
    only allowed for context-specific registers.
+
+ - \finally{}
+   Language-agnostic code section as defined below, executed every rising clock
+   edge with clkEn high and reset inactive, after all \implementation{} sections
+   have been processed. Variables from other fields/registers may be read in
+   this section, in addition to all the objects which are accessible from
+   \implementation{}.
+ 
+ - \connect{<output>}{<expr>}
+   Combinatorially connects the specified output port with the specified
+   expression of internal registers and predefined constants. This may be used
+   to easily connect an output port to an internal register. Note however that
+   since inputs cannot be used in the expression, it still cannot make a
+   combinatorial path from an input to an output. This is illegal specifically
+   because such combinatorial paths are not supported by the simulator.
 
  - Anything else:
    Any unrecognized line is used as a description for either the whole 

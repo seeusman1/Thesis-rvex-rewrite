@@ -18,9 +18,35 @@ by the debug bus, but the processor cannot write to this register.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \declaration{}
+\declVariable{_v}{trapCause}{0}
 \declRegister{_r}{trapCause}{0}
-
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_v = (_v & ~_wmask_dbg) | (_write & _wmask_dbg);
+_read = _r;
+
+// Handle entering/leaving trap.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = cxplif2cxreg_trapInfo.cause;
+    }
+    if (cxplif2cxreg_rfi) {
+        _v = 0;
+    }
+}
+
+// Output the cxreg2cxplif_handlingDebugTrap signal.
+<?vhdl
+@lvalue cxreg2cxplif_handlingDebugTrap <= TRAP_TABLE(vect2uint(@read _v)).isDebugTrap;
+?><?c
+#error "Need to implement this!"
+?>
+
+_r = _v;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{23..16}{BRANCH}
@@ -32,12 +58,32 @@ register file. While the core is running, accessing this register is undefined
 due to it being dependent on the pipeline and forwarding state.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declVariable{_v}{brRegData}{0}
+\declRegister{_r}{brRegData}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_v = (_v & ~_wmask_dbg) | (_write & _wmask_dbg);
+_read = _r;
+
+// Handle core interface.
+if (!cxplif2cxreg_stall) {
+    _v = (_v                       & ~cxplif2cxreg_brWriteEnable)
+       | (cxplif2cxreg_brWriteData &  cxplif2cxreg_brWriteEnable);
+}
+
+_r = _v;
+\end{lstlisting}
+\connect{cxreg2cxplif_brReadData}{_r}
 
 %-------------------------------------------------------------------------------
 \field{9..8}{K}
 %-------------------------------------------------------------------------------
-\reset{01}
+\todo{The kernel mode/MMU enable flag exists, but the MMU is not in the design
+yet.}
 This register selects between kernel mode and user mode. Currently, this flag 
 only controls whether the MMU is enabled; the \rvex{} processor does not have 
 any security features yet. In kernel mode, the MMU is bypassed; in user mode, it 
@@ -52,13 +98,33 @@ to \creg{SCCR} and subsequently executing \insn{RFI}. Neither the core nor the
 debug bus can write to this field directly.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{01}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{1}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_read = ~_r $ _r;
+
+// Handle restoring and trap entry.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = 1;
+    }
+    if (cxplif2cxreg_rfi) {
+        _v = cr_sccr_k_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{7..6}{C}
 %-------------------------------------------------------------------------------
-\reset{10}
-\todo{The C flag in CCR doesn't exist yet.}
 This register controls whether the context switch trap is enabled. It does not 
 exist on hardware context 0. When the core is reset or the trap service routine 
 is entered, the context switch trap is disabled. When \insn{RFI} is executed, 
@@ -73,12 +139,36 @@ toggles the state. This prevents the need for read-modify-write operations.
 Refer to \creg{RSC} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle restoring and trap entry.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = 0;
+    }
+    if (cxplif2cxreg_rfi) {
+        _v = cr_sccr_c_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{5..4}{B}
 %-------------------------------------------------------------------------------
-\reset{10}
 This register controls whether breakpoints are enabled in self-hosted debug 
 mode. Its value is ignored in external debug mode. When the core is reset or the 
 trap service routine is entered due to a debug trap in self-hosted debug mode, 
@@ -92,12 +182,37 @@ traps, writing \code{10} disables them and writing \code{11} toggles the state.
 This prevents the need for read-modify-write operations.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle restoring and trap entry.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active & cxplif2cxreg_trapIsDebug) {
+        _v = 0;
+    }
+    if (cxplif2cxreg_rfi) {
+        _v = cr_sccr_b_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
+\connect{cxreg2cxplif_debugTrapEnable}{_r}
 
 %-------------------------------------------------------------------------------
 \field{3..2}{R}
 %-------------------------------------------------------------------------------
-\reset{10}
 This register, named ready-for-trap, tentatively specifies if the processor is
 currently capable of servicing traps. However, since traps cannot be masked,
 any trap that occurs while ready-for-trap is cleared will cause a panic.
@@ -114,12 +229,36 @@ it and writing \code{11} toggles the state. This prevents the need for
 read-modify-write operations.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle restoring and trap entry.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = 0;
+    }
+    if (cxplif2cxreg_rfi) {
+        _v = cr_sccr_r_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{1..0}{I}
 %-------------------------------------------------------------------------------
-\reset{10}
 This register selects whether external interrupts are enabled or not. When the 
 core is reset or the trap service routine is entered, external interrupts are 
 disabled. When \insn{RFI} is executed, the state is restored from \creg{SCCR}.
@@ -131,7 +270,33 @@ external interrupts, writing \code{10} disables them and writing \code{11}
 toggles the state. This prevents the need for read-modify-write operations.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle restoring and trap entry.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = 0;
+    }
+    if (cxplif2cxreg_rfi) {
+        _v = cr_sccr_i_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
+\connect{cxreg2cxplif_interruptEnable}{_r}
 
 %===============================================================================
 \register{SCCR}{Saved context control register}{0x204}
@@ -145,19 +310,21 @@ which contexts may read to identify themselves.
 %-------------------------------------------------------------------------------
 \field{31..24}{ID}
 %-------------------------------------------------------------------------------
-\reset{********}
 \id{CID}
 This field is hardwired to the context index plus the core ID generic. Programs
 running on the \rvex{} processor may use this field to determine which hardware
 context they are running on.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{********}
 \implementation{}
+\begin{lstlisting}
+_read = rv2cxreg_coreID + ctxt;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{9..8}{K}
 %-------------------------------------------------------------------------------
-\reset{10}
 When the trap service routine is entered, this register stores whether kernel
 the processor was in kernel mode or user mode. When \insn{RFI} is executed,
 the state is set to this value.
@@ -169,13 +336,33 @@ the need for read-modify-write operations. Read behavior is identical to the
 K field in \creg{CCR}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface. The core can only go to application mode.
+_cmd = (_wmask_dbg | (_wmask_core & "10")) & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle saving.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = cr_ccr_k_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{7..6}{C}
 %-------------------------------------------------------------------------------
-\reset{10}
-\todo{The C flag in SCCR doesn't exist yet.}
 When the trap service routine is entered, this register stores whether the 
 context switching trap was enabled. When \insn{RFI} is executed, the state is 
 set to this value.
@@ -183,12 +370,33 @@ set to this value.
 Core and debug bus access behavior is identical to the C field in \creg{CCR}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle saving.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = cr_ccr_c_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{5..4}{B}
 %-------------------------------------------------------------------------------
-\reset{10}
 When the trap service routine is entered, this register stores whether 
 self-hosted debug breakpoints were enabled. When \insn{RFI} is executed, the 
 state is set to this value.
@@ -196,12 +404,33 @@ state is set to this value.
 Core and debug bus access behavior is identical to the B field in \creg{CCR}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle saving.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = cr_ccr_b_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{3..2}{R}
 %-------------------------------------------------------------------------------
-\reset{10}
 When the trap service routine is entered, this register stores whether 
 ready-for-trap was set. When \insn{RFI} is executed, the state is set to this
 value.
@@ -209,12 +438,33 @@ value.
 Core and debug bus access behavior is identical to the R field in \creg{CCR}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle saving.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = cr_ccr_r_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{1..0}{I}
 %-------------------------------------------------------------------------------
-\reset{10}
 When the trap service routine is entered, this register stores whether 
 interrupts were enabled. When \insn{RFI} is executed, the state is set to this
 value.
@@ -222,7 +472,29 @@ value.
 Core and debug bus access behavior is identical to the I field in \creg{CCR}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
 \implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle saving.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = cr_ccr_i_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
 
 %===============================================================================
 \register{LR}{Link register}{0x208}
@@ -234,7 +506,22 @@ undefined due to it being dependent on the pipeline and forwarding state.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{LR}
+\declaration{}
+\declRegister{_r}{address}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask_dbg) | (_write & _wmask_dbg);
+_read = _r;
+
+// Handle core interface.
+if (!cxplif2cxreg_stall && cxplif2cxreg_linkWriteEnable) {
+    _r = cxplif2cxreg_linkWriteData;
+}
+
+\end{lstlisting}
+\connect{cxreg2cxplif_linkReadData}{_r}
 
 %===============================================================================
 \register{PC}{Program counter}{0x20C}
@@ -247,7 +534,28 @@ even if the processor is running.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{PC}
+\declaration{}
+\declRegister{_r}{address}{0}
 \implementation{}
+\begin{lstlisting}
+
+// The bus must be able to override the PC, so we need to execute the write from
+// the pipelane first. Notice that writes are ignored when the debugger is
+// trying to jump.
+if (!cxplif2cxreg_stall && !cr_dcr_j_r) {
+    _r = cxplif2cxreg_nextPC;
+}
+
+// Handle bus interface. Set the jump flag when the register is written to by
+// the debug bus.
+_r = (_r & ~_wmask_dbg) | (_write & _wmask_dbg);
+if (_wmask_dbg[0]) {
+    cr_dcr_j_r = '1';
+}
+_read = _r;
+
+\end{lstlisting}
+\connect{cxreg2cxplif_currentPC}{_r}
 
 %===============================================================================
 \register{TH}{Trap handler}{0x210}
@@ -260,7 +568,13 @@ disabled when a trap occurs.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{TH}
+\declaration{}
+\declRegister{_r}{address}{0}
 \implementation{}
+\begin{lstlisting}
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
+\end{lstlisting}
 
 %===============================================================================
 \register{PH}{Panic handler}{0x214}
@@ -280,7 +594,20 @@ Section~\ref{sec:core-ug-traps} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{PH}
+\declaration{}
+\declRegister{_r}{address}{0}
 \implementation{}
+\begin{lstlisting}
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
+\end{lstlisting}
+
+%===============================================================================
+% Trap handler output
+%===============================================================================
+
+% Output the currently active trap handler when all variables have been set.
+\connect{cxreg2cxplif_trapHandler}{(CR_TH_TH_r & CR_CCR_R_r) | (CR_PH_PH_r & ~CR_CCR_R_r)}
 
 %===============================================================================
 \register{TP}{Trap point}{0x218}
@@ -300,7 +627,22 @@ has been swapped in as well.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{TP}
+\declaration{}
+\declRegister{_r}{address}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask_dbg) | (_write & _wmask_dbg);
+_read = _r;
+
+// Handle entering/leaving trap.
+if (!cxplif2cxreg_stall && cxplif2cxreg_trapInfo.active) {
+    _r = cxplif2cxreg_trapPoint;
+}
+
+\end{lstlisting}
+\connect{cxreg2cxplif_trapReturn}{_r}
 
 %===============================================================================
 \register{TA}{Trap argument}{0x21C}
@@ -313,5 +655,19 @@ information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{TA}
+\declaration{}
+\declRegister{_r}{address}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask_dbg) | (_write & _wmask_dbg);
+_read = _r;
+
+// Handle entering/leaving trap.
+if (!cxplif2cxreg_stall && cxplif2cxreg_trapInfo.active) {
+    _r = cxplif2cxreg_trapInfo.arg;
+}
+
+\end{lstlisting}
 

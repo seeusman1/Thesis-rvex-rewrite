@@ -94,7 +94,7 @@ def generate_declaration_vhdl(ob, init=None):
     vhdl = vhdl + ' ' * (28 - len(vhdl)) + ': '
     if obtype == 'input':
         vhdl += 'in  '
-    elif obtype == 'output':
+    elif obtype.endswith('output'):
         vhdl += 'out '
     vhdl += ob.atyp.typ.name_vhdl()
     if obtype == 'constant':
@@ -617,7 +617,7 @@ def generate_expr(operator, operands):
         
         if variant is None:
             # Move the gate to the second operand.
-            if opcls[0] in ['boolean', 'bit', 'bitvec1', 'unsigned1']:
+            if opcls[1].startswith('bitvec') or opcls[1].startswith('unsigned'):
                 operands = list(reversed(operands))
                 opcls = list(reversed(opcls))
                 vop = list(reversed(vop))
@@ -913,10 +913,10 @@ def generate_assignment(atyp, slic=False, size=None):
     return (vhdl, c)
 
 
-def generate_ifelse():
+def generate_if(inc_else=False):
     """Generates the code for an if/else statement. Returns a two-tuple with a
     VHDL code in the first entry and a C code in the second. {0} represents the
     condition expression, {1} represents the true block, {2} the false block."""
-    return ('if ({0}) then\n{1} else\n{2} end if;\n',
-            'if ({0}) {{\n{1}}} else {{\n{2}}}\n')
+    return ('if ({0}) then\n{1}%s end if;\n' % (' else\n{2}' if inc_else else ''),
+            'if ({0}) {{\n{1}}}%s\n' % (' else {{\n{2}}}' if inc_else else ''))
     

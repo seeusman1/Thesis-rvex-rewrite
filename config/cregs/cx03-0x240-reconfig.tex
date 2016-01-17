@@ -20,7 +20,7 @@ information.
 \register{WCFG}{Wakeup configuration}{0x248}
 %===============================================================================
 
-\todo{The WCFG register doesn't exist yet.}
+\todo{The WCFG and SAWC.S flag don't do anything yet.}
 \emph{This register only exists on context 0.} This configuration register is 
 used in conjunction with the S flag in \creg{SAWC}. Refer to
 Section~\ref{sec:core-ug-reconf-saw} for more information.
@@ -33,7 +33,6 @@ Section~\ref{sec:core-ug-reconf-saw} for more information.
 \register{SAWC}{Sleep and wake-up control register}{0x24C}
 %===============================================================================
 
-\todo{The SAWC register doesn't exist yet.}
 \emph{This register only exists on context 0.} This register contains special 
 control features for sleeping (reconfiguring to a configuration with all lane 
 groups disabled) and waking up other hardware contexts.
@@ -57,6 +56,76 @@ using these flags.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_read = 0;
+/*if (ctxt == 0) {
+    if (CFG.numContextsLog2 >= 1) {
+        
+        // Context 1.
+        if (_write[0] & _wmask[0]) {
+            cr_dcr_d_r@1 = '0'; // Clear done.
+            cr_dcr_b_r@1 = '0'; // Clear break.
+            cr_dcr_r_r@1 = '1'; // Set resume.
+        }
+        _read[0] = ~cr_dcr_b_r@1;
+        
+    }
+    if (CFG.numContextsLog2 >= 2) {
+        
+        // Context 2.
+        if (_write[1] & _wmask[1]) {
+            cr_dcr_d_r@2 = '0'; // Clear done.
+            cr_dcr_b_r@2 = '0'; // Clear break.
+            cr_dcr_r_r@2 = '1'; // Set resume.
+        }
+        _read[1] = ~cr_dcr_b_r@2;
+        
+        // Context 3.
+        if (_write[2] & _wmask[2]) {
+            cr_dcr_d_r@3 = '0'; // Clear done.
+            cr_dcr_b_r@3 = '0'; // Clear break.
+            cr_dcr_r_r@3 = '1'; // Set resume.
+        }
+        _read[2] = ~cr_dcr_b_r@3;
+        
+    }
+    if (CFG.numContextsLog2 >= 3) {
+        
+        // Context 4.
+        if (_write[3] & _wmask[3]) {
+            cr_dcr_d_r@4 = '0'; // Clear done.
+            cr_dcr_b_r@4 = '0'; // Clear break.
+            cr_dcr_r_r@4 = '1'; // Set resume.
+        }
+        _read[3] = ~cr_dcr_b_r@4;
+        
+        // Context 5.
+        if (_write[4] & _wmask[4]) {
+            cr_dcr_d_r@5 = '0'; // Clear done.
+            cr_dcr_b_r@5 = '0'; // Clear break.
+            cr_dcr_r_r@5 = '1'; // Set resume.
+        }
+        _read[4] = ~cr_dcr_b_r@5;
+        
+        // Context 6.
+        if (_write[5] & _wmask[5]) {
+            cr_dcr_d_r@6 = '0'; // Clear done.
+            cr_dcr_b_r@6 = '0'; // Clear break.
+            cr_dcr_r_r@6 = '1'; // Set resume.
+        }
+        _read[5] = ~cr_dcr_b_r@6;
+        
+        // Context 7.
+        if (_write[6] & _wmask[6]) {
+            cr_dcr_d_r@7 = '0'; // Clear done.
+            cr_dcr_b_r@7 = '0'; // Clear break.
+            cr_dcr_r_r@7 = '1'; // Set resume.
+        }
+        _read[6] = ~cr_dcr_b_r@7;
+        
+    }
+}*/
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{0}{S}

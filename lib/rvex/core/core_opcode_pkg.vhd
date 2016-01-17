@@ -137,7 +137,7 @@ package core_opcode_pkg is
   -- ##################### GENERATED FROM HERE ONWARDS ##################### --
   -- Do not remove the above line. It is used as a marker by the generator
   -- scripts.
-                                                                                -- GENERATED --
+                                                                                                     -- GENERATED --
   -----------------------------------------------------------------------------
   -- Undefined entries
   -----------------------------------------------------------------------------
@@ -147,7 +147,7 @@ package core_opcode_pkg is
     valid => "00", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
     op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '1',
     funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
-    brRegWE => '0', isLIMMH => '0', isTrap => '0'), aluCtrl => (compare => '0', -- GENERATED --
+    brRegWE => '0', isLIMMH => '0', isTrap => '0'), aluCtrl => (compare => '0',                      -- GENERATED --
     bitwiseOp => BITW_OR, op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
     intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
     divs => '0', opBrMux => PASS), branchCtrl => (isBranchInstruction => '0',
@@ -157,7 +157,7 @@ package core_opcode_pkg is
     writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
     op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
     op2sel => LOW_HALF, isMultiplyInstruction => '0')
-  );                                                                            -- GENERATED --
+  );                                                                                                 -- GENERATED --
 
   constant OPCODE_TABLE : opcodeTable_type := (
 
@@ -167,7 +167,7 @@ package core_opcode_pkg is
     98 => (
       syntax_reg => "add r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "add r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -177,7 +177,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
@@ -187,7 +187,7 @@ package core_opcode_pkg is
       syntax_reg => "sh1add r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "sh1add r#.%r1 = r#.%r2, %ih                       ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',                                 -- GENERATED --
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL1,
@@ -197,7 +197,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -207,7 +207,7 @@ package core_opcode_pkg is
       syntax_imm => "sh2add r#.%r1 = r#.%r2, %ih                       ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
-      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',  -- GENERATED --
+      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',                       -- GENERATED --
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL2,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
@@ -217,7 +217,7 @@ package core_opcode_pkg is
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',               -- GENERATED --
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',                                    -- GENERATED --
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
@@ -227,7 +227,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
-      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                           -- GENERATED --
+      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                                                -- GENERATED --
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL3,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
@@ -237,7 +237,7 @@ package core_opcode_pkg is
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                -- GENERATED --
+      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                                     -- GENERATED --
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     110 => (
@@ -247,7 +247,7 @@ package core_opcode_pkg is
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
-      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL4,        -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL4,                             -- GENERATED --
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -257,7 +257,7 @@ package core_opcode_pkg is
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')                         -- GENERATED --
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')                                              -- GENERATED --
     ),
     26 => (
       syntax_reg => "sub r#.%r1 = r#.%r3, r#.%r2                       ",
@@ -267,7 +267,7 @@ package core_opcode_pkg is
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
-      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,              -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,                                   -- GENERATED --
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
@@ -277,7 +277,7 @@ package core_opcode_pkg is
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
-    ),                                                                          -- GENERATED --
+    ),                                                                                               -- GENERATED --
     120 to 127 => (
       syntax_reg => "addcg r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3     ",
       syntax_imm => "unknown                                           ",
@@ -287,7 +287,7 @@ package core_opcode_pkg is
       brRegWE => '1', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
-      brResultMux => CARRY_OUT, unsignedOp => '1', divs => '0',                 -- GENERATED --
+      brResultMux => CARRY_OUT, unsignedOp => '1', divs => '0',                                      -- GENERATED --
       opBrMux => PASS), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -297,7 +297,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    112 to 119 => (                                                             -- GENERATED --
+    112 to 119 => (                                                                                  -- GENERATED --
       syntax_reg => "divs r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3      ",
       syntax_imm => "unknown                                           ",
       valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -307,7 +307,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL1,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => DIVS, unsignedOp => '0', divs => '1', opBrMux => PASS),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                   -- GENERATED --
+      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
@@ -317,7 +317,7 @@ package core_opcode_pkg is
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
 
-    --------------------------------------------------------------------------- -- GENERATED --
+    ---------------------------------------------------------------------------                      -- GENERATED --
     -- ALU barrel shifter instructions
     ---------------------------------------------------------------------------
     111 => (
@@ -327,7 +327,7 @@ package core_opcode_pkg is
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
-      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,                         -- GENERATED --
       op2Mux => EXTEND32, shiftLeft => '1', intResultMux => SHIFTER,
       brResultMux => PASS, unsignedOp => '1', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -337,7 +337,7 @@ package core_opcode_pkg is
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')                         -- GENERATED --
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')                                              -- GENERATED --
     ),
     24 => (
       syntax_reg => "shr r#.%r1 = r#.%r2, r#.%r3                       ",
@@ -347,7 +347,7 @@ package core_opcode_pkg is
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
-      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => SHIFTER,            -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => SHIFTER,                                 -- GENERATED --
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
@@ -357,7 +357,7 @@ package core_opcode_pkg is
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
-    ),                                                                          -- GENERATED --
+    ),                                                                                               -- GENERATED --
     25 => (
       syntax_reg => "shru r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "shru r#.%r1 = r#.%r2, %ih                         ",
@@ -367,7 +367,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => SHIFTER,
-      brResultMux => PASS, unsignedOp => '1', divs => '0', opBrMux => FALSE),   -- GENERATED --
+      brResultMux => PASS, unsignedOp => '1', divs => '0', opBrMux => FALSE),                        -- GENERATED --
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -377,7 +377,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-                                                                                -- GENERATED --
+                                                                                                     -- GENERATED --
     ---------------------------------------------------------------------------
     -- ALU bitwise instructions
     ---------------------------------------------------------------------------
@@ -387,7 +387,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
-      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                           -- GENERATED --
+      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                                                -- GENERATED --
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
@@ -397,7 +397,7 @@ package core_opcode_pkg is
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                -- GENERATED --
+      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                                     -- GENERATED --
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     100 => (
@@ -407,7 +407,7 @@ package core_opcode_pkg is
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
-      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV, -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,                      -- GENERATED --
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -417,7 +417,7 @@ package core_opcode_pkg is
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')                         -- GENERATED --
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')                                              -- GENERATED --
     ),
     105 => (
       syntax_reg => "or r#.%r1 = r#.%r2, r#.%r3                        ",
@@ -427,7 +427,7 @@ package core_opcode_pkg is
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
-      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,            -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,                                 -- GENERATED --
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
@@ -437,7 +437,7 @@ package core_opcode_pkg is
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
-    ),                                                                          -- GENERATED --
+    ),                                                                                               -- GENERATED --
     106 => (
       syntax_reg => "orc r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "orc r#.%r1 = r#.%r2, %ih                          ",
@@ -447,7 +447,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32INV,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
-      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),   -- GENERATED --
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),                        -- GENERATED --
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -457,7 +457,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    31 => (                                                                     -- GENERATED --
+    31 => (                                                                                          -- GENERATED --
       syntax_reg => "xor r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "xor r#.%r1 = r#.%r2, %ih                          ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -467,7 +467,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '0', bitwiseOp => BITW_XOR, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                   -- GENERATED --
+      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
@@ -477,7 +477,7 @@ package core_opcode_pkg is
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
 
-    --------------------------------------------------------------------------- -- GENERATED --
+    ---------------------------------------------------------------------------                      -- GENERATED --
     -- ALU single-bit instructions
     ---------------------------------------------------------------------------
     44 => (
@@ -487,7 +487,7 @@ package core_opcode_pkg is
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
-      aluCtrl => (compare => '0', bitwiseOp => SET_BIT, op1Mux => EXTEND32,     -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => SET_BIT, op1Mux => EXTEND32,                          -- GENERATED --
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -497,7 +497,7 @@ package core_opcode_pkg is
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')                         -- GENERATED --
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')                                              -- GENERATED --
     ),
     45 => (
       syntax_reg => "sbitf r#.%r1 = r#.%r2, r#.%r3                     ",
@@ -507,7 +507,7 @@ package core_opcode_pkg is
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => SET_BIT, op1Mux => EXTEND32,
-      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,            -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,                                 -- GENERATED --
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
@@ -517,7 +517,7 @@ package core_opcode_pkg is
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
-    ),                                                                          -- GENERATED --
+    ),                                                                                               -- GENERATED --
     92 => (
       syntax_reg => "tbit r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "tbit r#.%r1 = r#.%r2, %ih                         ",
@@ -527,7 +527,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
-      brResultMux => TBIT, unsignedOp => '0', divs => '0', opBrMux => FALSE),   -- GENERATED --
+      brResultMux => TBIT, unsignedOp => '0', divs => '0', opBrMux => FALSE),                        -- GENERATED --
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -537,7 +537,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    93 => (                                                                     -- GENERATED --
+    93 => (                                                                                          -- GENERATED --
       syntax_reg => "tbit b#.%b2 = r#.%r2, r#.%r3                      ",
       syntax_imm => "tbit b#.%b2 = r#.%r2, %ih                         ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -547,7 +547,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => TBIT, unsignedOp => '0', divs => '0', opBrMux => FALSE),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                   -- GENERATED --
+      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
@@ -557,7 +557,7 @@ package core_opcode_pkg is
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     94 => (
-      syntax_reg => "tbitf r#.%r1 = r#.%r2, r#.%r3                     ",       -- GENERATED --
+      syntax_reg => "tbitf r#.%r1 = r#.%r2, r#.%r3                     ",                            -- GENERATED --
       syntax_imm => "tbitf r#.%r1 = r#.%r2, %ih                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
@@ -567,7 +567,7 @@ package core_opcode_pkg is
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => TBITF, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -577,7 +577,7 @@ package core_opcode_pkg is
     ),
     95 => (
       syntax_reg => "tbitf b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "tbitf b#.%b2 = r#.%r2, %ih                        ",       -- GENERATED --
+      syntax_imm => "tbitf b#.%b2 = r#.%r2, %ih                        ",                            -- GENERATED --
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -587,7 +587,7 @@ package core_opcode_pkg is
       brResultMux => TBITF, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -597,7 +597,7 @@ package core_opcode_pkg is
 
     ---------------------------------------------------------------------------
     -- ALU boolean instructions
-    --------------------------------------------------------------------------- -- GENERATED --
+    ---------------------------------------------------------------------------                      -- GENERATED --
     90 => (
       syntax_reg => "andl r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "andl r#.%r1 = r#.%r2, %ih                         ",
@@ -607,7 +607,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
-      brResultMux => LOGIC_AND, unsignedOp => '0', divs => '0',                 -- GENERATED --
+      brResultMux => LOGIC_AND, unsignedOp => '0', divs => '0',                                      -- GENERATED --
       opBrMux => FALSE), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -617,7 +617,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    91 => (                                                                     -- GENERATED --
+    91 => (                                                                                          -- GENERATED --
       syntax_reg => "andl b#.%b2 = r#.%r2, r#.%r3                      ",
       syntax_imm => "andl b#.%b2 = r#.%r2, %ih                         ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -627,7 +627,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => LOGIC_AND, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), branchCtrl => (isBranchInstruction => '0', stop => '0', -- GENERATED --
+      opBrMux => FALSE), branchCtrl => (isBranchInstruction => '0', stop => '0',                     -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
@@ -637,7 +637,7 @@ package core_opcode_pkg is
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     88 => (
-      syntax_reg => "orl r#.%r1 = r#.%r2, r#.%r3                       ",       -- GENERATED --
+      syntax_reg => "orl r#.%r1 = r#.%r2, r#.%r3                       ",                            -- GENERATED --
       syntax_imm => "orl r#.%r1 = r#.%r2, %ih                          ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
@@ -647,7 +647,7 @@ package core_opcode_pkg is
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => LOGIC_OR, unsignedOp => '0', divs => '0',
       opBrMux => FALSE), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -657,7 +657,7 @@ package core_opcode_pkg is
     ),
     89 => (
       syntax_reg => "orl b#.%b2 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "orl b#.%b2 = r#.%r2, %ih                          ",       -- GENERATED --
+      syntax_imm => "orl b#.%b2 = r#.%r2, %ih                          ",                            -- GENERATED --
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -667,7 +667,7 @@ package core_opcode_pkg is
       brResultMux => LOGIC_OR, unsignedOp => '0', divs => '0',
       opBrMux => FALSE), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -677,7 +677,7 @@ package core_opcode_pkg is
     84 => (
       syntax_reg => "nandl r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "nandl r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -687,7 +687,7 @@ package core_opcode_pkg is
       opBrMux => FALSE), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
@@ -697,7 +697,7 @@ package core_opcode_pkg is
       syntax_reg => "nandl b#.%b2 = r#.%r2, r#.%r3                     ",
       syntax_imm => "nandl b#.%b2 = r#.%r2, %ih                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',                                 -- GENERATED --
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '1', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
@@ -707,7 +707,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -717,7 +717,7 @@ package core_opcode_pkg is
       syntax_imm => "norl r#.%r1 = r#.%r2, %ih                         ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
-      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',  -- GENERATED --
+      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',                       -- GENERATED --
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
@@ -727,7 +727,7 @@ package core_opcode_pkg is
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',               -- GENERATED --
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',                                    -- GENERATED --
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
@@ -737,7 +737,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
-      brRegWE => '1', isLIMMH => '0', isTrap => '0'),                           -- GENERATED --
+      brRegWE => '1', isLIMMH => '0', isTrap => '0'),                                                -- GENERATED --
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => LOGIC_NOR, unsignedOp => '0', divs => '0',
@@ -747,7 +747,7 @@ package core_opcode_pkg is
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                -- GENERATED --
+      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                                     -- GENERATED --
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
 
@@ -757,7 +757,7 @@ package core_opcode_pkg is
     64 => (
       syntax_reg => "cmpeq r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmpeq r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -767,7 +767,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
@@ -777,7 +777,7 @@ package core_opcode_pkg is
       syntax_reg => "cmpeq b#.%b2 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmpeq b#.%b2 = r#.%r2, %ih                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',                                 -- GENERATED --
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '1', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
@@ -787,7 +787,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -797,7 +797,7 @@ package core_opcode_pkg is
       syntax_imm => "cmpge r#.%r1 = r#.%r2, %ih                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
-      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',  -- GENERATED --
+      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',                       -- GENERATED --
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
@@ -807,7 +807,7 @@ package core_opcode_pkg is
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',               -- GENERATED --
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',                                    -- GENERATED --
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
@@ -817,7 +817,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
-      brRegWE => '1', isLIMMH => '0', isTrap => '0'),                           -- GENERATED --
+      brRegWE => '1', isLIMMH => '0', isTrap => '0'),                                                -- GENERATED --
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => CMP_GE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
@@ -827,7 +827,7 @@ package core_opcode_pkg is
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                -- GENERATED --
+      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                                     -- GENERATED --
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     68 => (
@@ -837,7 +837,7 @@ package core_opcode_pkg is
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
-      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV, -- GENERATED --
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,                      -- GENERATED --
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => CMP_GE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -847,7 +847,7 @@ package core_opcode_pkg is
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')                         -- GENERATED --
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')                                              -- GENERATED --
     ),
     69 => (
       syntax_reg => "cmpgeu b#.%b2 = r#.%r2, r#.%r3                    ",
@@ -857,7 +857,7 @@ package core_opcode_pkg is
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '1', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
-      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,               -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,                                    -- GENERATED --
       brResultMux => CMP_GE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
@@ -867,7 +867,7 @@ package core_opcode_pkg is
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
-    ),                                                                          -- GENERATED --
+    ),                                                                                               -- GENERATED --
     70 => (
       syntax_reg => "cmpgt r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmpgt r#.%r1 = r#.%r2, %ih                        ",
@@ -877,7 +877,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
-      brResultMux => CMP_GT, unsignedOp => '0', divs => '0', opBrMux => TRUE),  -- GENERATED --
+      brResultMux => CMP_GT, unsignedOp => '0', divs => '0', opBrMux => TRUE),                       -- GENERATED --
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -887,7 +887,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    71 => (                                                                     -- GENERATED --
+    71 => (                                                                                          -- GENERATED --
       syntax_reg => "cmpgt b#.%b2 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmpgt b#.%b2 = r#.%r2, %ih                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -897,7 +897,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => CMP_GT, unsignedOp => '0', divs => '0', opBrMux => TRUE),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                   -- GENERATED --
+      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
@@ -907,7 +907,7 @@ package core_opcode_pkg is
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     72 => (
-      syntax_reg => "cmpgtu r#.%r1 = r#.%r2, r#.%r3                    ",       -- GENERATED --
+      syntax_reg => "cmpgtu r#.%r1 = r#.%r2, r#.%r3                    ",                            -- GENERATED --
       syntax_imm => "cmpgtu r#.%r1 = r#.%r2, %ih                       ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
@@ -917,7 +917,7 @@ package core_opcode_pkg is
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => CMP_GT, unsignedOp => '1', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -927,7 +927,7 @@ package core_opcode_pkg is
     ),
     73 => (
       syntax_reg => "cmpgtu b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgtu b#.%b2 = r#.%r2, %ih                       ",       -- GENERATED --
+      syntax_imm => "cmpgtu b#.%b2 = r#.%r2, %ih                       ",                            -- GENERATED --
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -937,7 +937,7 @@ package core_opcode_pkg is
       brResultMux => CMP_GT, unsignedOp => '1', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -947,7 +947,7 @@ package core_opcode_pkg is
     74 => (
       syntax_reg => "cmple r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmple r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -957,7 +957,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
@@ -967,7 +967,7 @@ package core_opcode_pkg is
       syntax_reg => "cmple b#.%b2 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmple b#.%b2 = r#.%r2, %ih                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',                                 -- GENERATED --
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '1', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
@@ -977,7 +977,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -987,7 +987,7 @@ package core_opcode_pkg is
       syntax_imm => "cmpleu r#.%r1 = r#.%r2, %ih                       ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
-      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',  -- GENERATED --
+      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',                       -- GENERATED --
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
@@ -997,7 +997,7 @@ package core_opcode_pkg is
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',               -- GENERATED --
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',                                    -- GENERATED --
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
@@ -1007,7 +1007,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
-      brRegWE => '1', isLIMMH => '0', isTrap => '0'),                           -- GENERATED --
+      brRegWE => '1', isLIMMH => '0', isTrap => '0'),                                                -- GENERATED --
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => CMP_LE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
@@ -1017,7 +1017,7 @@ package core_opcode_pkg is
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                -- GENERATED --
+      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                                     -- GENERATED --
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     78 => (
@@ -1027,7 +1027,7 @@ package core_opcode_pkg is
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
-      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV, -- GENERATED --
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,                      -- GENERATED --
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => CMP_LT, unsignedOp => '0', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1037,7 +1037,7 @@ package core_opcode_pkg is
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')                         -- GENERATED --
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')                                              -- GENERATED --
     ),
     79 => (
       syntax_reg => "cmplt b#.%b2 = r#.%r2, r#.%r3                     ",
@@ -1047,7 +1047,7 @@ package core_opcode_pkg is
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '1', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
-      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,               -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,                                    -- GENERATED --
       brResultMux => CMP_LT, unsignedOp => '0', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
@@ -1057,7 +1057,7 @@ package core_opcode_pkg is
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
-    ),                                                                          -- GENERATED --
+    ),                                                                                               -- GENERATED --
     80 => (
       syntax_reg => "cmpltu r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "cmpltu r#.%r1 = r#.%r2, %ih                       ",
@@ -1067,7 +1067,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
-      brResultMux => CMP_LT, unsignedOp => '1', divs => '0', opBrMux => TRUE),  -- GENERATED --
+      brResultMux => CMP_LT, unsignedOp => '1', divs => '0', opBrMux => TRUE),                       -- GENERATED --
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -1077,7 +1077,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    81 => (                                                                     -- GENERATED --
+    81 => (                                                                                          -- GENERATED --
       syntax_reg => "cmpltu b#.%b2 = r#.%r2, r#.%r3                    ",
       syntax_imm => "cmpltu b#.%b2 = r#.%r2, %ih                       ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -1087,7 +1087,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => CMP_LT, unsignedOp => '1', divs => '0', opBrMux => TRUE),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                   -- GENERATED --
+      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
@@ -1097,7 +1097,7 @@ package core_opcode_pkg is
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     82 => (
-      syntax_reg => "cmpne r#.%r1 = r#.%r2, r#.%r3                     ",       -- GENERATED --
+      syntax_reg => "cmpne r#.%r1 = r#.%r2, r#.%r3                     ",                            -- GENERATED --
       syntax_imm => "cmpne r#.%r1 = r#.%r2, %ih                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
@@ -1107,7 +1107,7 @@ package core_opcode_pkg is
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
       brResultMux => CMP_NE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -1117,7 +1117,7 @@ package core_opcode_pkg is
     ),
     83 => (
       syntax_reg => "cmpne b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpne b#.%b2 = r#.%r2, %ih                        ",       -- GENERATED --
+      syntax_imm => "cmpne b#.%b2 = r#.%r2, %ih                        ",                            -- GENERATED --
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -1127,7 +1127,7 @@ package core_opcode_pkg is
       brResultMux => CMP_NE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -1137,7 +1137,7 @@ package core_opcode_pkg is
 
     ---------------------------------------------------------------------------
     -- ALU selection instructions
-    --------------------------------------------------------------------------- -- GENERATED --
+    ---------------------------------------------------------------------------                      -- GENERATED --
     56 to 63 => (
       syntax_reg => "slct r#.%r1 = b#.%b1, r#.%r2, r#.%r3              ",
       syntax_imm => "slct r#.%r1 = b#.%b1, r#.%r2, %ih                 ",
@@ -1147,7 +1147,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,
-      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),    -- GENERATED --
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),                         -- GENERATED --
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -1157,7 +1157,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    48 to 55 => (                                                               -- GENERATED --
+    48 to 55 => (                                                                                    -- GENERATED --
       syntax_reg => "slctf r#.%r1 = b#.%b1, r#.%r2, r#.%r3             ",
       syntax_imm => "slctf r#.%r1 = b#.%b1, r#.%r2, %ih                ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -1167,7 +1167,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => INVERT),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                   -- GENERATED --
+      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
@@ -1177,7 +1177,7 @@ package core_opcode_pkg is
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     101 => (
-      syntax_reg => "max r#.%r1 = r#.%r2, r#.%r3                       ",       -- GENERATED --
+      syntax_reg => "max r#.%r1 = r#.%r2, r#.%r3                       ",                            -- GENERATED --
       syntax_imm => "max r#.%r1 = r#.%r2, %ih                          ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
@@ -1187,7 +1187,7 @@ package core_opcode_pkg is
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,
       brResultMux => CMP_GE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -1197,7 +1197,7 @@ package core_opcode_pkg is
     ),
     102 => (
       syntax_reg => "maxu r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "maxu r#.%r1 = r#.%r2, %ih                         ",       -- GENERATED --
+      syntax_imm => "maxu r#.%r1 = r#.%r2, %ih                         ",                            -- GENERATED --
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -1207,7 +1207,7 @@ package core_opcode_pkg is
       brResultMux => CMP_GE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -1217,7 +1217,7 @@ package core_opcode_pkg is
     103 => (
       syntax_reg => "min r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "min r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -1227,7 +1227,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
@@ -1237,7 +1237,7 @@ package core_opcode_pkg is
       syntax_reg => "minu r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "minu r#.%r1 = r#.%r2, %ih                         ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',                                 -- GENERATED --
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
@@ -1247,7 +1247,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -1257,7 +1257,7 @@ package core_opcode_pkg is
     -- ALU type conversion instructions
     ---------------------------------------------------------------------------
     27 => (
-      syntax_reg => "sxtb r#.%r1 = r#.%r2                              ",       -- GENERATED --
+      syntax_reg => "sxtb r#.%r1 = r#.%r2                              ",                            -- GENERATED --
       syntax_imm => "unknown                                           ",
       valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
@@ -1267,7 +1267,7 @@ package core_opcode_pkg is
       op2Mux => ZERO, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -1277,7 +1277,7 @@ package core_opcode_pkg is
     ),
     28 => (
       syntax_reg => "sxth r#.%r1 = r#.%r2                              ",
-      syntax_imm => "unknown                                           ",       -- GENERATED --
+      syntax_imm => "unknown                                           ",                            -- GENERATED --
       valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -1287,7 +1287,7 @@ package core_opcode_pkg is
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -1297,7 +1297,7 @@ package core_opcode_pkg is
     29 => (
       syntax_reg => "zxtb r#.%r1 = r#.%r2                              ",
       syntax_imm => "unknown                                           ",
-      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -1307,7 +1307,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
@@ -1317,7 +1317,7 @@ package core_opcode_pkg is
       syntax_reg => "zxth r#.%r1 = r#.%r2                              ",
       syntax_imm => "unknown                                           ",
       valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',                                 -- GENERATED --
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND16,
@@ -1327,7 +1327,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -1337,7 +1337,7 @@ package core_opcode_pkg is
     -- ALU miscellaneous instructions
     ---------------------------------------------------------------------------
     96 => (
-      syntax_reg => "nop                                               ",       -- GENERATED --
+      syntax_reg => "nop                                               ",                            -- GENERATED --
       syntax_imm => "nop                                               ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '1',
@@ -1347,7 +1347,7 @@ package core_opcode_pkg is
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -1357,7 +1357,7 @@ package core_opcode_pkg is
     ),
     145 => (
       syntax_reg => "clz r#.%r1 = r#.%r2                               ",
-      syntax_imm => "unknown                                           ",       -- GENERATED --
+      syntax_imm => "unknown                                           ",                            -- GENERATED --
       valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '1', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -1367,7 +1367,7 @@ package core_opcode_pkg is
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -1377,7 +1377,7 @@ package core_opcode_pkg is
     11 => (
       syntax_reg => "movtl l#.0 = r#.%r3                               ",
       syntax_imm => "movtl l#.0 = %ih                                  ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '1', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -1387,7 +1387,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
@@ -1397,7 +1397,7 @@ package core_opcode_pkg is
       syntax_reg => "movfl r#.%r1 = l#.0                               ",
       syntax_imm => "unknown                                           ",
       valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '1', gpRegWE => '1', brFmt => '0', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '1', gpRegWE => '1', brFmt => '0', isNOP => '0',                                 -- GENERATED --
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
@@ -1407,7 +1407,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -1417,7 +1417,7 @@ package core_opcode_pkg is
       syntax_imm => "trap r#.%r2, %ih                                  ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
-      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',  -- GENERATED --
+      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',                       -- GENERATED --
       brRegWE => '0', isLIMMH => '0', isTrap => '1'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
@@ -1427,7 +1427,7 @@ package core_opcode_pkg is
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',               -- GENERATED --
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',                                    -- GENERATED --
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
@@ -1437,7 +1437,7 @@ package core_opcode_pkg is
     ---------------------------------------------------------------------------
     0 => (
       syntax_reg => "mpyll r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpyll r#.%r1 = r#.%r2, %ih                        ",       -- GENERATED --
+      syntax_imm => "mpyll r#.%r1 = r#.%r2, %ih                        ",                            -- GENERATED --
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
       funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -1447,7 +1447,7 @@ package core_opcode_pkg is
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -1457,7 +1457,7 @@ package core_opcode_pkg is
     1 => (
       syntax_reg => "mpyllu r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "mpyllu r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
       funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -1467,7 +1467,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '1',
       op1unsigned => '1', resultSel => PASS, op1sel => LOW_HALF,
@@ -1477,7 +1477,7 @@ package core_opcode_pkg is
       syntax_reg => "mpylh r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "mpylh r#.%r1 = r#.%r2, %ih                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',                                 -- GENERATED --
       funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
@@ -1487,7 +1487,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => HIGH_HALF, isMultiplyInstruction => '1')
@@ -1497,7 +1497,7 @@ package core_opcode_pkg is
       syntax_imm => "mpylhu r#.%r1 = r#.%r2, %ih                       ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
-      funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',  -- GENERATED --
+      funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',                       -- GENERATED --
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
@@ -1507,7 +1507,7 @@ package core_opcode_pkg is
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '1',               -- GENERATED --
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '1',                                    -- GENERATED --
       op1unsigned => '1', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => HIGH_HALF, isMultiplyInstruction => '1')
     ),
@@ -1517,7 +1517,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
       funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
-      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                           -- GENERATED --
+      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                                                -- GENERATED --
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
@@ -1527,7 +1527,7 @@ package core_opcode_pkg is
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => HIGH_HALF,               -- GENERATED --
+      op1unsigned => '0', resultSel => PASS, op1sel => HIGH_HALF,                                    -- GENERATED --
       op2sel => HIGH_HALF, isMultiplyInstruction => '1')
     ),
     5 => (
@@ -1537,7 +1537,7 @@ package core_opcode_pkg is
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
       funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
-      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,     -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,                          -- GENERATED --
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1547,7 +1547,7 @@ package core_opcode_pkg is
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '1',
       op1unsigned => '1', resultSel => PASS, op1sel => HIGH_HALF,
-      op2sel => HIGH_HALF, isMultiplyInstruction => '1')                        -- GENERATED --
+      op2sel => HIGH_HALF, isMultiplyInstruction => '1')                                             -- GENERATED --
     ),
     6 => (
       syntax_reg => "mpyl r#.%r1 = r#.%r2, r#.%r3                      ",
@@ -1557,7 +1557,7 @@ package core_opcode_pkg is
       funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
-      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,                -- GENERATED --
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,                                     -- GENERATED --
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
@@ -1567,7 +1567,7 @@ package core_opcode_pkg is
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => WORD, op2sel => LOW_HALF,
       isMultiplyInstruction => '1')
-    ),                                                                          -- GENERATED --
+    ),                                                                                               -- GENERATED --
     7 => (
       syntax_reg => "mpylu r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "mpylu r#.%r1 = r#.%r2, %ih                        ",
@@ -1577,7 +1577,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
-      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),    -- GENERATED --
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),                         -- GENERATED --
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -1587,7 +1587,7 @@ package core_opcode_pkg is
       op1unsigned => '1', resultSel => PASS, op1sel => WORD, op2sel => LOW_HALF,
       isMultiplyInstruction => '1')
     ),
-    8 => (                                                                      -- GENERATED --
+    8 => (                                                                                           -- GENERATED --
       syntax_reg => "mpyh r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "mpyh r#.%r1 = r#.%r2, %ih                         ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -1597,7 +1597,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                   -- GENERATED --
+      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
@@ -1607,7 +1607,7 @@ package core_opcode_pkg is
       op2sel => HIGH_HALF, isMultiplyInstruction => '1')
     ),
     9 => (
-      syntax_reg => "mpyhu r#.%r1 = r#.%r2, r#.%r3                     ",       -- GENERATED --
+      syntax_reg => "mpyhu r#.%r1 = r#.%r2, r#.%r3                     ",                            -- GENERATED --
       syntax_imm => "mpyhu r#.%r1 = r#.%r2, %ih                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
@@ -1617,7 +1617,7 @@ package core_opcode_pkg is
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -1627,7 +1627,7 @@ package core_opcode_pkg is
     ),
     10 => (
       syntax_reg => "mpyhs r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpyhs r#.%r1 = r#.%r2, %ih                        ",       -- GENERATED --
+      syntax_imm => "mpyhs r#.%r1 = r#.%r2, %ih                        ",                            -- GENERATED --
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
       funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -1637,7 +1637,7 @@ package core_opcode_pkg is
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -1647,7 +1647,7 @@ package core_opcode_pkg is
     146 => (
       syntax_reg => "mpylhus r#.%r1 = r#.%r2, r#.%r3                   ",
       syntax_imm => "mpylhus r#.%r1 = r#.%r2, %ih                      ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
       funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -1657,7 +1657,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '1',
       op1unsigned => '0', resultSel => SHR32, op1sel => WORD,
@@ -1667,7 +1667,7 @@ package core_opcode_pkg is
       syntax_reg => "mpyhhs r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "mpyhhs r#.%r1 = r#.%r2, %ih                       ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',                                 -- GENERATED --
       funcSel => MUL, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
@@ -1677,7 +1677,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => SHR16, op1sel => WORD,
       op2sel => HIGH_HALF, isMultiplyInstruction => '1')
@@ -1687,7 +1687,7 @@ package core_opcode_pkg is
     -- Memory instructions
     ---------------------------------------------------------------------------
     16 => (
-      syntax_reg => "unknown                                           ",       -- GENERATED --
+      syntax_reg => "unknown                                           ",                            -- GENERATED --
       syntax_imm => "ldw r#.%r1 = %ih[r#.%r2]                          ",
       valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
@@ -1697,7 +1697,7 @@ package core_opcode_pkg is
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
       readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -1707,7 +1707,7 @@ package core_opcode_pkg is
     ),
     17 => (
       syntax_reg => "unknown                                           ",
-      syntax_imm => "ldh r#.%r1 = %ih[r#.%r2]                          ",       -- GENERATED --
+      syntax_imm => "ldh r#.%r1 = %ih[r#.%r2]                          ",                            -- GENERATED --
       valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
       funcSel => MEM, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -1717,7 +1717,7 @@ package core_opcode_pkg is
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
       readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_HALFWORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -1727,7 +1727,7 @@ package core_opcode_pkg is
     18 => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldhu r#.%r1 = %ih[r#.%r2]                         ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
       funcSel => MEM, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -1737,7 +1737,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '1',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '1',                                  -- GENERATED --
       readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_HALFWORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
@@ -1747,7 +1747,7 @@ package core_opcode_pkg is
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldb r#.%r1 = %ih[r#.%r2]                          ",
       valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',                                 -- GENERATED --
       funcSel => MEM, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
@@ -1757,7 +1757,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
-      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_BYTE,                   -- GENERATED --
+      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_BYTE,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -1767,7 +1767,7 @@ package core_opcode_pkg is
       syntax_imm => "ldbu r#.%r1 = %ih[r#.%r2]                         ",
       valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
-      funcSel => MEM, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',  -- GENERATED --
+      funcSel => MEM, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',                       -- GENERATED --
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
@@ -1777,7 +1777,7 @@ package core_opcode_pkg is
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '1',
       readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_BYTE,
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',               -- GENERATED --
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',                                    -- GENERATED --
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
@@ -1787,7 +1787,7 @@ package core_opcode_pkg is
       valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => MEM, linkWE => '1', allBrRegsWE => '0', op3BranchRegs => '0',
-      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                           -- GENERATED --
+      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                                                -- GENERATED --
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
@@ -1797,7 +1797,7 @@ package core_opcode_pkg is
       memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
       readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                -- GENERATED --
+      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                                     -- GENERATED --
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     46 => (
@@ -1807,7 +1807,7 @@ package core_opcode_pkg is
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => MEM, linkWE => '0', allBrRegsWE => '1', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
-      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,                         -- GENERATED --
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1817,7 +1817,7 @@ package core_opcode_pkg is
       readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_BYTE,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')                         -- GENERATED --
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')                                              -- GENERATED --
     ),
     21 => (
       syntax_reg => "unknown                                           ",
@@ -1827,7 +1827,7 @@ package core_opcode_pkg is
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
-      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,              -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,                                   -- GENERATED --
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
@@ -1837,7 +1837,7 @@ package core_opcode_pkg is
       writeEnable => '1'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
-    ),                                                                          -- GENERATED --
+    ),                                                                                               -- GENERATED --
     22 => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "sth %ih[r#.%r2] = r#.%r1                          ",
@@ -1847,7 +1847,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
-      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),   -- GENERATED --
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),                        -- GENERATED --
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
@@ -1857,7 +1857,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    23 => (                                                                     -- GENERATED --
+    23 => (                                                                                          -- GENERATED --
       syntax_reg => "unknown                                           ",
       syntax_imm => "stb %ih[r#.%r2] = r#.%r1                          ",
       valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -1867,7 +1867,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                   -- GENERATED --
+      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
@@ -1877,7 +1877,7 @@ package core_opcode_pkg is
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     14 => (
-      syntax_reg => "unknown                                           ",       -- GENERATED --
+      syntax_reg => "unknown                                           ",                            -- GENERATED --
       syntax_imm => "stw %ih[r#.%r2] = l#.0                            ",
       valid => "10", datapathCtrl => (op3LinkReg => '1', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
@@ -1887,7 +1887,7 @@ package core_opcode_pkg is
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0',                   -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0',                                        -- GENERATED --
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -1897,7 +1897,7 @@ package core_opcode_pkg is
     ),
     47 => (
       syntax_reg => "unknown                                           ",
-      syntax_imm => "stbr %ih[r#.%r2]                                  ",       -- GENERATED --
+      syntax_imm => "stbr %ih[r#.%r2]                                  ",                            -- GENERATED --
       valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '1',
@@ -1907,7 +1907,7 @@ package core_opcode_pkg is
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
-      branchIfTrue => '0', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '0', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_BYTE,
       writeEnable => '1'), multiplierCtrl => (op2unsigned => '0',
@@ -1917,7 +1917,7 @@ package core_opcode_pkg is
 
     ---------------------------------------------------------------------------
     -- Branch instructions
-    --------------------------------------------------------------------------- -- GENERATED --
+    ---------------------------------------------------------------------------                      -- GENERATED --
     32 => (
       syntax_reg => "goto %bt                                          ",
       syntax_imm => "goto %bt                                          ",
@@ -1927,7 +1927,7 @@ package core_opcode_pkg is
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
-      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),    -- GENERATED --
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),                         -- GENERATED --
       branchCtrl => (isBranchInstruction => '1', stop => '0',
       branchIfFalse => '1', branchToLink => '0', link => '0',
       branchIfTrue => '1', RFI => '0'),
@@ -1937,7 +1937,7 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    33 => (                                                                     -- GENERATED --
+    33 => (                                                                                          -- GENERATED --
       syntax_reg => "igoto l#.0                                        ",
       syntax_imm => "igoto l#.0                                        ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
@@ -1947,7 +1947,7 @@ package core_opcode_pkg is
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
-      branchCtrl => (isBranchInstruction => '1', stop => '0',                   -- GENERATED --
+      branchCtrl => (isBranchInstruction => '1', stop => '0',                                        -- GENERATED --
       branchIfFalse => '1', branchToLink => '1', link => '0',
       branchIfTrue => '1', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
@@ -1957,7 +1957,7 @@ package core_opcode_pkg is
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     34 => (
-      syntax_reg => "call l#.0 = %bt                                   ",       -- GENERATED --
+      syntax_reg => "call l#.0 = %bt                                   ",                            -- GENERATED --
       syntax_imm => "call l#.0 = %bt                                   ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
@@ -1967,7 +1967,7 @@ package core_opcode_pkg is
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
       branchCtrl => (isBranchInstruction => '1', stop => '0',
-      branchIfFalse => '1', branchToLink => '0', link => '1',                   -- GENERATED --
+      branchIfFalse => '1', branchToLink => '0', link => '1',                                        -- GENERATED --
       branchIfTrue => '1', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
@@ -1977,7 +1977,7 @@ package core_opcode_pkg is
     ),
     35 => (
       syntax_reg => "icall l#.0 = l#.0                                 ",
-      syntax_imm => "icall l#.0 = l#.0                                 ",       -- GENERATED --
+      syntax_imm => "icall l#.0 = l#.0                                 ",                            -- GENERATED --
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => PCP1, linkWE => '1', allBrRegsWE => '0', op3BranchRegs => '0',
@@ -1987,7 +1987,7 @@ package core_opcode_pkg is
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
       branchCtrl => (isBranchInstruction => '1', stop => '0',
       branchIfFalse => '1', branchToLink => '1', link => '1',
-      branchIfTrue => '1', RFI => '0'),                                         -- GENERATED --
+      branchIfTrue => '1', RFI => '0'),                                                              -- GENERATED --
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
@@ -1997,7 +1997,7 @@ package core_opcode_pkg is
     36 => (
       syntax_reg => "br b#.%b3, %bt                                    ",
       syntax_imm => "br b#.%b3, %bt                                    ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',        -- GENERATED --
+      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
@@ -2007,7 +2007,7 @@ package core_opcode_pkg is
       branchCtrl => (isBranchInstruction => '1', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '1', RFI => '0'),
-      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',             -- GENERATED --
+      memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                                  -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
@@ -2017,7 +2017,7 @@ package core_opcode_pkg is
       syntax_reg => "brf b#.%b3, %bt                                   ",
       syntax_imm => "brf b#.%b3, %bt                                   ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',                                 -- GENERATED --
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
@@ -2027,7 +2027,7 @@ package core_opcode_pkg is
       branchIfFalse => '1', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -2037,7 +2037,7 @@ package core_opcode_pkg is
       syntax_imm => "return r#.1 = r#.1, %bi, l#.0                     ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '1',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
-      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',  -- GENERATED --
+      funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',                       -- GENERATED --
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
@@ -2047,7 +2047,7 @@ package core_opcode_pkg is
       branchIfTrue => '1', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',               -- GENERATED --
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',                                    -- GENERATED --
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
@@ -2057,7 +2057,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '1',
       op1LinkReg => '0', gpRegWE => '1', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
-      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                           -- GENERATED --
+      brRegWE => '0', isLIMMH => '0', isTrap => '0'),                                                -- GENERATED --
       aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
       op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
@@ -2067,7 +2067,7 @@ package core_opcode_pkg is
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                -- GENERATED --
+      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,                                     -- GENERATED --
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
     40 => (
@@ -2077,7 +2077,7 @@ package core_opcode_pkg is
       op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '0', isTrap => '0'),
-      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,     -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,                          -- GENERATED --
       op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
       branchCtrl => (isBranchInstruction => '1', stop => '1',
@@ -2087,7 +2087,7 @@ package core_opcode_pkg is
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')                         -- GENERATED --
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')                                              -- GENERATED --
     ),
 
     ---------------------------------------------------------------------------
@@ -2097,7 +2097,7 @@ package core_opcode_pkg is
       syntax_reg => "limmh %i1, %i2                                    ",
       syntax_imm => "limmh %i1, %i2                                    ",
       valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',            -- GENERATED --
+      op1LinkReg => '0', gpRegWE => '0', brFmt => '0', isNOP => '0',                                 -- GENERATED --
       funcSel => ALU, linkWE => '0', allBrRegsWE => '0', op3BranchRegs => '0',
       brRegWE => '0', isLIMMH => '1', isTrap => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
@@ -2107,7 +2107,7 @@ package core_opcode_pkg is
       branchIfFalse => '0', branchToLink => '0', link => '0',
       branchIfTrue => '0', RFI => '0'),
       memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD,                                        -- GENERATED --
       writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
@@ -2117,5 +2117,5 @@ package core_opcode_pkg is
 
 end core_opcode_pkg;
 
-package body core_opcode_pkg is                                                 -- GENERATED --
+package body core_opcode_pkg is                                                                      -- GENERATED --
 end core_opcode_pkg;

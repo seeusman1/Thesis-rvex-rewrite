@@ -97,9 +97,9 @@ entity core_cfgCtrl is
     -- enable signal triggers the update of the external register. When
     -- multiple requests are made at once, the bus first take priority, after 
     -- which the core contexts in increasing order.
-    cxreg2cfg_requestData_r     : in  rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2cfg_requestData       : in  rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
     cxreg2cfg_requestEnable     : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    gbreg2cfg_requestData_r     : in  rvex_data_type;
+    gbreg2cfg_requestData       : in  rvex_data_type;
     gbreg2cfg_requestEnable     : in  std_logic;
     
     ---------------------------------------------------------------------------
@@ -215,12 +215,6 @@ architecture Behavioral of core_cfgCtrl is
   end function;
   constant CONFIGURATION_MASK   : rvex_data_type := determineConfigMask;
   
-  -- Registers for the context and bus requests. These request signals go high
-  -- in the first cycle that the respective configuration word inputs are
-  -- valid.
-  signal contextRequestEnable_r : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal busRequestEnable_r     : std_logic;
-  
   -- This is high when any of the requestEnable inputs are high and busy_r is
   -- low.
   signal reconfigRequest        : std_logic;
@@ -296,31 +290,16 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Priority encoding among reconfiguration request inputs
   -----------------------------------------------------------------------------
-  -- Generate registers for the bus and core request signals, to align them
-  -- with the data signals timing-wise (see entity description).
-  request_regs: process (clk) is
-  begin
-    if rising_edge(clk) then
-      if reset = '1' then
-        contextRequestEnable_r <= (others => '0');
-        busRequestEnable_r <= '0';
-      elsif clkEn = '1' then
-        contextRequestEnable_r <= cxreg2cfg_requestEnable;
-        busRequestEnable_r <= gbreg2cfg_requestEnable;
-      end if;
-    end if;
-  end process;
-  
   -- Generate the reconfigRequest signal. This is just a big or gate across the
   -- request enable signals.
   reconfig_request_gen: process (
-    busy_r, contextRequestEnable_r, busRequestEnable_r
+    busy_r, cxreg2cfg_requestEnable, gbreg2cfg_requestEnable
   ) is
   begin
     if busy_r = '0' then
-      reconfigRequest <= busRequestEnable_r;
+      reconfigRequest <= gbreg2cfg_requestEnable;
       for i in 2**CFG.numContextsLog2-1 downto 0 loop
-        if contextRequestEnable_r(i) = '1' then
+        if cxreg2cfg_requestEnable(i) = '1' then
           reconfigRequest <= '1';
         end if;
       end loop;
@@ -341,7 +320,7 @@ begin -- architecture
   
   -- Generate the priority encoder for the incoming requests.
   request_priority_encoder: process (
-    contextRequestEnable_r, busRequestEnable_r
+    cxreg2cfg_requestEnable, gbreg2cfg_requestEnable
   ) is
   begin
     
@@ -351,9 +330,9 @@ begin -- architecture
     -- If there is no request from the bus, priority encode between the request
     -- signals from the contexts, giving the highest priority to the lowest
     -- indexed context.
-    if busRequestEnable_r = '0' then
+    if gbreg2cfg_requestEnable = '0' then
       for i in 2**CFG.numContextsLog2-1 downto 0 loop
-        if contextRequestEnable_r(i) = '1' then
+        if cxreg2cfg_requestEnable(i) = '1' then
           requesterID <= uint2vect(i, 4);
         end if;
       end loop;
@@ -364,7 +343,7 @@ begin -- architecture
   -- Mux between the requested configuration vectors based on the priority
   -- encoder output.
   request_mux: process (
-    requesterID, cxreg2cfg_requestData_r, gbreg2cfg_requestData_r
+    requesterID, cxreg2cfg_requestData, gbreg2cfg_requestData
   ) is
     variable sel : integer range 0 to 16;
   begin
@@ -374,9 +353,9 @@ begin -- architecture
     
     -- Select the right data signal.
     if sel < 2**CFG.numContextsLog2 then
-      newConfiguration <= cxreg2cfg_requestData_r(sel);
+      newConfiguration <= cxreg2cfg_requestData(sel);
     else
-      newConfiguration <= gbreg2cfg_requestData_r;
+      newConfiguration <= gbreg2cfg_requestData;
     end if;
     
   end process;

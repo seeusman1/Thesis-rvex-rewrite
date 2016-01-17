@@ -2,6 +2,14 @@
 \contextInterface{}
 
 %===============================================================================
+\ifaceGroup{Misc.}
+%===============================================================================
+\ifaceSubGroup{}
+\ifaceIn{rv}{coreID}{byte}
+Core ID generic, passed as a port because of limitations in the register
+generator.
+
+%===============================================================================
 \ifaceGroup{Run control interface}
 %===============================================================================
 \ifaceSubGroup{}
@@ -100,6 +108,7 @@ capable of accepting a trap, this is set to the panic handler register instead.
 \ifaceSubGroup{}
 \ifaceInCtxt{cxplif}{trapInfo}{trapInfo}
 \ifaceInCtxt{cxplif}{trapPoint}{address}
+\ifaceInCtxt{cxplif}{trapIsDebug}{bit}
 Regular trap information. When the trap in trapInfo is active, the trap 
 information should be stored in the trap cause/arg registers. In addition, the 
 register hardware should save the current value of the control register and 
@@ -176,17 +185,14 @@ traps are ignored.
 \ifaceGroup{Interface with configuration logic}
 %===============================================================================
 \ifaceSubGroup{}
-\ifaceOutCtxt{cfg}{requestData_r}{data}{0}
+\ifaceOutCtxt{cfg}{requestData}{data}{0}
 \ifaceOutCtxt{cfg}{requestEnable}{bit}{0}
 Each nibble in the data word corresponds to a pipelane group, of which bit 3 
 specifies whether the pipelane group should be disabled (high) or enabled (low) 
 and, if low, bit 2..0 specify the context it should run on. Bits which are not 
 supported by the core (as specified in the CFG generic) should be written zero 
 or the request will be ignored (as specified by the error flag in the global 
-control register file). The enable signal is active high, and is valid one 
-clkEn'd cycle BEFORE the data vector is. This is because the enable signal is 
-connected to the bus write enable signal for the register and the data is 
-connected to the register output.
+control register file). The enable signal is active high.
 
 %===============================================================================
 \ifaceGroup{Trace control unit interface}

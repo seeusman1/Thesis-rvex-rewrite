@@ -1612,8 +1612,8 @@ value 0x80000000 returns 0 and the value 0 returns 32.
 unsigned int in = $r0.x;
 int out = 32;
 while (in) {
-in >>= 1;
-out--;
+  in >>= 1;
+  out--;
 }
 $r0.d = out;
 \end{lstlisting}

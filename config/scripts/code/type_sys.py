@@ -585,7 +585,19 @@ class Input(AccessibleType):
         return False
     
 
-class Output(AccessibleType):
+class CombinatorialOutput(AccessibleType):
+    
+    def name(self):
+        return 'combinatorial output'
+    
+    def can_read(self):
+        return False
+    
+    def can_assign(self):
+        return False
+    
+
+class Output(AccessibleType): # This behaves like a read-only register.
     
     def name(self):
         return 'output'

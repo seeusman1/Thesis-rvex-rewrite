@@ -4,12 +4,36 @@
 
 These registers hold the addresses for the hardware breakpoints and/or
 watchpoints. These registers only exist up to how many break-/watchpoints are
-design-time configured to be supported by the processor. Breakpoints are
-configured in \creg{DCR}.
+design-time configured to be supported by the processor. The functionality of
+the breakpoints is configured in \creg{DCR}. These registers are always writable
+by the debug bus, but they are only writable by the core when the E flag is
+cleared, i.e. when self-hosted debug mode is selected.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{BR\n{}}
+\declaration{}
+\declVariable{_mask}{address}{0}
+\declRegister{_r}{address}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.numBreakpoints > \n{}) {
+    
+    // Handle bus interface.
+    if (cr_dcr_e_r) {
+        _mask = _wmask_dbg;
+    } else {
+        _mask = _wmask;
+    }
+    _r = (_r & ~_mask) | (_write & _mask);
+    _read = _r;
+    
+    // Forward breakpoint to pipelanes. Note that there's an extra delay cycle
+    // for the write to propagate because we're reading from the register in a
+    // clocked process, but it doesn't really matter here.
+    cxreg2cxplif_breakpoints.addr{\n{}} = _r;
+    
+}
+\end{lstlisting}
 
 %===============================================================================
 \register{DCR}{Debug control register 1}{0x230}
@@ -35,7 +59,22 @@ Note that breakpoint information will have to be reloaded when the context is
 reset using this method.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle the debug bus writing a one to this flag.
+cxreg2rv_reset = _write & _wmask_dbg;
+
+// Set the flag if a stop instruction is encountered.
+if (!cxplif2cxreg_stall && cxplif2cxreg_stop) {
+    _r = '1';
+}
+
+_read = _r;
+\end{lstlisting}
+\connect{cxreg2rctrl_done}{_r}
 
 %-------------------------------------------------------------------------------
 \field{30}{J}
@@ -45,7 +84,20 @@ cleared when the processor jumps to it. It can thus be used as an acknowledgemen
 flag for jumping. The flag is read only.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Clear the flag if the new PC is acknowledged by the pipelanes. Setting the
+// flag is handled in the PC register implementation.
+if (!cxplif2cxreg_stall && cxplif2cxreg_overridePC_ack) {
+    _r = '0';
+}
+
+_read = _r;
+\end{lstlisting}
+\connect{cxreg2cxplif_overridePC}{_r}
 
 %-------------------------------------------------------------------------------
 \field{28}{I}
@@ -58,6 +110,15 @@ affected by a context reset; it is only reset when the entire core is reset.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+
+// Clear the E flag when a one is written to this flag.
+if (_write & _wmask_dbg) {
+    cr_dcr_e_r = '0';
+}
+
+_read = ~cr_dcr_e_r;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{27}{E}
@@ -75,7 +136,27 @@ trap. Writing a one to the R or the S flag is the equivalent of \insn{RFI} for
 the external debugging system. 
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Set the E flag when a one is written to this flag.
+if (_write & _wmask_dbg) {
+    _r = '1';
+}
+
+_read = _r;
+\end{lstlisting}
+\resetImplementation{}
+\begin{lstlisting}
+
+// Prevent a context reset from affecting this register (the assignment below
+// overrides the normal reset value assignment).
+_r = _r;
+
+\end{lstlisting}
+\connect{cxreg2cxplif_extDebug}{_r}
 
 %-------------------------------------------------------------------------------
 \field{26}{R}
@@ -93,7 +174,26 @@ the triggered breakpoint in order to resume. This behavior is also used for
 single stepping; see below.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle the debug bus writing a one to this flag.
+if (_write & _wmask_dbg) {
+    _r = '1';         // Set ourselves.
+    cr_dcr_d_r = '0'; // Clear done.
+    cr_dcr_b_r = '0'; // Clear break.
+}
+
+// Clear the flag if resumption is acknowledged by the pipelanes.
+if (!cxplif2cxreg_stall && cxplif2cxreg_resuming_ack) {
+    _r = '0';
+}
+
+_read = _r;
+\end{lstlisting}
+\connect{cxreg2cxplif_resuming}{_r}
 
 %-------------------------------------------------------------------------------
 \field{25}{S}
@@ -112,7 +212,43 @@ routine through the breakpoint enable field in \creg{CCR}. This allows both an
 external debugger and the self-hosted debug system to single-step.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle the debug bus writing a one to this flag.
+if (_write & _wmask_dbg) {
+    _r = '1';         // Set ourselves.
+    cr_dcr_r_r = '1'; // Set resume.
+    cr_dcr_d_r = '0'; // Clear done.
+    cr_dcr_b_r = '0'; // Clear break.
+}
+
+// Handle the core writing a one to this flag with external debug disabled.
+if (_write & _wmask_core & ~cr_dcr_e_r) {
+    _r = '1';
+}
+
+// Handle all the pipelane events which clear this flag.
+if (!cxplif2cxreg_stall && (
+    (cxplif2cxreg_trapInfo.active & cxplif2cxreg_trapIsDebug) |
+    cxplif2cxreg_exDbgTrapInfo.active | cxplif2cxreg_stop
+)) {
+    _r = '0';
+}
+
+_read = _r;
+\end{lstlisting}
+\resetImplementation{}
+\begin{lstlisting}
+
+// Prevent a context reset from affecting this register (the assignment below
+// overrides the normal reset value assignment).
+_r = _r;
+
+\end{lstlisting}
+\connect{cxreg2cxplif_stepping}{_r}
 
 %-------------------------------------------------------------------------------
 \field{24}{B}
@@ -128,7 +264,35 @@ hardware when a debug trap occurs while the E flag is set and when a \insn{STOP}
 instruction is executed.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle the debug bus writing a one to this flag.
+if (_write & _wmask_dbg) {
+    _r = '1';         // Set ourselves.
+    cr_dcr_s_r = '0'; // Clear step.
+}
+
+// Handle all the pipelane events which set this flag.
+if (!cxplif2cxreg_stall && (
+    cxplif2cxreg_exDbgTrapInfo.active | cxplif2cxreg_stop
+)) {
+    _r = '1';
+}
+
+_read = _r;
+\end{lstlisting}
+\resetImplementation{}
+\begin{lstlisting}
+
+// Prevent a context reset from affecting this register (the assignment below
+// overrides the normal reset value assignment).
+_r = _r;
+
+\end{lstlisting}
+\connect{cxreg2cxplif_brk}{_r}
 
 %-------------------------------------------------------------------------------
 \field{23..16}{CAUSE}
@@ -138,7 +302,21 @@ This is set to the debug trap cause by hardware when the B flag is set due to a
 debug trap.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{trapCause}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask_dbg) | (_write & _wmask_dbg);
+
+// Set the register when an external debug request is active.
+if (!cxplif2cxreg_stall && cxplif2cxreg_exDbgTrapInfo.active) {
+    _r = cxplif2cxreg_exDbgTrapInfo.cause;
+}
+
+_read = _r;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{13..12}{BR3}
@@ -147,7 +325,30 @@ Breakpoint 3 control field. This field only exists if the core is design-time
 configured to support all four hardware breakpoints. See also BR0.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declVariable{_mask}{twoBit}{0}
+\declVariable{_v}{twoBit}{0}
+\declRegister{_r}{twoBit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.numBreakpoints > 3) {
+    _v = _r;
+
+    // Handle bus interface.
+    if (cr_dcr_e_r) {
+        _mask = _wmask_dbg;
+    } else {
+        _mask = _wmask;
+    }
+    _v = (_v & ~_mask) | (_write & _mask);
+    _read = _r;
+    
+    // Forward breakpoint to pipelanes.
+    cxreg2cxplif_breakpoints.cfg{3} = _r;
+    
+    _r = _v;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{9..8}{BR2}
@@ -156,7 +357,30 @@ Breakpoint 2 control field. This field only exists if the core is design-time
 configured to support at least three hardware breakpoints. See also BR0.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declVariable{_mask}{twoBit}{0}
+\declVariable{_v}{twoBit}{0}
+\declRegister{_r}{twoBit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.numBreakpoints > 2) {
+    _v = _r;
+
+    // Handle bus interface.
+    if (cr_dcr_e_r) {
+        _mask = _wmask_dbg;
+    } else {
+        _mask = _wmask;
+    }
+    _v = (_v & ~_mask) | (_write & _mask);
+    _read = _r;
+    
+    // Forward breakpoint to pipelanes.
+    cxreg2cxplif_breakpoints.cfg{2} = _r;
+    
+    _r = _v;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{5..4}{BR1}
@@ -165,7 +389,30 @@ Breakpoint 1 control field. This field only exists if the core is design-time
 configured to support at least two hardware breakpoints. See also BR0.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declVariable{_mask}{twoBit}{0}
+\declVariable{_v}{twoBit}{0}
+\declRegister{_r}{twoBit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.numBreakpoints > 1) {
+    _v = _r;
+
+    // Handle bus interface.
+    if (cr_dcr_e_r) {
+        _mask = _wmask_dbg;
+    } else {
+        _mask = _wmask;
+    }
+    _v = (_v & ~_mask) | (_write & _mask);
+    _read = _r;
+    
+    // Forward breakpoint to pipelanes.
+    cxreg2cxplif_breakpoints.cfg{1} = _r;
+    
+    _r = _v;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{1..0}{BR0}
@@ -184,7 +431,30 @@ BR$n$ = \code{11}: & \ data read/write watchpoint enabled. \\
 \end{tabularx}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declVariable{_mask}{twoBit}{0}
+\declVariable{_v}{twoBit}{0}
+\declRegister{_r}{twoBit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.numBreakpoints > 0) {
+    _v = _r;
+
+    // Handle bus interface.
+    if (cr_dcr_e_r) {
+        _mask = _wmask_dbg;
+    } else {
+        _mask = _wmask;
+    }
+    _v = (_v & ~_mask) | (_write & _mask);
+    _read = _r;
+    
+    // Forward breakpoint to pipelanes.
+    cxreg2cxplif_breakpoints.cfg{0} = _r;
+    
+    _r = _v;
+}
+\end{lstlisting}
 
 %===============================================================================
 \register{DCR2}{Debug control register 2}{0x234}
@@ -197,7 +467,6 @@ an execution result to the debug system.
 %-------------------------------------------------------------------------------
 \field{31..24}{RESULT}
 %-------------------------------------------------------------------------------
-\signed{}
 \id{RET}
 This field does not have a hardwired function. It is intended to be used to
 communicate the reason for executing a \insn{STOP} instruction to the debug
@@ -205,69 +474,33 @@ system. The default \code{_start.s} file will write the \code{main()} return
 value to this register before stopping.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\signed{}
+\reset{11111111}
 \declaration{}
 \declRegister{_r}{byte}{0xFF}
 \implementation{}
+\begin{lstlisting}
 _r = (_r & ~_wmask) | (_write & _wmask);
 _read = _r;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
-\field{15}{U}
+\field{15..8}{TRCAP}
 %-------------------------------------------------------------------------------
-\reset{*}
-Whether the core was design-time configured to be able to trace trap
-information.
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\implementation{}
-
-%-------------------------------------------------------------------------------
-\field{14}{N}
-%-------------------------------------------------------------------------------
-\reset{*}
-Whether the core was design-time configured to be able to trace memory/control
-register operations.
+\reset{*****00*}
+This field lists the tracing capabilities of the core. The bit indices in this
+byte correspond to the bit indices in the control byte (the least significant
+byte of \creg{DCR2}). If a bit is high, the feature is available.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
-
-%-------------------------------------------------------------------------------
-\field{13}{S}
-%-------------------------------------------------------------------------------
-\reset{*}
-Whether the core was design-time configured to be able to trace register writes.
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\implementation{}
-
-%-------------------------------------------------------------------------------
-\field{12}{D}
-%-------------------------------------------------------------------------------
-\reset{*}
-Whether the core was design-time configured to be able to trace cache
-performance information.
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\implementation{}
-
-%-------------------------------------------------------------------------------
-\field{11}{J}
-%-------------------------------------------------------------------------------
-\reset{*}
-Whether the core was design-time configured to be able to trace all fetched
-instructions.
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\implementation{}
-
-%-------------------------------------------------------------------------------
-\field{8}{F}
-%-------------------------------------------------------------------------------
-\reset{*}
-Whether the core was design-time configured to support tracing.
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\implementation{}
+\begin{lstlisting}
+if (CFG.traceEnable) {
+    _read = "11111001";
+} else {
+    _read = "00000000";
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{7}{T}
@@ -276,7 +509,18 @@ Setting this bit enables trap tracing if the E flag is set and the core is
 design-time configured to support it.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.traceEnable) {
+    _r = (_r & ~_wmask) | (_write & _wmask);
+    _read = _r;
+} else {
+    _read = '0';
+}
+\end{lstlisting}
+\connect{cxreg2trace_trapEn}{_r}
 
 %-------------------------------------------------------------------------------
 \field{6}{M}
@@ -285,7 +529,18 @@ Setting this bit enables memory/control register tracing if the E flag is set
 and the core is design-time configured to support it.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.traceEnable) {
+    _r = (_r & ~_wmask) | (_write & _wmask);
+    _read = _r;
+} else {
+    _read = '0';
+}
+\end{lstlisting}
+\connect{cxreg2trace_memEn}{_r}
 
 %-------------------------------------------------------------------------------
 \field{5}{R}
@@ -294,7 +549,18 @@ Setting this bit enables register write tracing if the E flag is set and the
 core is design-time configured to support it.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.traceEnable) {
+    _r = (_r & ~_wmask) | (_write & _wmask);
+    _read = _r;
+} else {
+    _read = '0';
+}
+\end{lstlisting}
+\connect{cxreg2trace_regEn}{_r}
 
 %-------------------------------------------------------------------------------
 \field{4}{C}
@@ -303,7 +569,18 @@ Setting this bit enables cache performance tracing if the E flag is set and the
 core is design-time configured to support it.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.traceEnable) {
+    _r = (_r & ~_wmask) | (_write & _wmask);
+    _read = _r;
+} else {
+    _read = '0';
+}
+\end{lstlisting}
+\connect{cxreg2trace_cacheEn}{_r}
 
 %-------------------------------------------------------------------------------
 \field{3}{I}
@@ -312,7 +589,18 @@ Setting this bit causes all fetched instructions to be traced if the E flag is
 set and the core is design-time configured to support it.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.traceEnable) {
+    _r = (_r & ~_wmask) | (_write & _wmask);
+    _read = _r;
+} else {
+    _read = '0';
+}
+\end{lstlisting}
+\connect{cxreg2trace_instrEn}{_r}
 
 %-------------------------------------------------------------------------------
 \field{0}{E}
@@ -322,5 +610,16 @@ support it. If no other bits are set, only branch origins and destinations are
 traced.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
 \implementation{}
+\begin{lstlisting}
+if (CFG.traceEnable) {
+    _r = (_r & ~_wmask) | (_write & _wmask);
+    _read = _r;
+} else {
+    _read = '0';
+}
+\end{lstlisting}
+\connect{cxreg2trace_enable}{_r}
 

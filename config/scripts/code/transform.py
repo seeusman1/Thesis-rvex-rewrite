@@ -160,7 +160,7 @@ def transform_code(code, templates, gen_values, env, source, debug=False):
                   (source, code[0][0], '\n    '.join(x[1] for x in code)))
         
         # Expand templates.
-        # TODO
+        code = expand_templates(code, templates)
         if debug:
             print('After template expansion:\n    %s\n\n' %
                   ('\n    '.join(x[1] for x in code)))
@@ -208,6 +208,31 @@ def transform_code(code, templates, gen_values, env, source, debug=False):
     
     except Exception as e:
         except_prefix(e, source)
+
+
+def expand_templates(code, templates):
+    """Performs template expansion (similar to the C preprocessor)."""
+    newcode = []
+    for origin, line in code:
+        stripped = line.strip()
+        
+        # Ignore empty lines.
+        if stripped == '':
+            continue
+        
+        # Ignore lines which start with \begin and \end.
+        if stripped.startswith('\\begin') or stripped.startswith('\\end'):
+            continue
+        
+        if stripped.startswith('\\'):
+            # TODO: templates.
+            raise CodeError(('found template command on line %s, but templates' +
+                            ' are not yet implemented.') % origin)
+        
+        # Normal line of code.
+        newcode.append((origin, line))
+    
+    return newcode
 
 
 class Resolve(Transformation):
@@ -538,7 +563,8 @@ class GenerateStmt(Transformation):
         
     def ifelse(self, node):
         node.children[0] = generate_expression_ast(node[0], Boolean())
-        node['vhdl'], node['c'] = generate_ifelse()
+        inc_else = (node.children[2]['vhdl'] != '') or (node.children[2]['c'] != '')
+        node['vhdl'], node['c'] = generate_if(inc_else)
         
     def verbatim(self, node):
         verb = []

@@ -1,5 +1,6 @@
 from __future__ import print_function
 
+import sys
 import common.interpreter
 import common.bitfields
 import copy
@@ -61,14 +62,18 @@ def parse(indir):
         'id': (1, False),            # (alternate standalone identifier)
         
         # Field declarations.
-        'declaration': (0, True),
+        'declaration':  (0, True),
         'declRegister': (3, False),  # (name, type, reset value expression)
         'declVariable': (3, False),  # (name, type, init)
         'declConstant': (3, False),  # (name, type, value)
         
         # Field implementation.
-        'implementation': (0, True, {'code': True}),
-        'resetImplementation': (0, True, {'code': True})
+        'implementation':      (0, True, {'code': True}),
+        'resetImplementation': (0, True, {'code': True}),
+        'finally':             (0, True, {'code': True}),
+        
+        # Combinatorial connections.
+        'connect':             (2, False) # (output port, expression)
         
     })
     
@@ -91,52 +96,15 @@ def parse(indir):
             ['field*']),
         
         (['field'],
-            ['reset?', 'signed?', 'id*', 'declaration?', 'implementation!', 'resetImplementation?']),
+            ['reset?', 'signed?', 'id*', 'declaration?', 'connect*',
+             'implementation!', 'resetImplementation?', 'finally?']),
         
         (['declaration'],
             ['declRegister*', 'declVariable*', 'declConstant*'])
         
     ])['subcmds']
     
-    # Construct the global constant variable environment which can be used by
-    # user code.
-    env = Environment()
-    env.declare(Object('', 'CFG', PredefinedConstant(CfgVectType())))
-    pipeline_stage_defs = ['S_FIRST', 'S_IF', 'L_IF', 'L_IF_MEM', 'S_PCP1',
-        'S_BTGT', 'S_STOP', 'S_LIMM', 'S_TRAP', 'S_RD', 'L_RD', 'S_SRD', 'S_FW',
-        'S_SFW', 'S_BR', 'S_ALU', 'L_ALU1', 'L_ALU2', 'L_ALU', 'S_MUL',
-        'L_MUL1', 'L_MUL2', 'L_MUL', 'S_MEM', 'L_MEM', 'S_BRK', 'L_BRK', 'S_WB',
-        'L_WB', 'S_SWB', 'S_LTRP', 'S_LAST']
-    for d in pipeline_stage_defs:
-        env.declare(Object('', d, PredefinedConstant(Natural())))
-    
-    # Parse global register file interface.
-    gbiface, gbenv = parse_iface('gbreg', env,
-        [cmd for cmd in cmds if cmd['cmd'][0] == 'globalInterface'])
-    result['gbiface'] = gbiface
-    result['gbenv'] = gbenv
-    
-    # Parse context register file interface.
-    cxiface, cxenv = parse_iface('cxreg', env,
-        [cmd for cmd in cmds if cmd['cmd'][0] == 'contextInterface'])
-    result['cxiface'] = cxiface
-    result['cxenv'] = cxenv
-    cxenv.set_implicit_ctxt('ctxt')
-    
-    # Add bus access "constants" to the environments. They are not actually
-    # constants but variables. They are expected by the field implementation
-    # code.
-    gbenv.declare(Object('', 'bus_writeData', PredefinedConstant(Data())))
-    gbenv.declare(Object('', 'bus_writeMaskDbg', PredefinedConstant(Data())))
-    gbenv.declare(Object('', 'bus_wordAddr', PredefinedConstant(Unsigned(gbreg_size_log2))))
-    result['gbreg_size_log2'] = gbreg_size_log2
-    
-    cxenv.declare(Object('', 'bus_writeData', PredefinedConstant(Data())))
-    cxenv.declare(Object('', 'bus_writeMaskDbg', PredefinedConstant(Data())))
-    cxenv.declare(Object('', 'bus_writeMaskCore', PredefinedConstant(Data())))
-    cxenv.declare(Object('', 'bus_wordAddr', PredefinedConstant(Unsigned(cxreg_size_log2))))
-    result['cxreg_size_log2'] = cxreg_size_log2
-    
+    # Register parsing. --------------------------------------------------------
     # Extract register commands from the command list.
     regcmds = [cmd for cmd in cmds
                if cmd['cmd'][0] in ['register', 'registergen']]
@@ -156,86 +124,92 @@ def parse(indir):
     # Generate register/field definition list for headers.
     result['defs'] = gen_defs(regdoc)
     
-    # Gather all declarations and compile [reset] implementation code.
-    result['gbdecl'] = []
-    result['cxdecl'] = []
+    # Get lists of all global and all context registers together.
+    gbregs = []
+    cxregs = []
     for reg in regmap:
         if reg is None:
             continue
         if 'glob' in reg:
-            regtyp = 'gb'
+            gbregs.append(reg)
         elif 'ctxt' in reg:
-            regtyp = 'cx'
+            cxregs.append(reg)
         else:
             raise CodeError('Unknown register type for CR_%s.' % reg['mnemonic'])
-        result[regtyp + 'decl'] += gather_declarations_and_compile(
-            reg, result[regtyp + 'env'], {'gb': gbreg_size, 'cx': cxreg_size}[regtyp])
+    
+    # Code generation. ---------------------------------------------------------
+    print(' \'- compiling cregs: ', end='')
+    sys.stdout.flush()
+    
+    # Construct the global constant variable environment which can be used by
+    # user code.
+    predefined = Environment()
+    predefined.declare(Object('', 'CFG', PredefinedConstant(CfgVectType())))
+    pipeline_stage_defs = ['S_FIRST', 'S_IF', 'L_IF', 'L_IF_MEM', 'S_PCP1',
+        'S_BTGT', 'S_STOP', 'S_LIMM', 'S_TRAP', 'S_RD', 'L_RD', 'S_SRD', 'S_FW',
+        'S_SFW', 'S_BR', 'S_ALU', 'L_ALU1', 'L_ALU2', 'L_ALU', 'S_MUL',
+        'L_MUL1', 'L_MUL2', 'L_MUL', 'S_MEM', 'L_MEM', 'S_BRK', 'L_BRK', 'S_WB',
+        'L_WB', 'S_SWB', 'S_LTRP', 'S_LAST']
+    for d in pipeline_stage_defs:
+        predefined.declare(Object('', d, PredefinedConstant(Natural())))
+    
+    # Handle the global and context register files separately.
+    for mo, regs in [('gb', gbregs), ('cx', cxregs)]:
+        
+        # Gather all connect commands. We need to do this because output port
+        # which are assigned a connection in this way should not be treated as
+        # registers and should not be assignable from implementation code.
+        outconns = gather_output_connections(regs)
+        result[mo + 'outconns'] = outconns
+        
+        # Parse the port interface.
+        ifacegroup = 'globalInterface' if mo == 'gb' else 'contextInterface'
+        iface, env = parse_iface(mo + 'reg', predefined,
+            [cmd for cmd in cmds if cmd['cmd'][0] == ifacegroup], outconns)
+        result[mo + 'iface'] = iface
+        result[mo + 'env'] = env
+        
+        # Add the per-context loop iterationj variable to the context-specific
+        # environment.
+        if mo == 'cx':
+            env.set_implicit_ctxt('ctxt')
+            env.declare(Object('', 'ctxt', PredefinedConstant(Natural())))
+        
+        # Construct the object environment for combinatorial output port
+        # assignments. These may use only predefined constants, the ctxt
+        # variable and registers, so we need to take the Input types out.
+        combinatorial_env = env.copy()
+        combinatorial_env.with_access_check(lambda x: not isinstance(x.atyp, Input))
+        
+        # Add bus access "constants" to the environments. They are not actually
+        # constants but variables. They are expected to be declared and assigned
+        # appropriately in the template by the field implementation code.
+        reg_size_log2 = gbreg_size_log2 if mo == 'gb' else cxreg_size_log2
+        env.declare(Object('', 'bus_writeData', PredefinedConstant(Data())))
+        env.declare(Object('', 'bus_writeMaskDbg', PredefinedConstant(Data())))
+        if mo == 'cx':
+            env.declare(Object('', 'bus_writeMaskCore', PredefinedConstant(Data())))
+        env.declare(Object('', 'bus_wordAddr', PredefinedConstant(Unsigned(reg_size_log2))))
+        result[mo + 'reg_size_log2'] = reg_size_log2
+        
+        # Gather all declarations and compile [reset] implementation code.
+        decls = []
+        for reg in regs:
+            load_declarations(reg, env, combinatorial_env,
+                              gbreg_size if mo == 'gb' else cxreg_size)
+        final_env = env.copy()
+        for reg in regs:
+            decls.extend(gather_declarations_and_compile(reg, env, final_env))
+            print('.', end='')
+            sys.stdout.flush()
+        for reg in regs:
+            compile_finally_and_outconn(reg, final_env, combinatorial_env)
+        decls = [x for x in decls if x.used or x.assigned]
+        result[mo + 'decl'] = decls
+    
+    print('')
     
     return result
-
-
-def parse_iface(unit, env, ifacecmds):
-    """Flattens the interface command tree into a list of tuples for easy code
-    output. Also does type parsing and name checking, so this might throw
-    exceptions for the user. The output is a two-tuple.
-    
-    The first entry is list of these tuples:
-    ('group', name) -> should map to the comment header for a signal group.
-    ('doc', doc)    -> should map to a bit of documentation.
-    ('space', None) -> should map to an empty line.
-    ('ob', ob)      -> maps to an input or output Object.
-    
-    The second entry is an Environment() populated with the interface objects.
-    """
-    
-    iface = []
-    for ifacecmd in ifacecmds:
-        for groupcmd in ifacecmd['subcmds']:
-            iface += [('group', groupcmd['cmd'][1])]
-            if groupcmd['doc'] != '':
-                iface += [('space', None)]
-                iface += [('doc', groupcmd['doc'])]
-            for subgroupcmd in groupcmd['subcmds']:
-                if subgroupcmd['doc'] != '':
-                    iface += [('doc', subgroupcmd['doc'])]
-                for portcmd in subgroupcmd['subcmds']:
-                    origin = portcmd['origin']
-                    
-                    # Parse type.
-                    try:
-                        typ = parse_type(portcmd['cmd'][3])
-                        if portcmd['cmd'][0] in ['ifaceInCtxt', 'ifaceOutCtxt']:
-                            typ = PerCtxt(typ)
-                        if portcmd['cmd'][0] in ['ifaceOut', 'ifaceOutCtxt']:
-                            atyp = Output(typ)
-                            init = portcmd['cmd'][4]
-                        else:
-                            atyp = Input(typ)
-                            init = None
-                    except CodeError as e:
-                        except_prefix(e, 'Type error in type %s, command \\%s{}, after line %s: ' %
-                                      (portcmd['cmd'][3], portcmd['cmd'][0], origin))
-                    
-                    # Check name.
-                    fmt = '%s2%%s_%%s' if portcmd['cmd'][0] in ['ifaceOut', 'ifaceOutCtxt'] else '%%s2%s_%%s'
-                    fmt %= unit
-                    name = fmt % (portcmd['cmd'][1], portcmd['cmd'][2])
-                    if not re.match(r'[a-zA-Z0-9][a-zA-Z0-9_]*$', name):
-                        raise CodeError('Name error in \\%s{} after line %s: invalid port name %s.' %
-                                        (portcmd['cmd'][0], origin, name))
-                    
-                    # Make the object.
-                    ob = Object('', name, atyp, origin, init)
-                    iface += [('ob', ob)]
-                    
-                iface += [('space', None)]
-    
-    env = env.copy()
-    for el in iface:
-        if el[0] == 'ob':
-            env.declare(el[1])
-    
-    return (iface, env)
 
 
 def parse_bitfields(regcmd):
@@ -308,6 +282,12 @@ def parse_bitfield(fieldcmd):
      - 'impl': list of two-tuples, where each first entry is an origin and each
        second entry is a line of implementation code.
      - 'resimpl': same as 'impl', but for the reset implementation.
+     - 'finimpl': same as 'impl', but for the \finally{} implementation.
+     - 'outconns': list of dictionaries representing combinatorial output port
+       connections, with the following keys:
+        - 'origin': same as field['origin'].
+        - 'port': the name of the output port which is to be assigned.
+        - 'expr': the expression which the port should be assigned to.
     """
 
     # Extract the trivial stuff from the \field{} command and create a
@@ -315,14 +295,16 @@ def parse_bitfield(fieldcmd):
     fcmd = fieldcmd['cmd']
     fnam = fcmd[2].strip()
     field = {
-        'defined': 'defined',
-        'range':   fcmd[1].strip(),
-        'name':    fnam,
-        'doc':     fieldcmd['doc'],
-        'origin':  fieldcmd['origin'],
-        'alt_ids': [],
-        'decl':    [],
-        'resimpl': [],
+        'defined':  'defined',
+        'range':    fcmd[1].strip(),
+        'name':     fnam,
+        'doc':      fieldcmd['doc'],
+        'origin':   fieldcmd['origin'],
+        'alt_ids':  [],
+        'decl':     [],
+        'resimpl':  [],
+        'finimpl':  [],
+        'outconns': []
     }
     
     # Parse the modifier commands.
@@ -339,7 +321,7 @@ def parse_bitfield(fieldcmd):
             
         elif mcmd[0] == 'id':
             # Add alternate ID to list.
-            field['alt_ids'] += [mcmd[1].strip()]
+            field['alt_ids'].append(mcmd[1].strip())
             
         elif mcmd[0] == 'declaration':
             # Add declarations.
@@ -353,6 +335,18 @@ def parse_bitfield(fieldcmd):
             # Add reset implementation.
             field['resimpl'] = modcmd['code']
         
+        elif mcmd[0] == 'finally':
+            # Add finally implementation.
+            field['finimpl'] = modcmd['code']
+        
+        elif mcmd[0] == 'connect':
+            # Setup port connection.
+            field['outconns'].append({
+                'origin': fieldcmd['origin'],
+                'port':   mcmd[1].strip(),
+                'expr':   mcmd[2].strip()
+            })
+            
         else:
             raise CodeError('Unimplemented field modifier command %s.' %
                             mcmd[0])
@@ -724,30 +718,110 @@ def gen_defs(regdoc):
     return defs
 
 
-def gather_declarations_and_compile(reg, env, addr_mod):
-    """Returns a list of objects representing the declarations for the given
-    register."""
+def gather_output_connections(regs):
+    """Constructs a dictionary of output port connections, with the output port
+    name in lowercase as the key. The value is the 'connect' dictionary from the
+    field. Errors are generated for duplicate assignments."""
+    outconns = {}
+    for reg in regs:
+        for field in reg['fields']:
+            if 'defined' not in field:
+                continue
+            for outconn in field['outconns']:
+                key = outconn['port'].lower()
+                if key in outconns:
+                    raise CodeError(('Multiple drivers for output port %s: ' +
+                        '\\connect{} command after line %s and ' +
+                        '\\connect{} command after line %s.') %
+                        (outconn['port'], outconns[key]['origin'], outconn['origin']))
+                outconns[key] = outconn
+    return outconns
+
+
+def parse_iface(unit, env, ifacecmds, outconns):
+    """Flattens the interface command tree into a list of tuples for easy code
+    output. Also does type parsing and name checking, so this might throw
+    exceptions for the user. The output is a two-tuple.
     
-    # Declaration list.
-    decls = []
+    The first entry is list of these tuples:
+    ('group', name) -> should map to the comment header for a signal group.
+    ('doc', doc)    -> should map to a bit of documentation.
+    ('space', None) -> should map to an empty line.
+    ('ob', ob)      -> maps to an input or output Object.
     
-    # VHDL/C implementation code for this register.
-    vhdli = []
-    ci = []
+    The second entry is an Environment() populated with the interface objects.
+    """
     
-    # VHDL/C reset implementation code for this register.
-    vhdlr = []
-    cr = []
+    iface = []
+    for ifacecmd in ifacecmds:
+        for groupcmd in ifacecmd['subcmds']:
+            iface += [('group', groupcmd['cmd'][1])]
+            if groupcmd['doc'] != '':
+                iface += [('space', None)]
+                iface += [('doc', groupcmd['doc'])]
+            for subgroupcmd in groupcmd['subcmds']:
+                if subgroupcmd['doc'] != '':
+                    iface += [('doc', subgroupcmd['doc'])]
+                for portcmd in subgroupcmd['subcmds']:
+                    origin = portcmd['origin']
+                    
+                    # Check name.
+                    fmt = '%s2%%s_%%s' if portcmd['cmd'][0] in ['ifaceOut', 'ifaceOutCtxt'] else '%%s2%s_%%s'
+                    fmt %= unit
+                    name = fmt % (portcmd['cmd'][1], portcmd['cmd'][2])
+                    if not re.match(r'[a-zA-Z0-9][a-zA-Z0-9_]*$', name):
+                        raise CodeError('Name error in \\%s{} after line %s: invalid port name %s.' %
+                                        (portcmd['cmd'][0], origin, name))
+                    
+                    # Parse type.
+                    outconndict = {}
+                    try:
+                        typ = parse_type(portcmd['cmd'][3])
+                        if portcmd['cmd'][0] in ['ifaceInCtxt', 'ifaceOutCtxt']:
+                            typ = PerCtxt(typ)
+                        if portcmd['cmd'][0] in ['ifaceOut', 'ifaceOutCtxt']:
+                            if name.lower() in outconns:
+                                atyp = CombinatorialOutput(typ)
+                                outconndict = outconns[name.lower()]
+                            else:
+                                atyp = Output(typ)
+                                init = portcmd['cmd'][4]
+                        else:
+                            atyp = Input(typ)
+                            init = None
+                    except CodeError as e:
+                        except_prefix(e, 'Type error in type %s, command \\%s{}, after line %s: ' %
+                                      (portcmd['cmd'][3], portcmd['cmd'][0], origin))
+                    
+                    # Make the object.
+                    ob = Object('', name, atyp, origin, init)
+                    outconndict['port_ob'] = ob
+                    iface += [('ob', ob)]
+                    
+                iface += [('space', None)]
     
-    # Read value for the register.
-    read_vals = []
+    # Check if all \connect{} commands actually map to an output port.
+    for key in outconns:
+        outconn = outconns[key]
+        if 'port_ob' not in outconn:
+            raise CodeError(('\'%s\' in \\connect{} command after line %s is ' +
+                'not an output port.') % (outconn['port'], outconn['origin']))
     
-    # Add the per-field stuff.
+    env = env.copy()
+    for el in iface:
+        if el[0] == 'ob':
+            env.declare(el[1])
+    
+    return (iface, env)
+
+
+def load_declarations(reg, env, combinatorial_env, addr_mod):
+    """Makes a list of declarations for each field in the given register, and
+    stores them using the 'fdecls' parameter."""
     for field in reg['fields']:
-        size = field['upper_bit'] - field['lower_bit'] + 1
         if 'defined' not in field:
-            read_vals.append('"' + '0' * size + '"')
             continue
+        size = field['upper_bit'] - field['lower_bit'] + 1
         owner = ('cr_%s_%s' % (reg['mnemonic'], field['name'])).lower()
         offset = field['lower_bit']
         field_typ = BitVector(size)
@@ -766,6 +840,7 @@ def gather_declarations_and_compile(reg, env, addr_mod):
         else:
             d('_wmask', 'bus_writeMaskDbg{0} & (bit)(bus_wordAddr == {1})')
         read_val = Object(owner, '_read', GlobalVariable(field_typ), '<internal>', '0')
+        field['read_val'] = read_val
         fdecls.append(read_val)
         
         # Add user declarations to our local list.
@@ -798,7 +873,7 @@ def gather_declarations_and_compile(reg, env, addr_mod):
                     typ = field_typ
                 else:
                     typ = parse_type(typspec)
-            except TypError as e:
+            except Exception as e:
                 raise CodeError('Error parsing type \'%s\' after line %s: %s' %
                                 (typspec, origin, str(e)))
             
@@ -818,16 +893,56 @@ def gather_declarations_and_compile(reg, env, addr_mod):
             # Construct and add the object.
             fdecls.append(Object(owner, name, atyp, origin, init))
         
-        # Make a local environment and add all declarations to it. Add only
-        # constant and register declarations to the global environment.
+        
+        # Add constant and register declarations to the environment.
+        for fdecl in fdecls:
+            if not isinstance(fdecl.atyp, Variable):
+                env.declare(fdecl)
+            if isinstance(fdecl.atyp, Register):
+                combinatorial_env.declare(fdecl)
+        
+        # Store the field declaration list and its owner.
+        field['fdeclowner'] = owner
+        field['fdecls'] = fdecls
+    
+
+def gather_declarations_and_compile(reg, env, final_env):
+    """Returns a list of objects representing the declarations for the given
+    register. Code is also generated, put in register keys
+     - 'read_vhdl', 'read_c': bitvec32 expression for the register read value.
+     - 'impl_vhdl', 'impl_c': code for the register implementation.
+     - 'resimpl_vhdl', 'resimpl_c': code for the reset implementation.
+    """
+    
+    # Declaration list.
+    decls = []
+    
+    # VHDL/C implementation code for this register.
+    vhdli = []
+    ci = []
+    
+    # VHDL/C reset implementation code for this register.
+    vhdlr = []
+    cr = []
+    
+    # Read value for the register.
+    read_vals = []
+    
+    for field_idx, field in enumerate(reg['fields']):
+        size = field['upper_bit'] - field['lower_bit'] + 1
+        if 'defined' not in field:
+            read_vals.append('"' + '0' * size + '"')
+            continue
+        owner = field['fdeclowner']
+        fdecls = field['fdecls']
+        read_val = field['read_val']
+        
+        # Compile the normal implementation.
         envi = env.copy()
         envi.set_user(owner)
         for fdecl in fdecls:
-            envi.declare(fdecl)
-            if not isinstance(fdecl.atyp, Variable):
-                env.declare(fdecl)
-        
-        # Compile the normal implementation.
+            if isinstance(fdecl.atyp, Variable):
+                envi.declare(fdecl)
         fvhdli, fci = transform_code(
             field['impl'], {}, field['gen_values'], envi,
             'In implementation of field %s: ' % owner.upper())
@@ -870,7 +985,27 @@ def gather_declarations_and_compile(reg, env, addr_mod):
         for fdecl in fdecls:
             if fdecl.used or fdecl.assigned:
                 decls.append(fdecl)
+                
+                # Define our local variables as predefined constants in the
+                # global scope, so later fields/registers and \finally{}
+                # sections can use them.
+                if isinstance(fdecl.atyp, Variable):
+                    final_env.declare(Object('', fdecl.name, PredefinedConstant(fdecl.atyp.typ)))
         
+        # Add 'core' and/or 'debug' markers if the core/debug bus can write to
+        # the register.
+        docfield = reg['doc']['fields'][field_idx]
+        if envi.lookup('_wmask')[0].used:
+            if 'ctxt' in reg:
+                docfield['core'] = 'core'
+            docfield['debug'] = 'debug'
+        if 'ctxt' in reg:
+            if envi.lookup('_wmask_core')[0].used:
+                docfield['core'] = 'core'
+        if envi.lookup('_wmask_dbg')[0].used:
+            docfield['debug'] = 'debug'
+        
+        # Handle the read value.
         if read_val.assigned:
             read_vals.append(read_val.name)
         else:
@@ -892,4 +1027,42 @@ def gather_declarations_and_compile(reg, env, addr_mod):
     return decls
 
 
+def compile_finally_and_outconn(reg, env, combenv):
+    """Generates code for the \finally{} implementations and \connect{}
+    assignments in reg. The generated \finally{} code is put in the
+    'finimpl_vhdl' and 'finimpl_c' keys in reg, the \connect{} assignment
+    statements are put in the \connect{} dictionaries as 'vhdl' and 'c'."""
+    
+    # \finally{} VHDL/C implementation code for this register.
+    vhdlf = []
+    cf = []
+    
+    for field in reg['fields']:
+        if 'defined' not in field:
+            continue
+        owner = field['fdeclowner']
+        
+        # Compile the finally implementation.
+        envf = env.copy()
+        envf.set_user(owner)
+        fvhdlf, fcf = transform_code(
+            field['finimpl'], {}, field['gen_values'], envf,
+            'In \\finally{} implementation of field %s: ' % owner.upper())
+        
+        # Append the compiled reset implementation code.
+        vhdlf.append(fvhdlf)
+        cf.append(fcf)
+        
+        # Handle the \connect{} assignment statements.
+        combenvf = combenv.copy()
+        combenvf.set_user(owner)
+        for outconn in field['outconns']:
+            outconn['vhdl'], outconn['c'] = transform_assignment(
+                outconn['port_ob'], outconn['expr'], outconn['origin'], {}, combenvf,
+                'In the \\connect{} expression for port %s: ' % outconn['port'])
+            
+    
+    # Add the compiled code to the register.
+    reg['finimpl_vhdl'] = ''.join(vhdlf)
+    reg['finimpl_c'] = ''.join(cf)
 

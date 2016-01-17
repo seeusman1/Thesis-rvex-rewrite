@@ -90,9 +90,9 @@ architecture Behavioral of core_cfgCtrl_tb is
   signal reset                       : std_logic;
   signal clk                         : std_logic;
   signal clkEn                       : std_logic;
-  signal cxreg2cfg_requestData_r     : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cfg_requestData       : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cfg_requestEnable     : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal gbreg2cfg_requestData_r     : rvex_data_type;
+  signal gbreg2cfg_requestData       : rvex_data_type;
   signal gbreg2cfg_requestEnable     : std_logic;
   signal cfg2gbreg_busy              : std_logic;
   signal cfg2gbreg_error             : std_logic;
@@ -131,9 +131,9 @@ begin
       reset                       => reset,
       clk                         => clk,
       clkEn                       => clkEn,
-      cxreg2cfg_requestData_r     => cxreg2cfg_requestData_r,
+      cxreg2cfg_requestData       => cxreg2cfg_requestData,
       cxreg2cfg_requestEnable     => cxreg2cfg_requestEnable,
-      gbreg2cfg_requestData_r     => gbreg2cfg_requestData_r,
+      gbreg2cfg_requestData       => gbreg2cfg_requestData,
       gbreg2cfg_requestEnable     => gbreg2cfg_requestEnable,
       cfg2gbreg_busy              => cfg2gbreg_busy,
       cfg2gbreg_error             => cfg2gbreg_error,
@@ -159,7 +159,7 @@ begin
   
   -- Load default values into the requests from the contexts, we're not using
   -- them in this testbench.
-  cxreg2cfg_requestData_r <= (others => (others => '0'));
+  cxreg2cfg_requestData <= (others => (others => '0'));
   cxreg2cfg_requestEnable <= (others => '0');
   
   -- Generate sync signal.
@@ -181,7 +181,7 @@ begin
     
     -- Reset everything.
     validConfigs <= (others => '0');
-    gbreg2cfg_requestData_r <= (others => '0');
+    gbreg2cfg_requestData <= (others => '0');
     gbreg2cfg_requestEnable <= '0';
     reset <= '1';
     clkEn <= '1';
@@ -221,12 +221,12 @@ begin
       
       -- Clock in the request.
       gbreg2cfg_requestEnable <= '1';
+      gbreg2cfg_requestData <= word;
       wait for 1 ps;
       clk <= '1';
       wait for 1 ps;
       clk <= '0';
       gbreg2cfg_requestEnable <= '0';
-      gbreg2cfg_requestData_r <= word;
       
       -- Send 10 clock pulses, after which reconfiguration should be complete.
       for i in 1 to 10 loop

@@ -67,7 +67,7 @@ vhdl_indentation_rules = rule_gen([
     
     # Tokens which should decrease indentation level.
     ((-1, 0), (r'\)',)),
-    ((-1, 0), (r'end(?!\w)', re.IGNORECASE)),
+    ((-1, 0), (r'end(\s+if)?(?!\w)', re.IGNORECASE)),
     
     # Tokens which should decrease indentation level only for themselves.
     ((0, -1), (r'then(?!\w)', re.IGNORECASE)),

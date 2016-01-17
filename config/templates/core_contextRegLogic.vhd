@@ -66,7 +66,7 @@ entity core_contextRegLogic is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type := rvex_cfg
+    CFG                         : rvex_generic_config_type
     
   );
   port (
@@ -184,6 +184,9 @@ begin -- architecture
         end if;
       end if;
     end process;
+    
+    @OUTPUT_CONNECTIONS
+    
   end generate;
   
 end Behavioral;

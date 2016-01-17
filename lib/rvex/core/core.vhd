@@ -630,6 +630,12 @@ architecture Behavioral of core is
   signal creg2cxreg_readEnable        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2creg_readData          : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
   
+  -- Control register misc.
+  signal imem2gbreg_affinity          : rvex_data_type;
+  signal coreID_byte                  : rvex_byte_type;
+  signal ctxtReset                    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2rv_reset               : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  
   -- Context register <-> context-pipelane interface signals.
   signal cxplif2cxreg_brWriteData     : rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_brWriteEnable   : rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
@@ -649,6 +655,7 @@ architecture Behavioral of core is
   signal cxreg2cxplif_trapHandler     : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_trapInfo        : trap_info_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_trapPoint       : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxplif2cxreg_trapIsDebug     : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_trapReturn      : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxplif2cxreg_rfi             : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cxplif_handlingDebugTrap:std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
@@ -663,11 +670,11 @@ architecture Behavioral of core is
   signal cxplif2cxreg_resuming_ack    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
   -- Context register logic <-> configuration control signals.
-  signal cxreg2cfg_requestData_r      : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2cfg_requestData        : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2cfg_requestEnable      : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
   -- Global register logic <-> configuration control signals.
-  signal gbreg2cfg_requestData_r      : rvex_data_type;
+  signal gbreg2cfg_requestData        : rvex_data_type;
   signal gbreg2cfg_requestEnable      : std_logic;
   signal cfg2gbreg_busy               : std_logic;
   signal cfg2gbreg_error              : std_logic;
@@ -1019,10 +1026,116 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the context-based control register logic
   -----------------------------------------------------------------------------
+  ctxtReset <= rctrl2rv_reset or cxreg2rv_reset;
+  coreID_byte <= std_logic_vector(to_unsigned(CORE_ID + coreID, 8));
+  trap_is_dbg_gen: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
+    cxplif2cxreg_trapIsDebug(ctxt) <=
+      rvex_isDebugTrap(cxplif2cxreg_trapInfo(ctxt));
+  end generate;
+  
   cxreg_inst: entity rvex.core_contextRegLogic
     generic map (
-      CFG                           => CFG,
-      CORE_ID                       => CORE_ID + coreID
+      CFG                           => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                         => reset_s,
+      ctxtReset                     => ctxtReset,
+      clk                           => clk,
+      clkEn                         => clkEn,
+      
+      -- Misc.
+      rv2cxreg_coreID               => coreID_byte,
+      
+      -- Run control interface.
+      cxreg2rv_reset                => cxreg2rv_reset,
+      rctrl2cxreg_resetVect         => rctrl2rv_resetVect,
+      cxreg2rctrl_done              => rv2rctrl_done,
+
+      -- Pipelane interface: misc.
+      cxplif2cxreg_stall            => cxplif2cxreg_stall,
+      cxplif2cxreg_idle             => cxplif2cxreg_idle,
+      cxplif2cxreg_sylCommit        => cxplif2cxreg_sylCommit,
+      cxplif2cxreg_sylNop           => cxplif2cxreg_sylNop,
+      cxplif2cxreg_stop             => cxplif2cxreg_stop,
+
+      -- Pipelane interface: branch/link registers.
+      cxplif2cxreg_brWriteData      => cxplif2cxreg_brWriteData,
+      cxplif2cxreg_brWriteEnable    => cxplif2cxreg_brWriteEnable,
+      cxreg2cxplif_brReadData       => cxreg2cxplif_brReadData,
+      cxplif2cxreg_linkWriteData    => cxplif2cxreg_linkWriteData,
+      cxplif2cxreg_linkWriteEnable  => cxplif2cxreg_linkWriteEnable,
+      cxreg2cxplif_linkReadData     => cxreg2cxplif_linkReadData,
+
+      -- Pipelane interface: program counter.
+      cxplif2cxreg_nextPC           => cxplif2cxreg_nextPC,
+      cxreg2cxplif_currentPC        => cxreg2cxplif_currentPC,
+      cxreg2cxplif_overridePC       => cxreg2cxplif_overridePC,
+      cxplif2cxreg_overridePC_ack   => cxplif2cxreg_overridePC_ack,
+
+      -- Pipelane interface: trap handling.
+      cxreg2cxplif_trapHandler      => cxreg2cxplif_trapHandler,
+      cxplif2cxreg_trapInfo         => cxplif2cxreg_trapInfo,
+      cxplif2cxreg_trapPoint        => cxplif2cxreg_trapPoint,
+      cxplif2cxreg_trapIsDebug      => cxplif2cxreg_trapIsDebug,
+      cxreg2cxplif_trapReturn       => cxreg2cxplif_trapReturn,
+      cxplif2cxreg_rfi              => cxplif2cxreg_rfi,
+      cxreg2cxplif_handlingDebugTrap=> cxreg2cxplif_handlingDebugTrap,
+      cxreg2cxplif_interruptEnable  => cxreg2cxplif_interruptEnable,
+      cxreg2cxplif_debugTrapEnable  => cxreg2cxplif_debugTrapEnable,
+
+      -- Pipelane interface: external debug control signals.
+      cxreg2cxplif_breakpoints      => cxreg2cxplif_breakpoints,
+      cxreg2cxplif_extDebug         => cxreg2cxplif_extDebug,
+      cxplif2cxreg_exDbgTrapInfo    => cxplif2cxreg_exDbgTrapInfo,
+      cxreg2cxplif_brk              => cxreg2cxplif_brk,
+      cxreg2cxplif_stepping         => cxreg2cxplif_stepping,
+      cxreg2cxplif_resuming         => cxreg2cxplif_resuming,
+      cxplif2cxreg_resuming_ack     => cxplif2cxreg_resuming_ack,
+
+      -- Interface with configuration logic.
+      cxreg2cfg_requestData         => cxreg2cfg_requestData,
+      cxreg2cfg_requestEnable       => cxreg2cfg_requestEnable,
+
+      -- Trace control unit interface.
+      cxreg2trace_enable            => cxreg2trace_enable,
+      cxreg2trace_trapEn            => cxreg2trace_trapEn,
+      cxreg2trace_memEn             => cxreg2trace_memEn,
+      cxreg2trace_regEn             => cxreg2trace_regEn,
+      cxreg2trace_cacheEn           => cxreg2trace_cacheEn,
+      cxreg2trace_instrEn           => cxreg2trace_instrEn,
+
+      -- Interface with the control registers and bus logic.
+      creg2cxreg_addr               => creg2cxreg_addr,
+      creg2cxreg_origin             => creg2cxreg_origin,
+      creg2cxreg_writeEnable        => creg2cxreg_writeEnable,
+      creg2cxreg_writeMask          => creg2cxreg_writeMask,
+      creg2cxreg_writeData          => creg2cxreg_writeData,
+      creg2cxreg_readEnable         => creg2cxreg_readEnable,
+      cxreg2creg_readData           => cxreg2creg_readData
+      
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the global (common to all contexts) control register logic
+  -----------------------------------------------------------------------------
+  unpack_affinity: process (imem2rv_affinity) is
+    constant n: natural := CFG.numLaneGroupsLog2;
+    variable aff: rvex_data_type;
+  begin
+    aff := (others => '0');
+    for g in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+      aff(g*4+n-1 downto g*4) := imem2rv_affinity(g*n+n-1 downto g*n);
+    end loop;
+    imem2gbreg_affinity <= aff;
+  end process;
+  
+  gbreg_inst: entity rvex.core_globalRegLogic
+    generic map (
+      CFG                           => CFG
+      --CORE_ID                       => CORE_ID + coreID,
+      --PLATFORM_TAG                  => PLATFORM_TAG
     )
     port map (
       
@@ -1031,83 +1144,20 @@ begin -- architecture
       clk                           => clk,
       clkEn                         => clkEn,
       
-      -- Interface with the control registers and bus logic.
-      creg2cxreg_addr               => creg2cxreg_addr,
-      creg2cxreg_origin             => creg2cxreg_origin,
-      creg2cxreg_writeEnable        => creg2cxreg_writeEnable,
-      creg2cxreg_writeMask          => creg2cxreg_writeMask,
-      creg2cxreg_writeData          => creg2cxreg_writeData,
-      creg2cxreg_readEnable         => creg2cxreg_readEnable,
-      cxreg2creg_readData           => cxreg2creg_readData,
-      
-      -- Run control interface.
-      rctrl2cxreg_reset             => rctrl2rv_reset,
-      rctrl2cxreg_resetVect         => rctrl2rv_resetVect,
-      cxreg2rctrl_done              => rv2rctrl_done,
-      
-      -- Pipelane interface.
-      cxplif2cxreg_stall            => cxplif2cxreg_stall,
-      cxplif2cxreg_idle             => cxplif2cxreg_idle,
-      cxplif2cxreg_sylCommit        => cxplif2cxreg_sylCommit,
-      cxplif2cxreg_sylNop           => cxplif2cxreg_sylNop,
-      cxplif2cxreg_stop             => cxplif2cxreg_stop,
-      cxplif2cxreg_brWriteData      => cxplif2cxreg_brWriteData,
-      cxplif2cxreg_brWriteEnable    => cxplif2cxreg_brWriteEnable,
-      cxreg2cxplif_brReadData       => cxreg2cxplif_brReadData,
-      cxplif2cxreg_linkWriteData    => cxplif2cxreg_linkWriteData,
-      cxplif2cxreg_linkWriteEnable  => cxplif2cxreg_linkWriteEnable,
-      cxreg2cxplif_linkReadData     => cxreg2cxplif_linkReadData,
-      cxplif2cxreg_nextPC           => cxplif2cxreg_nextPC,
-      cxreg2cxplif_currentPC        => cxreg2cxplif_currentPC,
-      cxreg2cxplif_overridePC       => cxreg2cxplif_overridePC,
-      cxplif2cxreg_overridePC_ack   => cxplif2cxreg_overridePC_ack,
-      cxreg2cxplif_trapHandler      => cxreg2cxplif_trapHandler,
-      cxplif2cxreg_trapInfo         => cxplif2cxreg_trapInfo,
-      cxplif2cxreg_trapPoint        => cxplif2cxreg_trapPoint,
-      cxreg2cxplif_trapReturn       => cxreg2cxplif_trapReturn,
-      cxplif2cxreg_rfi              => cxplif2cxreg_rfi,
-      cxreg2cxplif_handlingDebugTrap=> cxreg2cxplif_handlingDebugTrap,
-      cxreg2cxplif_interruptEnable  => cxreg2cxplif_interruptEnable,
-      cxreg2cxplif_debugTrapEnable  => cxreg2cxplif_debugTrapEnable,
-      cxreg2cxplif_breakpoints      => cxreg2cxplif_breakpoints,
-      cxreg2cxplif_extDebug         => cxreg2cxplif_extDebug,
-      cxplif2cxreg_exDbgTrapInfo    => cxplif2cxreg_exDbgTrapInfo,
-      cxreg2cxplif_brk              => cxreg2cxplif_brk,
-      cxreg2cxplif_stepping         => cxreg2cxplif_stepping,
-      cxreg2cxplif_resuming         => cxreg2cxplif_resuming,
-      cxplif2cxreg_resuming_ack     => cxplif2cxreg_resuming_ack,
+      -- Run control.
+      gbreg2rv_reset                => gbreg2rv_reset,
       
       -- Interface with configuration logic.
-      cxreg2cfg_requestData_r       => cxreg2cfg_requestData_r,
-      cxreg2cfg_requestEnable       => cxreg2cfg_requestEnable,
-      
-      -- Trace control unit interface.
-      cxreg2trace_enable            => cxreg2trace_enable,
-      cxreg2trace_trapEn            => cxreg2trace_trapEn,
-      cxreg2trace_memEn             => cxreg2trace_memEn,
-      cxreg2trace_regEn             => cxreg2trace_regEn,
-      cxreg2trace_cacheEn           => cxreg2trace_cacheEn,
-      cxreg2trace_instrEn           => cxreg2trace_instrEn
-      
-    );
-  
-  -----------------------------------------------------------------------------
-  -- Instantiate the global (common to all contexts) control register logic
-  -----------------------------------------------------------------------------
-  gbreg_inst: entity rvex.core_globalRegLogic
-    generic map (
-      CFG                           => CFG,
-      CORE_ID                       => CORE_ID + coreID,
-      PLATFORM_TAG                  => PLATFORM_TAG
-    )
-    port map (
-      
-      -- System control.
-      resetIn                       => reset_s,
-      resetOut                      => gbreg2rv_reset,
-      clk                           => clk,
-      clkEn                         => clkEn,
-      
+      gbreg2cfg_requestData         => gbreg2cfg_requestData,
+      gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
+      cfg2gbreg_currentCfg          => cfg2any_configWord,
+      cfg2gbreg_busy                => cfg2gbreg_busy,
+      cfg2gbreg_error               => cfg2gbreg_error,
+      cfg2gbreg_requesterID         => cfg2gbreg_requesterID,
+
+      -- Interface with memory.
+      imem2gbreg_affinity           => imem2gbreg_affinity,
+
       -- Debug bus to global control register interface.
       creg2gbreg_dbgAddr            => creg2gbreg_dbgAddr,
       creg2gbreg_dbgWriteEnable     => creg2gbreg_dbgWriteEnable,
@@ -1115,23 +1165,12 @@ begin -- architecture
       creg2gbreg_dbgWriteData       => creg2gbreg_dbgWriteData,
       creg2gbreg_dbgReadEnable      => creg2gbreg_dbgReadEnable,
       gbreg2creg_dbgReadData        => gbreg2creg_dbgReadData,
-      
+
       -- Core to global control register interface.
       creg2gbreg_coreAddr           => creg2gbreg_coreAddr,
       creg2gbreg_coreReadEnable     => creg2gbreg_coreReadEnable,
-      gbreg2creg_coreReadData       => gbreg2creg_coreReadData,
-      
-      -- Interface with configuration logic.
-      gbreg2cfg_requestData_r       => gbreg2cfg_requestData_r,
-      gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
-      cfg2gbreg_currentCfg          => cfg2any_configWord,
-      cfg2gbreg_busy                => cfg2gbreg_busy,
-      cfg2gbreg_error               => cfg2gbreg_error,
-      cfg2gbreg_requesterID         => cfg2gbreg_requesterID,
-      
-      -- Interface with memory
-      imem2gbreg_affinity           => imem2rv_affinity
-      
+      gbreg2creg_coreReadData       => gbreg2creg_coreReadData
+
     );
   
   -----------------------------------------------------------------------------
@@ -1149,9 +1188,9 @@ begin -- architecture
       clkEn                         => clkEn,
       
       -- Configuration request inputs.
-      cxreg2cfg_requestData_r       => cxreg2cfg_requestData_r,
+      cxreg2cfg_requestData         => cxreg2cfg_requestData,
       cxreg2cfg_requestEnable       => cxreg2cfg_requestEnable,
-      gbreg2cfg_requestData_r       => gbreg2cfg_requestData_r,
+      gbreg2cfg_requestData         => gbreg2cfg_requestData,
       gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
       
       -- Configuration status outputs.

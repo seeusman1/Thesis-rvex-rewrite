@@ -522,7 +522,7 @@ def parser_generate():
     
     # verbatim_tokens grabs any token which isn't used to break out of a
     # verbatim environment.
-    verbatim_token = some(lambda tok: not tok.type.startswith('verb_'))
+    verbatim_token = some(lambda tok: not tok.type.startswith('verb_') and not tok.type == 'context')
     verbatim_tokens = oneplus(verbatim_token) >> ASTVerbForeign
     
     # Translated references in a verbatim environment.
