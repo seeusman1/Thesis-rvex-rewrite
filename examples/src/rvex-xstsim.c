@@ -164,5 +164,7 @@ int getchar(void) {
 
 int stop(int exit_code)
 {
-	asm volatile("stop");
+  // The HP compiler does not approve of inline assembly!
+  //asm volatile("stop");
+  while (1);
 }

@@ -21,9 +21,14 @@ endif
 DEFS += ISSUE=$(ISSUE_WIDTH)
 
 # Bundle alignment requirement. Must be 1, 2, 4 or 8 (and at most ISSUE_WIDTH).
+# Default is $(ISSUE_WIDTH) to disable stop bits.
 ifndef BUNDLE_ALIGN
-#BUNDLE_ALIGN = $(ISSUE_WIDTH)
-BUNDLE_ALIGN = 2
+BUNDLE_ALIGN = $(ISSUE_WIDTH)
+# NOTE: This was changed to 2 in ancient times for some reason. Please refrain
+# from changing the defaults in this file; they should always correspond to the
+# default core configuration ( = what you get when you configure with core_cfg()
+# without parameters). Platform specific core configurations should be changed
+# in the platform specific makefiles.
 endif
 
 # Filename to give to io.c. replace the dot (.) by an underscore here,

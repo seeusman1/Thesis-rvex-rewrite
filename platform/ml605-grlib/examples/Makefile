@@ -25,6 +25,9 @@ TARGETS = \
 # Additional things to clean.
 CLEAN = 
 
+# Core configuration.
+BUNDLE_ALIGN = 2
+
 # Include generic examples makefile.
 include $(GEN_EXAMPLES)/Makefile
 
