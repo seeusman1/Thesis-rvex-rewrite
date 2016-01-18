@@ -56,10 +56,11 @@ def parse_files(indir, cmds):
     }]
     
     groupflags = {}
-    for origin, cline in content:
+    for origin, ccline in content:
         
         # Ignore indentation, trailing whitespace and comments.
-        cline = cline.split('%')[0].rstrip()
+        ccline = ccline.rstrip()
+        cline = ccline.split('%')[0].rstrip()
         line = cline.strip()
         
         # Try to recognize commands.
@@ -76,7 +77,7 @@ def parse_files(indir, cmds):
         # If we didn't recognize a command, handle as text or code.
         if cmd_data is None:
             if 'code' in groupflags:
-                groups[-1]['code'] += [(origin, cline)]
+                groups[-1]['code'] += [(origin, ccline)]
             else:
                 groups[-1]['doc'] += cline + '\n'
             continue

@@ -43,24 +43,26 @@ Section~\ref{sec:core-ug-reconf-saw} for more information.
 \declRegister{_r}{data}{0}
 \implementation{}
 \begin{lstlisting}
-
-// Handle bus access.
-_r = (_r & ~_wmask_core) | (_write & _wmask_core);
-_read = _r;
-
-// Set the sleep flag in SAWC when this register is written to.
-if (_wmask_core[0]) {
-    cr_sawc_s_r = '1';
+if (ctxt == 0) {
+    
+    // Handle bus access.
+    _r = (_r & ~_wmask_core) | (_write & _wmask_core);
+    _read = _r;
+    
+    // Set the sleep flag in SAWC when this register is written to.
+    if (_wmask_core[0]) {
+        cr_sawc_s_r = '1';
+    }
+    
+    // Load the current configuration when the wakeup system triggers. This allows
+    // context 0 to restore the configuration which was automatically swapped out.
+    if (cfg2cxreg_wakeupAck) {
+        _r = cfg2cxreg_currentConfig;
+    }
+    
 }
-
-// Load the current configuration when the wakeup system triggers. This allows
-// context 0 to restore the configuration which was automatically swapped out.
-if (cfg2cxreg_wakeupAck) {
-    _r = cfg2cxreg_currentConfig;
-}
-
 \end{lstlisting}
-\connect{cxreg2cfg_wakeupConfig}{_r}
+\connect{cxreg2cfg_wakeupConfig}{_r@0}
 
 %===============================================================================
 \register{SAWC}{Sleep and wake-up control register}{0x24C}
@@ -90,7 +92,6 @@ using these flags.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
 \begin{lstlisting}
-_read = 0;
 if (ctxt == 0) {
     if (CFG.numContextsLog2 >= 1) {
         
@@ -171,15 +172,17 @@ Section~\ref{sec:core-ug-reconf-saw} for more information.
 \declRegister{_r}{bit}{0}
 \implementation{}
 \begin{lstlisting}
+if (ctxt == 0) {
 
-// Handle bus access.
-_r = (_r & ~_wmask_core) | (_write & _wmask_core);
-_read = _r;
+    // Handle bus access.
+    _r = (_r & ~_wmask_core) | (_write & _wmask_core);
+    _read = _r;
 
-// Clear the sleep flag when the wakeup system triggers.
-if (cfg2cxreg_wakeupAck) {
-    _r = '0';
+    // Clear the sleep flag when the wakeup system triggers.
+    if (cfg2cxreg_wakeupAck) {
+        _r = '0';
+    }
+    
 }
-
 \end{lstlisting}
-\connect{cxreg2cfg_wakeupEnable}{_r}
+\connect{cxreg2cfg_wakeupEnable}{_r@0}

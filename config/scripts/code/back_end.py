@@ -783,7 +783,7 @@ def generate_expr(operator, operands):
             cop[i] = cfmt.format(cop[i])
         
         # Generate the code.
-        return (('({0}) %s ({1})' % operator).format(*vop),
+        return (('({0}) %s ({1})' % ('mod' if operator == '%' else operator)).format(*vop),
                 ('(({0}) %s ({1}))&0x7FFFFFFFull' % operator).format(*cop),
                 Natural())
     
@@ -822,9 +822,8 @@ def generate_expr(operator, operands):
                         ('({0}) << ({1})').format(*cop),
                         typ)
             else:
-                print(typ.size)
                 return (('({0}) srl ({1})').format(*vop),
-                        ('(({0})&0x%Xull) >> ({1})' % (1<<typ.size)-1).format(*cop),
+                        ('(({0})&0x%Xull) >> ({1})' % ((1<<typ.size)-1)).format(*cop),
                         typ)
         
         else:

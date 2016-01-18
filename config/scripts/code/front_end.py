@@ -243,7 +243,7 @@ def parser_generate():
         
         # Expressions. ---------------------------------------------------------
         ('unop1',     (r'(!(?!=))|~',)),             # Level 1: unary.
-        ('binop2',    (r'[\*/%]',)),                 # Level 2: mul, div, mod.
+        ('binop2',    (r'[\*%]|(/(?![/\*]))',)),     # Level 2: mul, div, mod.
         ('binop3',    (r'[\+\-\$]',)),               # Level 3: add, sub, concat ($).
         ('binop4',    (r'(\<\<)|(\>\>)',)),          # Level 4: shifts.
         ('binop5',    (r'[\<\>](?!\?)=?',)),         # Level 5: relational.

@@ -146,7 +146,11 @@ package core_pkg is
     -- counters. Up to 7 bytes are supported. The default is 4.
     perfCountSize               : natural;
     
-    -- Enables or disables the cache performance counters.
+    -- Enables or disables the cache performance counters. When enabled, the
+    -- number of lane groups must equal the number of contexts, because the
+    -- signals from the cache blocks are mapped to the contexts directly. This
+    -- is extremely ugly, yes. The cache performance counters should really
+    -- just be in the cache.
     cachePerfCountEnable        : boolean;
     
   end record;

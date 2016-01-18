@@ -633,6 +633,7 @@ architecture Behavioral of core is
   signal coreID_byte                  : rvex_byte_type;
   signal ctxtReset                    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2rv_reset               : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal mem2cxreg_cacheStatus        : rvex_cacheStatus_array(2**CFG.numContextsLog2-1 downto 0);
   
   -- Context register <-> context-pipelane interface signals.
   signal cxplif2cxreg_brWriteData     : rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
@@ -1029,12 +1030,28 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the context-based control register logic
   -----------------------------------------------------------------------------
+  -- Generate misc. signals.
   ctxtReset <= rctrl2rv_reset or cxreg2rv_reset;
   trap_is_dbg_gen: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
     cxplif2cxreg_trapIsDebug(ctxt) <=
       rvex_isDebugTrap(cxplif2cxreg_trapInfo(ctxt));
   end generate;
   
+  -- Connect the cache status signals to cxreg if the cache performance
+  -- counters are enabled.
+  assert CFG.numLaneGroupsLog2 = CFG.numContextsLog2
+    or not CFG.cachePerfCountEnable
+    report "When the cache performance counters are enabled, the number of " &
+           "lane groups must equal the number of contexts."
+    severity failure;
+  gen_cache_perf_count_connection: if CFG.cachePerfCountEnable generate
+    mem2cxreg_cacheStatus <= mem2rv_cacheStatus;
+  end generate;
+  dont_gen_cache_perf_count_connection: if not CFG.cachePerfCountEnable generate
+    mem2cxreg_cacheStatus <= (others => RVEX_CACHE_STATUS_IDLE);
+  end generate;
+  
+  -- Instantiate.
   cxreg_inst: entity rvex.core_contextRegLogic
     generic map (
       CFG                           => CFG
@@ -1052,6 +1069,9 @@ begin -- architecture
       rctrl2cxreg_resetVect         => rctrl2rv_resetVect,
       cxreg2rctrl_done              => rv2rctrl_done,
 
+      -- Memory interface.
+      mem2cxreg_cacheStatus         => mem2cxreg_cacheStatus,
+      
       -- Pipelane interface: misc.
       cxplif2cxreg_stall            => cxplif2cxreg_stall,
       cxplif2cxreg_idle             => cxplif2cxreg_idle,

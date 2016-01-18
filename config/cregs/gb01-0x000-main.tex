@@ -13,6 +13,9 @@ a one to this flag. Writing a zero has no effect.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+gbreg2rv_reset = _wmask_dbg & _write;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{13}{E}
@@ -23,6 +26,9 @@ requested.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_read = cfg2gbreg_error;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{12}{B}
@@ -31,6 +37,9 @@ Reconfiguration busy flag. While high, reconfiguration requests are ignored.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_read = cfg2gbreg_busy;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{11..8}{RID}
@@ -43,6 +52,9 @@ Section~\ref{sec:core-ug-reconf-request} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_read = cfg2gbreg_requesterID;
+\end{lstlisting}
 
 %===============================================================================
 \register{BCRR}{Bus reconfiguration request register}{0x004}
@@ -54,7 +66,20 @@ and \ref{sec:core-ug-reconf-request} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{BCRR}
+\declaration{}
+\declRegister{_r}{data}{0}
 \implementation{}
+\begin{lstlisting}
+
+// Handle bus access.
+_r = (_r & ~_wmask_dbg) | (_write & _wmask_dbg);
+_read = _r;
+
+// Forward the write enable bit as the request flag.
+gbreg2cfg_requestEnable = _wmask_dbg[0];
+
+\end{lstlisting}
+\connect{gbreg2cfg_requestData}{_r}
 
 %===============================================================================
 \register{CC}{Current configuration register}{0x008}
@@ -66,6 +91,9 @@ Section~\ref{sec:core-ug-reconf-word} for more information.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{CC}
 \implementation{}
+\begin{lstlisting}
+_read = cfg2gbreg_currentCfg;
+\end{lstlisting}
 
 %===============================================================================
 \register{AFF}{Cache affinity register}{0x00C}
@@ -80,3 +108,7 @@ Each nibble represents a lane group. The nibble value is the context index.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{AF}
 \implementation{}
+\begin{lstlisting}
+_read = imem2gbreg_affinity;
+\end{lstlisting}
+

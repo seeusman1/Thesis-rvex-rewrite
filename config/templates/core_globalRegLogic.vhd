@@ -56,6 +56,7 @@ use rvex.core_intIface_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
 use rvex.core_trap_pkg.all;
 use rvex.core_pipeline_pkg.all;
+use rvex.core_version_pkg.all;
 
 --=============================================================================
 -- This entity contains the specifications and logic for the control registers
@@ -131,6 +132,7 @@ begin -- architecture
     variable bus_writeData     : rvex_data_type;
     variable bus_writeMaskDbg  : rvex_data_type;
     variable bus_wordAddr      : unsigned(5 downto 0);
+    variable perf_count_clear  : std_logic;
     
     -- Generated variables and constants.
     @VAR_DECL
@@ -159,6 +161,7 @@ begin -- architecture
             7 downto  0 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(0)
         );
         bus_wordAddr := unsigned(creg2gbreg_dbgAddr(7 downto 2));
+        perf_count_clear := '0';
         
         -- Generated register implementation code.
         @IMPL
@@ -169,6 +172,8 @@ begin -- architecture
       end if;
     end if;
   end process;
+  
+  @OUTPUT_CONNECTIONS
   
 end Behavioral;
 

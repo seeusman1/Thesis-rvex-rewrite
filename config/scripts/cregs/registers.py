@@ -164,6 +164,8 @@ def parse(indir):
         'L_WB', 'S_SWB', 'S_LTRP', 'S_LAST']
     for d in pipeline_stage_defs:
         predefined.declare(Object('', d, PredefinedConstant(Natural())))
+    predefined.declare(Object('', 'BRANCH_OFFS_SHIFT', PredefinedConstant(Natural())))
+    predefined.declare(Object('', 'RVEX_CORE_TAG', PredefinedConstant(BitVector(56))))
     
     # Handle the global and context register files separately.
     for mo, regs in [('gb', gbregs), ('cx', cxregs)]:
@@ -181,17 +183,17 @@ def parse(indir):
         result[mo + 'iface'] = iface
         result[mo + 'env'] = env
         
+        # Construct the object environment for combinatorial output port
+        # assignments. These may use only predefined constants registers, so
+        # we need to take the Input types out. The ctxt variable is only
+        # allowed when the assigned port exists per context.
+        combinatorial_env = env.copy()
+        combinatorial_env.with_access_check(lambda x: not isinstance(x.atyp, Input))
+        
         # Add the per-context loop iterationj variable to the context-specific
         # environment.
         if mo == 'cx':
-            env.set_implicit_ctxt('ctxt')
-            env.declare(Object('', 'ctxt', PredefinedConstant(Natural())))
-        
-        # Construct the object environment for combinatorial output port
-        # assignments. These may use only predefined constants, the ctxt
-        # variable and registers, so we need to take the Input types out.
-        combinatorial_env = env.copy()
-        combinatorial_env.with_access_check(lambda x: not isinstance(x.atyp, Input))
+            make_env_per_ctxt(env)
         
         # Add bus access "constants" to the environments. They are not actually
         # constants but variables. They are expected to be declared and assigned
@@ -203,6 +205,10 @@ def parse(indir):
             env.declare(Object('', 'bus_writeMaskCore', PredefinedConstant(Data())))
         env.declare(Object('', 'bus_wordAddr', PredefinedConstant(Unsigned(reg_size_log2))))
         result[mo + 'reg_size_log2'] = reg_size_log2
+        
+        # Add the performance counter clear global variable, used by the
+        # perfCounter commands.
+        env.declare(Object('', 'perf_count_clear', GlobalVariable(Bit())))
         
         # Gather all declarations and compile [reset] implementation code.
         decls = []
@@ -216,7 +222,7 @@ def parse(indir):
             sys.stdout.flush()
         for reg in regs:
             compile_finally_and_outconn(reg, final_env, combinatorial_env)
-        decls = [x for x in decls if x.used or x.assigned]
+        decls = [x for x in decls if x.used or x.assigned or (x.atyp.name() == 'constant')]
         result[mo + 'decl'] = decls
     
     print('')
@@ -554,9 +560,10 @@ def parse_registers(regcmds):
                     if n == 1 and byte == 3:
                         min_size = 5
                     field_n['name'] = mnem + str(byte)
+                    r = 'cr_%s_%s0_r' % (mnem, mnem)
                     read = ('<internal>', 
                         'if (CFG.perfCountSize >= %d)' % (min_size) +
-                        '  _read = cr_%s_%s0_r[%d, 8];' % (mnem, mnem, byte*8)
+                        '    _read = %s[%d, 8];' % (r, byte*8)
                     )
                     if byte == 0:
                         obs = [
@@ -571,11 +578,22 @@ def parse_registers(regcmds):
                                 'origin': '<internal>',
                                 'subcmds': []
                             })
-                        field_n['impl'].append(('<internal>', '_add_r = _add; _r = _r + _add_r;'))
+                        field_n['impl'].append(('<internal>', 
+                            '_add_r = _add;' +
+                            '_r = _r + _add_r;'))
                         field_n['impl'].append(read)
+                        field_n['finimpl'].append(('<internal>', 'if (perf_count_clear) _r = 0;'))
                     else:
                         field_n['decl'] = []
                         field_n['impl'] = [read]
+                        field_n['finimpl'] = []
+                    if field_idx == 3:
+                        field_n['impl'].append(('<internal>', 
+                            'if (_wmask[0]) {' +
+                            '    %s = 0;' % r +
+                            '    if (_write[0]) perf_count_clear = \'1\';' +
+                            '}'))
+                        
                     field_n['gen_values'] = {}
                 else:
                     gen_values = {'n': n}
@@ -1064,7 +1082,7 @@ def gather_declarations_and_compile(reg, env, final_env):
         # Add only the declarations which were used or assigned to the result
         # declaration list.
         for fdecl in fdecls:
-            if fdecl.used or fdecl.assigned:
+            if fdecl.used or fdecl.assigned or (fdecl.atyp.name() == 'constant'):
                 decls.append(fdecl)
                 
                 # Define our local variables as predefined constants in the
@@ -1138,6 +1156,9 @@ def compile_finally_and_outconn(reg, env, combenv):
         combenvf = combenv.copy()
         combenvf.set_user(owner)
         for outconn in field['outconns']:
+            if outconn['port_ob'].atyp.typ.exists_per_context():
+                make_env_per_ctxt(combenvf)
+                outconn['per_ctxt'] = True
             outconn['vhdl'], outconn['c'] = transform_assignment(
                 outconn['port_ob'], outconn['expr'], outconn['origin'], {}, combenvf,
                 'In the \\connect{} expression for port %s: ' % outconn['port'])
@@ -1146,4 +1167,10 @@ def compile_finally_and_outconn(reg, env, combenv):
     # Add the compiled code to the register.
     reg['finimpl_vhdl'] = ''.join(vhdlf)
     reg['finimpl_c'] = ''.join(cf)
+
+
+def make_env_per_ctxt(env):
+    """Adds the context loop iteration stuff to the given environment."""
+    env.set_implicit_ctxt('ctxt')
+    env.declare(Object('', 'ctxt', PredefinedConstant(Natural())))
 

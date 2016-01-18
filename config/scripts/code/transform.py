@@ -212,6 +212,13 @@ def transform_code(code, templates, gen_values, env, source, debug=False):
 
 def expand_templates(code, templates):
     """Performs template expansion (similar to the C preprocessor)."""
+    if len(code) == 0:
+        return []
+    
+    # Strip the \begin line.
+    if code[0][1].startswith('\\begin'):
+        code = code[1:]
+    
     newcode = []
     for origin, line in code:
         stripped = line.strip()
@@ -220,9 +227,9 @@ def expand_templates(code, templates):
         if stripped == '':
             continue
         
-        # Ignore lines which start with \begin and \end.
-        if stripped.startswith('\\begin') or stripped.startswith('\\end'):
-            continue
+        # Stop when we reach the \end command.
+        if stripped.startswith('\\end'):
+            break
         
         if stripped.startswith('\\'):
             # TODO: templates.

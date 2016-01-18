@@ -3,24 +3,31 @@
 \registergen{reversed(range(8))}{LIMC\n{}}{Long immediate capability register \n{}}{0x0BC}{-4}
 %===============================================================================
 
-\todo{The LIMC\n{} registers don't exist yet.}
 This group of hardwired values represent the supported \insn{LIMMH} forwarding
 routes.
 
 %-------------------------------------------------------------------------------
 \field{31..16}{BORROW\n{'$2n+1$' if n is None else str(2*n+1)}}
 %-------------------------------------------------------------------------------
-\reset{****************}
 \id{BORROW\n{'i' if n is None else str(2*n+1)}}
 \  % Force the title for this field to be generated in the documentation.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****************}
 \implementation{}
+\begin{lstlisting}
+if (CFG.limmhFromPreviousPair) {
+    _read[2*\n{} + 1] = '1';
+    _read = _read >> 2;
+}
+if (CFG.limmhFromNeighbor) {
+    _read[2*\n{}] = '1';
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{15..0}{BORROW\n{'$2n$' if n is None else str(2*n)}}
 %-------------------------------------------------------------------------------
-\reset{****************}
 \id{BORROW\n{'i' if n is None else str(2*n)}}
 
 Each bit in these fields represents a possible \insn{LIMMH} forwarding route. 
@@ -36,50 +43,88 @@ For the purpose of generic binaries, the configuration is repeated beyond the
 number of physically available lanes.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****************}
 \implementation{}
+\begin{lstlisting}
+if (CFG.limmhFromPreviousPair) {
+    _read[2*\n{}] = '1';
+    _read = _read >> 2;
+}
+if (CFG.limmhFromNeighbor) {
+    _read[2*\n{} + 1] = '1';
+}
+\end{lstlisting}
 
 %===============================================================================
 \registergen{reversed(range(4))}{SIC\n{}}{Syllable index capability register \n{}}{0x0CC}{-4}
 %===============================================================================
 
-\todo{The SIC\n{} registers don't exist yet.}
 This group of hardwired values represent the capabilities of each syllable
 within a bundle.
 
 %-------------------------------------------------------------------------------
 \field{31..24}{SYL\n{'$4n+3$' if n is None else str(4*n+3)}CAP}
 %-------------------------------------------------------------------------------
-\reset{0000***1}
 \id{SYL\n{'i' if n is None else str(4*n+3)}CAP}
 \  % Force the title for this field to be generated in the documentation.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{0000***1}
+\declaration{}
+\declConstant{_lane}{natural}{(4*\n{}+3) & ((1 << CFG.numLanesLog2) - 1)}
+\declConstant{_groupMask}{natural}{(1 << (CFG.numLanesLog2 - CFG.numLaneGroupsLog2))-1}
+\declConstant{_revindex}{natural}{_groupMask - (_lane & _groupMask)}
 \implementation{}
+\begin{lstlisting}
+_read[0] = '1';                                                /* ALU */
+_read[1] = CFG.multiplierLanes & (1 << _lane);                 /* MUL */
+_read[2] = (bit)(CFG.memLaneRevIndex == _revindex);            /* MEM */
+_read[3] = (bit)(((_lane+1) % (1<<CFG.bundleAlignLog2)) == 0); /* BR/STOP */
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{23..16}{SYL\n{'$4n+2$' if n is None else str(4*n+2)}CAP}
 %-------------------------------------------------------------------------------
-\reset{0000***1}
 \id{SYL\n{'i' if n is None else str(4*n+2)}CAP}
 \  % Force the title for this field to be generated in the documentation.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{0000***1}
+\declaration{}
+\declConstant{_lane}{natural}{(4*\n{}+2) & ((1 << CFG.numLanesLog2) - 1)}
+\declConstant{_groupMask}{natural}{(1 << (CFG.numLanesLog2 - CFG.numLaneGroupsLog2))-1}
+\declConstant{_revindex}{natural}{_groupMask - (_lane & _groupMask)}
 \implementation{}
+\begin{lstlisting}
+_read[0] = '1';                                                /* ALU */
+_read[1] = CFG.multiplierLanes & (1 << _lane);                 /* MUL */
+_read[2] = (bit)(CFG.memLaneRevIndex == _revindex);            /* MEM */
+_read[3] = (bit)(((_lane+1) % (1<<CFG.bundleAlignLog2)) == 0); /* BR/STOP */
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{15..8}{SYL\n{'$4n+1$' if n is None else str(4*n+1)}CAP}
 %-------------------------------------------------------------------------------
-\reset{0000***1}
 \id{SYL\n{'i' if n is None else str(4*n+1)}CAP}
 \  % Force the title for this field to be generated in the documentation.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{0000***1}
+\declaration{}
+\declConstant{_lane}{natural}{(4*\n{}+1) & ((1 << CFG.numLanesLog2) - 1)}
+\declConstant{_groupMask}{natural}{(1 << (CFG.numLanesLog2 - CFG.numLaneGroupsLog2))-1}
+\declConstant{_revindex}{natural}{_groupMask - (_lane & _groupMask)}
 \implementation{}
+\begin{lstlisting}
+_read[0] = '1';                                                /* ALU */
+_read[1] = CFG.multiplierLanes & (1 << _lane);                 /* MUL */
+_read[2] = (bit)(CFG.memLaneRevIndex == _revindex);            /* MEM */
+_read[3] = (bit)(((_lane+1) % (1<<CFG.bundleAlignLog2)) == 0); /* BR/STOP */
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{7..0}{SYL\n{'$4n$' if n is None else str(4*n)}CAP}
 %-------------------------------------------------------------------------------
-\reset{0000***1}
 \id{SYL\n{'i' if n is None else str(4*n)}CAP}
 
 Each bit within the field represents a functional unit or resource that is
@@ -105,7 +150,18 @@ available to syllable index $i$ within a bundle. The following encoding is used.
 repeated beyond the number of physically available lanes.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{0000***1}
+\declaration{}
+\declConstant{_lane}{natural}{(4*\n{}+0) & ((1 << CFG.numLanesLog2) - 1)}
+\declConstant{_groupMask}{natural}{(1 << (CFG.numLanesLog2 - CFG.numLaneGroupsLog2))-1}
+\declConstant{_revindex}{natural}{_groupMask - (_lane & _groupMask)}
 \implementation{}
+\begin{lstlisting}
+_read[0] = '1';                                                /* ALU */
+_read[1] = CFG.multiplierLanes & (1 << _lane);                 /* MUL */
+_read[2] = (bit)(CFG.memLaneRevIndex == _revindex);            /* MEM */
+_read[3] = (bit)(((_lane+1) % (1<<CFG.bundleAlignLog2)) == 0); /* BR/STOP */
+\end{lstlisting}
 
 %===============================================================================
 \register{GPS1}{General purpose register delay register B}{0x0D0}
@@ -117,85 +173,161 @@ This register is reserved for future expansion.
 \register{GPS0}{General purpose register delay register A}{0x0D4}
 %===============================================================================
 
-\todo{The GPS$n$ registers don't exist yet.}
 This register lists the key pipeline stages in which the core appears to read
 from and write to the general purpose register file. Forwarding is taken into
 consideration, so the core may not actually write to the register file in the
 listed stages, but from the perspective of the software it seems to.
 
-From these values, the required number of bundles between an instruction that
-writes to a general purpose register and an instruction that reads from one can
-be determined, being $stage_{commit} - stage_{read} - 1$.
+From these values, the required number of bundles \emph{between} an instruction
+that writes to a general purpose register and an instruction that reads from one
+can be determined, being $stage_{commit} - stage_{read} - 1$.
 
 %-------------------------------------------------------------------------------
 \field{27..24}{MEMAR}
 %-------------------------------------------------------------------------------
-\reset{****}
-Hardwired to the stage in which the memory unit reads its address operands from
-the general purpose registers.
+Hardwired to the stage in which the memory unit appears to read its address
+operands from the general purpose registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (S_ALU < S_FW) {
+        _read = S_ALU;
+    } else {
+        _read = S_FW;
+    }
+} else {
+    _read = S_RD;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{23..20}{MEMDC}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the memory unit appears to commit the data
 loaded from memory to the general purpose registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (L_MEM == 0) {
+        _read = S_MEM + 1;
+    } else {
+        _read = S_MEM + L_MEM;
+    }
+} else {
+    _read = S_WB + L_WB;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{19..16}{MEMDR}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the memory unit appears to read the data to be
 stored to memory from the general purpose registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (S_MEM < S_FW) {
+        _read = S_MEM;
+    } else {
+        _read = S_FW;
+    }
+} else {
+    _read = S_RD;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{15..12}{MULC}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the multiplier appears to commit its result to
 the general purpose registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (L_MUL == 0) {
+        _read = S_MUL + 1;
+    } else {
+        _read = S_MUL + L_MUL;
+    }
+} else {
+    _read = S_WB + L_WB;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{11..8}{MULR}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the multiplier appears to read its operands from
 the general purpose registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (S_MUL < S_FW) {
+        _read = S_MUL;
+    } else {
+        _read = S_FW;
+    }
+} else {
+    _read = S_RD;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{7..4}{ALUC}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the ALU appears to commit its result to the
 general purpose registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (L_ALU == 0) {
+        _read = S_ALU + 1;
+    } else {
+        _read = S_ALU + L_ALU;
+    }
+} else {
+    _read = S_WB + L_WB;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{3..0}{ALUR}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the ALU appears to read its operands from the
 general purpose registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (S_ALU < S_FW) {
+        _read = S_ALU;
+    } else {
+        _read = S_FW;
+    }
+} else {
+    _read = S_RD;
+}
+\end{lstlisting}
 
 %===============================================================================
 \register{SPS1}{Special delay register B}{0x0D8}
@@ -207,7 +339,6 @@ This register is reserved for future expansion.
 \register{SPS0}{Special delay register A}{0x0DC}
 %===============================================================================
 
-\todo{The SPS$n$ registers don't exist yet.}
 This register serves a similar purpose as \creg{GPS0}, but instead of being only
 for the general purpose registers, these values represents the delay for branch
 registers, the link register and memory.
@@ -215,47 +346,74 @@ registers, the link register and memory.
 %-------------------------------------------------------------------------------
 \field{31..28}{MEMMC}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the memory unit actually commits the data from
 a store instruction to memory.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+_read = S_MEM + L_MEM;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{27..24}{MEMMR}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the memory unit actually reads the data for a
 load operation from memory.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+_read = S_MEM;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{23..20}{MEMDC}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the memory unit appears to commit the data
 loaded from memory to the link and branch registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (L_MEM == 0) {
+        _read = S_MEM + 1;
+    } else {
+        _read = S_MEM + L_MEM;
+    }
+} else {
+    _read = S_SWB;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{19..16}{MEMDR}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the memory unit appears to read the data to be
 stored to memory from the link and branch registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (S_MEM < S_SFW) {
+        _read = S_MEM;
+    } else {
+        _read = S_SFW;
+    }
+} else {
+    _read = S_SRD;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{15..12}{BRC}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the branch unit appears to commit the new
 program counter. This thus represents the number of branch delay slots. The next
 instruction is requested in stage 1 and its PC is forwarded combinatorially,
@@ -264,37 +422,74 @@ processor does not actually execute its branch delay slots; it is invalidated
 when a branch is taken.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+_read = S_BR;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{11..8}{BRR}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the branch unit appears to read its operands 
 from the branch and link registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (S_BR < S_SFW) {
+        _read = S_BR;
+    } else {
+        _read = S_SFW;
+    }
+} else {
+    _read = S_SRD;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{7..4}{ALUC}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the ALU appears to commit its result to the
 branch and link registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (L_ALU == 0) {
+        _read = S_ALU + 1;
+    } else {
+        _read = S_ALU + L_ALU;
+    }
+} else {
+    _read = S_SWB;
+}
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{3..0}{ALUR}
 %-------------------------------------------------------------------------------
-\reset{****}
 Hardwired to the stage in which the ALU appears to read its operands from the
 branch and link registers.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+if (CFG.forwarding) {
+    if (S_ALU < S_SFW) {
+        _read = S_ALU;
+    } else {
+        _read = S_SFW;
+    }
+} else {
+    _read = S_SRD;
+}
+\end{lstlisting}
 
 %===============================================================================
 \register{EXT2}{Extension register 2}{0x0E0}
@@ -312,151 +507,183 @@ This register is reserved for future expansion.
 \register{EXT0}{Extension register 0}{0x0E8}
 %===============================================================================
 
-\todo{The EXT$n$ registers don't exist yet.}
 This register contains flags that specify the supported extensions and quirks
 of the processor as per its design-time configuration.
 
 %-------------------------------------------------------------------------------
 \field{27}{T}
 %-------------------------------------------------------------------------------
-\reset{***}
 Defines whether the trace unit is available. The trace unit has its own
 capability flags in \creg{DCR2}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{***}
 \implementation{}
+\begin{lstlisting}
+_read = (bit)CFG.traceEnable;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{26..24}{BRK}
 %-------------------------------------------------------------------------------
-\reset{***}
 Defines the number of available hardware breakpoints.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{***}
 \implementation{}
+\begin{lstlisting}
+_read = CFG.numBreakpoints;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{19}{C}
 %-------------------------------------------------------------------------------
-\reset{*}
 If set, cache-related performance counters exist.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{*}
 \implementation{}
+\begin{lstlisting}
+_read = (bit)CFG.cachePerfCountEnable;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{18..16}{P}
 %-------------------------------------------------------------------------------
-\reset{***}
 This field represents the size in bytes of all performance counters except
 \creg{CNT}, which is always 64-bit. Refer to Section~\ref{sec:core-ug-creg-perf}
 for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{***}
 \implementation{}
+\begin{lstlisting}
+_read = CFG.perfCountSize;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{2}{O}
 %-------------------------------------------------------------------------------
-\reset{*}
 This flag determines the unit in which the branch offset field is encoded. When
 this flag is cleared, the branch offset is encoded in 8-byte units. When it is
 set, the branch offset is encoded in 4-byte units.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{*}
 \implementation{}
+\begin{lstlisting}
+_read = (bit)(BRANCH_OFFS_SHIFT == 2);
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{1}{L}
 %-------------------------------------------------------------------------------
-\reset{*}
 This flag is set when register \texttt{\$r0.63} is mapped to \texttt{\$l0.0}, to
 allow arithmetic to be performed on the link register directly. If it is
 cleared, these registers are independent.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{*}
 \implementation{}
+\begin{lstlisting}
+_read = (bit)CFG.reg63isLink;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{0}{F}
 %-------------------------------------------------------------------------------
-\reset{*}
 This flag is set when forwarding is enabled.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{*}
 \implementation{}
+\begin{lstlisting}
+_read = (bit)CFG.forwarding;
+\end{lstlisting}
 
 %===============================================================================
 \register{DCFG}{Design-time configuration register}{0x0EC}
 %===============================================================================
 
-\todo{The DCFG register doesn't exist yet.}
 This register is hardwired to the key parameters that define the size of the
 processor, such as the number of pipelanes and the number of contexts.
 
 %-------------------------------------------------------------------------------
 \field{15..12}{BA}
 %-------------------------------------------------------------------------------
-\reset{****}
 Specifies the minimum bundle alignment necessary. Specified as the alignment
 size in 32-bit words minus 1. For example, if this value is 7, each bundle must
 start on a 128-byte boundary, as $(7 + 1) \cdot 32 = 128$.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+_read = (1 << CFG.bundleAlignLog2) - 1;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{11..8}{NC}
 %-------------------------------------------------------------------------------
-\reset{****}
 Number of hardware contexts supported, minus one.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+_read = (1 << CFG.numContextsLog2) - 1;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{7..4}{NG}
 %-------------------------------------------------------------------------------
-\reset{****}
 Number of pipelane groups supported, minus one. This determines the degree of
 reconfigurability. Together with NC, it fully specifies the number of valid
 configuration words.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+_read = (1 << CFG.numLaneGroupsLog2) - 1;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{3..0}{NL}
 %-------------------------------------------------------------------------------
-\reset{****}
 Number of pipelanes in the design, minus one.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{****}
 \implementation{}
+\begin{lstlisting}
+_read = (1 << CFG.numLanesLog2) - 1;
+\end{lstlisting}
 
 %===============================================================================
 \register{CVER1}{Core version register 1}{0x0F0}
 %===============================================================================
 
-\todo{The CVER$n$ registers don't exist yet.}
 This register specifies the major version of the processor and, together with
 \creg{CVER0}, a 7-byte ASCII core version identification tag.
 
 %-------------------------------------------------------------------------------
 \field{31..24}{VER}
 %-------------------------------------------------------------------------------
-\reset{00110011}
 \id{CVER}
 Specifies the major version number of the \rvex{} processor in ASCII. This will
 most likely always be \code{'3'}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{00110011}
 \implementation{}
+\begin{lstlisting}
+_read = X"33";
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{23..16}{CTAG0}
 %-------------------------------------------------------------------------------
-\reset{0*******}
 \id{CTAG}
 First ASCII character in a string of seven characters, which together identify 
 the core version, similar to how a license plate identifies a car. It is 
@@ -464,17 +691,27 @@ intended that a database will be set up which maps each tag to an immutable
 archive containing the source code for the core and a mutable errata/notes file.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = RVEX_CORE_TAG[48, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{15..8}{CTAG1}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = RVEX_CORE_TAG[40, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{7..0}{CTAG2}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = RVEX_CORE_TAG[32, 8];
+\end{lstlisting}
 
 %===============================================================================
 \register{CVER0}{Core version register 0}{0x0F4}
@@ -486,27 +723,38 @@ Refer to \creg{CVER1} for more information.
 \field{31..24}{CTAG3}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = RVEX_CORE_TAG[24, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{23..16}{CTAG4}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = RVEX_CORE_TAG[16, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{15..8}{CTAG5}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = RVEX_CORE_TAG[8, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{7..0}{CTAG6}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = RVEX_CORE_TAG[0, 8];
+\end{lstlisting}
 
 %===============================================================================
 \register{PVER1}{Platform version register 1}{0x0F8}
 %===============================================================================
 
-\todo{The PVER$n$ registers don't exist yet.}
 This register specifies the processor index within a platform and, together with
 \creg{PVER0}, uniquely identifies the platform using a 7-byte ASCII
 idenfitication tag.
@@ -514,17 +762,19 @@ idenfitication tag.
 %-------------------------------------------------------------------------------
 \field{31..24}{COID}
 %-------------------------------------------------------------------------------
-\reset{********}
 \id{COID}
 Unique processor identifier within a multicore platform.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{********}
 \implementation{}
+\begin{lstlisting}
+_read = rv2gbreg_coreID;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \field{23..16}{PTAG0}
 %-------------------------------------------------------------------------------
-\reset{0*******}
 \id{PTAG}
 First ASCII character in a string of seven characters, which together identify 
 the platform and bit file, similar to how a license plate identifies a car. It 
@@ -534,17 +784,27 @@ file, as well as mutable \code{memory.map}, \code{rvex.h} and errata/notes
 files.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = rv2gbreg_platformTag[48, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{15..8}{PTAG1}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = rv2gbreg_platformTag[40, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{7..0}{PTAG2}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = rv2gbreg_platformTag[32, 8];
+\end{lstlisting}
 
 %===============================================================================
 \register{PVER0}{Platform version register 0}{0x0FC}
@@ -556,19 +816,31 @@ Refer to \creg{PVER1} for more information.
 \field{31..24}{PTAG3}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = rv2gbreg_platformTag[24, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{23..16}{PTAG4}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = rv2gbreg_platformTag[16, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{15..8}{PTAG5}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = rv2gbreg_platformTag[8, 8];
+\end{lstlisting}
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{7..0}{PTAG6}
 \reset{0*******}
 \implementation{}
+\begin{lstlisting}
+_read = rv2gbreg_platformTag[0, 8];
+\end{lstlisting}
 

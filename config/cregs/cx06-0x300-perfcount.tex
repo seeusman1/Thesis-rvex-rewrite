@@ -6,9 +6,10 @@ This performance counter increments every cycle while an instruction from this
 context is in the pipeline, even when the context is stalled.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-% Don't forget about the reset stuff which still needs to be added to the
-% generator!
 \implementation{}
+\begin{lstlisting}
+_add = ~cxplif2cxreg_idle;
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{STALL}{Stall cycle counter}{0x308}
@@ -21,6 +22,9 @@ represents the number of active cycles.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = cxplif2cxreg_stall & ~cxplif2cxreg_idle;
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{BUN}{Committed bundle counter}{0x310}
@@ -34,6 +38,9 @@ delay slot.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = (bit)(cxplif2cxreg_sylCommit != 0) & ~cxplif2cxreg_stall;
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{SYL}{Committed syllable counter}{0x318}
@@ -45,7 +52,19 @@ non-\insn{NOP} syllable are committed. As long as neither \creg{BUN} nor
 instruction-level parallelism since the registers were cleared.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declVariable{_vec}{sylStatus}{0}
 \implementation{}
+\begin{lstlisting}
+_vec = cxplif2cxreg_sylCommit & ~cxplif2cxreg_stall;
+_add = (
+    ((_vec[0]  + _vec[1])  + (_vec[2]  + _vec[3])) +
+    ((_vec[4]  + _vec[5])  + (_vec[6]  + _vec[7]))
+) + (
+    ((_vec[8]  + _vec[9])  + (_vec[10] + _vec[11])) +
+    ((_vec[12] + _vec[13]) + (_vec[14] + _vec[15]))
+);
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{NOP}{Committed NOP counter}{0x320}
@@ -57,7 +76,19 @@ As long as neither \creg{SYL} nor \creg{NOP} have overflowed,
 that are \insn{NOP}, i.e. the compression efficiency of the binary.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declVariable{_vec}{sylStatus}{0}
 \implementation{}
+\begin{lstlisting}
+_vec = (cxplif2cxreg_sylCommit & cxplif2cxreg_sylNop) & ~cxplif2cxreg_stall;
+_add = (
+    ((_vec[0]  + _vec[1])  + (_vec[2]  + _vec[3])) +
+    ((_vec[4]  + _vec[5])  + (_vec[6]  + _vec[7]))
+) + (
+    ((_vec[8]  + _vec[9])  + (_vec[10] + _vec[11])) +
+    ((_vec[12] + _vec[13]) + (_vec[14] + _vec[15]))
+);
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{IACC}{Instruction cache access counter}{0x328}
@@ -67,6 +98,9 @@ This performance counter increments for every instruction cache access.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = mem2cxreg_cacheStatus.instr_access;
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{IMISS}{Instruction cache miss counter}{0x330}
@@ -77,6 +111,10 @@ instruction cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = mem2cxreg_cacheStatus.instr_access
+     & mem2cxreg_cacheStatus.instr_miss;
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{DRACC}{Data cache read access counter}{0x338}
@@ -87,6 +125,9 @@ data cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = (bit)(mem2cxreg_cacheStatus.data_accessType == "01");
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{DRMISS}{Data cache read miss counter}{0x340}
@@ -97,6 +138,10 @@ cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = (bit)(mem2cxreg_cacheStatus.data_accessType == "01")
+     & mem2cxreg_cacheStatus.data_miss;
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{DWACC}{Data cache write access counter}{0x348}
@@ -107,6 +152,9 @@ data cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = mem2cxreg_cacheStatus.data_accessType[1];
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{DWMISS}{Data cache write miss counter}{0x350}
@@ -117,6 +165,10 @@ cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = mem2cxreg_cacheStatus.data_accessType[1]
+     & mem2cxreg_cacheStatus.data_miss;
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{DBYPASS}{Data cache bypass counter}{0x358}
@@ -127,13 +179,26 @@ data cache.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = (bit)(mem2cxreg_cacheStatus.data_accessType != "00")
+     & mem2cxreg_cacheStatus.data_bypass;
+\end{lstlisting}
 
 %===============================================================================
 \perfCounter{DWBUF}{Data cache write buffer counter}{0x360}
 %===============================================================================
 
-This performance counter increments every time there is a write to the data 
-cache while the write buffer is full.
+This performance counter increments every time the cache has to wait for the
+write buffer to flush in order to process the current request.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
+\begin{lstlisting}
+_add = (bit)(mem2cxreg_cacheStatus.data_accessType != "00") /* Any access... */
+     & mem2cxreg_cacheStatus.data_writepending              /* ... while a write was pending... */
+     & (                                                    /* ... that needs a bus access, being: */
+        mem2cxreg_cacheStatus.data_accessType[1] |          /* any kind of write, */
+        mem2cxreg_cacheStatus.data_miss |                   /* any kind of miss, */
+        mem2cxreg_cacheStatus.data_bypass                   /* or any kind of bypass. */
+     );
+\end{lstlisting}

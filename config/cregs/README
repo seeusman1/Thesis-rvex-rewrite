@@ -190,18 +190,19 @@ supported (hardcoded into scripts/code/type_classes.py).
  | bit            | bit         | std_logic                      | std_logic_vector(...)               | uint8_t           |
  | bitvec<n>      | bitvec<n>   | std_logic_vector(n-1 downto 0) | -                                   | uint<minsize>_t   |
  | unsigned<n>    | unsigned<n> | unsigned(n-1 downto 0)         | -                                   | uint<minsize>_t   |
- | byte           | bitvec<8>   | rvex_byte_type                 | rvex_byte_array(...)                | uint8_t           |
- | data           | bitvec<32>  | rvex_data_type                 | rvex_data_array(...)                | uint32_t          |
- | address        | bitvec<32>  | rvex_address_type              | rvex_address_array(...)             | uint32_t          |
- | sylstatus      | bitvec<16>  | rvex_sylStatus_type            | rvex_sylStatus_array(...)           | uint16_t          |
- | brregdata      | bitvec<8>   | rvex_brRegData_type            | rvex_brRegData_array(...)           | uint8_t           |
- | trapcause      | bitvec<8>   | rvex_trap_type                 | rvex_trap_array(...)                | uint8_t           |
- | twobit         | bitvec<2>   | rvex_2bit_type                 | rvex_2bit_array(...)                | uint8_t           |
- | threebit       | bitvec<3>   | rvex_3bit_type                 | rvex_3bit_array(...)                | uint8_t           |
- | fourbit        | bitvec<4>   | rvex_4bit_type                 | rvex_4bit_array(...)                | uint8_t           |
- | sevenByte      | bitvec<56>  | rvex_7byte_type                | rvex_7byte_array(...)               | uint64_t          |
+ | byte           | bitvec8     | rvex_byte_type                 | rvex_byte_array(...)                | uint8_t           |
+ | data           | bitvec32    | rvex_data_type                 | rvex_data_array(...)                | uint32_t          |
+ | address        | bitvec32    | rvex_address_type              | rvex_address_array(...)             | uint32_t          |
+ | sylstatus      | bitvec16    | rvex_sylStatus_type            | rvex_sylStatus_array(...)           | uint16_t          |
+ | brregdata      | bitvec8     | rvex_brRegData_type            | rvex_brRegData_array(...)           | uint8_t           |
+ | trapcause      | bitvec8     | rvex_trap_type                 | rvex_trap_array(...)                | uint8_t           |
+ | twobit         | bitvec2     | rvex_2bit_type                 | rvex_2bit_array(...)                | uint8_t           |
+ | threebit       | bitvec3     | rvex_3bit_type                 | rvex_3bit_array(...)                | uint8_t           |
+ | fourbit        | bitvec4     | rvex_4bit_type                 | rvex_4bit_array(...)                | uint8_t           |
+ | sevenByte      | bitvec56    | rvex_7byte_type                | rvex_7byte_array(...)               | uint64_t          |
  | trapinfo       | aggregate   | trap_info_type                 | trap_info_array(...)                | trapInfo_t        |
  | breakpointinfo | aggregate   | cxreg2pl_breakpoint_info_type  | cxreg2pl_breakpoint_info_array(...) | breakpointInfo_t  |
+ | cacheStatus    | aggregate   | rvex_cacheStatus_type          | rvex_cacheStatus_array(...)         | cacheStatus_t     |
  | -              | aggregate   | rvex_generic_config_type       | -                                   | cfgVect_t         |
  '----------------'-------------'--------------------------------'-------------------------------------'-------------------'
 
@@ -223,10 +224,18 @@ breakpointinfo aggregate members:
  - addr{1}:               address
  - addr{2}:               address
  - addr{3}:               address
- - cfg{0}:                bitvec<2>
- - cfg{1}:                bitvec<2>
- - cfg{2}:                bitvec<2>
- - cfg{3}:                bitvec<2>
+ - cfg{0}:                bitvec2
+ - cfg{1}:                bitvec2
+ - cfg{2}:                bitvec2
+ - cfg{3}:                bitvec2
+
+cacheStatus aggregate members:
+ - instr_access           bit
+ - instr_miss             bit
+ - data_accessType        bitvec2
+ - data_bypass            bit
+ - data_miss              bit
+ - data_writePending      bit
 
 CFG vector members:
  - numLanesLog2:          natural

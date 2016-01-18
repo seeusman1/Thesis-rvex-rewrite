@@ -10,7 +10,14 @@ seconds at 50 MHz.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{CNT}
+\declaration{}
+\declRegister{_r}{unsigned56}{0}
 \implementation{}
+\begin{lstlisting}
+_r = _r + 1;
+_read = _r[0, 32];
+\end{lstlisting}
+
 
 %===============================================================================
 \register{CNTH}{Cycle counter register high}{0x014}
@@ -26,6 +33,12 @@ of the design-time configured performance counter width.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..8}{CNTH}
 \implementation{}
+\begin{lstlisting}
+_read = cr_cnt_cnt_r[32, 24];
+\end{lstlisting}
 \field{7..0}{CNT}
 \implementation{}
+\begin{lstlisting}
+_read = cr_cnt_cnt_r[24, 8];
+\end{lstlisting}
 

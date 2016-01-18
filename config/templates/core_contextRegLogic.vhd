@@ -56,6 +56,7 @@ use rvex.core_intIface_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
 use rvex.core_trap_pkg.all;
 use rvex.core_pipeline_pkg.all;
+use rvex.core_version_pkg.all;
 
 --=============================================================================
 -- This entity contains the specifications and logic for the control registers
@@ -123,20 +124,21 @@ architecture Behavioral of core_contextRegLogic is
 begin -- architecture
 --=============================================================================
   
-  cxreg_gen: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
-    cxregs: process (clk) is
-      
-      -- Static variables and constants.
-      variable bus_writeData     : rvex_data_type;
-      variable bus_writeMaskDbg  : rvex_data_type;
-      variable bus_writeMaskCore : rvex_data_type;
-      variable bus_wordAddr      : unsigned(6 downto 0);
-      
-      -- Generated variables and constants.
-      @VAR_DECL
-      
-    begin
-      if rising_edge(clk) then
+  cxregs: process (clk) is
+    
+    -- Static variables and constants.
+    variable bus_writeData     : rvex_data_type;
+    variable bus_writeMaskDbg  : rvex_data_type;
+    variable bus_writeMaskCore : rvex_data_type;
+    variable bus_wordAddr      : unsigned(6 downto 0);
+    variable perf_count_clear  : std_logic;
+    
+    -- Generated variables and constants.
+    @VAR_DECL
+    
+  begin
+    if rising_edge(clk) then
+      for ctxt in 0 to 2**CFG.numContextsLog2-1 loop
         
         -- Set readData to 0 by default.
         cxreg2creg_readData(ctxt) <= (others => '0');
@@ -173,6 +175,7 @@ begin -- architecture
                7 downto  0 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(0) and not creg2cxreg_origin(ctxt)
             );
             bus_wordAddr := unsigned(creg2cxreg_addr(ctxt)(8 downto 2));
+            perf_count_clear := '0';
             
             -- Generated register implementation code.
             @IMPL
@@ -182,12 +185,11 @@ begin -- architecture
             
           end if;
         end if;
-      end if;
-    end process;
-    
-    @OUTPUT_CONNECTIONS
-    
-  end generate;
+      end loop;
+    end if;
+  end process;
+  
+  @OUTPUT_CONNECTIONS
   
 end Behavioral;
 

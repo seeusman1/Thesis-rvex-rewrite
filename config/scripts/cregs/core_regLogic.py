@@ -68,15 +68,20 @@ def decls(obs, env, do_regs):
     output = []
     
     # Make sure that the constant initialization expressions only use predefined
-    # constants and constants which have already been defined.
+    # constants and constants which have already been defined. They also cannot
+    # use the ctxt loop iteration variable, because they are defined outside the
+    # loop.
     defined_constants = set()
     def const_init_access(ob):
+        if ob.name == 'ctxt':
+            return False
         if isinstance(ob.atyp, PredefinedConstant):
             return True
         if isinstance(ob.atyp, Constant):
-            return ob.name in defined_constants
+            return ob.name.lower() in defined_constants
         return False
     env = env.with_access_check(const_init_access)
+    env.set_implicit_ctxt(None)
     
     # Loop over and generate all object declarations.
     for ob in obs:
@@ -84,16 +89,19 @@ def decls(obs, env, do_regs):
             continue
         if ob.atyp.name() == 'constant':
             
+            lenv = env.copy()
+            lenv.set_user(ob.owner)
+            
             # Parse the expression for constant object values.
             if ob.initspec is None:
                 raise Exception('Constant object without init: \'%s\'.' % ob.name)
             init = transform_expression(
-                ob.initspec, ob.origin, ob.atyp.typ, {}, env,
+                ob.initspec, ob.origin, ob.atyp.typ, {}, lenv,
                 'in constant \'%s\' initialization: ' % ob.name,
                 True)[0]
             
             # Mark that this constant has been defined.
-            defined_constants.add(ob.name)
+            defined_constants.add(ob.name.lower())
         
         else:
             init = None
@@ -156,7 +164,19 @@ def busmux(reglist, addr_size, hi_fun=None):
 
 
 def outconns(outconns):
-    vhdl = []
+    vhdl_glob = []
+    vhdl_ctxt = []
     for key in outconns:
-        vhdl.append(outconns[key]['vhdl'])
+        outconn = outconns[key]
+        if 'per_ctxt' in outconn:
+            vhdl_ctxt.append(outconn['vhdl'])
+        else:
+            vhdl_glob.append(outconn['vhdl'])
+    
+    vhdl = []
+    if len(vhdl_ctxt) > 0:
+        vhdl.append('connect_gen: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate\n')
+        vhdl.append('\n'.join(['  %s' % x for x in ''.join(vhdl_ctxt).rstrip().split('\n')]) + '\n')
+        vhdl.append('end generate;\n')
+    vhdl.extend(vhdl_glob)
     return ''.join(vhdl)

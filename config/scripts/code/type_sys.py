@@ -21,7 +21,7 @@ class Type(object):
     def name_vhdl(self):
         """Returns the VHDL name of the type, or None if it does not exist. A
         declaration will be """
-        return name(self)
+        return self.name()
         
     def name_vhdl_array(self):
         """Returns the VHDL name of the array type for this type, or None if it
@@ -435,8 +435,33 @@ class BreakpointInfo(Aggregate):
 
     def name_c(self):
         return 'breakpointInfo_t'
+
+
+class CacheStatus(Aggregate):
+    """Cache status structure."""
     
-        
+    def __init__(self):
+        Aggregate.__init__(self)
+        self.add_entry('instr_access',      Bit())
+        self.add_entry('instr_miss',        Bit())
+        self.add_entry('data_accessType',   BitVector(2))
+        self.add_entry('data_bypass',       Bit())
+        self.add_entry('data_miss',         Bit())
+        self.add_entry('data_writePending', Bit())
+
+    def name(self):
+        return 'cacheStatus'
+    
+    def name_vhdl(self):
+        return 'rvex_cacheStatus_type'
+    
+    def name_vhdl_array(self):
+        return 'rvex_cacheStatus_array'
+
+    def name_c(self):
+        return 'cacheStatus_t'
+
+
 def parse_type(text):
     """Converts a textual type (using the language agnostic names) which can be
     instantiated by the user into an internal Type. Raises a CodeError if 
@@ -465,7 +490,8 @@ def parse_type(text):
         
         # Aggregate types.
         'trapinfo':         TrapInfo(),
-        'breakpointinfo':   BreakpointInfo()
+        'breakpointinfo':   BreakpointInfo(),
+        'cachestatus':      CacheStatus()
         
     }
     if text in SIMPLE_TYPES:
