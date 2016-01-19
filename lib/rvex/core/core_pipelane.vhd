@@ -1509,7 +1509,7 @@ begin -- architecture
     gpreg2pl_readPortA, gpreg2pl_readPortB, cxplif2pl_brLinkReadPort,
     
     -- Special register interface.
-    cxplif2pl_trapHandler, cxplif2pl_debugTrapEnable,
+    cxplif2pl_trapHandler, cxplif2pl_debugTrapEnable, cxplif2pl_softCtxtSwitch,
     
     -- Stop bit routing interface.
     sbit2pl_stop, sbit2pl_invalidate, sbit2pl_valid, sbit2pl_syllable,

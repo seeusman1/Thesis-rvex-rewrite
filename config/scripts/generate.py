@@ -4,18 +4,17 @@
 #-------------------------------------------------------------------------------
 import sys
 
-if len(sys.argv) != 8:
-    print('Usage: python generate.py <opcdir> <regdir> <trapdir> <headdir> <corelibdir> <platdir> <outdir>')
+if len(sys.argv) != 7:
+    print('Usage: python generate.py <opcdir> <regdir> <trapdir> <headdir> <corelibdir> <outdir>')
     sys.exit(2)
 
 dirs = {
-    'opcdir':  sys.argv[1],
-    'regdir':  sys.argv[2],
-    'trapdir': sys.argv[3],
-    'tmpldir': sys.argv[4],
-    'libdir':  sys.argv[5],
-    'platdir': sys.argv[6],
-    'outdir':  sys.argv[7]
+    'opcdir':   sys.argv[1],
+    'regdir':   sys.argv[2],
+    'trapdir':  sys.argv[3],
+    'tmpldir':  sys.argv[4],
+    'libdir':   sys.argv[5],
+    'outdir':   sys.argv[6]
 }
 
 
@@ -87,7 +86,9 @@ headers.rvex_h.generate(regs, trps, dirs)
 #-------------------------------------------------------------------------------
 print('Generating memory.map files...')
 
-# TODO
+# Generate rvex.h.
+import headers.core_map
+headers.core_map.generate(regs, trps, dirs)
 
 
 #-------------------------------------------------------------------------------

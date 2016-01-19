@@ -11,7 +11,7 @@ def generate(regs, dirs):
     
     # Generate the file.
     common.templates.generate('vhdl',
-        dirs['platdir'] + '/core-tests/share/core_tb.template.vhd',
+        dirs['tmpldir'] + '/core_tb.vhd',
         dirs['outdir'] + '/core_tb.vhd',
         {'REGISTER_DEFINITIONS': ''.join(vhdl)})
     

@@ -13,7 +13,7 @@ TEMP = temp
 CORE_LIB = ../lib/rvex/core
 DOCS = ../doc/src/refman/generated
 RVEX_H = ../examples/src/rvex.h
-MEMORY_MAP = ../tools/debug-interface/core-regs.map
+MEMORY_MAP = ../tools/debug-interface/core.map
 PLATFORMS = ../platform
 
 # Set python search path.
@@ -30,8 +30,9 @@ all: $(TEMP)
 	$(CP) $(TEMP)/core_contextRegLogic.vhd $(CORE_LIB)/core_contextRegLogic.vhd
 	$(CP) $(TEMP)/core_tb.vhd $(PLATFORMS)/core-tests/share/core_tb.vhd
 	@echo ""
-	@echo "Configuring C/assembly headers..."
+	@echo "Configuring C/assembly and rvd headers..."
 	$(CP) $(TEMP)/rvex.h $(RVEX_H)
+	$(CP) $(TEMP)/core.map $(MEMORY_MAP)
 	@echo ""
 	@echo "Configuring reference manual..."
 	$(CP) $(TEMP)/opcode-stats.generated.tex $(DOCS)/opcode-stats.generated.tex
@@ -56,7 +57,7 @@ all: $(TEMP)
 .PHONY: $(TEMP)
 $(TEMP): cregs/*.tex opcodes/*.tex traps/*.tex $(SCRIPTS)
 	@$(ENSURE_DIR) $(TEMP)
-	$(PYTHONP) $(SCRIPTS)/generate.py opcodes cregs traps templates $(CORE_LIB) $(PLATFORMS) $(TEMP)
+	$(PYTHONP) $(SCRIPTS)/generate.py opcodes cregs traps templates $(CORE_LIB) $(TEMP)
 
 test:
 	$(PYTHONP) $(SCRIPTS)/code/code.py

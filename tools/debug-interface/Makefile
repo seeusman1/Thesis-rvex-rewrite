@@ -49,7 +49,7 @@ monitor-nobuf: copyconf
 
 debug: copyconf $(BINDIR)/rvd $(BINDIR)/rvtrace
 	@echo "#!/bin/bash" > $(BINDIR)/rvd.sh
-	@echo "$(shell pwd)/bin/rvd -p$(TCP_PORT_DEBUG) -m$(shell pwd)/memory.map \$$RVD_OPT \"\$$@\"" >> $(BINDIR)/rvd.sh
+	@echo "$(shell pwd)/bin/rvd -p$(TCP_PORT_DEBUG) -m$(shell pwd)/core.map -m$(shell pwd)/memory.map \$$RVD_OPT \"\$$@\"" >> $(BINDIR)/rvd.sh
 	@chmod +x $(BINDIR)/rvd.sh
 	@echo "export PATH=\$$PATH:$(shell pwd)/$(BINDIR)" > debug
 	@echo "alias rvd=\"rvd.sh\"" >> debug

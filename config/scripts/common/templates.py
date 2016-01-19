@@ -89,9 +89,10 @@ def _post_process(text, com_start, com_end):
 
 def _comment_style(lang):
     com = {
-        'vhdl': ('--', '--'),
-        'c':    ('/*', '*/'),
-        'tex':  ('%%', '%%')
+        'vhdl':   ('--', '--'),
+        'c':      ('/*', '*/'),
+        'tex':    ('%%', '%%'),
+        'memmap': ('##', '##')
     }
     lang = lang.lower()
     if lang not in com:
