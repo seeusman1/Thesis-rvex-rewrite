@@ -139,14 +139,11 @@ begin -- architecture
     
   begin
     if rising_edge(clk) then
-    
-      -- Set readData to 0 by default.
-      gbreg2creg_dbgReadData <= (others => '0');
-      gbreg2creg_coreReadData <= (others => (others => '0'));
-      
       if reset = '1' then
         
         -- Reset all registers and ports.
+        gbreg2creg_dbgReadData <= (others => '0');
+        gbreg2creg_coreReadData <= (others => (others => '0'));
         @REG_RESET
         
       elsif clkEn = '1' then
@@ -162,6 +159,10 @@ begin -- architecture
         );
         bus_wordAddr := unsigned(creg2gbreg_dbgAddr(7 downto 2));
         perf_count_clear := '0';
+        
+        -- Set readData to 0 by default.
+        gbreg2creg_dbgReadData <= (others => '0');
+        gbreg2creg_coreReadData <= (others => (others => '0'));
         
         -- Generated register implementation code.
         @IMPL

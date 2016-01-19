@@ -4,8 +4,8 @@
 #-------------------------------------------------------------------------------
 import sys
 
-if len(sys.argv) != 7:
-    print('Usage: python generate.py <opcdir> <regdir> <trapdir> <headdir> <corelibdir> <outdir>')
+if len(sys.argv) != 8:
+    print('Usage: python generate.py <opcdir> <regdir> <trapdir> <headdir> <corelibdir> <platdir> <outdir>')
     sys.exit(2)
 
 dirs = {
@@ -14,7 +14,8 @@ dirs = {
     'trapdir': sys.argv[3],
     'tmpldir': sys.argv[4],
     'libdir':  sys.argv[5],
-    'outdir':  sys.argv[6]
+    'platdir': sys.argv[6],
+    'outdir':  sys.argv[7]
 }
 
 
@@ -58,6 +59,10 @@ cregs.core_regLogic.generate(regs, dirs)
 # TODO: Generate core_trap_pkg.vhd.
 
 # TODO: Generate core_pipeline_pkg.vhd.
+
+# Generate the conformance test runner.
+import cregs.core_tb
+cregs.core_tb.generate(regs, dirs)
 
 
 #-------------------------------------------------------------------------------

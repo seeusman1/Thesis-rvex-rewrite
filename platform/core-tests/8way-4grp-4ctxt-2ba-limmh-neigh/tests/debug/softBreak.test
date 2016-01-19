@@ -32,21 +32,21 @@ reset
 wait    50
 
 -- Reset/break the processor.
-write   dbg byte CR_DCRF CR_DCRC_RESET_BREAK
+write   dbg byte CR_DCR CR_DCRC_RESET_BREAK
 wait    50
 
 -- Verify that the PC is set to 0.
 read    dbg word CR_PC 0x00000000
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
 read    dbg word CR_PC 0x00000008
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
@@ -56,7 +56,7 @@ read    dbg word CR_PC 0x00000010
 read    dbg byte CR_DCRC 0xFA
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
@@ -64,14 +64,14 @@ read    dbg word CR_PC 0x00000020
 
 
 -- Reset/break the processor.
-write   dbg byte CR_DCRF CR_DCRC_RESET_BREAK
+write   dbg byte CR_DCR CR_DCRC_RESET_BREAK
 wait    50
 
 -- Verify that the PC is set to 0.
 read    dbg word CR_PC 0x00000000
 
 -- Resume execution.
-write   dbg byte CR_DCRF CR_DCRC_RESUME
+write   dbg byte CR_DCR CR_DCRC_RESUME
 wait    50
 
 -- Verify that we stopped at 0x10.

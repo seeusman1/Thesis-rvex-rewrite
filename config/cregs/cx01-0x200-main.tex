@@ -538,23 +538,27 @@ even if the processor is running.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{PC}
 \declaration{}
+\declVariable{_v}{address}{0}
 \declRegister{_r}{address}{0}
 \implementation{}
 \begin{lstlisting}
+_v = _r;
 
 // The bus must be able to override the PC, so we need to execute the write from
 // the pipelane first. Notice that writes are ignored when the debugger is
 // trying to jump.
 if (!cxplif2cxreg_stall && !cr_dcr_j_r) {
-    _r = cxplif2cxreg_nextPC;
+    _v = cxplif2cxreg_nextPC;
 }
 
 // Handle bus interface. Set the jump flag when the register is written to by
 // the debug bus.
-_r = (_r & ~_wmask_dbg) | (_write & _wmask_dbg);
+_v = (_v & ~_wmask_dbg) | (_write & _wmask_dbg);
 if (_wmask_dbg[0]) {
     cr_dcr_j_r = '1';
 }
+
+_r = _v;
 _read = _r;
 
 \end{lstlisting}

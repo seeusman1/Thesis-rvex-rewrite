@@ -140,18 +140,17 @@ begin -- architecture
     if rising_edge(clk) then
       for ctxt in 0 to 2**CFG.numContextsLog2-1 loop
         
-        -- Set readData to 0 by default.
-        cxreg2creg_readData(ctxt) <= (others => '0');
-        
         if reset = '1' then
           
           -- Reset all registers and ports.
+          cxreg2creg_readData(ctxt) <= (others => '0');
           @REG_RESET
           
         elsif clkEn = '1' then
           if ctxtReset(ctxt) = '1' then
             
             -- Reset all registers and ports.
+            cxreg2creg_readData(ctxt) <= (others => '0');
             @REG_RESET
             
             -- Generated special reset stuff.
@@ -176,6 +175,9 @@ begin -- architecture
             );
             bus_wordAddr := unsigned(creg2cxreg_addr(ctxt)(8 downto 2));
             perf_count_clear := '0';
+            
+            -- Set readData to 0 by default.
+            cxreg2creg_readData(ctxt) <= (others => '0');
             
             -- Generated register implementation code.
             @IMPL

@@ -539,7 +539,8 @@ This flag may be set by the debug bus by writing a one to it, in order to pause
 execution. Writing a zero has no effect. In addition, the flag is set by
 hardware when a debug trap occurs while the E flag is set and when a \insn{STOP}
 instruction is executed.
-\paragraph*{CAUSE field, bits 23..16}
+\paragraph*{CAUSE field, bits 23..16, a.k.a. \creg{DCRC}}
+\label{reg:DCRC}
 Trap cause for debug traps that should be handled by the external debug system.
 This is set to the debug trap cause by hardware when the B flag is set due to a
 debug trap.

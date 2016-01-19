@@ -49,21 +49,21 @@ reset
 wait    50
 
 -- Reset/break the processor.
-write   dbg byte CR_DCRF CR_DCRC_RESET_BREAK
+write   dbg byte CR_DCR CR_DCRC_RESET_BREAK
 wait    50
 
 -- Verify that the PC is set to 0.
 read    dbg word CR_PC 0x00000000
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
 read    dbg word CR_PC 0x00000020
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
@@ -77,21 +77,21 @@ wait    50
 read    dbg word CR_PC 0x00000040
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
 read    dbg word CR_PC 0x00000050
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
 read    dbg word CR_PC 0x00000060
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
@@ -105,21 +105,21 @@ wait    50
 read    dbg word CR_PC 0x00000070
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
 read    dbg word CR_PC 0x00000078
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
 read    dbg word CR_PC 0x00000080
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.
@@ -133,14 +133,14 @@ wait    50
 read    dbg word CR_PC 0x00000088
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC properly realigned itself and incremented.
 read    dbg word CR_PC 0x000000A0
 
 -- Step the processor.
-write   dbg byte CR_DCRF CR_DCRC_STEP
+write   dbg byte CR_DCR CR_DCRC_STEP
 wait    50
 
 -- Verify that the PC has incremented.

@@ -21,9 +21,11 @@ def generate(regs, dirs):
             if ent[2][3] != 'W':
                 continue
             if ent[3] >= 512:
-                append_def(output, ent[1], 'std_logic_vector(8 downto 2) := "{0:07b}"'.format((ent[3] // 4) % 128))
+                append_def(output, ent[1], 'natural := {0:d}'.format(ent[3] // 4))
+                append_def(output, ent[1] + '_V', 'std_logic_vector(8 downto 2) := "{0:07b}"'.format((ent[3] // 4) % 128))
             else:
-                append_def(output, ent[1], 'std_logic_vector(7 downto 2) := "{0:06b}"'.format((ent[3] // 4) % 64))
+                append_def(output, ent[1], 'natural := {0:d}'.format(ent[3] // 4))
+                append_def(output, ent[1] + '_V', 'std_logic_vector(7 downto 2) := "{0:06b}"'.format((ent[3] // 4) % 64))
             output.append('\n')
         
         else:
