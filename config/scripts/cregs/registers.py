@@ -578,10 +578,17 @@ def parse_registers(regcmds):
                                 'origin': '<internal>',
                                 'subcmds': []
                             })
-                        field_n['impl'].append(('<internal>', 
+                        
+                        code = []
+                        for origin, line in field_n['impl']:
+                            if line.strip().startswith('\\end'):
+                                break
+                            code.append((origin, line))
+                        code.append(('<internal>', 
                             '_add_r = _add;' +
                             '_r = _r + _add_r;'))
-                        field_n['impl'].append(read)
+                        code.append(read)
+                        field_n['impl'] = code
                         field_n['finimpl'].append(('<internal>', 'if (perf_count_clear) _r = 0;'))
                     else:
                         field_n['decl'] = []
