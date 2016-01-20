@@ -202,10 +202,32 @@ begin -- architecture
         
       end loop;
       
-      -- Drive trapPending signal.
-      trap2pl_trapPending(lane) <= trapInPipeline and not combinedTraps(firstLane)(S_LTRP).active;
+      -- Drive trapPending signal. This will cause the branch unit to
+      -- constantly "branch" to the current instruction, which will essentially
+      -- prevent instruction fetches. Note though, that when the branch unit
+      -- branches, S_IF+1 through S_BR-1 are flushed. We have to make sure that
+      -- that doesn't happen yet there's a trap before S_BR-1, because the
+      -- branch unit could then incorrectly flush an instruction *before* the
+      -- trapping instruction, mistaking it for a branch delay slot! So we can't
+      -- just connect trap2pl_trapPending to the trapInPipeline signal above.
+      -- The same thing goes for a trap in S_BR-1, but then it's even worse
+      -- because the pipeline is actually supposed to disable/flush the stage
+      -- which is causing the trap... which makes no sense. So basically, we
+      -- should only start the check from S_BR onwards. In reality it doesn't
+      -- matter because the pipelanes only start forwarding traps from S_BR
+      -- onwards anyway, but from a defensive programming point of view it's not
+      -- a bad idea to check it here.
+      --
+      -- In addition, for some reason S_LTRP should not be taken into
+      -- consideration. At least, that's the way I found it a year after I wrote
+      -- the code and I'm not sure why.
+      trapInPipeline := '0';
+      for stage in S_LTRP-1 downto S_BR loop
+        trapInPipeline := trapInPipeline or combinedTraps(firstLane)(stage).active;
+      end loop;
+      trap2pl_trapPending(lane) <= trapInPipeline;
       
-      -- Drive trapToHandle signal.
+      -- Forward trapToHandle signal.
       trap2pl_trapToHandle(lane) <= combinedTraps(firstLane)(S_LTRP);
       
     end loop;

@@ -56,6 +56,7 @@ use rvex.core_intIface_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
 use rvex.core_trap_pkg.all;
 use rvex.core_pipeline_pkg.all;
+use rvex.core_opcode_pkg.all;
 use rvex.core_version_pkg.all;
 
 --=============================================================================

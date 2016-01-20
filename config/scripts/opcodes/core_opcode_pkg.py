@@ -7,20 +7,21 @@ def generate(opc, dirs):
     sections     = opc['sections']
     table        = opc['table']
     def_params   = opc['def_params']
-    templatefile = dirs['libdir'] + '/core_opcode_pkg.vhd'
-    outfile      = dirs['outdir'] + '/core_opcode_pkg.vhd'
-
+    
+    # Generate the branch offset shift constant.
+    branch_offset_shift = 'constant BRANCH_OFFS_SHIFT    : natural := %d;\n' % opc['branch_offset_shift']
+    
     # Write the undefined entry.
     output = []
-    output.append('  \n')
-    output.append('  -----------------------------------------------------------------------------\n')
-    output.append('  -- Undefined entries\n')
-    output.append('  -----------------------------------------------------------------------------\n')
-    write_entry(output, 'constant opcodeTableEntry_default : opcodeTableEntry_type :=', def_params, end=';', indent='    ')
-    output.append('  \n')
+    output.append('\n')
+    output.append('-----------------------------------------------------------------------------\n')
+    output.append('-- Undefined entries\n')
+    output.append('-----------------------------------------------------------------------------\n')
+    write_entry(output, 'constant opcodeTableEntry_default : opcodeTableEntry_type :=', def_params, end=';', indent='  ')
+    output.append('\n')
     
     # Write the start of the opcode table.
-    output.append('  constant OPCODE_TABLE : opcodeTable_type := (\n')
+    output.append('constant OPCODE_TABLE : opcodeTable_type := (\n')
     
     # Determine the opcode ranges for each syllable.
     for opcode, syl in enumerate(table):
@@ -45,21 +46,19 @@ def generate(opc, dirs):
                 write_entry(output, rs + ' =>', syl)
     
     # Write the others clause and the end of the table.
-    output.append('    others => opcodeTableEntry_default\n')
-    output.append('  );\n')
-    
-    # Write the package footer.
-    output.append('    \n')
-    output.append('end core_opcode_pkg;\n')
-    output.append('\n')
-    output.append('package body core_opcode_pkg is\n')
-    output.append('end core_opcode_pkg;\n')
+    output.append('  others => opcodeTableEntry_default\n')
+    output.append(');\n')
     
     # Write the output file.
-    common.templates.generate_footer('vhdl', templatefile, outfile, ''.join(output))
+    common.templates.generate(
+        'vhdl',
+        dirs['tmpldir'] + '/core_opcode_pkg.vhd',
+        dirs['outdir'] + '/core_opcode_pkg.vhd',
+        {   'BRANCH_OFFS_SHIFT': branch_offset_shift,
+            'OPCODE_TABLE': ''.join(output)})
     
 
-def write_entry(output, r, syl, end=',', indent='      '):
+def write_entry(output, r, syl, end=',', indent='    '):
     
     # Start the opcode definition.
     output.append(indent[:-2] + r + ' (\n')
@@ -117,8 +116,8 @@ def write_entry(output, r, syl, end=',', indent='      '):
     output.append(indent[:-2] + ')' + end + '\n')
 
 def write_head(output, name):
-    output.append('    \n')
-    output.append('    ---------------------------------------------------------------------------\n')
-    output.append('    -- ' + name + '\n')
-    output.append('    ---------------------------------------------------------------------------\n')
+    output.append('  \n')
+    output.append('  ---------------------------------------------------------------------------\n')
+    output.append('  -- ' + name + '\n')
+    output.append('  ---------------------------------------------------------------------------\n')
 

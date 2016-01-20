@@ -177,6 +177,11 @@ begin -- architecture
          & "instruction buffer is used."
     severity failure;
   
+  assert L_IF_MEM = 1
+    report "L_IF_MEM must be set to 1 because apparently different values "
+         & "were never actually implemented."
+    severity failure;
+  
   -- Forward the signals which we don't have to do anything with.
   ibuf2imem_PCs     <= cxplif2ibuf_fetchPCs;
   ibuf2imem_fetch   <= cxplif2ibuf_fetch;

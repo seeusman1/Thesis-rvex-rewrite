@@ -1,59 +1,12 @@
 
 This directory contains configuration files for some key components of the core.
 The idea is that these files can be used to generate as many different things as
-possible, though not everything is possible at this time.
+possible.
 
 Running make will first of all patch source code. Then it will try to regenerate
 the PDF documentation, which may fail if you don't have all the required LaTeX
 packages installed.
 
---------------------------------------------------------------------------------
-cregs
---------------------------------------------------------------------------------
-Describes the context control registers and the global control registers of the
-core.
-
-  Completely specifies:
-   - C header/assembly include files (rvex.h)
-   - Documentation
-  
-  TODO:
-   - Default memory map for rvd
-   - VHDL core
-   - Simulator
-  
---------------------------------------------------------------------------------
-opcodes
---------------------------------------------------------------------------------
-Describes the rvex instruction set.
-
-  Completely specifies:
-   - VHDL core
-   - Documentation
-  
-  TODO:
-   - Simulator
-  
-  Does NOT specify:
-   - Binutils
-   - Compilers
-
---------------------------------------------------------------------------------
-traps
---------------------------------------------------------------------------------
-Describes the hardware traps.
-
-  Completely specifies:
-   - C header/assembly include files (rvex.h)
-   - Documentation
-  
-  TODO:
-   - Default memory map for rvd
-  
-  Only specifies ID constants for each trap (not functionality):
-   - Nothing yet :(
-  
-  TODO:
-   - VHDL core
-   - Simulator
-
+The scripts and templates folders contain the source files needed to generate
+everything. The other folders contain the actual configuration files (.tex or
+.ini files).

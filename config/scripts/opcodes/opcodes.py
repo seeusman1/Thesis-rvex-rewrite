@@ -1,5 +1,10 @@
 from __future__ import print_function
 
+try:
+    from configparser import ConfigParser
+except ImportError:
+    from ConfigParser import ConfigParser  # ver. < 3.0
+
 import common.interpreter
 import common.bitfields
 import copy
@@ -13,6 +18,9 @@ def parse(indir):
      - indir specifies the directory in which to look for .tex files.
       
     The return value is a dictionary.
+    
+    'branch_offset_shift': the branch offset shift value. Will be 2 for 32-bit
+        aligned branch offsets, or 3 for 64-bit aligned offsets.
     
     'sections': list of dictionaries. These dicts have the following entries:
      - 'name': name of the group which this dict represents.
@@ -43,7 +51,12 @@ def parse(indir):
      - 'multiplier': dict with multiplier control key-value pairs.
     """
     
-    # Parse the file.
+    # Parse the ini file.
+    encoding = ConfigParser()
+    encoding.read(indir + '/encoding.ini')
+    branch_offset_shift = encoding.getint('encoding', 'branch_offset_shift')    
+    
+    # Parse the tex files.
     groups = interpreter.parse_files(indir, {
         'section': (1, True),
         'syllable': (3, True),
@@ -132,6 +145,7 @@ def parse(indir):
                             group['origin'])
     
     return {
+        'branch_offset_shift': branch_offset_shift,
         'sections': sections,
         'table': table,
         'def_params': def_params

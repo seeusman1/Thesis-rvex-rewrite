@@ -1,0 +1,1 @@
+../../lib/rvex/core/core_trap_pkg.template.vhd

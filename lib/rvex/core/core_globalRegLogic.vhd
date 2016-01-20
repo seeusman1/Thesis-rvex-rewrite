@@ -58,9 +58,10 @@ use rvex.core_intIface_pkg.all;
 use rvex.core_ctrlRegs_pkg.all;
 use rvex.core_trap_pkg.all;
 use rvex.core_pipeline_pkg.all;
+use rvex.core_opcode_pkg.all;
 use rvex.core_version_pkg.all;
-
---=============================================================================                      -- GENERATED --
+                                                                                                     -- GENERATED --
+--=============================================================================
 -- This entity contains the specifications and logic for the control registers
 -- which are shared between all cores. They are read only to the core, but the
 -- debug bus can write to them (depending on specification).
@@ -69,8 +70,8 @@ entity core_globalRegLogic is
 --=============================================================================
   generic (
 
-    -- Configuration.
-    CFG                         : rvex_generic_config_type                                           -- GENERATED --
+    -- Configuration.                                                                                -- GENERATED --
+    CFG                         : rvex_generic_config_type
 
   );
   port (
@@ -79,8 +80,8 @@ entity core_globalRegLogic is
     -- System control
     ---------------------------------------------------------------------------
     -- Active high synchronous reset input.
-    reset                       : in  std_logic;
-                                                                                                     -- GENERATED --
+    reset                       : in  std_logic;                                                     -- GENERATED --
+
     -- Clock input, registers are rising edge triggered.
     clk                         : in  std_logic;
 
@@ -89,8 +90,8 @@ entity core_globalRegLogic is
 
     ---------------------------------------------------------------------------
     -- Run control
-    ---------------------------------------------------------------------------
-    -- Reset output. This can be made high for one cycle by the debug bus                            -- GENERATED --
+    ---------------------------------------------------------------------------                      -- GENERATED --
+    -- Reset output. This can be made high for one cycle by the debug bus
     -- writing a one to the MSB of GSR.
     gbreg2rv_reset              : out std_logic;
 
@@ -99,8 +100,8 @@ entity core_globalRegLogic is
     ---------------------------------------------------------------------------
     -- Each nibble in the data word corresponds to a pipelane group, of which
     -- bit 3 specifies whether the pipelane group should be disabled (high) or
-    -- enabled (low) and, if low, bit 2..0 specify the context it should run
-    -- on. Bits which are not supported by the core (as specified in the CFG                         -- GENERATED --
+    -- enabled (low) and, if low, bit 2..0 specify the context it should run                         -- GENERATED --
+    -- on. Bits which are not supported by the core (as specified in the CFG
     -- generic) should be written zero or the request will be ignored (as
     -- specified by the error flag in the global control register file). The
     -- enable signal is active high.
@@ -109,8 +110,8 @@ entity core_globalRegLogic is
 
     -- Current configuration, using the same encoding as the request data.
     cfg2gbreg_currentCfg        : in  rvex_data_type;
-
-    -- Configuration busy signal. When set, new configuration requests are not                       -- GENERATED --
+                                                                                                     -- GENERATED --
+    -- Configuration busy signal. When set, new configuration requests are not
     -- accepted.
     cfg2gbreg_busy              : in  std_logic;
 
@@ -119,8 +120,8 @@ entity core_globalRegLogic is
     cfg2gbreg_error             : in  std_logic;
 
     -- When reconfiguration is requested, this field is set to the index of the
-    -- context which requested the configuration, or all ones if the source was
-    -- the debug bus.                                                                                -- GENERATED --
+    -- context which requested the configuration, or all ones if the source was                      -- GENERATED --
+    -- the debug bus.
     cfg2gbreg_requesterID       : in  std_logic_vector(3 downto 0);
 
     ---------------------------------------------------------------------------
@@ -129,8 +130,8 @@ entity core_globalRegLogic is
     -- Affinity signal from the memory.
     imem2gbreg_affinity         : in  rvex_data_type;
 
-    ---------------------------------------------------------------------------
-    -- Misc.                                                                                         -- GENERATED --
+    ---------------------------------------------------------------------------                      -- GENERATED --
+    -- Misc.
     ---------------------------------------------------------------------------
     -- Core ID generic, passed as a port because of limitations in the register
     -- generator.
@@ -139,8 +140,8 @@ entity core_globalRegLogic is
     -- ASCII platform tag code for the platform version registers.
     rv2gbreg_platformTag        : in  std_logic_vector(55 downto 0);
 
-    ---------------------------------------------------------------------------
-    -- Debug bus to global control register interface                                                -- GENERATED --
+    ---------------------------------------------------------------------------                      -- GENERATED --
+    -- Debug bus to global control register interface
     ---------------------------------------------------------------------------
     -- Global control register address. Only bits 7..0 are used.
     creg2gbreg_dbgAddr          : in  rvex_address_type;
@@ -149,8 +150,8 @@ entity core_globalRegLogic is
     creg2gbreg_dbgWriteEnable   : in  std_logic;
     creg2gbreg_dbgWriteMask     : in  rvex_mask_type;
     creg2gbreg_dbgWriteData     : in  rvex_data_type;
-
-    -- Read command and reply.                                                                       -- GENERATED --
+                                                                                                     -- GENERATED --
+    -- Read command and reply.
     creg2gbreg_dbgReadEnable    : in  std_logic;
     gbreg2creg_dbgReadData      : out rvex_data_type;
 
@@ -159,8 +160,8 @@ entity core_globalRegLogic is
     ---------------------------------------------------------------------------
     -- Global control register address. Only bits 7..0 are used.
     creg2gbreg_coreAddr         : in  rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-
-    -- Read command and reply.                                                                       -- GENERATED --
+                                                                                                     -- GENERATED --
+    -- Read command and reply.
     creg2gbreg_coreReadEnable   : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     gbreg2creg_coreReadData     : out rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0)
 
@@ -169,8 +170,8 @@ end core_globalRegLogic;
 
 --=============================================================================
 architecture Behavioral of core_globalRegLogic is
---=============================================================================
-                                                                                                     -- GENERATED --
+--=============================================================================                      -- GENERATED --
+
   -- Coerces string literal x to an std_logic_vector.
   function bitvec_lit(x: std_logic_vector) return std_logic_vector is
   begin
@@ -179,8 +180,8 @@ architecture Behavioral of core_globalRegLogic is
 
   -- Coerces string literal x to an unsigned.
   function unsigned_lit(x: unsigned) return unsigned is
-  begin
-    return x;                                                                                        -- GENERATED --
+  begin                                                                                              -- GENERATED --
+    return x;
   end unsigned_lit;
 
   -- Reduces an std_logic_vector to a single std_logic using OR.
@@ -189,8 +190,8 @@ architecture Behavioral of core_globalRegLogic is
   begin
     y := '0';
     for i in x'range loop
-      y := y or x(i);
-    end loop;                                                                                        -- GENERATED --
+      y := y or x(i);                                                                                -- GENERATED --
+    end loop;
     return y;
   end vec2bit;
 
@@ -199,8 +200,8 @@ architecture Behavioral of core_globalRegLogic is
   function bit2vec(x: std_logic; s: natural) return std_logic_vector is
     variable result: std_logic_vector(s-1 downto 0) := (others => '0');
   begin
-    result(0) := x;
-    return result;                                                                                   -- GENERATED --
+    result(0) := x;                                                                                  -- GENERATED --
+    return result;
   end bit2vec;
 
   -- Returns boolean x as an std_logic using positive logic.
@@ -209,8 +210,8 @@ architecture Behavioral of core_globalRegLogic is
     if x then
       return '1';
     else
-      return '0';
-    end if;                                                                                          -- GENERATED --
+      return '0';                                                                                    -- GENERATED --
+    end if;
   end bool2bit;
 
   -- Returns std_logic x as a boolean using positive logic.
@@ -219,8 +220,8 @@ architecture Behavioral of core_globalRegLogic is
     return x = '1';
   end bit2bool;
 
-  -- Returns 1 for true and 0 for false.
-  function bool2int(x: boolean) return natural is                                                    -- GENERATED --
+  -- Returns 1 for true and 0 for false.                                                             -- GENERATED --
+  function bool2int(x: boolean) return natural is
   begin
     if x then
       return 1;
@@ -229,8 +230,8 @@ architecture Behavioral of core_globalRegLogic is
     end if;
   end bool2int;
 
-  -- Returns true for nonzero and false for zero.
-  function int2bool(x: integer) return boolean is                                                    -- GENERATED --
+  -- Returns true for nonzero and false for zero.                                                    -- GENERATED --
+  function int2bool(x: integer) return boolean is
   begin
     return x /= 0;
   end int2bool;
@@ -239,8 +240,8 @@ architecture Behavioral of core_globalRegLogic is
   signal cr_bcrr_bcrr_r       : rvex_data_type;
   signal cr_cnt_cnt_r         : unsigned(55 downto 0);
 
---=============================================================================
-begin -- architecture                                                                                -- GENERATED --
+--=============================================================================                      -- GENERATED --
+begin -- architecture
 --=============================================================================
 
   gbregs: process (clk) is
@@ -249,8 +250,8 @@ begin -- architecture                                                           
     variable bus_writeData     : rvex_data_type;
     variable bus_writeMaskDbg  : rvex_data_type;
     variable bus_wordAddr      : unsigned(5 downto 0);
-    variable perf_count_clear  : std_logic;
-                                                                                                     -- GENERATED --
+    variable perf_count_clear  : std_logic;                                                          -- GENERATED --
+
     -- Generated variables and constants.
     variable cr_gsr_r_write     : std_logic_vector(0 downto 0);
     variable cr_gsr_r_wmask_dbg : std_logic_vector(0 downto 0);
@@ -259,8 +260,8 @@ begin -- architecture                                                           
     variable cr_gsr_b_read      : std_logic_vector(0 downto 0);
     variable cr_gsr_rid_read    : std_logic_vector(3 downto 0);
     variable cr_bcrr_bcrr_write : std_logic_vector(31 downto 0);
-    variable cr_bcrr_bcrr_wmask_dbg: std_logic_vector(31 downto 0);
-    variable cr_bcrr_bcrr_read  : std_logic_vector(31 downto 0);                                     -- GENERATED --
+    variable cr_bcrr_bcrr_wmask_dbg: std_logic_vector(31 downto 0);                                  -- GENERATED --
+    variable cr_bcrr_bcrr_read  : std_logic_vector(31 downto 0);
     variable cr_cc_cc_read      : std_logic_vector(31 downto 0);
     variable cr_aff_af_read     : std_logic_vector(31 downto 0);
     variable cr_cnt_cnt_read    : std_logic_vector(31 downto 0);
@@ -269,8 +270,8 @@ begin -- architecture                                                           
     variable cr_limc7_borrow15_read: std_logic_vector(15 downto 0);
     variable cr_limc7_borrow14_read: std_logic_vector(15 downto 0);
     variable cr_limc6_borrow13_read: std_logic_vector(15 downto 0);
-    variable cr_limc6_borrow12_read: std_logic_vector(15 downto 0);
-    variable cr_limc5_borrow11_read: std_logic_vector(15 downto 0);                                  -- GENERATED --
+    variable cr_limc6_borrow12_read: std_logic_vector(15 downto 0);                                  -- GENERATED --
+    variable cr_limc5_borrow11_read: std_logic_vector(15 downto 0);
     variable cr_limc5_borrow10_read: std_logic_vector(15 downto 0);
     variable cr_limc4_borrow9_read: std_logic_vector(15 downto 0);
     variable cr_limc4_borrow8_read: std_logic_vector(15 downto 0);
@@ -279,8 +280,8 @@ begin -- architecture                                                           
     variable cr_limc2_borrow5_read: std_logic_vector(15 downto 0);
     variable cr_limc2_borrow4_read: std_logic_vector(15 downto 0);
     variable cr_limc1_borrow3_read: std_logic_vector(15 downto 0);
-    variable cr_limc1_borrow2_read: std_logic_vector(15 downto 0);
-    variable cr_limc0_borrow1_read: std_logic_vector(15 downto 0);                                   -- GENERATED --
+    variable cr_limc1_borrow2_read: std_logic_vector(15 downto 0);                                   -- GENERATED --
+    variable cr_limc0_borrow1_read: std_logic_vector(15 downto 0);
     variable cr_limc0_borrow0_read: std_logic_vector(15 downto 0);
     variable cr_sic3_syl15cap_read: std_logic_vector(7 downto 0);
     constant cr_sic3_syl15cap_lane: natural := to_integer((to_unsigned(((4) * (3)) + (3), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
@@ -289,8 +290,8 @@ begin -- architecture                                                           
     variable cr_sic3_syl14cap_read: std_logic_vector(7 downto 0);
     constant cr_sic3_syl14cap_lane: natural := to_integer((to_unsigned(((4) * (3)) + (2), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
     constant cr_sic3_syl14cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
-    constant cr_sic3_syl14cap_revindex: natural := (cr_sic3_syl14cap_groupMask) - (to_integer((to_unsigned(cr_sic3_syl14cap_lane, 31)) and (to_unsigned(cr_sic3_syl14cap_groupMask, 31))));
-    variable cr_sic3_syl13cap_read: std_logic_vector(7 downto 0);                                    -- GENERATED --
+    constant cr_sic3_syl14cap_revindex: natural := (cr_sic3_syl14cap_groupMask) - (to_integer((to_unsigned(cr_sic3_syl14cap_lane, 31)) and (to_unsigned(cr_sic3_syl14cap_groupMask, 31)))); -- GENERATED --
+    variable cr_sic3_syl13cap_read: std_logic_vector(7 downto 0);
     constant cr_sic3_syl13cap_lane: natural := to_integer((to_unsigned(((4) * (3)) + (1), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
     constant cr_sic3_syl13cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
     constant cr_sic3_syl13cap_revindex: natural := (cr_sic3_syl13cap_groupMask) - (to_integer((to_unsigned(cr_sic3_syl13cap_lane, 31)) and (to_unsigned(cr_sic3_syl13cap_groupMask, 31))));
@@ -299,8 +300,8 @@ begin -- architecture                                                           
     constant cr_sic3_syl12cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
     constant cr_sic3_syl12cap_revindex: natural := (cr_sic3_syl12cap_groupMask) - (to_integer((to_unsigned(cr_sic3_syl12cap_lane, 31)) and (to_unsigned(cr_sic3_syl12cap_groupMask, 31))));
     variable cr_sic2_syl11cap_read: std_logic_vector(7 downto 0);
-    constant cr_sic2_syl11cap_lane: natural := to_integer((to_unsigned(((4) * (2)) + (3), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
-    constant cr_sic2_syl11cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1); -- GENERATED --
+    constant cr_sic2_syl11cap_lane: natural := to_integer((to_unsigned(((4) * (2)) + (3), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31))); -- GENERATED --
+    constant cr_sic2_syl11cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
     constant cr_sic2_syl11cap_revindex: natural := (cr_sic2_syl11cap_groupMask) - (to_integer((to_unsigned(cr_sic2_syl11cap_lane, 31)) and (to_unsigned(cr_sic2_syl11cap_groupMask, 31))));
     variable cr_sic2_syl10cap_read: std_logic_vector(7 downto 0);
     constant cr_sic2_syl10cap_lane: natural := to_integer((to_unsigned(((4) * (2)) + (2), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
@@ -309,8 +310,8 @@ begin -- architecture                                                           
     variable cr_sic2_syl9cap_read: std_logic_vector(7 downto 0);
     constant cr_sic2_syl9cap_lane: natural := to_integer((to_unsigned(((4) * (2)) + (1), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
     constant cr_sic2_syl9cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
-    constant cr_sic2_syl9cap_revindex: natural := (cr_sic2_syl9cap_groupMask) - (to_integer((to_unsigned(cr_sic2_syl9cap_lane, 31)) and (to_unsigned(cr_sic2_syl9cap_groupMask, 31))));
-    variable cr_sic2_syl8cap_read: std_logic_vector(7 downto 0);                                     -- GENERATED --
+    constant cr_sic2_syl9cap_revindex: natural := (cr_sic2_syl9cap_groupMask) - (to_integer((to_unsigned(cr_sic2_syl9cap_lane, 31)) and (to_unsigned(cr_sic2_syl9cap_groupMask, 31)))); -- GENERATED --
+    variable cr_sic2_syl8cap_read: std_logic_vector(7 downto 0);
     constant cr_sic2_syl8cap_lane: natural := to_integer((to_unsigned(((4) * (2)) + (0), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
     constant cr_sic2_syl8cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
     constant cr_sic2_syl8cap_revindex: natural := (cr_sic2_syl8cap_groupMask) - (to_integer((to_unsigned(cr_sic2_syl8cap_lane, 31)) and (to_unsigned(cr_sic2_syl8cap_groupMask, 31))));
@@ -319,8 +320,8 @@ begin -- architecture                                                           
     constant cr_sic1_syl7cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
     constant cr_sic1_syl7cap_revindex: natural := (cr_sic1_syl7cap_groupMask) - (to_integer((to_unsigned(cr_sic1_syl7cap_lane, 31)) and (to_unsigned(cr_sic1_syl7cap_groupMask, 31))));
     variable cr_sic1_syl6cap_read: std_logic_vector(7 downto 0);
-    constant cr_sic1_syl6cap_lane: natural := to_integer((to_unsigned(((4) * (1)) + (2), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
-    constant cr_sic1_syl6cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1); -- GENERATED --
+    constant cr_sic1_syl6cap_lane: natural := to_integer((to_unsigned(((4) * (1)) + (2), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31))); -- GENERATED --
+    constant cr_sic1_syl6cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
     constant cr_sic1_syl6cap_revindex: natural := (cr_sic1_syl6cap_groupMask) - (to_integer((to_unsigned(cr_sic1_syl6cap_lane, 31)) and (to_unsigned(cr_sic1_syl6cap_groupMask, 31))));
     variable cr_sic1_syl5cap_read: std_logic_vector(7 downto 0);
     constant cr_sic1_syl5cap_lane: natural := to_integer((to_unsigned(((4) * (1)) + (1), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
@@ -329,8 +330,8 @@ begin -- architecture                                                           
     variable cr_sic1_syl4cap_read: std_logic_vector(7 downto 0);
     constant cr_sic1_syl4cap_lane: natural := to_integer((to_unsigned(((4) * (1)) + (0), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
     constant cr_sic1_syl4cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
-    constant cr_sic1_syl4cap_revindex: natural := (cr_sic1_syl4cap_groupMask) - (to_integer((to_unsigned(cr_sic1_syl4cap_lane, 31)) and (to_unsigned(cr_sic1_syl4cap_groupMask, 31))));
-    variable cr_sic0_syl3cap_read: std_logic_vector(7 downto 0);                                     -- GENERATED --
+    constant cr_sic1_syl4cap_revindex: natural := (cr_sic1_syl4cap_groupMask) - (to_integer((to_unsigned(cr_sic1_syl4cap_lane, 31)) and (to_unsigned(cr_sic1_syl4cap_groupMask, 31)))); -- GENERATED --
+    variable cr_sic0_syl3cap_read: std_logic_vector(7 downto 0);
     constant cr_sic0_syl3cap_lane: natural := to_integer((to_unsigned(((4) * (0)) + (3), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
     constant cr_sic0_syl3cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
     constant cr_sic0_syl3cap_revindex: natural := (cr_sic0_syl3cap_groupMask) - (to_integer((to_unsigned(cr_sic0_syl3cap_lane, 31)) and (to_unsigned(cr_sic0_syl3cap_groupMask, 31))));
@@ -339,8 +340,8 @@ begin -- architecture                                                           
     constant cr_sic0_syl2cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
     constant cr_sic0_syl2cap_revindex: natural := (cr_sic0_syl2cap_groupMask) - (to_integer((to_unsigned(cr_sic0_syl2cap_lane, 31)) and (to_unsigned(cr_sic0_syl2cap_groupMask, 31))));
     variable cr_sic0_syl1cap_read: std_logic_vector(7 downto 0);
-    constant cr_sic0_syl1cap_lane: natural := to_integer((to_unsigned(((4) * (0)) + (1), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
-    constant cr_sic0_syl1cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1); -- GENERATED --
+    constant cr_sic0_syl1cap_lane: natural := to_integer((to_unsigned(((4) * (0)) + (1), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31))); -- GENERATED --
+    constant cr_sic0_syl1cap_groupMask: natural := ((1) * 2**((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))) - (1);
     constant cr_sic0_syl1cap_revindex: natural := (cr_sic0_syl1cap_groupMask) - (to_integer((to_unsigned(cr_sic0_syl1cap_lane, 31)) and (to_unsigned(cr_sic0_syl1cap_groupMask, 31))));
     variable cr_sic0_syl0cap_read: std_logic_vector(7 downto 0);
     constant cr_sic0_syl0cap_lane: natural := to_integer((to_unsigned(((4) * (0)) + (0), 31)) and (to_unsigned(((1) * 2**(CFG.numLanesLog2)) - (1), 31)));
@@ -349,8 +350,8 @@ begin -- architecture                                                           
     variable cr_gps0_memar_read : std_logic_vector(3 downto 0);
     variable cr_gps0_memdc_read : std_logic_vector(3 downto 0);
     variable cr_gps0_memdr_read : std_logic_vector(3 downto 0);
-    variable cr_gps0_mulc_read  : std_logic_vector(3 downto 0);
-    variable cr_gps0_mulr_read  : std_logic_vector(3 downto 0);                                      -- GENERATED --
+    variable cr_gps0_mulc_read  : std_logic_vector(3 downto 0);                                      -- GENERATED --
+    variable cr_gps0_mulr_read  : std_logic_vector(3 downto 0);
     variable cr_gps0_aluc_read  : std_logic_vector(3 downto 0);
     variable cr_gps0_alur_read  : std_logic_vector(3 downto 0);
     variable cr_sps0_memmc_read : std_logic_vector(3 downto 0);
@@ -359,8 +360,8 @@ begin -- architecture                                                           
     variable cr_sps0_memdr_read : std_logic_vector(3 downto 0);
     variable cr_sps0_brc_read   : std_logic_vector(3 downto 0);
     variable cr_sps0_brr_read   : std_logic_vector(3 downto 0);
-    variable cr_sps0_aluc_read  : std_logic_vector(3 downto 0);
-    variable cr_sps0_alur_read  : std_logic_vector(3 downto 0);                                      -- GENERATED --
+    variable cr_sps0_aluc_read  : std_logic_vector(3 downto 0);                                      -- GENERATED --
+    variable cr_sps0_alur_read  : std_logic_vector(3 downto 0);
     variable cr_ext0_t_read     : std_logic_vector(0 downto 0);
     variable cr_ext0_brk_read   : std_logic_vector(2 downto 0);
     variable cr_ext0_c_read     : std_logic_vector(0 downto 0);
@@ -369,8 +370,8 @@ begin -- architecture                                                           
     variable cr_ext0_l_read     : std_logic_vector(0 downto 0);
     variable cr_ext0_f_read     : std_logic_vector(0 downto 0);
     variable cr_dcfg_ba_read    : std_logic_vector(3 downto 0);
-    variable cr_dcfg_nc_read    : std_logic_vector(3 downto 0);
-    variable cr_dcfg_ng_read    : std_logic_vector(3 downto 0);                                      -- GENERATED --
+    variable cr_dcfg_nc_read    : std_logic_vector(3 downto 0);                                      -- GENERATED --
+    variable cr_dcfg_ng_read    : std_logic_vector(3 downto 0);
     variable cr_dcfg_nl_read    : std_logic_vector(3 downto 0);
     variable cr_cver1_ver_read  : std_logic_vector(7 downto 0);
     variable cr_cver1_ctag0_read: std_logic_vector(7 downto 0);
@@ -379,8 +380,8 @@ begin -- architecture                                                           
     variable cr_cver0_ctag3_read: std_logic_vector(7 downto 0);
     variable cr_cver0_ctag4_read: std_logic_vector(7 downto 0);
     variable cr_cver0_ctag5_read: std_logic_vector(7 downto 0);
-    variable cr_cver0_ctag6_read: std_logic_vector(7 downto 0);
-    variable cr_pver1_coid_read : std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_cver0_ctag6_read: std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_pver1_coid_read : std_logic_vector(7 downto 0);
     variable cr_pver1_ptag0_read: std_logic_vector(7 downto 0);
     variable cr_pver1_ptag1_read: std_logic_vector(7 downto 0);
     variable cr_pver1_ptag2_read: std_logic_vector(7 downto 0);
@@ -389,8 +390,8 @@ begin -- architecture                                                           
     variable cr_pver0_ptag5_read: std_logic_vector(7 downto 0);
     variable cr_pver0_ptag6_read: std_logic_vector(7 downto 0);
 
-  begin
-    if rising_edge(clk) then                                                                         -- GENERATED --
+  begin                                                                                              -- GENERATED --
+    if rising_edge(clk) then
       if reset = '1' then
 
         -- Reset all registers and ports.
@@ -399,8 +400,8 @@ begin -- architecture                                                           
         gbreg2rv_reset <= bool2bit(int2bool(0));
         gbreg2cfg_requestEnable <= bool2bit(int2bool(0));
         cr_bcrr_bcrr_r <= std_logic_vector(to_unsigned(0, 32));
-        cr_cnt_cnt_r <= to_unsigned(0, 56);
-                                                                                                     -- GENERATED --
+        cr_cnt_cnt_r <= to_unsigned(0, 56);                                                          -- GENERATED --
+
       elsif clkEn = '1' then
 
         -- Setup the bus write command variables which are expected by the
@@ -409,8 +410,8 @@ begin -- architecture                                                           
         bus_writeMaskDbg := (
             31 downto 24 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(3),
             23 downto 16 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(2),
-            15 downto  8 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(1),
-            7 downto  0 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(0)                  -- GENERATED --
+            15 downto  8 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(1),                -- GENERATED --
+            7 downto  0 => creg2gbreg_dbgWriteEnable and creg2gbreg_dbgWriteMask(0)
         );
         bus_wordAddr := unsigned(creg2gbreg_dbgAddr(7 downto 2));
         perf_count_clear := '0';
@@ -419,8 +420,8 @@ begin -- architecture                                                           
         gbreg2creg_dbgReadData <= (others => '0');
         gbreg2creg_coreReadData <= (others => (others => '0'));
 
-        -- Generated register implementation code.
-        cr_gsr_r_write := bus_writeData((31)+0 downto 31);                                           -- GENERATED --
+        -- Generated register implementation code.                                                   -- GENERATED --
+        cr_gsr_r_write := bus_writeData((31)+0 downto 31);
         cr_gsr_r_wmask_dbg := (bus_writeMaskDbg((31)+0 downto 31)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(0, 31)))));
         gbreg2rv_reset <= vec2bit((cr_gsr_r_wmask_dbg) and (cr_gsr_r_write));
         cr_gsr_e_read := bit2vec(cfg2gbreg_error, 1);
@@ -429,8 +430,8 @@ begin -- architecture                                                           
         cr_bcrr_bcrr_write := bus_writeData((0)+31 downto 0);
         cr_bcrr_bcrr_wmask_dbg := (bus_writeMaskDbg((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(1, 31)))));
         cr_bcrr_bcrr_r <= ((cr_bcrr_bcrr_r) and (not (cr_bcrr_bcrr_wmask_dbg))) or ((cr_bcrr_bcrr_write) and (cr_bcrr_bcrr_wmask_dbg));
-        cr_bcrr_bcrr_read := cr_bcrr_bcrr_r;
-        gbreg2cfg_requestEnable <= cr_bcrr_bcrr_wmask_dbg(0);                                        -- GENERATED --
+        cr_bcrr_bcrr_read := cr_bcrr_bcrr_r;                                                         -- GENERATED --
+        gbreg2cfg_requestEnable <= cr_bcrr_bcrr_wmask_dbg(0);
         cr_cc_cc_read := cfg2gbreg_currentCfg;
         cr_aff_af_read := imem2gbreg_affinity;
         cr_cnt_cnt_r <= resize((resize(cr_cnt_cnt_r, 57)) + (to_unsigned(1, 57)), 56);
@@ -439,8 +440,8 @@ begin -- architecture                                                           
         cr_cnth_cnt_read := std_logic_vector(cr_cnt_cnt_r((24)+7 downto 24));
         if (CFG.limmhFromPreviousPair) then
           cr_limc7_borrow15_read(((2) * (7)) + (1)) := '1';
-          cr_limc7_borrow15_read := std_logic_vector((unsigned(cr_limc7_borrow15_read)) srl (2));
-        end if;                                                                                      -- GENERATED --
+          cr_limc7_borrow15_read := std_logic_vector((unsigned(cr_limc7_borrow15_read)) srl (2));    -- GENERATED --
+        end if;
         if (CFG.limmhFromNeighbor) then
           cr_limc7_borrow15_read((2) * (7)) := '1';
         end if;
@@ -449,8 +450,8 @@ begin -- architecture                                                           
           cr_limc7_borrow14_read := std_logic_vector((unsigned(cr_limc7_borrow14_read)) srl (2));
         end if;
         if (CFG.limmhFromNeighbor) then
-          cr_limc7_borrow14_read(((2) * (7)) + (1)) := '1';
-        end if;                                                                                      -- GENERATED --
+          cr_limc7_borrow14_read(((2) * (7)) + (1)) := '1';                                          -- GENERATED --
+        end if;
         if (CFG.limmhFromPreviousPair) then
           cr_limc6_borrow13_read(((2) * (6)) + (1)) := '1';
           cr_limc6_borrow13_read := std_logic_vector((unsigned(cr_limc6_borrow13_read)) srl (2));
@@ -459,8 +460,8 @@ begin -- architecture                                                           
           cr_limc6_borrow13_read((2) * (6)) := '1';
         end if;
         if (CFG.limmhFromPreviousPair) then
-          cr_limc6_borrow12_read((2) * (6)) := '1';
-          cr_limc6_borrow12_read := std_logic_vector((unsigned(cr_limc6_borrow12_read)) srl (2));    -- GENERATED --
+          cr_limc6_borrow12_read((2) * (6)) := '1';                                                  -- GENERATED --
+          cr_limc6_borrow12_read := std_logic_vector((unsigned(cr_limc6_borrow12_read)) srl (2));
         end if;
         if (CFG.limmhFromNeighbor) then
           cr_limc6_borrow12_read(((2) * (6)) + (1)) := '1';
@@ -469,8 +470,8 @@ begin -- architecture                                                           
           cr_limc5_borrow11_read(((2) * (5)) + (1)) := '1';
           cr_limc5_borrow11_read := std_logic_vector((unsigned(cr_limc5_borrow11_read)) srl (2));
         end if;
-        if (CFG.limmhFromNeighbor) then
-          cr_limc5_borrow11_read((2) * (5)) := '1';                                                  -- GENERATED --
+        if (CFG.limmhFromNeighbor) then                                                              -- GENERATED --
+          cr_limc5_borrow11_read((2) * (5)) := '1';
         end if;
         if (CFG.limmhFromPreviousPair) then
           cr_limc5_borrow10_read((2) * (5)) := '1';
@@ -479,8 +480,8 @@ begin -- architecture                                                           
         if (CFG.limmhFromNeighbor) then
           cr_limc5_borrow10_read(((2) * (5)) + (1)) := '1';
         end if;
-        if (CFG.limmhFromPreviousPair) then
-          cr_limc4_borrow9_read(((2) * (4)) + (1)) := '1';                                           -- GENERATED --
+        if (CFG.limmhFromPreviousPair) then                                                          -- GENERATED --
+          cr_limc4_borrow9_read(((2) * (4)) + (1)) := '1';
           cr_limc4_borrow9_read := std_logic_vector((unsigned(cr_limc4_borrow9_read)) srl (2));
         end if;
         if (CFG.limmhFromNeighbor) then
@@ -489,8 +490,8 @@ begin -- architecture                                                           
         if (CFG.limmhFromPreviousPair) then
           cr_limc4_borrow8_read((2) * (4)) := '1';
           cr_limc4_borrow8_read := std_logic_vector((unsigned(cr_limc4_borrow8_read)) srl (2));
-        end if;
-        if (CFG.limmhFromNeighbor) then                                                              -- GENERATED --
+        end if;                                                                                      -- GENERATED --
+        if (CFG.limmhFromNeighbor) then
           cr_limc4_borrow8_read(((2) * (4)) + (1)) := '1';
         end if;
         if (CFG.limmhFromPreviousPair) then
@@ -499,8 +500,8 @@ begin -- architecture                                                           
         end if;
         if (CFG.limmhFromNeighbor) then
           cr_limc3_borrow7_read((2) * (3)) := '1';
-        end if;
-        if (CFG.limmhFromPreviousPair) then                                                          -- GENERATED --
+        end if;                                                                                      -- GENERATED --
+        if (CFG.limmhFromPreviousPair) then
           cr_limc3_borrow6_read((2) * (3)) := '1';
           cr_limc3_borrow6_read := std_logic_vector((unsigned(cr_limc3_borrow6_read)) srl (2));
         end if;
@@ -509,8 +510,8 @@ begin -- architecture                                                           
         end if;
         if (CFG.limmhFromPreviousPair) then
           cr_limc2_borrow5_read(((2) * (2)) + (1)) := '1';
-          cr_limc2_borrow5_read := std_logic_vector((unsigned(cr_limc2_borrow5_read)) srl (2));
-        end if;                                                                                      -- GENERATED --
+          cr_limc2_borrow5_read := std_logic_vector((unsigned(cr_limc2_borrow5_read)) srl (2));      -- GENERATED --
+        end if;
         if (CFG.limmhFromNeighbor) then
           cr_limc2_borrow5_read((2) * (2)) := '1';
         end if;
@@ -519,8 +520,8 @@ begin -- architecture                                                           
           cr_limc2_borrow4_read := std_logic_vector((unsigned(cr_limc2_borrow4_read)) srl (2));
         end if;
         if (CFG.limmhFromNeighbor) then
-          cr_limc2_borrow4_read(((2) * (2)) + (1)) := '1';
-        end if;                                                                                      -- GENERATED --
+          cr_limc2_borrow4_read(((2) * (2)) + (1)) := '1';                                           -- GENERATED --
+        end if;
         if (CFG.limmhFromPreviousPair) then
           cr_limc1_borrow3_read(((2) * (1)) + (1)) := '1';
           cr_limc1_borrow3_read := std_logic_vector((unsigned(cr_limc1_borrow3_read)) srl (2));
@@ -529,8 +530,8 @@ begin -- architecture                                                           
           cr_limc1_borrow3_read((2) * (1)) := '1';
         end if;
         if (CFG.limmhFromPreviousPair) then
-          cr_limc1_borrow2_read((2) * (1)) := '1';
-          cr_limc1_borrow2_read := std_logic_vector((unsigned(cr_limc1_borrow2_read)) srl (2));      -- GENERATED --
+          cr_limc1_borrow2_read((2) * (1)) := '1';                                                   -- GENERATED --
+          cr_limc1_borrow2_read := std_logic_vector((unsigned(cr_limc1_borrow2_read)) srl (2));
         end if;
         if (CFG.limmhFromNeighbor) then
           cr_limc1_borrow2_read(((2) * (1)) + (1)) := '1';
@@ -539,8 +540,8 @@ begin -- architecture                                                           
           cr_limc0_borrow1_read(((2) * (0)) + (1)) := '1';
           cr_limc0_borrow1_read := std_logic_vector((unsigned(cr_limc0_borrow1_read)) srl (2));
         end if;
-        if (CFG.limmhFromNeighbor) then
-          cr_limc0_borrow1_read((2) * (0)) := '1';                                                   -- GENERATED --
+        if (CFG.limmhFromNeighbor) then                                                              -- GENERATED --
+          cr_limc0_borrow1_read((2) * (0)) := '1';
         end if;
         if (CFG.limmhFromPreviousPair) then
           cr_limc0_borrow0_read((2) * (0)) := '1';
@@ -549,8 +550,8 @@ begin -- architecture                                                           
         if (CFG.limmhFromNeighbor) then
           cr_limc0_borrow0_read(((2) * (0)) + (1)) := '1';
         end if;
-        cr_sic3_syl15cap_read(0) := '1';
-        cr_sic3_syl15cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic3_syl15cap_lane), 31))))); -- GENERATED --
+        cr_sic3_syl15cap_read(0) := '1';                                                             -- GENERATED --
+        cr_sic3_syl15cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic3_syl15cap_lane), 31)))));
         cr_sic3_syl15cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic3_syl15cap_revindex));
         cr_sic3_syl15cap_read(3) := bool2bit((((cr_sic3_syl15cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         cr_sic3_syl14cap_read(0) := '1';
@@ -559,8 +560,8 @@ begin -- architecture                                                           
         cr_sic3_syl14cap_read(3) := bool2bit((((cr_sic3_syl14cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         cr_sic3_syl13cap_read(0) := '1';
         cr_sic3_syl13cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic3_syl13cap_lane), 31)))));
-        cr_sic3_syl13cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic3_syl13cap_revindex));
-        cr_sic3_syl13cap_read(3) := bool2bit((((cr_sic3_syl13cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0)); -- GENERATED --
+        cr_sic3_syl13cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic3_syl13cap_revindex));   -- GENERATED --
+        cr_sic3_syl13cap_read(3) := bool2bit((((cr_sic3_syl13cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         cr_sic3_syl12cap_read(0) := '1';
         cr_sic3_syl12cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic3_syl12cap_lane), 31)))));
         cr_sic3_syl12cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic3_syl12cap_revindex));
@@ -569,8 +570,8 @@ begin -- architecture                                                           
         cr_sic2_syl11cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic2_syl11cap_lane), 31)))));
         cr_sic2_syl11cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic2_syl11cap_revindex));
         cr_sic2_syl11cap_read(3) := bool2bit((((cr_sic2_syl11cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
-        cr_sic2_syl10cap_read(0) := '1';
-        cr_sic2_syl10cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic2_syl10cap_lane), 31))))); -- GENERATED --
+        cr_sic2_syl10cap_read(0) := '1';                                                             -- GENERATED --
+        cr_sic2_syl10cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic2_syl10cap_lane), 31)))));
         cr_sic2_syl10cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic2_syl10cap_revindex));
         cr_sic2_syl10cap_read(3) := bool2bit((((cr_sic2_syl10cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         cr_sic2_syl9cap_read(0) := '1';
@@ -579,8 +580,8 @@ begin -- architecture                                                           
         cr_sic2_syl9cap_read(3) := bool2bit((((cr_sic2_syl9cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         cr_sic2_syl8cap_read(0) := '1';
         cr_sic2_syl8cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic2_syl8cap_lane), 31)))));
-        cr_sic2_syl8cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic2_syl8cap_revindex));
-        cr_sic2_syl8cap_read(3) := bool2bit((((cr_sic2_syl8cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0)); -- GENERATED --
+        cr_sic2_syl8cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic2_syl8cap_revindex));     -- GENERATED --
+        cr_sic2_syl8cap_read(3) := bool2bit((((cr_sic2_syl8cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         cr_sic1_syl7cap_read(0) := '1';
         cr_sic1_syl7cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic1_syl7cap_lane), 31)))));
         cr_sic1_syl7cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic1_syl7cap_revindex));
@@ -589,8 +590,8 @@ begin -- architecture                                                           
         cr_sic1_syl6cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic1_syl6cap_lane), 31)))));
         cr_sic1_syl6cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic1_syl6cap_revindex));
         cr_sic1_syl6cap_read(3) := bool2bit((((cr_sic1_syl6cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
-        cr_sic1_syl5cap_read(0) := '1';
-        cr_sic1_syl5cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic1_syl5cap_lane), 31))))); -- GENERATED --
+        cr_sic1_syl5cap_read(0) := '1';                                                              -- GENERATED --
+        cr_sic1_syl5cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic1_syl5cap_lane), 31)))));
         cr_sic1_syl5cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic1_syl5cap_revindex));
         cr_sic1_syl5cap_read(3) := bool2bit((((cr_sic1_syl5cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         cr_sic1_syl4cap_read(0) := '1';
@@ -599,8 +600,8 @@ begin -- architecture                                                           
         cr_sic1_syl4cap_read(3) := bool2bit((((cr_sic1_syl4cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         cr_sic0_syl3cap_read(0) := '1';
         cr_sic0_syl3cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic0_syl3cap_lane), 31)))));
-        cr_sic0_syl3cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic0_syl3cap_revindex));
-        cr_sic0_syl3cap_read(3) := bool2bit((((cr_sic0_syl3cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0)); -- GENERATED --
+        cr_sic0_syl3cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic0_syl3cap_revindex));     -- GENERATED --
+        cr_sic0_syl3cap_read(3) := bool2bit((((cr_sic0_syl3cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         cr_sic0_syl2cap_read(0) := '1';
         cr_sic0_syl2cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic0_syl2cap_lane), 31)))));
         cr_sic0_syl2cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic0_syl2cap_revindex));
@@ -609,8 +610,8 @@ begin -- architecture                                                           
         cr_sic0_syl1cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic0_syl1cap_lane), 31)))));
         cr_sic0_syl1cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic0_syl1cap_revindex));
         cr_sic0_syl1cap_read(3) := bool2bit((((cr_sic0_syl1cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
-        cr_sic0_syl0cap_read(0) := '1';
-        cr_sic0_syl0cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic0_syl0cap_lane), 31))))); -- GENERATED --
+        cr_sic0_syl0cap_read(0) := '1';                                                              -- GENERATED --
+        cr_sic0_syl0cap_read(1) := bool2bit(int2bool(to_integer((to_unsigned(CFG.multiplierLanes, 31)) and (to_unsigned((1) * 2**(cr_sic0_syl0cap_lane), 31)))));
         cr_sic0_syl0cap_read(2) := bool2bit((CFG.memLaneRevIndex) = (cr_sic0_syl0cap_revindex));
         cr_sic0_syl0cap_read(3) := bool2bit((((cr_sic0_syl0cap_lane) + (1)) mod ((1) * 2**(CFG.bundleAlignLog2))) = (0));
         if (CFG.forwarding) then
@@ -619,8 +620,8 @@ begin -- architecture                                                           
           else
             cr_gps0_memar_read := std_logic_vector(to_unsigned(S_FW, 4));
           end if;
-        else
-          cr_gps0_memar_read := std_logic_vector(to_unsigned(S_RD, 4));                              -- GENERATED --
+        else                                                                                         -- GENERATED --
+          cr_gps0_memar_read := std_logic_vector(to_unsigned(S_RD, 4));
         end if;
         if (CFG.forwarding) then
           if ((L_MEM) = (0)) then
@@ -629,8 +630,8 @@ begin -- architecture                                                           
             cr_gps0_memdc_read := std_logic_vector(to_unsigned((S_MEM) + (L_MEM), 4));
           end if;
         else
-          cr_gps0_memdc_read := std_logic_vector(to_unsigned((S_WB) + (L_WB), 4));
-        end if;                                                                                      -- GENERATED --
+          cr_gps0_memdc_read := std_logic_vector(to_unsigned((S_WB) + (L_WB), 4));                   -- GENERATED --
+        end if;
         if (CFG.forwarding) then
           if ((S_MEM) < (S_FW)) then
             cr_gps0_memdr_read := std_logic_vector(to_unsigned(S_MEM, 4));
@@ -639,8 +640,8 @@ begin -- architecture                                                           
           end if;
         else
           cr_gps0_memdr_read := std_logic_vector(to_unsigned(S_RD, 4));
-        end if;
-        if (CFG.forwarding) then                                                                     -- GENERATED --
+        end if;                                                                                      -- GENERATED --
+        if (CFG.forwarding) then
           if ((L_MUL) = (0)) then
             cr_gps0_mulc_read := std_logic_vector(to_unsigned((S_MUL) + (1), 4));
           else
@@ -649,8 +650,8 @@ begin -- architecture                                                           
         else
           cr_gps0_mulc_read := std_logic_vector(to_unsigned((S_WB) + (L_WB), 4));
         end if;
-        if (CFG.forwarding) then
-          if ((S_MUL) < (S_FW)) then                                                                 -- GENERATED --
+        if (CFG.forwarding) then                                                                     -- GENERATED --
+          if ((S_MUL) < (S_FW)) then
             cr_gps0_mulr_read := std_logic_vector(to_unsigned(S_MUL, 4));
           else
             cr_gps0_mulr_read := std_logic_vector(to_unsigned(S_FW, 4));
@@ -659,8 +660,8 @@ begin -- architecture                                                           
           cr_gps0_mulr_read := std_logic_vector(to_unsigned(S_RD, 4));
         end if;
         if (CFG.forwarding) then
-          if ((L_ALU) = (0)) then
-            cr_gps0_aluc_read := std_logic_vector(to_unsigned((S_ALU) + (1), 4));                    -- GENERATED --
+          if ((L_ALU) = (0)) then                                                                    -- GENERATED --
+            cr_gps0_aluc_read := std_logic_vector(to_unsigned((S_ALU) + (1), 4));
           else
             cr_gps0_aluc_read := std_logic_vector(to_unsigned((S_ALU) + (L_ALU), 4));
           end if;
@@ -669,8 +670,8 @@ begin -- architecture                                                           
         end if;
         if (CFG.forwarding) then
           if ((S_ALU) < (S_FW)) then
-            cr_gps0_alur_read := std_logic_vector(to_unsigned(S_ALU, 4));
-          else                                                                                       -- GENERATED --
+            cr_gps0_alur_read := std_logic_vector(to_unsigned(S_ALU, 4));                            -- GENERATED --
+          else
             cr_gps0_alur_read := std_logic_vector(to_unsigned(S_FW, 4));
           end if;
         else
@@ -679,8 +680,8 @@ begin -- architecture                                                           
         cr_sps0_memmc_read := std_logic_vector(to_unsigned((S_MEM) + (L_MEM), 4));
         cr_sps0_memmr_read := std_logic_vector(to_unsigned(S_MEM, 4));
         if (CFG.forwarding) then
-          if ((L_MEM) = (0)) then
-            cr_sps0_memdc_read := std_logic_vector(to_unsigned((S_MEM) + (1), 4));                   -- GENERATED --
+          if ((L_MEM) = (0)) then                                                                    -- GENERATED --
+            cr_sps0_memdc_read := std_logic_vector(to_unsigned((S_MEM) + (1), 4));
           else
             cr_sps0_memdc_read := std_logic_vector(to_unsigned((S_MEM) + (L_MEM), 4));
           end if;
@@ -689,8 +690,8 @@ begin -- architecture                                                           
         end if;
         if (CFG.forwarding) then
           if ((S_MEM) < (S_SFW)) then
-            cr_sps0_memdr_read := std_logic_vector(to_unsigned(S_MEM, 4));
-          else                                                                                       -- GENERATED --
+            cr_sps0_memdr_read := std_logic_vector(to_unsigned(S_MEM, 4));                           -- GENERATED --
+          else
             cr_sps0_memdr_read := std_logic_vector(to_unsigned(S_SFW, 4));
           end if;
         else
@@ -699,8 +700,8 @@ begin -- architecture                                                           
         cr_sps0_brc_read := std_logic_vector(to_unsigned(S_BR, 4));
         if (CFG.forwarding) then
           if ((S_BR) < (S_SFW)) then
-            cr_sps0_brr_read := std_logic_vector(to_unsigned(S_BR, 4));
-          else                                                                                       -- GENERATED --
+            cr_sps0_brr_read := std_logic_vector(to_unsigned(S_BR, 4));                              -- GENERATED --
+          else
             cr_sps0_brr_read := std_logic_vector(to_unsigned(S_SFW, 4));
           end if;
         else
@@ -709,8 +710,8 @@ begin -- architecture                                                           
         if (CFG.forwarding) then
           if ((L_ALU) = (0)) then
             cr_sps0_aluc_read := std_logic_vector(to_unsigned((S_ALU) + (1), 4));
-          else
-            cr_sps0_aluc_read := std_logic_vector(to_unsigned((S_ALU) + (L_ALU), 4));                -- GENERATED --
+          else                                                                                       -- GENERATED --
+            cr_sps0_aluc_read := std_logic_vector(to_unsigned((S_ALU) + (L_ALU), 4));
           end if;
         else
           cr_sps0_aluc_read := std_logic_vector(to_unsigned(S_SWB, 4));
@@ -719,8 +720,8 @@ begin -- architecture                                                           
           if ((S_ALU) < (S_SFW)) then
             cr_sps0_alur_read := std_logic_vector(to_unsigned(S_ALU, 4));
           else
-            cr_sps0_alur_read := std_logic_vector(to_unsigned(S_SFW, 4));
-          end if;                                                                                    -- GENERATED --
+            cr_sps0_alur_read := std_logic_vector(to_unsigned(S_SFW, 4));                            -- GENERATED --
+          end if;
         else
           cr_sps0_alur_read := std_logic_vector(to_unsigned(S_SRD, 4));
         end if;
@@ -729,8 +730,8 @@ begin -- architecture                                                           
         cr_ext0_c_read := bit2vec(bool2bit(CFG.cachePerfCountEnable), 1);
         cr_ext0_p_read := std_logic_vector(to_unsigned(CFG.perfCountSize, 3));
         cr_ext0_o_read := bit2vec(bool2bit((BRANCH_OFFS_SHIFT) = (2)), 1);
-        cr_ext0_l_read := bit2vec(bool2bit(CFG.reg63isLink), 1);
-        cr_ext0_f_read := bit2vec(bool2bit(CFG.forwarding), 1);                                      -- GENERATED --
+        cr_ext0_l_read := bit2vec(bool2bit(CFG.reg63isLink), 1);                                     -- GENERATED --
+        cr_ext0_f_read := bit2vec(bool2bit(CFG.forwarding), 1);
         cr_dcfg_ba_read := std_logic_vector(to_unsigned(((1) * 2**(CFG.bundleAlignLog2)) - (1), 4));
         cr_dcfg_nc_read := std_logic_vector(to_unsigned(((1) * 2**(CFG.numContextsLog2)) - (1), 4));
         cr_dcfg_ng_read := std_logic_vector(to_unsigned(((1) * 2**(CFG.numLaneGroupsLog2)) - (1), 4));
@@ -739,8 +740,8 @@ begin -- architecture                                                           
         cr_cver1_ctag0_read := RVEX_CORE_TAG((48)+7 downto 48);
         cr_cver1_ctag1_read := RVEX_CORE_TAG((40)+7 downto 40);
         cr_cver1_ctag2_read := RVEX_CORE_TAG((32)+7 downto 32);
-        cr_cver0_ctag3_read := RVEX_CORE_TAG((24)+7 downto 24);
-        cr_cver0_ctag4_read := RVEX_CORE_TAG((16)+7 downto 16);                                      -- GENERATED --
+        cr_cver0_ctag3_read := RVEX_CORE_TAG((24)+7 downto 24);                                      -- GENERATED --
+        cr_cver0_ctag4_read := RVEX_CORE_TAG((16)+7 downto 16);
         cr_cver0_ctag5_read := RVEX_CORE_TAG((8)+7 downto 8);
         cr_cver0_ctag6_read := RVEX_CORE_TAG((0)+7 downto 0);
         cr_pver1_coid_read := rv2gbreg_coreID;
@@ -749,8 +750,8 @@ begin -- architecture                                                           
         cr_pver1_ptag2_read := rv2gbreg_platformTag((32)+7 downto 32);
         cr_pver0_ptag3_read := rv2gbreg_platformTag((24)+7 downto 24);
         cr_pver0_ptag4_read := rv2gbreg_platformTag((16)+7 downto 16);
-        cr_pver0_ptag5_read := rv2gbreg_platformTag((8)+7 downto 8);
-        cr_pver0_ptag6_read := rv2gbreg_platformTag((0)+7 downto 0);                                 -- GENERATED --
+        cr_pver0_ptag5_read := rv2gbreg_platformTag((8)+7 downto 8);                                 -- GENERATED --
+        cr_pver0_ptag6_read := rv2gbreg_platformTag((0)+7 downto 0);
 
         -- Bus read muxes.
         case creg2gbreg_dbgAddr(7 downto 2) is
@@ -759,8 +760,8 @@ begin -- architecture                                                           
           when "000010" => gbreg2creg_dbgReadData <= cr_cc_cc_read;
           when "000011" => gbreg2creg_dbgReadData <= cr_aff_af_read;
           when "000100" => gbreg2creg_dbgReadData <= cr_cnt_cnt_read;
-          when "000101" => gbreg2creg_dbgReadData <= (cr_cnth_cnth_read) & (cr_cnth_cnt_read);
-          when "101000" => gbreg2creg_dbgReadData <= (cr_limc7_borrow15_read) & (cr_limc7_borrow14_read); -- GENERATED --
+          when "000101" => gbreg2creg_dbgReadData <= (cr_cnth_cnth_read) & (cr_cnth_cnt_read);       -- GENERATED --
+          when "101000" => gbreg2creg_dbgReadData <= (cr_limc7_borrow15_read) & (cr_limc7_borrow14_read);
           when "101001" => gbreg2creg_dbgReadData <= (cr_limc6_borrow13_read) & (cr_limc6_borrow12_read);
           when "101010" => gbreg2creg_dbgReadData <= (cr_limc5_borrow11_read) & (cr_limc5_borrow10_read);
           when "101011" => gbreg2creg_dbgReadData <= (cr_limc4_borrow9_read) & (cr_limc4_borrow8_read);
@@ -769,8 +770,8 @@ begin -- architecture                                                           
           when "101110" => gbreg2creg_dbgReadData <= (cr_limc1_borrow3_read) & (cr_limc1_borrow2_read);
           when "101111" => gbreg2creg_dbgReadData <= (cr_limc0_borrow1_read) & (cr_limc0_borrow0_read);
           when "110000" => gbreg2creg_dbgReadData <= (((cr_sic3_syl15cap_read) & (cr_sic3_syl14cap_read)) & (cr_sic3_syl13cap_read)) & (cr_sic3_syl12cap_read);
-          when "110001" => gbreg2creg_dbgReadData <= (((cr_sic2_syl11cap_read) & (cr_sic2_syl10cap_read)) & (cr_sic2_syl9cap_read)) & (cr_sic2_syl8cap_read);
-          when "110010" => gbreg2creg_dbgReadData <= (((cr_sic1_syl7cap_read) & (cr_sic1_syl6cap_read)) & (cr_sic1_syl5cap_read)) & (cr_sic1_syl4cap_read); -- GENERATED --
+          when "110001" => gbreg2creg_dbgReadData <= (((cr_sic2_syl11cap_read) & (cr_sic2_syl10cap_read)) & (cr_sic2_syl9cap_read)) & (cr_sic2_syl8cap_read); -- GENERATED --
+          when "110010" => gbreg2creg_dbgReadData <= (((cr_sic1_syl7cap_read) & (cr_sic1_syl6cap_read)) & (cr_sic1_syl5cap_read)) & (cr_sic1_syl4cap_read);
           when "110011" => gbreg2creg_dbgReadData <= (((cr_sic0_syl3cap_read) & (cr_sic0_syl2cap_read)) & (cr_sic0_syl1cap_read)) & (cr_sic0_syl0cap_read);
           when "110100" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
           when "110101" => gbreg2creg_dbgReadData <= (((((((bitvec_lit("0000")) & (cr_gps0_memar_read)) & (cr_gps0_memdc_read)) & (cr_gps0_memdr_read)) & (cr_gps0_mulc_read)) & (cr_gps0_mulr_read)) & (cr_gps0_aluc_read)) & (cr_gps0_alur_read);
@@ -779,8 +780,8 @@ begin -- architecture                                                           
           when "111000" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
           when "111001" => gbreg2creg_dbgReadData <= bitvec_lit("00000000000000000000000000000000");
           when "111010" => gbreg2creg_dbgReadData <= (((((((((bitvec_lit("0000")) & (cr_ext0_t_read)) & (cr_ext0_brk_read)) & (bitvec_lit("0000"))) & (cr_ext0_c_read)) & (cr_ext0_p_read)) & (bitvec_lit("0000000000000"))) & (cr_ext0_o_read)) & (cr_ext0_l_read)) & (cr_ext0_f_read);
-          when "111011" => gbreg2creg_dbgReadData <= ((((bitvec_lit("0000000000000000")) & (cr_dcfg_ba_read)) & (cr_dcfg_nc_read)) & (cr_dcfg_ng_read)) & (cr_dcfg_nl_read);
-          when "111100" => gbreg2creg_dbgReadData <= (((cr_cver1_ver_read) & (cr_cver1_ctag0_read)) & (cr_cver1_ctag1_read)) & (cr_cver1_ctag2_read); -- GENERATED --
+          when "111011" => gbreg2creg_dbgReadData <= ((((bitvec_lit("0000000000000000")) & (cr_dcfg_ba_read)) & (cr_dcfg_nc_read)) & (cr_dcfg_ng_read)) & (cr_dcfg_nl_read); -- GENERATED --
+          when "111100" => gbreg2creg_dbgReadData <= (((cr_cver1_ver_read) & (cr_cver1_ctag0_read)) & (cr_cver1_ctag1_read)) & (cr_cver1_ctag2_read);
           when "111101" => gbreg2creg_dbgReadData <= (((cr_cver0_ctag3_read) & (cr_cver0_ctag4_read)) & (cr_cver0_ctag5_read)) & (cr_cver0_ctag6_read);
           when "111110" => gbreg2creg_dbgReadData <= (((cr_pver1_coid_read) & (cr_pver1_ptag0_read)) & (cr_pver1_ptag1_read)) & (cr_pver1_ptag2_read);
           when "111111" => gbreg2creg_dbgReadData <= (((cr_pver0_ptag3_read) & (cr_pver0_ptag4_read)) & (cr_pver0_ptag5_read)) & (cr_pver0_ptag6_read);
@@ -789,8 +790,8 @@ begin -- architecture                                                           
         for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
           case creg2gbreg_coreAddr(laneGroup)(7 downto 2) is
             when "000000" => gbreg2creg_coreReadData(laneGroup) <= (((((bitvec_lit("0")) & (bitvec_lit("00000000000000000"))) & (cr_gsr_e_read)) & (cr_gsr_b_read)) & (cr_gsr_rid_read)) & (bitvec_lit("00000000"));
-            when "000001" => gbreg2creg_coreReadData(laneGroup) <= cr_bcrr_bcrr_read;
-            when "000010" => gbreg2creg_coreReadData(laneGroup) <= cr_cc_cc_read;                    -- GENERATED --
+            when "000001" => gbreg2creg_coreReadData(laneGroup) <= cr_bcrr_bcrr_read;                -- GENERATED --
+            when "000010" => gbreg2creg_coreReadData(laneGroup) <= cr_cc_cc_read;
             when "000011" => gbreg2creg_coreReadData(laneGroup) <= cr_aff_af_read;
             when "000100" => gbreg2creg_coreReadData(laneGroup) <= cr_cnt_cnt_read;
             when "000101" => gbreg2creg_coreReadData(laneGroup) <= (cr_cnth_cnth_read) & (cr_cnth_cnt_read);
@@ -799,8 +800,8 @@ begin -- architecture                                                           
             when "101010" => gbreg2creg_coreReadData(laneGroup) <= (cr_limc5_borrow11_read) & (cr_limc5_borrow10_read);
             when "101011" => gbreg2creg_coreReadData(laneGroup) <= (cr_limc4_borrow9_read) & (cr_limc4_borrow8_read);
             when "101100" => gbreg2creg_coreReadData(laneGroup) <= (cr_limc3_borrow7_read) & (cr_limc3_borrow6_read);
-            when "101101" => gbreg2creg_coreReadData(laneGroup) <= (cr_limc2_borrow5_read) & (cr_limc2_borrow4_read);
-            when "101110" => gbreg2creg_coreReadData(laneGroup) <= (cr_limc1_borrow3_read) & (cr_limc1_borrow2_read); -- GENERATED --
+            when "101101" => gbreg2creg_coreReadData(laneGroup) <= (cr_limc2_borrow5_read) & (cr_limc2_borrow4_read); -- GENERATED --
+            when "101110" => gbreg2creg_coreReadData(laneGroup) <= (cr_limc1_borrow3_read) & (cr_limc1_borrow2_read);
             when "101111" => gbreg2creg_coreReadData(laneGroup) <= (cr_limc0_borrow1_read) & (cr_limc0_borrow0_read);
             when "110000" => gbreg2creg_coreReadData(laneGroup) <= (((cr_sic3_syl15cap_read) & (cr_sic3_syl14cap_read)) & (cr_sic3_syl13cap_read)) & (cr_sic3_syl12cap_read);
             when "110001" => gbreg2creg_coreReadData(laneGroup) <= (((cr_sic2_syl11cap_read) & (cr_sic2_syl10cap_read)) & (cr_sic2_syl9cap_read)) & (cr_sic2_syl8cap_read);
@@ -809,8 +810,8 @@ begin -- architecture                                                           
             when "110100" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
             when "110101" => gbreg2creg_coreReadData(laneGroup) <= (((((((bitvec_lit("0000")) & (cr_gps0_memar_read)) & (cr_gps0_memdc_read)) & (cr_gps0_memdr_read)) & (cr_gps0_mulc_read)) & (cr_gps0_mulr_read)) & (cr_gps0_aluc_read)) & (cr_gps0_alur_read);
             when "110110" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
-            when "110111" => gbreg2creg_coreReadData(laneGroup) <= (((((((cr_sps0_memmc_read) & (cr_sps0_memmr_read)) & (cr_sps0_memdc_read)) & (cr_sps0_memdr_read)) & (cr_sps0_brc_read)) & (cr_sps0_brr_read)) & (cr_sps0_aluc_read)) & (cr_sps0_alur_read);
-            when "111000" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000"); -- GENERATED --
+            when "110111" => gbreg2creg_coreReadData(laneGroup) <= (((((((cr_sps0_memmc_read) & (cr_sps0_memmr_read)) & (cr_sps0_memdc_read)) & (cr_sps0_memdr_read)) & (cr_sps0_brc_read)) & (cr_sps0_brr_read)) & (cr_sps0_aluc_read)) & (cr_sps0_alur_read); -- GENERATED --
+            when "111000" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
             when "111001" => gbreg2creg_coreReadData(laneGroup) <= bitvec_lit("00000000000000000000000000000000");
             when "111010" => gbreg2creg_coreReadData(laneGroup) <= (((((((((bitvec_lit("0000")) & (cr_ext0_t_read)) & (cr_ext0_brk_read)) & (bitvec_lit("0000"))) & (cr_ext0_c_read)) & (cr_ext0_p_read)) & (bitvec_lit("0000000000000"))) & (cr_ext0_o_read)) & (cr_ext0_l_read)) & (cr_ext0_f_read);
             when "111011" => gbreg2creg_coreReadData(laneGroup) <= ((((bitvec_lit("0000000000000000")) & (cr_dcfg_ba_read)) & (cr_dcfg_nc_read)) & (cr_dcfg_ng_read)) & (cr_dcfg_nl_read);
@@ -819,8 +820,8 @@ begin -- architecture                                                           
             when "111110" => gbreg2creg_coreReadData(laneGroup) <= (((cr_pver1_coid_read) & (cr_pver1_ptag0_read)) & (cr_pver1_ptag1_read)) & (cr_pver1_ptag2_read);
             when "111111" => gbreg2creg_coreReadData(laneGroup) <= (((cr_pver0_ptag3_read) & (cr_pver0_ptag4_read)) & (cr_pver0_ptag5_read)) & (cr_pver0_ptag6_read);
             when others => gbreg2creg_coreReadData(laneGroup) <= (others => '0');
-          end case;
-        end loop;                                                                                    -- GENERATED --
+          end case;                                                                                  -- GENERATED --
+        end loop;
 
       end if;
     end if;
@@ -829,4 +830,4 @@ begin -- architecture                                                           
   gbreg2cfg_requestData <= cr_bcrr_bcrr_r;
 
 end Behavioral;
-
+                                                                                                     -- GENERATED --

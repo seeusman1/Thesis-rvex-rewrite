@@ -3,14 +3,14 @@ from __future__ import print_function
 import common.templates
 
 def generate(regs, dirs):
-    output = ['\n']
+    output = []
     
     # Write VHDL constants for all registers and fields.
     for ent in regs['defs']:
         if ent[0] == 'section':
-            output.append('  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n')
-            output.append('  -- %s\n' % ent[1])
-            output.append('  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n')
+            output.append('-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n')
+            output.append('-- %s\n' % ent[1])
+            output.append('-- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -\n')
             
         elif ent[0] == 'field':
             append_def(output, ent[1] + '_H', 'natural := %d' % ent[4])
@@ -31,20 +31,14 @@ def generate(regs, dirs):
         else:
             raise Exception('Unknown definition type %s.' % ent[0])
     
-    # Write the package footer.
-    output.append('end core_ctrlRegs_pkg;\n')
-    output.append('\n')
-    output.append('package body core_ctrlRegs_pkg is\n')
-    output.append('end core_ctrlRegs_pkg;\n')
-    
     # Write the output file.
-    common.templates.generate_footer(
+    common.templates.generate(
         'vhdl',
-        dirs['libdir'] + '/core_ctrlRegs_pkg.vhd',
+        dirs['tmpldir'] + '/core_ctrlRegs_pkg.vhd',
         dirs['outdir'] + '/core_ctrlRegs_pkg.vhd',
-        ''.join(output))
+        {'CREG_CONSTANTS': ''.join(output)})
 
 def append_def(data, key, value):
     if len(key) < 21:
         key = key + ' ' * (21 - len(key))
-    data.append('  constant %s: %s;\n' % (key, value))
+    data.append('constant %s: %s;\n' % (key, value))

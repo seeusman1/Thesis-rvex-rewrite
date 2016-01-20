@@ -25,6 +25,8 @@ all: $(TEMP)
 	@echo ""
 	@echo "Configuring core..."
 	$(CP) $(TEMP)/core_opcode_pkg.vhd $(CORE_LIB)/core_opcode_pkg.vhd
+	$(CP) $(TEMP)/core_pipeline_pkg.vhd $(CORE_LIB)/core_pipeline_pkg.vhd
+	$(CP) $(TEMP)/core_trap_pkg.vhd $(CORE_LIB)/core_trap_pkg.vhd
 	$(CP) $(TEMP)/core_ctrlRegs_pkg.vhd $(CORE_LIB)/core_ctrlRegs_pkg.vhd
 	$(CP) $(TEMP)/core_globalRegLogic.vhd $(CORE_LIB)/core_globalRegLogic.vhd
 	$(CP) $(TEMP)/core_contextRegLogic.vhd $(CORE_LIB)/core_contextRegLogic.vhd
@@ -44,20 +46,20 @@ all: $(TEMP)
 	@echo ""
 	@echo "Cleaning up..."
 	@$(RM_DIR) $(TEMP)
+	@$(RM) $(SCRIPTS)/code/*.pyc
 	@$(RM) $(SCRIPTS)/common/*.pyc
 	@$(RM) $(SCRIPTS)/cregs/*.pyc
 	@$(RM) $(SCRIPTS)/funcparserlib/*.pyc
 	@$(RM) $(SCRIPTS)/headers/*.pyc
 	@$(RM) $(SCRIPTS)/opcodes/*.pyc
+	@$(RM) $(SCRIPTS)/pipeline/*.pyc
 	@$(RM) $(SCRIPTS)/traps/*.pyc
 	@echo ""
 	@echo "Trying to rebuild reference manual..."
 	cd $(DOCS)/../../.. && $(MAKE)
 
 .PHONY: $(TEMP)
-$(TEMP): cregs/*.tex opcodes/*.tex traps/*.tex $(SCRIPTS)
+$(TEMP): cregs/*.tex opcodes/*.tex opcodes/*.ini traps/*.tex pipeline/*.ini $(SCRIPTS)
 	@$(ENSURE_DIR) $(TEMP)
-	$(PYTHONP) $(SCRIPTS)/generate.py opcodes cregs traps templates $(CORE_LIB) $(TEMP)
+	$(PYTHONP) $(SCRIPTS)/generate.py opcodes cregs traps pipeline templates $(TEMP)
 
-test:
-	$(PYTHONP) $(SCRIPTS)/code/code.py

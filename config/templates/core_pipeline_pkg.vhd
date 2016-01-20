@@ -1,0 +1,1 @@
+../../lib/rvex/core/core_pipeline_pkg.template.vhd

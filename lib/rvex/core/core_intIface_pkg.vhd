@@ -116,23 +116,6 @@ package core_intIface_pkg is
   -- undefined values to '0' here.
   constant RVEX_UNDEF           : std_logic := 'U';
   
-  -- Special "general purpose" register which is always tied to 0.
-  constant GPREG_ZERO           : rvex_gpRegAddr_type := "000000";
-  
-  -- Special "general purpose" register which is used as stack pointer by
-  -- return instructions.
-  constant GPREG_STACK          : rvex_gpRegAddr_type := "000001";
-  
-  -- Special "general purpose" register which optionally maps to the link
-  -- register, based on configuration.
-  constant GPREG_LINK           : rvex_gpRegAddr_type := "111111";
-  
-  -- Determines which encoding is used for the relative branch offset. May be
-  -- set to 2 or 3. When set to 3, the old encoding is used, where the LSB of
-  -- the branch offset is equal to 64 bits. When set to 2, the branch offset
-  -- is shifted right by one bit, to allow branching to 32 bit boundaries.
-  constant BRANCH_OFFS_SHIFT    : natural := 3;
-    
   -----------------------------------------------------------------------------
   -- General purpose register file read/write ports
   -----------------------------------------------------------------------------

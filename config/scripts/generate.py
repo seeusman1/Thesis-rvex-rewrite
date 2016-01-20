@@ -5,15 +5,15 @@
 import sys
 
 if len(sys.argv) != 7:
-    print('Usage: python generate.py <opcdir> <regdir> <trapdir> <headdir> <corelibdir> <outdir>')
+    print('Usage: python generate.py <opcdir> <regdir> <trapdir> <pldir> <tmpldir> <outdir>')
     sys.exit(2)
 
 dirs = {
     'opcdir':   sys.argv[1],
     'regdir':   sys.argv[2],
     'trapdir':  sys.argv[3],
-    'tmpldir':  sys.argv[4],
-    'libdir':   sys.argv[5],
+    'pldir':    sys.argv[4],
+    'tmpldir':  sys.argv[5],
     'outdir':   sys.argv[6]
 }
 
@@ -35,7 +35,9 @@ regs = cregs.registers.parse(dirs['regdir'])
 import traps.traps
 trps = traps.traps.parse(dirs['trapdir'])
 
-# TODO: Parse pipeline configuration.
+# Parse pipeline configuration.
+import pipeline.pipeline
+pl = pipeline.pipeline.parse(dirs['pldir'])
 
 
 #-------------------------------------------------------------------------------
@@ -44,8 +46,8 @@ trps = traps.traps.parse(dirs['trapdir'])
 print('Generating VHDL code...')
 
 # Generate core_opcode_pkg.vhd.
-import opcodes.opcodes_vhdl
-opcodes.opcodes_vhdl.generate(opc, dirs)
+import opcodes.core_opcode_pkg
+opcodes.core_opcode_pkg.generate(opc, dirs)
 
 # Generate core_ctrlRegs_pkg.vhd.
 import cregs.core_ctrlRegs_pkg
@@ -55,9 +57,13 @@ cregs.core_ctrlRegs_pkg.generate(regs, dirs)
 import cregs.core_regLogic
 cregs.core_regLogic.generate(regs, dirs)
 
-# TODO: Generate core_trap_pkg.vhd.
+# Generate core_trap_pkg.vhd.
+import traps.core_trap_pkg
+traps.core_trap_pkg.generate(trps, dirs)
 
-# TODO: Generate core_pipeline_pkg.vhd.
+# Generate core_pipeline_pkg.vhd.
+import pipeline.core_pipeline_pkg
+pipeline.core_pipeline_pkg.generate(pl, dirs)
 
 # Generate the conformance test runner.
 import cregs.core_tb
@@ -86,7 +92,7 @@ headers.rvex_h.generate(regs, trps, dirs)
 #-------------------------------------------------------------------------------
 print('Generating memory.map files...')
 
-# Generate rvex.h.
+# Generate memory map.
 import headers.core_map
 headers.core_map.generate(regs, trps, dirs)
 

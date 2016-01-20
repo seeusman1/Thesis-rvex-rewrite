@@ -179,7 +179,7 @@ begin -- architecture
     -- Infer a priority encoder using some high level code and hope that the
     -- synthesizer knows how to deal with it efficiently (this seems to
     -- generate three levels of LUTs for a 16:4 priority encoder, which is also
-    -- the minimum I can come up with from looking are the hardwired slice
+    -- the minimum I can come up with from looking at the hardwired slice
     -- logic for a Virtex 6). Also generate the anyMatch signal while we're at
     -- it.
     priority_encoder: process (match) is

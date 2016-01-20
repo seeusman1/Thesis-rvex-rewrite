@@ -1,0 +1,1 @@
+../../lib/rvex/core/core_ctrlRegs_pkg.template.vhd
