@@ -552,7 +552,7 @@ begin -- architecture
     variable cr_ph_ph_wmask     : std_logic_vector(31 downto 0);
     variable cr_ph_ph_read      : std_logic_vector(31 downto 0);                                     -- GENERATED --
     variable cr_tp_tp_write     : std_logic_vector(31 downto 0);
-    variable cr_tp_tp_wmask_dbg : std_logic_vector(31 downto 0);
+    variable cr_tp_tp_wmask     : std_logic_vector(31 downto 0);
     variable cr_tp_tp_read      : std_logic_vector(31 downto 0);
     variable cr_ta_ta_write     : std_logic_vector(31 downto 0);
     variable cr_ta_ta_wmask_dbg : std_logic_vector(31 downto 0);
@@ -1350,8 +1350,8 @@ begin -- architecture
             cr_ph_ph_r(ctxt) <= ((cr_ph_ph_r(ctxt)) and (not (cr_ph_ph_wmask))) or ((cr_ph_ph_write) and (cr_ph_ph_wmask));
             cr_ph_ph_read := cr_ph_ph_r(ctxt);
             cr_tp_tp_write := bus_writeData((0)+31 downto 0);
-            cr_tp_tp_wmask_dbg := (bus_writeMaskDbg((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(6, 31))))); -- GENERATED --
-            cr_tp_tp_r(ctxt) <= ((cr_tp_tp_r(ctxt)) and (not (cr_tp_tp_wmask_dbg))) or ((cr_tp_tp_write) and (cr_tp_tp_wmask_dbg));
+            cr_tp_tp_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(6, 31))))); -- GENERATED --
+            cr_tp_tp_r(ctxt) <= ((cr_tp_tp_r(ctxt)) and (not (cr_tp_tp_wmask))) or ((cr_tp_tp_write) and (cr_tp_tp_wmask));
             cr_tp_tp_read := cr_tp_tp_r(ctxt);
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool(cxplif2cxreg_trapInfo(ctxt).active))) then
               cr_tp_tp_r(ctxt) <= cxplif2cxreg_trapPoint(ctxt);

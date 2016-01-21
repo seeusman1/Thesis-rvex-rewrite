@@ -640,7 +640,7 @@ has been swapped in as well.
 \begin{lstlisting}
 
 // Handle bus interface.
-_r = (_r & ~_wmask_dbg) | (_write & _wmask_dbg);
+_r = (_r & ~_wmask) | (_write & _wmask);
 _read = _r;
 
 // Handle entering/leaving trap.

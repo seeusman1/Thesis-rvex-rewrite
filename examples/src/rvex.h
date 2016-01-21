@@ -637,7 +637,7 @@
 // Trap point
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_TP_ADDR                      (CREG_BASE + 0x218)
-#define CR_TP                           CREG_UINT32_R(CR_TP_ADDR)
+#define CR_TP                           CREG_UINT32_RW(CR_TP_ADDR)
 
 #define CR_TP_TP_BIT                    0
 #define CR_TP_TP_MASK                   0xFFFFFFFF                                                   /* GENERATED */
