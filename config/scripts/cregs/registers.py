@@ -133,9 +133,6 @@ def parse(indir):
     # Check register and field name validity.
     check_reg_names(regmap)
     
-    # Generate register/field definition list for headers.
-    result['defs'] = gen_defs(regdoc)
-    
     # Get lists of all global and all context registers together.
     gbregs = []
     cxregs = []
@@ -226,6 +223,9 @@ def parse(indir):
         result[mo + 'decl'] = decls
     
     print('')
+    
+    # Generate register/field definition list for headers.
+    result['defs'] = gen_defs(regdoc)
     
     return result
 
@@ -1104,12 +1104,16 @@ def gather_declarations_and_compile(reg, env, final_env):
         if envi.lookup('_wmask')[0].used:
             if 'ctxt' in reg:
                 docfield['core'] = 'core'
+                field['core'] = 'core'
             docfield['debug'] = 'debug'
+            field['debug'] = 'debug'
         if 'ctxt' in reg:
             if envi.lookup('_wmask_core')[0].used:
                 docfield['core'] = 'core'
+                field['core'] = 'core'
         if envi.lookup('_wmask_dbg')[0].used:
             docfield['debug'] = 'debug'
+            field['debug'] = 'debug'
         
         # Handle the read value.
         if read_val.assigned:
