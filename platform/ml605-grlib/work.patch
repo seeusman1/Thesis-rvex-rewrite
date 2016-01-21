@@ -1,5 +1,6 @@
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd
-+++ work/config.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
++++ work/config.vhd	2016-01-21 14:42:05.845331113 +0100
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -36,7 +37,7 @@
    constant CFG_ITBSZ : integer := 4;
    constant CFG_ATBSZ : integer := 4;
    constant CFG_LEON3FT_EN : integer := 0;
-@@ -73,6 +82,32 @@ package config is
+@@ -73,6 +82,34 @@ package config is
    constant CFG_LEON3_NETLIST: integer := 0;
    constant CFG_DISAS : integer := 0 + 0;
    constant CFG_PCLOW : integer := 2;
@@ -52,7 +53,9 @@
 +      numContextsLog2       => 2,
 +      bundleAlignLog2       => 1,
 +      limmhFromPreviousPair => 0,
-+      traceEnable           => 1
++      traceEnable           => 1,
++      perfCountSize         => 7,
++      cachePerfCountEnable  => 1
 +    ), core_valid => true,
 +
 +    -- Cache configuration
@@ -69,7 +72,7 @@
  -- AMBA settings
    constant CFG_DEFMST : integer := (0);
    constant CFG_RROBIN : integer := 1;
-@@ -85,7 +120,8 @@ package config is
+@@ -85,18 +122,19 @@ package config is
    constant CFG_AHB_MONWAR : integer := 0;
    constant CFG_AHB_DTRACE : integer := 0;
  -- DSU UART
@@ -79,7 +82,11 @@
  -- JTAG based DSU interface
    constant CFG_AHB_JTAG : integer := 1;
  -- Ethernet DSU
-@@ -96,7 +132,7 @@ package config is
+-  constant CFG_DSU_ETH : integer := 1 + 0 + 0;
++  constant CFG_DSU_ETH : integer := 0 + 0 + 0;
+   constant CFG_ETH_BUF : integer := 16;
+   constant CFG_ETH_IPM : integer := 16#C0A8#;
+   constant CFG_ETH_IPL : integer := 16#0033#;
    constant CFG_ETH_ENM : integer := 16#020789#;
    constant CFG_ETH_ENL : integer := 16#000123#;
  -- LEON2 memory controller
@@ -88,7 +95,14 @@
    constant CFG_MCTRL_RAM8BIT : integer := 1;
    constant CFG_MCTRL_RAM16BIT : integer := 1;
    constant CFG_MCTRL_5CS : integer := 0;
-@@ -123,7 +159,7 @@ package config is
+@@ -117,13 +155,13 @@ package config is
+   constant CFG_AHBRADDR : integer := 16#A00#;
+   constant CFG_AHBRPIPE : integer := 0;
+ -- Gaisler Ethernet core
+-  constant CFG_GRETH : integer := 1;
++  constant CFG_GRETH : integer := 0;
+   constant CFG_GRETH1G : integer := 0;
+   constant CFG_ETH_FIFO : integer := 16;
    constant CFG_GRETH_FT : integer := 0;
    constant CFG_GRETH_EDCLFT : integer := 0;
  -- UART 1
@@ -97,7 +111,7 @@
    constant CFG_UART1_FIFO : integer := 8;
  -- LEON3 interrupt controller
    constant CFG_IRQ3_ENABLE : integer := 1;
-@@ -158,10 +194,11 @@ package config is
+@@ -158,10 +196,11 @@ package config is
   constant CFG_PCIE_SIM_MAS : integer := 0;
   constant CFG_PCIEXPVID : integer := 16#0#;
   constant CFG_PCIEXPDID : integer := 16#0#;
@@ -111,8 +125,9 @@
 +  constant CFG_MIG_CLK4 : integer := 32;
 +
  end;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp_mig39.ucf
-+++ work/leon3mp_mig39.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp_mig39.ucf work/leon3mp_mig39.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp_mig39.ucf	2014-04-16 16:50:08.000000000 +0200
++++ work/leon3mp_mig39.ucf	2016-01-20 21:29:54.447631824 +0100
 @@ -1,160 +1,212 @@
 -
 -NET "clk_ref_p" TNM_NET = TNM_clk_ref;
@@ -483,8 +498,9 @@
  NET "clk_33" PERIOD = 30.000 ;
  OFFSET = IN : 20.000 : BEFORE clk_33 ;
  OFFSET = OUT : 20.000 : AFTER clk_33 ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf
-+++ work/leon3mp.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf work/leon3mp.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.ucf	2014-04-16 16:50:08.000000000 +0200
++++ work/leon3mp.ucf	2016-01-20 21:29:54.459631825 +0100
 @@ -1,544 +1,543 @@
 -############################################################################
 -## 
@@ -1685,8 +1701,9 @@
  
 +# MMCM Placment. This constraint selects the MMCM Placement
 +INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd
-+++ work/leon3mp.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
++++ work/leon3mp.vhd	2016-01-20 21:29:54.460631825 +0100
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License
@@ -2411,8 +2428,9 @@
      ahbmo(i) <= ahbm_none;
    end generate;
  
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/ahb2mig_ml605.vhd
-+++ work/leon3-xilinx-ml605/ahb2mig_ml605.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/ahb2mig_ml605.vhd work/leon3-xilinx-ml605/ahb2mig_ml605.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/ahb2mig_ml605.vhd	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/ahb2mig_ml605.vhd	2016-01-20 21:29:54.461631825 +0100
 @@ -0,0 +1,463 @@
 +------------------------------------------------------------------------------
 +--  This file is a part of the GRLIB VHDL IP LIBRARY
@@ -2877,8 +2895,9 @@
 +
 +end;
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/ahbrom.vhd
-+++ work/leon3-xilinx-ml605/ahbrom.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/ahbrom.vhd work/leon3-xilinx-ml605/ahbrom.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/ahbrom.vhd	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/ahbrom.vhd	2016-01-20 21:29:54.461631825 +0100
 @@ -0,0 +1,279 @@
 +
 +----------------------------------------------------------------------------
@@ -3159,8 +3178,9 @@
 +  ": 32-bit AHB ROM Module,  " & tost(bytes/4) & " words, " & tost(abits-2) & " address bits" );
 +  -- pragma translate_on
 +  end;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/.config
-+++ work/leon3-xilinx-ml605/.config
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/.config work/leon3-xilinx-ml605/.config
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/.config	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/.config	2016-01-20 21:29:54.461631825 +0100
 @@ -0,0 +1,320 @@
 +#
 +# Automatically generated make config: don't edit
@@ -3482,8 +3502,9 @@
 +# VHDL Debugging        
 +#
 +# CONFIG_DEBUG_UART is not set
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.h
-+++ work/leon3-xilinx-ml605/config.h
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.h work/leon3-xilinx-ml605/config.h
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.h	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/config.h	2016-01-20 21:29:54.461631825 +0100
 @@ -0,0 +1,298 @@
 +/*
 + * Automatically generated C config: don't edit
@@ -3783,8 +3804,9 @@
 + * VHDL Debugging        
 + */
 +#undef  CONFIG_DEBUG_UART
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.help
-+++ work/leon3-xilinx-ml605/config.help
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.help work/leon3-xilinx-ml605/config.help
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.help	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/config.help	2016-01-20 21:29:54.462631825 +0100
 @@ -0,0 +1,964 @@
 +
 +
@@ -4750,8 +4772,9 @@
 +  If you say Y here, all writes to the floating-point unit register file
 +  will be printed on the simulator console.
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.in
-+++ work/leon3-xilinx-ml605/config.in
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.in work/leon3-xilinx-ml605/config.in
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.in	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/config.in	2016-01-20 21:29:54.462631825 +0100
 @@ -0,0 +1,104 @@
 +#
 +# LEON3 configuration written in linux configuration language
@@ -4857,8 +4880,9 @@
 +comment 'VHDL Debugging        '
 +  source lib/grlib/util/debug.in
 +endmenu
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.vhd
-+++ work/leon3-xilinx-ml605/config.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.vhd work/leon3-xilinx-ml605/config.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.vhd	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/config.vhd	2016-01-20 21:29:54.462631825 +0100
 @@ -0,0 +1,167 @@
 +
 +
@@ -5027,8 +5051,9 @@
 +  constant CFG_MIG_DDR2 : integer := 1;
 +  constant CFG_MIG_CLK4 : integer := 16;
 +end;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.vhd.h
-+++ work/leon3-xilinx-ml605/config.vhd.h
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.vhd.h work/leon3-xilinx-ml605/config.vhd.h
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.vhd.h	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/config.vhd.h	2016-01-20 21:29:54.462631825 +0100
 @@ -0,0 +1,162 @@
 +-- Technology and synthesis options
 +  constant CFG_FABTECH 	: integer := CONFIG_SYN_TECH;
@@ -5192,8 +5217,9 @@
 +-- GRLIB debugging
 +  constant CFG_DUART    : integer := CONFIG_DEBUG_UART;
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.vhd.in
-+++ work/leon3-xilinx-ml605/config.vhd.in
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.vhd.in work/leon3-xilinx-ml605/config.vhd.in
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/config.vhd.in	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/config.vhd.in	2016-01-20 21:29:54.462631825 +0100
 @@ -0,0 +1,23 @@
 +#include "config.h"
 +#include "tkconfig.h"
@@ -5218,8 +5244,9 @@
 +  constant CFG_MIG_CLK4 : integer := CFG_SYS_FREQ_DIV;
 +
 +end;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/default.sdc
-+++ work/leon3-xilinx-ml605/default.sdc
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/default.sdc work/leon3-xilinx-ml605/default.sdc
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/default.sdc	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/default.sdc	2016-01-20 21:29:54.462631825 +0100
 @@ -0,0 +1,49 @@
 +# Synplicity, Inc. constraint file
 +# /home/jiri/ibm/vhdl/grlib/boards/gr-xc3s-1500/default.sdc
@@ -5270,8 +5297,9 @@
 +#
 +# Other Constraints
 +#
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/defconfig
-+++ work/leon3-xilinx-ml605/defconfig
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/defconfig work/leon3-xilinx-ml605/defconfig
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/defconfig	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/defconfig	2016-01-20 21:29:54.462631825 +0100
 @@ -0,0 +1,279 @@
 +#
 +# Automatically generated make config: don't edit
@@ -5552,8 +5580,9 @@
 +# VHDL Debugging        
 +#
 +# CONFIG_DEBUG_UART is not set
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_config.vhd
-+++ work/leon3-xilinx-ml605/grlib_config.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_config.vhd work/leon3-xilinx-ml605/grlib_config.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_config.vhd	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_config.vhd	2016-01-20 21:29:54.462631825 +0100
 @@ -0,0 +1,68 @@
 +------------------------------------------------------------------------------
 +--  This file is a part of the GRLIB VHDL IP LIBRARY
@@ -5623,8 +5652,9 @@
 +  others => 0);
 +
 +end;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig39.cgp
-+++ work/leon3-xilinx-ml605/grlib_mig/mig39.cgp
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig39.cgp work/leon3-xilinx-ml605/grlib_mig/mig39.cgp
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig39.cgp	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig39.cgp	2016-01-20 21:29:54.462631825 +0100
 @@ -0,0 +1,22 @@
 +# Date: Wed Dec  5 12:56:18 2012
 +
@@ -5648,8 +5678,9 @@
 +SET workingdirectory = ./tmp/
 +
 +# CRC: 59c905fa
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig39.prj
-+++ work/leon3-xilinx-ml605/grlib_mig/mig39.prj
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig39.prj work/leon3-xilinx-ml605/grlib_mig/mig39.prj
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig39.prj	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig39.prj	2016-01-20 21:29:54.463631825 +0100
 @@ -0,0 +1,194 @@
 +<?xml version="1.0" encoding="UTF-8"?>
 +<Project NoOfControllers="1" >
@@ -5845,8 +5876,9 @@
 +        <PortInterface>NATIVE</PortInterface>
 +    </Controller>
 +</Project>
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig39.xco
-+++ work/leon3-xilinx-ml605/grlib_mig/mig39.xco
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig39.xco work/leon3-xilinx-ml605/grlib_mig/mig39.xco
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig39.xco	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig39.xco	2016-01-20 21:29:54.463631825 +0100
 @@ -0,0 +1,49 @@
 +##############################################################
 +#
@@ -5897,8 +5929,9 @@
 +# END Extra information
 +GENERATE
 +# CRC: 1dbe8904
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.cgc
-+++ work/leon3-xilinx-ml605/grlib_mig/mig.cgc
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.cgc work/leon3-xilinx-ml605/grlib_mig/mig.cgc
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.cgc	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig.cgc	2016-01-20 21:29:54.464631825 +0100
 @@ -0,0 +1,1635 @@
 +<?xml version="1.0" encoding="UTF-8"?>
 +<spirit:design xmlns:spirit="http://www.spiritconsortium.org/XMLSchema/SPIRIT/1685-2009" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xilinx="http://www.xilinx.com" >
@@ -7535,8 +7568,9 @@
 +   </spirit:vendorExtensions>
 +</spirit:design>
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.cgp
-+++ work/leon3-xilinx-ml605/grlib_mig/mig.cgp
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.cgp work/leon3-xilinx-ml605/grlib_mig/mig.cgp
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.cgp	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig.cgp	2016-01-20 21:29:54.464631825 +0100
 @@ -0,0 +1,22 @@
 +# Date: Mon Jun 13 20:41:14 2011
 +
@@ -7560,8 +7594,9 @@
 +SET workingdirectory = ./tmp/
 +
 +# CRC: db21485d
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.diff
-+++ work/leon3-xilinx-ml605/grlib_mig/mig.diff
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.diff work/leon3-xilinx-ml605/grlib_mig/mig.diff
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.diff	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig.diff	2016-01-20 21:29:54.464631825 +0100
 @@ -0,0 +1,416 @@
 +diff -Naur mig37/mig_37/user_design/rtl/ip_top/infrastructure.vhd /home/jiri/ibm/vhdl/grlib/lib/work/ml605/rtl/ip_top/infrastructure.vhd
 +--- mig37/mig_37/user_design/rtl/ip_top/infrastructure.vhd	2011-06-13 18:01:50.000000000 +0200
@@ -7979,8 +8014,9 @@
 +    -- For reg dimm addign one extra cycle of latency for CWL. The new value
 +    -- will be passed to phy_write and phy_data_io	
 +    function CALC_CWL_M return integer is
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_infrastructure_patch.txt
-+++ work/leon3-xilinx-ml605/grlib_mig/mig_infrastructure_patch.txt
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_infrastructure_patch.txt work/leon3-xilinx-ml605/grlib_mig/mig_infrastructure_patch.txt
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_infrastructure_patch.txt	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig_infrastructure_patch.txt	2016-01-20 21:29:54.464631825 +0100
 @@ -0,0 +1,109 @@
 +--- ./mig/user_design/rtl/ip_top/infrastructure.v	2012-12-18 14:40:25.000000000 +0100
 ++++ ./mig_patch/p/a/t/c/h/mig_design/infrastructure.v	2012-12-18 10:03:46.821589702 +0100
@@ -8091,8 +8127,9 @@
 +   //***************************************************************************
 +   // RESET SYNCHRONIZATION DESCRIPTION:
 +   //  Various resets are generated to ensure that:
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_iodelay_ctrl_patch.txt
-+++ work/leon3-xilinx-ml605/grlib_mig/mig_iodelay_ctrl_patch.txt
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_iodelay_ctrl_patch.txt work/leon3-xilinx-ml605/grlib_mig/mig_iodelay_ctrl_patch.txt
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_iodelay_ctrl_patch.txt	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig_iodelay_ctrl_patch.txt	2016-01-20 21:29:54.464631825 +0100
 @@ -0,0 +1,18 @@
 +--- ./mig/user_design/rtl/ip_top/iodelay_ctrl.v	2012-12-18 14:40:25.000000000 +0100
 ++++ ./mig_patch/p/a/t/c/h/mig_design/iodelay_ctrl.v	2012-12-17 07:40:31.662595674 +0100
@@ -8112,8 +8149,9 @@
 + 
 +   //*****************************************************************
 +   // IDELAYCTRL reset
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_patch.txt
-+++ work/leon3-xilinx-ml605/grlib_mig/mig_patch.txt
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_patch.txt work/leon3-xilinx-ml605/grlib_mig/mig_patch.txt
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_patch.txt	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig_patch.txt	2016-01-20 21:29:54.464631825 +0100
 @@ -0,0 +1,159 @@
 +--- ./mig/user_design/rtl/ip_top/mig.v	2012-12-18 14:40:26.000000000 +0100
 ++++ ./mig_patch/p/a/t/c/h/mig_design/mig.v	2012-12-18 14:24:36.329423978 +0100
@@ -8274,8 +8312,9 @@
 +        .sys_rst          (sys_rst),
 +        .iodelay_ctrl_rdy (iodelay_ctrl_rdy),
 +        .PSDONE           (pd_PSDONE),
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.prj
-+++ work/leon3-xilinx-ml605/grlib_mig/mig.prj
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.prj work/leon3-xilinx-ml605/grlib_mig/mig.prj
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.prj	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig.prj	2016-01-20 21:29:54.464631825 +0100
 @@ -0,0 +1,60 @@
 +<?xml version='1.0' encoding='UTF-8'?>
 +<Project NoOfControllers="1" >
@@ -8337,8 +8376,9 @@
 +        <PortInterface>NATIVE</PortInterface>
 +    </Controller>
 +</Project>
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_reset13.diff
-+++ work/leon3-xilinx-ml605/grlib_mig/mig_reset13.diff
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_reset13.diff work/leon3-xilinx-ml605/grlib_mig/mig_reset13.diff
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_reset13.diff	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig_reset13.diff	2016-01-20 21:29:54.465631825 +0100
 @@ -0,0 +1,30 @@
 +--- /home/anandhavel/mig_37.vhd	2013-10-25 19:38:05.381163679 +0200
 ++++ mig_37/user_design/rtl/ip_top/mig_37.vhd	2013-10-25 19:48:18.649914855 +0200
@@ -8370,8 +8410,9 @@
 +       iodelay_ctrl_rdy => iodelay_ctrl_rdy,
 +       PSDONE           => pd_PSDONE,
 +       PSEN             => pd_PSEN,
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_reset14.diff
-+++ work/leon3-xilinx-ml605/grlib_mig/mig_reset14.diff
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_reset14.diff work/leon3-xilinx-ml605/grlib_mig/mig_reset14.diff
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_reset14.diff	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig_reset14.diff	2016-01-20 21:29:54.465631825 +0100
 @@ -0,0 +1,30 @@
 +--- /home/anandhavel/mig.v	2013-10-25 20:00:01.000000000 +0200
 ++++ mig/user_design/rtl/ip_top/mig.v	2013-10-25 20:02:02.115036358 +0200
@@ -8403,8 +8444,9 @@
 +        .iodelay_ctrl_rdy (iodelay_ctrl_rdy),
 +        .PSDONE           (pd_PSDONE),
 +        .PSEN             (pd_PSEN),
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_ucf_patch.txt
-+++ work/leon3-xilinx-ml605/grlib_mig/mig_ucf_patch.txt
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_ucf_patch.txt work/leon3-xilinx-ml605/grlib_mig/mig_ucf_patch.txt
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig_ucf_patch.txt	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig_ucf_patch.txt	2016-01-20 21:29:54.465631825 +0100
 @@ -0,0 +1,204 @@
 +--- ./mig/user_design/par/mig.ucf	2012-12-18 14:40:26.000000000 +0100
 ++++ ./mig_patch/p/a/t/c/h/mig_design/mig.ucf	2012-12-18 12:01:45.861514738 +0100
@@ -8610,8 +8652,9 @@
 + 
 +-INST "u_infrastructure/u_mmcm_adv"      LOC = "MMCM_ADV_X0Y8"; #Banks 16, 26, 36
 ++INST "ddr3ctrl/u_infrastructure/u_mmcm_adv"      LOC = "MMCM_ADV_X0Y8"; #Banks 16, 26, 36
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.xco
-+++ work/leon3-xilinx-ml605/grlib_mig/mig.xco
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.xco work/leon3-xilinx-ml605/grlib_mig/mig.xco
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/grlib_mig/mig.xco	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/grlib_mig/mig.xco	2016-01-20 21:29:54.465631825 +0100
 @@ -0,0 +1,42 @@
 +##############################################################
 +#
@@ -8655,8 +8698,9 @@
 +# END Parameters
 +GENERATE
 +# CRC:  362dace
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/gtxclk.vhd
-+++ work/leon3-xilinx-ml605/gtxclk.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/gtxclk.vhd work/leon3-xilinx-ml605/gtxclk.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/gtxclk.vhd	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/gtxclk.vhd	2016-01-20 21:29:54.465631825 +0100
 @@ -0,0 +1,78 @@
 +
 +library ieee;
@@ -8736,8 +8780,9 @@
 +           
 +
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/lconfig.tk
-+++ work/leon3-xilinx-ml605/lconfig.tk
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/lconfig.tk work/leon3-xilinx-ml605/lconfig.tk
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/lconfig.tk	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/lconfig.tk	2016-01-20 21:29:54.469631825 +0100
 @@ -0,0 +1,6563 @@
 +# FILE: header.tk
 +# This file is boilerplate TCL/TK function definitions for 'make xconfig'.
@@ -15302,8 +15347,9 @@
 +#			.f0.right.save configure -state disabled
 +#		}
 +#	}
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp_mig39.ucf
-+++ work/leon3-xilinx-ml605/leon3mp_mig39.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp_mig39.ucf work/leon3-xilinx-ml605/leon3mp_mig39.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp_mig39.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/leon3mp_mig39.ucf	2016-01-20 21:29:54.469631825 +0100
 @@ -0,0 +1,195 @@
 +
 +NET "clk_ref_p" TNM_NET = TNM_clk_ref;
@@ -15500,8 +15546,9 @@
 +#TIMESPEC "TSPLB_TFT25" = FROM "clkm" TO "clkvga" TIG;
 +#TIMESPEC "TSPLB_TFT40" = FROM "clkvga" TO "clkm" TIG;
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp.ucf
-+++ work/leon3-xilinx-ml605/leon3mp.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp.ucf work/leon3-xilinx-ml605/leon3mp.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/leon3mp.ucf	2016-01-20 21:29:54.469631825 +0100
 @@ -0,0 +1,613 @@
 +############################################################################
 +## 
@@ -16116,8 +16163,9 @@
 +#INST "u_memc_ui_top/u_mem_intfc/phy_top0/u_phy_init/u_ff_phy_init_data_sel" TNM = "TNM_PHY_INIT_SEL";
 +#TIMESPEC "TS_MC_PHY_INIT_SEL" = FROM "TNM_PHY_INIT_SEL" TO FFS = 10 ns;  ## = "2.5ns * 4" ML605 single clock
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp.vhd
-+++ work/leon3-xilinx-ml605/leon3mp.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp.vhd work/leon3-xilinx-ml605/leon3mp.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp.vhd	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/leon3mp.vhd	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,852 @@
 +------------------------------------------------------------------------------
 +--  LEON3 Demonstration design
@@ -16971,8 +17019,9 @@
 +-- pragma translate_on
 +
 +end rtl;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp.xcf
-+++ work/leon3-xilinx-ml605/leon3mp.xcf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp.xcf work/leon3-xilinx-ml605/leon3mp.xcf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/leon3mp.xcf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/leon3mp.xcf	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,21 @@
 +
 +NET gmiiclk_p 	PERIOD = 8.000 ;
@@ -16996,8 +17045,9 @@
 +#TIMESPEC "TS_clkml_clkm" = FROM "clkml" TO "clkm" TIG;
 +NET "lock"  TIG;
 \ No newline at end of file
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/linkprom
-+++ work/leon3-xilinx-ml605/linkprom
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/linkprom work/leon3-xilinx-ml605/linkprom
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/linkprom	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/linkprom	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,155 @@
 +/*  linkcmds
 + *
@@ -17154,8 +17204,9 @@
 +    [ .stabstr ]
 +  }
 +}
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/Makefile
-+++ work/leon3-xilinx-ml605/Makefile
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/Makefile work/leon3-xilinx-ml605/Makefile
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/Makefile	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/Makefile	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,202 @@
 +include .config
 +GRLIB=../..
@@ -17359,8 +17410,9 @@
 +	-rm -rf pcie/v6_pcie_v1_7* pcie/tmp pcie/coregen.cgc tx.dat rx.dat
 +
 +.PHONY : pcie pcieclean
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie/coregen.cgp
-+++ work/leon3-xilinx-ml605/pcie/coregen.cgp
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie/coregen.cgp work/leon3-xilinx-ml605/pcie/coregen.cgp
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie/coregen.cgp	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie/coregen.cgp	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,22 @@
 +# Date: Wed Aug  8 14:52:14 2012
 +
@@ -17384,8 +17436,9 @@
 +SET workingdirectory = ./tmp/
 +
 +# CRC: efb42278
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie/pcie.xco
-+++ work/leon3-xilinx-ml605/pcie/pcie.xco
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie/pcie.xco work/leon3-xilinx-ml605/pcie/pcie.xco
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie/pcie.xco	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie/pcie.xco	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,205 @@
 +##############################################################
 +#
@@ -17592,8 +17645,9 @@
 +# END Parameters
 +GENERATE
 +# CRC: 1ab9c854
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie.diff
-+++ work/leon3-xilinx-ml605/pcie.diff
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie.diff work/leon3-xilinx-ml605/pcie.diff
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie.diff	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie.diff	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,19 @@
 +diff -Naur pcie.org/v6_pcie_v1_7/source/v6_pcie_v1_7.vhd pcie/v6_pcie_v1_7/source/v6_pcie_v1_7.vhd
 +--- pcie.org/v6_pcie_v1_7/source/v6_pcie_v1_7.vhd	2013-07-16 16:50:59.000000000 +0200
@@ -17614,8 +17668,9 @@
 +       FUNDRSTN                            : in  std_logic;
 +       TRNLNKUPN                           : out std_logic;
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane1.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane1.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane1.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane1.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane1.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane1.ucf	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,29 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17646,8 +17701,9 @@
 +PIN "pcie_mf.dma/EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_int_i.CLR" TIG ;
 +PIN "pcie_mf.dma/EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_i.CLR" TIG ;
 +PIN "pcie_mf.dma/EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane2.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane2.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane2.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane2.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane2.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane2.ucf	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,31 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17680,8 +17736,9 @@
 +PIN "pcie_mf.dma/EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_int_i.CLR" TIG ;
 +PIN "pcie_mf.dma/EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_i.CLR" TIG ;
 +PIN "pcie_mf.dma/EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane4.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane4.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane4.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane4.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane4.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_dma_lane4.ucf	2016-01-20 21:29:54.470631825 +0100
 @@ -0,0 +1,33 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17716,8 +17773,9 @@
 +PIN "pcie_mf.dma/EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_int_i.CLR" TIG ;
 +PIN "pcie_mf.dma/EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_i.CLR" TIG ;
 +PIN "pcie_mf.dma/EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane1.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane1.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane1.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane1.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane1.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane1.ucf	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,29 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17748,8 +17806,9 @@
 +PIN "pcie_mf_no_dma.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_int_i.CLR" TIG ;
 +PIN "pcie_mf_no_dma.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_i.CLR" TIG ;
 +PIN "pcie_mf_no_dma.EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane2.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane2.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane2.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane2.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane2.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane2.ucf	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,31 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17782,8 +17841,9 @@
 +PIN "pcie_mf_no_dma.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_int_i.CLR" TIG ;
 +PIN "pcie_mf_no_dma.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_i.CLR" TIG ;
 +PIN "pcie_mf_no_dma.EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane4.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane4.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane4.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane4.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane4.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_fifo_lane4.ucf	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,34 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17819,8 +17879,9 @@
 +PIN "pcie_mf_no_dma.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_int_i.CLR" TIG ;
 +PIN "pcie_mf_no_dma.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_i.CLR" TIG ;
 +PIN "pcie_mf_no_dma.EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane1.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane1.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane1.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane1.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane1.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane1.ucf	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,29 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17851,8 +17912,9 @@
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_int_i.CLR" TIG ;
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_i.CLR" TIG ;
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane2.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane2.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane2.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane2.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane2.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane2.ucf	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,31 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17885,8 +17947,9 @@
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_int_i.CLR" TIG ;
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_i.CLR" TIG ;
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane4.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane4.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane4.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane4.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane4.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane4.ucf	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,33 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17921,8 +17984,9 @@
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_int_i.CLR" TIG ;
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/trn_reset_n_i.CLR" TIG ;
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane8.ucf
-+++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane8.ucf
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane8.ucf work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane8.ucf
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane8.ucf	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/pcie_ucf/pcie_master_target_lane8.ucf	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,46 @@
 +NET "sys_reset_n" TIG;
 +NET "sys_reset_n" LOC = AE13 | IOSTANDARD = LVCMOS25 | PULLUP | NODELAY ;
@@ -17970,8 +18034,9 @@
 +PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
 +
 +#TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS(trn_reset_n_i) 8 ns;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/prom.h
-+++ work/leon3-xilinx-ml605/prom.h
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/prom.h work/leon3-xilinx-ml605/prom.h
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/prom.h	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/prom.h	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,10 @@
 +#define MCFG1 0x10380133
 +#define MCFG2 0xe6B80e50
@@ -17983,8 +18048,9 @@
 +#define RAMSTART  0x40000000
 +#define RAMSIZE   0x00100000
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/prom.srec
-+++ work/leon3-xilinx-ml605/prom.srec
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/prom.srec work/leon3-xilinx-ml605/prom.srec
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/prom.srec	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/prom.srec	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,37 @@
 +S00C000070726F6D2E737265635A
 +S113000081D8200003000004821060E08188400051
@@ -18023,8 +18089,9 @@
 +S11302109C27A0600310000081C040000100000082
 +S113022000000000000000000000000000000000CA
 +S9030000FC
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/README.txt
-+++ work/leon3-xilinx-ml605/README.txt
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/README.txt work/leon3-xilinx-ml605/README.txt
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/README.txt	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/README.txt	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,291 @@
 +This leon3 design is tailored to the Xilinx Virtex-6 ML605 board
 +
@@ -18317,8 +18384,9 @@
 +
 +grlib> 
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/sim.do
-+++ work/leon3-xilinx-ml605/sim.do
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/sim.do work/leon3-xilinx-ml605/sim.do
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/sim.do	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/sim.do	2016-01-20 21:29:54.471631825 +0100
 @@ -0,0 +1,147 @@
 +###############################################################################
 +## (c) Copyright 2008 – 2009 Xilinx, Inc. All rights reserved.
@@ -18467,8 +18535,9 @@
 +
 +run -all
 +stop
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/svga2ch7301c.vhd
-+++ work/leon3-xilinx-ml605/svga2ch7301c.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/svga2ch7301c.vhd work/leon3-xilinx-ml605/svga2ch7301c.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/svga2ch7301c.vhd	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/svga2ch7301c.vhd	2016-01-20 21:29:54.472631825 +0100
 @@ -0,0 +1,221 @@
 +------------------------------------------------------------------------------
 +--  This file is a part of the GRLIB VHDL IP LIBRARY
@@ -18691,8 +18760,9 @@
 +  clk65 <= clkval65(0);
 +  
 +end rtl;
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/systest.c
-+++ work/leon3-xilinx-ml605/systest.c
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/systest.c work/leon3-xilinx-ml605/systest.c
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/systest.c	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/systest.c	2016-01-20 21:29:54.472631825 +0100
 @@ -0,0 +1,10 @@
 +
 +main()
@@ -18704,8 +18774,9 @@
 +
 +	report_end();
 +}
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/testbench.vhd
-+++ work/leon3-xilinx-ml605/testbench.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/testbench.vhd work/leon3-xilinx-ml605/testbench.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/testbench.vhd	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/testbench.vhd	2016-01-20 21:29:54.472631825 +0100
 @@ -0,0 +1,377 @@
 +-----------------------------------------------------------------------------
 +--  LEON3 Demonstration design test bench
@@ -19084,8 +19155,9 @@
 +end;
 +
 +
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/tkconfig2.h
-+++ work/leon3-xilinx-ml605/tkconfig2.h
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/tkconfig2.h work/leon3-xilinx-ml605/tkconfig2.h
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/tkconfig2.h	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/tkconfig2.h	2016-01-20 21:29:54.472631825 +0100
 @@ -0,0 +1,12 @@
 +
 +#if defined CONFIG_FREQ60
@@ -19099,8 +19171,9 @@
 +#else
 +#define CFG_SYS_FREQ_DIV 10
 +#endif
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/tkconfig.h
-+++ work/leon3-xilinx-ml605/tkconfig.h
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/tkconfig.h work/leon3-xilinx-ml605/tkconfig.h
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/tkconfig.h	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/tkconfig.h	2016-01-20 21:29:54.472631825 +0100
 @@ -0,0 +1,997 @@
 +#if defined CONFIG_SYN_INFERRED
 +#define CONFIG_SYN_TECH inferred
@@ -20099,8 +20172,9 @@
 +#ifndef CONFIG_DEBUG_UART
 +#define CONFIG_DEBUG_UART 0
 +#endif
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/wave.do
-+++ work/leon3-xilinx-ml605/wave.do
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/wave.do work/leon3-xilinx-ml605/wave.do
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3-xilinx-ml605/wave.do	1970-01-01 01:00:00.000000000 +0100
++++ work/leon3-xilinx-ml605/wave.do	2016-01-20 21:29:54.472631825 +0100
 @@ -0,0 +1,76 @@
 +onerror {resume}
 +quietly WaveActivateNextPane {} 0
@@ -20178,8 +20252,9 @@
 +configure wave -timelineunits ns
 +update
 +WaveRestoreZoom {54325843 ps} {54327644 ps}
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile
-+++ work/Makefile
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile work/Makefile
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/Makefile	2014-04-16 16:50:08.000000000 +0200
++++ work/Makefile	2016-01-20 21:29:54.473631825 +0100
 @@ -1,5 +1,5 @@
  include .config
 -GRLIB=../..
@@ -20353,8 +20428,9 @@
 +	-rm -rf pcie tx.dat rx.dat
  
  .PHONY : pcie pcieclean
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/coregen.cgp
-+++ work/pcie/coregen.cgp
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/coregen.cgp work/pcie/coregen.cgp
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/coregen.cgp	2014-04-16 16:50:08.000000000 +0200
++++ work/pcie/coregen.cgp	1970-01-01 01:00:00.000000000 +0100
 @@ -1,22 +0,0 @@
 -# Date: Wed Aug  8 14:52:14 2012
 -
@@ -20378,8 +20454,9 @@
 -SET workingdirectory = ./tmp/
 -
 -# CRC: efb42278
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/pcie.xco
-+++ work/pcie/pcie.xco
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/pcie.xco work/pcie/pcie.xco
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/pcie/pcie.xco	2014-04-16 16:50:08.000000000 +0200
++++ work/pcie/pcie.xco	1970-01-01 01:00:00.000000000 +0100
 @@ -1,205 +0,0 @@
 -##############################################################
 -#
@@ -20586,8 +20663,9 @@
 -# END Parameters
 -GENERATE
 -# CRC: 1ab9c854
---- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd
-+++ work/testbench.vhd
+diff -rupN '--exclude=ram.srec' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd work/testbench.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd	2014-04-16 16:51:31.000000000 +0200
++++ work/testbench.vhd	2016-01-20 21:29:54.473631825 +0100
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License
