@@ -2,18 +2,11 @@
 \subsection{Generic binaries}
 \label{sec:core-ug-isa-gen-bin}
 
-\todo[inline]{This section might contain trace amounts of bullshit. Anthony
-should probably look over this sometime, as he knows more about it than I do.
-The vexparse stuff might also be wrong because I can't remember properly what
-I all added to it and what it could already do and I haven't looked into it yet.
-- Jeroen}
-
 Generic binaries are binaries that can be correctly run on different core 
 configurations, even if the core reconfigures during execution. They were 
-introduced in Anthony's generic binary paper. \todo{Insert reference to Anthony's 
-generic binary paper} Typically, a generic binary refers to a binary that can 
-be run with two pipelanes (2-way), four pipelanes (4-way) or eight pipelanes 
-(8-way).
+introduced in \cite{brandon2013}. Typically, a generic binary refers to a
+binary that can be run with two pipelanes (2-way), four pipelanes (4-way)
+or eight pipelanes (8-way).
 
 A generic binary is typically compiled in the same way as a regular 8-way
 binary. It is the task of the assembler to ensure that the generic binary
@@ -48,9 +41,8 @@ this is not possible without further processing.
 There are two ways to process the assembly files to meet the requirements. The
 first one can be done by the assembler as well. If the \code{--autosplit} flag
 is passed, it will attempt to split bundles that it cannot schedule directly.
-This solves most problems at the cost of runtime performance. Refer to Anthony's
-generic binary paper\todo{Insert reference to Anthony's generic binary paper}
-for more information.
+This solves most problems at the cost of runtime performance. Refer to
+\cite{brandon2013} for more information.
 
 The second way involves running a python script called \code{vexparse} on the 
 assembly compilation output, before passing them to the assembler. Depending on 
