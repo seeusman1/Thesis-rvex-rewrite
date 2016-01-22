@@ -71,17 +71,17 @@ difficult to reconfigure in the middle of program execution. At best, the
 program counters would be the only things that would not match between the two 
 binaries.
 
-The solution to this problem is a \textit{generic binary}\todo{Reference to 
-Anthony's generic binary paper here}. Generic binaries are compiled for the 
-largest possible bundle size at which they may execute, referred to as the 
-\textit{generic bundle size}. This allows the compiler to extract as much 
-parallelism as may ever be used. The difference between a normal binary compiled 
-for the generic bundle size and a generic binary lies in additional rules 
-imposed to the program by the assembler. These rules are carefully picked to 
-ensure that, for instance, a bundle with four syllables in it still runs 
-correctly if the two syllable pairs are run sequentially. Unless otherwise 
-specified, an \rvex{} generic binary refers to a binary compiled such that it 
-runs correctly on 8-way, 4-way and 2-way \rvex{} processor cores.
+The solution to this problem is a \textit{generic binary} \cite{brandon2013}.
+Generic binaries are compiled for the largest possible bundle size at which
+they may execute, referred to as the \textit{generic bundle size}. This allows
+the compiler to extract as much parallelism as may ever be used. The difference
+between a normal binary compiled for the generic bundle size and a generic
+binary lies in additional rules imposed to the program by the assembler. These
+rules are carefully picked to ensure that, for instance, a bundle with four
+syllables in it still runs correctly if the two syllable pairs are run
+sequentially. Unless otherwise specified, an \rvex{} generic binary refers to a
+binary compiled such that it runs correctly on 8-way, 4-way and 2-way \rvex{}
+processor cores.
 
 \subsection{Intended applications}
 \label{sec:core-ug-intro-applic}
