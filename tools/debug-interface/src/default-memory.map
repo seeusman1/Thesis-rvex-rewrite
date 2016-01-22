@@ -46,76 +46,34 @@ all:CREG_GLOB               { CREG + 0x000 }
 all:CREG_GPREG              { CREG + 0x100 + (_CUR_CONTEXT * 0x400) }
 all:CREG_CTXT               { CREG + 0x200 + (_CUR_CONTEXT * 0x400) }
 
-# Control register mnemonics. These should match the values in
-# core_ctrlRegs_pkg.vhd.
-all:GSR                     { CREG_GLOB + 0x00 } # Global status register.
-all:BUS_BANK                { CREG_GLOB + 0x03 } # Debug bus bank selection.
-all:BCRR                    { CREG_GLOB + 0x04 } # Debug bus reconfiguration request.
-all:CC                      { CREG_GLOB + 0x08 } # Current configuration.
-all:AFF                     { CREG_GLOB + 0x0C } # Cache affinity.
-all:CNT                     { CREG_GLOB + 0x10 } # Cycle counter.
-all:CNTH                    { CREG_GLOB + 0x14 } # Cycle counter high.
-all:PVR                     { CREG_GLOB + 0x18 } # Processor Version Register.
-all:CSR                     { CREG_GLOB + 0x1c } # Cache Sizes Register.
-all:GSCR                    { CREG_GLOB + 0x20 } # Global Scratch Register.
-all:GSCR2                   { CREG_GLOB + 0x24 } # Global Scratch Register 2.
-all:GSCR3                   { CREG_GLOB + 0x28 } # Global Scratch Register 3.
-all:GSCR4                   { CREG_GLOB + 0x2c } # Global Scratch Register 4.
-
-all:CCR                     { CREG_CTXT + 0x00 } # Context control register.
-all:TC                      { CREG_CTXT + 0x00 } # Trap cause (byte).
-all:BR                      { CREG_CTXT + 0x01 } # Branch registers (byte).
-all:CCRF                    { CREG_CTXT + 0x02 } # Context control register flags (short).
-all:SCCR                    { CREG_CTXT + 0x04 } # Saved context control register.
-all:SCCRF                   { CREG_CTXT + 0x06 } # Saved context control register flags (short).
-all:LR                      { CREG_CTXT + 0x08 } # Link register.
-all:PC                      { CREG_CTXT + 0x0C } # PC register.
-all:TH                      { CREG_CTXT + 0x10 } # Trap handler.
-all:PH                      { CREG_CTXT + 0x14 } # Panic handler.
-all:TP                      { CREG_CTXT + 0x18 } # Trap point.
-all:TA                      { CREG_CTXT + 0x1C } # Trap argument.
-all:BRK0                    { CREG_CTXT + 0x20 } # Breakpoint 0.
-all:BRK1                    { CREG_CTXT + 0x24 } # Breakpoint 1.
-all:BRK2                    { CREG_CTXT + 0x28 } # Breakpoint 2.
-all:BRK3                    { CREG_CTXT + 0x2C } # Breakpoint 3.
-all:DCR                     { CREG_CTXT + 0x30 } # Debug control register 1.
-all:DCRF                    { CREG_CTXT + 0x30 } # Debug control flags (byte).
-all:DCRC                    { CREG_CTXT + 0x31 } # Break cause (byte).
-all:DCRB                    { CREG_CTXT + 0x32 } # Breakpoint configuration (half).
-all:DCR2                    { CREG_CTXT + 0x34 } # Debug control register 2.
-all:RET                     { CREG_CTXT + 0x34 } # Program return value (byte).
-all:_TRACE_CTRL             { CREG_CTXT + 0x37 } # Trace control register (byte).
-all:CRR                     { CREG_CTXT + 0x38 } # Context reconfiguration request.
-all:C_CYC                   { CREG_CTXT + 0x3C } # Non-idle cycle counter.
-all:C_CYCH                  { CREG_CTXT + 0x40 } # Non-idle cycle counter.
-all:C_STALL                 { CREG_CTXT + 0x44 } # Non-idle stall counter.
-all:C_STALLH                { CREG_CTXT + 0x48 } # Non-idle stall counter.
-all:C_BUN                   { CREG_CTXT + 0x4C } # Committed bundle counter.
-all:C_BUNH                  { CREG_CTXT + 0x50 } # Committed bundle counter.
-all:C_SYL                   { CREG_CTXT + 0x54 } # Committed syllable counter.
-all:C_SYLH                  { CREG_CTXT + 0x58 } # Committed syllable counter.
-all:C_NOP                   { CREG_CTXT + 0x5c } # Committed NOP counter.
-all:C_NOPH                  { CREG_CTXT + 0x60 } # Committed NOP counter.
-all:C_IACC                  { CREG_CTXT + 0x64 } # Instruction cache access counter.
-all:C_IACCH                 { CREG_CTXT + 0x68 } # Instruction cache access counter.
-all:C_IMISS                 { CREG_CTXT + 0x6c } # Instruction cache miss counter.
-all:C_IMISSH                { CREG_CTXT + 0x70 } # Instruction cache miss counter.
-all:C_DRACC                 { CREG_CTXT + 0x74 } # Data cache read access counter.
-all:C_DRACCH                { CREG_CTXT + 0x78 } # Data cache read access counter.
-all:C_DRMISS                { CREG_CTXT + 0x7c } # Data cache read miss counter.
-all:C_DRMISSH               { CREG_CTXT + 0x80 } # Data cache read miss counter.
-all:C_DWACC                 { CREG_CTXT + 0x84 } # Data cache write access counter.
-all:C_DWACCH                { CREG_CTXT + 0x88 } # Data cache write access counter.
-all:C_DWMISS                { CREG_CTXT + 0x8c } # Data cache write miss counter.
-all:C_DWMISSH               { CREG_CTXT + 0x90 } # Data cache write miss counter.
-all:C_DBYPASS               { CREG_CTXT + 0x94 } # Data cache bypassed accesses counter.
-all:C_DBYPASSH              { CREG_CTXT + 0x98 } # Data cache bypassed accesses counter.
-all:C_DWBUF                 { CREG_CTXT + 0x9c } # Data cache accesses with buffered write counter.
-all:C_DWBUFH                { CREG_CTXT + 0xa0 } # Data cache accesses with buffered write counter.
-all:SCRP                    { CREG_CTXT + 0xa4 } # Scratch-pad register 1.
-all:SCRP2                   { CREG_CTXT + 0xa8 } # Scratch-pad register 2.
-all:SCRP3                   { CREG_CTXT + 0xac } # Scratch-pad register 3.
-all:SCRP4                   { CREG_CTXT + 0xb0 } # Scratch-pad register 4.
+# Aliases for the old register names.
+all:DCRF                    { DCR }
+all:C_CYC                   { CYC }
+all:C_CYCH                  { CYCH }
+all:C_STALL                 { STALL }
+all:C_STALLH                { STALLH }
+all:C_BUN                   { BUN }
+all:C_BUNH                  { BUNH }
+all:C_SYL                   { SYL }
+all:C_SYLH                  { SYLH }
+all:C_NOP                   { NOP }
+all:C_NOPH                  { NOPH }
+all:C_IACC                  { IACC }
+all:C_IACCH                 { IACCH }
+all:C_IMISS                 { IMISS }
+all:C_IMISSH                { IMISSH }
+all:C_DRACC                 { DRACC }
+all:C_DRACCH                { DRACCH }
+all:C_DRMISS                { DRMISS }
+all:C_DRMISSH               { DRMISSH }
+all:C_DWACC                 { DWACC }
+all:C_DWACCH                { DWACCH }
+all:C_DWMISS                { DWMISS }
+all:C_DWMISSH               { DWMISSH }
+all:C_DBYPASS               { DBYPASS }
+all:C_DBYPASSH              { DBYPASSH }
+all:C_DWBUF                 { DWBUF }
+all:C_DWBUFH                { DWBUFH }
 
 # This is called after a context change to set banking bits. Currently there
 # are no banking bits, so this does nothing.
