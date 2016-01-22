@@ -1440,8 +1440,6 @@ static int scanExpression(const char **str, value_t *value, int depth) {
         case OP_ADD:  v.value = v.value +  v2.value; v.size = mergeSize(v.size, v2.size); break;
         case OP_SUB:  v.value = v.value -  v2.value; v.size = mergeSize(v.size, v2.size); break;
         case OP_MUL:  v.value = v.value *  v2.value; v.size = mergeSize(v.size, v2.size); break;
-        case OP_DIV:  v.value = v.value /  v2.value; v.size = mergeSize(v.size, v2.size); break;
-        case OP_MOD:  v.value = v.value %  v2.value; v.size = mergeSize(v.size, v2.size); break;
         case OP_EQ:   v.value = v.value == v2.value; v.size = mergeSize(v.size, v2.size); break;
         case OP_NEQ:  v.value = v.value != v2.value; v.size = mergeSize(v.size, v2.size); break;
         case OP_GT:   v.value = v.value >  v2.value; v.size = mergeSize(v.size, v2.size); break;
@@ -1456,6 +1454,9 @@ static int scanExpression(const char **str, value_t *value, int depth) {
         case OP_BOR:  v.value = v.value |  v2.value; v.size = mergeSize(v.size, v2.size); break;
         case OP_XOR:  v.value = v.value ^  v2.value; v.size = mergeSize(v.size, v2.size); break;
         case OP_SEP:  v.value =            v2.value; v.size =                   v2.size ; break;
+        
+        case OP_DIV:  v.value = (v2.value == 0) ? 0 : (v.value / v2.value); v.size = mergeSize(v.size, v2.size); break;
+        case OP_MOD:  v.value = (v2.value == 0) ? 0 : (v.value % v2.value); v.size = mergeSize(v.size, v2.size); break;
       }
       
     }

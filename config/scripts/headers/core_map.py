@@ -17,6 +17,11 @@ def generate(regs, trps, dirs):
                 else:
                     raise Exception('Unknown register type at address 0x%03X.' % ent[3])
             
+        elif ent[0] == 'field':
+            name = ent[1]
+            if name.startswith('CR_'):
+                name = 'FIELD_' + name[3:]
+                memmap.append('all:%s { (val & 0x%08X) >> %d }\n' % (name, ent[3], ent[2]))
     
     # Generate the file.
     common.templates.generate('memmap',

@@ -33,10 +33,23 @@
 # information on how expressions work in rvd, run "rvd help expressions".
 #
 
+################################################################################
+#                             RVEX CONTEXT SETUP                               #
+################################################################################
+
 # Specifies the number of contexts. This defines what rvd will do when you run
 # a command for all contexts. Should be defined for all contexts, there's no
 # point in defining a different number for different contexts (obviously).
 all:_NUM_CONTEXTS           { 4 }
+
+# This is called after a context change to set banking bits. Currently there
+# are no banking bits, so this does nothing.
+all:SET_BANK                { 0 }
+
+
+################################################################################
+#                           RVEX CONTROL REGISTERS                             #
+################################################################################
 
 # Control register base address.
 all:CREG                    { 0xF0000000 }
@@ -45,6 +58,10 @@ all:CREG                    { 0xF0000000 }
 all:CREG_GLOB               { CREG + 0x000 }
 all:CREG_GPREG              { CREG + 0x100 + (_CUR_CONTEXT * 0x400) }
 all:CREG_CTXT               { CREG + 0x200 + (_CUR_CONTEXT * 0x400) }
+
+# All the actual registers are specified in the generated core.map memory map
+# file. The things below are aliases for backwards-compatibility because some
+# names have changed.
 
 # Aliases for the old register names.
 all:DCRF                    { DCR }
@@ -75,115 +92,10 @@ all:C_DBYPASSH              { DBYPASSH }
 all:C_DWBUF                 { DWBUF }
 all:C_DWBUFH                { DWBUFH }
 
-# This is called after a context change to set banking bits. Currently there
-# are no banking bits, so this does nothing.
-all:SET_BANK                { 0 }
 
-all:PRINT_STATE { _STATE }
-
-# Waits for completion of a program and then prints statistics. Should only be
-# called using a single context.
-all:WAIT_COMPLETE {
-  
-  printf("Waiting for program to terminate");
-  
-  # In case _NUM_CONTEXTS expands to something complicated, we'll want to
-  # preload it here.
-  set(count, _NUM_CONTEXTS);
-  
-  # Initialize prev_cycle things.
-  set(prev_cyc0, 0);
-  set(prev_cyc1, 0);
-  set(prev_cyc2, 0);
-  set(prev_cyc3, 0);
-  set(prev_cyc4, 0);
-  set(prev_cyc5, 0);
-  set(prev_cyc6, 0);
-  set(prev_cyc7, 0);
-  
-  # Wait for completion.
-  set(diffs, 1);
-  while (diffs, (
-    
-    # Load the current cycle counter values.
-    if (count > 0, (set(_CUR_CONTEXT, 0); SET_BANK; set(cyc0, readWord(C_CYC))), set(cyc0, 0));
-    if (count > 1, (set(_CUR_CONTEXT, 1); SET_BANK; set(cyc1, readWord(C_CYC))), set(cyc1, 0));
-    if (count > 2, (set(_CUR_CONTEXT, 2); SET_BANK; set(cyc2, readWord(C_CYC))), set(cyc2, 0));
-    if (count > 3, (set(_CUR_CONTEXT, 3); SET_BANK; set(cyc3, readWord(C_CYC))), set(cyc3, 0));
-    if (count > 4, (set(_CUR_CONTEXT, 4); SET_BANK; set(cyc4, readWord(C_CYC))), set(cyc4, 0));
-    if (count > 5, (set(_CUR_CONTEXT, 5); SET_BANK; set(cyc5, readWord(C_CYC))), set(cyc5, 0));
-    if (count > 6, (set(_CUR_CONTEXT, 6); SET_BANK; set(cyc6, readWord(C_CYC))), set(cyc6, 0));
-    if (count > 7, (set(_CUR_CONTEXT, 7); SET_BANK; set(cyc7, readWord(C_CYC))), set(cyc7, 0));
-    
-    # See if the cycle counter values changed since the last time we read them.
-    set(diffs, 
-      (cyc0 != prev_cyc0) ||
-      (cyc1 != prev_cyc1) ||
-      (cyc2 != prev_cyc2) ||
-      (cyc3 != prev_cyc3) ||
-      (cyc4 != prev_cyc4) ||
-      (cyc5 != prev_cyc5) ||
-      (cyc6 != prev_cyc6) ||
-      (cyc7 != prev_cyc7)
-    );
-    
-    # Store the previous values.
-    set(prev_cyc0, cyc0);
-    set(prev_cyc1, cyc1);
-    set(prev_cyc2, cyc2);
-    set(prev_cyc3, cyc3);
-    set(prev_cyc4, cyc4);
-    set(prev_cyc5, cyc5);
-    set(prev_cyc6, cyc6);
-    set(prev_cyc7, cyc7);
-    
-    # Delay for 500 milliseconds between checks.
-    delay_ms(500);
-    
-    printf(".");
-    
-  ));
-  
-  printf(" done.\n\n");
-  
-  # Do a performance counter dump for each context.
-  set(cur, 0);
-  set(total_cyc, 0);
-  while (cur < count, (
-    
-    set(_CUR_CONTEXT, cur);
-    SET_BANK;
-    printf("\033[1mPerformance counters for context %d:\033[0m\n", cur);
-    set(cyc, readWord(C_CYC));
-    set(total_cyc, total_cyc + cyc);
-    printf("             Active cycles = %u\n", cyc);
-    printf("        Active cycles high = %u\n", readWord(C_CYCH));
-    printf("            Stalled cycles = %u\n", readWord(C_STALL));
-    printf("    Committed bundle count = %u\n", readWord(C_BUN));
-    printf("  Committed syllable count = %u\n", readWord(C_SYL));
-    printf("       Committed NOP count = %u\n", readWord(C_NOP));
-    printf("\n");
-    printf("\033[1mPerformance counters for cache block %d:\033[0m\n", cur);
-    printf("Instruction cache accesses = %u\n", readWord(C_IACC));
-    printf("  Instruction cache misses = %u\n", readWord(C_IMISS));
-    printf("  Data cache read accesses = %u\n", readWord(C_DRACC));
-    printf("    Data cache read misses = %u\n", readWord(C_DRMISS));
-    printf(" Data cache write accesses = %u\n", readWord(C_DWACC));
-    printf("   Data cache write misses = %u\n", readWord(C_DWMISS));
-    printf("Data cache bypass accesses = %u\n", readWord(C_DBYPASS));
-    printf("Data cache accesses with buffered write = %u\n", readWord(C_DWBUF));
-    printf("\n");
-    
-    set(cur, cur + 1);
-  ));
-  printf(" Sum of all active cycles = \033[1m%u\033[0m\n", total_cyc);
-  printf(" (this is the total cycle count if contexts are never active at the same time)\n\n");
-  
-  set(cur, 0);
-  printf("Processor cycle count = \033[1m%u\033[0m\n", readWordPreload(CREG_GPREG + (63*4)));
-}
-
-
+################################################################################
+#                              RVD INTERNAL DEFS                               #
+################################################################################
 
 # This is evaluated before any rvd command is called.
 all:_ALWAYS {
@@ -261,111 +173,15 @@ all:_WAIT {
 
 # This is evaluated when "rvd state" is called.
 all:_STATE {
-  
-  printf("Dumping state for context %d...\n\n", _CUR_CONTEXT);
-  
+  printf("\n\033[1;4m                              DUMPING STATE FOR CONTEXT %d                             \033[0m\n", _CUR_CONTEXT);
   SET_BANK;
-
-  # Core running or stopped
-  set (val, readByte(DCR));
-  if (val&0x1,
-    (printf("\033[1mCore stopped\033[0m\n");),
-    (printf("\033[1mCore running\033[0m\n");)
-  );
-  printf("\n");
-  
-  # Special registers
-  printf("\033[1mSpecial regs:\033[0m\n");
-  printf("   PC = 0x%08X\n", readWord(PC));
-  printf(" l0.0 = 0x%08X\n\n", readWord(LR));
-  
-  # General purpose registers
-  printf("\033[1mGeneral purpose regs:\033[0m\n");
-  preload(CREG_GPREG, 256);
-  set(reg, 0);
-  while (reg < 64, (
-    set(val, readWordPreload(CREG_GPREG + (reg*4)));
-    if (val, (
-      printf("\033[1;32m");
-    ));
-    printf("r0.%.2d = 0x%08X  \033[0m", reg, val);
-    set(reg, reg + 1);
-    if (!(reg & 3), (
-      printf("\n");
-    ));
-  ));
-  printf("\n");
-  
-  # Branch registers
-  printf("\033[1mBranch regs:\033[0m\n");
-  set(val, readByte(BR));
-  set(reg, 0);
-  while (reg < 8, (
-    if (val & (1 << reg), (
-      printf("\033[1;32m b0.%d = true        \033[0m", reg);
-    ), (
-      printf(" b0.%d = false       \033[0m", reg);
-    ));
-    
-    set(reg, reg + 1);
-    if (!(reg & 3), (
-      printf("\n");
-    ));
-  ));
-  printf("\n");
-  
-  # Performance counters
-  printf("\033[1mPerformance counters:\033[0m\n");
-  printf("            Active cycles = %u\n", readWord(C_CYC));
-  printf("       Active cycles high = %u\n", readWord(C_CYCH));
-  printf("           Stalled cycles = %u\n", readWord(C_STALL));
-  printf("   Committed bundle count = %u\n", readWord(C_BUN));
-  printf(" Committed syllable count = %u\n", readWord(C_SYL));
-  printf("      Committed NOP count = %u\n", readWord(C_NOP));
-  printf("\n");
-  
-  # Trap registers
-  printf("\033[1mTrap registers:\033[0m\n");
-  printf("    Trap cause = %u\n", readByte(TC));
-  printf("    Trap point = 0x%x\n", readWord(TP));
-  printf(" Trap argument = 0x%x\n", readWord(TA));
-  printf("\n");
-
+  FANCY_PRINT;
 }
 
-# This reads out the low and high values of all performance counters.
-all:_PERFORMANCE_COUNTERS {
-  SET_BANK;
-  
-  printf("Performance counters for context %d:\n", _CUR_CONTEXT);
-  
-  printf("              Active cycles = %u\n", readWord(C_CYC));
-  printf("         Active cycles high = %u\n", readWord(C_CYCH));
-  printf("             Stalled cycles = %u\n", readWord(C_STALL));
-  printf("             Stalled cycles = %u\n", readWord(C_STALLH));
-  printf("     Committed bundle count = %u\n", readWord(C_BUN));
-  printf("     Committed bundle count = %u\n", readWord(C_BUNH));
-  printf("   Committed syllable count = %u\n", readWord(C_SYL));
-  printf("   Committed syllable count = %u\n", readWord(C_SYLH));
-  printf("        Committed NOP count = %u\n", readWord(C_NOP));
-  printf("        Committed NOP count = %u\n", readWord(C_NOPH));
-  printf("        ICache access count = %u\n", readWord(C_IACC));
-  printf("        ICache access count = %u\n", readWord(C_IACCH));
-  printf("          ICache miss count = %u\n", readWord(C_IMISS));
-  printf("          ICache miss count = %u\n", readWord(C_IMISSH));
-  printf("          DCache read count = %u\n", readWord(C_DRACC));
-  printf("          DCache read count = %u\n", readWord(C_DRACCH));
-  printf("     DCache read miss count = %u\n", readWord(C_DRMISS));
-  printf("     DCache read miss count = %u\n", readWord(C_DRMISSH));
-  printf("         DCache write count = %u\n", readWord(C_DWACC));
-  printf("         DCache write count = %u\n", readWord(C_DWACCH));
-  printf("    DCache write miss count = %u\n", readWord(C_DWMISS));
-  printf("    DCache write miss count = %u\n", readWord(C_DWMISSH));
-  printf("        DCache bypass count = %u\n", readWord(C_DBYPASS));
-  printf("        DCache bypass count = %u\n", readWord(C_DBYPASSH));
-  printf("DCache buffered write count = %u\n", readWord(C_DWBUF));
-  printf("DCache buffered write count = %u\n", readWord(C_DWBUFH));
-}
+
+################################################################################
+#                              GDB BRIDGING DEFS                               #
+################################################################################
 
 # Convert a core/gdb address to a debug bus address.
 all:_GDB_ADDR_R { _GDB_ADDR }
@@ -462,4 +278,337 @@ all:_GDB_HARDBRK {
       1
     )
   )
+}
+
+
+################################################################################
+#                           STUFF USED IN MAKEFILES                            #
+################################################################################
+
+all:PRINT_STATE { _STATE }
+
+# Waits for completion of a program and then prints statistics. Should only be
+# called using a single context.
+all:WAIT_COMPLETE {
+  
+  printf("Waiting for program to terminate");
+  
+  # In case _NUM_CONTEXTS expands to something complicated, we'll want to
+  # preload it here.
+  set(count, _NUM_CONTEXTS);
+  
+  # Initialize prev_cycle things.
+  set(prev_cyc0, 0);
+  set(prev_cyc1, 0);
+  set(prev_cyc2, 0);
+  set(prev_cyc3, 0);
+  set(prev_cyc4, 0);
+  set(prev_cyc5, 0);
+  set(prev_cyc6, 0);
+  set(prev_cyc7, 0);
+  
+  # Wait for completion.
+  set(diffs, 1);
+  while (diffs, (
+    
+    # Load the current cycle counter values.
+    if (count > 0, (set(_CUR_CONTEXT, 0); SET_BANK; set(cyc0, readWord(C_CYC))), set(cyc0, 0));
+    if (count > 1, (set(_CUR_CONTEXT, 1); SET_BANK; set(cyc1, readWord(C_CYC))), set(cyc1, 0));
+    if (count > 2, (set(_CUR_CONTEXT, 2); SET_BANK; set(cyc2, readWord(C_CYC))), set(cyc2, 0));
+    if (count > 3, (set(_CUR_CONTEXT, 3); SET_BANK; set(cyc3, readWord(C_CYC))), set(cyc3, 0));
+    if (count > 4, (set(_CUR_CONTEXT, 4); SET_BANK; set(cyc4, readWord(C_CYC))), set(cyc4, 0));
+    if (count > 5, (set(_CUR_CONTEXT, 5); SET_BANK; set(cyc5, readWord(C_CYC))), set(cyc5, 0));
+    if (count > 6, (set(_CUR_CONTEXT, 6); SET_BANK; set(cyc6, readWord(C_CYC))), set(cyc6, 0));
+    if (count > 7, (set(_CUR_CONTEXT, 7); SET_BANK; set(cyc7, readWord(C_CYC))), set(cyc7, 0));
+    
+    # See if the cycle counter values changed since the last time we read them.
+    set(diffs, 
+      (cyc0 != prev_cyc0) ||
+      (cyc1 != prev_cyc1) ||
+      (cyc2 != prev_cyc2) ||
+      (cyc3 != prev_cyc3) ||
+      (cyc4 != prev_cyc4) ||
+      (cyc5 != prev_cyc5) ||
+      (cyc6 != prev_cyc6) ||
+      (cyc7 != prev_cyc7)
+    );
+    
+    # Store the previous values.
+    set(prev_cyc0, cyc0);
+    set(prev_cyc1, cyc1);
+    set(prev_cyc2, cyc2);
+    set(prev_cyc3, cyc3);
+    set(prev_cyc4, cyc4);
+    set(prev_cyc5, cyc5);
+    set(prev_cyc6, cyc6);
+    set(prev_cyc7, cyc7);
+    
+    # Delay for 500 milliseconds between checks.
+    delay_ms(500);
+    
+    printf(".");
+    
+  ));
+  
+  printf(" done.\n\n");
+  
+  # Do a performance counter dump for each context.
+  FANCY_PERFORMANCE;
+  
+  set(cur, 0);
+  printf("Processor cycle count = \033[1m%u\033[0m\n", readWordPreload(CREG_GPREG + (63*4)));
+}
+
+
+################################################################################
+#                             FANCY STATE PRINTING                             #
+################################################################################
+
+all:PRINT_PERFORMANCE_COUNTER {
+  set(lo, readWordPreload(reg));
+  if (counter_width > 4, (
+    set(hi, readWordPreload(reg+4));
+    if ((lo >> 24) != (hi & 0xFF), (
+      set(lo, hi << 24);
+    ));
+    set(hi, hi >> 8);
+  ), (
+    set(hi, 0);
+  ));
+  printf("0x%06X%08X = ", hi, lo);
+  prioritize(
+    (hi & 0xFFFC0000),         printf("\033[1;32m%7u............ Tebicycles\033[0m", hi >> 8),
+    (hi & 0xFFFFFF00),         printf("   \033[1;32m%7u......... Gibicycles\033[0m", (lo >> 30) | (hi <<  2)),
+    (hi || (lo & 0xC0000000)), printf("      \033[1;32m%7u...... Mebicycles\033[0m", (lo >> 20) | (hi << 12)),
+    (hi || (lo & 0xFFF00000)), printf("         \033[1;32m%7u... kibicycles\033[0m", (lo >> 10) | (hi << 22)),
+    1,                         printf("            \033[1;32m%7u cycles\033[0m",     lo)
+  );
+}
+
+all:FANCY_PERFORMANCE {
+  set(val, readWordPreload(EXT0));
+  set(counter_width, FIELD_EXT0_P);
+  set(count, _NUM_CONTEXTS);
+  set(cur, 0);
+  while (cur < count, (
+    
+    set(_CUR_CONTEXT, cur);
+    SET_BANK;
+    printf("\033[1mPerformance counters for context %d:\033[0m\n", cur);
+    printf("             Active cycles = "); set(reg, CYC);     PRINT_PERFORMANCE_COUNTER; printf("\n");
+    printf("            Stalled cycles = "); set(reg, STALL);   PRINT_PERFORMANCE_COUNTER; printf("\n");
+    printf("    Committed bundle count = "); set(reg, BUN);     PRINT_PERFORMANCE_COUNTER; printf("\n");
+    printf("  Committed syllable count = "); set(reg, SYL);     PRINT_PERFORMANCE_COUNTER; printf("\n");
+    printf("       Committed NOP count = "); set(reg, NOP);     PRINT_PERFORMANCE_COUNTER; printf("\n");
+    printf("\n");
+    
+    set(cur, cur + 1);
+  ));
+  set(val, readWordPreload(EXT0));
+  if ((FIELD_EXT0_C), (
+    set(cur, 0);
+    while (cur < count, (
+      printf("\033[1mPerformance counters for cache block %d:\033[0m\n", cur);
+      printf("Instruction cache accesses = "); set(reg, IACC);    PRINT_PERFORMANCE_COUNTER; printf("\n");
+      printf("  Instruction cache misses = "); set(reg, IMISS);   PRINT_PERFORMANCE_COUNTER; printf("\n");
+      printf("  Data cache read accesses = "); set(reg, DRACC);   PRINT_PERFORMANCE_COUNTER; printf("\n");
+      printf("    Data cache read misses = "); set(reg, DRMISS);  PRINT_PERFORMANCE_COUNTER; printf("\n");
+      printf(" Data cache write accesses = "); set(reg, DWACC);   PRINT_PERFORMANCE_COUNTER; printf("\n");
+      printf("   Data cache write misses = "); set(reg, DWMISS);  PRINT_PERFORMANCE_COUNTER; printf("\n");
+      printf("Data cache bypass accesses = "); set(reg, DBYPASS); PRINT_PERFORMANCE_COUNTER; printf("\n");
+      printf("   Data waits on write buf = "); set(reg, DWBUF);   PRINT_PERFORMANCE_COUNTER; printf("\n");
+      printf("\n");
+      
+      set(cur, cur + 1);
+    ));
+  ));
+}
+
+all:FANCY_PRINT {
+  
+  printf("\n");
+  
+  # Load GPREG and CXREG sections.
+  preload(CREG_GLOB, 256);
+  
+  printf("\033[1mConfiguration:\033[0m\n");
+  
+  printf("  Version: core-\033[4m");
+  printf("TODO"); # TODO
+  printf("\033[0m, platform-\033[4m");
+  printf("TODO"); # TODO
+  set(val, readWordPreload(EXT0));
+  printf("\033[0m, branch offset in units of %d bits\n", (64-(32*FIELD_EXT0_O)));
+  
+  set(val, readWordPreload(DCFG));
+  printf("  Generic config: %d lanes, %d group(s), %d context(s), %d-bit bundle alignment\n",
+    FIELD_DCFG_NL+1, FIELD_DCFG_NG+1, FIELD_DCFG_NC+1, (FIELD_DCFG_BA+1)*32);
+  
+  printf("  Runtime config: 0x%08X, requested by ", readWordPreload(CC));
+  set(val, readWordPreload(GSR));
+  set(val, FIELD_GSR_RID);
+  prioritize(
+    (val < 8), printf("context %d\n", val),
+    (val == 8), printf("the wakeup system\n"),
+    (val == 15), printf("the debug bus or a reset\n"),
+    1, printf("unknown origin %d\n", val)
+  );
+  printf("\n");
+  
+  # Load GPREG and CXREG sections.
+  preload(CREG_GPREG, 256 + 512);
+  
+  printf("\033[1mState:\033[0m\n  ");
+  
+  set(me,  readBytePreload(CID));
+  set(cfg, readWordPreload(CC));
+  set(val, readWordPreload(DCFG));
+  set(nlg, FIELD_DCFG_NG+1);
+  set(lpg, (FIELD_DCFG_NL+1) / nlg);
+  set(lg, 0);
+  set(lanes, 0);
+  while (lg < nlg, (
+    if (((cfg >> (lg*4)) & 0xF) == me, (
+      set(lanes, lanes + lpg);
+    ));
+    set(lg, lg+1);
+  ));
+  if ((lanes == 0), (
+    printf("\033[1;4;31mNO LANES ALLOCATED\033[0m.");
+  ), (
+    printf("\033[1;32m%d lanes\033[0m allocated, ", lanes);
+    set(val, readWordPreload(DCR));
+    prioritize (
+      (FIELD_DCR_D), (printf("\033[1;4;32mDONE\033[0m, return value = \033[1;32m0x%02X\033[0m.", readBytePreload(RET))),
+      (FIELD_DCR_J), (printf("\033[1;4;31mjumping...\033[0m.")),
+      (FIELD_DCR_S), (printf("\033[1;4;31msingle-stepping...\033[0m.")),
+      (FIELD_DCR_B), (printf("\033[1;4;31mpaused\033[0m.")),
+      (1),           (printf("\033[1;4;32mrunning\033[0m."))
+    );
+  ));
+  printf("\n  ");
+  
+  set(tc, readBytePreload(TC));
+  if ((tc != 0), (
+    printf("Not handling any trap.\n  ");
+  ), (
+    printf("Currently handling \033[1;31mtrap %d\033[0m, argument \033[1;31m0x%08X\033[0m.\n  ", tc, readWordPreload(TA));
+  ));
+  
+  set(val, readWordPreload(CCR));
+  if ((FIELD_CCR_K == 1), (
+    printf("\033[1;32mKernel mode\033[0m, ");
+  ), (
+    printf("\033[1;32mUser mode\033[0m, ");
+  ));
+  if ((FIELD_CCR_R == 1), (
+    printf("\033[1;32mready\033[0m for trap, ");
+  ), (
+    printf("\033[1;31mnot ready\033[0m for trap, ");
+  ));
+  if ((FIELD_CCR_I == 1), (
+    printf("interrupts \033[1;32menabled\033[0m, ");
+  ), (
+    printf("interrupts \033[1;31mdisabled\033[0m, ");
+  ));
+  if ((FIELD_CCR_C == 1), (
+    printf("cxswitch \033[1;32menabled\033[0m.\n\n");
+  ), (
+    printf("cxswitch \033[1;31mdisabled\033[0m.\n\n");
+  ));
+  
+  printf("\033[1mInstruction pointers:\033[0m\n  ");
+  
+  printf("PC     = \033[1;4;32m0x%08X\033[0m\n\n  ", readWordPreload(PC));
+  printf("$l0.0  = \033[1;32m0x%08X\033[0m  ", readWordPreload(LR));
+  printf("TrapPt = \033[1;32m0x%08X\033[0m  ", readWordPreload(TP));
+  printf("TrapHan= \033[1;32m0x%08X\033[0m  ", readWordPreload(TH));
+  printf("PaniHan= \033[1;32m0x%08X\033[0m\n  ", readWordPreload(PH));
+  
+  set(reg, 0);
+  set(val, readWordPreload(DCR));
+  while (reg < 4, (
+    printf("BR%d    = ", reg);
+    if ((((val << (reg*4)) & 0xF) == 1), (
+      printf("\033[1;32m0x%08X\033[0m  ", readWordPreload(BR0 + (reg*4)));
+    ), (
+      printf("disabled    ");
+    ));
+    set(reg, reg + 1);
+  ));
+  printf("\n\n");
+  
+  printf("\033[1mWatchpoints:\033[0m\n  ");
+  set(reg, 0);
+  set(val, readWordPreload(DCR));
+  while (reg < 4, (
+    printf("BR%d    = ", reg);
+    if ((((val << (reg*4)) & 0xF) > 1), (
+      printf("\033[1;32m0x%08X\033[0m  ", readWordPreload(BR0 + (reg*4)));
+    ), (
+      printf("disabled    ");
+    ));
+    set(reg, reg + 1);
+  ));
+  printf("\n\n");
+  
+  printf("\033[1mGeneral purpose:\033[0m\n  ");
+  set(reg, 0);
+  while (reg < 64, (
+    set(val, readWordPreload(CREG_GPREG + (reg*4)));
+    printf("$r0.%.2d = ", reg);
+    if (val, (
+      printf("\033[1;32m");
+    ));
+    printf("0x%08X  \033[0m", val);
+    set(reg, reg + 1);
+    if (!(reg & 3), (
+      printf("\n  ");
+    ));
+  ));
+  printf("\n\033[1mBranch:\033[0m\n  ");
+  set(val, readBytePreload(BR));
+  set(reg, 0);
+  while (reg < 8, (
+    if (val & (1 << reg), (
+      printf("$b0.%d  = \033[1;32mtrue        \033[0m", reg);
+    ), (
+      printf("$b0.%d  = false       \033[0m", reg);
+    ));
+    
+    set(reg, reg + 1);
+    if (!(reg & 3), (
+      printf("\n  ");
+    ));
+  ));
+  printf("\n\033[1mScratchpad:\033[0m\n  ");
+  set(val, readWordPreload(SCRP1));
+  if (val, (
+    printf("\033[1;32m");
+  ));
+  printf("SCRP1  = 0x%08X  \033[0m", val);
+  set(val, readWordPreload(SCRP2));
+  if (val, (
+    printf("\033[1;32m");
+  ));
+  printf("SCRP2  = 0x%08X  \033[0m", val);
+  set(val, readWordPreload(SCRP3));
+  if (val, (
+    printf("\033[1;32m");
+  ));
+  printf("SCRP3  = 0x%08X  \033[0m", val);
+  set(val, readWordPreload(SCRP4));
+  if (val, (
+    printf("\033[1;32m");
+  ));
+  printf("SCRP4  = 0x%08X  \033[0m\n", val);
+  
+  set(val, readWordPreload(EXT0));
+  set(counter_width, FIELD_EXT0_P);
+  printf("\n\033[1mPerformance counters:\033[0m (size = %d bytes)\n", counter_width);
+  printf("  Active cycles            = "); set(reg, CYC);     PRINT_PERFORMANCE_COUNTER; printf("\n");
+  printf("  Stalled cycles           = "); set(reg, STALL);   PRINT_PERFORMANCE_COUNTER; printf("\n");
+  printf("  Committed bundle count   = "); set(reg, BUN);     PRINT_PERFORMANCE_COUNTER; printf("\n");
+  printf("  Committed syllable count = "); set(reg, SYL);     PRINT_PERFORMANCE_COUNTER; printf("\n");
+  printf("  Committed NOP count      = "); set(reg, NOP);     PRINT_PERFORMANCE_COUNTER; printf("\n\n");
 }
