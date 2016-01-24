@@ -52,6 +52,7 @@
 #include <string.h>
 #include <signal.h>
 #include <unistd.h>
+#include <time.h>
 
 #include "main.h"
 #include "serial.h"
@@ -466,6 +467,9 @@ int run(const commandLineArgs_t *args) {
   int tty;
   int busy;
   int terminated;
+  int supposed_to_have_tty;
+  time_t now = 0;
+  time_t last_reconnect_attempt = 0;
   
   // Initialize select wrapper state.
   CHECK(select_init());
@@ -474,6 +478,7 @@ int run(const commandLineArgs_t *args) {
   tty = serial_open(args->port, args->baudrate);
   // Only fail when we are not using PCIe communication.
   CHECK_FALSE(tty >= 0 || args->pcieCdev);
+  supposed_to_have_tty = tty != 0;
 
   // Try to initalize the rvex interface.
   if (args->pcieCdev) {
@@ -498,7 +503,7 @@ int run(const commandLineArgs_t *args) {
   
   // Fork into daemon mode if foreground is not set.
   if (!args->foreground) {
-    CHECK(daemonize());
+    CHECK(daemonize(args->debugPort));
   }
   
   // Set up the terminate handler.
@@ -522,7 +527,28 @@ int run(const commandLineArgs_t *args) {
     
     // Update the serial port (perform reads into our buffer).
     if (tty >= 0) {
-        serial_update(tty);
+      if (serial_update(tty) == -1) {
+        
+        // USB serial port connection lost. Close the port file immediately.
+        serial_close(&tty);
+        
+        // Terminate if we shouldn't try to reconnect.
+        if (args->noReconnect) {
+          terminated = 1;
+        }
+        
+      }
+    } else if (supposed_to_have_tty) {
+      
+      // Try to reopen the USB serial port at most every few seconds if we lost
+      // the connection.
+      time(&now);
+      if (last_reconnect_attempt + 5 < now) {
+        printf("Trying to reopen serial port...\n");
+        tty = serial_open(args->port, args->baudrate);
+      }
+      last_reconnect_attempt = now;
+      
     }
     
     // Update the TCP servers (accept incoming connections, perform reads into

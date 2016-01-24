@@ -91,6 +91,12 @@ typedef struct {
    */
   int foreground;
   
+  /**
+   * When set, rvsrv will exit when there is a serial port error. The default
+   * behavior is to keep running and try to reconnect.
+   */
+  int noReconnect;
+  
 } commandLineArgs_t;
 
 #endif

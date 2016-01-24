@@ -59,15 +59,17 @@
 /**
  * Log file to use.
  */
-static const char *LOG_FILE = "/var/tmp/rvsrv.log";
+static const char *LOG_DIR = "/var/tmp/rvsrv";
+static const char *LOG_FILE = "/var/tmp/rvsrv/rvsrv-p%d.log";
 
 /**
  * Turns the process into a daemon. stdout and stderr are redirected to
  * /var/tmp/rvsrv.log.
  */
-int daemonize(void) {
+int daemonize(const unsigned short port) {
   pid_t pid;
   int logfile;
+  char log_file[128];
   
   // Fork, allowing the parent process to terminate.
   pid = fork();
@@ -105,24 +107,43 @@ int daemonize(void) {
   // Set the user file creation mask to zero.
   umask(0);
   
+  // Format the log filename. We add the debug TCP port number to the filename
+  // to allow multiple rvsrv processes to run on the same machine.
+  snprintf(log_file, sizeof(log_file), LOG_FILE, (int)port);
+  
+  // Create the log directory if it doesn't exist yet.
+  if (mkdir(LOG_DIR, 0777)) {
+    if (errno != EEXIST) {
+      perror("Failed to create log directory");
+      printf("The log directory is %s.\n", LOG_DIR);
+      return -1;
+    }
+    
+    // Remove the old log file if it exists.
+    if (unlink(log_file)) {
+      if (errno != ENOENT) {
+        perror("Failed to remove previous log file");
+        printf("The log file is %s.\n", log_file);
+        return -1;
+      }
+    }
+  }
+  
+  // Open the log file.
+  logfile = open(log_file, O_RDWR | O_CREAT, 0666);
+  if (logfile == -1) {
+    perror("Failed to open log file");
+    printf("The log file is %s.\n", log_file);
+    return -1;
+  }
+  
   // Close and reopen standard file descriptors.
   close(STDIN_FILENO);
-  if (open("/dev/null",O_RDONLY) == -1) {
+  if (open("/dev/null", O_RDONLY) == -1) {
     perror("Failed to reopen stdin while daemonizing");
     return -1;
   }
-  if (unlink(LOG_FILE)) {
-    if (errno != ENOENT) {
-      perror("Failed to remove previous log file");
-      return -1;
-    }
-  }
-  logfile = open(LOG_FILE, O_RDWR | O_CREAT, 00666);
-  if (logfile == -1) {
-    perror("Failed to open log file");
-    return -1;
-  }
-  printf("Daemon process running now, moving log output to %s.\n", LOG_FILE);
+  printf("Daemon process running now, moving log output to %s.\n", log_file);
   dup2(logfile, STDOUT_FILENO);
   dup2(logfile, STDERR_FILENO);
   close(logfile);

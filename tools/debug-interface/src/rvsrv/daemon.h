@@ -53,6 +53,6 @@
  * Turns the process into a daemon. stdout and stderr are redirected to
  * /var/tmp/rvsrv.log.
  */
-int daemonize(void);
+int daemonize(const unsigned short port);
 
 #endif

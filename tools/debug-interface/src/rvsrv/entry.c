@@ -83,6 +83,7 @@ int main(int argc, char **argv) {
   args.appPort   = 21078;
   args.debugPort = 21079;
   args.foreground = 0;
+  args.noReconnect = 0;
   
   // Parse command line arguments.
   while (1) {
@@ -96,6 +97,7 @@ int main(int argc, char **argv) {
       {"foreground",no_argument,      0, 'f'},
       {"help",     no_argument,       0, 'h'},
       {"license",  no_argument,       0, 'l'},
+      {"no-reconnect",no_argument,    0, 'n'},
       {0, 0, 0, 0}
     };
     
@@ -161,6 +163,10 @@ int main(int argc, char **argv) {
         
       case 'f':
         args.foreground = 1;
+        break;
+        
+      case 'n':
+        args.noReconnect = 1;
         break;
         
       case 'l':
@@ -231,6 +237,8 @@ static void usage(char *progName, int verbose) {
     "                     Defaults to port 21079.\n"
     "      --foreground   Run in the calling terminal instead of starting the daemon\n"
     "                     process.\n"
+    "      --no-reconnect Do not attempt to reconnect to serial port after the port\n"
+    "                     stops working; exit instead.\n"
     "  -h  --help         Shows this usage screen%s.\n"
     "      --license      Prints licensing information.\n"
     "\n",

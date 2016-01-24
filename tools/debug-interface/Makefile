@@ -39,7 +39,7 @@ stop: copyconf $(BINDIR)/rvd
 	@$(BINDIR)/rvd -p$(TCP_PORT_DEBUG) stop
 
 catlog:
-	@cat /var/tmp/rvsrv.log
+	@cat /var/tmp/rvsrv/rvsrv-p$(TCP_PORT_DEBUG).log
 
 monitor: copyconf
 	@echo "Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running."; $(NETCAT) localhost $(TCP_PORT_APP)

@@ -193,7 +193,7 @@ int serial_open(const char *name, const int baud) {
   
   // Retrieve the current serial port configuration.
   if (tcgetattr(f, &cfg)) {
-    perror("Error while setting baud rate");
+    perror("Error while setting baud rate (tcgetattr)");
     close(f);
     return -1;
   }
@@ -229,14 +229,14 @@ int serial_open(const char *name, const int baud) {
       
   }
   if (cfsetispeed(&cfg, speed) || cfsetospeed(&cfg, speed)) {
-    perror("Error while setting baud rate");
+    perror("Error while setting baud rate (cfset*speed)");
     close(f);
     return -1;
   }
   
   // Commit the new configuration.
   if (tcsetattr(f, TCSAFLUSH, &cfg)) {
-    perror("Error while setting baud rate");
+    perror("Error while setting baud rate (tcsetattr)");
     close(f);
     return -1;
   }
