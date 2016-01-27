@@ -185,6 +185,7 @@ compile-%:
 
 # Make sure the rvex debugging tools are compiled and generate source script
 # for setting up the debugging environment.
+.PHONY: debug
 debug:
 	cd examples && $(MAKE) $@
 	cat ../../tools/debug-interface/debug > debug
