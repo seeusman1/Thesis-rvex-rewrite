@@ -15,6 +15,7 @@ DOCS = ../doc/src/refman/generated
 RVEX_H = ../examples/src/rvex.h
 MEMORY_MAP = ../tools/debug-interface/core.map
 PLATFORMS = ../platform
+SIM_CORE = ../tools/rvsim/src/rvsim/components/core
 
 # Set python search path.
 PYTHONP = PYTHONPATH=$(SCRIPTS) $(PYTHON)
@@ -36,6 +37,10 @@ all: $(TEMP)
 	$(CP) $(TEMP)/rvex.h $(RVEX_H)
 	$(CP) $(TEMP)/core.map $(MEMORY_MAP)
 	@echo ""
+	@echo "Configuring simulator..."
+	$(CP) $(TEMP)/Generated.h $(SIM_CORE)
+	$(CP) $(TEMP)/Generated.cpp $(SIM_CORE)
+	@echo ""
 	@echo "Configuring reference manual..."
 	$(CP) $(TEMP)/opcode-stats.generated.tex $(DOCS)/opcode-stats.generated.tex
 	$(CP) $(TEMP)/opcode-table.generated.tex $(DOCS)/opcode-table.generated.tex
@@ -53,6 +58,7 @@ all: $(TEMP)
 	@$(RM) $(SCRIPTS)/headers/*.pyc
 	@$(RM) $(SCRIPTS)/opcodes/*.pyc
 	@$(RM) $(SCRIPTS)/pipeline/*.pyc
+	@$(RM) $(SCRIPTS)/simulator/*.pyc
 	@$(RM) $(SCRIPTS)/traps/*.pyc
 	@echo ""
 	@echo "Trying to rebuild reference manual..."

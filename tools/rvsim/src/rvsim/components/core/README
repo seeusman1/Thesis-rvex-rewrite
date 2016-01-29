@@ -1,0 +1,24 @@
+
+Before changing any code in the simulator, you must know how to use the special
+types like bitvec<n>_t:
+
+natural_t:
+  Stores a value from 0 to 0x7FFFFFFF, like the VHDL natural type. All other
+  values are illegal.
+
+boolean_t:
+  Stores a boolean. Zero represents false, one represents true. Thus, it can
+  be used as a C condition without masking. All values other than 0 and 1 are
+  illegal.
+
+bit_t:
+  Stores a single bit in its LSB. High order bits are DON'T CARE; they MUST be
+  masked when the don't care bits make a difference.
+
+bitvec<n>_t and unsigned<n>_t:
+  Stores n bits in the LSBs. High order bits are DON'T CARE; they MUST be masked
+  when the don't care bits make a difference. bitvec<n>_t and unsigned<n>_t are
+  completely equivalent in C; normally you would only use bitvec<n>_t. The
+  unsigned<n>_t typedefs only exists because they *are* different in the
+  language-agnostic configuration files and VHDL.
+

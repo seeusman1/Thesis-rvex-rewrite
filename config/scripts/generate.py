@@ -74,7 +74,10 @@ cregs.core_tb.generate(regs, dirs)
 # Simulator source generation
 #-------------------------------------------------------------------------------
 
-# TODO
+print('Generating simulator files...')
+
+import simulator.generated
+simulator.generated.generate(opc, regs, trps, pl, dirs)
 
 
 #-------------------------------------------------------------------------------

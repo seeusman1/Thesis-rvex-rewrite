@@ -2322,7 +2322,7 @@ begin -- architecture
             cr_dwbuf_dwbuf0_write := bus_writeData((0)+7 downto 0);
             cr_dwbuf_dwbuf0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(88, 31))))); -- GENERATED --
             cr_dwbuf_dwbuf0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_dwbuf_dwbuf0_add := bit2vec(((bool2bit((unsigned(mem2cxreg_cacheStatus(ctxt).data_accessType)) /= (unsigned(bitvec_lit("00"))))) and (mem2cxreg_cacheStatus(ctxt).data_writepending)) and (((mem2cxreg_cacheStatus(ctxt).data_accessType(1)) or (mem2cxreg_cacheStatus(ctxt).data_miss)) or (mem2cxreg_cacheStatus(ctxt).data_bypass)), 8);
+            cr_dwbuf_dwbuf0_add := bit2vec(((bool2bit((unsigned(mem2cxreg_cacheStatus(ctxt).data_accessType)) /= (unsigned(bitvec_lit("00"))))) and (mem2cxreg_cacheStatus(ctxt).data_writePending)) and (((mem2cxreg_cacheStatus(ctxt).data_accessType(1)) or (mem2cxreg_cacheStatus(ctxt).data_miss)) or (mem2cxreg_cacheStatus(ctxt).data_bypass)), 8);
             cr_dwbuf_dwbuf0_add_r(ctxt) <= cr_dwbuf_dwbuf0_add;
             cr_dwbuf_dwbuf0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dwbuf_dwbuf0_r(ctxt)), 57)) + (resize(unsigned(cr_dwbuf_dwbuf0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then

@@ -134,7 +134,10 @@ int select_wait(int quick) {
   readyDescriptors = registeredDescriptors;
   
   // Call select.
-  if ((numReady = select(maxRegisteredDescriptor + 1, &readyDescriptors, 0, 0, ptimeout)) < 0) {
+  while ((numReady = select(maxRegisteredDescriptor + 1, &readyDescriptors, 0, 0, ptimeout)) < 0) {
+    if (errno == EINTR) {
+      continue;
+    }
     perror("Call to select failed");
     return -1;
   }

@@ -1,0 +1,21144 @@
+	.file	"Generated.cpp"
+# GNU C++ (SUSE Linux) version 4.8.1 20130909 [gcc-4_8-branch revision 202388] (x86_64-suse-linux)
+#	compiled by GNU C version 4.8.1 20130909 [gcc-4_8-branch revision 202388], GMP version 5.1.2, MPFR version 3.1.2, MPC version 1.0
+# GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+# options passed:  -I /opt/modelsim-10.2a/modeltech/include -D_GNU_SOURCE
+# src/rvsim/components/core/Generated.cpp -m64 -mtune=generic -march=x86-64
+# -auxbase-strip .s -g -Wall -Wpedantic -ansi -fms-extensions -fPIC
+# -freg-struct-return -fverbose-asm
+# options enabled:  -fPIC -faggressive-loop-optimizations
+# -fasynchronous-unwind-tables -fauto-inc-dec -fbranch-count-reg -fcommon
+# -fdelete-null-pointer-checks -fdwarf2-cfi-asm -fearly-inlining
+# -feliminate-unused-debug-types -fexceptions -ffunction-cse -fgcse-lm
+# -fgnu-runtime -fident -finline-atomics -fira-hoist-pressure
+# -fira-share-save-slots -fira-share-spill-slots -fivopts
+# -fkeep-static-consts -fleading-underscore -fmath-errno
+# -fmerge-debug-strings -fmove-loop-invariants -fpeephole
+# -fprefetch-loop-arrays -freg-struct-return
+# -fsched-critical-path-heuristic -fsched-dep-count-heuristic
+# -fsched-group-heuristic -fsched-interblock -fsched-last-insn-heuristic
+# -fsched-rank-heuristic -fsched-spec -fsched-spec-insn-heuristic
+# -fsched-stalled-insns-dep -fshow-column -fsigned-zeros
+# -fsplit-ivs-in-unroller -fstrict-volatile-bitfields -fsync-libcalls
+# -ftrapping-math -ftree-coalesce-vars -ftree-cselim -ftree-forwprop
+# -ftree-loop-if-convert -ftree-loop-im -ftree-loop-ivcanon
+# -ftree-loop-optimize -ftree-parallelize-loops= -ftree-phiprop -ftree-pta
+# -ftree-reassoc -ftree-scev-cprop -ftree-slp-vectorize
+# -ftree-vect-loop-version -funit-at-a-time -funwind-tables -fverbose-asm
+# -fzero-initialized-in-bss -m128bit-long-double -m64 -m80387
+# -maccumulate-outgoing-args -malign-stringops -mfancy-math-387
+# -mfp-ret-in-387 -mfxsr -mglibc -mieee-fp -mlong-double-80 -mmmx -mno-sse4
+# -mpush-args -mred-zone -msse -msse2
+
+	.text
+.Ltext0:
+	.globl	_ZN4Core12OPCODE_TABLEE
+	.section	.rodata
+	.align 32
+	.type	_ZN4Core12OPCODE_TABLEE, @object
+	.size	_ZN4Core12OPCODE_TABLEE, 17408
+_ZN4Core12OPCODE_TABLEE:
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	4
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	7
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	0
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	4
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	0
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	7
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	0
+# op2sel:
+	.long	0
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	4
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	0
+# op2sel:
+	.long	0
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	7
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	1
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	4
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	1
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	7
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	1
+# op2sel:
+	.long	0
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	4
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	1
+# op2sel:
+	.long	0
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	7
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	1
+# op1sel:
+	.long	1
+# op2sel:
+	.long	0
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	4
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	64
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	12
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	0
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	64
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	5
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	1
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	9
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	0
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	5
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	0
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	0
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	5
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	0
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	0
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	7
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	0
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	1
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	5
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	0
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	1
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	7
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	9
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	0
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	9
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	1
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	9
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	5
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	5
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	7
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	4
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	7
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	4
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	1
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	37
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	45
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	3
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	64
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	53
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	3
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	64
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	61
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	33
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	5
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	10
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	45
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	10
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	65
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	3
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	0
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	0
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	0
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	128
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	1
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	7
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	16
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	1
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	9
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	1
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	1
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	1
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	1
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	1
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	1
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	1
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	1
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	13
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	13
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	8
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	8
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	8
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	8
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	0
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	0
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	0
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	0
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	1
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	1
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	1
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	1
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	10
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	10
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	10
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	10
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	6
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	6
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	9
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	9
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	4
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	4
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	2
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	2
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	5
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	5
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	3
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	3
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	12
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	2
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	3
+# brResultMux:
+	.long	12
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	8
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	8
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	1
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	1
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	1
+# brResultMux:
+	.long	1
+# opBrMux:
+	.long	0
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	5
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	6
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	1
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	3
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	2
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	5
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	5
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	6
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	1
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	14
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	8
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	1
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	14
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	8
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	1
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	14
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	8
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	1
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	14
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	8
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	1
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	14
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	8
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	1
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	14
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	8
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	1
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	14
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	8
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	1
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	14
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	8
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	7
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	7
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	7
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	7
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	7
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	7
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	7
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	3
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	4
+# brResultMux:
+	.long	7
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	4
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	4
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	0
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	8
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	1
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	2
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	1
+# intResultMux:
+	.long	0
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	2
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	0
+# op1sel:
+	.long	1
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	5
+	.zero	3
+# valid:
+	.byte	1
+	.byte	1
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	1
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	8
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	2
+# op1sel:
+	.long	1
+# op2sel:
+	.long	0
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	4
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+# valid:
+	.byte	0
+	.byte	0
+# datapathCtrl:
+	.zero	2
+# funcSel:
+	.long	2
+# op3LinkReg:
+# stackOp:
+# op1LinkReg:
+# gpRegWE:
+# op3BranchRegs:
+# isNOP:
+# linkWE:
+# allBrRegsWE:
+# brFmt:
+	.byte	32
+# brRegWE:
+# isLIMMH:
+# isTrap:
+	.byte	0
+	.zero	2
+# aluCtrl:
+# bitwiseOp:
+	.long	3
+# op1Mux:
+	.long	0
+# op2Mux:
+	.long	0
+# intResultMux:
+	.long	2
+# brResultMux:
+	.long	11
+# opBrMux:
+	.long	3
+# compare:
+# shiftLeft:
+# unsignedOp:
+# divs:
+	.byte	0
+	.zero	3
+# branchCtrl:
+# isBranchInstruction:
+# stop:
+# branchIfFalse:
+# branchToLink:
+# link:
+# branchIfTrue:
+# RFI:
+	.byte	0
+	.zero	3
+# memoryCtrl:
+# accessSizeBLog2:
+	.long	2
+# isMemoryInstruction:
+# unsignedOp:
+# readEnable:
+# writeEnable:
+	.byte	0
+	.zero	3
+# multiplierCtrl:
+# resultSel:
+	.long	3
+# op1sel:
+	.long	2
+# op2sel:
+	.long	1
+# op2unsigned:
+# op1unsigned:
+# isMultiplyInstruction:
+	.byte	0
+	.zero	3
+	.text
+.Letext0:
+	.file 1 "/usr/lib64/gcc/x86_64-suse-linux/4.8/include/stddef.h"
+	.file 2 "/usr/include/bits/types.h"
+	.file 3 "/usr/include/stdio.h"
+	.file 4 "/usr/include/libio.h"
+	.file 5 "/usr/include/wchar.h"
+	.file 6 "/usr/include/_G_config.h"
+	.file 7 "<built-in>"
+	.file 8 "/usr/include/c++/4.8/cstdio"
+	.file 9 "src/rvsim/components/core/Generated.h"
+	.file 10 "src/rvsim/components/core/Generated.cpp"
+	.section	.debug_info,"",@progbits
+.Ldebug_info0:
+	.long	0xdb4
+	.value	0x4
+	.long	.Ldebug_abbrev0
+	.byte	0x8
+	.uleb128 0x1
+	.long	.LASF228
+	.byte	0x4
+	.long	.LASF229
+	.long	.LASF230
+	.long	.Ldebug_line0
+	.uleb128 0x2
+	.long	.LASF7
+	.byte	0x1
+	.byte	0xd4
+	.long	0x28
+	.uleb128 0x3
+	.byte	0x8
+	.byte	0x7
+	.long	.LASF0
+	.uleb128 0x3
+	.byte	0x1
+	.byte	0x8
+	.long	.LASF1
+	.uleb128 0x3
+	.byte	0x2
+	.byte	0x7
+	.long	.LASF2
+	.uleb128 0x3
+	.byte	0x4
+	.byte	0x7
+	.long	.LASF3
+	.uleb128 0x3
+	.byte	0x1
+	.byte	0x6
+	.long	.LASF4
+	.uleb128 0x3
+	.byte	0x2
+	.byte	0x5
+	.long	.LASF5
+	.uleb128 0x4
+	.byte	0x4
+	.byte	0x5
+	.string	"int"
+	.uleb128 0x3
+	.byte	0x8
+	.byte	0x5
+	.long	.LASF6
+	.uleb128 0x2
+	.long	.LASF8
+	.byte	0x2
+	.byte	0x83
+	.long	0x59
+	.uleb128 0x2
+	.long	.LASF9
+	.byte	0x2
+	.byte	0x84
+	.long	0x59
+	.uleb128 0x3
+	.byte	0x8
+	.byte	0x7
+	.long	.LASF10
+	.uleb128 0x5
+	.byte	0x8
+	.uleb128 0x6
+	.byte	0x8
+	.long	0x85
+	.uleb128 0x3
+	.byte	0x1
+	.byte	0x6
+	.long	.LASF11
+	.uleb128 0x2
+	.long	.LASF12
+	.byte	0x3
+	.byte	0x30
+	.long	0x97
+	.uleb128 0x7
+	.long	.LASF52
+	.byte	0xd8
+	.byte	0x4
+	.byte	0xf5
+	.long	0x217
+	.uleb128 0x8
+	.long	.LASF13
+	.byte	0x4
+	.byte	0xf6
+	.long	0x52
+	.byte	0
+	.uleb128 0x8
+	.long	.LASF14
+	.byte	0x4
+	.byte	0xfb
+	.long	0x7f
+	.byte	0x8
+	.uleb128 0x8
+	.long	.LASF15
+	.byte	0x4
+	.byte	0xfc
+	.long	0x7f
+	.byte	0x10
+	.uleb128 0x8
+	.long	.LASF16
+	.byte	0x4
+	.byte	0xfd
+	.long	0x7f
+	.byte	0x18
+	.uleb128 0x8
+	.long	.LASF17
+	.byte	0x4
+	.byte	0xfe
+	.long	0x7f
+	.byte	0x20
+	.uleb128 0x8
+	.long	.LASF18
+	.byte	0x4
+	.byte	0xff
+	.long	0x7f
+	.byte	0x28
+	.uleb128 0x9
+	.long	.LASF19
+	.byte	0x4
+	.value	0x100
+	.long	0x7f
+	.byte	0x30
+	.uleb128 0x9
+	.long	.LASF20
+	.byte	0x4
+	.value	0x101
+	.long	0x7f
+	.byte	0x38
+	.uleb128 0x9
+	.long	.LASF21
+	.byte	0x4
+	.value	0x102
+	.long	0x7f
+	.byte	0x40
+	.uleb128 0x9
+	.long	.LASF22
+	.byte	0x4
+	.value	0x104
+	.long	0x7f
+	.byte	0x48
+	.uleb128 0x9
+	.long	.LASF23
+	.byte	0x4
+	.value	0x105
+	.long	0x7f
+	.byte	0x50
+	.uleb128 0x9
+	.long	.LASF24
+	.byte	0x4
+	.value	0x106
+	.long	0x7f
+	.byte	0x58
+	.uleb128 0x9
+	.long	.LASF25
+	.byte	0x4
+	.value	0x108
+	.long	0x31b
+	.byte	0x60
+	.uleb128 0x9
+	.long	.LASF26
+	.byte	0x4
+	.value	0x10a
+	.long	0x321
+	.byte	0x68
+	.uleb128 0x9
+	.long	.LASF27
+	.byte	0x4
+	.value	0x10c
+	.long	0x52
+	.byte	0x70
+	.uleb128 0x9
+	.long	.LASF28
+	.byte	0x4
+	.value	0x110
+	.long	0x52
+	.byte	0x74
+	.uleb128 0x9
+	.long	.LASF29
+	.byte	0x4
+	.value	0x112
+	.long	0x60
+	.byte	0x78
+	.uleb128 0x9
+	.long	.LASF30
+	.byte	0x4
+	.value	0x116
+	.long	0x36
+	.byte	0x80
+	.uleb128 0x9
+	.long	.LASF31
+	.byte	0x4
+	.value	0x117
+	.long	0x44
+	.byte	0x82
+	.uleb128 0x9
+	.long	.LASF32
+	.byte	0x4
+	.value	0x118
+	.long	0x327
+	.byte	0x83
+	.uleb128 0x9
+	.long	.LASF33
+	.byte	0x4
+	.value	0x11c
+	.long	0x337
+	.byte	0x88
+	.uleb128 0x9
+	.long	.LASF34
+	.byte	0x4
+	.value	0x125
+	.long	0x6b
+	.byte	0x90
+	.uleb128 0x9
+	.long	.LASF35
+	.byte	0x4
+	.value	0x12e
+	.long	0x7d
+	.byte	0x98
+	.uleb128 0x9
+	.long	.LASF36
+	.byte	0x4
+	.value	0x12f
+	.long	0x7d
+	.byte	0xa0
+	.uleb128 0x9
+	.long	.LASF37
+	.byte	0x4
+	.value	0x130
+	.long	0x7d
+	.byte	0xa8
+	.uleb128 0x9
+	.long	.LASF38
+	.byte	0x4
+	.value	0x131
+	.long	0x7d
+	.byte	0xb0
+	.uleb128 0x9
+	.long	.LASF39
+	.byte	0x4
+	.value	0x132
+	.long	0x1d
+	.byte	0xb8
+	.uleb128 0x9
+	.long	.LASF40
+	.byte	0x4
+	.value	0x134
+	.long	0x52
+	.byte	0xc0
+	.uleb128 0x9
+	.long	.LASF41
+	.byte	0x4
+	.value	0x136
+	.long	0x33d
+	.byte	0xc4
+	.byte	0
+	.uleb128 0xa
+	.byte	0x8
+	.byte	0x5
+	.byte	0x53
+	.long	.LASF47
+	.long	0x25b
+	.uleb128 0xb
+	.byte	0x4
+	.byte	0x5
+	.byte	0x56
+	.long	0x242
+	.uleb128 0xc
+	.long	.LASF42
+	.byte	0x5
+	.byte	0x58
+	.long	0x3d
+	.uleb128 0xc
+	.long	.LASF43
+	.byte	0x5
+	.byte	0x5c
+	.long	0x25b
+	.byte	0
+	.uleb128 0x8
+	.long	.LASF44
+	.byte	0x5
+	.byte	0x54
+	.long	0x52
+	.byte	0
+	.uleb128 0x8
+	.long	.LASF45
+	.byte	0x5
+	.byte	0x5d
+	.long	0x223
+	.byte	0x4
+	.byte	0
+	.uleb128 0xd
+	.long	0x85
+	.long	0x26b
+	.uleb128 0xe
+	.long	0x76
+	.byte	0x3
+	.byte	0
+	.uleb128 0x2
+	.long	.LASF46
+	.byte	0x5
+	.byte	0x5e
+	.long	0x217
+	.uleb128 0xa
+	.byte	0x10
+	.byte	0x6
+	.byte	0x16
+	.long	.LASF48
+	.long	0x29b
+	.uleb128 0x8
+	.long	.LASF49
+	.byte	0x6
+	.byte	0x17
+	.long	0x60
+	.byte	0
+	.uleb128 0x8
+	.long	.LASF50
+	.byte	0x6
+	.byte	0x18
+	.long	0x26b
+	.byte	0x8
+	.byte	0
+	.uleb128 0x2
+	.long	.LASF51
+	.byte	0x6
+	.byte	0x19
+	.long	0x276
+	.uleb128 0x7
+	.long	.LASF53
+	.byte	0x18
+	.byte	0x7
+	.byte	0
+	.long	0x2e3
+	.uleb128 0x8
+	.long	.LASF54
+	.byte	0x7
+	.byte	0
+	.long	0x3d
+	.byte	0
+	.uleb128 0x8
+	.long	.LASF55
+	.byte	0x7
+	.byte	0
+	.long	0x3d
+	.byte	0x4
+	.uleb128 0x8
+	.long	.LASF56
+	.byte	0x7
+	.byte	0
+	.long	0x7d
+	.byte	0x8
+	.uleb128 0x8
+	.long	.LASF57
+	.byte	0x7
+	.byte	0
+	.long	0x7d
+	.byte	0x10
+	.byte	0
+	.uleb128 0xf
+	.long	.LASF231
+	.byte	0x4
+	.byte	0x9a
+	.uleb128 0x7
+	.long	.LASF58
+	.byte	0x18
+	.byte	0x4
+	.byte	0xa0
+	.long	0x31b
+	.uleb128 0x8
+	.long	.LASF59
+	.byte	0x4
+	.byte	0xa1
+	.long	0x31b
+	.byte	0
+	.uleb128 0x8
+	.long	.LASF60
+	.byte	0x4
+	.byte	0xa2
+	.long	0x321
+	.byte	0x8
+	.uleb128 0x8
+	.long	.LASF61
+	.byte	0x4
+	.byte	0xa6
+	.long	0x52
+	.byte	0x10
+	.byte	0
+	.uleb128 0x6
+	.byte	0x8
+	.long	0x2ea
+	.uleb128 0x6
+	.byte	0x8
+	.long	0x97
+	.uleb128 0xd
+	.long	0x85
+	.long	0x337
+	.uleb128 0xe
+	.long	0x76
+	.byte	0
+	.byte	0
+	.uleb128 0x6
+	.byte	0x8
+	.long	0x2e3
+	.uleb128 0xd
+	.long	0x85
+	.long	0x34d
+	.uleb128 0xe
+	.long	0x76
+	.byte	0x13
+	.byte	0
+	.uleb128 0x6
+	.byte	0x8
+	.long	0x353
+	.uleb128 0x10
+	.long	0x85
+	.uleb128 0x2
+	.long	.LASF62
+	.byte	0x3
+	.byte	0x6e
+	.long	0x29b
+	.uleb128 0x11
+	.string	"std"
+	.byte	0x7
+	.byte	0
+	.long	0x456
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x5f
+	.long	0x8c
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x60
+	.long	0x358
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x62
+	.long	0x456
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x63
+	.long	0x46e
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x64
+	.long	0x483
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x65
+	.long	0x499
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x66
+	.long	0x4af
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x67
+	.long	0x4c4
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x68
+	.long	0x4da
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x69
+	.long	0x4fb
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x6a
+	.long	0x51b
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x6e
+	.long	0x536
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x6f
+	.long	0x55b
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x71
+	.long	0x57b
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x72
+	.long	0x59b
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x73
+	.long	0x5c1
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x75
+	.long	0x5d7
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x76
+	.long	0x5ed
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x77
+	.long	0x5f9
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x78
+	.long	0x60f
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x7d
+	.long	0x621
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x7e
+	.long	0x636
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x7f
+	.long	0x650
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x81
+	.long	0x662
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x82
+	.long	0x679
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x85
+	.long	0x69e
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x86
+	.long	0x6a9
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0x87
+	.long	0x6be
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xb1
+	.long	0x708
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xb2
+	.long	0x729
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xb3
+	.long	0x74f
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xb4
+	.long	0x76a
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xb5
+	.long	0x78f
+	.byte	0
+	.uleb128 0x13
+	.long	.LASF78
+	.byte	0x3
+	.value	0x33a
+	.long	0x468
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x6
+	.byte	0x8
+	.long	0x8c
+	.uleb128 0x15
+	.long	.LASF63
+	.byte	0x3
+	.byte	0xed
+	.long	0x52
+	.long	0x483
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF64
+	.byte	0x3
+	.value	0x33c
+	.long	0x52
+	.long	0x499
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF65
+	.byte	0x3
+	.value	0x33e
+	.long	0x52
+	.long	0x4af
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x15
+	.long	.LASF66
+	.byte	0x3
+	.byte	0xf2
+	.long	0x52
+	.long	0x4c4
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF67
+	.byte	0x3
+	.value	0x213
+	.long	0x52
+	.long	0x4da
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF68
+	.byte	0x3
+	.value	0x31e
+	.long	0x52
+	.long	0x4f5
+	.uleb128 0x14
+	.long	0x468
+	.uleb128 0x14
+	.long	0x4f5
+	.byte	0
+	.uleb128 0x6
+	.byte	0x8
+	.long	0x358
+	.uleb128 0x16
+	.long	.LASF69
+	.byte	0x3
+	.value	0x26e
+	.long	0x7f
+	.long	0x51b
+	.uleb128 0x14
+	.long	0x7f
+	.uleb128 0x14
+	.long	0x52
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF70
+	.byte	0x3
+	.value	0x110
+	.long	0x468
+	.long	0x536
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x14
+	.long	0x34d
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF71
+	.byte	0x3
+	.value	0x2c5
+	.long	0x1d
+	.long	0x55b
+	.uleb128 0x14
+	.long	0x7d
+	.uleb128 0x14
+	.long	0x1d
+	.uleb128 0x14
+	.long	0x1d
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF72
+	.byte	0x3
+	.value	0x116
+	.long	0x468
+	.long	0x57b
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF73
+	.byte	0x3
+	.value	0x2ed
+	.long	0x52
+	.long	0x59b
+	.uleb128 0x14
+	.long	0x468
+	.uleb128 0x14
+	.long	0x59
+	.uleb128 0x14
+	.long	0x52
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF74
+	.byte	0x3
+	.value	0x323
+	.long	0x52
+	.long	0x5b6
+	.uleb128 0x14
+	.long	0x468
+	.uleb128 0x14
+	.long	0x5b6
+	.byte	0
+	.uleb128 0x6
+	.byte	0x8
+	.long	0x5bc
+	.uleb128 0x10
+	.long	0x358
+	.uleb128 0x16
+	.long	.LASF75
+	.byte	0x3
+	.value	0x2f2
+	.long	0x59
+	.long	0x5d7
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF76
+	.byte	0x3
+	.value	0x214
+	.long	0x52
+	.long	0x5ed
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x17
+	.long	.LASF85
+	.byte	0x3
+	.value	0x21a
+	.long	0x52
+	.uleb128 0x16
+	.long	.LASF77
+	.byte	0x3
+	.value	0x27e
+	.long	0x7f
+	.long	0x60f
+	.uleb128 0x14
+	.long	0x7f
+	.byte	0
+	.uleb128 0x13
+	.long	.LASF79
+	.byte	0x3
+	.value	0x34e
+	.long	0x621
+	.uleb128 0x14
+	.long	0x34d
+	.byte	0
+	.uleb128 0x15
+	.long	.LASF80
+	.byte	0x3
+	.byte	0xb2
+	.long	0x52
+	.long	0x636
+	.uleb128 0x14
+	.long	0x34d
+	.byte	0
+	.uleb128 0x15
+	.long	.LASF81
+	.byte	0x3
+	.byte	0xb4
+	.long	0x52
+	.long	0x650
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x14
+	.long	0x34d
+	.byte	0
+	.uleb128 0x13
+	.long	.LASF82
+	.byte	0x3
+	.value	0x2f7
+	.long	0x662
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x13
+	.long	.LASF83
+	.byte	0x3
+	.value	0x14c
+	.long	0x679
+	.uleb128 0x14
+	.long	0x468
+	.uleb128 0x14
+	.long	0x7f
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF84
+	.byte	0x3
+	.value	0x150
+	.long	0x52
+	.long	0x69e
+	.uleb128 0x14
+	.long	0x468
+	.uleb128 0x14
+	.long	0x7f
+	.uleb128 0x14
+	.long	0x52
+	.uleb128 0x14
+	.long	0x1d
+	.byte	0
+	.uleb128 0x18
+	.long	.LASF86
+	.byte	0x3
+	.byte	0xc3
+	.long	0x468
+	.uleb128 0x15
+	.long	.LASF87
+	.byte	0x3
+	.byte	0xd1
+	.long	0x7f
+	.long	0x6be
+	.uleb128 0x14
+	.long	0x7f
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF88
+	.byte	0x3
+	.value	0x2be
+	.long	0x52
+	.long	0x6d9
+	.uleb128 0x14
+	.long	0x52
+	.uleb128 0x14
+	.long	0x468
+	.byte	0
+	.uleb128 0x19
+	.long	.LASF89
+	.byte	0x8
+	.byte	0x96
+	.long	0x708
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xa7
+	.long	0x708
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xa8
+	.long	0x729
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xa9
+	.long	0x74f
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xaa
+	.long	0x76a
+	.uleb128 0x12
+	.byte	0x8
+	.byte	0xab
+	.long	0x78f
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF90
+	.byte	0x3
+	.value	0x182
+	.long	0x52
+	.long	0x729
+	.uleb128 0x14
+	.long	0x7f
+	.uleb128 0x14
+	.long	0x1d
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x1a
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF91
+	.byte	0x3
+	.value	0x1d7
+	.long	0x52
+	.long	0x749
+	.uleb128 0x14
+	.long	0x468
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x14
+	.long	0x749
+	.byte	0
+	.uleb128 0x6
+	.byte	0x8
+	.long	0x2a6
+	.uleb128 0x16
+	.long	.LASF92
+	.byte	0x3
+	.value	0x1df
+	.long	0x52
+	.long	0x76a
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x14
+	.long	0x749
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF93
+	.byte	0x3
+	.value	0x186
+	.long	0x52
+	.long	0x78f
+	.uleb128 0x14
+	.long	0x7f
+	.uleb128 0x14
+	.long	0x1d
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x14
+	.long	0x749
+	.byte	0
+	.uleb128 0x16
+	.long	.LASF94
+	.byte	0x3
+	.value	0x1e3
+	.long	0x52
+	.long	0x7af
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x14
+	.long	0x34d
+	.uleb128 0x14
+	.long	0x749
+	.byte	0
+	.uleb128 0x19
+	.long	.LASF95
+	.byte	0x9
+	.byte	0x39
+	.long	0xd7c
+	.uleb128 0x1b
+	.byte	0x4
+	.byte	0x9
+	.byte	0xf8
+	.long	.LASF232
+	.long	0x7df
+	.uleb128 0x1c
+	.long	.LASF96
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF97
+	.sleb128 1
+	.uleb128 0x1c
+	.long	.LASF98
+	.sleb128 2
+	.uleb128 0x1c
+	.long	.LASF99
+	.sleb128 3
+	.byte	0
+	.uleb128 0xa
+	.byte	0x8
+	.byte	0x9
+	.byte	0xff
+	.long	.LASF100
+	.long	0x8b9
+	.uleb128 0x9
+	.long	.LASF101
+	.byte	0x9
+	.value	0x100
+	.long	0x8b9
+	.byte	0
+	.uleb128 0x1d
+	.long	.LASF102
+	.byte	0x9
+	.value	0x101
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1f
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF103
+	.byte	0x9
+	.value	0x102
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1e
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF104
+	.byte	0x9
+	.value	0x103
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1d
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF105
+	.byte	0x9
+	.value	0x104
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1c
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF106
+	.byte	0x9
+	.value	0x105
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1b
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF107
+	.byte	0x9
+	.value	0x106
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1a
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF108
+	.byte	0x9
+	.value	0x107
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x19
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF109
+	.byte	0x9
+	.value	0x108
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x18
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF110
+	.byte	0x9
+	.value	0x109
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x17
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF111
+	.byte	0x9
+	.value	0x10a
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x16
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF112
+	.byte	0x9
+	.value	0x10b
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x15
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF113
+	.byte	0x9
+	.value	0x10c
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x14
+	.byte	0x4
+	.byte	0
+	.uleb128 0x2
+	.long	.LASF114
+	.byte	0x9
+	.byte	0xfd
+	.long	0x7ba
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x10f
+	.long	.LASF119
+	.long	0x8ea
+	.uleb128 0x1c
+	.long	.LASF115
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF116
+	.sleb128 1
+	.uleb128 0x1c
+	.long	.LASF117
+	.sleb128 2
+	.uleb128 0x1c
+	.long	.LASF118
+	.sleb128 3
+	.byte	0
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x116
+	.long	.LASF120
+	.long	0x928
+	.uleb128 0x1c
+	.long	.LASF121
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF122
+	.sleb128 1
+	.uleb128 0x1c
+	.long	.LASF123
+	.sleb128 2
+	.uleb128 0x1c
+	.long	.LASF124
+	.sleb128 3
+	.uleb128 0x1c
+	.long	.LASF125
+	.sleb128 4
+	.uleb128 0x1c
+	.long	.LASF126
+	.sleb128 5
+	.uleb128 0x1c
+	.long	.LASF127
+	.sleb128 6
+	.uleb128 0x1c
+	.long	.LASF128
+	.sleb128 7
+	.byte	0
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x121
+	.long	.LASF129
+	.long	0x942
+	.uleb128 0x1c
+	.long	.LASF130
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF131
+	.sleb128 1
+	.byte	0
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x126
+	.long	.LASF132
+	.long	0x974
+	.uleb128 0x1c
+	.long	.LASF133
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF134
+	.sleb128 1
+	.uleb128 0x1c
+	.long	.LASF135
+	.sleb128 2
+	.uleb128 0x1c
+	.long	.LASF136
+	.sleb128 3
+	.uleb128 0x1c
+	.long	.LASF137
+	.sleb128 4
+	.uleb128 0x1c
+	.long	.LASF138
+	.sleb128 5
+	.byte	0
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x12f
+	.long	.LASF139
+	.long	0x9dc
+	.uleb128 0x1c
+	.long	.LASF140
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF141
+	.sleb128 1
+	.uleb128 0x1c
+	.long	.LASF142
+	.sleb128 2
+	.uleb128 0x1c
+	.long	.LASF143
+	.sleb128 3
+	.uleb128 0x1c
+	.long	.LASF144
+	.sleb128 4
+	.uleb128 0x1c
+	.long	.LASF145
+	.sleb128 5
+	.uleb128 0x1c
+	.long	.LASF146
+	.sleb128 6
+	.uleb128 0x1c
+	.long	.LASF147
+	.sleb128 7
+	.uleb128 0x1c
+	.long	.LASF148
+	.sleb128 8
+	.uleb128 0x1c
+	.long	.LASF149
+	.sleb128 9
+	.uleb128 0x1c
+	.long	.LASF150
+	.sleb128 10
+	.uleb128 0x1c
+	.long	.LASF151
+	.sleb128 11
+	.uleb128 0x1c
+	.long	.LASF152
+	.sleb128 12
+	.uleb128 0x1c
+	.long	.LASF153
+	.sleb128 13
+	.uleb128 0x1c
+	.long	.LASF154
+	.sleb128 14
+	.byte	0
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x141
+	.long	.LASF155
+	.long	0xa02
+	.uleb128 0x1c
+	.long	.LASF156
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF157
+	.sleb128 1
+	.uleb128 0x1c
+	.long	.LASF158
+	.sleb128 2
+	.uleb128 0x1c
+	.long	.LASF159
+	.sleb128 3
+	.byte	0
+	.uleb128 0x1f
+	.byte	0x1c
+	.byte	0x9
+	.value	0x148
+	.long	.LASF176
+	.long	0xa9e
+	.uleb128 0x9
+	.long	.LASF160
+	.byte	0x9
+	.value	0x149
+	.long	0xa9e
+	.byte	0
+	.uleb128 0x9
+	.long	.LASF161
+	.byte	0x9
+	.value	0x14a
+	.long	0xaaa
+	.byte	0x4
+	.uleb128 0x9
+	.long	.LASF162
+	.byte	0x9
+	.value	0x14b
+	.long	0xab6
+	.byte	0x8
+	.uleb128 0x9
+	.long	.LASF163
+	.byte	0x9
+	.value	0x14c
+	.long	0xac2
+	.byte	0xc
+	.uleb128 0x9
+	.long	.LASF164
+	.byte	0x9
+	.value	0x14d
+	.long	0xace
+	.byte	0x10
+	.uleb128 0x9
+	.long	.LASF165
+	.byte	0x9
+	.value	0x14e
+	.long	0xada
+	.byte	0x14
+	.uleb128 0x1d
+	.long	.LASF166
+	.byte	0x9
+	.value	0x14f
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1f
+	.byte	0x18
+	.uleb128 0x1d
+	.long	.LASF167
+	.byte	0x9
+	.value	0x150
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1e
+	.byte	0x18
+	.uleb128 0x1d
+	.long	.LASF168
+	.byte	0x9
+	.value	0x151
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1d
+	.byte	0x18
+	.uleb128 0x1d
+	.long	.LASF169
+	.byte	0x9
+	.value	0x152
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1c
+	.byte	0x18
+	.byte	0
+	.uleb128 0x20
+	.long	.LASF170
+	.byte	0x9
+	.value	0x114
+	.long	0x8c4
+	.uleb128 0x20
+	.long	.LASF171
+	.byte	0x9
+	.value	0x11f
+	.long	0x8ea
+	.uleb128 0x20
+	.long	.LASF172
+	.byte	0x9
+	.value	0x124
+	.long	0x928
+	.uleb128 0x20
+	.long	.LASF173
+	.byte	0x9
+	.value	0x12d
+	.long	0x942
+	.uleb128 0x20
+	.long	.LASF174
+	.byte	0x9
+	.value	0x13f
+	.long	0x974
+	.uleb128 0x20
+	.long	.LASF175
+	.byte	0x9
+	.value	0x146
+	.long	0x9dc
+	.uleb128 0x1f
+	.byte	0x4
+	.byte	0x9
+	.value	0x155
+	.long	.LASF177
+	.long	0xb64
+	.uleb128 0x1d
+	.long	.LASF178
+	.byte	0x9
+	.value	0x156
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1f
+	.byte	0
+	.uleb128 0x1d
+	.long	.LASF179
+	.byte	0x9
+	.value	0x157
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1e
+	.byte	0
+	.uleb128 0x1d
+	.long	.LASF180
+	.byte	0x9
+	.value	0x158
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1d
+	.byte	0
+	.uleb128 0x1d
+	.long	.LASF181
+	.byte	0x9
+	.value	0x159
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1c
+	.byte	0
+	.uleb128 0x1d
+	.long	.LASF182
+	.byte	0x9
+	.value	0x15a
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1b
+	.byte	0
+	.uleb128 0x1d
+	.long	.LASF183
+	.byte	0x9
+	.value	0x15b
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1a
+	.byte	0
+	.uleb128 0x21
+	.string	"RFI"
+	.byte	0x9
+	.value	0x15c
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x19
+	.byte	0
+	.byte	0
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x15f
+	.long	.LASF184
+	.long	0xb84
+	.uleb128 0x1c
+	.long	.LASF185
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF186
+	.sleb128 1
+	.uleb128 0x1c
+	.long	.LASF187
+	.sleb128 2
+	.byte	0
+	.uleb128 0x1f
+	.byte	0x8
+	.byte	0x9
+	.value	0x165
+	.long	.LASF188
+	.long	0xbdf
+	.uleb128 0x9
+	.long	.LASF189
+	.byte	0x9
+	.value	0x166
+	.long	0xbdf
+	.byte	0
+	.uleb128 0x1d
+	.long	.LASF190
+	.byte	0x9
+	.value	0x167
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1f
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF168
+	.byte	0x9
+	.value	0x168
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1e
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF191
+	.byte	0x9
+	.value	0x169
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1d
+	.byte	0x4
+	.uleb128 0x1d
+	.long	.LASF192
+	.byte	0x9
+	.value	0x16a
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1c
+	.byte	0x4
+	.byte	0
+	.uleb128 0x20
+	.long	.LASF193
+	.byte	0x9
+	.value	0x163
+	.long	0xb64
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x16d
+	.long	.LASF194
+	.long	0xc11
+	.uleb128 0x1c
+	.long	.LASF195
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF196
+	.sleb128 1
+	.uleb128 0x1c
+	.long	.LASF197
+	.sleb128 2
+	.uleb128 0x1c
+	.long	.LASF198
+	.sleb128 3
+	.byte	0
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x174
+	.long	.LASF199
+	.long	0xc31
+	.uleb128 0x1c
+	.long	.LASF200
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF201
+	.sleb128 1
+	.uleb128 0x1c
+	.long	.LASF202
+	.sleb128 2
+	.byte	0
+	.uleb128 0x1e
+	.byte	0x4
+	.byte	0x9
+	.value	0x17a
+	.long	.LASF203
+	.long	0xc4b
+	.uleb128 0x1c
+	.long	.LASF204
+	.sleb128 0
+	.uleb128 0x1c
+	.long	.LASF205
+	.sleb128 1
+	.byte	0
+	.uleb128 0x1f
+	.byte	0x10
+	.byte	0x9
+	.value	0x17f
+	.long	.LASF206
+	.long	0xcb0
+	.uleb128 0x9
+	.long	.LASF207
+	.byte	0x9
+	.value	0x180
+	.long	0xcb0
+	.byte	0
+	.uleb128 0x9
+	.long	.LASF208
+	.byte	0x9
+	.value	0x181
+	.long	0xcbc
+	.byte	0x4
+	.uleb128 0x9
+	.long	.LASF209
+	.byte	0x9
+	.value	0x182
+	.long	0xcc8
+	.byte	0x8
+	.uleb128 0x1d
+	.long	.LASF210
+	.byte	0x9
+	.value	0x183
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1f
+	.byte	0xc
+	.uleb128 0x1d
+	.long	.LASF211
+	.byte	0x9
+	.value	0x184
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1e
+	.byte	0xc
+	.uleb128 0x1d
+	.long	.LASF212
+	.byte	0x9
+	.value	0x185
+	.long	0x3d
+	.byte	0x4
+	.byte	0x1
+	.byte	0x1d
+	.byte	0xc
+	.byte	0
+	.uleb128 0x20
+	.long	.LASF213
+	.byte	0x9
+	.value	0x172
+	.long	0xbeb
+	.uleb128 0x20
+	.long	.LASF214
+	.byte	0x9
+	.value	0x178
+	.long	0xc11
+	.uleb128 0x20
+	.long	.LASF215
+	.byte	0x9
+	.value	0x17d
+	.long	0xc31
+	.uleb128 0x1f
+	.byte	0x44
+	.byte	0x9
+	.value	0x188
+	.long	.LASF216
+	.long	0xd30
+	.uleb128 0x9
+	.long	.LASF217
+	.byte	0x9
+	.value	0x189
+	.long	0xd7c
+	.byte	0
+	.uleb128 0x9
+	.long	.LASF218
+	.byte	0x9
+	.value	0x18a
+	.long	0xd30
+	.byte	0x4
+	.uleb128 0x9
+	.long	.LASF219
+	.byte	0x9
+	.value	0x18b
+	.long	0xd3c
+	.byte	0xc
+	.uleb128 0x9
+	.long	.LASF220
+	.byte	0x9
+	.value	0x18c
+	.long	0xd48
+	.byte	0x28
+	.uleb128 0x9
+	.long	.LASF221
+	.byte	0x9
+	.value	0x18d
+	.long	0xd54
+	.byte	0x2c
+	.uleb128 0x9
+	.long	.LASF222
+	.byte	0x9
+	.value	0x18e
+	.long	0xd60
+	.byte	0x34
+	.byte	0
+	.uleb128 0x20
+	.long	.LASF223
+	.byte	0x9
+	.value	0x10d
+	.long	0x7df
+	.uleb128 0x20
+	.long	.LASF224
+	.byte	0x9
+	.value	0x153
+	.long	0xa02
+	.uleb128 0x20
+	.long	.LASF225
+	.byte	0x9
+	.value	0x15d
+	.long	0xae6
+	.uleb128 0x20
+	.long	.LASF226
+	.byte	0x9
+	.value	0x16b
+	.long	0xb84
+	.uleb128 0x20
+	.long	.LASF227
+	.byte	0x9
+	.value	0x186
+	.long	0xc4b
+	.uleb128 0x22
+	.long	.LASF233
+	.byte	0xa
+	.byte	0x43
+	.long	.LASF234
+	.long	0xda3
+	.byte	0
+	.uleb128 0xd
+	.long	0x2f
+	.long	0xd8c
+	.uleb128 0xe
+	.long	0x76
+	.byte	0x1
+	.byte	0
+	.uleb128 0x23
+	.byte	0xa
+	.byte	0x3a
+	.long	0x363
+	.uleb128 0xd
+	.long	0xcd4
+	.long	0xda3
+	.uleb128 0xe
+	.long	0x76
+	.byte	0xff
+	.byte	0
+	.uleb128 0x10
+	.long	0xd93
+	.uleb128 0x24
+	.long	0xd6c
+	.uleb128 0x9
+	.byte	0x3
+	.quad	_ZN4Core12OPCODE_TABLEE
+	.byte	0
+	.section	.debug_abbrev,"",@progbits
+.Ldebug_abbrev0:
+	.uleb128 0x1
+	.uleb128 0x11
+	.byte	0x1
+	.uleb128 0x25
+	.uleb128 0xe
+	.uleb128 0x13
+	.uleb128 0xb
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x1b
+	.uleb128 0xe
+	.uleb128 0x10
+	.uleb128 0x17
+	.byte	0
+	.byte	0
+	.uleb128 0x2
+	.uleb128 0x16
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x49
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0x24
+	.byte	0
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0x3e
+	.uleb128 0xb
+	.uleb128 0x3
+	.uleb128 0xe
+	.byte	0
+	.byte	0
+	.uleb128 0x4
+	.uleb128 0x24
+	.byte	0
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0x3e
+	.uleb128 0xb
+	.uleb128 0x3
+	.uleb128 0x8
+	.byte	0
+	.byte	0
+	.uleb128 0x5
+	.uleb128 0xf
+	.byte	0
+	.uleb128 0xb
+	.uleb128 0xb
+	.byte	0
+	.byte	0
+	.uleb128 0x6
+	.uleb128 0xf
+	.byte	0
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0x49
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x7
+	.uleb128 0x13
+	.byte	0x1
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x8
+	.uleb128 0xd
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x38
+	.uleb128 0xb
+	.byte	0
+	.byte	0
+	.uleb128 0x9
+	.uleb128 0xd
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0x5
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x38
+	.uleb128 0xb
+	.byte	0
+	.byte	0
+	.uleb128 0xa
+	.uleb128 0x13
+	.byte	0x1
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x6e
+	.uleb128 0xe
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0xb
+	.uleb128 0x17
+	.byte	0x1
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0xc
+	.uleb128 0xd
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x49
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0xd
+	.uleb128 0x1
+	.byte	0x1
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0xe
+	.uleb128 0x21
+	.byte	0
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x2f
+	.uleb128 0xb
+	.byte	0
+	.byte	0
+	.uleb128 0xf
+	.uleb128 0x16
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.byte	0
+	.byte	0
+	.uleb128 0x10
+	.uleb128 0x26
+	.byte	0
+	.uleb128 0x49
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x11
+	.uleb128 0x39
+	.byte	0x1
+	.uleb128 0x3
+	.uleb128 0x8
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x12
+	.uleb128 0x8
+	.byte	0
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x18
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x13
+	.uleb128 0x2e
+	.byte	0x1
+	.uleb128 0x3f
+	.uleb128 0x19
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0x5
+	.uleb128 0x3c
+	.uleb128 0x19
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x14
+	.uleb128 0x5
+	.byte	0
+	.uleb128 0x49
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x15
+	.uleb128 0x2e
+	.byte	0x1
+	.uleb128 0x3f
+	.uleb128 0x19
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x3c
+	.uleb128 0x19
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x16
+	.uleb128 0x2e
+	.byte	0x1
+	.uleb128 0x3f
+	.uleb128 0x19
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0x5
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x3c
+	.uleb128 0x19
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x17
+	.uleb128 0x2e
+	.byte	0
+	.uleb128 0x3f
+	.uleb128 0x19
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0x5
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x3c
+	.uleb128 0x19
+	.byte	0
+	.byte	0
+	.uleb128 0x18
+	.uleb128 0x2e
+	.byte	0
+	.uleb128 0x3f
+	.uleb128 0x19
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x3c
+	.uleb128 0x19
+	.byte	0
+	.byte	0
+	.uleb128 0x19
+	.uleb128 0x39
+	.byte	0x1
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x1a
+	.uleb128 0x18
+	.byte	0
+	.byte	0
+	.byte	0
+	.uleb128 0x1b
+	.uleb128 0x4
+	.byte	0x1
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x6e
+	.uleb128 0xe
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x1c
+	.uleb128 0x28
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x1c
+	.uleb128 0xd
+	.byte	0
+	.byte	0
+	.uleb128 0x1d
+	.uleb128 0xd
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0x5
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0xd
+	.uleb128 0xb
+	.uleb128 0xc
+	.uleb128 0xb
+	.uleb128 0x38
+	.uleb128 0xb
+	.byte	0
+	.byte	0
+	.uleb128 0x1e
+	.uleb128 0x4
+	.byte	0x1
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0x5
+	.uleb128 0x6e
+	.uleb128 0xe
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x1f
+	.uleb128 0x13
+	.byte	0x1
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0x5
+	.uleb128 0x6e
+	.uleb128 0xe
+	.uleb128 0x1
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x20
+	.uleb128 0x16
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0x5
+	.uleb128 0x49
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x21
+	.uleb128 0xd
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0x8
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0x5
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0xb
+	.uleb128 0xb
+	.uleb128 0xd
+	.uleb128 0xb
+	.uleb128 0xc
+	.uleb128 0xb
+	.uleb128 0x38
+	.uleb128 0xb
+	.byte	0
+	.byte	0
+	.uleb128 0x22
+	.uleb128 0x34
+	.byte	0
+	.uleb128 0x3
+	.uleb128 0xe
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x6e
+	.uleb128 0xe
+	.uleb128 0x49
+	.uleb128 0x13
+	.uleb128 0x3f
+	.uleb128 0x19
+	.uleb128 0x3c
+	.uleb128 0x19
+	.byte	0
+	.byte	0
+	.uleb128 0x23
+	.uleb128 0x3a
+	.byte	0
+	.uleb128 0x3a
+	.uleb128 0xb
+	.uleb128 0x3b
+	.uleb128 0xb
+	.uleb128 0x18
+	.uleb128 0x13
+	.byte	0
+	.byte	0
+	.uleb128 0x24
+	.uleb128 0x34
+	.byte	0
+	.uleb128 0x47
+	.uleb128 0x13
+	.uleb128 0x2
+	.uleb128 0x18
+	.byte	0
+	.byte	0
+	.byte	0
+	.section	.debug_aranges,"",@progbits
+	.long	0x1c
+	.value	0x2
+	.long	.Ldebug_info0
+	.byte	0x8
+	.byte	0
+	.value	0
+	.value	0
+	.quad	0
+	.quad	0
+	.section	.debug_line,"",@progbits
+.Ldebug_line0:
+	.section	.debug_str,"MS",@progbits,1
+.LASF232:
+	.string	"N4Core17datapathFuncSel_tE"
+.LASF175:
+	.string	"aluOpBrMux_t"
+.LASF112:
+	.string	"isLIMMH"
+.LASF32:
+	.string	"_shortbuf"
+.LASF231:
+	.string	"_IO_lock_t"
+.LASF84:
+	.string	"setvbuf"
+.LASF189:
+	.string	"accessSizeBLog2"
+.LASF54:
+	.string	"gp_offset"
+.LASF80:
+	.string	"remove"
+.LASF177:
+	.string	"N4Core19branchCtrlSignals_tE"
+.LASF21:
+	.string	"_IO_buf_end"
+.LASF100:
+	.string	"N4Core21datapathCtrlSignals_tE"
+.LASF168:
+	.string	"unsignedOp"
+.LASF66:
+	.string	"fflush"
+.LASF75:
+	.string	"ftell"
+.LASF160:
+	.string	"bitwiseOp"
+.LASF19:
+	.string	"_IO_write_end"
+.LASF3:
+	.string	"unsigned int"
+.LASF133:
+	.string	"A_INTRESULTMUX_CLZ"
+.LASF89:
+	.string	"__gnu_cxx"
+.LASF13:
+	.string	"_flags"
+.LASF210:
+	.string	"op2unsigned"
+.LASF149:
+	.string	"A_BRRESULTMUX_LOGIC_NAND"
+.LASF105:
+	.string	"gpRegWE"
+.LASF117:
+	.string	"A_BITWISEOP_BITW_AND"
+.LASF209:
+	.string	"op2sel"
+.LASF182:
+	.string	"link"
+.LASF25:
+	.string	"_markers"
+.LASF113:
+	.string	"isTrap"
+.LASF159:
+	.string	"A_OPBRMUX_PASS"
+.LASF104:
+	.string	"op1LinkReg"
+.LASF198:
+	.string	"U_RESULTSEL_PASS"
+.LASF88:
+	.string	"ungetc"
+.LASF230:
+	.string	"/home/jeroen/rvex/rvex-rewrite/tools/rvsim"
+.LASF204:
+	.string	"U_OP2SEL_HIGH_HALF"
+.LASF185:
+	.string	"M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD"
+.LASF61:
+	.string	"_pos"
+.LASF212:
+	.string	"isMultiplyInstruction"
+.LASF24:
+	.string	"_IO_save_end"
+.LASF44:
+	.string	"__count"
+.LASF200:
+	.string	"U_OP1SEL_HIGH_HALF"
+.LASF218:
+	.string	"datapathCtrl"
+.LASF99:
+	.string	"D_FUNCSEL_PCP1"
+.LASF68:
+	.string	"fgetpos"
+.LASF147:
+	.string	"A_BRRESULTMUX_CARRY_OUT"
+.LASF56:
+	.string	"overflow_arg_area"
+.LASF139:
+	.string	"N4Core16aluBrResultMux_tE"
+.LASF172:
+	.string	"aluOp2Mux_t"
+.LASF161:
+	.string	"op1Mux"
+.LASF132:
+	.string	"N4Core17aluIntResultMux_tE"
+.LASF129:
+	.string	"N4Core11aluOp2Mux_tE"
+.LASF197:
+	.string	"U_RESULTSEL_SHR16"
+.LASF208:
+	.string	"op1sel"
+.LASF127:
+	.string	"A_OP1MUX_EXTEND32INV"
+.LASF163:
+	.string	"intResultMux"
+.LASF23:
+	.string	"_IO_backup_base"
+.LASF34:
+	.string	"_offset"
+.LASF152:
+	.string	"A_BRRESULTMUX_TBITF"
+.LASF199:
+	.string	"N4Core18multiplierOp1sel_tE"
+.LASF150:
+	.string	"A_BRRESULTMUX_CMP_LT"
+.LASF181:
+	.string	"branchToLink"
+.LASF27:
+	.string	"_fileno"
+.LASF141:
+	.string	"A_BRRESULTMUX_CMP_LE"
+.LASF156:
+	.string	"A_OPBRMUX_TRUE"
+.LASF154:
+	.string	"A_BRRESULTMUX_DIVS"
+.LASF116:
+	.string	"A_BITWISEOP_BITW_XOR"
+.LASF170:
+	.string	"aluBitwiseOp_t"
+.LASF7:
+	.string	"size_t"
+.LASF205:
+	.string	"U_OP2SEL_LOW_HALF"
+.LASF122:
+	.string	"A_OP1MUX_SHL1"
+.LASF124:
+	.string	"A_OP1MUX_SHL2"
+.LASF123:
+	.string	"A_OP1MUX_SHL3"
+.LASF126:
+	.string	"A_OP1MUX_SHL4"
+.LASF16:
+	.string	"_IO_read_base"
+.LASF178:
+	.string	"isBranchInstruction"
+.LASF59:
+	.string	"_next"
+.LASF207:
+	.string	"resultSel"
+.LASF214:
+	.string	"multiplierOp1sel_t"
+.LASF78:
+	.string	"clearerr"
+.LASF136:
+	.string	"A_INTRESULTMUX_BOOL"
+.LASF128:
+	.string	"A_OP1MUX_EXTEND8"
+.LASF72:
+	.string	"freopen"
+.LASF125:
+	.string	"A_OP1MUX_EXTEND16"
+.LASF45:
+	.string	"__value"
+.LASF188:
+	.string	"N4Core19memoryCtrlSignals_tE"
+.LASF98:
+	.string	"D_FUNCSEL_ALU"
+.LASF109:
+	.string	"allBrRegsWE"
+.LASF153:
+	.string	"A_BRRESULTMUX_CMP_EQ"
+.LASF229:
+	.string	"src/rvsim/components/core/Generated.cpp"
+.LASF146:
+	.string	"A_BRRESULTMUX_CMP_NE"
+.LASF11:
+	.string	"char"
+.LASF187:
+	.string	"M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD"
+.LASF40:
+	.string	"_mode"
+.LASF219:
+	.string	"aluCtrl"
+.LASF167:
+	.string	"shiftLeft"
+.LASF65:
+	.string	"ferror"
+.LASF58:
+	.string	"_IO_marker"
+.LASF14:
+	.string	"_IO_read_ptr"
+.LASF176:
+	.string	"N4Core16aluCtrlSignals_tE"
+.LASF184:
+	.string	"N4Core23memoryAccessSizeBLog2_tE"
+.LASF215:
+	.string	"multiplierOp2sel_t"
+.LASF227:
+	.string	"multiplierCtrlSignals_t"
+.LASF42:
+	.string	"__wch"
+.LASF111:
+	.string	"brRegWE"
+.LASF183:
+	.string	"branchIfTrue"
+.LASF81:
+	.string	"rename"
+.LASF49:
+	.string	"__pos"
+.LASF85:
+	.string	"getchar"
+.LASF17:
+	.string	"_IO_write_base"
+.LASF87:
+	.string	"tmpnam"
+.LASF83:
+	.string	"setbuf"
+.LASF79:
+	.string	"perror"
+.LASF206:
+	.string	"N4Core23multiplierCtrlSignals_tE"
+.LASF135:
+	.string	"A_INTRESULTMUX_BITWISE"
+.LASF195:
+	.string	"U_RESULTSEL_SHR32"
+.LASF22:
+	.string	"_IO_save_base"
+.LASF217:
+	.string	"valid"
+.LASF121:
+	.string	"A_OP1MUX_EXTEND32"
+.LASF48:
+	.string	"9_G_fpos_t"
+.LASF155:
+	.string	"N4Core12aluOpBrMux_tE"
+.LASF115:
+	.string	"A_BITWISEOP_SET_BIT"
+.LASF73:
+	.string	"fseek"
+.LASF90:
+	.string	"snprintf"
+.LASF193:
+	.string	"memoryAccessSizeBLog2_t"
+.LASF166:
+	.string	"compare"
+.LASF201:
+	.string	"U_OP1SEL_WORD"
+.LASF74:
+	.string	"fsetpos"
+.LASF222:
+	.string	"multiplierCtrl"
+.LASF35:
+	.string	"__pad1"
+.LASF36:
+	.string	"__pad2"
+.LASF37:
+	.string	"__pad3"
+.LASF38:
+	.string	"__pad4"
+.LASF39:
+	.string	"__pad5"
+.LASF221:
+	.string	"memoryCtrl"
+.LASF114:
+	.string	"datapathFuncSel_t"
+.LASF67:
+	.string	"fgetc"
+.LASF110:
+	.string	"brFmt"
+.LASF70:
+	.string	"fopen"
+.LASF106:
+	.string	"op3BranchRegs"
+.LASF31:
+	.string	"_vtable_offset"
+.LASF179:
+	.string	"stop"
+.LASF171:
+	.string	"aluOp1Mux_t"
+.LASF69:
+	.string	"fgets"
+.LASF194:
+	.string	"N4Core21multiplierResultSel_tE"
+.LASF46:
+	.string	"__mbstate_t"
+.LASF164:
+	.string	"brResultMux"
+.LASF213:
+	.string	"multiplierResultSel_t"
+.LASF101:
+	.string	"funcSel"
+.LASF190:
+	.string	"isMemoryInstruction"
+.LASF134:
+	.string	"A_INTRESULTMUX_OP_SEL"
+.LASF174:
+	.string	"aluBrResultMux_t"
+.LASF15:
+	.string	"_IO_read_end"
+.LASF5:
+	.string	"short int"
+.LASF191:
+	.string	"readEnable"
+.LASF6:
+	.string	"long int"
+.LASF96:
+	.string	"D_FUNCSEL_MEM"
+.LASF120:
+	.string	"N4Core11aluOp1Mux_tE"
+.LASF62:
+	.string	"fpos_t"
+.LASF71:
+	.string	"fread"
+.LASF47:
+	.string	"11__mbstate_t"
+.LASF53:
+	.string	"typedef __va_list_tag __va_list_tag"
+.LASF145:
+	.string	"A_BRRESULTMUX_LOGIC_AND"
+.LASF43:
+	.string	"__wchb"
+.LASF63:
+	.string	"fclose"
+.LASF142:
+	.string	"A_BRRESULTMUX_LOGIC_OR"
+.LASF220:
+	.string	"branchCtrl"
+.LASF97:
+	.string	"D_FUNCSEL_MUL"
+.LASF223:
+	.string	"datapathCtrlSignals_t"
+.LASF234:
+	.string	"_ZN4Core12OPCODE_TABLEE"
+.LASF186:
+	.string	"M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE"
+.LASF55:
+	.string	"fp_offset"
+.LASF82:
+	.string	"rewind"
+.LASF92:
+	.string	"vscanf"
+.LASF76:
+	.string	"getc"
+.LASF118:
+	.string	"A_BITWISEOP_BITW_OR"
+.LASF169:
+	.string	"divs"
+.LASF51:
+	.string	"_G_fpos_t"
+.LASF94:
+	.string	"vsscanf"
+.LASF180:
+	.string	"branchIfFalse"
+.LASF77:
+	.string	"gets"
+.LASF33:
+	.string	"_lock"
+.LASF192:
+	.string	"writeEnable"
+.LASF10:
+	.string	"sizetype"
+.LASF0:
+	.string	"long unsigned int"
+.LASF29:
+	.string	"_old_offset"
+.LASF226:
+	.string	"memoryCtrlSignals_t"
+.LASF52:
+	.string	"_IO_FILE"
+.LASF202:
+	.string	"U_OP1SEL_LOW_HALF"
+.LASF57:
+	.string	"reg_save_area"
+.LASF211:
+	.string	"op1unsigned"
+.LASF224:
+	.string	"aluCtrlSignals_t"
+.LASF162:
+	.string	"op2Mux"
+.LASF137:
+	.string	"A_INTRESULTMUX_ADDER"
+.LASF95:
+	.string	"Core"
+.LASF1:
+	.string	"unsigned char"
+.LASF138:
+	.string	"A_INTRESULTMUX_SHIFTER"
+.LASF60:
+	.string	"_sbuf"
+.LASF86:
+	.string	"tmpfile"
+.LASF225:
+	.string	"branchCtrlSignals_t"
+.LASF18:
+	.string	"_IO_write_ptr"
+.LASF157:
+	.string	"A_OPBRMUX_INVERT"
+.LASF64:
+	.string	"feof"
+.LASF173:
+	.string	"aluIntResultMux_t"
+.LASF151:
+	.string	"A_BRRESULTMUX_PASS"
+.LASF228:
+	.string	"GNU C++ 4.8.1 20130909 [gcc-4_8-branch revision 202388] -m64 -mtune=generic -march=x86-64 -g -ansi -fms-extensions -fPIC -freg-struct-return"
+.LASF196:
+	.string	"U_RESULTSEL_SHL16"
+.LASF102:
+	.string	"op3LinkReg"
+.LASF130:
+	.string	"A_OP2MUX_ZERO"
+.LASF91:
+	.string	"vfscanf"
+.LASF8:
+	.string	"__off_t"
+.LASF107:
+	.string	"isNOP"
+.LASF216:
+	.string	"N4Core18opcodeTableEntry_tE"
+.LASF4:
+	.string	"signed char"
+.LASF143:
+	.string	"A_BRRESULTMUX_TBIT"
+.LASF2:
+	.string	"short unsigned int"
+.LASF165:
+	.string	"opBrMux"
+.LASF158:
+	.string	"A_OPBRMUX_FALSE"
+.LASF233:
+	.string	"OPCODE_TABLE"
+.LASF103:
+	.string	"stackOp"
+.LASF131:
+	.string	"A_OP2MUX_EXTEND32"
+.LASF108:
+	.string	"linkWE"
+.LASF144:
+	.string	"A_BRRESULTMUX_LOGIC_NOR"
+.LASF148:
+	.string	"A_BRRESULTMUX_CMP_GE"
+.LASF26:
+	.string	"_chain"
+.LASF12:
+	.string	"FILE"
+.LASF50:
+	.string	"__state"
+.LASF140:
+	.string	"A_BRRESULTMUX_CMP_GT"
+.LASF28:
+	.string	"_flags2"
+.LASF203:
+	.string	"N4Core18multiplierOp2sel_tE"
+.LASF30:
+	.string	"_cur_column"
+.LASF9:
+	.string	"__off64_t"
+.LASF41:
+	.string	"_unused2"
+.LASF20:
+	.string	"_IO_buf_base"
+.LASF93:
+	.string	"vsnprintf"
+.LASF119:
+	.string	"N4Core14aluBitwiseOp_tE"
+	.ident	"GCC: (SUSE Linux) 4.8.1 20130909 [gcc-4_8-branch revision 202388]"
+	.section	.note.GNU-stack,"",@progbits

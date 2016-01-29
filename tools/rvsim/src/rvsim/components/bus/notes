@@ -1,0 +1,20 @@
+
+ - in  uint32_t address
+ - in  uint8_t  writeMask
+ - in  uint8_t  mode
+ - in  uint32_t *data
+ - in  uint8_t  *fault
+ - out int      ack
+ - out int      period
+ - out int      retry
+
+
+address:    The address to read from or write to.
+writeMask:  If zero, this is a read. If nonzero, the 4 LSB specify the byte mask.
+flags:      Bit 0: if set, this is a burst access. The bus will remain claimed
+              by this master during the response cycle, so the 
+            Bit 1: Lock. The 
+data:       Data buffer. Must be at least <burstCount> entries large. For
+              writes, this must be filled by the caller. For reads, the callee
+              will fill it.
+fault:      Fault flag for each 

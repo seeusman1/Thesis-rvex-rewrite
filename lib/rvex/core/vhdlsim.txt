@@ -1,2 +1,4 @@
 core_listOpcodes_tb.vhd
 core_cfgCtrl_tb.vhd
+core_c_proxy.vhd
+core_c.vhd

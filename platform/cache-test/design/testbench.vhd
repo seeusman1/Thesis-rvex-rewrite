@@ -113,7 +113,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the rvex core
   -----------------------------------------------------------------------------
-  rvex_inst: entity rvex.core
+  rvex_inst: entity rvex.core_c
     generic map (
       CFG                       => RCFG
     )

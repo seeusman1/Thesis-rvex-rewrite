@@ -1,0 +1,69 @@
+
+# Toolchain.
+CC = g++
+CFLAGS = -O3 -std=c++11 -fopenmp
+ENSURE_DIR = mkdir -p
+
+# Modelsim .so file flags. Taken from FLI examples.
+MSIM_CFLAGS = -g -Wall -ansi -fms-extensions
+MSIM_CFLAGS += -pedantic
+MSIM_LDFLAGS = -shared -Wl,-Bsymbolic -Wl,-export-dynamic
+ifeq ($(shell uname -m), x86_64)
+   MSIM_CFLAGS += -m64 -fPIC
+   MSIM_LDFLAGS += -m64
+else
+   MSIM_CFLAGS += -m32 -fPIC
+   MSIM_LDFLAGS += -m32
+endif
+MSIM_CFLAGS += -freg-struct-return
+MSIM_CFLAGS += -I$$MTI_HOME/include
+
+# Binary output directory.
+BINDIR = bin
+
+# Look for source files.
+MAGIC = -name "*.cpp" -or -name "*.c" | sed -e "s/\\.c\(pp\)\?$$//g"
+MSIM_OBS_ = $(shell find src/modelsim $(MAGIC))
+RVSIM_OBS = $(shell find src/rvsim $(MAGIC))
+MSIM_OBS  = $(MSIM_OBS_) $(shell find src/rvsim/components/core $(MAGIC))
+ALL_OBS   = $(MSIM_OBS_) $(RVSIM_OBS)
+
+
+.PHONY: all
+all: $(BINDIR)/rvsim $(BINDIR)/core.so
+
+# Dependency generation.
+%.d: %.c
+	$(CC) $(CFLAGS) -MM $^ > $@
+
+-include $(ALL_OBS:=.d)
+
+# Standalone simulator compilation.
+%.o: %.c
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+%.o: %.cpp
+	$(CC) $(CFLAGS) -c $^ -o $@
+
+$(BINDIR)/rvsim: $(RVSIM_OBS:=.o)
+	$(ENSURE_DIR) $(BINDIR)
+	$(CC) $(CFLAGS) $^ -o $@
+
+# Modelsim C model compilation.
+%.mso: %.c
+	$(CC) $(MSIM_CFLAGS) -c $^ -o $@
+
+%.mso: %.cpp
+	$(CC) $(MSIM_CFLAGS) -c $^ -o $@
+
+.PRECIOUS: %.s
+
+$(BINDIR)/core.so: $(MSIM_OBS:=.mso)
+	$(CC) $(MSIM_LDFLAGS) -o $@ $^ -lm -lpthread
+
+# Cleaning.
+.PHONY: clean
+clean:
+	rm -rf $(BINDIR)
+	rm -f $(ALL_OBS:=.o) $(ALL_OBS:=.mso) $(ALL_OBS:=.d)
+

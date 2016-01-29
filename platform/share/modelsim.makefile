@@ -16,6 +16,7 @@ endif
 
 .PHONY: vsim
 vsim: compile.do
+	-ln -s $(RVLIB)/core/core_c.so core_c.so
 	$(VSIM) $(VSIMFLAGS) -do sim.do
 
 .PHONY: vsim-%
