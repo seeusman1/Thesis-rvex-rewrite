@@ -50,7 +50,7 @@
 #include "Core.h"
 
 #include <cstring>
-
+#include <cstdio>
 
 using namespace std;
 
@@ -64,18 +64,19 @@ namespace Core {
  * MEANS THAT THE DESTRUCTOR IS NOT NECESSARILY CALLED, AND MUST THUS BE
  * NO-OP.
  */
-Core::Core(const coreInterfaceGenerics_t *generics)
+Core::Core(const coreInterfaceGenerics_t *generics, printfFuncPtr_t printf)
 	throw(GenericsException):
-	generics(*generics)
+	printf(printf), generics(*generics)
 {
-	throw GenericsException("Hello, I'm a generics exception.");
 }
 
 /**
  * Generates the stall output signal, which is combinatorial based on the
  * stall input and the debug bus. Returns the output signal structure.
  */
-const coreInterfaceOut_t *Core::comb(void) {
+const coreInterfaceOut_t *Core::stallOut(void) throw(GenericsException) {
+
+	printf("Core::stallOut()\n");
 
 	// Determine stall output.
 	// Sources:
@@ -117,7 +118,9 @@ const coreInterfaceOut_t *Core::comb(void) {
 /**
  * Simulates a clock cycle and returns the output signal structure.
  */
-const coreInterfaceOut_t *Core::clock(void) {
+const coreInterfaceOut_t *Core::clock(void) throw(GenericsException) {
+
+	printf("Core::clock()\n");
 
 	// Instruction buffer input.
 	// TODO
@@ -141,6 +144,7 @@ const coreInterfaceOut_t *Core::clock(void) {
  * Returns the output signal structure.
  */
 const coreInterfaceOut_t *Core::getOut() const {
+	// FYI: the modelsim interface code assumes that this address never changes.
 	return &out;
 }
 

@@ -54,6 +54,12 @@
 #include <mti.h>
 
 /**
+ * Creates a process.
+ */
+extern mtiProcessIdT mti_CreateProcessX(const char *name,
+		mtiVoidFuncPtrT func, void *param);
+
+/**
  * Finds the specified port in the specified interface list. Throws a fatal
  * error and does not return if the signal does not exist.
  */
@@ -64,19 +70,8 @@ extern mtiSignalIdT mti_FindPortX(mtiInterfaceListT *list, const char *name);
  * std_logic and std_logic_vector are supported. Returns the number of bytes
  * written.
  */
-extern int genericToC(mtiInterfaceListT *list, const char *name, char *buf, int size);
-
-/**
- * Copies the current value of the given signal into the given buffer. VHDL
- * types natural, boolean, std_logic and arrays thereof are supported. Record
- * types must first be unpacked.
- */
-extern int signalToC(mtiSignalIdT signal, char *buf, int size);
-
-/**
- * Opposite of signalToC.
- */
-extern int CToSignal(mtiDriverIdT driver, char *buf, int size);
+extern int genericToC(mtiInterfaceListT *list, const char *name, char *buf,
+		int size);
 
 
 #endif

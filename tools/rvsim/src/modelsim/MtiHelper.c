@@ -54,6 +54,20 @@
 #include <string.h>
 
 /**
+ * Creates a process.
+ */
+mtiProcessIdT mti_CreateProcessX(const char *name,
+		mtiVoidFuncPtrT func, void *param)
+{
+	char *name2 = (char*)mti_Malloc(strlen(name) + 1);
+	strcpy(name2, name);
+	return mti_CreateProcess(name2, func, param);
+	// Note no free. This is because modelsim is silly.
+
+}
+
+
+/**
  * Finds the specified port in the specified interface list. Throws a fatal
  * error and does not return if the signal does not exist.
  */
@@ -178,127 +192,6 @@ int genericToC(mtiInterfaceListT *list, const char *name, char *buf, int size) {
 	}
 
 	mti_FatalError();
-	return 0;
-}
-
-/**
- * Copies the current value of the given signal into the given buffer. VHDL
- * types natural, boolean, std_logic and arrays thereof are supported. Record
- * types must first be unpacked. Returns the number of bytes written.
- */
-int signalToC(mtiSignalIdT signal, char *buf, int size) {
-
-	mtiTypeIdT type = mti_GetSignalType(signal);
-	switch (mti_GetTypeKind(type)) {
-
-	case MTI_TYPE_INTEGER:
-		if (size < 4) goto oor;
-		*((int32_t*)buf) = (int32_t)mti_GetSignalValue(signal);
-		return 4;
-
-	case MTI_TYPE_ENUM: {
-		int n = mti_TickLength(type);
-		if (n == 2) {
-
-			// Probably a boolean.
-			if (size < 1) goto oor;
-			*((uint8_t*)buf) = (uint8_t)mti_GetSignalValue(signal);
-			return 1;
-
-		} else if (n == 9) {
-
-			// Probably std_logic. Enum index 3 is '1', enum index 7 is 'H'.
-			if (size < 1) goto oor;
-			mtiInt32T val = mti_GetSignalValue(signal);
-			*((uint8_t*)buf) = (val == 3) || (val == 7);
-			return 1;
-
-		}
-		break;
-	}
-
-	case MTI_TYPE_ARRAY: {
-		mtiTypeIdT atype = mti_GetArrayElementType(type);
-		int count = mti_TickLength(type);
-		switch (mti_GetTypeKind(atype)) {
-
-		case MTI_TYPE_ENUM: {
-			if (mti_TickLength(atype) == 9) {
-
-				// Probably std_logic_vector.
-				char *data = (char*)mti_GetArraySignalValue(signal, 0);
-				uint64_t aval = 0;
-				for (int i = 0; i < count; i++) {
-					if (data[i] == 3 || data[i] == 7) {
-						aval |= 1 << (count-i-1);
-					}
-				}
-				mti_VsimFree(data);
-
-				if (count > 32) {
-					if (size < 8) goto oor;
-					*((uint64_t*)buf) = aval;
-					return 8;
-				} else if (count > 16) {
-					if (size < 4) goto oor;
-					*((uint32_t*)buf) = aval;
-					return 4;
-				} else if (count > 8) {
-					if (size < 2) goto oor;
-					*((uint16_t*)buf) = aval;
-					return 2;
-				} else {
-					if (size < 1) goto oor;
-					*((uint8_t*)buf) = aval;
-					return 1;
-				}
-
-			}
-			break;
-		}
-
-		case MTI_TYPE_ARRAY: {
-
-			// An array of some kind; recurse.
-			mtiSignalIdT *se = mti_GetSignalSubelements(signal, 0);
-			int c = 0;
-			for (int i = count-1; i >= 0; i--) {
-				int n = signalToC(se[i], buf, size);
-				buf += n;
-				size -= n;
-				c += n;
-			}
-			mti_VsimFree(se);
-			return c;
-		}
-
-		default:
-			break;
-		}
-		break;
-	}
-
-	default:
-		break;
-	}
-
-	// Error handling...
-	mti_PrintFormatted("FATAL: could not read value from signal %s: ",
-			mti_GetSignalName(signal));
-	mti_PrintFormatted("unsupported VHDL type.\n", size);
-	mti_FatalError();
-	oor:
-	mti_PrintFormatted("FATAL: could not read value from signal %s: ",
-			mti_GetSignalName(signal));
-	mti_PrintFormatted("buffer too small (got %d bytes).\n", size);
-	mti_FatalError();
-	return 0;
-}
-
-/**
- * Opposite of signalToC.
- */
-int CToSignal(mtiDriverIdT driver, char *buf, int size) {
 	return 0;
 }
 

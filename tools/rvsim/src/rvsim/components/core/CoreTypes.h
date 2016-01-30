@@ -60,6 +60,7 @@ namespace Core {
  */
 typedef bitvec4_t mask_t;
 typedef bitvec32_t syllable_t;
+typedef char *charPtr_t;
 
 /**
  * Maximum supported core sizes.
@@ -129,6 +130,9 @@ typedef struct {
 
 	// System control.
 	bit_t      resetOut;
+
+	// VHDL simulation debug information.
+	charPtr_t  rv2sim[2*CORE_MAX_LANES + CORE_MAX_LANE_GROUPS + CORE_MAX_CONTEXTS];
 
 	// Run control interface.
 	bit_t      rv2rctrl_irqAck[CORE_MAX_CONTEXTS];

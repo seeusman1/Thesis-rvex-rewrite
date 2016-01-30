@@ -49,89 +49,239 @@
 
 #include "../rvsim/components/core/Core.h"
 #include "MtiHelper.h"
+#include "Updaters.h"
 
 #include <inttypes.h>
 #include <mti.h>
+#include <new>
 
 using namespace std;
 
+/**
+ * Core structure which contains pretty much all the data for the rvex core
+ * simulator.
+ */
 typedef struct {
 
-	// System control.
-	mtiSignalIdT reset;
-	mtiDriverIdT resetOut;
-	mtiSignalIdT clk;
-	mtiSignalIdT clkEn;
-
-	// VHDL simulation debug information.
-	mtiDriverIdT rv2sim;
-
-	// Run control interface.
-	mtiSignalIdT rctrl2rv_irq;
-	mtiSignalIdT rctrl2rv_irqID;
-	mtiDriverIdT rv2rctrl_irqAck;
-	mtiSignalIdT rctrl2rv_run;
-	mtiDriverIdT rv2rctrl_idle;
-	mtiSignalIdT rctrl2rv_reset;
-	mtiSignalIdT rctrl2rv_resetVect;
-	mtiDriverIdT rv2rctrl_done;
-
-	// Common memory interface.
-	mtiDriverIdT rv2mem_decouple;
-	mtiSignalIdT mem2rv_blockReconfig;
-	mtiSignalIdT mem2rv_stallIn;
-	mtiDriverIdT rv2mem_stallOut;
-	mtiSignalIdT mem2rv_cacheStatus;
-
-	// Instruction memory interface.
-	mtiDriverIdT rv2imem_PCs;
-	mtiDriverIdT rv2imem_fetch;
-	mtiDriverIdT rv2imem_cancel;
-	mtiSignalIdT imem2rv_instr;
-	mtiSignalIdT imem2rv_affinity;
-	mtiSignalIdT imem2rv_busFault;
-
-	// Data memory interface.
-	mtiDriverIdT rv2dmem_addr;
-	mtiDriverIdT rv2dmem_readEnable;
-	mtiDriverIdT rv2dmem_writeData;
-	mtiDriverIdT rv2dmem_writeMask;
-	mtiDriverIdT rv2dmem_writeEnable;
-	mtiSignalIdT dmem2rv_readData;
-	mtiSignalIdT dmem2rv_ifaceFault;
-	mtiSignalIdT dmem2rv_busFault;
-
-	// Control/debug bus interface.
-	mtiSignalIdT dbg2rv_addr;
-	mtiSignalIdT dbg2rv_readEnable;
-	mtiSignalIdT dbg2rv_writeEnable;
-	mtiSignalIdT dbg2rv_writeMask;
-	mtiSignalIdT dbg2rv_writeData;
-	mtiDriverIdT rv2dbg_readData;
-
-	// Trace interface.
-	mtiDriverIdT rv2trsink_push;
-	mtiDriverIdT rv2trsink_data;
-	mtiDriverIdT rv2trsink_end;
-	mtiSignalIdT trsink2rv_busy;
-
-} rvexCorePorts_t;
-
-typedef struct {
-
-	// Modelsim ports.
-	rvexCorePorts_t ports;
+	// Processes.
+	updatedProcess_t stallOutProc;
+	updatedProcess_t clockProc;
 
 	// Core simulator class.
 	Core::Core core;
 
+	// Just a place to store the current value of the clock signal.
+	uint8_t clk;
+
 } rvexCore_t;
+
+/**
+ * Macro for adding the clock to a process.
+ */
+#define ADD_CLK(proc, name, hint) updaters_addInput( \
+	&(core->proc), \
+	mti_FindPortX(ports, #name), \
+	&(core->name), \
+	sizeof(core->name), \
+	hint, 1)
+
+/**
+ * Macro for adding a sensitive input to a process.
+ */
+#define ADD_INS(proc, name, hint) updaters_addInput( \
+	&(core->proc), \
+	mti_FindPortX(ports, #name), \
+	&(core->core.in.name), \
+	sizeof(core->core.in.name), \
+	hint, 1)
+
+/**
+ * Macro for adding a non-sensitive input to a process.
+ */
+#define ADD_INN(proc, name, hint) updaters_addInput( \
+	&(core->proc), \
+	mti_FindPortX(ports, #name), \
+	&(core->core.in.name), \
+	sizeof(core->core.in.name), \
+	hint, 0)
+
+/**
+ * Macro for adding an output to a process.
+ */
+#define ADD_OUT(proc, name, hint) updaters_addOutput( \
+	&(core->proc), \
+	mti_FindPortX(ports, #name), \
+	&(core->core.getOut()->name), \
+	sizeof(core->core.getOut()->name), \
+	hint)
+
+
+//==============================================================================
+// Stall output process.
+//==============================================================================
+
+/**
+ * Simulates the combinatorial stall output signal.
+ */
+static void stallOut_update(void *param) {
+	rvexCore_t *core = (rvexCore_t*)param;
+
+	// Simulate the combinatorial logic.
+	try {
+		core->core.stallOut();
+	} catch (const Core::GenericsException& e) {
+		mti_PrintFormatted("FATAL: generic configuration error: %s.\n", e.what());
+		mti_FatalError();
+	}
+
+}
+
+/**
+ * Initializes the stallOut process.
+ */
+static void stallOut_init(rvexCore_t *core, mtiInterfaceListT *ports) {
+
+	// Create the process.
+	updaters_createProcess(
+			&(core->stallOutProc), // Process structure.
+			"stallOut_proc",       // Process name.
+			core,                  // Core structure.
+			stallOut_update,       // Update function.
+			0);                    // Gate function.
+
+	// Common memory interface.
+	ADD_INS(stallOutProc, mem2rv_stallIn, 0);
+	ADD_OUT(stallOutProc, rv2mem_stallOut, 0);
+
+	// Control/debug bus interface.
+	ADD_INS(stallOutProc, dbg2rv_addr, 0);
+	ADD_INS(stallOutProc, dbg2rv_readEnable, 0);
+	ADD_INS(stallOutProc, dbg2rv_writeEnable, 0);
+	ADD_INS(stallOutProc, dbg2rv_writeMask, 0);
+	ADD_INS(stallOutProc, dbg2rv_writeData, 0);
+
+	// We also depend on the clock process due to the trace unit. This is
+	// handled in the clock process by scheduling a wakeup of this process
+	// whenever it completes.
+
+}
+
+
+//==============================================================================
+// Clock process.
+//==============================================================================
+
+/**
+ * Gate function for the clock process. Makes sure that the process is only run
+ * on the rising edge of the clock instead of on any event.
+ */
+static int clock_gate(void *param) {
+	rvexCore_t *core = (rvexCore_t*)param;
+	return core->clk & 1;
+}
+
+/**
+ * Simulates all registered signals.
+ */
+static void clock_update(void *param) {
+	rvexCore_t *core = (rvexCore_t*)param;
+
+	// Simulate the clock cycle.
+	try {
+		core->core.clock();
+	} catch (const Core::GenericsException& e) {
+		mti_PrintFormatted("FATAL: generic configuration error: %s.\n", e.what());
+		mti_FatalError();
+	}
+
+	// Wake up the stallOut process, since it depends on internal registered
+	// values.
+	mti_ScheduleWakeup(core->stallOutProc.pid, 0);
+
+}
+
+/**
+ * Initializes the clock process.
+ */
+static void clock_init(rvexCore_t *core, mtiInterfaceListT *ports) {
+
+	// Create the process.
+	updaters_createProcess(
+			&(core->clockProc), // Process structure.
+			"clock_proc",       // Process name.
+			core,               // Core structure.
+			clock_update,       // Update function.
+			clock_gate);        // Gate function.
+
+	// System control.
+	ADD_INN(clockProc, reset, 0);
+	ADD_OUT(clockProc, resetOut, 0);
+	ADD_CLK(clockProc, clk, 0);
+	ADD_INN(clockProc, clkEn, 0);
+
+	// VHDL simulation debug information.
+	ADD_OUT(clockProc, rv2sim, 0);
+
+	// Run control interface.
+	ADD_INN(clockProc, rctrl2rv_irq, 0);
+	ADD_INN(clockProc, rctrl2rv_irqID, 0);
+	ADD_OUT(clockProc, rv2rctrl_irqAck, 0);
+	ADD_INN(clockProc, rctrl2rv_run, 0);
+	ADD_OUT(clockProc, rv2rctrl_idle, 0);
+	ADD_INN(clockProc, rctrl2rv_reset, 0);
+	ADD_INN(clockProc, rctrl2rv_resetVect, 0);
+	ADD_OUT(clockProc, rv2rctrl_done, 0);
+
+	// Common memory interface.
+	ADD_OUT(clockProc, rv2mem_decouple, 0);
+	ADD_INN(clockProc, mem2rv_blockReconfig, 0);
+	ADD_INN(clockProc, mem2rv_stallIn, 0);
+	ADD_INN(clockProc, mem2rv_cacheStatus, "cacheStatus");
+
+	// Instruction memory interface.
+	ADD_OUT(clockProc, rv2imem_PCs, 0);
+	ADD_OUT(clockProc, rv2imem_fetch, 0);
+	ADD_OUT(clockProc, rv2imem_cancel, 0);
+	ADD_INN(clockProc, imem2rv_instr, 0);
+	ADD_INN(clockProc, imem2rv_affinity, 0);
+	ADD_INN(clockProc, imem2rv_busFault, 0);
+
+	// Data memory interface.
+	ADD_OUT(clockProc, rv2dmem_addr, 0);
+	ADD_OUT(clockProc, rv2dmem_readEnable, 0);
+	ADD_OUT(clockProc, rv2dmem_writeData, 0);
+	ADD_OUT(clockProc, rv2dmem_writeMask, 0);
+	ADD_OUT(clockProc, rv2dmem_writeEnable, 0);
+	ADD_INN(clockProc, dmem2rv_readData, 0);
+	ADD_INN(clockProc, dmem2rv_ifaceFault, 0);
+	ADD_INN(clockProc, dmem2rv_busFault, 0);
+
+	// Control/debug bus interface.
+	ADD_INN(clockProc, dbg2rv_addr, 0);
+	ADD_INN(clockProc, dbg2rv_readEnable, 0);
+	ADD_INN(clockProc, dbg2rv_writeEnable, 0);
+	ADD_INN(clockProc, dbg2rv_writeMask, 0);
+	ADD_INN(clockProc, dbg2rv_writeData, 0);
+	ADD_OUT(clockProc, rv2dbg_readData, 0);
+
+	// Trace interface.
+	ADD_OUT(clockProc, rv2trsink_push, 0);
+	ADD_OUT(clockProc, rv2trsink_data, 0);
+	ADD_OUT(clockProc, rv2trsink_end, 0);
+	ADD_INN(clockProc, trsink2rv_busy, 0);
+
+}
+
+
+//==============================================================================
+// Housekeeping.
+//==============================================================================
 
 /**
  * Loads the VHDL generics into our own generics structure.
  */
 static void load_generics(mtiInterfaceListT *generics,
-		volatile Core::coreInterfaceGenerics_t *gen)
+		Core::coreInterfaceGenerics_t *gen)
 {
 	genericToC(generics, "CFG_numLanesLog2",
 			(char*)&(gen->CFG.numLanesLog2),
@@ -240,71 +390,6 @@ static void load_generics(mtiInterfaceListT *generics,
 }
 
 /**
- * Looks up all VHDL ports and creates drivers for the outputs.
- */
-static void load_ports(mtiInterfaceListT *ports, rvexCorePorts_t *prts) {
-
-	// System control.
-	prts->reset = mti_FindPortX(ports, "reset");
-	prts->resetOut = mti_CreateDriver(mti_FindPortX(ports, "resetOut"));
-	prts->clk = mti_FindPortX(ports, "clk");
-	prts->clkEn = mti_FindPortX(ports, "clkEn");
-
-	// VHDL simulation debug information.
-	prts->rv2sim = mti_CreateDriver(mti_FindPortX(ports, "rv2sim"));
-
-	// Run control interface.
-	prts->rctrl2rv_irq = mti_FindPortX(ports, "rctrl2rv_irq");
-	prts->rctrl2rv_irqID = mti_FindPortX(ports, "rctrl2rv_irqID");
-	prts->rv2rctrl_irqAck = mti_CreateDriver(mti_FindPortX(ports, "rv2rctrl_irqAck"));
-	prts->rctrl2rv_run = mti_FindPortX(ports, "rctrl2rv_run");
-	prts->rv2rctrl_idle = mti_CreateDriver(mti_FindPortX(ports, "rv2rctrl_idle"));
-	prts->rctrl2rv_reset = mti_FindPortX(ports, "rctrl2rv_reset");
-	prts->rctrl2rv_resetVect = mti_FindPortX(ports, "rctrl2rv_resetVect");
-	prts->rv2rctrl_done = mti_CreateDriver(mti_FindPortX(ports, "rv2rctrl_done"));
-
-	// Common memory interface.
-	prts->rv2mem_decouple = mti_CreateDriver(mti_FindPortX(ports, "rv2mem_decouple"));
-	prts->mem2rv_blockReconfig = mti_FindPortX(ports, "mem2rv_blockReconfig");
-	prts->mem2rv_stallIn = mti_FindPortX(ports, "mem2rv_stallIn");
-	prts->rv2mem_stallOut = mti_CreateDriver(mti_FindPortX(ports, "rv2mem_stallOut"));
-	prts->mem2rv_cacheStatus = mti_FindPortX(ports, "mem2rv_cacheStatus");
-
-	// Instruction memory interface.
-	prts->rv2imem_PCs = mti_CreateDriver(mti_FindPortX(ports, "rv2imem_PCs"));
-	prts->rv2imem_fetch = mti_CreateDriver(mti_FindPortX(ports, "rv2imem_fetch"));
-	prts->rv2imem_cancel = mti_CreateDriver(mti_FindPortX(ports, "rv2imem_cancel"));
-	prts->imem2rv_instr = mti_FindPortX(ports, "imem2rv_instr");
-	prts->imem2rv_affinity = mti_FindPortX(ports, "imem2rv_affinity");
-	prts->imem2rv_busFault = mti_FindPortX(ports, "imem2rv_busFault");
-
-	// Data memory interface.
-	prts->rv2dmem_addr = mti_CreateDriver(mti_FindPortX(ports, "rv2dmem_addr"));
-	prts->rv2dmem_readEnable = mti_CreateDriver(mti_FindPortX(ports, "rv2dmem_readEnable"));
-	prts->rv2dmem_writeData = mti_CreateDriver(mti_FindPortX(ports, "rv2dmem_writeData"));
-	prts->rv2dmem_writeMask = mti_CreateDriver(mti_FindPortX(ports, "rv2dmem_writeMask"));
-	prts->rv2dmem_writeEnable = mti_CreateDriver(mti_FindPortX(ports, "rv2dmem_writeEnable"));
-	prts->dmem2rv_readData = mti_FindPortX(ports, "dmem2rv_readData");
-	prts->dmem2rv_ifaceFault = mti_FindPortX(ports, "dmem2rv_ifaceFault");
-	prts->dmem2rv_busFault = mti_FindPortX(ports, "dmem2rv_busFault");
-
-	// Control/debug bus interface.
-	prts->dbg2rv_addr = mti_FindPortX(ports, "dbg2rv_addr");
-	prts->dbg2rv_readEnable = mti_FindPortX(ports, "dbg2rv_readEnable");
-	prts->dbg2rv_writeEnable = mti_FindPortX(ports, "dbg2rv_writeEnable");
-	prts->dbg2rv_writeMask = mti_FindPortX(ports, "dbg2rv_writeMask");
-	prts->dbg2rv_writeData = mti_FindPortX(ports, "dbg2rv_writeData");
-	prts->rv2dbg_readData = mti_CreateDriver(mti_FindPortX(ports, "rv2dbg_readData"));
-
-	// Trace interface.
-	prts->rv2trsink_push = mti_CreateDriver(mti_FindPortX(ports, "rv2trsink_push"));
-	prts->rv2trsink_data = mti_CreateDriver(mti_FindPortX(ports, "rv2trsink_data"));
-	prts->rv2trsink_end = mti_CreateDriver(mti_FindPortX(ports, "rv2trsink_end"));
-	prts->trsink2rv_busy = mti_FindPortX(ports, "trsink2rv_busy");
-
-}
-
-/**
  * Initialize an rvex core.
  */
 static void init(mtiInterfaceListT *generics, mtiInterfaceListT *ports) {
@@ -314,22 +399,20 @@ static void init(mtiInterfaceListT *generics, mtiInterfaceListT *ports) {
 	rvexCore_t *core = (rvexCore_t*)mti_Malloc(sizeof(rvexCore_t));
 
 	// Load the generics.
-	volatile Core::coreInterfaceGenerics_t gen;
+	Core::coreInterfaceGenerics_t gen;
 	load_generics(generics, &gen);
 
-	// Load the ports.
-	load_ports(ports, &(core->ports));
-
-	mti_PrintFormatted("Number of lanes log2: %d\n", gen.CFG.numLanesLog2);
-	mti_PrintFormatted("CREG start: 0x%08X\n", gen.CFG.cregStartAddress);
+	// Create processes.
+	stallOut_init(core, ports);
+	clock_init(core, ports);
 
 	// Construct the core simulator.
-	/*try {
-		new ((void*)&(core->core)) Core::Core(&gen);
+	try {
+		new (&(core->core)) Core::Core(&gen, mti_PrintFormatted);
 	} catch (const Core::GenericsException& e) {
 		mti_PrintFormatted("FATAL: generic configuration error: %s.\n", e.what());
 		mti_FatalError();
-	}*/
+	}
 
 }
 
