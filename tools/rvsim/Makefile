@@ -29,8 +29,10 @@ MSIM_OBS  = $(MSIM_OBS_) $(shell find src/rvsim/components/core $(MAGIC))
 ALL_OBS   = $(MSIM_OBS_) $(RVSIM_OBS)
 
 
-.PHONY: all
+.PHONY: all msim rvsim
+rvsim: $(BINDIR)/rvsim
 all: $(BINDIR)/rvsim $(BINDIR)/core.so
+msim: $(BINDIR)/core.so
 
 # Dependency generation.
 %.d: %.c
@@ -50,16 +52,21 @@ $(BINDIR)/rvsim: $(RVSIM_OBS:=.o)
 	$(CC) $(CFLAGS) $^ -o $@
 
 # Modelsim C model compilation.
-%.mso: %.c
-	$(CC) $(MSIM_CFLAGS) -c $^ -o $@
+MTI_INC = $(shell echo $$MTI_HOME/include)
 
-%.mso: %.cpp
-	$(CC) $(MSIM_CFLAGS) -c $^ -o $@
+$(MTI_INC):
+	@echo -e "\e[1;31mError: you need to source the modelsim environment script before compiling.\e[0m"
+	@false
 
-.PRECIOUS: %.s
+%.mso: %.c $(MTI_INC)
+	$(CC) $(MSIM_CFLAGS) -c $< -o $@
 
-$(BINDIR)/core.so: $(MSIM_OBS:=.mso)
-	$(CC) $(MSIM_LDFLAGS) -o $@ $^ -lm -lpthread
+%.mso: %.cpp $(MTI_INC) 
+	$(CC) $(MSIM_CFLAGS) -c $< -o $@
+
+$(BINDIR)/core.so: $(MTI_INC) $(MSIM_OBS:=.mso)
+	$(ENSURE_DIR) $(BINDIR)
+	$(CC) $(MSIM_LDFLAGS) -o $@ $(MSIM_OBS:=.mso) -lm -lpthread
 
 # Cleaning.
 .PHONY: clean

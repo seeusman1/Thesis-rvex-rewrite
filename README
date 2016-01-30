@@ -10,9 +10,11 @@ out README.INTERNAL.
 You will need at least the following things (this list is probably not
 complete):
 
+ - A linux environment. Cygwin may work kind of, but you'll probably need to
+   handle the symlinks in the repo properly somehow.
  - Xilinx ISE. Version 14.7 is STRONGLY RECOMMENDED; older versions are known
-   to synthesize the rvex incorrectly. Vivado may or may not work, but be
-   aware that the makefiles are not designed for it.
+   to synthesize the rvex incorrectly. Vivado is used in the grlib and Virtex-7
+   based platforms.
  - Modelsim. The system is tested using version SE 10.2a; older versions are
    known to crash when simulating the core.
  - GNU make

@@ -14,9 +14,12 @@ ifndef VSIMFLAGS
 VSIMFLAGS =
 endif
 
+RVSIM = $(RVLIB)/../../tools/rvsim
+
 .PHONY: vsim
 vsim: compile.do
-	-ln -s $(RVLIB)/core/core_c.so core_c.so
+	(cd $(RVSIM) && $(MAKE) bin/core.so)
+	-ln -s $(RVSIM)/bin/core.so core_c.so
 	$(VSIM) $(VSIMFLAGS) -do sim.do
 
 .PHONY: vsim-%
@@ -27,6 +30,7 @@ vsim-%: compile.do
 clean:
 	rm -rf *.wlf wlft* transcript work rvex unisim
 	rm -rf compile*.do unisim_*.vhd
+	rm -rf core_c.so
 
 unisim_VCOMP.vhd unisim_VPKG.vhd:
 	@cp $(UNISIM)/$@ $@
