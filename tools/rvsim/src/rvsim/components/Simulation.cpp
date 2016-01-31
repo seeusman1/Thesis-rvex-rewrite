@@ -56,6 +56,7 @@
  */
 void Simulation::add(Entity *e) {
 	entities.push_back(e);
+	e->sim = this;
 }
 
 /**
@@ -67,7 +68,6 @@ void Simulation::run() {
 	int ec;
 	int stopped;
 	int i, j;
-	long long cycles;
 
 	long long lastCycles;
 	double time, lastTime;
@@ -77,67 +77,76 @@ void Simulation::run() {
 
 	// Initialize the simulation.
 	printf("Starting simulation with the following entities:\n");
+	int error = 0;
 	for (i = 0; i < ec; i++) {
 		printf(" - %s\n", entities[i]->name);
-		entities[i]->init();
+		if (entities[i]->init()) {
+			printf("   This entity had some trouble initializing...\n");
+			error = 1;
+		}
 	}
 	printf("That's %d entities total.\n\n", ec);
 
-	// Run the simulation loop.
-	lastTime = omp_get_wtime();
-	lastCycles = 0;
 	cycles = 0;
-	stopped = 0;
-	while (!stopped) {
+	if (error) {
+		printf("One or more entities did not initialize properly.\n");
+	} else {
 
-		// Do performance monitoring.
-		time = omp_get_wtime();
-		if (time > lastTime + 1.0) {
-			double elapsedTime = time - lastTime;
-			long long elapsedCycles = cycles - lastCycles;
-			lastTime = time;
-			lastCycles = cycles;
+		// Run the simulation loop.
+		lastTime = omp_get_wtime();
+		lastCycles = 0;
+		stopped = 0;
+		while (!stopped) {
 
-			double frequency = (double)elapsedCycles / elapsedTime;
-			const char *unit = "Hz";
-			if (frequency > 1000000.0) {
-				unit = "MHz";
-				frequency /= 1000000.0;
-			} else if (frequency > 1000.0) {
-				unit = "kHz";
-				frequency /= 1000.0;
-			}
-			printf("Simulation running at %8.2f %s, at %lld cycles...\n",
-					frequency, unit, cycles);
-		}
+			// Do performance monitoring.
+			time = omp_get_wtime();
+			if (time > lastTime + 1.0) {
+				double elapsedTime = time - lastTime;
+				long long elapsedCycles = cycles - lastCycles;
+				lastTime = time;
+				lastCycles = cycles;
 
-		// Run for 1024 cycles.
-		for (j = 0; j < 1024 && !stopped; j++) {
-
-			// Clock cycle.
-			//#pragma omp for schedule(dynamic, 1)
-			for (i = 0; i < ec; i++) {
-				entities[i]->clock();
+				double frequency = (double)elapsedCycles / elapsedTime;
+				const char *unit = "Hz";
+				if (frequency > 1000000.0) {
+					unit = "MHz";
+					frequency /= 1000000.0;
+				} else if (frequency > 1000.0) {
+					unit = "kHz";
+					frequency /= 1000.0;
+				}
+				printf("Simulation running at %8.2f %s, at %lld cycles...\n",
+						frequency, unit, cycles);
 			}
 
-			// Synchronization and signal propagation.
+			// Run for 1024 cycles.
+			for (j = 0; j < 1024 && !stopped; j++) {
+
+				// Clock cycle.
+				//#pragma omp for schedule(dynamic, 1)
+				for (i = 0; i < ec; i++) {
+					entities[i]->clock();
+				}
+
+				// Synchronization and signal propagation.
+				for (i = 0; i < ec; i++) {
+					if (entities[i]->synchronize() < 0) {
+						printf("Entity '%s' is stopping the simulation!\n",
+								entities[i]->name);
+						stopped = 1;
+					}
+				}
+
+				cycles++;
+			}
+
+			// Occasional synchronization stuff.
 			for (i = 0; i < ec; i++) {
-				if (entities[i]->synchronize() < 0) {
-					printf("Entity '%s' is stopping the simulation!",
+				if (entities[i]->occasional() < 0) {
+					printf("Entity '%s' is stopping the simulation!\n",
 							entities[i]->name);
 					stopped = 1;
 				}
-			}
-
-		}
-		cycles += j;
-
-		// Occasional synchronization stuff.
-		for (i = 0; i < ec; i++) {
-			if (entities[i]->occasional() < 0) {
-				printf("Entity '%s' is stopping the simulation!",
-						entities[i]->name);
-				stopped = 1;
 			}
 		}
 	}

@@ -57,6 +57,99 @@
 
 class DebugServerConnection;
 
+typedef struct {
+
+	/**
+	 * Start address.
+	 */
+	uint32_t address;
+
+	/**
+	 * Data buffer.
+	 */
+	uint32_t *buffer;
+
+	/**
+	 * Number of aligned 32-bit words to transfer. buffer starts at a word
+	 * alignment point, so buffer is numWords in size.
+	 */
+	int numWords;
+
+	/**
+	 * Byte mask for the first transfer if this is a write.
+	 */
+	uint8_t firstMask;
+
+	/**
+	 * Byte mask for the last transfer if this is a write.
+	 */
+	uint8_t lastMask;
+
+	/**
+	 * The actual number of bytes requested.
+	 */
+	int numBytes;
+
+	/**
+	 * Transfer direction; 0 for read, 1 for write.
+	 */
+	int direction;
+
+	/**
+	 * Transfer type; 0 for bus, 1 for ROM.
+	 */
+	int type;
+
+	/**
+	 * Fault code.
+	 */
+	uint32_t faultCode;
+
+} pendingAccess_t;
+
+typedef struct {
+
+	/**
+	 * Nonzero if this pending bus access if valid, zero if it isn't.
+	 */
+	int pending;
+
+	/**
+	 * Command name.
+	 */
+	const char *cmdName;
+
+	/**
+	 * Command parameters.
+	 */
+	char *params;
+
+	/**
+	 * Buffer to write the reply to.
+	 */
+	char *replyBuf;
+
+	/**
+	 * Size of the reply buffer.
+	 */
+	int replyBufSize;
+
+	/**
+	 * Number of bytes in the reply buffer.
+	 */
+	int replyBufLength;
+
+	/**
+	 * The client connection which issued this command.
+	 */
+	DebugServerConnection *replyTo;
+
+} pendingCommand_t;
+
+typedef enum {
+	AR_ERROR, AR_OK, AR_FAULT
+} accessResult_t;
+
 class DebugServer: public TcpServer {
 	friend class DebugServerConnection;
 
@@ -65,7 +158,18 @@ private:
 	/**
 	 * Data buffer for bus and ROM accesses.
 	 */
-	char dataBuffer[4096];
+	uint32_t dataBuffer[1026];
+
+	/**
+	 * Contains pending command information.
+	 */
+	pendingCommand_t pendingCommand;
+
+	/**
+	 * Contains the pending bus access information between handleAccess() and
+	 * finishBusAccess().
+	 */
+	pendingAccess_t pendingAccess;
 
 protected:
 
@@ -77,20 +181,23 @@ protected:
 			struct sockaddr_in *addr, int desc);
 
 	/**
-	 * Should implement what needs to happen when a bus access is requested by
-	 * one of the clients. address is the start address, buffer is the data
-	 * buffer, numBytes is the number of bytes to transfer, direction is 1 for
-	 * a write and 0 for a read, faultCode is used to return the bus fault code
-	 * if one occured. Returns -1 if there is a simulator error, 0 if
-	 * successful, or 1 if there was a bus fault.
+	 * Returns whether updating client connections is currently allowed. We
+	 * prevent this when a transfer is in progress, so we don't have our command
+	 * overwritten.
 	 */
-	virtual int handleBusAccess(uint32_t address, char *buffer, int numBytes,
-			int direction, uint32_t *faultCode) = 0;
+	virtual int canUpdateClients();
 
 	/**
-	 * Same as handleBusAccess, but for ROM accesses.
+	 * Should implement what needs to happen when a bus or ROM access is
+	 * requested by one of the clients. When the transfer is complete,
+	 * finishBusAccess() must be called.
 	 */
-	virtual int handleRomAccess(uint32_t address, char *buffer, int numBytes) = 0;
+	virtual void handleAccess(pendingAccess_t *access) = 0;
+
+	/**
+	 * Sends the reply of a pending bus access started by handleBusAccess().
+	 */
+	void finishBusAccess(accessResult_t result);
 
 	/**
 	 * Should implement what needs to happen when a client requests the server
@@ -99,18 +206,20 @@ protected:
 	virtual void handleStop() = 0;
 
 	/**
-	 * Handles incoming commands. This should write a response to replyBuf
-	 * and replyBufLen, which will then be sent by the caller.
+	 * Handles incoming commands. Returns 1 if a reply should be sent by the
+	 * caller, or 0 if the callee will handle that later.
 	 */
-	virtual void handleCommand(const char *cmdName, char *params,
-			char *replyBuf, int *replyBufLen);
+	virtual int handleCommand(const char *cmdName, char *params,
+			char *replyBuf, int *replyBufLen, DebugServerConnection *replyTo);
 
 public:
 
 	/**
 	 * Constructs an rvd debug server.
 	 */
-	DebugServer() : TcpServer("rvd server") {};
+	DebugServer(const char *name) : TcpServer(name) {
+		pendingCommand.pending = 0;
+	};
 
 	/**
 	 * Destroys the server.

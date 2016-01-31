@@ -50,14 +50,134 @@
 #ifndef RVSIM_COMPONENTS_CORE_CORE_H
 #define RVSIM_COMPONENTS_CORE_CORE_H
 
-#include "CoreTypes.h"
 #include "GenericsException.h"
-#include "Generated.h"
+#include <inttypes.h>
 
 namespace Core {
 
+/**
+ * Include generated stuff.
+ */
+#include "Generated.h.inc"
+
+/**
+ * VHDL typedefs which are not known by the configuration scripts.
+ */
+typedef bitvec4_t mask_t;
+typedef bitvec32_t syllable_t;
+typedef char *charPtr_t;
+
+/**
+ * Maximum supported core sizes.
+ */
+#define CORE_MAX_CONTEXTS     8
+#define CORE_MAX_LANES        16
+#define CORE_MAX_LANE_GROUPS  8
+
+/**
+ * All rvex core generics.
+ */
+typedef struct {
+
+	cfgVect_t  CFG;
+    natural_t  CORE_ID;
+    bitvec56_t PLATFORM_TAG;
+
+} coreInterfaceGenerics_t;
+
+/**
+ * All rvex core input signals.
+ */
+typedef struct {
+
+	// System control.
+	bit_t      reset;
+	bit_t      clkEn;
+
+	// Run control interface.
+	bit_t      rctrl2rv_irq[CORE_MAX_CONTEXTS];
+	address_t  rctrl2rv_irqID[CORE_MAX_CONTEXTS];
+	bit_t      rctrl2rv_run[CORE_MAX_CONTEXTS];
+	bit_t      rctrl2rv_reset[CORE_MAX_CONTEXTS];
+    address_t  rctrl2rv_resetVect[CORE_MAX_CONTEXTS];
+
+    // Common memory interface.
+    bit_t      mem2rv_blockReconfig[CORE_MAX_LANE_GROUPS];
+    bit_t      mem2rv_stallIn[CORE_MAX_LANE_GROUPS];
+    cacheStatus_t mem2rv_cacheStatus[CORE_MAX_LANE_GROUPS];
+
+    // Instruction memory interface.
+    syllable_t imem2rv_instr[CORE_MAX_LANES];
+    bitvec32_t imem2rv_affinity;
+    bit_t      imem2rv_busFault[CORE_MAX_LANE_GROUPS];
+
+    // Data memory interface.
+    data_t     dmem2rv_readData[CORE_MAX_LANE_GROUPS];
+    bit_t      dmem2rv_ifaceFault[CORE_MAX_LANE_GROUPS];
+    bit_t      dmem2rv_busFault[CORE_MAX_LANE_GROUPS];
+
+    // Control/debug bus interface.
+    address_t  dbg2rv_addr;
+    bit_t      dbg2rv_readEnable;
+    bit_t      dbg2rv_writeEnable;
+    mask_t     dbg2rv_writeMask;
+    data_t     dbg2rv_writeData;
+
+    // Trace interface.
+    bit_t      trsink2rv_busy;
+
+} coreInterfaceIn_t;
+
+/**
+ * All rvex core output signals.
+ */
+typedef struct {
+
+	// System control.
+	bit_t      resetOut;
+
+	// VHDL simulation debug information.
+	charPtr_t  rv2sim[2*CORE_MAX_LANES + CORE_MAX_LANE_GROUPS + CORE_MAX_CONTEXTS];
+
+	// Run control interface.
+	bit_t      rv2rctrl_irqAck[CORE_MAX_CONTEXTS];
+	bit_t      rv2rctrl_idle[CORE_MAX_CONTEXTS];
+	bit_t      rv2rctrl_done[CORE_MAX_CONTEXTS];
+
+	// Common memory interface.
+	bit_t      rv2mem_decouple[CORE_MAX_LANE_GROUPS];
+	bit_t      rv2mem_stallOut[CORE_MAX_LANE_GROUPS]; // Combinatorial!
+
+	// Instruction memory interface.
+	address_t  rv2imem_PCs[CORE_MAX_LANE_GROUPS];
+	bit_t      rv2imem_fetch[CORE_MAX_LANE_GROUPS];
+	bit_t      rv2imem_cancel[CORE_MAX_LANE_GROUPS];
+
+	// Data memory interface.
+	address_t  rv2dmem_addr[CORE_MAX_LANE_GROUPS];
+	bit_t      rv2dmem_readEnable[CORE_MAX_LANE_GROUPS];
+	data_t     rv2dmem_writeData[CORE_MAX_LANE_GROUPS];
+	mask_t     rv2dmem_writeMask[CORE_MAX_LANE_GROUPS];
+	bit_t      rv2dmem_writeEnable[CORE_MAX_LANE_GROUPS];
+
+	// Control/debug bus interface.
+	data_t     rv2dbg_readData;
+
+	// Trace interface.
+	bit_t      rv2trsink_push;
+	byte_t     rv2trsink_data;
+	bit_t      rv2trsink_end;
+
+} coreInterfaceOut_t;
+
+/**
+ * Typedef for a printf-like function pointer, used for the debug function.
+ */
 typedef void (*printfFuncPtr_t)(const char *format, ...);
 
+/**
+ * Main simulator class.
+ */
 class Core {
 private:
 

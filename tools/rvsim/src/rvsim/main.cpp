@@ -4,8 +4,51 @@
 
 #include "utils/DebugServer.h"
 #include "utils/VirtualMemory.h"
+#include "components/Simulation.h"
+#include "components/bus/Bus.h"
+#include "components/periph/Memory.h"
+#include "components/periph/DebugPort.h"
 
 using namespace std;
+
+static int64_t demuxMemory(Bus::busSlave_t *slave, uint32_t address) {
+	if (address < 0x80000000) {
+		return address;
+	} else {
+		return -1;
+	}
+}
+
+int main(int argc, char **argv) {
+
+	Simulation sim;
+
+	// Bus.
+	Bus::Bus bus("busModel");
+	sim.add(&bus);
+
+	// Debug "UART".
+	Periph::DebugPort debugPort("debugPort", 21079);
+	bus.addMaster(&debugPort);
+	sim.add(&debugPort);
+
+	// Main memory, 512 MiB.
+	Periph::Memory memory("memModel", 29, 0);
+	memory.setLatency(100);
+	memory.setPeriod(0);
+	memory.setBurstBoundary(8);
+
+	bus.addSlave(&memory, demuxMemory);
+	sim.add(&memory);
+
+	// Run the simulation.
+	sim.run();
+	return 0;
+
+}
+
+
+#if 0
 
 class DebugServerTest: public DebugServer {
 private:
@@ -22,17 +65,14 @@ protected:
 	 * if one occured. Returns -1 if there is a simulator error, 0 if
 	 * successful, or 1 if there was a bus fault.
 	 */
-	virtual int handleBusAccess(uint32_t address, char *buffer, int numBytes,
-			int direction, uint32_t *faultCode) {
-		mem.access(address, buffer, numBytes, direction);
-		return 0;
-	}
-
-	/**
-	 * Same as handleBusAccess, but for ROM accesses.
-	 */
-	virtual int handleRomAccess(uint32_t address, char *buffer, int numBytes) {
-		memset(buffer, 0, numBytes);
+	virtual void handleAccess(pendingAccess_t *access) {
+		if (access->type == 0) {
+			mem.access(access->address, access->buffer, access->numBytes,
+					access->direction);
+			finishBusAccess(AR_OK);
+		} else {
+			finishBusAccess(AR_ERROR);
+		}
 	}
 
 	/**
@@ -53,7 +93,7 @@ public:
 	/**
 	 * Constructs an rvd debug server.
 	 */
-	DebugServerTest() : DebugServer(), stopped(0), mem(32, 0) {};
+	DebugServerTest() : DebugServer("debug"), stopped(0), mem(32, 0) {};
 
 	/**
 	 * Destroys the server.
@@ -78,4 +118,6 @@ int main(int argc, char **argv) {
 	return 0;
 
 }
+
+#endif
 

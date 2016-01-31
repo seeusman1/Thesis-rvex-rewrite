@@ -49,19 +49,8 @@
 // Copyright (C) 2008-2015 by TU Delft.
 ///
 
-#include <cstdio>
-                                                                                                     /* GENERATED */
-#include "Core.h"
-#include "CoreTypes.h"
-#include "Generated.h"
-
-using namespace std;
-
-namespace Core {
-
-
-//==============================================================================                     /* GENERATED */
-// Opcode decoding table
+//==============================================================================
+// Opcode decoding table                                                                             /* GENERATED */
 //==============================================================================
 
 const opcodeTableEntry_t OPCODE_TABLE[256] = {
@@ -70,8 +59,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 1 }},                        /* GENERATED */
-    { /* 0x01 = MPYLLU */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 1 }},
+    { /* 0x01 = MPYLLU */ { 1, 1 },                                                                  /* GENERATED */
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -80,8 +69,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x02 = MPYLH */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
     { /* 0x03 = MPYLHU */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -90,8 +79,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_HIGH_HALF, 1, 1, 1 }},
     { /* 0x04 = MPYHH */ { 1, 1 },
-        { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_HIGH_HALF, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
@@ -100,8 +89,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_HIGH_HALF, U_OP2SEL_HIGH_HALF, 1, 1, 1 }},                      /* GENERATED */
-    { /* 0x06 = MPYL */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_HIGH_HALF, U_OP2SEL_HIGH_HALF, 1, 1, 1 }},
+    { /* 0x06 = MPYL */ { 1, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -110,8 +99,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x07 = MPYLU */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_WORD, U_OP2SEL_LOW_HALF, 1, 1, 1 }},
     { /* 0x08 = MPYH */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -120,8 +109,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_WORD, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
     { /* 0x09 = MPYHU */ { 1, 1 },
-        { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_WORD, U_OP2SEL_HIGH_HALF, 1, 1, 1 }},
@@ -130,8 +119,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_SHL16, U_OP1SEL_WORD, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},                          /* GENERATED */
-    { /* 0x0B = MOVTL */ { 1, 1 },
+        { U_RESULTSEL_SHL16, U_OP1SEL_WORD, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
+    { /* 0x0B = MOVTL */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -140,8 +129,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x0C = MOVFL */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x0D = LDW */ { 0, 1 },
         { D_FUNCSEL_MEM, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 },
@@ -150,8 +139,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 1, 0, 1, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x0E = STW */ { 0, 1 },
-        { D_FUNCSEL_ALU, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 1, 0, 0, 1 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -160,8 +149,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x10 = LDW */ { 0, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x10 = LDW */ { 0, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -170,8 +159,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x11 = LDH */ { 0, 1 },
         { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD, 1, 0, 1, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD, 1, 0, 1, 0 },                                      /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x12 = LDHU */ { 0, 1 },
         { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -180,8 +169,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD, 1, 1, 1, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x13 = LDB */ { 0, 1 },
-        { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 0, 1, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -190,8 +179,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 1, 1, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x15 = STW */ { 0, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x15 = STW */ { 0, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -200,8 +189,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x16 = STH */ { 0, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD, 1, 0, 0, 1 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD, 1, 0, 0, 1 },                                      /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x17 = STB */ { 0, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -210,8 +199,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 0, 0, 1 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x18 = SHR */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_SHIFTER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_SHIFTER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -220,8 +209,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_SHIFTER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x1A = SUB */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x1A = SUB */ { 1, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_TRUE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -230,8 +219,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x1B = SXTB */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND8, A_OP2MUX_ZERO, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x1C = SXTH */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -240,8 +229,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x1D = ZXTB */ { 1, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND8, A_OP2MUX_ZERO, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 1, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND8, A_OP2MUX_ZERO, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 1, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -250,8 +239,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND16, A_OP2MUX_ZERO, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x1F = XOR */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x1F = XOR */ { 1, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_XOR, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -260,8 +249,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x20 = GOTO */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 1, 0, 1, 0, 0, 1, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 1, 0, 1, 0, 0, 1, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x21 = IGOTO */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -270,8 +259,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x22 = CALL */ { 1, 1 },
-        { D_FUNCSEL_PCP1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 },                                      /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_PCP1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 1, 0, 1, 0, 1, 1, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -280,8 +269,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 1, 0, 1, 1, 1, 1, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x24 = BR */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x24 = BR */ { 1, 1 },                                                                      /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 1, 0, 0, 0, 0, 1, 0 },
@@ -290,8 +279,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x25 = BRF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 1, 0, 1, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 1, 0, 1, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x26 = RETURN */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -300,8 +289,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x27 = RFI */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 1, 0, 0, 0, 0, 0, 1 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -310,8 +299,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 1, 1, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x29 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x29 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -320,8 +309,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x2A = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x2B = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -330,8 +319,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x2C = SBIT */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_SET_BIT, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_TRUE, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_SET_BIT, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_TRUE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -340,8 +329,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_SET_BIT, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x2E = LDBR */ { 0, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x2E = LDBR */ { 0, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_MEM, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -350,8 +339,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x2F = STBR */ { 0, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 0, 0, 1 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 0, 0, 1 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x30 = SLCTF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -360,8 +349,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x31 = SLCTF */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -370,8 +359,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x33 = SLCTF */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x33 = SLCTF */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -380,8 +369,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x34 = SLCTF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x35 = SLCTF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -390,8 +379,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x36 = SLCTF */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -400,8 +389,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x38 = SLCT */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x38 = SLCT */ { 1, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -410,8 +399,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x39 = SLCT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x3A = SLCT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -420,8 +409,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x3B = SLCT */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -430,8 +419,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x3D = SLCT */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x3D = SLCT */ { 1, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -440,8 +429,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x3E = SLCT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x3F = SLCT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -450,8 +439,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x40 = CMPEQ */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_EQ, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_EQ, A_OPBRMUX_TRUE, 1, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -460,8 +449,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_EQ, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x42 = CMPGE */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x42 = CMPGE */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -470,8 +459,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x43 = CMPGE */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x44 = CMPGEU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -480,8 +469,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x45 = CMPGEU */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 1, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -490,8 +479,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GT, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x47 = CMPGT */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x47 = CMPGT */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GT, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -500,8 +489,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x48 = CMPGTU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GT, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x49 = CMPGTU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
@@ -510,8 +499,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x4A = CMPLE */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -520,8 +509,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x4C = CMPLEU */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x4C = CMPLEU */ { 1, 1 },                                                                  /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -530,8 +519,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x4D = CMPLEU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x4E = CMPLT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -540,8 +529,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x4F = CMPLT */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LT, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LT, A_OPBRMUX_TRUE, 1, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -550,8 +539,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LT, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x51 = CMPLTU */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x51 = CMPLTU */ { 1, 1 },                                                                  /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LT, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -560,8 +549,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x52 = CMPNE */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_NE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x53 = CMPNE */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
@@ -570,8 +559,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x54 = NANDL */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NAND, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NAND, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -580,8 +569,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NAND, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x56 = NORL */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x56 = NORL */ { 1, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NOR, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -590,8 +579,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x57 = NORL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NOR, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x58 = ORL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -600,8 +589,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x59 = ORL */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_OR, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_OR, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -610,8 +599,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_AND, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x5B = ANDL */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x5B = ANDL */ { 1, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_AND, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -620,8 +609,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x5C = TBIT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_TBIT, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x5D = TBIT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
@@ -630,8 +619,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x5E = TBITF */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_TBITF, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_TBITF, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -640,8 +629,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_TBITF, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x60 = NOP */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x60 = NOP */ { 1, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -650,8 +639,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x61 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x62 = ADD */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -660,8 +649,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x63 = AND */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -670,8 +659,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x65 = MAX */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x65 = MAX */ { 1, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -680,8 +669,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x66 = MAXU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x67 = MIN */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -690,8 +679,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x68 = MINU */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 1, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -700,8 +689,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x6A = ORC */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x6A = ORC */ { 1, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -710,8 +699,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x6B = SH1ADD */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x6C = SH2ADD */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -720,8 +709,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x6D = SH3ADD */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL3, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL3, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -730,8 +719,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL4, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x6F = SHL */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x6F = SHL */ { 1, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_SHIFTER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 1, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -740,8 +729,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x70 = DIVS */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x71 = DIVS */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
@@ -750,8 +739,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x72 = DIVS */ { 1, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -760,8 +749,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x74 = DIVS */ { 1, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x74 = DIVS */ { 1, 0 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -770,8 +759,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x75 = DIVS */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x76 = DIVS */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
@@ -780,8 +769,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x77 = DIVS */ { 1, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -790,8 +779,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x79 = ADDCG */ { 1, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x79 = ADDCG */ { 1, 0 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -800,8 +789,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x7A = ADDCG */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x7B = ADDCG */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
@@ -810,8 +799,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x7C = ADDCG */ { 1, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -820,8 +809,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x7E = ADDCG */ { 1, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x7E = ADDCG */ { 1, 0 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -830,8 +819,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x7F = ADDCG */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x80 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
@@ -840,8 +829,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x81 = LIMMH */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -850,8 +839,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x83 = LIMMH */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x83 = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -860,8 +849,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x84 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x85 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
@@ -870,8 +859,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x86 = LIMMH */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -880,8 +869,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x88 = LIMMH */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x88 = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -890,8 +879,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x89 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x8A = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
@@ -900,8 +889,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x8B = LIMMH */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -910,8 +899,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x8D = LIMMH */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x8D = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -920,8 +909,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x8E = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x8F = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
@@ -930,8 +919,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x90 = TRAP */ { 1, 1 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -940,8 +929,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_CLZ, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x92 = MPYLHUS */ { 1, 1 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x92 = MPYLHUS */ { 1, 1 },                                                                 /* GENERATED */
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -950,8 +939,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x93 = MPYHHS */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_SHR16, U_OP1SEL_WORD, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
     { /* 0x94 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -960,8 +949,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x95 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -970,8 +959,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x97 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x97 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -980,8 +969,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x98 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x99 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -990,8 +979,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x9A = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1000,8 +989,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0x9C = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0x9C = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1010,8 +999,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x9D = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x9E = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1020,8 +1009,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x9F = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1030,8 +1019,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xA1 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xA1 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1040,8 +1029,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xA2 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xA3 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1050,8 +1039,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xA4 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1060,8 +1049,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xA6 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xA6 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1070,8 +1059,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xA7 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xA8 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1080,8 +1069,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xA9 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1090,8 +1079,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xAB = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xAB = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1100,8 +1089,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xAC = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xAD = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1110,8 +1099,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xAE = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1120,8 +1109,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xB0 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xB0 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1130,8 +1119,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xB1 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xB2 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1140,8 +1129,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xB3 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1150,8 +1139,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xB5 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xB5 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1160,8 +1149,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xB6 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xB7 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1170,8 +1159,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xB8 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1180,8 +1169,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xBA = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xBA = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1190,8 +1179,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xBB = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xBC = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1200,8 +1189,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xBD = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1210,8 +1199,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xBF = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xBF = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1220,8 +1209,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xC0 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xC1 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1230,8 +1219,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xC2 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1240,8 +1229,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xC4 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xC4 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1250,8 +1239,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xC5 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xC6 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1260,8 +1249,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xC7 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1270,8 +1259,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xC9 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xC9 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1280,8 +1269,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xCA = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xCB = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1290,8 +1279,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xCC = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1300,8 +1289,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xCE = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xCE = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1310,8 +1299,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xCF = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xD0 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1320,8 +1309,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xD1 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1330,8 +1319,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xD3 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xD3 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1340,8 +1329,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xD4 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xD5 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1350,8 +1339,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xD6 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1360,8 +1349,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xD8 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xD8 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1370,8 +1359,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xD9 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xDA = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1380,8 +1369,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xDB = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1390,8 +1379,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xDD = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xDD = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1400,8 +1389,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xDE = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xDF = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1410,8 +1399,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xE0 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1420,8 +1409,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xE2 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xE2 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1430,8 +1419,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xE3 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xE4 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1440,8 +1429,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xE5 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1450,8 +1439,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xE7 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xE7 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1460,8 +1449,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xE8 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xE9 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1470,8 +1459,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xEA = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1480,8 +1469,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xEC = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xEC = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1490,8 +1479,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xED = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xEE = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1500,8 +1489,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xEF = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1510,8 +1499,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xF1 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xF1 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1520,8 +1509,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xF2 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xF3 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1530,8 +1519,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xF4 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1540,8 +1529,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xF6 = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xF6 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1550,8 +1539,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xF7 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xF8 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1560,8 +1549,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xF9 = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1570,8 +1559,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},                        /* GENERATED */
-    { /* 0xFB = undefined */ { 0, 0 },
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
+    { /* 0xFB = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1580,8 +1569,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0xFC = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
-        { 0, 0, 0, 0, 0, 0, 0 },                                                                     /* GENERATED */
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { 0, 0, 0, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xFD = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1590,8 +1579,8 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xFE = undefined */ { 0, 0 },
-        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },                                       /* GENERATED */
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1600,8 +1589,6 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
-        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }}                         /* GENERATED */
-};
+        { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }}
+};                                                                                                   /* GENERATED */
 
-
-} /* namespace Core */

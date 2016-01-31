@@ -1,4 +1,5 @@
-/* r-VEX simulator.
+/**
+ * r-VEX simulator.
  *
  * Copyright (C) 2008-2015 by TU Delft.
  * All Rights Reserved.
@@ -46,59 +47,57 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef RVSIM_COMPONENTS_SIMULATION_H
-#define RVSIM_COMPONENTS_SIMULATION_H
+#ifndef RVSIM_COMPONENTS_PERIPH_DEBUGPORT_H
+#define RVSIM_COMPONENTS_PERIPH_DEBUGPORT_H
 
-#include <vector>
+#include "../Simulation.h"
+#include "../../utils/DebugServer.h"
+#include "../bus/Bus.h"
 
-using namespace std;
+namespace Periph {
 
-class Simulation;
-
-class Entity {
-	friend class Simulation;
-
+class DebugPort : public Entity, protected DebugServer, public Bus::busMaster_t {
 private:
 
 	/**
-	 * Entity name.
+	 * TCP port number.
 	 */
-	const char *name;
+	const int tcpPort;
 
 	/**
-	 * Simulation pointer.
+	 * Nonzero if a stop was requested by this debug port.
 	 */
-	Simulation *sim = 0;
+	int stopped = 0;
+
+	/**
+	 * Pending bus access, or 0 if no access is pending.
+	 */
+	pendingAccess_t *pending = 0;
+
+	/**
+	 * Number of requests made.
+	 */
+	int requestCounter = 0;
+
+	/**
+	 * Number of responses received.
+	 */
+	int responseCounter = 0;
 
 protected:
-
-	/**
-	 * Constructs an entity.
-	 */
-	Entity(const char *name) : name(name) {};
-
-	/**
-	 * Destroys an entity.
-	 */
-	virtual ~Entity() {};
-
-	/**
-	 * Returns a pointer to the current simulation.
-	 */
-	const Simulation *getSim() const { return sim; }
 
 	/**
 	 * Called in preparation for the first clock cycle. The return value should
 	 * be 0 for OK or -1 if the simulator should shut down.
 	 */
-	virtual int init() = 0;
+	virtual int init();
 
 	/**
 	 * Runs a clock cycle, reading only from inputs and writing only to outputs.
 	 * This is called in an OpenMP accelerated loop, so it may be called from
 	 * any thread.
 	 */
-	virtual void clock() = 0;
+	virtual void clock();
 
 	/**
 	 * This should propagate the outputs of this entity to the inputs of other
@@ -106,52 +105,42 @@ protected:
 	 * simulation. It is only called from the main thread. The return value
 	 * should be 0 for OK or -1 if the simulator should shut down.
 	 */
-	virtual int synchronize() = 0;
+	virtual int synchronize();
 
 	/**
 	 * Same as synchronize, except that it's only called every n cycles.
 	 */
-	virtual int occasional() = 0;
+	virtual int occasional();
 
 	/**
 	 * Called after the last synchronize() call in the simulation.
 	 */
-	virtual void fini() = 0;
-
-};
-
-class Simulation {
-private:
+	virtual void fini();
 
 	/**
-	 * List of entities currently registered.
+	 * Called when a debug client wants to access the bus or ROM.
 	 */
-	vector<Entity*> entities;
+	virtual void handleAccess(pendingAccess_t *access);
 
 	/**
-	 * Current simulation cycle.
+	 * Called when a debug client wants to stop the simulation.
 	 */
-	long long cycles = 0;
+	virtual void handleStop();
 
 public:
 
 	/**
-	 * Adds an entity to the simulation.
+	 * Constructs a debug port.
 	 */
-	void add(Entity *e);
+	DebugPort(const char *name, int tcpPort);
 
 	/**
-	 * Runs the simulation until synchronize() for one of the entities returns -1.
-	 * e should be a list of pointers to entities, with the last pointer in the list
-	 * set to 0.
+	 * Destroys the debug port.
 	 */
-	void run();
-
-	/**
-	 * Returns the current simulation cycle.
-	 */
-	long long getCycle() const { return cycles; };
+	virtual ~DebugPort();
 
 };
+
+} /* namespace Core */
 
 #endif

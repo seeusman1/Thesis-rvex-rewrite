@@ -52,6 +52,7 @@
 #include <string.h>
 #include <cstdint>
 #include <cstdio>
+#include <cstdlib>
 
 /**
  * Allocates the connection structure for the given file descriptor using
@@ -61,6 +62,15 @@ TcpServerConnection *DebugServer::allocConnection(
 		struct sockaddr_in *addr, int desc)
 {
 	return new DebugServerConnection(this, addr, desc);
+}
+
+/**
+ * Returns whether updating client connections is currently allowed. We
+ * prevent this when a transfer is in progress, so we don't have our command
+ * overwritten.
+ */
+int DebugServer::canUpdateClients() {
+	return !pendingCommand.pending;
 }
 
 /**
@@ -145,11 +155,13 @@ int DebugServerConnection::update(void) {
 					DebugServer *server = (DebugServer*)getServer();
 					if (server) {
 						xmitCmdCount = sizeof(xmitCmdBuffer);
-						server->handleCommand(cmdName, params, xmitCmdBuffer,
-								&xmitCmdCount);
+						int ret = server->handleCommand(cmdName, params,
+								xmitCmdBuffer, &xmitCmdCount, this);
 
-						// Transmit the reply.
-						transmit(xmitCmdBuffer, xmitCmdCount, 1);
+						// Transmit the reply if the command has been handled.
+						if (ret) {
+							transmit(xmitCmdBuffer, xmitCmdCount, 1);
+						}
 
 					}
 
@@ -171,8 +183,8 @@ int DebugServerConnection::update(void) {
  * Handles incoming commands. This should write a response to xmitCmdBuffer
  * and xmitCmdCount, which will then be sent by the caller.
  */
-void DebugServer::handleCommand(const char *cmdName, char *params,
-		char *replyBuf, int *replyBufLen) {
+int DebugServer::handleCommand(const char *cmdName, char *params,
+		char *replyBuf, int *replyBufLen, DebugServerConnection *replyTo) {
 	int replyBufSize = *replyBufLen;
 	int rd, wr, ro;
 
@@ -180,7 +192,7 @@ void DebugServer::handleCommand(const char *cmdName, char *params,
 	if (!strcmp(cmdName, "Stop")) {
 		handleStop();
 		*replyBufLen = snprintf(replyBuf, replyBufSize, "OK,Stop;");
-		return;
+		return 1;
 	}
 
 	// Handle read/write/rom commands.
@@ -189,21 +201,49 @@ void DebugServer::handleCommand(const char *cmdName, char *params,
 	ro = !strcmp(cmdName, "ROM");
 	if (rd || wr || ro) {
 
-		uint32_t addr, fault;
+		uint32_t addr;
 		int count, ret;
 
 		// Try to scan the address and count.
 		if (sscanf(params, "%8X,%d", &addr, &count) < 2) {
 			*replyBufLen = snprintf(replyBuf, replyBufSize,
 					"Error,%s,SyntaxError;", cmdName);
-			return;
+			return 1;
 		}
 
 		// Return an error if too much data is requested at once.
 		if (count > 4096) {
 			*replyBufLen = snprintf(replyBuf, replyBufSize,
 					"Error,%s,AccessTooLarge;", cmdName);
-			return;
+			return 1;
+		}
+
+		// Set up the trivial parts of the access structure.
+		pendingAccess.address = addr & 0xFFFFFFFC;
+		pendingAccess.buffer = dataBuffer;
+		pendingAccess.numBytes = count;
+		pendingAccess.direction = wr;
+		pendingAccess.type = ro;
+		pendingAccess.faultCode = 0;
+
+		// Handle misaligned stuff.
+		uint32_t start = addr;
+		uint32_t end = addr + count;
+		pendingAccess.numWords = ((end + 3) / 4) - (start / 4);
+		switch (start & 3) {
+		case 0: pendingAccess.firstMask = 0xF; break;
+		case 1: pendingAccess.firstMask = 0x7; break;
+		case 2: pendingAccess.firstMask = 0x3; break;
+		case 3: pendingAccess.firstMask = 0x1; break;
+		}
+		switch (end & 3) {
+		case 0: pendingAccess.lastMask = 0xF; break;
+		case 1: pendingAccess.lastMask = 0x8; break;
+		case 2: pendingAccess.lastMask = 0xC; break;
+		case 3: pendingAccess.lastMask = 0xE; break;
+		}
+		if (pendingAccess.numWords == 1) {
+			pendingAccess.firstMask &= pendingAccess.lastMask;
 		}
 
 		// Scan the data to be written if this is a write.
@@ -224,70 +264,62 @@ void DebugServer::handleCommand(const char *cmdName, char *params,
 			if (strlen(params) != count*2) {
 				*replyBufLen = snprintf(replyBuf, replyBufSize,
 						"Error,%s,DataSizeIncorrect;", cmdName);
-				return;
+				return 1;
 			}
 
 			// Read the data into the buffer.
-			for (int i = 0; i < count; i++) {
-				if (sscanf(params, "%2hhX", dataBuffer + i) < 1) {
+			for (int i = 0; i < pendingAccess.numWords; i++) {
+				uint8_t mask = 0xF;
+				if (i == 0) {
+					mask = pendingAccess.firstMask;
+				} else if (i == pendingAccess.numWords - 1) {
+					mask = pendingAccess.lastMask;
+				}
+				int sh = 0;
+				int charCount = 8;
+				const char *fmt = "%08X";
+				if (mask != 0xF) {
+					if (mask == 0) {
+						printf("Something weird happened on line %d in file %s\n.",
+								__LINE__, __FILE__);
+						exit(1);
+					}
+					while ((mask & 1) == 0) {
+						mask >>= 1;
+						sh += 8;
+					}
+					switch (mask) {
+					case 0x1: fmt = "%02X"; charCount = 2; break;
+					case 0x3: fmt = "%04X"; charCount = 4; break;
+					case 0x7: fmt = "%06X"; charCount = 6; break;
+					default:
+						printf("Something weird happened on line %d in file %s\n.",
+								__LINE__, __FILE__);
+						exit(1);
+					}
+				}
+				uint32_t val;
+				if (sscanf(params, fmt, &val) < 1) {
 					*replyBufLen = snprintf(replyBuf, replyBufSize,
 							"Error,%s,SyntaxError;", cmdName);
-					return;
+					return 1;
 				}
-				params += 2;
+				dataBuffer[i] = val << sh;
+				params += charCount;
 			}
 
 		}
 
 		// Handle the command.
-		if (ro) {
-			ret = handleRomAccess(addr, dataBuffer, count);
-		} else {
-			ret = handleBusAccess(addr, dataBuffer, count, wr, &fault);
-		}
-
-		// Handle errors.
-		if (ret < 0) {
-			*replyBufLen = snprintf(replyBuf, replyBufSize,
-					"Error,%s,SimulatorError;", cmdName);
-			return;
-		}
-
-		// Handle bus faults.
-		if (ret > 0) {
-			*replyBufLen = snprintf(replyBuf, replyBufSize,
-					"OK,%s,Fault,%08X,%d,%08X;", cmdName, addr, count, fault);
-			return;
-		}
-
-		// Handle normal replies.
-		*replyBufLen = snprintf(replyBuf, replyBufSize,
-				"OK,%s,OK,%08X,%d;", cmdName, addr, count);
-
-		// Append data to the reply if necessary.
-		if (!wr) {
-			int c;
-
-			// Replace the command termination character with a comma.
-			replyBuf[*replyBufLen-1] = ',';
-			replyBuf += *replyBufLen;
-
-			// Append the data.
-			for (int i = 0; i < count; i++) {
-				snprintf(replyBuf, replyBufSize - *replyBufLen,
-						"%02hhX", dataBuffer[i]);
-				*replyBufLen += 2;
-				replyBuf += 2;
-			}
-
-			// Terminate the command again.
-			*replyBuf++ = ';';
-			*replyBuf++ = 0;
-			*replyBufLen += 1;
-
-		}
-
-		return;
+		pendingCommand.pending = 1;
+		pendingCommand.cmdName = cmdName;
+		pendingCommand.params = params;
+		pendingCommand.replyBuf = replyBuf;
+		pendingCommand.replyBufSize = replyBufSize;
+		pendingCommand.replyBufLength = 0;
+		pendingCommand.replyTo = (DebugServerConnection*)replyTo->claim();
+		handleAccess(&pendingAccess);
+		return 0;
 
 	}
 
@@ -298,6 +330,104 @@ void DebugServer::handleCommand(const char *cmdName, char *params,
 		*replyBufLen = snprintf(replyBuf, replyBufSize,
 				"Error,CmdNameOverrun,UnknownCommand;");
 	}
+	return 1;
+
+}
+
+/**
+ * Sends the reply of a pending bus access started by handleBusAccess().
+ * Refer to handleBusAccess() for more info.
+ */
+void DebugServer::finishBusAccess(accessResult_t result) {
+
+	if (result == AR_ERROR) {
+
+		// Handle errors.
+		pendingCommand.replyBufLength = snprintf(
+				pendingCommand.replyBuf, pendingCommand.replyBufSize,
+				"Error,%s,SimulatorError;", pendingCommand.cmdName);
+
+	} else if (result == AR_FAULT) {
+
+		// Handle bus faults.
+		pendingCommand.replyBufLength = snprintf(
+				pendingCommand.replyBuf, pendingCommand.replyBufSize,
+				"OK,%s,Fault,%08X,%d,%08X;", pendingCommand.cmdName,
+				pendingAccess.address, pendingAccess.numBytes,
+				pendingAccess.faultCode);
+
+	} else {
+
+		// Handle normal replies.
+		pendingCommand.replyBufLength = snprintf(
+				pendingCommand.replyBuf, pendingCommand.replyBufSize,
+				"OK,%s,OK,%08X,%d;", pendingCommand.cmdName,
+				pendingAccess.address, pendingAccess.numBytes);
+
+		// Append data to the reply if necessary.
+		if (!pendingAccess.direction) {
+			int c;
+
+			// Replace the command termination character with a comma.
+			char *buf = pendingCommand.replyBuf;
+			buf[pendingCommand.replyBufLength-1] = ',';
+			buf += pendingCommand.replyBufLength;
+
+			// Append the read data.
+			for (int i = 0; i < pendingAccess.numWords; i++) {
+				int charCount = 0;
+				uint8_t mask = 0xF;
+				if (i == 0) {
+					mask = pendingAccess.firstMask;
+				} else if (i == pendingAccess.numWords - 1) {
+					mask = pendingAccess.lastMask;
+				}
+				uint32_t val = pendingAccess.buffer[i];
+				const char *fmt = "%08X";
+				if (mask != 0xF) {
+					if (mask == 0) {
+						printf("Something weird happened on line %d in file %s\n.",
+								__LINE__, __FILE__);
+						exit(1);
+					}
+					while ((mask & 1) == 0) {
+						mask >>= 1;
+						val >>= 8;
+					}
+					switch (mask) {
+					case 0x1: fmt = "%02X"; val &= 0xFF; break;
+					case 0x3: fmt = "%04X"; val &= 0xFFFF; break;
+					case 0x7: fmt = "%06X"; val &= 0xFFFFFF; break;
+					default:
+						printf("Something weird happened on line %d in file %s\n.",
+								__LINE__, __FILE__);
+						exit(1);
+					}
+				}
+				charCount = snprintf(buf,
+						pendingCommand.replyBufSize -
+							pendingCommand.replyBufLength,
+						fmt, val);
+				pendingCommand.replyBufLength += charCount;
+				buf += charCount;
+			}
+
+			// Terminate the command again.
+			*buf++ = ';';
+			*buf++ = 0;
+			pendingCommand.replyBufLength += 1;
+
+		}
+
+	}
+
+	// Transmit the reply.
+	pendingCommand.replyTo->transmit(
+			pendingCommand.replyBuf, pendingCommand.replyBufLength, 1);
+
+	// Release our reference.
+	pendingCommand.replyTo = (DebugServerConnection*)pendingCommand.replyTo->release();
+	pendingCommand.pending = 0;
 
 }
 

@@ -1,20 +1,78 @@
 
- - in  uint32_t address
- - in  uint8_t  writeMask
- - in  uint8_t  mode
- - in  uint32_t *data
- - in  uint8_t  *fault
- - out int      ack
- - out int      period
- - out int      retry
 
 
-address:    The address to read from or write to.
-writeMask:  If zero, this is a read. If nonzero, the 4 LSB specify the byte mask.
-flags:      Bit 0: if set, this is a burst access. The bus will remain claimed
-              by this master during the response cycle, so the 
-            Bit 1: Lock. The 
-data:       Data buffer. Must be at least <burstCount> entries large. For
-              writes, this must be filled by the caller. For reads, the callee
-              will fill it.
-fault:      Fault flag for each 
+
+
+
+
+int Bus::synchronize() {
+  
+  // Acknowledge all idle requests, nack all non-idle requests.
+  for ( /* master in masters */ ) {
+    master->request.ack = master->request.state == BQS_IDLE;
+  }
+  
+  // Handle the current transfer.
+  if (transferInProgress) {
+    currentResponse.state = currentSlave->response.state;
+    if (currentResponse.state != BSS_BUSY) {
+      currentResponse.master = currentSlave->response.master;
+      currentResponse.data = currentSlave->response.data;
+      transferInProgress = 0;
+    }
+  } else {
+    currentResponse.state = BSS_IDLE;
+  }
+  
+  // Arbitrate among the masters.
+  int newMaster = -1;
+  if (!transferInProgress) {
+  	
+  	// Arbitrate in a round robin fashion. If the previous request was a locked
+  	// or burst request, start looking for requests at the current master,
+  	// otherwise start at the next one.
+  	
+  	// Handle burst/locked transfers.
+  	int start;
+    if (( /* response.state ack */ ) && ( /* request.state burst/lock */ )) {
+      start = currentMaster;
+    } else {
+      start = currentMaster + 1;
+      if (start == master->size()) {
+        start = 0;
+      }
+    }
+    
+    // Arbitrate round-robin.
+    do {
+      if (masters[master]->req.state != BQS_IDLE) {
+        newMaster = master;
+        break;
+      }
+      master++;
+      if (master == master->size()) {
+        master = 0;
+      }
+    } while (master != start);
+  }
+  
+  // If we found a new request, handle it.
+  if (newMaster >= 0) {
+    busMaster_t *master = masters[master];
+    currentRequest = master->req;
+    busSlave_t *slave = demux(currentRequest.address);
+    slave->response->state = BSS_BUSY;
+    slave->response->master = master;
+    master->request.ack = 1;
+  }
+  
+  return 0;
+}
+
+
+
+
+
+
+
+

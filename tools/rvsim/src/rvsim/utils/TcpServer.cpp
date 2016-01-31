@@ -195,6 +195,9 @@ int TcpServer::update(void) {
 	// Update all connections. Erase a connection from the list if it was
 	// closed remotely or an error occured.
 	for (auto it = connections.begin(); it != connections.end(); it++) {
+		if (!canUpdateClients()) {
+			break;
+		}
 		if ((*it)->update() < 0) {
 
 			// Print that we've lost a connection.

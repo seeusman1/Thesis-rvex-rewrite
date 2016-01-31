@@ -63,28 +63,7 @@ def generate(opc, regs, trps, pl, dirs):
         ///
         """.split('\n        '))
     header.append(copyright)
-    header.append('\n'.join("""
-        #ifndef RVSIM_COMPONENTS_CORE_GENERATED_H
-        #define RVSIM_COMPONENTS_CORE_GENERATED_H
-
-        #include <inttypes.h>
-
-        namespace Core {
-
-        """.split('\n        ')))
     source.append(copyright)
-    source.append('\n'.join("""
-        #include <cstdio>
-
-        #include "Core.h"
-        #include "CoreTypes.h"
-        #include "Generated.h"
-
-        using namespace std;
-
-        namespace Core {
-
-        """.split('\n        ')))
     
     # Language-agnostic code types.
     header.append(separator % 'Language-agnostic code types')
@@ -122,23 +101,13 @@ def generate(opc, regs, trps, pl, dirs):
         header.append('#define %s %d\n' % (key, pl['defs'][key]))
     header.append('\n')
     
-    # File footers.
-    header.append('\n'.join("""
-        } /* namespace Core */
-
-        #endif
-        """.split('\n        ')))
-    source.append('\n'.join("""
-        } /* namespace Core */
-        """.split('\n        ')))
-    
     # Write the files.
     common.templates.generate_raw(
         'c',
-        dirs['outdir'] + '/Generated.h',
+        dirs['outdir'] + '/Generated.h.inc',
         ''.join(header))
     
     common.templates.generate_raw(
         'c',
-        dirs['outdir'] + '/Generated.cpp',
+        dirs['outdir'] + '/Generated.cpp.inc',
         ''.join(source))

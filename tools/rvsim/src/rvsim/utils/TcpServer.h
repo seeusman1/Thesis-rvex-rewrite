@@ -92,6 +92,11 @@ protected:
 	virtual TcpServerConnection *allocConnection(
 			struct sockaddr_in *addr, int desc);
 
+	/**
+	 * Returns whether updating client connections is currently allowed.
+	 */
+	virtual int canUpdateClients() { return 1; }
+
 public:
 
 	/**

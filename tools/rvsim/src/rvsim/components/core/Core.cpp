@@ -57,6 +57,12 @@ using namespace std;
 namespace Core {
 
 /**
+ * Include generated code. We want this to be in the same compilation unit as
+ * the non-generated code, so gcc can better perform optimizations.
+ */
+#include "Generated.cpp.inc"
+
+/**
  * Creates a new core with the specified generic configuration.
  * NOTE: NONE OF THE FUCNTIONS IN THIS CLASS ARE ALLOWED TO USE DYNAMIC
  * MEMORY ALLOCATION, AS THE MODELSIM INTERFACE REQUIRES THE USAGE OF
@@ -122,20 +128,25 @@ const coreInterfaceOut_t *Core::clock(void) throw(GenericsException) {
 
 	printf("Core::clock()\n");
 
-	// Instruction buffer input.
-	// TODO
+	// Only operate if clkEn is high or if we're resetting.
+	if ((in.reset & 1) || (in.clkEn & 1)) {
 
-	// Pipelanes.
-	// TODO
+		// Instruction buffer input.
+		// TODO
 
-	// Instruction buffer output.
-	// TODO
+		// Pipelanes.
+		// TODO
 
-	// Reconfiguration controller.
-	// TODO
+		// Instruction buffer output.
+		// TODO
 
-	// Control registers.
-	// TODO
+		// Reconfiguration controller.
+		// TODO
+
+		// Control registers.
+		// TODO
+
+	}
 
 	return &out;
 }

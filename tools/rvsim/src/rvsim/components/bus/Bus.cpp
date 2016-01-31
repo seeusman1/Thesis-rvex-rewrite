@@ -49,12 +49,202 @@
 
 #include "Bus.h"
 
-Bus::Bus() {
-	// TODO Auto-generated constructor stub
+#include <stdio.h>
+
+namespace Bus {
+
+/**
+ * Called in preparation for the first clock cycle. The return value should
+ * be 0 for OK or -1 if the simulator should shut down.
+ */
+int Bus::init() {
+	return 0;
+}
+
+/**
+ * Runs a clock cycle, reading only from inputs and writing only to outputs.
+ * This is called in an OpenMP accelerated loop, so it may be called from
+ * any thread.
+ */
+void Bus::clock() {
+
+	// Clock the dummy slave.
+	if (unmapped.request) {
+		unmapped.response.state = BSS_FAULT;
+		unmapped.response.data = 0;
+	}
+
+	return;
+}
+
+/**
+ * This should propagate the outputs of this entity to the inputs of other
+ * entities and, if necessary, perform communication with things outside the
+ * simulation. It is only called from the main thread. The return value
+ * should be 0 for OK or -1 if the simulator should shut down.
+ */
+int Bus::synchronize() {
+
+	// Acknowledge all idle requests, nack all non-idle requests.
+	for (int i = 0; i < masters.size(); i++) {
+		masters[i]->request.ack = masters[i]->request.state == BQS_IDLE;
+	}
+
+	// Handle the current transfer.
+	if (currentSlave) {
+
+		// Forward the response state to the masters.
+		currentResponse.state = currentSlave->response.state;
+
+		// See if the slave is done.
+		if (currentResponse.state != BSS_BUSY) {
+
+			// Forward the rest of the response to the masters.
+			currentResponse.master = currentSlave->response.master;
+			currentResponse.data = currentSlave->response.data;
+			currentSnoop.address = currentOrigAddr;
+			currentSnoop.mask = currentRequest.mask;
+
+			// Take the request away from the slave, so it doesn't start
+			// processing it again.
+			currentSlave->request = 0;
+			currentSlave = 0;
+		}
+
+	} else {
+
+		// Tell the masters that there is no response on the bus right now.
+		currentResponse.state = BSS_IDLE;
+
+	}
+
+	// Look for a new bus request if we don't have a transfer right now.
+	if (!currentSlave) {
+
+		// Arbitrate in a round robin fashion. If the previous request was a locked
+		// or burst request, start looking for requests at the current master,
+		// otherwise start at the next one.
+
+		// Do bus arbitration among the masters.
+		int locked = 0;
+		locked  = currentRequest.state == BQS_BURST_START;
+		locked |= currentRequest.state == BQS_BURST_CONT;
+		locked |= currentRequest.state == BQS_LOCK;
+		if (!locked) {
+			int startIdx = currentMasterIdx + 1;
+			if (startIdx == masters.size()) {
+				startIdx = 0;
+			}
+			int masterIdx = startIdx;
+			do {
+				if (masters[masterIdx]->request.state != BQS_IDLE) {
+					currentMasterIdx = masterIdx;
+					break;
+				}
+				masterIdx++;
+				if (masterIdx == masters.size()) {
+					masterIdx = 0;
+				}
+			} while (masterIdx != startIdx);
+		}
+
+		// Handle the current master's request.
+		busMaster_t *master = masters[currentMasterIdx];
+		if (master->request.state != BQS_IDLE) {
+
+			// We have a request. Store it and acknowledge it.
+			master->request.ack = 1;
+			currentOrigAddr = master->request.address;
+			currentRequest = master->request;
+
+			// Find the slave for this request.
+			currentSlave = demux(&currentRequest.address);
+
+			// Forward the transfer to the slave.
+			currentSlave->request = &currentRequest;
+			currentSlave->response.state = BSS_BUSY;
+			currentSlave->response.master = master;
+
+		} else {
+
+			// No request.
+			currentRequest.state = BQS_IDLE;
+
+		}
+
+	}
+
+	return 0;
+}
+
+/**
+ * Same as synchronize, except that it's only called every n cycles.
+ */
+int Bus::occasional() {
+	return 0;
+}
+
+/**
+ * Called after the last synchronize() call in the simulation.
+ */
+void Bus::fini() {
 
 }
 
+/**
+ * Finds the slave which is mapped to the given address and mutates the
+ * address to put it in the slave address space.
+ */
+busSlave_t *Bus::demux(uint32_t *address) {
+	for (int i = 0; i < slaves.size(); i++) {
+		int64_t ret = slaves[i].fun(slaves[i].slave, *address);
+		if (ret >= 0) {
+			*address = ret;
+			return slaves[i].slave;
+		}
+	}
+	return &unmapped;
+}
+
+/**
+ * Creates a new bus controller.
+ */
+Bus::Bus(const char *name) : Entity(name), currentOrigAddr(0),
+		currentSlave(0), currentMasterIdx(0)
+{
+	currentRequest.state = BQS_IDLE;
+	currentResponse.state = BSS_IDLE;
+	unmapped.request = 0;
+	unmapped.response.state = BSS_IDLE;
+}
+
+/**
+ * Destroys this bus controller.
+ */
 Bus::~Bus() {
-	// TODO Auto-generated destructor stub
 }
+
+/**
+ * Adds a master to the bus. May not be called after clock() or
+ * synchronize() are called.
+ */
+void Bus::addMaster(busMaster_t *master) {
+	masters.push_back(master);
+	master->response = &currentResponse;
+	master->snoop = &currentSnoop;
+}
+
+/**
+ * Adds a slave to the bus. May not be called after clock() or
+ * synchronize() are called.
+ */
+void Bus::addSlave(busSlave_t *slave, busDemuxFunPtr_t demuxFun) {
+	busDemuxEntry_t entry;
+	entry.slave = slave;
+	entry.fun = demuxFun;
+	slaves.push_back(entry);
+}
+
+
+} /* namespace Bus */
 

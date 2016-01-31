@@ -1,4 +1,5 @@
-/* r-VEX simulator.
+/**
+ * r-VEX simulator.
  *
  * Copyright (C) 2008-2015 by TU Delft.
  * All Rights Reserved.
@@ -46,59 +47,62 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#ifndef RVSIM_COMPONENTS_SIMULATION_H
-#define RVSIM_COMPONENTS_SIMULATION_H
+#ifndef RVSIM_COMPONENTS_PERIPH_MEMORY_H
+#define RVSIM_COMPONENTS_PERIPH_MEMORY_H
 
-#include <vector>
+#include "../bus/Bus.h"
+#include "../../utils/VirtualMemory.h"
+#include "../Simulation.h"
 
-using namespace std;
+namespace Periph {
 
-class Simulation;
-
-class Entity {
-	friend class Simulation;
-
+class Memory: public Entity, public VirtualMemory, public Bus::busSlave_t {
 private:
 
 	/**
-	 * Entity name.
+	 * Whether we're in the middle of a burst.
 	 */
-	const char *name;
+	int bursting;
 
 	/**
-	 * Simulation pointer.
+	 * Previously requested address, used for determining whether we're in a
+	 * valid burst.
 	 */
-	Simulation *sim = 0;
+	uint32_t previousAddress;
+
+	/**
+	 * Number of busy cycles remaining before we should acknowledge the transfer.
+	 */
+	int busyCyclesRemaining;
+
+	/**
+	 * Latency metrics. Refer to the public setter functions for more
+	 * information.
+	 */
+	int readLatency;
+	int writeLatency;
+	int readPeriod;
+	int writePeriod;
+
+	/**
+	 * Stores the bitmask applied to the address in order to get a page.
+	 */
+	int burstMask;
 
 protected:
-
-	/**
-	 * Constructs an entity.
-	 */
-	Entity(const char *name) : name(name) {};
-
-	/**
-	 * Destroys an entity.
-	 */
-	virtual ~Entity() {};
-
-	/**
-	 * Returns a pointer to the current simulation.
-	 */
-	const Simulation *getSim() const { return sim; }
 
 	/**
 	 * Called in preparation for the first clock cycle. The return value should
 	 * be 0 for OK or -1 if the simulator should shut down.
 	 */
-	virtual int init() = 0;
+	virtual int init();
 
 	/**
 	 * Runs a clock cycle, reading only from inputs and writing only to outputs.
 	 * This is called in an OpenMP accelerated loop, so it may be called from
 	 * any thread.
 	 */
-	virtual void clock() = 0;
+	virtual void clock();
 
 	/**
 	 * This should propagate the outputs of this entity to the inputs of other
@@ -106,52 +110,75 @@ protected:
 	 * simulation. It is only called from the main thread. The return value
 	 * should be 0 for OK or -1 if the simulator should shut down.
 	 */
-	virtual int synchronize() = 0;
+	virtual int synchronize();
 
 	/**
 	 * Same as synchronize, except that it's only called every n cycles.
 	 */
-	virtual int occasional() = 0;
+	virtual int occasional();
 
 	/**
 	 * Called after the last synchronize() call in the simulation.
 	 */
-	virtual void fini() = 0;
+	virtual void fini();
 
-};
-
-class Simulation {
-private:
-
-	/**
-	 * List of entities currently registered.
-	 */
-	vector<Entity*> entities;
-
-	/**
-	 * Current simulation cycle.
-	 */
-	long long cycles = 0;
 
 public:
 
 	/**
-	 * Adds an entity to the simulation.
+	 * Constructs a memory peripheral. numBits specifies the log2 of the number
+	 * of bytes in the memory, initialValue specifies the initial value of all
+	 * the memory locations.
 	 */
-	void add(Entity *e);
+	Memory(const char *name, int numBits, int initialValue);
 
 	/**
-	 * Runs the simulation until synchronize() for one of the entities returns -1.
-	 * e should be a list of pointers to entities, with the last pointer in the list
-	 * set to 0.
+	 * Destroys this memory peripheral.
 	 */
-	void run();
+	virtual ~Memory();
 
 	/**
-	 * Returns the current simulation cycle.
+	 * Sets the amount of busy cycles which are injected into a bus request that
+	 * is not a continuation of a burst.
 	 */
-	long long getCycle() const { return cycles; };
+	void setLatency(int cycles);
+
+	/**
+	 * Like setLatency, but only for reads.
+	 */
+	void setReadLatency(int cycles);
+
+	/**
+	 * Like setLatency, but only for writes.
+	 */
+	void setWriteLatency(int cycles);
+
+	/**
+	 * Sets the amount of busy cycles which are injected into a bus request that
+	 * IS a continuation of a burst.
+	 */
+	void setPeriod(int cycles);
+
+	/**
+	 * Like setPeriod, but only for reads.
+	 */
+	void setReadPeriod(int cycles);
+
+	/**
+	 * Like setPeriod, but only for writes.
+	 */
+	void setWritePeriod(int cycles);
+
+	/**
+	 * Sets the burst boundary size as log2 of bytes (i.e. address bits).
+	 * Whenever a burst boundary is crossed, the normal read/write latency
+	 * penalty is applied instead of the period penalty. Bits may be set to 32
+	 * or greater if no such boundary exists.
+	 */
+	void setBurstBoundary(int bits);
 
 };
+
+} /* namespace Periph */
 
 #endif

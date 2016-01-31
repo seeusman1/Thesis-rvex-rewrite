@@ -38,8 +38,8 @@ all: $(TEMP)
 	$(CP) $(TEMP)/core.map $(MEMORY_MAP)
 	@echo ""
 	@echo "Configuring simulator..."
-	$(CP) $(TEMP)/Generated.h $(SIM_CORE)
-	$(CP) $(TEMP)/Generated.cpp $(SIM_CORE)
+	$(CP) $(TEMP)/Generated.h.inc $(SIM_CORE)
+	$(CP) $(TEMP)/Generated.cpp.inc $(SIM_CORE)
 	@echo ""
 	@echo "Configuring reference manual..."
 	$(CP) $(TEMP)/opcode-stats.generated.tex $(DOCS)/opcode-stats.generated.tex

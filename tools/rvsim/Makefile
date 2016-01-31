@@ -1,19 +1,26 @@
 
+# Optimization flags.
+ifdef DEBUG
+    OPTIM_FLAGS = -Og -g
+else
+    OPTIM_FLAGS = -O3 -flto
+endif
+
 # Toolchain.
 CC = g++
-CFLAGS = -O3 -std=c++11 -fopenmp
+CFLAGS = $(OPTIM_FLAGS) -std=c++11 -fopenmp
 ENSURE_DIR = mkdir -p
 
 # Modelsim .so file flags. Taken from FLI examples.
-MSIM_CFLAGS = -g -Wall -ansi -fms-extensions
+MSIM_CFLAGS = $(OPTIM_FLAGS) -Wall -ansi -fms-extensions
 MSIM_CFLAGS += -pedantic
-MSIM_LDFLAGS = -shared -Wl,-Bsymbolic -Wl,-export-dynamic
+MSIM_LDFLAGS = $(OPTIM_FLAGS) -shared -Wl,-Bsymbolic -Wl,-export-dynamic
 ifeq ($(shell uname -m), x86_64)
-   MSIM_CFLAGS += -m64 -fPIC
-   MSIM_LDFLAGS += -m64
+    MSIM_CFLAGS += -m64 -fPIC
+    MSIM_LDFLAGS += -m64
 else
-   MSIM_CFLAGS += -m32 -fPIC
-   MSIM_LDFLAGS += -m32
+    MSIM_CFLAGS += -m32 -fPIC
+    MSIM_LDFLAGS += -m32
 endif
 MSIM_CFLAGS += -freg-struct-return
 MSIM_CFLAGS += -I$$MTI_HOME/include
