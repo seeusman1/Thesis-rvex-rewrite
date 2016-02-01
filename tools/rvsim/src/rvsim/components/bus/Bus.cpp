@@ -197,7 +197,7 @@ void Bus::fini() {
  */
 busSlave_t *Bus::demux(uint32_t *address) {
 	for (int i = 0; i < slaves.size(); i++) {
-		int64_t ret = slaves[i].fun(slaves[i].slave, *address);
+		int64_t ret = slaves[i].fun(slaves[i].slave, *address, slaves[i].param);
 		if (ret >= 0) {
 			*address = ret;
 			return slaves[i].slave;
@@ -238,10 +238,11 @@ void Bus::addMaster(busMaster_t *master) {
  * Adds a slave to the bus. May not be called after clock() or
  * synchronize() are called.
  */
-void Bus::addSlave(busSlave_t *slave, busDemuxFunPtr_t demuxFun) {
+void Bus::addSlave(busSlave_t *slave, busDemuxFunPtr_t demuxFun, void *param) {
 	busDemuxEntry_t entry;
 	entry.slave = slave;
 	entry.fun = demuxFun;
+	entry.param = param;
 	slaves.push_back(entry);
 }
 

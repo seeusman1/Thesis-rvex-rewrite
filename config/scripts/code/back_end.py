@@ -102,6 +102,20 @@ def generate_declaration_vhdl(ob, init=None):
     return vhdl + ';\n'
 
 
+def generate_declaration_c(ob, init=None):
+    """Generates the code for a C object declaration. If init is specified, it
+    is expected to be a valid C initializer for the object."""
+    
+    c = ob.atyp.typ.name_c()
+    c += ' ' * (12 - len(c))
+    c += ' ' + ob.name
+    if init is not None:
+        c = '%s = %s;\n' % (c, init)
+    else:
+        c = '%s;\n' % c
+    return c
+
+
 def generate_literal(val, typ):
     """Returns a two-tuple with a VHDL literal in the first entry and a C
     literal in the second."""
@@ -201,6 +215,7 @@ def generate_aggregate(members, typ):
     
     return (''.join(vhdl), ''.join(c))
 
+
 def generate_reference(ob, ctxt, direction='r'):
     """Generates the code for reading from or writing to an object. Returns a
     two-tuple with the VHDL code in the first entry and the C code in the
@@ -222,20 +237,22 @@ def generate_reference(ob, ctxt, direction='r'):
             vhdl = '%s(%s)' % (vhdl, ctxt)
     
     # Generate C syntax.
-    if ob.atyp.name() in ['input', 'output']:
+    if ob.atyp.name() in ['input', 'output', 'combinatorial output']:
         if ctxt is not None:
-            c = 'cxiface[%s]->%s' % (ctxt, name)
+            c = 'st.cx[%s].cregIface.%s' % (ctxt, name)
         else:
-            c = 'gbiface->%s' % name
+            c = 'st.cregIface.%s' % name
     elif ob.atyp.name() in ['register']:
         if direction == 'r':
-            qd = 'q'
+            if ctxt is not None:
+                c = 'oldCxregState[%s].%s' % (ctxt, name)
+            else:
+                c = 'oldGbregState.%s' % name
         else:
-            qd = 'd'
-        if ctxt is not None:
-            c = 'cxr%s[%s]->%s' % (qd, ctxt, name)
-        else:
-            c = 'gbr%s->%s' % (qd, name)
+            if ctxt is not None:
+                c = 'st.cx[%s].cxregState.%s' % (ctxt, name)
+            else:
+                c = 'st.gbregState.%s' % name
     else:
         if ctxt is not None:
             c = '%s[%s]' % (name, ctxt)

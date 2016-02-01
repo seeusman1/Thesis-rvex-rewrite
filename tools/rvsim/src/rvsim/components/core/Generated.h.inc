@@ -234,194 +234,233 @@ typedef struct {
 
 
 //==============================================================================
-// Opcode decoding table
+// Control registers
 //==============================================================================
 
-typedef enum {
-    D_FUNCSEL_MEM,
-    D_FUNCSEL_MUL,
-    D_FUNCSEL_ALU,                                                                                   /* GENERATED */
-    D_FUNCSEL_PCP1
-} datapathFuncSel_t;
+typedef struct CtrlRegInterface_t {
 
-typedef struct {
-    datapathFuncSel_t funcSel;
-    unsigned int op3LinkReg : 1;
-    unsigned int stackOp : 1;
-    unsigned int op1LinkReg : 1;
-    unsigned int gpRegWE : 1;
-    unsigned int op3BranchRegs : 1;                                                                  /* GENERATED */
-    unsigned int isNOP : 1;
-    unsigned int linkWE : 1;
-    unsigned int allBrRegsWE : 1;
-    unsigned int brFmt : 1;
-    unsigned int brRegWE : 1;
-    unsigned int isLIMMH : 1;
-    unsigned int isTrap : 1;
-} datapathCtrlSignals_t;
+    // Global cregs: Run control.
+    bit_t        gbreg2rv_reset;                                                                     /* GENERATED */
 
-typedef enum {                                                                                       /* GENERATED */
-    A_BITWISEOP_SET_BIT,
-    A_BITWISEOP_BITW_XOR,
-    A_BITWISEOP_BITW_AND,
-    A_BITWISEOP_BITW_OR
-} aluBitwiseOp_t;
+    // Global cregs: Interface with configuration logic.
+    data_t       gbreg2cfg_requestData;
+    bit_t        gbreg2cfg_requestEnable;
+    data_t       cfg2gbreg_currentCfg;
+    bit_t        cfg2gbreg_busy;
+    bit_t        cfg2gbreg_error;
+    bitvec4_t    cfg2gbreg_requesterID;
 
-typedef enum {
-    A_OP1MUX_EXTEND32,
-    A_OP1MUX_SHL1,
-    A_OP1MUX_SHL3,                                                                                   /* GENERATED */
-    A_OP1MUX_SHL2,
-    A_OP1MUX_EXTEND16,
-    A_OP1MUX_SHL4,
-    A_OP1MUX_EXTEND32INV,
-    A_OP1MUX_EXTEND8
-} aluOp1Mux_t;
+    // Global cregs: Interface with memory.                                                          /* GENERATED */
+    data_t       imem2gbreg_affinity;
 
-typedef enum {
-    A_OP2MUX_ZERO,
-    A_OP2MUX_EXTEND32                                                                                /* GENERATED */
-} aluOp2Mux_t;
+    // Global cregs: Misc..
+    byte_t       rv2gbreg_coreID;
+    bitvec56_t   rv2gbreg_platformTag;
 
-typedef enum {
-    A_INTRESULTMUX_CLZ,
-    A_INTRESULTMUX_OP_SEL,
-    A_INTRESULTMUX_BITWISE,
-    A_INTRESULTMUX_BOOL,
-    A_INTRESULTMUX_ADDER,
-    A_INTRESULTMUX_SHIFTER
-} aluIntResultMux_t;                                                                                 /* GENERATED */
+    // Context cregs: Run control interface.
 
-typedef enum {
-    A_BRRESULTMUX_CMP_GT,
-    A_BRRESULTMUX_CMP_LE,
-    A_BRRESULTMUX_LOGIC_OR,
-    A_BRRESULTMUX_TBIT,
-    A_BRRESULTMUX_LOGIC_NOR,
-    A_BRRESULTMUX_LOGIC_AND,
-    A_BRRESULTMUX_CMP_NE,
-    A_BRRESULTMUX_CARRY_OUT,                                                                         /* GENERATED */
-    A_BRRESULTMUX_CMP_GE,
-    A_BRRESULTMUX_LOGIC_NAND,
-    A_BRRESULTMUX_CMP_LT,
-    A_BRRESULTMUX_PASS,
-    A_BRRESULTMUX_TBITF,
-    A_BRRESULTMUX_CMP_EQ,
-    A_BRRESULTMUX_DIVS
-} aluBrResultMux_t;
-
-typedef enum {                                                                                       /* GENERATED */
-    A_OPBRMUX_TRUE,
-    A_OPBRMUX_INVERT,
-    A_OPBRMUX_FALSE,
-    A_OPBRMUX_PASS
-} aluOpBrMux_t;
-
-typedef struct {
-    aluBitwiseOp_t bitwiseOp;
-    aluOp1Mux_t op1Mux;
-    aluOp2Mux_t op2Mux;                                                                              /* GENERATED */
-    aluIntResultMux_t intResultMux;
-    aluBrResultMux_t brResultMux;
-    aluOpBrMux_t opBrMux;
-    unsigned int compare : 1;
-    unsigned int shiftLeft : 1;
-    unsigned int unsignedOp : 1;
-    unsigned int divs : 1;
-} aluCtrlSignals_t;
-
-typedef struct {                                                                                     /* GENERATED */
-    unsigned int isBranchInstruction : 1;
-    unsigned int stop : 1;
-    unsigned int branchIfFalse : 1;
-    unsigned int branchToLink : 1;
-    unsigned int link : 1;
-    unsigned int branchIfTrue : 1;
-    unsigned int RFI : 1;
-} branchCtrlSignals_t;
-
-typedef enum {                                                                                       /* GENERATED */
-    M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD,
-    M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE,
-    M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD
-} memoryAccessSizeBLog2_t;
-
-typedef struct {
-    memoryAccessSizeBLog2_t accessSizeBLog2;
-    unsigned int isMemoryInstruction : 1;
-    unsigned int unsignedOp : 1;
-    unsigned int readEnable : 1;                                                                     /* GENERATED */
-    unsigned int writeEnable : 1;
-} memoryCtrlSignals_t;
-
-typedef enum {
-    U_RESULTSEL_SHR32,
-    U_RESULTSEL_SHL16,
-    U_RESULTSEL_SHR16,
-    U_RESULTSEL_PASS
-} multiplierResultSel_t;
+    // Context cregs: Memory interface.
                                                                                                      /* GENERATED */
-typedef enum {
-    U_OP1SEL_HIGH_HALF,
-    U_OP1SEL_WORD,
-    U_OP1SEL_LOW_HALF
-} multiplierOp1sel_t;
+    // Context cregs: Pipelane interface: misc.
 
-typedef enum {
-    U_OP2SEL_HIGH_HALF,
-    U_OP2SEL_LOW_HALF
-} multiplierOp2sel_t;                                                                                /* GENERATED */
+    // Context cregs: Pipelane interface: branch/link registers.
 
-typedef struct {
-    multiplierResultSel_t resultSel;
-    multiplierOp1sel_t op1sel;
-    multiplierOp2sel_t op2sel;
-    unsigned int op2unsigned : 1;
-    unsigned int op1unsigned : 1;
-    unsigned int isMultiplyInstruction : 1;
-} multiplierCtrlSignals_t;
+    // Context cregs: Pipelane interface: program counter.
+
+    // Context cregs: Pipelane interface: trap handling.
+
+    // Context cregs: Pipelane interface: external debug control signals.
                                                                                                      /* GENERATED */
-typedef struct {
-    uint8_t valid[2];
-    datapathCtrlSignals_t datapathCtrl;
-    aluCtrlSignals_t aluCtrl;
-    branchCtrlSignals_t branchCtrl;
-    memoryCtrlSignals_t memoryCtrl;
-    multiplierCtrlSignals_t multiplierCtrl;
-} opcodeTableEntry_t;
+    // Context cregs: Interface with configuration logic.
+    data_t       cfg2cxreg_currentConfig;
+    data_t       cxreg2cfg_wakeupConfig;
+    bit_t        cxreg2cfg_wakeupEnable;
+    bit_t        cfg2cxreg_wakeupAck;
 
-extern const opcodeTableEntry_t OPCODE_TABLE[256];                                                   /* GENERATED */
+    // Context cregs: Trace control unit interface.
 
+    // Debug bus interface. Address is set to -1 to disable access.
+    int16_t      gbreg_dbgAddress;                                                                   /* GENERATED */
+    uint8_t      gbreg_dbgWriteMask;
+    uint32_t     gbreg_dbgReadData;
+    uint32_t     gbreg_dbgWriteData;
 
-//==============================================================================
-// Traps
-//==============================================================================
+    // Core interfaces. Address is set to -1 to disable access.
+    int16_t      gbreg_coreAddress[CORE_MAX_LANE_GROUPS];
+    uint32_t     gbreg_coreReadData[CORE_MAX_LANE_GROUPS];
 
-#define TRAP_NONE 0x00
-#define TRAP_INVALID_OP 0x01
-#define TRAP_MISALIGNED_BRANCH 0x02
-#define TRAP_FETCH_FAULT 0x03                                                                        /* GENERATED */
-#define TRAP_MISALIGNED_ACCESS 0x04
-#define TRAP_DMEM_FAULT 0x05
-#define TRAP_LIMMH_FAULT 0x06
-#define TRAP_EXT_INTERRUPT 0x07
-#define TRAP_STOP 0x08
-#define TRAP_SOFT_CTXT_SWITCH 0x09
-#define TRAP_SOFT_DEBUG_0 0xF8
-#define TRAP_SOFT_DEBUG_1 0xF9
-#define TRAP_SOFT_DEBUG_2 0xFA
-#define TRAP_STEP_COMPLETE 0xFB                                                                      /* GENERATED */
-#define TRAP_HW_BREAKPOINT_0 0xFC
-#define TRAP_HW_BREAKPOINT_1 0xFD
-#define TRAP_HW_BREAKPOINT_2 0xFE
-#define TRAP_HW_BREAKPOINT_3 0xFF
-
-
-//==============================================================================
-// Control register definitions
-//==============================================================================
+} CtrlRegInterface_t;
                                                                                                      /* GENERATED */
-#define CR_GSR 0x000
+typedef struct CtrlRegInterfacePerCtxt_t {
+
+    // System control.
+    uint8_t      cxreg_reset;
+
+    // Global cregs: Run control.
+
+    // Global cregs: Interface with configuration logic.
+
+    // Global cregs: Interface with memory.                                                          /* GENERATED */
+
+    // Global cregs: Misc..
+
+    // Context cregs: Run control interface.
+    bit_t        cxreg2rv_reset;
+    address_t    rctrl2cxreg_resetVect;
+    bit_t        cxreg2rctrl_done;
+
+    // Context cregs: Memory interface.
+    cacheStatus_t mem2cxreg_cacheStatus;                                                             /* GENERATED */
+
+    // Context cregs: Pipelane interface: misc.
+    bit_t        cxplif2cxreg_stall;
+    bit_t        cxplif2cxreg_idle;
+    sylStatus_t  cxplif2cxreg_sylCommit;
+    sylStatus_t  cxplif2cxreg_sylNop;
+    bit_t        cxplif2cxreg_stop;
+
+    // Context cregs: Pipelane interface: branch/link registers.
+    brRegData_t  cxplif2cxreg_brWriteData;                                                           /* GENERATED */
+    brRegData_t  cxplif2cxreg_brWriteEnable;
+    brRegData_t  cxreg2cxplif_brReadData;
+    data_t       cxplif2cxreg_linkWriteData;
+    bit_t        cxplif2cxreg_linkWriteEnable;
+    data_t       cxreg2cxplif_linkReadData;
+
+    // Context cregs: Pipelane interface: program counter.
+    address_t    cxplif2cxreg_nextPC;
+    address_t    cxreg2cxplif_currentPC;
+    bit_t        cxreg2cxplif_overridePC;                                                            /* GENERATED */
+    bit_t        cxplif2cxreg_overridePC_ack;
+
+    // Context cregs: Pipelane interface: trap handling.
+    address_t    cxreg2cxplif_trapHandler;
+    trapInfo_t   cxplif2cxreg_trapInfo;
+    address_t    cxplif2cxreg_trapPoint;
+    bit_t        cxplif2cxreg_trapIsDebug;
+    address_t    cxreg2cxplif_trapReturn;
+    bit_t        cxplif2cxreg_rfi;
+    bit_t        cxreg2cxplif_handlingDebugTrap;                                                     /* GENERATED */
+    bit_t        cxreg2cxplif_interruptEnable;
+    bit_t        cxreg2cxplif_debugTrapEnable;
+    bit_t        cxreg2cxplif_softCtxtSwitch;
+
+    // Context cregs: Pipelane interface: external debug control signals.
+    breakpointInfo_t cxreg2cxplif_breakpoints;
+    bit_t        cxreg2cxplif_extDebug;
+    trapInfo_t   cxplif2cxreg_exDbgTrapInfo;
+    bit_t        cxreg2cxplif_brk;
+    bit_t        cxreg2cxplif_stepping;                                                              /* GENERATED */
+    bit_t        cxreg2cxplif_resuming;
+    bit_t        cxplif2cxreg_resuming_ack;
+
+    // Context cregs: Interface with configuration logic.
+    data_t       cxreg2cfg_requestData;
+    bit_t        cxreg2cfg_requestEnable;
+
+    // Context cregs: Trace control unit interface.
+    bit_t        cxreg2trace_enable;
+    bit_t        cxreg2trace_trapEn;                                                                 /* GENERATED */
+    bit_t        cxreg2trace_memEn;
+    bit_t        cxreg2trace_regEn;
+    bit_t        cxreg2trace_cacheEn;
+    bit_t        cxreg2trace_instrEn;
+
+    // Core/debug bus interface. Address is set to -1 to disable access.
+    // Origin is set to 0 for a core access or to 1 for a debug access.
+    int16_t      cxreg_address;
+    uint8_t      cxreg_origin;
+    uint8_t      cxreg_writeMask;                                                                    /* GENERATED */
+    uint32_t     cxreg_readData;
+    uint32_t     cxreg_writeData;
+
+} CtrlRegInterfacePerCtxt_t;
+
+typedef struct globalRegState_t {
+    data_t       cr_bcrr_bcrr_r;
+    unsigned56_t cr_cnt_cnt_r;
+} globalRegState_t;
+                                                                                                     /* GENERATED */
+typedef struct contextRegState_t {
+    trapCause_t  cr_ccr_cause_r;
+    brRegData_t  cr_ccr_branch_r;
+    bit_t        cr_ccr_k_r;
+    bit_t        cr_ccr_c_r;
+    bit_t        cr_ccr_b_r;
+    bit_t        cr_ccr_r_r;
+    bit_t        cr_ccr_i_r;
+    bit_t        cr_sccr_k_r;
+    bit_t        cr_sccr_c_r;                                                                        /* GENERATED */
+    bit_t        cr_sccr_b_r;
+    bit_t        cr_sccr_r_r;
+    bit_t        cr_sccr_i_r;
+    address_t    cr_lr_lr_r;
+    address_t    cr_pc_pc_r;
+    address_t    cr_th_th_r;
+    address_t    cr_ph_ph_r;
+    address_t    cr_tp_tp_r;
+    address_t    cr_ta_ta_r;
+    address_t    cr_br0_br0_r;                                                                       /* GENERATED */
+    address_t    cr_br1_br1_r;
+    address_t    cr_br2_br2_r;
+    address_t    cr_br3_br3_r;
+    bit_t        cr_dcr_d_r;
+    bit_t        cr_dcr_j_r;
+    bit_t        cr_dcr_e_r;
+    bit_t        cr_dcr_r_r;
+    bit_t        cr_dcr_s_r;
+    bit_t        cr_dcr_b_r;
+    trapCause_t  cr_dcr_cause_r;                                                                     /* GENERATED */
+    twoBit_t     cr_dcr_br3_r;
+    twoBit_t     cr_dcr_br2_r;
+    twoBit_t     cr_dcr_br1_r;
+    twoBit_t     cr_dcr_br0_r;
+    byte_t       cr_dcr2_result_r;
+    bit_t        cr_dcr2_t_r;
+    bit_t        cr_dcr2_m_r;
+    bit_t        cr_dcr2_r_r;
+    bit_t        cr_dcr2_c_r;
+    bit_t        cr_dcr2_i_r;                                                                        /* GENERATED */
+    bit_t        cr_dcr2_e_r;
+    data_t       cr_crr_crr_r;
+    data_t       cr_wcfg_wcfg_r;
+    bit_t        cr_sawc_s_r;
+    data_t       cr_scrp1_scrp1_r;
+    data_t       cr_scrp2_scrp2_r;
+    data_t       cr_scrp3_scrp3_r;
+    data_t       cr_scrp4_scrp4_r;
+    data_t       cr_rsc_rsc_r;
+    data_t       cr_csc_csc_r;                                                                       /* GENERATED */
+    bit_t        cr_csc_csc_neq;
+    byte_t       cr_cyc_cyc0_add_r;
+    sevenByte_t  cr_cyc_cyc0_r;
+    byte_t       cr_stall_stall0_add_r;
+    sevenByte_t  cr_stall_stall0_r;
+    byte_t       cr_bun_bun0_add_r;
+    sevenByte_t  cr_bun_bun0_r;
+    byte_t       cr_syl_syl0_add_r;
+    sevenByte_t  cr_syl_syl0_r;
+    byte_t       cr_nop_nop0_add_r;                                                                  /* GENERATED */
+    sevenByte_t  cr_nop_nop0_r;
+    byte_t       cr_iacc_iacc0_add_r;
+    sevenByte_t  cr_iacc_iacc0_r;
+    byte_t       cr_imiss_imiss0_add_r;
+    sevenByte_t  cr_imiss_imiss0_r;
+    byte_t       cr_dracc_dracc0_add_r;
+    sevenByte_t  cr_dracc_dracc0_r;
+    byte_t       cr_drmiss_drmiss0_add_r;
+    sevenByte_t  cr_drmiss_drmiss0_r;
+    byte_t       cr_dwacc_dwacc0_add_r;                                                              /* GENERATED */
+    sevenByte_t  cr_dwacc_dwacc0_r;
+    byte_t       cr_dwmiss_dwmiss0_add_r;
+    sevenByte_t  cr_dwmiss_dwmiss0_r;
+    byte_t       cr_dbypass_dbypass0_add_r;
+    sevenByte_t  cr_dbypass_dbypass0_r;
+    byte_t       cr_dwbuf_dwbuf0_add_r;
+    sevenByte_t  cr_dwbuf_dwbuf0_r;
+} contextRegState_t;
+
+#define CR_GSR 0x000                                                                                 /* GENERATED */
 #define CR_GSR_R_BIT 31
 #define CR_GSR_R_MASK 0x80000000
 #define CR_GSR_E_BIT 13
@@ -430,8 +469,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_GSR_B_MASK 0x00001000
 #define CR_GSR_RID_BIT 8
 #define CR_GSR_RID_MASK 0x00000F00
-#define CR_BCRR 0x004                                                                                /* GENERATED */
-#define CR_BCRR_BCRR_BIT 0
+#define CR_BCRR 0x004
+#define CR_BCRR_BCRR_BIT 0                                                                           /* GENERATED */
 #define CR_BCRR_BCRR_MASK 0xFFFFFFFF
 #define CR_CC 0x008
 #define CR_CC_CC_BIT 0
@@ -440,8 +479,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_AFF_AF_BIT 0
 #define CR_AFF_AF_MASK 0xFFFFFFFF
 #define CR_CNT 0x010
-#define CR_CNT_CNT_BIT 0                                                                             /* GENERATED */
-#define CR_CNT_CNT_MASK 0xFFFFFFFF
+#define CR_CNT_CNT_BIT 0
+#define CR_CNT_CNT_MASK 0xFFFFFFFF                                                                   /* GENERATED */
 #define CR_CNTH 0x014
 #define CR_CNTH_CNTH_BIT 8
 #define CR_CNTH_CNTH_MASK 0xFFFFFF00
@@ -450,8 +489,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_LIMC7 0x0A0
 #define CR_LIMC7_BORROW15_BIT 16
 #define CR_LIMC7_BORROW15_MASK 0xFFFF0000
-#define CR_BORROW15 0x0A1                                                                            /* GENERATED */
-#define CR_LIMC7_BORROW14_BIT 0
+#define CR_BORROW15 0x0A1
+#define CR_LIMC7_BORROW14_BIT 0                                                                      /* GENERATED */
 #define CR_LIMC7_BORROW14_MASK 0x0000FFFF
 #define CR_BORROW14 0x0A3
 #define CR_LIMC6 0x0A4
@@ -460,8 +499,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_BORROW13 0x0A5
 #define CR_LIMC6_BORROW12_BIT 0
 #define CR_LIMC6_BORROW12_MASK 0x0000FFFF
-#define CR_BORROW12 0x0A7                                                                            /* GENERATED */
-#define CR_LIMC5 0x0A8
+#define CR_BORROW12 0x0A7
+#define CR_LIMC5 0x0A8                                                                               /* GENERATED */
 #define CR_LIMC5_BORROW11_BIT 16
 #define CR_LIMC5_BORROW11_MASK 0xFFFF0000
 #define CR_BORROW11 0x0A9
@@ -470,8 +509,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_BORROW10 0x0AB
 #define CR_LIMC4 0x0AC
 #define CR_LIMC4_BORROW9_BIT 16
-#define CR_LIMC4_BORROW9_MASK 0xFFFF0000                                                             /* GENERATED */
-#define CR_BORROW9 0x0AD
+#define CR_LIMC4_BORROW9_MASK 0xFFFF0000
+#define CR_BORROW9 0x0AD                                                                             /* GENERATED */
 #define CR_LIMC4_BORROW8_BIT 0
 #define CR_LIMC4_BORROW8_MASK 0x0000FFFF
 #define CR_BORROW8 0x0AF
@@ -480,8 +519,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_LIMC3_BORROW7_MASK 0xFFFF0000
 #define CR_BORROW7 0x0B1
 #define CR_LIMC3_BORROW6_BIT 0
-#define CR_LIMC3_BORROW6_MASK 0x0000FFFF                                                             /* GENERATED */
-#define CR_BORROW6 0x0B3
+#define CR_LIMC3_BORROW6_MASK 0x0000FFFF
+#define CR_BORROW6 0x0B3                                                                             /* GENERATED */
 #define CR_LIMC2 0x0B4
 #define CR_LIMC2_BORROW5_BIT 16
 #define CR_LIMC2_BORROW5_MASK 0xFFFF0000
@@ -490,8 +529,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_LIMC2_BORROW4_MASK 0x0000FFFF
 #define CR_BORROW4 0x0B7
 #define CR_LIMC1 0x0B8
-#define CR_LIMC1_BORROW3_BIT 16                                                                      /* GENERATED */
-#define CR_LIMC1_BORROW3_MASK 0xFFFF0000
+#define CR_LIMC1_BORROW3_BIT 16
+#define CR_LIMC1_BORROW3_MASK 0xFFFF0000                                                             /* GENERATED */
 #define CR_BORROW3 0x0B9
 #define CR_LIMC1_BORROW2_BIT 0
 #define CR_LIMC1_BORROW2_MASK 0x0000FFFF
@@ -500,8 +539,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_LIMC0_BORROW1_BIT 16
 #define CR_LIMC0_BORROW1_MASK 0xFFFF0000
 #define CR_BORROW1 0x0BD
-#define CR_LIMC0_BORROW0_BIT 0                                                                       /* GENERATED */
-#define CR_LIMC0_BORROW0_MASK 0x0000FFFF
+#define CR_LIMC0_BORROW0_BIT 0
+#define CR_LIMC0_BORROW0_MASK 0x0000FFFF                                                             /* GENERATED */
 #define CR_BORROW0 0x0BF
 #define CR_SIC3 0x0C0
 #define CR_SIC3_SYL15CAP_BIT 24
@@ -510,8 +549,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SIC3_SYL14CAP_BIT 16
 #define CR_SIC3_SYL14CAP_MASK 0x00FF0000
 #define CR_SYL14CAP 0x0C1
-#define CR_SIC3_SYL13CAP_BIT 8                                                                       /* GENERATED */
-#define CR_SIC3_SYL13CAP_MASK 0x0000FF00
+#define CR_SIC3_SYL13CAP_BIT 8
+#define CR_SIC3_SYL13CAP_MASK 0x0000FF00                                                             /* GENERATED */
 #define CR_SYL13CAP 0x0C2
 #define CR_SIC3_SYL12CAP_BIT 0
 #define CR_SIC3_SYL12CAP_MASK 0x000000FF
@@ -520,8 +559,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SIC2_SYL11CAP_BIT 24
 #define CR_SIC2_SYL11CAP_MASK 0xFF000000
 #define CR_SYL11CAP 0x0C4
-#define CR_SIC2_SYL10CAP_BIT 16                                                                      /* GENERATED */
-#define CR_SIC2_SYL10CAP_MASK 0x00FF0000
+#define CR_SIC2_SYL10CAP_BIT 16
+#define CR_SIC2_SYL10CAP_MASK 0x00FF0000                                                             /* GENERATED */
 #define CR_SYL10CAP 0x0C5
 #define CR_SIC2_SYL9CAP_BIT 8
 #define CR_SIC2_SYL9CAP_MASK 0x0000FF00
@@ -530,8 +569,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SIC2_SYL8CAP_MASK 0x000000FF
 #define CR_SYL8CAP 0x0C7
 #define CR_SIC1 0x0C8
-#define CR_SIC1_SYL7CAP_BIT 24                                                                       /* GENERATED */
-#define CR_SIC1_SYL7CAP_MASK 0xFF000000
+#define CR_SIC1_SYL7CAP_BIT 24
+#define CR_SIC1_SYL7CAP_MASK 0xFF000000                                                              /* GENERATED */
 #define CR_SYL7CAP 0x0C8
 #define CR_SIC1_SYL6CAP_BIT 16
 #define CR_SIC1_SYL6CAP_MASK 0x00FF0000
@@ -540,8 +579,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SIC1_SYL5CAP_MASK 0x0000FF00
 #define CR_SYL5CAP 0x0CA
 #define CR_SIC1_SYL4CAP_BIT 0
-#define CR_SIC1_SYL4CAP_MASK 0x000000FF                                                              /* GENERATED */
-#define CR_SYL4CAP 0x0CB
+#define CR_SIC1_SYL4CAP_MASK 0x000000FF
+#define CR_SYL4CAP 0x0CB                                                                             /* GENERATED */
 #define CR_SIC0 0x0CC
 #define CR_SIC0_SYL3CAP_BIT 24
 #define CR_SIC0_SYL3CAP_MASK 0xFF000000
@@ -550,8 +589,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SIC0_SYL2CAP_MASK 0x00FF0000
 #define CR_SYL2CAP 0x0CD
 #define CR_SIC0_SYL1CAP_BIT 8
-#define CR_SIC0_SYL1CAP_MASK 0x0000FF00                                                              /* GENERATED */
-#define CR_SYL1CAP 0x0CE
+#define CR_SIC0_SYL1CAP_MASK 0x0000FF00
+#define CR_SYL1CAP 0x0CE                                                                             /* GENERATED */
 #define CR_SIC0_SYL0CAP_BIT 0
 #define CR_SIC0_SYL0CAP_MASK 0x000000FF
 #define CR_SYL0CAP 0x0CF
@@ -560,8 +599,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_GPS0_MEMAR_BIT 24
 #define CR_GPS0_MEMAR_MASK 0x0F000000
 #define CR_GPS0_MEMDC_BIT 20
-#define CR_GPS0_MEMDC_MASK 0x00F00000                                                                /* GENERATED */
-#define CR_GPS0_MEMDR_BIT 16
+#define CR_GPS0_MEMDC_MASK 0x00F00000
+#define CR_GPS0_MEMDR_BIT 16                                                                         /* GENERATED */
 #define CR_GPS0_MEMDR_MASK 0x000F0000
 #define CR_GPS0_MULC_BIT 12
 #define CR_GPS0_MULC_MASK 0x0000F000
@@ -570,8 +609,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_GPS0_ALUC_BIT 4
 #define CR_GPS0_ALUC_MASK 0x000000F0
 #define CR_GPS0_ALUR_BIT 0
-#define CR_GPS0_ALUR_MASK 0x0000000F                                                                 /* GENERATED */
-#define CR_SPS1 0x0D8
+#define CR_GPS0_ALUR_MASK 0x0000000F
+#define CR_SPS1 0x0D8                                                                                /* GENERATED */
 #define CR_SPS0 0x0DC
 #define CR_SPS0_MEMMC_BIT 28
 #define CR_SPS0_MEMMC_MASK 0xF0000000
@@ -580,8 +619,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SPS0_MEMDC_BIT 20
 #define CR_SPS0_MEMDC_MASK 0x00F00000
 #define CR_SPS0_MEMDR_BIT 16
-#define CR_SPS0_MEMDR_MASK 0x000F0000                                                                /* GENERATED */
-#define CR_SPS0_BRC_BIT 12
+#define CR_SPS0_MEMDR_MASK 0x000F0000
+#define CR_SPS0_BRC_BIT 12                                                                           /* GENERATED */
 #define CR_SPS0_BRC_MASK 0x0000F000
 #define CR_SPS0_BRR_BIT 8
 #define CR_SPS0_BRR_MASK 0x00000F00
@@ -590,8 +629,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SPS0_ALUR_BIT 0
 #define CR_SPS0_ALUR_MASK 0x0000000F
 #define CR_EXT2 0x0E0
-#define CR_EXT1 0x0E4                                                                                /* GENERATED */
-#define CR_EXT0 0x0E8
+#define CR_EXT1 0x0E4
+#define CR_EXT0 0x0E8                                                                                /* GENERATED */
 #define CR_EXT0_T_BIT 27
 #define CR_EXT0_T_MASK 0x08000000
 #define CR_EXT0_BRK_BIT 24
@@ -600,8 +639,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_EXT0_C_MASK 0x00080000
 #define CR_EXT0_P_BIT 16
 #define CR_EXT0_P_MASK 0x00070000
-#define CR_EXT0_O_BIT 2                                                                              /* GENERATED */
-#define CR_EXT0_O_MASK 0x00000004
+#define CR_EXT0_O_BIT 2
+#define CR_EXT0_O_MASK 0x00000004                                                                    /* GENERATED */
 #define CR_EXT0_L_BIT 1
 #define CR_EXT0_L_MASK 0x00000002
 #define CR_EXT0_F_BIT 0
@@ -610,8 +649,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DCFG_BA_BIT 12
 #define CR_DCFG_BA_MASK 0x0000F000
 #define CR_DCFG_NC_BIT 8
-#define CR_DCFG_NC_MASK 0x00000F00                                                                   /* GENERATED */
-#define CR_DCFG_NG_BIT 4
+#define CR_DCFG_NC_MASK 0x00000F00
+#define CR_DCFG_NG_BIT 4                                                                             /* GENERATED */
 #define CR_DCFG_NG_MASK 0x000000F0
 #define CR_DCFG_NL_BIT 0
 #define CR_DCFG_NL_MASK 0x0000000F
@@ -620,8 +659,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_CVER1_VER_MASK 0xFF000000
 #define CR_CVER 0x0F0
 #define CR_CVER1_CTAG0_BIT 16
-#define CR_CVER1_CTAG0_MASK 0x00FF0000                                                               /* GENERATED */
-#define CR_CTAG 0x0F1
+#define CR_CVER1_CTAG0_MASK 0x00FF0000
+#define CR_CTAG 0x0F1                                                                                /* GENERATED */
 #define CR_CVER1_CTAG1_BIT 8
 #define CR_CVER1_CTAG1_MASK 0x0000FF00
 #define CR_CVER1_CTAG2_BIT 0
@@ -630,8 +669,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_CVER0_CTAG3_BIT 24
 #define CR_CVER0_CTAG3_MASK 0xFF000000
 #define CR_CVER0_CTAG4_BIT 16
-#define CR_CVER0_CTAG4_MASK 0x00FF0000                                                               /* GENERATED */
-#define CR_CVER0_CTAG5_BIT 8
+#define CR_CVER0_CTAG4_MASK 0x00FF0000
+#define CR_CVER0_CTAG5_BIT 8                                                                         /* GENERATED */
 #define CR_CVER0_CTAG5_MASK 0x0000FF00
 #define CR_CVER0_CTAG6_BIT 0
 #define CR_CVER0_CTAG6_MASK 0x000000FF
@@ -640,8 +679,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_PVER1_COID_MASK 0xFF000000
 #define CR_COID 0x0F8
 #define CR_PVER1_PTAG0_BIT 16
-#define CR_PVER1_PTAG0_MASK 0x00FF0000                                                               /* GENERATED */
-#define CR_PTAG 0x0F9
+#define CR_PVER1_PTAG0_MASK 0x00FF0000
+#define CR_PTAG 0x0F9                                                                                /* GENERATED */
 #define CR_PVER1_PTAG1_BIT 8
 #define CR_PVER1_PTAG1_MASK 0x0000FF00
 #define CR_PVER1_PTAG2_BIT 0
@@ -650,8 +689,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_PVER0_PTAG3_BIT 24
 #define CR_PVER0_PTAG3_MASK 0xFF000000
 #define CR_PVER0_PTAG4_BIT 16
-#define CR_PVER0_PTAG4_MASK 0x00FF0000                                                               /* GENERATED */
-#define CR_PVER0_PTAG5_BIT 8
+#define CR_PVER0_PTAG4_MASK 0x00FF0000
+#define CR_PVER0_PTAG5_BIT 8                                                                         /* GENERATED */
 #define CR_PVER0_PTAG5_MASK 0x0000FF00
 #define CR_PVER0_PTAG6_BIT 0
 #define CR_PVER0_PTAG6_MASK 0x000000FF
@@ -660,8 +699,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_CCR_CAUSE_MASK 0xFF000000
 #define CR_TC 0x200
 #define CR_CCR_BRANCH_BIT 16
-#define CR_CCR_BRANCH_MASK 0x00FF0000                                                                /* GENERATED */
-#define CR_BR 0x201
+#define CR_CCR_BRANCH_MASK 0x00FF0000
+#define CR_BR 0x201                                                                                  /* GENERATED */
 #define CR_CCR_K_BIT 8
 #define CR_CCR_K_MASK 0x00000300
 #define CR_CCR_C_BIT 6
@@ -670,8 +709,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_CCR_B_MASK 0x00000030
 #define CR_CCR_R_BIT 2
 #define CR_CCR_R_MASK 0x0000000C
-#define CR_CCR_I_BIT 0                                                                               /* GENERATED */
-#define CR_CCR_I_MASK 0x00000003
+#define CR_CCR_I_BIT 0
+#define CR_CCR_I_MASK 0x00000003                                                                     /* GENERATED */
 #define CR_SCCR 0x204
 #define CR_SCCR_ID_BIT 24
 #define CR_SCCR_ID_MASK 0xFF000000
@@ -680,8 +719,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SCCR_K_MASK 0x00000300
 #define CR_SCCR_C_BIT 6
 #define CR_SCCR_C_MASK 0x000000C0
-#define CR_SCCR_B_BIT 4                                                                              /* GENERATED */
-#define CR_SCCR_B_MASK 0x00000030
+#define CR_SCCR_B_BIT 4
+#define CR_SCCR_B_MASK 0x00000030                                                                    /* GENERATED */
 #define CR_SCCR_R_BIT 2
 #define CR_SCCR_R_MASK 0x0000000C
 #define CR_SCCR_I_BIT 0
@@ -690,8 +729,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_LR_LR_BIT 0
 #define CR_LR_LR_MASK 0xFFFFFFFF
 #define CR_PC 0x20C
-#define CR_PC_PC_BIT 0                                                                               /* GENERATED */
-#define CR_PC_PC_MASK 0xFFFFFFFF
+#define CR_PC_PC_BIT 0
+#define CR_PC_PC_MASK 0xFFFFFFFF                                                                     /* GENERATED */
 #define CR_TH 0x210
 #define CR_TH_TH_BIT 0
 #define CR_TH_TH_MASK 0xFFFFFFFF
@@ -700,8 +739,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_PH_PH_MASK 0xFFFFFFFF
 #define CR_TP 0x218
 #define CR_TP_TP_BIT 0
-#define CR_TP_TP_MASK 0xFFFFFFFF                                                                     /* GENERATED */
-#define CR_TA 0x21C
+#define CR_TP_TP_MASK 0xFFFFFFFF
+#define CR_TA 0x21C                                                                                  /* GENERATED */
 #define CR_TA_TA_BIT 0
 #define CR_TA_TA_MASK 0xFFFFFFFF
 #define CR_BR0 0x220
@@ -710,8 +749,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_BR1 0x224
 #define CR_BR1_BR1_BIT 0
 #define CR_BR1_BR1_MASK 0xFFFFFFFF
-#define CR_BR2 0x228                                                                                 /* GENERATED */
-#define CR_BR2_BR2_BIT 0
+#define CR_BR2 0x228
+#define CR_BR2_BR2_BIT 0                                                                             /* GENERATED */
 #define CR_BR2_BR2_MASK 0xFFFFFFFF
 #define CR_BR3 0x22C
 #define CR_BR3_BR3_BIT 0
@@ -720,8 +759,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DCR_D_BIT 31
 #define CR_DCR_D_MASK 0x80000000
 #define CR_DCR_J_BIT 30
-#define CR_DCR_J_MASK 0x40000000                                                                     /* GENERATED */
-#define CR_DCR_I_BIT 28
+#define CR_DCR_J_MASK 0x40000000
+#define CR_DCR_I_BIT 28                                                                              /* GENERATED */
 #define CR_DCR_I_MASK 0x10000000
 #define CR_DCR_E_BIT 27
 #define CR_DCR_E_MASK 0x08000000
@@ -730,8 +769,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DCR_S_BIT 25
 #define CR_DCR_S_MASK 0x02000000
 #define CR_DCR_B_BIT 24
-#define CR_DCR_B_MASK 0x01000000                                                                     /* GENERATED */
-#define CR_DCR_CAUSE_BIT 16
+#define CR_DCR_B_MASK 0x01000000
+#define CR_DCR_CAUSE_BIT 16                                                                          /* GENERATED */
 #define CR_DCR_CAUSE_MASK 0x00FF0000
 #define CR_DCRC 0x231
 #define CR_DCR_BR3_BIT 12
@@ -740,8 +779,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DCR_BR2_MASK 0x00000300
 #define CR_DCR_BR1_BIT 4
 #define CR_DCR_BR1_MASK 0x00000030
-#define CR_DCR_BR0_BIT 0                                                                             /* GENERATED */
-#define CR_DCR_BR0_MASK 0x00000003
+#define CR_DCR_BR0_BIT 0
+#define CR_DCR_BR0_MASK 0x00000003                                                                   /* GENERATED */
 #define CR_DCR2 0x234
 #define CR_DCR2_RESULT_BIT 24
 #define CR_DCR2_RESULT_MASK 0xFF000000
@@ -750,8 +789,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DCR2_TRCAP_MASK 0x0000FF00
 #define CR_DCR2_T_BIT 7
 #define CR_DCR2_T_MASK 0x00000080
-#define CR_DCR2_M_BIT 6                                                                              /* GENERATED */
-#define CR_DCR2_M_MASK 0x00000040
+#define CR_DCR2_M_BIT 6
+#define CR_DCR2_M_MASK 0x00000040                                                                    /* GENERATED */
 #define CR_DCR2_R_BIT 5
 #define CR_DCR2_R_MASK 0x00000020
 #define CR_DCR2_C_BIT 4
@@ -760,8 +799,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DCR2_I_MASK 0x00000008
 #define CR_DCR2_E_BIT 0
 #define CR_DCR2_E_MASK 0x00000001
-#define CR_CRR 0x240                                                                                 /* GENERATED */
-#define CR_CRR_CRR_BIT 0
+#define CR_CRR 0x240
+#define CR_CRR_CRR_BIT 0                                                                             /* GENERATED */
 #define CR_CRR_CRR_MASK 0xFFFFFFFF
 #define CR_WCFG 0x248
 #define CR_WCFG_WCFG_BIT 0
@@ -770,8 +809,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SAWC_RUN_BIT 1
 #define CR_SAWC_RUN_MASK 0x000000FE
 #define CR_SAWC_S_BIT 0
-#define CR_SAWC_S_MASK 0x00000001                                                                    /* GENERATED */
-#define CR_SCRP1 0x250
+#define CR_SAWC_S_MASK 0x00000001
+#define CR_SCRP1 0x250                                                                               /* GENERATED */
 #define CR_SCRP1_SCRP1_BIT 0
 #define CR_SCRP1_SCRP1_MASK 0xFFFFFFFF
 #define CR_SCRP2 0x254
@@ -780,8 +819,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SCRP3 0x258
 #define CR_SCRP3_SCRP3_BIT 0
 #define CR_SCRP3_SCRP3_MASK 0xFFFFFFFF
-#define CR_SCRP4 0x25C                                                                               /* GENERATED */
-#define CR_SCRP4_SCRP4_BIT 0
+#define CR_SCRP4 0x25C
+#define CR_SCRP4_SCRP4_BIT 0                                                                         /* GENERATED */
 #define CR_SCRP4_SCRP4_MASK 0xFFFFFFFF
 #define CR_RSC 0x260
 #define CR_RSC_RSC_BIT 0
@@ -790,8 +829,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_CSC_CSC_BIT 0
 #define CR_CSC_CSC_MASK 0xFFFFFFFF
 #define CR_RSC1 0x268
-#define CR_RSC1_RSC1_BIT 0                                                                           /* GENERATED */
-#define CR_RSC1_RSC1_MASK 0xFFFFFFFF
+#define CR_RSC1_RSC1_BIT 0
+#define CR_RSC1_RSC1_MASK 0xFFFFFFFF                                                                 /* GENERATED */
 #define CR_RSC2 0x270
 #define CR_RSC2_RSC2_BIT 0
 #define CR_RSC2_RSC2_MASK 0xFFFFFFFF
@@ -800,8 +839,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_RSC3_RSC3_MASK 0xFFFFFFFF
 #define CR_RSC4 0x280
 #define CR_RSC4_RSC4_BIT 0
-#define CR_RSC4_RSC4_MASK 0xFFFFFFFF                                                                 /* GENERATED */
-#define CR_RSC5 0x288
+#define CR_RSC4_RSC4_MASK 0xFFFFFFFF
+#define CR_RSC5 0x288                                                                                /* GENERATED */
 #define CR_RSC5_RSC5_BIT 0
 #define CR_RSC5_RSC5_MASK 0xFFFFFFFF
 #define CR_RSC6 0x290
@@ -810,8 +849,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_RSC7 0x298
 #define CR_RSC7_RSC7_BIT 0
 #define CR_RSC7_RSC7_MASK 0xFFFFFFFF
-#define CR_CSC1 0x26C                                                                                /* GENERATED */
-#define CR_CSC1_CSC1_BIT 0
+#define CR_CSC1 0x26C
+#define CR_CSC1_CSC1_BIT 0                                                                           /* GENERATED */
 #define CR_CSC1_CSC1_MASK 0xFFFFFFFF
 #define CR_CSC2 0x274
 #define CR_CSC2_CSC2_BIT 0
@@ -820,8 +859,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_CSC3_CSC3_BIT 0
 #define CR_CSC3_CSC3_MASK 0xFFFFFFFF
 #define CR_CSC4 0x284
-#define CR_CSC4_CSC4_BIT 0                                                                           /* GENERATED */
-#define CR_CSC4_CSC4_MASK 0xFFFFFFFF
+#define CR_CSC4_CSC4_BIT 0
+#define CR_CSC4_CSC4_MASK 0xFFFFFFFF                                                                 /* GENERATED */
 #define CR_CSC5 0x28C
 #define CR_CSC5_CSC5_BIT 0
 #define CR_CSC5_CSC5_MASK 0xFFFFFFFF
@@ -830,8 +869,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_CSC6_CSC6_MASK 0xFFFFFFFF
 #define CR_CSC7 0x29C
 #define CR_CSC7_CSC7_BIT 0
-#define CR_CSC7_CSC7_MASK 0xFFFFFFFF                                                                 /* GENERATED */
-#define CR_CYC 0x300
+#define CR_CSC7_CSC7_MASK 0xFFFFFFFF
+#define CR_CYC 0x300                                                                                 /* GENERATED */
 #define CR_CYC_CYC3_BIT 24
 #define CR_CYC_CYC3_MASK 0xFF000000
 #define CR_CYC_CYC2_BIT 16
@@ -840,8 +879,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_CYC_CYC1_MASK 0x0000FF00
 #define CR_CYC_CYC0_BIT 0
 #define CR_CYC_CYC0_MASK 0x000000FF
-#define CR_CYCH 0x304                                                                                /* GENERATED */
-#define CR_CYCH_CYC6_BIT 24
+#define CR_CYCH 0x304
+#define CR_CYCH_CYC6_BIT 24                                                                          /* GENERATED */
 #define CR_CYCH_CYC6_MASK 0xFF000000
 #define CR_CYCH_CYC5_BIT 16
 #define CR_CYCH_CYC5_MASK 0x00FF0000
@@ -850,8 +889,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_CYCH_CYC3_BIT 0
 #define CR_CYCH_CYC3_MASK 0x000000FF
 #define CR_STALL 0x308
-#define CR_STALL_STALL3_BIT 24                                                                       /* GENERATED */
-#define CR_STALL_STALL3_MASK 0xFF000000
+#define CR_STALL_STALL3_BIT 24
+#define CR_STALL_STALL3_MASK 0xFF000000                                                              /* GENERATED */
 #define CR_STALL_STALL2_BIT 16
 #define CR_STALL_STALL2_MASK 0x00FF0000
 #define CR_STALL_STALL1_BIT 8
@@ -860,8 +899,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_STALL_STALL0_MASK 0x000000FF
 #define CR_STALLH 0x30C
 #define CR_STALLH_STALL6_BIT 24
-#define CR_STALLH_STALL6_MASK 0xFF000000                                                             /* GENERATED */
-#define CR_STALLH_STALL5_BIT 16
+#define CR_STALLH_STALL6_MASK 0xFF000000
+#define CR_STALLH_STALL5_BIT 16                                                                      /* GENERATED */
 #define CR_STALLH_STALL5_MASK 0x00FF0000
 #define CR_STALLH_STALL4_BIT 8
 #define CR_STALLH_STALL4_MASK 0x0000FF00
@@ -870,8 +909,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_BUN 0x310
 #define CR_BUN_BUN3_BIT 24
 #define CR_BUN_BUN3_MASK 0xFF000000
-#define CR_BUN_BUN2_BIT 16                                                                           /* GENERATED */
-#define CR_BUN_BUN2_MASK 0x00FF0000
+#define CR_BUN_BUN2_BIT 16
+#define CR_BUN_BUN2_MASK 0x00FF0000                                                                  /* GENERATED */
 #define CR_BUN_BUN1_BIT 8
 #define CR_BUN_BUN1_MASK 0x0000FF00
 #define CR_BUN_BUN0_BIT 0
@@ -880,8 +919,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_BUNH_BUN6_BIT 24
 #define CR_BUNH_BUN6_MASK 0xFF000000
 #define CR_BUNH_BUN5_BIT 16
-#define CR_BUNH_BUN5_MASK 0x00FF0000                                                                 /* GENERATED */
-#define CR_BUNH_BUN4_BIT 8
+#define CR_BUNH_BUN5_MASK 0x00FF0000
+#define CR_BUNH_BUN4_BIT 8                                                                           /* GENERATED */
 #define CR_BUNH_BUN4_MASK 0x0000FF00
 #define CR_BUNH_BUN3_BIT 0
 #define CR_BUNH_BUN3_MASK 0x000000FF
@@ -890,8 +929,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SYL_SYL3_MASK 0xFF000000
 #define CR_SYL_SYL2_BIT 16
 #define CR_SYL_SYL2_MASK 0x00FF0000
-#define CR_SYL_SYL1_BIT 8                                                                            /* GENERATED */
-#define CR_SYL_SYL1_MASK 0x0000FF00
+#define CR_SYL_SYL1_BIT 8
+#define CR_SYL_SYL1_MASK 0x0000FF00                                                                  /* GENERATED */
 #define CR_SYL_SYL0_BIT 0
 #define CR_SYL_SYL0_MASK 0x000000FF
 #define CR_SYLH 0x31C
@@ -900,8 +939,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_SYLH_SYL5_BIT 16
 #define CR_SYLH_SYL5_MASK 0x00FF0000
 #define CR_SYLH_SYL4_BIT 8
-#define CR_SYLH_SYL4_MASK 0x0000FF00                                                                 /* GENERATED */
-#define CR_SYLH_SYL3_BIT 0
+#define CR_SYLH_SYL4_MASK 0x0000FF00
+#define CR_SYLH_SYL3_BIT 0                                                                           /* GENERATED */
 #define CR_SYLH_SYL3_MASK 0x000000FF
 #define CR_NOP 0x320
 #define CR_NOP_NOP3_BIT 24
@@ -910,8 +949,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_NOP_NOP2_MASK 0x00FF0000
 #define CR_NOP_NOP1_BIT 8
 #define CR_NOP_NOP1_MASK 0x0000FF00
-#define CR_NOP_NOP0_BIT 0                                                                            /* GENERATED */
-#define CR_NOP_NOP0_MASK 0x000000FF
+#define CR_NOP_NOP0_BIT 0
+#define CR_NOP_NOP0_MASK 0x000000FF                                                                  /* GENERATED */
 #define CR_NOPH 0x324
 #define CR_NOPH_NOP6_BIT 24
 #define CR_NOPH_NOP6_MASK 0xFF000000
@@ -920,8 +959,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_NOPH_NOP4_BIT 8
 #define CR_NOPH_NOP4_MASK 0x0000FF00
 #define CR_NOPH_NOP3_BIT 0
-#define CR_NOPH_NOP3_MASK 0x000000FF                                                                 /* GENERATED */
-#define CR_IACC 0x328
+#define CR_NOPH_NOP3_MASK 0x000000FF
+#define CR_IACC 0x328                                                                                /* GENERATED */
 #define CR_IACC_IACC3_BIT 24
 #define CR_IACC_IACC3_MASK 0xFF000000
 #define CR_IACC_IACC2_BIT 16
@@ -930,8 +969,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_IACC_IACC1_MASK 0x0000FF00
 #define CR_IACC_IACC0_BIT 0
 #define CR_IACC_IACC0_MASK 0x000000FF
-#define CR_IACCH 0x32C                                                                               /* GENERATED */
-#define CR_IACCH_IACC6_BIT 24
+#define CR_IACCH 0x32C
+#define CR_IACCH_IACC6_BIT 24                                                                        /* GENERATED */
 #define CR_IACCH_IACC6_MASK 0xFF000000
 #define CR_IACCH_IACC5_BIT 16
 #define CR_IACCH_IACC5_MASK 0x00FF0000
@@ -940,8 +979,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_IACCH_IACC3_BIT 0
 #define CR_IACCH_IACC3_MASK 0x000000FF
 #define CR_IMISS 0x330
-#define CR_IMISS_IMISS3_BIT 24                                                                       /* GENERATED */
-#define CR_IMISS_IMISS3_MASK 0xFF000000
+#define CR_IMISS_IMISS3_BIT 24
+#define CR_IMISS_IMISS3_MASK 0xFF000000                                                              /* GENERATED */
 #define CR_IMISS_IMISS2_BIT 16
 #define CR_IMISS_IMISS2_MASK 0x00FF0000
 #define CR_IMISS_IMISS1_BIT 8
@@ -950,8 +989,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_IMISS_IMISS0_MASK 0x000000FF
 #define CR_IMISSH 0x334
 #define CR_IMISSH_IMISS6_BIT 24
-#define CR_IMISSH_IMISS6_MASK 0xFF000000                                                             /* GENERATED */
-#define CR_IMISSH_IMISS5_BIT 16
+#define CR_IMISSH_IMISS6_MASK 0xFF000000
+#define CR_IMISSH_IMISS5_BIT 16                                                                      /* GENERATED */
 #define CR_IMISSH_IMISS5_MASK 0x00FF0000
 #define CR_IMISSH_IMISS4_BIT 8
 #define CR_IMISSH_IMISS4_MASK 0x0000FF00
@@ -960,8 +999,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DRACC 0x338
 #define CR_DRACC_DRACC3_BIT 24
 #define CR_DRACC_DRACC3_MASK 0xFF000000
-#define CR_DRACC_DRACC2_BIT 16                                                                       /* GENERATED */
-#define CR_DRACC_DRACC2_MASK 0x00FF0000
+#define CR_DRACC_DRACC2_BIT 16
+#define CR_DRACC_DRACC2_MASK 0x00FF0000                                                              /* GENERATED */
 #define CR_DRACC_DRACC1_BIT 8
 #define CR_DRACC_DRACC1_MASK 0x0000FF00
 #define CR_DRACC_DRACC0_BIT 0
@@ -970,8 +1009,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DRACCH_DRACC6_BIT 24
 #define CR_DRACCH_DRACC6_MASK 0xFF000000
 #define CR_DRACCH_DRACC5_BIT 16
-#define CR_DRACCH_DRACC5_MASK 0x00FF0000                                                             /* GENERATED */
-#define CR_DRACCH_DRACC4_BIT 8
+#define CR_DRACCH_DRACC5_MASK 0x00FF0000
+#define CR_DRACCH_DRACC4_BIT 8                                                                       /* GENERATED */
 #define CR_DRACCH_DRACC4_MASK 0x0000FF00
 #define CR_DRACCH_DRACC3_BIT 0
 #define CR_DRACCH_DRACC3_MASK 0x000000FF
@@ -980,8 +1019,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DRMISS_DRMISS3_MASK 0xFF000000
 #define CR_DRMISS_DRMISS2_BIT 16
 #define CR_DRMISS_DRMISS2_MASK 0x00FF0000
-#define CR_DRMISS_DRMISS1_BIT 8                                                                      /* GENERATED */
-#define CR_DRMISS_DRMISS1_MASK 0x0000FF00
+#define CR_DRMISS_DRMISS1_BIT 8
+#define CR_DRMISS_DRMISS1_MASK 0x0000FF00                                                            /* GENERATED */
 #define CR_DRMISS_DRMISS0_BIT 0
 #define CR_DRMISS_DRMISS0_MASK 0x000000FF
 #define CR_DRMISSH 0x344
@@ -990,8 +1029,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DRMISSH_DRMISS5_BIT 16
 #define CR_DRMISSH_DRMISS5_MASK 0x00FF0000
 #define CR_DRMISSH_DRMISS4_BIT 8
-#define CR_DRMISSH_DRMISS4_MASK 0x0000FF00                                                           /* GENERATED */
-#define CR_DRMISSH_DRMISS3_BIT 0
+#define CR_DRMISSH_DRMISS4_MASK 0x0000FF00
+#define CR_DRMISSH_DRMISS3_BIT 0                                                                     /* GENERATED */
 #define CR_DRMISSH_DRMISS3_MASK 0x000000FF
 #define CR_DWACC 0x348
 #define CR_DWACC_DWACC3_BIT 24
@@ -1000,8 +1039,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DWACC_DWACC2_MASK 0x00FF0000
 #define CR_DWACC_DWACC1_BIT 8
 #define CR_DWACC_DWACC1_MASK 0x0000FF00
-#define CR_DWACC_DWACC0_BIT 0                                                                        /* GENERATED */
-#define CR_DWACC_DWACC0_MASK 0x000000FF
+#define CR_DWACC_DWACC0_BIT 0
+#define CR_DWACC_DWACC0_MASK 0x000000FF                                                              /* GENERATED */
 #define CR_DWACCH 0x34C
 #define CR_DWACCH_DWACC6_BIT 24
 #define CR_DWACCH_DWACC6_MASK 0xFF000000
@@ -1010,8 +1049,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DWACCH_DWACC4_BIT 8
 #define CR_DWACCH_DWACC4_MASK 0x0000FF00
 #define CR_DWACCH_DWACC3_BIT 0
-#define CR_DWACCH_DWACC3_MASK 0x000000FF                                                             /* GENERATED */
-#define CR_DWMISS 0x350
+#define CR_DWACCH_DWACC3_MASK 0x000000FF
+#define CR_DWMISS 0x350                                                                              /* GENERATED */
 #define CR_DWMISS_DWMISS3_BIT 24
 #define CR_DWMISS_DWMISS3_MASK 0xFF000000
 #define CR_DWMISS_DWMISS2_BIT 16
@@ -1020,8 +1059,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DWMISS_DWMISS1_MASK 0x0000FF00
 #define CR_DWMISS_DWMISS0_BIT 0
 #define CR_DWMISS_DWMISS0_MASK 0x000000FF
-#define CR_DWMISSH 0x354                                                                             /* GENERATED */
-#define CR_DWMISSH_DWMISS6_BIT 24
+#define CR_DWMISSH 0x354
+#define CR_DWMISSH_DWMISS6_BIT 24                                                                    /* GENERATED */
 #define CR_DWMISSH_DWMISS6_MASK 0xFF000000
 #define CR_DWMISSH_DWMISS5_BIT 16
 #define CR_DWMISSH_DWMISS5_MASK 0x00FF0000
@@ -1030,8 +1069,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DWMISSH_DWMISS3_BIT 0
 #define CR_DWMISSH_DWMISS3_MASK 0x000000FF
 #define CR_DBYPASS 0x358
-#define CR_DBYPASS_DBYPASS3_BIT 24                                                                   /* GENERATED */
-#define CR_DBYPASS_DBYPASS3_MASK 0xFF000000
+#define CR_DBYPASS_DBYPASS3_BIT 24
+#define CR_DBYPASS_DBYPASS3_MASK 0xFF000000                                                          /* GENERATED */
 #define CR_DBYPASS_DBYPASS2_BIT 16
 #define CR_DBYPASS_DBYPASS2_MASK 0x00FF0000
 #define CR_DBYPASS_DBYPASS1_BIT 8
@@ -1040,8 +1079,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DBYPASS_DBYPASS0_MASK 0x000000FF
 #define CR_DBYPASSH 0x35C
 #define CR_DBYPASSH_DBYPASS6_BIT 24
-#define CR_DBYPASSH_DBYPASS6_MASK 0xFF000000                                                         /* GENERATED */
-#define CR_DBYPASSH_DBYPASS5_BIT 16
+#define CR_DBYPASSH_DBYPASS6_MASK 0xFF000000
+#define CR_DBYPASSH_DBYPASS5_BIT 16                                                                  /* GENERATED */
 #define CR_DBYPASSH_DBYPASS5_MASK 0x00FF0000
 #define CR_DBYPASSH_DBYPASS4_BIT 8
 #define CR_DBYPASSH_DBYPASS4_MASK 0x0000FF00
@@ -1050,8 +1089,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DWBUF 0x360
 #define CR_DWBUF_DWBUF3_BIT 24
 #define CR_DWBUF_DWBUF3_MASK 0xFF000000
-#define CR_DWBUF_DWBUF2_BIT 16                                                                       /* GENERATED */
-#define CR_DWBUF_DWBUF2_MASK 0x00FF0000
+#define CR_DWBUF_DWBUF2_BIT 16
+#define CR_DWBUF_DWBUF2_MASK 0x00FF0000                                                              /* GENERATED */
 #define CR_DWBUF_DWBUF1_BIT 8
 #define CR_DWBUF_DWBUF1_MASK 0x0000FF00
 #define CR_DWBUF_DWBUF0_BIT 0
@@ -1060,18 +1099,218 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define CR_DWBUFH_DWBUF6_BIT 24
 #define CR_DWBUFH_DWBUF6_MASK 0xFF000000
 #define CR_DWBUFH_DWBUF5_BIT 16
-#define CR_DWBUFH_DWBUF5_MASK 0x00FF0000                                                             /* GENERATED */
-#define CR_DWBUFH_DWBUF4_BIT 8
+#define CR_DWBUFH_DWBUF5_MASK 0x00FF0000
+#define CR_DWBUFH_DWBUF4_BIT 8                                                                       /* GENERATED */
 #define CR_DWBUFH_DWBUF4_MASK 0x0000FF00
 #define CR_DWBUFH_DWBUF3_BIT 0
 #define CR_DWBUFH_DWBUF3_MASK 0x000000FF
 
 
 //==============================================================================
+// Misc. defines
+//==============================================================================
+
+#define BRANCH_OFFS_SHIFT 3                                                                          /* GENERATED */
+#define RVEX_CORE_TAG 0x7276657873696D
+
+
+//==============================================================================
+// Opcode decoding table
+//==============================================================================
+
+typedef enum {
+    D_FUNCSEL_MEM,
+    D_FUNCSEL_MUL,                                                                                   /* GENERATED */
+    D_FUNCSEL_ALU,
+    D_FUNCSEL_PCP1
+} datapathFuncSel_t;
+
+typedef struct {
+    datapathFuncSel_t funcSel;
+    unsigned int op3LinkReg : 1;
+    unsigned int stackOp : 1;
+    unsigned int op1LinkReg : 1;
+    unsigned int gpRegWE : 1;                                                                        /* GENERATED */
+    unsigned int op3BranchRegs : 1;
+    unsigned int isNOP : 1;
+    unsigned int linkWE : 1;
+    unsigned int allBrRegsWE : 1;
+    unsigned int brFmt : 1;
+    unsigned int brRegWE : 1;
+    unsigned int isLIMMH : 1;
+    unsigned int isTrap : 1;
+} datapathCtrlSignals_t;
+                                                                                                     /* GENERATED */
+typedef enum {
+    A_BITWISEOP_SET_BIT,
+    A_BITWISEOP_BITW_XOR,
+    A_BITWISEOP_BITW_AND,
+    A_BITWISEOP_BITW_OR
+} aluBitwiseOp_t;
+
+typedef enum {
+    A_OP1MUX_EXTEND32,
+    A_OP1MUX_SHL1,                                                                                   /* GENERATED */
+    A_OP1MUX_SHL3,
+    A_OP1MUX_SHL2,
+    A_OP1MUX_EXTEND16,
+    A_OP1MUX_SHL4,
+    A_OP1MUX_EXTEND32INV,
+    A_OP1MUX_EXTEND8
+} aluOp1Mux_t;
+
+typedef enum {
+    A_OP2MUX_ZERO,                                                                                   /* GENERATED */
+    A_OP2MUX_EXTEND32
+} aluOp2Mux_t;
+
+typedef enum {
+    A_INTRESULTMUX_CLZ,
+    A_INTRESULTMUX_OP_SEL,
+    A_INTRESULTMUX_BITWISE,
+    A_INTRESULTMUX_BOOL,
+    A_INTRESULTMUX_ADDER,
+    A_INTRESULTMUX_SHIFTER                                                                           /* GENERATED */
+} aluIntResultMux_t;
+
+typedef enum {
+    A_BRRESULTMUX_CMP_GT,
+    A_BRRESULTMUX_CMP_LE,
+    A_BRRESULTMUX_LOGIC_OR,
+    A_BRRESULTMUX_TBIT,
+    A_BRRESULTMUX_LOGIC_NOR,
+    A_BRRESULTMUX_LOGIC_AND,
+    A_BRRESULTMUX_CMP_NE,                                                                            /* GENERATED */
+    A_BRRESULTMUX_CARRY_OUT,
+    A_BRRESULTMUX_CMP_GE,
+    A_BRRESULTMUX_LOGIC_NAND,
+    A_BRRESULTMUX_CMP_LT,
+    A_BRRESULTMUX_PASS,
+    A_BRRESULTMUX_TBITF,
+    A_BRRESULTMUX_CMP_EQ,
+    A_BRRESULTMUX_DIVS
+} aluBrResultMux_t;
+                                                                                                     /* GENERATED */
+typedef enum {
+    A_OPBRMUX_TRUE,
+    A_OPBRMUX_INVERT,
+    A_OPBRMUX_FALSE,
+    A_OPBRMUX_PASS
+} aluOpBrMux_t;
+
+typedef struct {
+    aluBitwiseOp_t bitwiseOp;
+    aluOp1Mux_t op1Mux;                                                                              /* GENERATED */
+    aluOp2Mux_t op2Mux;
+    aluIntResultMux_t intResultMux;
+    aluBrResultMux_t brResultMux;
+    aluOpBrMux_t opBrMux;
+    unsigned int compare : 1;
+    unsigned int shiftLeft : 1;
+    unsigned int unsignedOp : 1;
+    unsigned int divs : 1;
+} aluCtrlSignals_t;
+                                                                                                     /* GENERATED */
+typedef struct {
+    unsigned int isBranchInstruction : 1;
+    unsigned int stop : 1;
+    unsigned int branchIfFalse : 1;
+    unsigned int branchToLink : 1;
+    unsigned int link : 1;
+    unsigned int branchIfTrue : 1;
+    unsigned int RFI : 1;
+} branchCtrlSignals_t;
+                                                                                                     /* GENERATED */
+typedef enum {
+    M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD,
+    M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE,
+    M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD
+} memoryAccessSizeBLog2_t;
+
+typedef struct {
+    memoryAccessSizeBLog2_t accessSizeBLog2;
+    unsigned int isMemoryInstruction : 1;
+    unsigned int unsignedOp : 1;                                                                     /* GENERATED */
+    unsigned int readEnable : 1;
+    unsigned int writeEnable : 1;
+} memoryCtrlSignals_t;
+
+typedef enum {
+    U_RESULTSEL_SHR32,
+    U_RESULTSEL_SHL16,
+    U_RESULTSEL_SHR16,
+    U_RESULTSEL_PASS
+} multiplierResultSel_t;                                                                             /* GENERATED */
+
+typedef enum {
+    U_OP1SEL_HIGH_HALF,
+    U_OP1SEL_WORD,
+    U_OP1SEL_LOW_HALF
+} multiplierOp1sel_t;
+
+typedef enum {
+    U_OP2SEL_HIGH_HALF,
+    U_OP2SEL_LOW_HALF                                                                                /* GENERATED */
+} multiplierOp2sel_t;
+
+typedef struct {
+    multiplierResultSel_t resultSel;
+    multiplierOp1sel_t op1sel;
+    multiplierOp2sel_t op2sel;
+    unsigned int op2unsigned : 1;
+    unsigned int op1unsigned : 1;
+    unsigned int isMultiplyInstruction : 1;
+} multiplierCtrlSignals_t;                                                                           /* GENERATED */
+
+typedef struct {
+    uint8_t valid[2];
+    datapathCtrlSignals_t datapathCtrl;
+    aluCtrlSignals_t aluCtrl;
+    branchCtrlSignals_t branchCtrl;
+    memoryCtrlSignals_t memoryCtrl;
+    multiplierCtrlSignals_t multiplierCtrl;
+} opcodeTableEntry_t;
+                                                                                                     /* GENERATED */
+extern const opcodeTableEntry_t OPCODE_TABLE[256];
+
+
+//==============================================================================
+// Traps
+//==============================================================================
+
+typedef struct trapTableEntry_t {
+    const char *name;
+    unsigned int isDebugTrap : 1;                                                                    /* GENERATED */
+    unsigned int isInterrupt : 1;
+} trapTableEntry_t;
+
+extern const trapTableEntry_t TRAP_TABLE[256];
+
+#define TRAP_NONE 0x00
+#define TRAP_INVALID_OP 0x01
+#define TRAP_MISALIGNED_BRANCH 0x02
+#define TRAP_FETCH_FAULT 0x03
+#define TRAP_MISALIGNED_ACCESS 0x04                                                                  /* GENERATED */
+#define TRAP_DMEM_FAULT 0x05
+#define TRAP_LIMMH_FAULT 0x06
+#define TRAP_EXT_INTERRUPT 0x07
+#define TRAP_STOP 0x08
+#define TRAP_SOFT_CTXT_SWITCH 0x09
+#define TRAP_SOFT_DEBUG_0 0xF8
+#define TRAP_SOFT_DEBUG_1 0xF9
+#define TRAP_SOFT_DEBUG_2 0xFA
+#define TRAP_STEP_COMPLETE 0xFB
+#define TRAP_HW_BREAKPOINT_0 0xFC                                                                    /* GENERATED */
+#define TRAP_HW_BREAKPOINT_1 0xFD
+#define TRAP_HW_BREAKPOINT_2 0xFE
+#define TRAP_HW_BREAKPOINT_3 0xFF
+
+
+//==============================================================================
 // Pipeline definitions
 //==============================================================================
-                                                                                                     /* GENERATED */
-#define S_LAST 6
+
+#define S_LAST 6                                                                                     /* GENERATED */
 #define S_BR 3
 #define S_FW 3
 #define S_SRD 3
@@ -1080,8 +1319,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define S_SWB 5
 #define S_STOP 2
 #define S_WB 5
-#define L_MUL 2                                                                                      /* GENERATED */
-#define L_BRK 0
+#define L_MUL 2
+#define L_BRK 0                                                                                      /* GENERATED */
 #define S_BTGT 2
 #define L_ALU1 0
 #define S_TRAP 2
@@ -1090,8 +1329,8 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define L_ALU 1
 #define S_BRK 4
 #define S_PCP1 1
-#define L_MUL2 1                                                                                     /* GENERATED */
-#define L_MEM 1
+#define L_MUL2 1
+#define L_MEM 1                                                                                      /* GENERATED */
 #define S_LTRP 5
 #define S_RD 2
 #define L_RD 1
@@ -1100,7 +1339,7 @@ extern const opcodeTableEntry_t OPCODE_TABLE[256];                              
 #define S_MUL 3
 #define S_IF 1
 #define S_LIMM 2
-#define L_MUL1 1                                                                                     /* GENERATED */
-#define L_IF_MEM 1
+#define L_MUL1 1
+#define L_IF_MEM 1                                                                                   /* GENERATED */
 #define S_SFW 3
 

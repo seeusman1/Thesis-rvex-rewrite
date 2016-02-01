@@ -50,9 +50,3007 @@
 ///
 
 //==============================================================================
-// Opcode decoding table                                                                             /* GENERATED */
+// Control registers                                                                                 /* GENERATED */
 //==============================================================================
 
+
+/**
+ * Simulates the control register logic. This function is generated.
+ */
+#pragma GCC diagnostic ignored "-Woverflow"
+void Core::simulateControlRegLogic() {
+
+    // Make CFG available to the code, as it is in VHDL.                                             /* GENERATED */
+    const cfgVect_t &CFG = generics.CFG;
+
+    // Make a copy of the current state, so registers behave the way they should.
+    // Hopefully gcc will optimize the shit out of this.
+    globalRegState_t oldGbregState = st.gbregState;
+    contextRegState_t oldCxregState[CORE_MAX_CONTEXTS];
+    for (int ctxt = 0; ctxt < (1 << CFG.numContextsLog2); ctxt++) {
+        oldCxregState[ctxt] = st.cx[ctxt].cxregState;
+    }
+                                                                                                     /* GENERATED */
+    if (in.reset & 1) {
+
+        // Reset code.
+        st.cregIface.gbreg_dbgReadData = 0;
+        st.cregIface.gbreg2rv_reset = !!(0ull);
+        st.cregIface.gbreg2cfg_requestEnable = !!(0ull);
+        st.gbregState.cr_bcrr_bcrr_r = 0ull;
+        st.gbregState.cr_cnt_cnt_r = 0ull;
+        for (int lg = 0; lg < (1 << CFG.numLaneGroupsLog2); lg++) {
+            st.cregIface.gbreg_coreReadData[lg] = 0;                                                 /* GENERATED */
+        }
+        for (int ctxt = 0; ctxt < (1 << CFG.numContextsLog2); ctxt++) {
+            st.cx[ctxt].cregIface.cxreg_readData = 0;
+            st.cx[ctxt].cregIface.cxreg2rv_reset = !!(0ull);
+            st.cx[ctxt].cregIface.cxreg2cxplif_handlingDebugTrap = !!(0ull);
+            st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints = (breakpointInfo_t) {
+                /* addr */ {
+                    /* 0 */ 0ull,
+                    /* 1 */ 0ull,
+                    /* 2 */ 0ull,                                                                    /* GENERATED */
+                    /* 3 */ 0ull
+                },
+                /* cfg */ {
+                    /* 0 */ 0ull,
+                    /* 1 */ 0ull,
+                    /* 2 */ 0ull,
+                    /* 3 */ 0ull
+                }
+            };
+            st.cx[ctxt].cregIface.cxreg2cfg_requestEnable = !!(0ull);                                /* GENERATED */
+            st.cx[ctxt].cxregState.cr_ccr_cause_r = 0ull;
+            st.cx[ctxt].cxregState.cr_ccr_branch_r = 0ull;
+            st.cx[ctxt].cxregState.cr_ccr_k_r = !!(1ull);
+            st.cx[ctxt].cxregState.cr_ccr_c_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_ccr_b_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_ccr_r_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_ccr_i_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_sccr_k_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_sccr_c_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_sccr_b_r = !!(0ull);                                           /* GENERATED */
+            st.cx[ctxt].cxregState.cr_sccr_r_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_sccr_i_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_lr_lr_r = 0ull;
+            st.cx[ctxt].cxregState.cr_pc_pc_r = 0ull;
+            st.cx[ctxt].cxregState.cr_th_th_r = 0ull;
+            st.cx[ctxt].cxregState.cr_ph_ph_r = 0ull;
+            st.cx[ctxt].cxregState.cr_tp_tp_r = 0ull;
+            st.cx[ctxt].cxregState.cr_ta_ta_r = 0ull;
+            st.cx[ctxt].cxregState.cr_br0_br0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_br1_br1_r = 0ull;                                              /* GENERATED */
+            st.cx[ctxt].cxregState.cr_br2_br2_r = 0ull;
+            st.cx[ctxt].cxregState.cr_br3_br3_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dcr_d_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr_j_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr_e_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr_r_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr_s_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr_b_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr_cause_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dcr_br3_r = 0ull;                                              /* GENERATED */
+            st.cx[ctxt].cxregState.cr_dcr_br2_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dcr_br1_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dcr_br0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dcr2_result_r = 255ull;
+            st.cx[ctxt].cxregState.cr_dcr2_t_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr2_m_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr2_r_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr2_c_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr2_i_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_dcr2_e_r = !!(0ull);                                           /* GENERATED */
+            st.cx[ctxt].cxregState.cr_crr_crr_r = 0ull;
+            st.cx[ctxt].cxregState.cr_wcfg_wcfg_r = 0ull;
+            st.cx[ctxt].cxregState.cr_sawc_s_r = !!(0ull);
+            st.cx[ctxt].cxregState.cr_scrp1_scrp1_r = 0ull;
+            st.cx[ctxt].cxregState.cr_scrp2_scrp2_r = 0ull;
+            st.cx[ctxt].cxregState.cr_scrp3_scrp3_r = 0ull;
+            st.cx[ctxt].cxregState.cr_scrp4_scrp4_r = 0ull;
+            st.cx[ctxt].cxregState.cr_rsc_rsc_r = 4294967295ull;
+            st.cx[ctxt].cxregState.cr_csc_csc_r = 4294967295ull;
+            st.cx[ctxt].cxregState.cr_csc_csc_neq = !!(0ull);                                        /* GENERATED */
+            st.cx[ctxt].cxregState.cr_cyc_cyc0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_cyc_cyc0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_stall_stall0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_stall_stall0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_bun_bun0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_bun_bun0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_syl_syl0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_syl_syl0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_nop_nop0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_nop_nop0_r = 0ull;                                             /* GENERATED */
+            st.cx[ctxt].cxregState.cr_iacc_iacc0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_iacc_iacc0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_imiss_imiss0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_imiss_imiss0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dracc_dracc0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dracc_dracc0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_drmiss_drmiss0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_drmiss_drmiss0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dwacc_dwacc0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dwacc_dwacc0_r = 0ull;                                         /* GENERATED */
+            st.cx[ctxt].cxregState.cr_dwmiss_dwmiss0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dwmiss_dwmiss0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dbypass_dbypass0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dbypass_dbypass0_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dwbuf_dwbuf0_add_r = 0ull;
+            st.cx[ctxt].cxregState.cr_dwbuf_dwbuf0_r = 0ull;
+        }
+
+    } else if (in.clkEn & 1) {
+                                                                                                     /* GENERATED */
+        // Global control register file.
+        if (1) {
+
+            // Language-agnostic code declarations.
+            bitvec1_t    cr_gsr_r_write;
+            bitvec1_t    cr_gsr_r_wmask_dbg;
+            bitvec1_t    cr_gsr_r_read;
+            bitvec1_t    cr_gsr_e_read;
+            bitvec1_t    cr_gsr_b_read;
+            bitvec4_t    cr_gsr_rid_read;                                                            /* GENERATED */
+            bitvec32_t   cr_bcrr_bcrr_write;
+            bitvec32_t   cr_bcrr_bcrr_wmask_dbg;
+            bitvec32_t   cr_bcrr_bcrr_read;
+            bitvec32_t   cr_cc_cc_read;
+            bitvec32_t   cr_aff_af_read;
+            bitvec32_t   cr_cnt_cnt_read;
+            bitvec24_t   cr_cnth_cnth_read;
+            bitvec8_t    cr_cnth_cnt_read;
+            bitvec16_t   cr_limc7_borrow15_read;
+            bitvec16_t   cr_limc7_borrow14_read;                                                     /* GENERATED */
+            bitvec16_t   cr_limc6_borrow13_read;
+            bitvec16_t   cr_limc6_borrow12_read;
+            bitvec16_t   cr_limc5_borrow11_read;
+            bitvec16_t   cr_limc5_borrow10_read;
+            bitvec16_t   cr_limc4_borrow9_read;
+            bitvec16_t   cr_limc4_borrow8_read;
+            bitvec16_t   cr_limc3_borrow7_read;
+            bitvec16_t   cr_limc3_borrow6_read;
+            bitvec16_t   cr_limc2_borrow5_read;
+            bitvec16_t   cr_limc2_borrow4_read;                                                      /* GENERATED */
+            bitvec16_t   cr_limc1_borrow3_read;
+            bitvec16_t   cr_limc1_borrow2_read;
+            bitvec16_t   cr_limc0_borrow1_read;
+            bitvec16_t   cr_limc0_borrow0_read;
+            bitvec8_t    cr_sic3_syl15cap_read;
+            natural_t    cr_sic3_syl15cap_lane = (((((4ull) * (3ull))&0x7FFFFFFFull) + (3ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic3_syl15cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic3_syl15cap_revindex = ((cr_sic3_syl15cap_groupMask) - ((cr_sic3_syl15cap_lane) & (cr_sic3_syl15cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic3_syl14cap_read;
+            natural_t    cr_sic3_syl14cap_lane = (((((4ull) * (3ull))&0x7FFFFFFFull) + (2ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull); /* GENERATED */
+            natural_t    cr_sic3_syl14cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic3_syl14cap_revindex = ((cr_sic3_syl14cap_groupMask) - ((cr_sic3_syl14cap_lane) & (cr_sic3_syl14cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic3_syl13cap_read;
+            natural_t    cr_sic3_syl13cap_lane = (((((4ull) * (3ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic3_syl13cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic3_syl13cap_revindex = ((cr_sic3_syl13cap_groupMask) - ((cr_sic3_syl13cap_lane) & (cr_sic3_syl13cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic3_syl12cap_read;
+            natural_t    cr_sic3_syl12cap_lane = (((((4ull) * (3ull))&0x7FFFFFFFull) + (0ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic3_syl12cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic3_syl12cap_revindex = ((cr_sic3_syl12cap_groupMask) - ((cr_sic3_syl12cap_lane) & (cr_sic3_syl12cap_groupMask)))&0x7FFFFFFFull; /* GENERATED */
+            bitvec8_t    cr_sic2_syl11cap_read;
+            natural_t    cr_sic2_syl11cap_lane = (((((4ull) * (2ull))&0x7FFFFFFFull) + (3ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic2_syl11cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic2_syl11cap_revindex = ((cr_sic2_syl11cap_groupMask) - ((cr_sic2_syl11cap_lane) & (cr_sic2_syl11cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic2_syl10cap_read;
+            natural_t    cr_sic2_syl10cap_lane = (((((4ull) * (2ull))&0x7FFFFFFFull) + (2ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic2_syl10cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic2_syl10cap_revindex = ((cr_sic2_syl10cap_groupMask) - ((cr_sic2_syl10cap_lane) & (cr_sic2_syl10cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic2_syl9cap_read;
+            natural_t    cr_sic2_syl9cap_lane = (((((4ull) * (2ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull); /* GENERATED */
+            natural_t    cr_sic2_syl9cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic2_syl9cap_revindex = ((cr_sic2_syl9cap_groupMask) - ((cr_sic2_syl9cap_lane) & (cr_sic2_syl9cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic2_syl8cap_read;
+            natural_t    cr_sic2_syl8cap_lane = (((((4ull) * (2ull))&0x7FFFFFFFull) + (0ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic2_syl8cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic2_syl8cap_revindex = ((cr_sic2_syl8cap_groupMask) - ((cr_sic2_syl8cap_lane) & (cr_sic2_syl8cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic1_syl7cap_read;
+            natural_t    cr_sic1_syl7cap_lane = (((((4ull) * (1ull))&0x7FFFFFFFull) + (3ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic1_syl7cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic1_syl7cap_revindex = ((cr_sic1_syl7cap_groupMask) - ((cr_sic1_syl7cap_lane) & (cr_sic1_syl7cap_groupMask)))&0x7FFFFFFFull; /* GENERATED */
+            bitvec8_t    cr_sic1_syl6cap_read;
+            natural_t    cr_sic1_syl6cap_lane = (((((4ull) * (1ull))&0x7FFFFFFFull) + (2ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic1_syl6cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic1_syl6cap_revindex = ((cr_sic1_syl6cap_groupMask) - ((cr_sic1_syl6cap_lane) & (cr_sic1_syl6cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic1_syl5cap_read;
+            natural_t    cr_sic1_syl5cap_lane = (((((4ull) * (1ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic1_syl5cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic1_syl5cap_revindex = ((cr_sic1_syl5cap_groupMask) - ((cr_sic1_syl5cap_lane) & (cr_sic1_syl5cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic1_syl4cap_read;
+            natural_t    cr_sic1_syl4cap_lane = (((((4ull) * (1ull))&0x7FFFFFFFull) + (0ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull); /* GENERATED */
+            natural_t    cr_sic1_syl4cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic1_syl4cap_revindex = ((cr_sic1_syl4cap_groupMask) - ((cr_sic1_syl4cap_lane) & (cr_sic1_syl4cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic0_syl3cap_read;
+            natural_t    cr_sic0_syl3cap_lane = (((((4ull) * (0ull))&0x7FFFFFFFull) + (3ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic0_syl3cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic0_syl3cap_revindex = ((cr_sic0_syl3cap_groupMask) - ((cr_sic0_syl3cap_lane) & (cr_sic0_syl3cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic0_syl2cap_read;
+            natural_t    cr_sic0_syl2cap_lane = (((((4ull) * (0ull))&0x7FFFFFFFull) + (2ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic0_syl2cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic0_syl2cap_revindex = ((cr_sic0_syl2cap_groupMask) - ((cr_sic0_syl2cap_lane) & (cr_sic0_syl2cap_groupMask)))&0x7FFFFFFFull; /* GENERATED */
+            bitvec8_t    cr_sic0_syl1cap_read;
+            natural_t    cr_sic0_syl1cap_lane = (((((4ull) * (0ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic0_syl1cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic0_syl1cap_revindex = ((cr_sic0_syl1cap_groupMask) - ((cr_sic0_syl1cap_lane) & (cr_sic0_syl1cap_groupMask)))&0x7FFFFFFFull;
+            bitvec8_t    cr_sic0_syl0cap_read;
+            natural_t    cr_sic0_syl0cap_lane = (((((4ull) * (0ull))&0x7FFFFFFFull) + (0ull))&0x7FFFFFFFull) & (((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull);
+            natural_t    cr_sic0_syl0cap_groupMask = ((((1ull) << (((CFG.numLanesLog2) - (CFG.numLaneGroupsLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            natural_t    cr_sic0_syl0cap_revindex = ((cr_sic0_syl0cap_groupMask) - ((cr_sic0_syl0cap_lane) & (cr_sic0_syl0cap_groupMask)))&0x7FFFFFFFull;
+            bitvec4_t    cr_gps0_memar_read;
+            bitvec4_t    cr_gps0_memdc_read;                                                         /* GENERATED */
+            bitvec4_t    cr_gps0_memdr_read;
+            bitvec4_t    cr_gps0_mulc_read;
+            bitvec4_t    cr_gps0_mulr_read;
+            bitvec4_t    cr_gps0_aluc_read;
+            bitvec4_t    cr_gps0_alur_read;
+            bitvec4_t    cr_sps0_memmc_read;
+            bitvec4_t    cr_sps0_memmr_read;
+            bitvec4_t    cr_sps0_memdc_read;
+            bitvec4_t    cr_sps0_memdr_read;
+            bitvec4_t    cr_sps0_brc_read;                                                           /* GENERATED */
+            bitvec4_t    cr_sps0_brr_read;
+            bitvec4_t    cr_sps0_aluc_read;
+            bitvec4_t    cr_sps0_alur_read;
+            bitvec1_t    cr_ext0_t_read;
+            bitvec3_t    cr_ext0_brk_read;
+            bitvec1_t    cr_ext0_c_read;
+            bitvec3_t    cr_ext0_p_read;
+            bitvec1_t    cr_ext0_o_read;
+            bitvec1_t    cr_ext0_l_read;
+            bitvec1_t    cr_ext0_f_read;                                                             /* GENERATED */
+            bitvec4_t    cr_dcfg_ba_read;
+            bitvec4_t    cr_dcfg_nc_read;
+            bitvec4_t    cr_dcfg_ng_read;
+            bitvec4_t    cr_dcfg_nl_read;
+            bitvec8_t    cr_cver1_ver_read;
+            bitvec8_t    cr_cver1_ctag0_read;
+            bitvec8_t    cr_cver1_ctag1_read;
+            bitvec8_t    cr_cver1_ctag2_read;
+            bitvec8_t    cr_cver0_ctag3_read;
+            bitvec8_t    cr_cver0_ctag4_read;                                                        /* GENERATED */
+            bitvec8_t    cr_cver0_ctag5_read;
+            bitvec8_t    cr_cver0_ctag6_read;
+            bitvec8_t    cr_pver1_coid_read;
+            bitvec8_t    cr_pver1_ptag0_read;
+            bitvec8_t    cr_pver1_ptag1_read;
+            bitvec8_t    cr_pver1_ptag2_read;
+            bitvec8_t    cr_pver0_ptag3_read;
+            bitvec8_t    cr_pver0_ptag4_read;
+            bitvec8_t    cr_pver0_ptag5_read;
+            bitvec8_t    cr_pver0_ptag6_read;                                                        /* GENERATED */
+
+            // Bus decoding.
+            data_t bus_writeData = st.cregIface.gbreg_dbgWriteData;
+            data_t bus_writeMaskDbg = 0;
+            if (st.cregIface.gbreg_dbgWriteMask & 1) bus_writeMaskDbg |= 0x000000FF;
+            if (st.cregIface.gbreg_dbgWriteMask & 2) bus_writeMaskDbg |= 0x0000FF00;
+            if (st.cregIface.gbreg_dbgWriteMask & 4) bus_writeMaskDbg |= 0x00FF0000;
+            if (st.cregIface.gbreg_dbgWriteMask & 8) bus_writeMaskDbg |= 0xFF000000;
+            unsigned6_t bus_wordAddr = st.cregIface.gbreg_dbgAddress >> 2;
+            if (st.cregIface.gbreg_dbgAddress < 0) {                                                 /* GENERATED */
+                bus_wordAddr = 0;
+                bus_writeMaskDbg = 0;
+            }
+
+            // Language-agnostic code.
+            bit_t perf_count_clear = 0;
+            cr_gsr_r_write = bus_writeData>>(31ull);
+            cr_gsr_r_wmask_dbg = (bus_writeMaskDbg>>(31ull)) & ((((((bus_wordAddr)&0xFFull) == (0ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cregIface.gbreg2rv_reset = !!(((cr_gsr_r_wmask_dbg) & (cr_gsr_r_write))&0x1ull);
+            cr_gsr_e_read = (st.cregIface.cfg2gbreg_error)&1ull;                                     /* GENERATED */
+            cr_gsr_b_read = (st.cregIface.cfg2gbreg_busy)&1ull;
+            cr_gsr_rid_read = st.cregIface.cfg2gbreg_requesterID;
+            cr_bcrr_bcrr_write = bus_writeData>>(0ull);
+            cr_bcrr_bcrr_wmask_dbg = (bus_writeMaskDbg>>(0ull)) & ((((((bus_wordAddr)&0xFFull) == (1ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.gbregState.cr_bcrr_bcrr_r = ((oldGbregState.cr_bcrr_bcrr_r) & (~(cr_bcrr_bcrr_wmask_dbg))) | ((cr_bcrr_bcrr_write) & (cr_bcrr_bcrr_wmask_dbg));
+            cr_bcrr_bcrr_read = oldGbregState.cr_bcrr_bcrr_r;
+            st.cregIface.gbreg2cfg_requestEnable = cr_bcrr_bcrr_wmask_dbg>>(0ull);
+            cr_cc_cc_read = st.cregIface.cfg2gbreg_currentCfg;
+            cr_aff_af_read = st.cregIface.imem2gbreg_affinity;
+            st.gbregState.cr_cnt_cnt_r = (((oldGbregState.cr_cnt_cnt_r)&0xFFFFFFFFFFFFFFull) + (1ull))&0x1FFFFFFFFFFFFFFull; /* GENERATED */
+            cr_cnt_cnt_read = oldGbregState.cr_cnt_cnt_r>>(0ull);
+            cr_cnth_cnth_read = oldGbregState.cr_cnt_cnt_r>>(32ull);
+            cr_cnth_cnt_read = oldGbregState.cr_cnt_cnt_r>>(24ull);
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (7ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc7_borrow15_read &= ~(1ull << __shift);
+                    cr_limc7_borrow15_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc7_borrow15_read = ((cr_limc7_borrow15_read)&0xFFFFull) >> (2ull);             /* GENERATED */
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((2ull) * (7ull))&0x7FFFFFFFull;
+                    cr_limc7_borrow15_read &= ~(1ull << __shift);
+                    cr_limc7_borrow15_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {                                                                             /* GENERATED */
+                    uint64_t __shift = ((2ull) * (7ull))&0x7FFFFFFFull;
+                    cr_limc7_borrow14_read &= ~(1ull << __shift);
+                    cr_limc7_borrow14_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc7_borrow14_read = ((cr_limc7_borrow14_read)&0xFFFFull) >> (2ull);
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (7ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc7_borrow14_read &= ~(1ull << __shift);                                    /* GENERATED */
+                    cr_limc7_borrow14_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (6ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc6_borrow13_read &= ~(1ull << __shift);
+                    cr_limc6_borrow13_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc6_borrow13_read = ((cr_limc6_borrow13_read)&0xFFFFull) >> (2ull);             /* GENERATED */
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((2ull) * (6ull))&0x7FFFFFFFull;
+                    cr_limc6_borrow13_read &= ~(1ull << __shift);
+                    cr_limc6_borrow13_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {                                                                             /* GENERATED */
+                    uint64_t __shift = ((2ull) * (6ull))&0x7FFFFFFFull;
+                    cr_limc6_borrow12_read &= ~(1ull << __shift);
+                    cr_limc6_borrow12_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc6_borrow12_read = ((cr_limc6_borrow12_read)&0xFFFFull) >> (2ull);
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (6ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc6_borrow12_read &= ~(1ull << __shift);                                    /* GENERATED */
+                    cr_limc6_borrow12_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (5ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc5_borrow11_read &= ~(1ull << __shift);
+                    cr_limc5_borrow11_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc5_borrow11_read = ((cr_limc5_borrow11_read)&0xFFFFull) >> (2ull);             /* GENERATED */
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((2ull) * (5ull))&0x7FFFFFFFull;
+                    cr_limc5_borrow11_read &= ~(1ull << __shift);
+                    cr_limc5_borrow11_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {                                                                             /* GENERATED */
+                    uint64_t __shift = ((2ull) * (5ull))&0x7FFFFFFFull;
+                    cr_limc5_borrow10_read &= ~(1ull << __shift);
+                    cr_limc5_borrow10_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc5_borrow10_read = ((cr_limc5_borrow10_read)&0xFFFFull) >> (2ull);
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (5ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc5_borrow10_read &= ~(1ull << __shift);                                    /* GENERATED */
+                    cr_limc5_borrow10_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (4ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc4_borrow9_read &= ~(1ull << __shift);
+                    cr_limc4_borrow9_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc4_borrow9_read = ((cr_limc4_borrow9_read)&0xFFFFull) >> (2ull);               /* GENERATED */
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((2ull) * (4ull))&0x7FFFFFFFull;
+                    cr_limc4_borrow9_read &= ~(1ull << __shift);
+                    cr_limc4_borrow9_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {                                                                             /* GENERATED */
+                    uint64_t __shift = ((2ull) * (4ull))&0x7FFFFFFFull;
+                    cr_limc4_borrow8_read &= ~(1ull << __shift);
+                    cr_limc4_borrow8_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc4_borrow8_read = ((cr_limc4_borrow8_read)&0xFFFFull) >> (2ull);
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (4ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc4_borrow8_read &= ~(1ull << __shift);                                     /* GENERATED */
+                    cr_limc4_borrow8_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (3ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc3_borrow7_read &= ~(1ull << __shift);
+                    cr_limc3_borrow7_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc3_borrow7_read = ((cr_limc3_borrow7_read)&0xFFFFull) >> (2ull);               /* GENERATED */
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((2ull) * (3ull))&0x7FFFFFFFull;
+                    cr_limc3_borrow7_read &= ~(1ull << __shift);
+                    cr_limc3_borrow7_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {                                                                             /* GENERATED */
+                    uint64_t __shift = ((2ull) * (3ull))&0x7FFFFFFFull;
+                    cr_limc3_borrow6_read &= ~(1ull << __shift);
+                    cr_limc3_borrow6_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc3_borrow6_read = ((cr_limc3_borrow6_read)&0xFFFFull) >> (2ull);
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (3ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc3_borrow6_read &= ~(1ull << __shift);                                     /* GENERATED */
+                    cr_limc3_borrow6_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (2ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc2_borrow5_read &= ~(1ull << __shift);
+                    cr_limc2_borrow5_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc2_borrow5_read = ((cr_limc2_borrow5_read)&0xFFFFull) >> (2ull);               /* GENERATED */
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((2ull) * (2ull))&0x7FFFFFFFull;
+                    cr_limc2_borrow5_read &= ~(1ull << __shift);
+                    cr_limc2_borrow5_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {                                                                             /* GENERATED */
+                    uint64_t __shift = ((2ull) * (2ull))&0x7FFFFFFFull;
+                    cr_limc2_borrow4_read &= ~(1ull << __shift);
+                    cr_limc2_borrow4_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc2_borrow4_read = ((cr_limc2_borrow4_read)&0xFFFFull) >> (2ull);
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (2ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc2_borrow4_read &= ~(1ull << __shift);                                     /* GENERATED */
+                    cr_limc2_borrow4_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (1ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc1_borrow3_read &= ~(1ull << __shift);
+                    cr_limc1_borrow3_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc1_borrow3_read = ((cr_limc1_borrow3_read)&0xFFFFull) >> (2ull);               /* GENERATED */
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((2ull) * (1ull))&0x7FFFFFFFull;
+                    cr_limc1_borrow3_read &= ~(1ull << __shift);
+                    cr_limc1_borrow3_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {                                                                             /* GENERATED */
+                    uint64_t __shift = ((2ull) * (1ull))&0x7FFFFFFFull;
+                    cr_limc1_borrow2_read &= ~(1ull << __shift);
+                    cr_limc1_borrow2_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc1_borrow2_read = ((cr_limc1_borrow2_read)&0xFFFFull) >> (2ull);
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (1ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc1_borrow2_read &= ~(1ull << __shift);                                     /* GENERATED */
+                    cr_limc1_borrow2_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (0ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc0_borrow1_read &= ~(1ull << __shift);
+                    cr_limc0_borrow1_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc0_borrow1_read = ((cr_limc0_borrow1_read)&0xFFFFull) >> (2ull);               /* GENERATED */
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((2ull) * (0ull))&0x7FFFFFFFull;
+                    cr_limc0_borrow1_read &= ~(1ull << __shift);
+                    cr_limc0_borrow1_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (CFG.limmhFromPreviousPair) {
+                if (1) {                                                                             /* GENERATED */
+                    uint64_t __shift = ((2ull) * (0ull))&0x7FFFFFFFull;
+                    cr_limc0_borrow0_read &= ~(1ull << __shift);
+                    cr_limc0_borrow0_read |= ((1ull)&1) << __shift;
+                }
+                cr_limc0_borrow0_read = ((cr_limc0_borrow0_read)&0xFFFFull) >> (2ull);
+            }
+            if (CFG.limmhFromNeighbor) {
+                if (1) {
+                    uint64_t __shift = ((((2ull) * (0ull))&0x7FFFFFFFull) + (1ull))&0x7FFFFFFFull;
+                    cr_limc0_borrow0_read &= ~(1ull << __shift);                                     /* GENERATED */
+                    cr_limc0_borrow0_read |= ((1ull)&1) << __shift;
+                }
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic3_syl15cap_read &= ~(1ull << __shift);
+                cr_sic3_syl15cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic3_syl15cap_read &= ~(1ull << __shift);
+                cr_sic3_syl15cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic3_syl15cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic3_syl15cap_read &= ~(1ull << __shift);
+                cr_sic3_syl15cap_read |= (((CFG.memLaneRevIndex) == (cr_sic3_syl15cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic3_syl15cap_read &= ~(1ull << __shift);
+                cr_sic3_syl15cap_read |= (((((((cr_sic3_syl15cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic3_syl14cap_read &= ~(1ull << __shift);
+                cr_sic3_syl14cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic3_syl14cap_read &= ~(1ull << __shift);
+                cr_sic3_syl14cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic3_syl14cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic3_syl14cap_read &= ~(1ull << __shift);
+                cr_sic3_syl14cap_read |= (((CFG.memLaneRevIndex) == (cr_sic3_syl14cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic3_syl14cap_read &= ~(1ull << __shift);
+                cr_sic3_syl14cap_read |= (((((((cr_sic3_syl14cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic3_syl13cap_read &= ~(1ull << __shift);
+                cr_sic3_syl13cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic3_syl13cap_read &= ~(1ull << __shift);
+                cr_sic3_syl13cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic3_syl13cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic3_syl13cap_read &= ~(1ull << __shift);
+                cr_sic3_syl13cap_read |= (((CFG.memLaneRevIndex) == (cr_sic3_syl13cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic3_syl13cap_read &= ~(1ull << __shift);
+                cr_sic3_syl13cap_read |= (((((((cr_sic3_syl13cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic3_syl12cap_read &= ~(1ull << __shift);
+                cr_sic3_syl12cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic3_syl12cap_read &= ~(1ull << __shift);
+                cr_sic3_syl12cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic3_syl12cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic3_syl12cap_read &= ~(1ull << __shift);
+                cr_sic3_syl12cap_read |= (((CFG.memLaneRevIndex) == (cr_sic3_syl12cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic3_syl12cap_read &= ~(1ull << __shift);
+                cr_sic3_syl12cap_read |= (((((((cr_sic3_syl12cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic2_syl11cap_read &= ~(1ull << __shift);
+                cr_sic2_syl11cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic2_syl11cap_read &= ~(1ull << __shift);
+                cr_sic2_syl11cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic2_syl11cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic2_syl11cap_read &= ~(1ull << __shift);
+                cr_sic2_syl11cap_read |= (((CFG.memLaneRevIndex) == (cr_sic2_syl11cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic2_syl11cap_read &= ~(1ull << __shift);
+                cr_sic2_syl11cap_read |= (((((((cr_sic2_syl11cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic2_syl10cap_read &= ~(1ull << __shift);
+                cr_sic2_syl10cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic2_syl10cap_read &= ~(1ull << __shift);
+                cr_sic2_syl10cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic2_syl10cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic2_syl10cap_read &= ~(1ull << __shift);
+                cr_sic2_syl10cap_read |= (((CFG.memLaneRevIndex) == (cr_sic2_syl10cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic2_syl10cap_read &= ~(1ull << __shift);
+                cr_sic2_syl10cap_read |= (((((((cr_sic2_syl10cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic2_syl9cap_read &= ~(1ull << __shift);
+                cr_sic2_syl9cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic2_syl9cap_read &= ~(1ull << __shift);
+                cr_sic2_syl9cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic2_syl9cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic2_syl9cap_read &= ~(1ull << __shift);
+                cr_sic2_syl9cap_read |= (((CFG.memLaneRevIndex) == (cr_sic2_syl9cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic2_syl9cap_read &= ~(1ull << __shift);
+                cr_sic2_syl9cap_read |= (((((((cr_sic2_syl9cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic2_syl8cap_read &= ~(1ull << __shift);
+                cr_sic2_syl8cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic2_syl8cap_read &= ~(1ull << __shift);
+                cr_sic2_syl8cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic2_syl8cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic2_syl8cap_read &= ~(1ull << __shift);
+                cr_sic2_syl8cap_read |= (((CFG.memLaneRevIndex) == (cr_sic2_syl8cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic2_syl8cap_read &= ~(1ull << __shift);
+                cr_sic2_syl8cap_read |= (((((((cr_sic2_syl8cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic1_syl7cap_read &= ~(1ull << __shift);
+                cr_sic1_syl7cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic1_syl7cap_read &= ~(1ull << __shift);
+                cr_sic1_syl7cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic1_syl7cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic1_syl7cap_read &= ~(1ull << __shift);
+                cr_sic1_syl7cap_read |= (((CFG.memLaneRevIndex) == (cr_sic1_syl7cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic1_syl7cap_read &= ~(1ull << __shift);
+                cr_sic1_syl7cap_read |= (((((((cr_sic1_syl7cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic1_syl6cap_read &= ~(1ull << __shift);
+                cr_sic1_syl6cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic1_syl6cap_read &= ~(1ull << __shift);
+                cr_sic1_syl6cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic1_syl6cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic1_syl6cap_read &= ~(1ull << __shift);
+                cr_sic1_syl6cap_read |= (((CFG.memLaneRevIndex) == (cr_sic1_syl6cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic1_syl6cap_read &= ~(1ull << __shift);
+                cr_sic1_syl6cap_read |= (((((((cr_sic1_syl6cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic1_syl5cap_read &= ~(1ull << __shift);
+                cr_sic1_syl5cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic1_syl5cap_read &= ~(1ull << __shift);
+                cr_sic1_syl5cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic1_syl5cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic1_syl5cap_read &= ~(1ull << __shift);
+                cr_sic1_syl5cap_read |= (((CFG.memLaneRevIndex) == (cr_sic1_syl5cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic1_syl5cap_read &= ~(1ull << __shift);
+                cr_sic1_syl5cap_read |= (((((((cr_sic1_syl5cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic1_syl4cap_read &= ~(1ull << __shift);
+                cr_sic1_syl4cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic1_syl4cap_read &= ~(1ull << __shift);
+                cr_sic1_syl4cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic1_syl4cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic1_syl4cap_read &= ~(1ull << __shift);
+                cr_sic1_syl4cap_read |= (((CFG.memLaneRevIndex) == (cr_sic1_syl4cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic1_syl4cap_read &= ~(1ull << __shift);
+                cr_sic1_syl4cap_read |= (((((((cr_sic1_syl4cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic0_syl3cap_read &= ~(1ull << __shift);
+                cr_sic0_syl3cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic0_syl3cap_read &= ~(1ull << __shift);
+                cr_sic0_syl3cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic0_syl3cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic0_syl3cap_read &= ~(1ull << __shift);
+                cr_sic0_syl3cap_read |= (((CFG.memLaneRevIndex) == (cr_sic0_syl3cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic0_syl3cap_read &= ~(1ull << __shift);
+                cr_sic0_syl3cap_read |= (((((((cr_sic0_syl3cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic0_syl2cap_read &= ~(1ull << __shift);
+                cr_sic0_syl2cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic0_syl2cap_read &= ~(1ull << __shift);
+                cr_sic0_syl2cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic0_syl2cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic0_syl2cap_read &= ~(1ull << __shift);
+                cr_sic0_syl2cap_read |= (((CFG.memLaneRevIndex) == (cr_sic0_syl2cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic0_syl2cap_read &= ~(1ull << __shift);
+                cr_sic0_syl2cap_read |= (((((((cr_sic0_syl2cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic0_syl1cap_read &= ~(1ull << __shift);
+                cr_sic0_syl1cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic0_syl1cap_read &= ~(1ull << __shift);
+                cr_sic0_syl1cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic0_syl1cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic0_syl1cap_read &= ~(1ull << __shift);
+                cr_sic0_syl1cap_read |= (((CFG.memLaneRevIndex) == (cr_sic0_syl1cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic0_syl1cap_read &= ~(1ull << __shift);
+                cr_sic0_syl1cap_read |= (((((((cr_sic0_syl1cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 0ull;
+                cr_sic0_syl0cap_read &= ~(1ull << __shift);
+                cr_sic0_syl0cap_read |= ((1ull)&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 1ull;                                                             /* GENERATED */
+                cr_sic0_syl0cap_read &= ~(1ull << __shift);
+                cr_sic0_syl0cap_read |= ((!!((CFG.multiplierLanes) & (((1ull) << (cr_sic0_syl0cap_lane))&0x7FFFFFFFull)))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 2ull;
+                cr_sic0_syl0cap_read &= ~(1ull << __shift);
+                cr_sic0_syl0cap_read |= (((CFG.memLaneRevIndex) == (cr_sic0_syl0cap_revindex))&1) << __shift;
+            }
+            if (1) {
+                uint64_t __shift = 3ull;                                                             /* GENERATED */
+                cr_sic0_syl0cap_read &= ~(1ull << __shift);
+                cr_sic0_syl0cap_read |= (((((((cr_sic0_syl0cap_lane) + (1ull))&0x7FFFFFFFull) % (((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull))&0x7FFFFFFFull) == (0ull))&1) << __shift;
+            }
+            if (CFG.forwarding) {
+                if ((S_ALU) < (S_FW)) {
+                    cr_gps0_memar_read = S_ALU;
+                } else {
+                    cr_gps0_memar_read = S_FW;
+                }
+            } else {                                                                                 /* GENERATED */
+                cr_gps0_memar_read = S_RD;
+            }
+            if (CFG.forwarding) {
+                if ((L_MEM) == (0ull)) {
+                    cr_gps0_memdc_read = ((S_MEM) + (1ull))&0x7FFFFFFFull;
+                } else {
+                    cr_gps0_memdc_read = ((S_MEM) + (L_MEM))&0x7FFFFFFFull;
+                }
+            } else {
+                cr_gps0_memdc_read = ((S_WB) + (L_WB))&0x7FFFFFFFull;                                /* GENERATED */
+            }
+            if (CFG.forwarding) {
+                if ((S_MEM) < (S_FW)) {
+                    cr_gps0_memdr_read = S_MEM;
+                } else {
+                    cr_gps0_memdr_read = S_FW;
+                }
+            } else {
+                cr_gps0_memdr_read = S_RD;
+            }                                                                                        /* GENERATED */
+            if (CFG.forwarding) {
+                if ((L_MUL) == (0ull)) {
+                    cr_gps0_mulc_read = ((S_MUL) + (1ull))&0x7FFFFFFFull;
+                } else {
+                    cr_gps0_mulc_read = ((S_MUL) + (L_MUL))&0x7FFFFFFFull;
+                }
+            } else {
+                cr_gps0_mulc_read = ((S_WB) + (L_WB))&0x7FFFFFFFull;
+            }
+            if (CFG.forwarding) {                                                                    /* GENERATED */
+                if ((S_MUL) < (S_FW)) {
+                    cr_gps0_mulr_read = S_MUL;
+                } else {
+                    cr_gps0_mulr_read = S_FW;
+                }
+            } else {
+                cr_gps0_mulr_read = S_RD;
+            }
+            if (CFG.forwarding) {
+                if ((L_ALU) == (0ull)) {                                                             /* GENERATED */
+                    cr_gps0_aluc_read = ((S_ALU) + (1ull))&0x7FFFFFFFull;
+                } else {
+                    cr_gps0_aluc_read = ((S_ALU) + (L_ALU))&0x7FFFFFFFull;
+                }
+            } else {
+                cr_gps0_aluc_read = ((S_WB) + (L_WB))&0x7FFFFFFFull;
+            }
+            if (CFG.forwarding) {
+                if ((S_ALU) < (S_FW)) {
+                    cr_gps0_alur_read = S_ALU;                                                       /* GENERATED */
+                } else {
+                    cr_gps0_alur_read = S_FW;
+                }
+            } else {
+                cr_gps0_alur_read = S_RD;
+            }
+            cr_sps0_memmc_read = ((S_MEM) + (L_MEM))&0x7FFFFFFFull;
+            cr_sps0_memmr_read = S_MEM;
+            if (CFG.forwarding) {
+                if ((L_MEM) == (0ull)) {                                                             /* GENERATED */
+                    cr_sps0_memdc_read = ((S_MEM) + (1ull))&0x7FFFFFFFull;
+                } else {
+                    cr_sps0_memdc_read = ((S_MEM) + (L_MEM))&0x7FFFFFFFull;
+                }
+            } else {
+                cr_sps0_memdc_read = S_SWB;
+            }
+            if (CFG.forwarding) {
+                if ((S_MEM) < (S_SFW)) {
+                    cr_sps0_memdr_read = S_MEM;                                                      /* GENERATED */
+                } else {
+                    cr_sps0_memdr_read = S_SFW;
+                }
+            } else {
+                cr_sps0_memdr_read = S_SRD;
+            }
+            cr_sps0_brc_read = S_BR;
+            if (CFG.forwarding) {
+                if ((S_BR) < (S_SFW)) {
+                    cr_sps0_brr_read = S_BR;                                                         /* GENERATED */
+                } else {
+                    cr_sps0_brr_read = S_SFW;
+                }
+            } else {
+                cr_sps0_brr_read = S_SRD;
+            }
+            if (CFG.forwarding) {
+                if ((L_ALU) == (0ull)) {
+                    cr_sps0_aluc_read = ((S_ALU) + (1ull))&0x7FFFFFFFull;
+                } else {                                                                             /* GENERATED */
+                    cr_sps0_aluc_read = ((S_ALU) + (L_ALU))&0x7FFFFFFFull;
+                }
+            } else {
+                cr_sps0_aluc_read = S_SWB;
+            }
+            if (CFG.forwarding) {
+                if ((S_ALU) < (S_SFW)) {
+                    cr_sps0_alur_read = S_ALU;
+                } else {
+                    cr_sps0_alur_read = S_SFW;                                                       /* GENERATED */
+                }
+            } else {
+                cr_sps0_alur_read = S_SRD;
+            }
+            cr_ext0_t_read = (CFG.traceEnable)&1ull;
+            cr_ext0_brk_read = CFG.numBreakpoints;
+            cr_ext0_c_read = (CFG.cachePerfCountEnable)&1ull;
+            cr_ext0_p_read = CFG.perfCountSize;
+            cr_ext0_o_read = ((BRANCH_OFFS_SHIFT) == (2ull))&1ull;
+            cr_ext0_l_read = (CFG.reg63isLink)&1ull;                                                 /* GENERATED */
+            cr_ext0_f_read = (CFG.forwarding)&1ull;
+            cr_dcfg_ba_read = ((((1ull) << (CFG.bundleAlignLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            cr_dcfg_nc_read = ((((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            cr_dcfg_ng_read = ((((1ull) << (CFG.numLaneGroupsLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            cr_dcfg_nl_read = ((((1ull) << (CFG.numLanesLog2))&0x7FFFFFFFull) - (1ull))&0x7FFFFFFFull;
+            cr_cver1_ver_read = 51ull;
+            cr_cver1_ctag0_read = RVEX_CORE_TAG>>(48ull);
+            cr_cver1_ctag1_read = RVEX_CORE_TAG>>(40ull);
+            cr_cver1_ctag2_read = RVEX_CORE_TAG>>(32ull);
+            cr_cver0_ctag3_read = RVEX_CORE_TAG>>(24ull);                                            /* GENERATED */
+            cr_cver0_ctag4_read = RVEX_CORE_TAG>>(16ull);
+            cr_cver0_ctag5_read = RVEX_CORE_TAG>>(8ull);
+            cr_cver0_ctag6_read = RVEX_CORE_TAG>>(0ull);
+            cr_pver1_coid_read = st.cregIface.rv2gbreg_coreID;
+            cr_pver1_ptag0_read = st.cregIface.rv2gbreg_platformTag>>(48ull);
+            cr_pver1_ptag1_read = st.cregIface.rv2gbreg_platformTag>>(40ull);
+            cr_pver1_ptag2_read = st.cregIface.rv2gbreg_platformTag>>(32ull);
+            cr_pver0_ptag3_read = st.cregIface.rv2gbreg_platformTag>>(24ull);
+            cr_pver0_ptag4_read = st.cregIface.rv2gbreg_platformTag>>(16ull);
+            cr_pver0_ptag5_read = st.cregIface.rv2gbreg_platformTag>>(8ull);                         /* GENERATED */
+            cr_pver0_ptag6_read = st.cregIface.rv2gbreg_platformTag>>(0ull);
+
+            // Bus read demuxing.
+            for (int _lg = -1; _lg < (1 << CFG.numLaneGroupsLog2); _lg++) {
+                uint16_t addr;
+                uint32_t *data;
+                if (_lg == -1) {
+                    addr = st.cregIface.gbreg_dbgAddress;
+                    data = &(st.cregIface.gbreg_dbgReadData);
+                } else {                                                                             /* GENERATED */
+                    addr = st.cregIface.gbreg_coreAddress[_lg];
+                    data = &(st.cregIface.gbreg_coreReadData[_lg]);
+                }
+                if (addr < 0) {
+                    *data = 0xDEADC0DE;
+                    continue;
+                } else {
+                    *data = 0;
+                }
+                switch ((addr >> 2) & 0x3F) {                                                        /* GENERATED */
+                case 0: *data = ((((((((((0ull)<<17ull)|((0ull)&0x1FFFFull))<<1ull)|((cr_gsr_e_read)&0x1ull))<<1ull)|((cr_gsr_b_read)&0x1ull))<<4ull)|((cr_gsr_rid_read)&0xFull))<<8ull)|((0ull)&0xFFull); break;
+                case 1: *data = cr_bcrr_bcrr_read; break;
+                case 2: *data = cr_cc_cc_read; break;
+                case 3: *data = cr_aff_af_read; break;
+                case 4: *data = cr_cnt_cnt_read; break;
+                case 5: *data = ((cr_cnth_cnth_read)<<8ull)|((cr_cnth_cnt_read)&0xFFull); break;
+                case 40: *data = ((cr_limc7_borrow15_read)<<16ull)|((cr_limc7_borrow14_read)&0xFFFFull); break;
+                case 41: *data = ((cr_limc6_borrow13_read)<<16ull)|((cr_limc6_borrow12_read)&0xFFFFull); break;
+                case 42: *data = ((cr_limc5_borrow11_read)<<16ull)|((cr_limc5_borrow10_read)&0xFFFFull); break;
+                case 43: *data = ((cr_limc4_borrow9_read)<<16ull)|((cr_limc4_borrow8_read)&0xFFFFull); break; /* GENERATED */
+                case 44: *data = ((cr_limc3_borrow7_read)<<16ull)|((cr_limc3_borrow6_read)&0xFFFFull); break;
+                case 45: *data = ((cr_limc2_borrow5_read)<<16ull)|((cr_limc2_borrow4_read)&0xFFFFull); break;
+                case 46: *data = ((cr_limc1_borrow3_read)<<16ull)|((cr_limc1_borrow2_read)&0xFFFFull); break;
+                case 47: *data = ((cr_limc0_borrow1_read)<<16ull)|((cr_limc0_borrow0_read)&0xFFFFull); break;
+                case 48: *data = ((((((cr_sic3_syl15cap_read)<<8ull)|((cr_sic3_syl14cap_read)&0xFFull))<<8ull)|((cr_sic3_syl13cap_read)&0xFFull))<<8ull)|((cr_sic3_syl12cap_read)&0xFFull); break;
+                case 49: *data = ((((((cr_sic2_syl11cap_read)<<8ull)|((cr_sic2_syl10cap_read)&0xFFull))<<8ull)|((cr_sic2_syl9cap_read)&0xFFull))<<8ull)|((cr_sic2_syl8cap_read)&0xFFull); break;
+                case 50: *data = ((((((cr_sic1_syl7cap_read)<<8ull)|((cr_sic1_syl6cap_read)&0xFFull))<<8ull)|((cr_sic1_syl5cap_read)&0xFFull))<<8ull)|((cr_sic1_syl4cap_read)&0xFFull); break;
+                case 51: *data = ((((((cr_sic0_syl3cap_read)<<8ull)|((cr_sic0_syl2cap_read)&0xFFull))<<8ull)|((cr_sic0_syl1cap_read)&0xFFull))<<8ull)|((cr_sic0_syl0cap_read)&0xFFull); break;
+                case 52: *data = 0ull; break;
+                case 53: *data = ((((((((((((((0ull)<<4ull)|((cr_gps0_memar_read)&0xFull))<<4ull)|((cr_gps0_memdc_read)&0xFull))<<4ull)|((cr_gps0_memdr_read)&0xFull))<<4ull)|((cr_gps0_mulc_read)&0xFull))<<4ull)|((cr_gps0_mulr_read)&0xFull))<<4ull)|((cr_gps0_aluc_read)&0xFull))<<4ull)|((cr_gps0_alur_read)&0xFull); break; /* GENERATED */
+                case 54: *data = 0ull; break;
+                case 55: *data = ((((((((((((((cr_sps0_memmc_read)<<4ull)|((cr_sps0_memmr_read)&0xFull))<<4ull)|((cr_sps0_memdc_read)&0xFull))<<4ull)|((cr_sps0_memdr_read)&0xFull))<<4ull)|((cr_sps0_brc_read)&0xFull))<<4ull)|((cr_sps0_brr_read)&0xFull))<<4ull)|((cr_sps0_aluc_read)&0xFull))<<4ull)|((cr_sps0_alur_read)&0xFull); break;
+                case 56: *data = 0ull; break;
+                case 57: *data = 0ull; break;
+                case 58: *data = ((((((((((((((((((0ull)<<1ull)|((cr_ext0_t_read)&0x1ull))<<3ull)|((cr_ext0_brk_read)&0x7ull))<<4ull)|((0ull)&0xFull))<<1ull)|((cr_ext0_c_read)&0x1ull))<<3ull)|((cr_ext0_p_read)&0x7ull))<<13ull)|((0ull)&0x1FFFull))<<1ull)|((cr_ext0_o_read)&0x1ull))<<1ull)|((cr_ext0_l_read)&0x1ull))<<1ull)|((cr_ext0_f_read)&0x1ull); break;
+                case 59: *data = ((((((((0ull)<<4ull)|((cr_dcfg_ba_read)&0xFull))<<4ull)|((cr_dcfg_nc_read)&0xFull))<<4ull)|((cr_dcfg_ng_read)&0xFull))<<4ull)|((cr_dcfg_nl_read)&0xFull); break;
+                case 60: *data = ((((((cr_cver1_ver_read)<<8ull)|((cr_cver1_ctag0_read)&0xFFull))<<8ull)|((cr_cver1_ctag1_read)&0xFFull))<<8ull)|((cr_cver1_ctag2_read)&0xFFull); break;
+                case 61: *data = ((((((cr_cver0_ctag3_read)<<8ull)|((cr_cver0_ctag4_read)&0xFFull))<<8ull)|((cr_cver0_ctag5_read)&0xFFull))<<8ull)|((cr_cver0_ctag6_read)&0xFFull); break;
+                case 62: *data = ((((((cr_pver1_coid_read)<<8ull)|((cr_pver1_ptag0_read)&0xFFull))<<8ull)|((cr_pver1_ptag1_read)&0xFFull))<<8ull)|((cr_pver1_ptag2_read)&0xFFull); break;
+                case 63: *data = ((((((cr_pver0_ptag3_read)<<8ull)|((cr_pver0_ptag4_read)&0xFFull))<<8ull)|((cr_pver0_ptag5_read)&0xFFull))<<8ull)|((cr_pver0_ptag6_read)&0xFFull); break; /* GENERATED */
+                }
+            }
+        }
+
+        // Context control register file.
+        for (int ctxt = 0; ctxt < (1 << CFG.numContextsLog2); ctxt++) {
+
+            // Language-agnostic code declarations.
+            bitvec8_t    cr_ccr_cause_write;
+            bitvec8_t    cr_ccr_cause_wmask_dbg;                                                     /* GENERATED */
+            bitvec8_t    cr_ccr_cause_read;
+            trapCause_t  cr_ccr_cause_v;
+            bitvec8_t    cr_ccr_branch_write;
+            bitvec8_t    cr_ccr_branch_wmask_dbg;
+            bitvec8_t    cr_ccr_branch_read;
+            brRegData_t  cr_ccr_branch_v;
+            bitvec2_t    cr_ccr_k_read;
+            bit_t        cr_ccr_k_v;
+            bitvec2_t    cr_ccr_c_write;
+            bitvec2_t    cr_ccr_c_wmask;                                                             /* GENERATED */
+            bitvec2_t    cr_ccr_c_read;
+            bit_t        cr_ccr_c_v;
+            bitvec2_t    cr_ccr_c_cmd;
+            bitvec2_t    cr_ccr_b_write;
+            bitvec2_t    cr_ccr_b_wmask;
+            bitvec2_t    cr_ccr_b_read;
+            bit_t        cr_ccr_b_v;
+            bitvec2_t    cr_ccr_b_cmd;
+            bitvec2_t    cr_ccr_r_write;
+            bitvec2_t    cr_ccr_r_wmask;                                                             /* GENERATED */
+            bitvec2_t    cr_ccr_r_read;
+            bit_t        cr_ccr_r_v;
+            bitvec2_t    cr_ccr_r_cmd;
+            bitvec2_t    cr_ccr_i_write;
+            bitvec2_t    cr_ccr_i_wmask;
+            bitvec2_t    cr_ccr_i_read;
+            bit_t        cr_ccr_i_v;
+            bitvec2_t    cr_ccr_i_cmd;
+            bitvec8_t    cr_sccr_id_read;
+            bitvec2_t    cr_sccr_k_write;                                                            /* GENERATED */
+            bitvec2_t    cr_sccr_k_wmask_dbg;
+            bitvec2_t    cr_sccr_k_wmask_core;
+            bitvec2_t    cr_sccr_k_read;
+            bit_t        cr_sccr_k_v;
+            bitvec2_t    cr_sccr_k_cmd;
+            bitvec2_t    cr_sccr_c_write;
+            bitvec2_t    cr_sccr_c_wmask;
+            bitvec2_t    cr_sccr_c_read;
+            bit_t        cr_sccr_c_v;
+            bitvec2_t    cr_sccr_c_cmd;                                                              /* GENERATED */
+            bitvec2_t    cr_sccr_b_write;
+            bitvec2_t    cr_sccr_b_wmask;
+            bitvec2_t    cr_sccr_b_read;
+            bit_t        cr_sccr_b_v;
+            bitvec2_t    cr_sccr_b_cmd;
+            bitvec2_t    cr_sccr_r_write;
+            bitvec2_t    cr_sccr_r_wmask;
+            bitvec2_t    cr_sccr_r_read;
+            bit_t        cr_sccr_r_v;
+            bitvec2_t    cr_sccr_r_cmd;                                                              /* GENERATED */
+            bitvec2_t    cr_sccr_i_write;
+            bitvec2_t    cr_sccr_i_wmask;
+            bitvec2_t    cr_sccr_i_read;
+            bit_t        cr_sccr_i_v;
+            bitvec2_t    cr_sccr_i_cmd;
+            bitvec32_t   cr_lr_lr_write;
+            bitvec32_t   cr_lr_lr_wmask_dbg;
+            bitvec32_t   cr_lr_lr_read;
+            bitvec32_t   cr_pc_pc_write;
+            bitvec32_t   cr_pc_pc_wmask_dbg;                                                         /* GENERATED */
+            bitvec32_t   cr_pc_pc_read;
+            address_t    cr_pc_pc_v;
+            bitvec32_t   cr_th_th_write;
+            bitvec32_t   cr_th_th_wmask;
+            bitvec32_t   cr_th_th_read;
+            bitvec32_t   cr_ph_ph_write;
+            bitvec32_t   cr_ph_ph_wmask;
+            bitvec32_t   cr_ph_ph_read;
+            bitvec32_t   cr_tp_tp_write;
+            bitvec32_t   cr_tp_tp_wmask;                                                             /* GENERATED */
+            bitvec32_t   cr_tp_tp_read;
+            bitvec32_t   cr_ta_ta_write;
+            bitvec32_t   cr_ta_ta_wmask_dbg;
+            bitvec32_t   cr_ta_ta_read;
+            bitvec32_t   cr_br0_br0_write;
+            bitvec32_t   cr_br0_br0_wmask_dbg;
+            bitvec32_t   cr_br0_br0_wmask;
+            bitvec32_t   cr_br0_br0_read;
+            address_t    cr_br0_br0_mask;
+            bitvec32_t   cr_br1_br1_write;                                                           /* GENERATED */
+            bitvec32_t   cr_br1_br1_wmask_dbg;
+            bitvec32_t   cr_br1_br1_wmask;
+            bitvec32_t   cr_br1_br1_read;
+            address_t    cr_br1_br1_mask;
+            bitvec32_t   cr_br2_br2_write;
+            bitvec32_t   cr_br2_br2_wmask_dbg;
+            bitvec32_t   cr_br2_br2_wmask;
+            bitvec32_t   cr_br2_br2_read;
+            address_t    cr_br2_br2_mask;
+            bitvec32_t   cr_br3_br3_write;                                                           /* GENERATED */
+            bitvec32_t   cr_br3_br3_wmask_dbg;
+            bitvec32_t   cr_br3_br3_wmask;
+            bitvec32_t   cr_br3_br3_read;
+            address_t    cr_br3_br3_mask;
+            bitvec1_t    cr_dcr_d_write;
+            bitvec1_t    cr_dcr_d_wmask_dbg;
+            bitvec1_t    cr_dcr_d_read;
+            bitvec1_t    cr_dcr_j_read;
+            bitvec1_t    cr_dcr_i_write;
+            bitvec1_t    cr_dcr_i_wmask_dbg;                                                         /* GENERATED */
+            bitvec1_t    cr_dcr_i_read;
+            bitvec1_t    cr_dcr_e_write;
+            bitvec1_t    cr_dcr_e_wmask_dbg;
+            bitvec1_t    cr_dcr_e_read;
+            bitvec1_t    cr_dcr_r_write;
+            bitvec1_t    cr_dcr_r_wmask_dbg;
+            bitvec1_t    cr_dcr_r_read;
+            bitvec1_t    cr_dcr_s_write;
+            bitvec1_t    cr_dcr_s_wmask_dbg;
+            bitvec1_t    cr_dcr_s_wmask_core;                                                        /* GENERATED */
+            bitvec1_t    cr_dcr_s_read;
+            bitvec1_t    cr_dcr_b_write;
+            bitvec1_t    cr_dcr_b_wmask_dbg;
+            bitvec1_t    cr_dcr_b_read;
+            bitvec8_t    cr_dcr_cause_write;
+            bitvec8_t    cr_dcr_cause_wmask_dbg;
+            bitvec8_t    cr_dcr_cause_read;
+            bitvec2_t    cr_dcr_br3_write;
+            bitvec2_t    cr_dcr_br3_wmask_dbg;
+            bitvec2_t    cr_dcr_br3_wmask;                                                           /* GENERATED */
+            bitvec2_t    cr_dcr_br3_read;
+            twoBit_t     cr_dcr_br3_mask;
+            twoBit_t     cr_dcr_br3_v;
+            bitvec2_t    cr_dcr_br2_write;
+            bitvec2_t    cr_dcr_br2_wmask_dbg;
+            bitvec2_t    cr_dcr_br2_wmask;
+            bitvec2_t    cr_dcr_br2_read;
+            twoBit_t     cr_dcr_br2_mask;
+            twoBit_t     cr_dcr_br2_v;
+            bitvec2_t    cr_dcr_br1_write;                                                           /* GENERATED */
+            bitvec2_t    cr_dcr_br1_wmask_dbg;
+            bitvec2_t    cr_dcr_br1_wmask;
+            bitvec2_t    cr_dcr_br1_read;
+            twoBit_t     cr_dcr_br1_mask;
+            twoBit_t     cr_dcr_br1_v;
+            bitvec2_t    cr_dcr_br0_write;
+            bitvec2_t    cr_dcr_br0_wmask_dbg;
+            bitvec2_t    cr_dcr_br0_wmask;
+            bitvec2_t    cr_dcr_br0_read;
+            twoBit_t     cr_dcr_br0_mask;                                                            /* GENERATED */
+            twoBit_t     cr_dcr_br0_v;
+            bitvec8_t    cr_dcr2_result_write;
+            bitvec8_t    cr_dcr2_result_wmask;
+            bitvec8_t    cr_dcr2_result_read;
+            bitvec8_t    cr_dcr2_trcap_read;
+            bitvec1_t    cr_dcr2_t_write;
+            bitvec1_t    cr_dcr2_t_wmask;
+            bitvec1_t    cr_dcr2_t_read;
+            bitvec1_t    cr_dcr2_m_write;
+            bitvec1_t    cr_dcr2_m_wmask;                                                            /* GENERATED */
+            bitvec1_t    cr_dcr2_m_read;
+            bitvec1_t    cr_dcr2_r_write;
+            bitvec1_t    cr_dcr2_r_wmask;
+            bitvec1_t    cr_dcr2_r_read;
+            bitvec1_t    cr_dcr2_c_write;
+            bitvec1_t    cr_dcr2_c_wmask;
+            bitvec1_t    cr_dcr2_c_read;
+            bitvec1_t    cr_dcr2_i_write;
+            bitvec1_t    cr_dcr2_i_wmask;
+            bitvec1_t    cr_dcr2_i_read;                                                             /* GENERATED */
+            bitvec1_t    cr_dcr2_e_write;
+            bitvec1_t    cr_dcr2_e_wmask;
+            bitvec1_t    cr_dcr2_e_read;
+            bitvec32_t   cr_crr_crr_write;
+            bitvec32_t   cr_crr_crr_wmask_core;
+            bitvec32_t   cr_crr_crr_read;
+            bitvec32_t   cr_wcfg_wcfg_write;
+            bitvec32_t   cr_wcfg_wcfg_wmask_core;
+            bitvec32_t   cr_wcfg_wcfg_read;
+            bitvec7_t    cr_sawc_run_write;                                                          /* GENERATED */
+            bitvec7_t    cr_sawc_run_wmask;
+            bitvec7_t    cr_sawc_run_read;
+            bitvec1_t    cr_sawc_s_write;
+            bitvec1_t    cr_sawc_s_wmask_core;
+            bitvec1_t    cr_sawc_s_read;
+            bitvec32_t   cr_scrp1_scrp1_write;
+            bitvec32_t   cr_scrp1_scrp1_wmask;
+            bitvec32_t   cr_scrp1_scrp1_read;
+            bitvec32_t   cr_scrp2_scrp2_write;
+            bitvec32_t   cr_scrp2_scrp2_wmask;                                                       /* GENERATED */
+            bitvec32_t   cr_scrp2_scrp2_read;
+            bitvec32_t   cr_scrp3_scrp3_write;
+            bitvec32_t   cr_scrp3_scrp3_wmask;
+            bitvec32_t   cr_scrp3_scrp3_read;
+            bitvec32_t   cr_scrp4_scrp4_write;
+            bitvec32_t   cr_scrp4_scrp4_wmask;
+            bitvec32_t   cr_scrp4_scrp4_read;
+            bitvec32_t   cr_rsc_rsc_read;
+            bitvec32_t   cr_csc_csc_write;
+            bitvec32_t   cr_csc_csc_wmask;                                                           /* GENERATED */
+            bitvec32_t   cr_csc_csc_read;
+            bitvec32_t   cr_rsc1_rsc1_write;
+            bitvec32_t   cr_rsc1_rsc1_wmask;
+            bitvec32_t   cr_rsc1_rsc1_read;
+            bitvec32_t   cr_csc1_csc1_read;
+            bitvec32_t   cr_rsc2_rsc2_write;
+            bitvec32_t   cr_rsc2_rsc2_wmask;
+            bitvec32_t   cr_rsc2_rsc2_read;
+            bitvec32_t   cr_csc2_csc2_read;
+            bitvec32_t   cr_rsc3_rsc3_write;                                                         /* GENERATED */
+            bitvec32_t   cr_rsc3_rsc3_wmask;
+            bitvec32_t   cr_rsc3_rsc3_read;
+            bitvec32_t   cr_csc3_csc3_read;
+            bitvec32_t   cr_rsc4_rsc4_write;
+            bitvec32_t   cr_rsc4_rsc4_wmask;
+            bitvec32_t   cr_rsc4_rsc4_read;
+            bitvec32_t   cr_csc4_csc4_read;
+            bitvec32_t   cr_rsc5_rsc5_write;
+            bitvec32_t   cr_rsc5_rsc5_wmask;
+            bitvec32_t   cr_rsc5_rsc5_read;                                                          /* GENERATED */
+            bitvec32_t   cr_csc5_csc5_read;
+            bitvec32_t   cr_rsc6_rsc6_write;
+            bitvec32_t   cr_rsc6_rsc6_wmask;
+            bitvec32_t   cr_rsc6_rsc6_read;
+            bitvec32_t   cr_csc6_csc6_read;
+            bitvec32_t   cr_rsc7_rsc7_write;
+            bitvec32_t   cr_rsc7_rsc7_wmask;
+            bitvec32_t   cr_rsc7_rsc7_read;
+            bitvec32_t   cr_csc7_csc7_read;
+            bitvec8_t    cr_cyc_cyc3_read;                                                           /* GENERATED */
+            bitvec8_t    cr_cyc_cyc2_read;
+            bitvec8_t    cr_cyc_cyc1_read;
+            bitvec8_t    cr_cyc_cyc0_write;
+            bitvec8_t    cr_cyc_cyc0_wmask;
+            bitvec8_t    cr_cyc_cyc0_read;
+            byte_t       cr_cyc_cyc0_add;
+            bitvec8_t    cr_cych_cyc6_read;
+            bitvec8_t    cr_cych_cyc5_read;
+            bitvec8_t    cr_cych_cyc4_read;
+            bitvec8_t    cr_cych_cyc3_write;                                                         /* GENERATED */
+            bitvec8_t    cr_cych_cyc3_wmask;
+            bitvec8_t    cr_cych_cyc3_read;
+            bitvec8_t    cr_stall_stall3_read;
+            bitvec8_t    cr_stall_stall2_read;
+            bitvec8_t    cr_stall_stall1_read;
+            bitvec8_t    cr_stall_stall0_write;
+            bitvec8_t    cr_stall_stall0_wmask;
+            bitvec8_t    cr_stall_stall0_read;
+            byte_t       cr_stall_stall0_add;
+            bitvec8_t    cr_stallh_stall6_read;                                                      /* GENERATED */
+            bitvec8_t    cr_stallh_stall5_read;
+            bitvec8_t    cr_stallh_stall4_read;
+            bitvec8_t    cr_stallh_stall3_write;
+            bitvec8_t    cr_stallh_stall3_wmask;
+            bitvec8_t    cr_stallh_stall3_read;
+            bitvec8_t    cr_bun_bun3_read;
+            bitvec8_t    cr_bun_bun2_read;
+            bitvec8_t    cr_bun_bun1_read;
+            bitvec8_t    cr_bun_bun0_write;
+            bitvec8_t    cr_bun_bun0_wmask;                                                          /* GENERATED */
+            bitvec8_t    cr_bun_bun0_read;
+            byte_t       cr_bun_bun0_add;
+            bitvec8_t    cr_bunh_bun6_read;
+            bitvec8_t    cr_bunh_bun5_read;
+            bitvec8_t    cr_bunh_bun4_read;
+            bitvec8_t    cr_bunh_bun3_write;
+            bitvec8_t    cr_bunh_bun3_wmask;
+            bitvec8_t    cr_bunh_bun3_read;
+            bitvec8_t    cr_syl_syl3_read;
+            bitvec8_t    cr_syl_syl2_read;                                                           /* GENERATED */
+            bitvec8_t    cr_syl_syl1_read;
+            bitvec8_t    cr_syl_syl0_write;
+            bitvec8_t    cr_syl_syl0_wmask;
+            bitvec8_t    cr_syl_syl0_read;
+            sylStatus_t  cr_syl_syl0_vec;
+            byte_t       cr_syl_syl0_add;
+            bitvec8_t    cr_sylh_syl6_read;
+            bitvec8_t    cr_sylh_syl5_read;
+            bitvec8_t    cr_sylh_syl4_read;
+            bitvec8_t    cr_sylh_syl3_write;                                                         /* GENERATED */
+            bitvec8_t    cr_sylh_syl3_wmask;
+            bitvec8_t    cr_sylh_syl3_read;
+            bitvec8_t    cr_nop_nop3_read;
+            bitvec8_t    cr_nop_nop2_read;
+            bitvec8_t    cr_nop_nop1_read;
+            bitvec8_t    cr_nop_nop0_write;
+            bitvec8_t    cr_nop_nop0_wmask;
+            bitvec8_t    cr_nop_nop0_read;
+            sylStatus_t  cr_nop_nop0_vec;
+            byte_t       cr_nop_nop0_add;                                                            /* GENERATED */
+            bitvec8_t    cr_noph_nop6_read;
+            bitvec8_t    cr_noph_nop5_read;
+            bitvec8_t    cr_noph_nop4_read;
+            bitvec8_t    cr_noph_nop3_write;
+            bitvec8_t    cr_noph_nop3_wmask;
+            bitvec8_t    cr_noph_nop3_read;
+            bitvec8_t    cr_iacc_iacc3_read;
+            bitvec8_t    cr_iacc_iacc2_read;
+            bitvec8_t    cr_iacc_iacc1_read;
+            bitvec8_t    cr_iacc_iacc0_write;                                                        /* GENERATED */
+            bitvec8_t    cr_iacc_iacc0_wmask;
+            bitvec8_t    cr_iacc_iacc0_read;
+            byte_t       cr_iacc_iacc0_add;
+            bitvec8_t    cr_iacch_iacc6_read;
+            bitvec8_t    cr_iacch_iacc5_read;
+            bitvec8_t    cr_iacch_iacc4_read;
+            bitvec8_t    cr_iacch_iacc3_write;
+            bitvec8_t    cr_iacch_iacc3_wmask;
+            bitvec8_t    cr_iacch_iacc3_read;
+            bitvec8_t    cr_imiss_imiss3_read;                                                       /* GENERATED */
+            bitvec8_t    cr_imiss_imiss2_read;
+            bitvec8_t    cr_imiss_imiss1_read;
+            bitvec8_t    cr_imiss_imiss0_write;
+            bitvec8_t    cr_imiss_imiss0_wmask;
+            bitvec8_t    cr_imiss_imiss0_read;
+            byte_t       cr_imiss_imiss0_add;
+            bitvec8_t    cr_imissh_imiss6_read;
+            bitvec8_t    cr_imissh_imiss5_read;
+            bitvec8_t    cr_imissh_imiss4_read;
+            bitvec8_t    cr_imissh_imiss3_write;                                                     /* GENERATED */
+            bitvec8_t    cr_imissh_imiss3_wmask;
+            bitvec8_t    cr_imissh_imiss3_read;
+            bitvec8_t    cr_dracc_dracc3_read;
+            bitvec8_t    cr_dracc_dracc2_read;
+            bitvec8_t    cr_dracc_dracc1_read;
+            bitvec8_t    cr_dracc_dracc0_write;
+            bitvec8_t    cr_dracc_dracc0_wmask;
+            bitvec8_t    cr_dracc_dracc0_read;
+            byte_t       cr_dracc_dracc0_add;
+            bitvec8_t    cr_dracch_dracc6_read;                                                      /* GENERATED */
+            bitvec8_t    cr_dracch_dracc5_read;
+            bitvec8_t    cr_dracch_dracc4_read;
+            bitvec8_t    cr_dracch_dracc3_write;
+            bitvec8_t    cr_dracch_dracc3_wmask;
+            bitvec8_t    cr_dracch_dracc3_read;
+            bitvec8_t    cr_drmiss_drmiss3_read;
+            bitvec8_t    cr_drmiss_drmiss2_read;
+            bitvec8_t    cr_drmiss_drmiss1_read;
+            bitvec8_t    cr_drmiss_drmiss0_write;
+            bitvec8_t    cr_drmiss_drmiss0_wmask;                                                    /* GENERATED */
+            bitvec8_t    cr_drmiss_drmiss0_read;
+            byte_t       cr_drmiss_drmiss0_add;
+            bitvec8_t    cr_drmissh_drmiss6_read;
+            bitvec8_t    cr_drmissh_drmiss5_read;
+            bitvec8_t    cr_drmissh_drmiss4_read;
+            bitvec8_t    cr_drmissh_drmiss3_write;
+            bitvec8_t    cr_drmissh_drmiss3_wmask;
+            bitvec8_t    cr_drmissh_drmiss3_read;
+            bitvec8_t    cr_dwacc_dwacc3_read;
+            bitvec8_t    cr_dwacc_dwacc2_read;                                                       /* GENERATED */
+            bitvec8_t    cr_dwacc_dwacc1_read;
+            bitvec8_t    cr_dwacc_dwacc0_write;
+            bitvec8_t    cr_dwacc_dwacc0_wmask;
+            bitvec8_t    cr_dwacc_dwacc0_read;
+            byte_t       cr_dwacc_dwacc0_add;
+            bitvec8_t    cr_dwacch_dwacc6_read;
+            bitvec8_t    cr_dwacch_dwacc5_read;
+            bitvec8_t    cr_dwacch_dwacc4_read;
+            bitvec8_t    cr_dwacch_dwacc3_write;
+            bitvec8_t    cr_dwacch_dwacc3_wmask;                                                     /* GENERATED */
+            bitvec8_t    cr_dwacch_dwacc3_read;
+            bitvec8_t    cr_dwmiss_dwmiss3_read;
+            bitvec8_t    cr_dwmiss_dwmiss2_read;
+            bitvec8_t    cr_dwmiss_dwmiss1_read;
+            bitvec8_t    cr_dwmiss_dwmiss0_write;
+            bitvec8_t    cr_dwmiss_dwmiss0_wmask;
+            bitvec8_t    cr_dwmiss_dwmiss0_read;
+            byte_t       cr_dwmiss_dwmiss0_add;
+            bitvec8_t    cr_dwmissh_dwmiss6_read;
+            bitvec8_t    cr_dwmissh_dwmiss5_read;                                                    /* GENERATED */
+            bitvec8_t    cr_dwmissh_dwmiss4_read;
+            bitvec8_t    cr_dwmissh_dwmiss3_write;
+            bitvec8_t    cr_dwmissh_dwmiss3_wmask;
+            bitvec8_t    cr_dwmissh_dwmiss3_read;
+            bitvec8_t    cr_dbypass_dbypass3_read;
+            bitvec8_t    cr_dbypass_dbypass2_read;
+            bitvec8_t    cr_dbypass_dbypass1_read;
+            bitvec8_t    cr_dbypass_dbypass0_write;
+            bitvec8_t    cr_dbypass_dbypass0_wmask;
+            bitvec8_t    cr_dbypass_dbypass0_read;                                                   /* GENERATED */
+            byte_t       cr_dbypass_dbypass0_add;
+            bitvec8_t    cr_dbypassh_dbypass6_read;
+            bitvec8_t    cr_dbypassh_dbypass5_read;
+            bitvec8_t    cr_dbypassh_dbypass4_read;
+            bitvec8_t    cr_dbypassh_dbypass3_write;
+            bitvec8_t    cr_dbypassh_dbypass3_wmask;
+            bitvec8_t    cr_dbypassh_dbypass3_read;
+            bitvec8_t    cr_dwbuf_dwbuf3_read;
+            bitvec8_t    cr_dwbuf_dwbuf2_read;
+            bitvec8_t    cr_dwbuf_dwbuf1_read;                                                       /* GENERATED */
+            bitvec8_t    cr_dwbuf_dwbuf0_write;
+            bitvec8_t    cr_dwbuf_dwbuf0_wmask;
+            bitvec8_t    cr_dwbuf_dwbuf0_read;
+            byte_t       cr_dwbuf_dwbuf0_add;
+            bitvec8_t    cr_dwbufh_dwbuf6_read;
+            bitvec8_t    cr_dwbufh_dwbuf5_read;
+            bitvec8_t    cr_dwbufh_dwbuf4_read;
+            bitvec8_t    cr_dwbufh_dwbuf3_write;
+            bitvec8_t    cr_dwbufh_dwbuf3_wmask;
+            bitvec8_t    cr_dwbufh_dwbuf3_read;                                                      /* GENERATED */
+
+            // Context soft reset.
+            if (st.cx[ctxt].cregIface.cxreg_reset) {
+                st.cx[ctxt].cregIface.cxreg_readData = 0;
+                st.cx[ctxt].cregIface.cxreg2rv_reset = !!(0ull);
+                st.cx[ctxt].cregIface.cxreg2cxplif_handlingDebugTrap = !!(0ull);
+                st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints = (breakpointInfo_t) {
+                    /* addr */ {
+                        /* 0 */ 0ull,
+                        /* 1 */ 0ull,                                                                /* GENERATED */
+                        /* 2 */ 0ull,
+                        /* 3 */ 0ull
+                    },
+                    /* cfg */ {
+                        /* 0 */ 0ull,
+                        /* 1 */ 0ull,
+                        /* 2 */ 0ull,
+                        /* 3 */ 0ull
+                    }
+                };                                                                                   /* GENERATED */
+                st.cx[ctxt].cregIface.cxreg2cfg_requestEnable = !!(0ull);
+                st.cx[ctxt].cxregState.cr_ccr_cause_r = 0ull;
+                st.cx[ctxt].cxregState.cr_ccr_branch_r = 0ull;
+                st.cx[ctxt].cxregState.cr_ccr_k_r = !!(1ull);
+                st.cx[ctxt].cxregState.cr_ccr_c_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_ccr_b_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_ccr_r_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_ccr_i_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_sccr_k_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_sccr_c_r = !!(0ull);                                       /* GENERATED */
+                st.cx[ctxt].cxregState.cr_sccr_b_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_sccr_r_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_sccr_i_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_lr_lr_r = 0ull;
+                st.cx[ctxt].cxregState.cr_pc_pc_r = 0ull;
+                st.cx[ctxt].cxregState.cr_th_th_r = 0ull;
+                st.cx[ctxt].cxregState.cr_ph_ph_r = 0ull;
+                st.cx[ctxt].cxregState.cr_tp_tp_r = 0ull;
+                st.cx[ctxt].cxregState.cr_ta_ta_r = 0ull;
+                st.cx[ctxt].cxregState.cr_br0_br0_r = 0ull;                                          /* GENERATED */
+                st.cx[ctxt].cxregState.cr_br1_br1_r = 0ull;
+                st.cx[ctxt].cxregState.cr_br2_br2_r = 0ull;
+                st.cx[ctxt].cxregState.cr_br3_br3_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dcr_d_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr_j_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr_e_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr_r_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr_s_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr_b_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr_cause_r = 0ull;                                        /* GENERATED */
+                st.cx[ctxt].cxregState.cr_dcr_br3_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dcr_br2_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dcr_br1_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dcr_br0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dcr2_result_r = 255ull;
+                st.cx[ctxt].cxregState.cr_dcr2_t_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr2_m_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr2_r_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr2_c_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_dcr2_i_r = !!(0ull);                                       /* GENERATED */
+                st.cx[ctxt].cxregState.cr_dcr2_e_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_crr_crr_r = 0ull;
+                st.cx[ctxt].cxregState.cr_wcfg_wcfg_r = 0ull;
+                st.cx[ctxt].cxregState.cr_sawc_s_r = !!(0ull);
+                st.cx[ctxt].cxregState.cr_scrp1_scrp1_r = 0ull;
+                st.cx[ctxt].cxregState.cr_scrp2_scrp2_r = 0ull;
+                st.cx[ctxt].cxregState.cr_scrp3_scrp3_r = 0ull;
+                st.cx[ctxt].cxregState.cr_scrp4_scrp4_r = 0ull;
+                st.cx[ctxt].cxregState.cr_rsc_rsc_r = 4294967295ull;
+                st.cx[ctxt].cxregState.cr_csc_csc_r = 4294967295ull;                                 /* GENERATED */
+                st.cx[ctxt].cxregState.cr_csc_csc_neq = !!(0ull);
+                st.cx[ctxt].cxregState.cr_cyc_cyc0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_cyc_cyc0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_stall_stall0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_stall_stall0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_bun_bun0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_bun_bun0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_syl_syl0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_syl_syl0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_nop_nop0_add_r = 0ull;                                     /* GENERATED */
+                st.cx[ctxt].cxregState.cr_nop_nop0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_iacc_iacc0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_iacc_iacc0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_imiss_imiss0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_imiss_imiss0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dracc_dracc0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dracc_dracc0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_drmiss_drmiss0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_drmiss_drmiss0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dwacc_dwacc0_add_r = 0ull;                                 /* GENERATED */
+                st.cx[ctxt].cxregState.cr_dwacc_dwacc0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dwmiss_dwmiss0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dwmiss_dwmiss0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dbypass_dbypass0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dbypass_dbypass0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dwbuf_dwbuf0_add_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dwbuf_dwbuf0_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dcr_e_r = oldCxregState[ctxt].cr_dcr_e_r;
+                st.cx[ctxt].cxregState.cr_dcr_s_r = oldCxregState[ctxt].cr_dcr_s_r;
+                st.cx[ctxt].cxregState.cr_dcr_b_r = oldCxregState[ctxt].cr_dcr_b_r;                  /* GENERATED */
+                continue;
+            }
+
+            // Bus decoding.
+            data_t bus_writeData = st.cx[ctxt].cregIface.cxreg_writeData;
+            data_t _mask = 0;
+            if (st.cx[ctxt].cregIface.cxreg_writeMask & 1) _mask |= 0x000000FF;
+            if (st.cx[ctxt].cregIface.cxreg_writeMask & 2) _mask |= 0x0000FF00;
+            if (st.cx[ctxt].cregIface.cxreg_writeMask & 4) _mask |= 0x00FF0000;
+            if (st.cx[ctxt].cregIface.cxreg_writeMask & 8) _mask |= 0xFF000000;                      /* GENERATED */
+            unsigned7_t bus_wordAddr = st.cx[ctxt].cregIface.cxreg_address >> 2;
+            if (st.cx[ctxt].cregIface.cxreg_address < 0) {
+                bus_wordAddr = 0;
+                _mask = 0;
+            }
+            data_t bus_writeMaskDbg = st.cx[ctxt].cregIface.cxreg_origin ? _mask : 0;
+            data_t bus_writeMaskCore = st.cx[ctxt].cregIface.cxreg_origin ? 0 : _mask;
+
+            // Language-agnostic code.
+            bit_t perf_count_clear = 0;                                                              /* GENERATED */
+            cr_ccr_cause_write = bus_writeData>>(24ull);
+            cr_ccr_cause_wmask_dbg = (bus_writeMaskDbg>>(24ull)) & ((((((bus_wordAddr)&0x1FFull) == (0ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_ccr_cause_v = 0ull;
+            cr_ccr_cause_v = oldCxregState[ctxt].cr_ccr_cause_r;
+            cr_ccr_cause_v = ((cr_ccr_cause_v) & (~(cr_ccr_cause_wmask_dbg))) | ((cr_ccr_cause_write) & (cr_ccr_cause_wmask_dbg));
+            cr_ccr_cause_read = oldCxregState[ctxt].cr_ccr_cause_r;
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_ccr_cause_v = st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.cause;
+                }                                                                                    /* GENERATED */
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_rfi)&1ull) {
+                    cr_ccr_cause_v = 0ull;
+                }
+            }
+            /*@user*/
+
+            st.cx[ctxt].cregIface.cxreg2cxplif_handlingDebugTrap = TRAP_TABLE[(cr_ccr_cause_v) & 0xFF].isDebugTrap;
+            /*@generated*/
+            st.cx[ctxt].cxregState.cr_ccr_cause_r = cr_ccr_cause_v;
+            cr_ccr_branch_write = bus_writeData>>(16ull);                                            /* GENERATED */
+            cr_ccr_branch_wmask_dbg = (bus_writeMaskDbg>>(16ull)) & ((((((bus_wordAddr)&0x1FFull) == (0ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_ccr_branch_v = 0ull;
+            cr_ccr_branch_v = oldCxregState[ctxt].cr_ccr_branch_r;
+            cr_ccr_branch_v = ((cr_ccr_branch_v) & (~(cr_ccr_branch_wmask_dbg))) | ((cr_ccr_branch_write) & (cr_ccr_branch_wmask_dbg));
+            cr_ccr_branch_read = oldCxregState[ctxt].cr_ccr_branch_r;
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                cr_ccr_branch_v = ((cr_ccr_branch_v) & (~(st.cx[ctxt].cregIface.cxplif2cxreg_brWriteEnable))) | ((st.cx[ctxt].cregIface.cxplif2cxreg_brWriteData) & (st.cx[ctxt].cregIface.cxplif2cxreg_brWriteEnable));
+            }
+            st.cx[ctxt].cxregState.cr_ccr_branch_r = cr_ccr_branch_v;
+            cr_ccr_k_v = !!(0ull);                                                                   /* GENERATED */
+            cr_ccr_k_v = oldCxregState[ctxt].cr_ccr_k_r;
+            cr_ccr_k_read = (((~(oldCxregState[ctxt].cr_ccr_k_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_ccr_k_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_ccr_k_v = !!(1ull);
+                }
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_rfi)&1ull) {
+                    cr_ccr_k_v = oldCxregState[ctxt].cr_sccr_k_r;
+                }
+            }                                                                                        /* GENERATED */
+            st.cx[ctxt].cxregState.cr_ccr_k_r = cr_ccr_k_v;
+            cr_ccr_c_write = bus_writeData>>(6ull);
+            cr_ccr_c_wmask = ((bus_writeMaskDbg>>(6ull)) | (bus_writeMaskCore>>(6ull))) & ((((((bus_wordAddr)&0x1FFull) == (0ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_ccr_c_v = !!(0ull);
+            cr_ccr_c_cmd = 0ull;
+            cr_ccr_c_v = oldCxregState[ctxt].cr_ccr_c_r;
+            cr_ccr_c_cmd = (cr_ccr_c_wmask) & (cr_ccr_c_write);
+            if ((cr_ccr_c_cmd) == (3ull)) {
+                cr_ccr_c_v = ~(cr_ccr_c_v);
+            } else {                                                                                 /* GENERATED */
+                cr_ccr_c_v = ((cr_ccr_c_v) | (cr_ccr_c_cmd>>(0ull))) & (~(cr_ccr_c_cmd>>(1ull)));
+            }
+            cr_ccr_c_read = (((~(oldCxregState[ctxt].cr_ccr_c_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_ccr_c_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_ccr_c_v = !!(0ull);
+                }
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_rfi)&1ull) {
+                    cr_ccr_c_v = oldCxregState[ctxt].cr_sccr_c_r;
+                }                                                                                    /* GENERATED */
+            }
+            st.cx[ctxt].cxregState.cr_ccr_c_r = cr_ccr_c_v;
+            cr_ccr_b_write = bus_writeData>>(4ull);
+            cr_ccr_b_wmask = ((bus_writeMaskDbg>>(4ull)) | (bus_writeMaskCore>>(4ull))) & ((((((bus_wordAddr)&0x1FFull) == (0ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_ccr_b_v = !!(0ull);
+            cr_ccr_b_cmd = 0ull;
+            cr_ccr_b_v = oldCxregState[ctxt].cr_ccr_b_r;
+            cr_ccr_b_cmd = (cr_ccr_b_wmask) & (cr_ccr_b_write);
+            if ((cr_ccr_b_cmd) == (3ull)) {
+                cr_ccr_b_v = ~(cr_ccr_b_v);                                                          /* GENERATED */
+            } else {
+                cr_ccr_b_v = ((cr_ccr_b_v) | (cr_ccr_b_cmd>>(0ull))) & (~(cr_ccr_b_cmd>>(1ull)));
+            }
+            cr_ccr_b_read = (((~(oldCxregState[ctxt].cr_ccr_b_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_ccr_b_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if (((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active) & (st.cx[ctxt].cregIface.cxplif2cxreg_trapIsDebug))&1ull) {
+                    cr_ccr_b_v = !!(0ull);
+                }
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_rfi)&1ull) {
+                    cr_ccr_b_v = oldCxregState[ctxt].cr_sccr_b_r;                                    /* GENERATED */
+                }
+            }
+            st.cx[ctxt].cxregState.cr_ccr_b_r = cr_ccr_b_v;
+            cr_ccr_r_write = bus_writeData>>(2ull);
+            cr_ccr_r_wmask = ((bus_writeMaskDbg>>(2ull)) | (bus_writeMaskCore>>(2ull))) & ((((((bus_wordAddr)&0x1FFull) == (0ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_ccr_r_v = !!(0ull);
+            cr_ccr_r_cmd = 0ull;
+            cr_ccr_r_v = oldCxregState[ctxt].cr_ccr_r_r;
+            cr_ccr_r_cmd = (cr_ccr_r_wmask) & (cr_ccr_r_write);
+            if ((cr_ccr_r_cmd) == (3ull)) {                                                          /* GENERATED */
+                cr_ccr_r_v = ~(cr_ccr_r_v);
+            } else {
+                cr_ccr_r_v = ((cr_ccr_r_v) | (cr_ccr_r_cmd>>(0ull))) & (~(cr_ccr_r_cmd>>(1ull)));
+            }
+            cr_ccr_r_read = (((~(oldCxregState[ctxt].cr_ccr_r_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_ccr_r_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_ccr_r_v = !!(0ull);
+                }
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_rfi)&1ull) {                                 /* GENERATED */
+                    cr_ccr_r_v = oldCxregState[ctxt].cr_sccr_r_r;
+                }
+            }
+            st.cx[ctxt].cxregState.cr_ccr_r_r = cr_ccr_r_v;
+            cr_ccr_i_write = bus_writeData>>(0ull);
+            cr_ccr_i_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (0ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_ccr_i_v = !!(0ull);
+            cr_ccr_i_cmd = 0ull;
+            cr_ccr_i_v = oldCxregState[ctxt].cr_ccr_i_r;
+            cr_ccr_i_cmd = (cr_ccr_i_wmask) & (cr_ccr_i_write);                                      /* GENERATED */
+            if ((cr_ccr_i_cmd) == (3ull)) {
+                cr_ccr_i_v = ~(cr_ccr_i_v);
+            } else {
+                cr_ccr_i_v = ((cr_ccr_i_v) | (cr_ccr_i_cmd>>(0ull))) & (~(cr_ccr_i_cmd>>(1ull)));
+            }
+            cr_ccr_i_read = (((~(oldCxregState[ctxt].cr_ccr_i_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_ccr_i_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_ccr_i_v = !!(0ull);
+                }                                                                                    /* GENERATED */
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_rfi)&1ull) {
+                    cr_ccr_i_v = oldCxregState[ctxt].cr_sccr_i_r;
+                }
+            }
+            st.cx[ctxt].cxregState.cr_ccr_i_r = cr_ccr_i_v;
+            cr_sccr_id_read = ctxt;
+            cr_sccr_k_write = bus_writeData>>(8ull);
+            cr_sccr_k_wmask_dbg = (bus_writeMaskDbg>>(8ull)) & ((((((bus_wordAddr)&0x1FFull) == (1ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_sccr_k_wmask_core = (bus_writeMaskCore>>(8ull)) & ((((((bus_wordAddr)&0x1FFull) == (1ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_sccr_k_v = !!(0ull);                                                                  /* GENERATED */
+            cr_sccr_k_cmd = 0ull;
+            cr_sccr_k_v = oldCxregState[ctxt].cr_sccr_k_r;
+            cr_sccr_k_cmd = ((cr_sccr_k_wmask_dbg) | ((cr_sccr_k_wmask_core) & (2ull))) & (cr_sccr_k_write);
+            if ((cr_sccr_k_cmd) == (3ull)) {
+                cr_sccr_k_v = ~(cr_sccr_k_v);
+            } else {
+                cr_sccr_k_v = ((cr_sccr_k_v) | (cr_sccr_k_cmd>>(0ull))) & (~(cr_sccr_k_cmd>>(1ull)));
+            }
+            cr_sccr_k_read = (((~(oldCxregState[ctxt].cr_sccr_k_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_sccr_k_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {                                /* GENERATED */
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_sccr_k_v = oldCxregState[ctxt].cr_ccr_k_r;
+                }
+            }
+            st.cx[ctxt].cxregState.cr_sccr_k_r = cr_sccr_k_v;
+            cr_sccr_c_write = bus_writeData>>(6ull);
+            cr_sccr_c_wmask = ((bus_writeMaskDbg>>(6ull)) | (bus_writeMaskCore>>(6ull))) & ((((((bus_wordAddr)&0x1FFull) == (1ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_sccr_c_v = !!(0ull);
+            cr_sccr_c_cmd = 0ull;
+            cr_sccr_c_v = oldCxregState[ctxt].cr_sccr_c_r;                                           /* GENERATED */
+            cr_sccr_c_cmd = (cr_sccr_c_wmask) & (cr_sccr_c_write);
+            if ((cr_sccr_c_cmd) == (3ull)) {
+                cr_sccr_c_v = ~(cr_sccr_c_v);
+            } else {
+                cr_sccr_c_v = ((cr_sccr_c_v) | (cr_sccr_c_cmd>>(0ull))) & (~(cr_sccr_c_cmd>>(1ull)));
+            }
+            cr_sccr_c_read = (((~(oldCxregState[ctxt].cr_sccr_c_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_sccr_c_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_sccr_c_v = oldCxregState[ctxt].cr_ccr_c_r;                                    /* GENERATED */
+                }
+            }
+            st.cx[ctxt].cxregState.cr_sccr_c_r = cr_sccr_c_v;
+            cr_sccr_b_write = bus_writeData>>(4ull);
+            cr_sccr_b_wmask = ((bus_writeMaskDbg>>(4ull)) | (bus_writeMaskCore>>(4ull))) & ((((((bus_wordAddr)&0x1FFull) == (1ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_sccr_b_v = !!(0ull);
+            cr_sccr_b_cmd = 0ull;
+            cr_sccr_b_v = oldCxregState[ctxt].cr_sccr_b_r;
+            cr_sccr_b_cmd = (cr_sccr_b_wmask) & (cr_sccr_b_write);
+            if ((cr_sccr_b_cmd) == (3ull)) {                                                         /* GENERATED */
+                cr_sccr_b_v = ~(cr_sccr_b_v);
+            } else {
+                cr_sccr_b_v = ((cr_sccr_b_v) | (cr_sccr_b_cmd>>(0ull))) & (~(cr_sccr_b_cmd>>(1ull)));
+            }
+            cr_sccr_b_read = (((~(oldCxregState[ctxt].cr_sccr_b_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_sccr_b_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_sccr_b_v = oldCxregState[ctxt].cr_ccr_b_r;
+                }
+            }                                                                                        /* GENERATED */
+            st.cx[ctxt].cxregState.cr_sccr_b_r = cr_sccr_b_v;
+            cr_sccr_r_write = bus_writeData>>(2ull);
+            cr_sccr_r_wmask = ((bus_writeMaskDbg>>(2ull)) | (bus_writeMaskCore>>(2ull))) & ((((((bus_wordAddr)&0x1FFull) == (1ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_sccr_r_v = !!(0ull);
+            cr_sccr_r_cmd = 0ull;
+            cr_sccr_r_v = oldCxregState[ctxt].cr_sccr_r_r;
+            cr_sccr_r_cmd = (cr_sccr_r_wmask) & (cr_sccr_r_write);
+            if ((cr_sccr_r_cmd) == (3ull)) {
+                cr_sccr_r_v = ~(cr_sccr_r_v);
+            } else {                                                                                 /* GENERATED */
+                cr_sccr_r_v = ((cr_sccr_r_v) | (cr_sccr_r_cmd>>(0ull))) & (~(cr_sccr_r_cmd>>(1ull)));
+            }
+            cr_sccr_r_read = (((~(oldCxregState[ctxt].cr_sccr_r_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_sccr_r_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_sccr_r_v = oldCxregState[ctxt].cr_ccr_r_r;
+                }
+            }
+            st.cx[ctxt].cxregState.cr_sccr_r_r = cr_sccr_r_v;
+            cr_sccr_i_write = bus_writeData>>(0ull);                                                 /* GENERATED */
+            cr_sccr_i_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (1ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_sccr_i_v = !!(0ull);
+            cr_sccr_i_cmd = 0ull;
+            cr_sccr_i_v = oldCxregState[ctxt].cr_sccr_i_r;
+            cr_sccr_i_cmd = (cr_sccr_i_wmask) & (cr_sccr_i_write);
+            if ((cr_sccr_i_cmd) == (3ull)) {
+                cr_sccr_i_v = ~(cr_sccr_i_v);
+            } else {
+                cr_sccr_i_v = ((cr_sccr_i_v) | (cr_sccr_i_cmd>>(0ull))) & (~(cr_sccr_i_cmd>>(1ull)));
+            }                                                                                        /* GENERATED */
+            cr_sccr_i_read = (((~(oldCxregState[ctxt].cr_sccr_i_r))&1ull)<<1ull)|(((oldCxregState[ctxt].cr_sccr_i_r)&1ull)&0x1ull);
+            if (!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) {
+                if ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull) {
+                    cr_sccr_i_v = oldCxregState[ctxt].cr_ccr_i_r;
+                }
+            }
+            st.cx[ctxt].cxregState.cr_sccr_i_r = cr_sccr_i_v;
+            cr_lr_lr_write = bus_writeData>>(0ull);
+            cr_lr_lr_wmask_dbg = (bus_writeMaskDbg>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (2ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_lr_lr_r = ((oldCxregState[ctxt].cr_lr_lr_r) & (~(cr_lr_lr_wmask_dbg))) | ((cr_lr_lr_write) & (cr_lr_lr_wmask_dbg)); /* GENERATED */
+            cr_lr_lr_read = oldCxregState[ctxt].cr_lr_lr_r;
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && ((st.cx[ctxt].cregIface.cxplif2cxreg_linkWriteEnable)&1ull)) {
+                st.cx[ctxt].cxregState.cr_lr_lr_r = st.cx[ctxt].cregIface.cxplif2cxreg_linkWriteData;
+            }
+            cr_pc_pc_write = bus_writeData>>(0ull);
+            cr_pc_pc_wmask_dbg = (bus_writeMaskDbg>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (3ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_pc_pc_v = 0ull;
+            cr_pc_pc_v = oldCxregState[ctxt].cr_pc_pc_r;
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && (!((oldCxregState[ctxt].cr_dcr_j_r)&1ull))) {
+                cr_pc_pc_v = st.cx[ctxt].cregIface.cxplif2cxreg_nextPC;                              /* GENERATED */
+            }
+            cr_pc_pc_v = ((cr_pc_pc_v) & (~(cr_pc_pc_wmask_dbg))) | ((cr_pc_pc_write) & (cr_pc_pc_wmask_dbg));
+            if ((cr_pc_pc_wmask_dbg>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dcr_j_r = 1ull;
+            }
+            st.cx[ctxt].cxregState.cr_pc_pc_r = cr_pc_pc_v;
+            cr_pc_pc_read = oldCxregState[ctxt].cr_pc_pc_r;
+            cr_th_th_write = bus_writeData>>(0ull);
+            cr_th_th_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (4ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_th_th_r = ((oldCxregState[ctxt].cr_th_th_r) & (~(cr_th_th_wmask))) | ((cr_th_th_write) & (cr_th_th_wmask)); /* GENERATED */
+            cr_th_th_read = oldCxregState[ctxt].cr_th_th_r;
+            cr_ph_ph_write = bus_writeData>>(0ull);
+            cr_ph_ph_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (5ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_ph_ph_r = ((oldCxregState[ctxt].cr_ph_ph_r) & (~(cr_ph_ph_wmask))) | ((cr_ph_ph_write) & (cr_ph_ph_wmask));
+            cr_ph_ph_read = oldCxregState[ctxt].cr_ph_ph_r;
+            cr_tp_tp_write = bus_writeData>>(0ull);
+            cr_tp_tp_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (6ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_tp_tp_r = ((oldCxregState[ctxt].cr_tp_tp_r) & (~(cr_tp_tp_wmask))) | ((cr_tp_tp_write) & (cr_tp_tp_wmask));
+            cr_tp_tp_read = oldCxregState[ctxt].cr_tp_tp_r;
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull)) { /* GENERATED */
+                st.cx[ctxt].cxregState.cr_tp_tp_r = st.cx[ctxt].cregIface.cxplif2cxreg_trapPoint;
+            }
+            cr_ta_ta_write = bus_writeData>>(0ull);
+            cr_ta_ta_wmask_dbg = (bus_writeMaskDbg>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (7ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_ta_ta_r = ((oldCxregState[ctxt].cr_ta_ta_r) & (~(cr_ta_ta_wmask_dbg))) | ((cr_ta_ta_write) & (cr_ta_ta_wmask_dbg));
+            cr_ta_ta_read = oldCxregState[ctxt].cr_ta_ta_r;
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && ((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active)&1ull)) {
+                st.cx[ctxt].cxregState.cr_ta_ta_r = st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.arg;
+            }
+            cr_br0_br0_write = bus_writeData>>(0ull);                                                /* GENERATED */
+            cr_br0_br0_wmask_dbg = (bus_writeMaskDbg>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (8ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_br0_br0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (8ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_br0_br0_mask = 0ull;
+            if ((CFG.numBreakpoints) > (0ull)) {
+                if ((oldCxregState[ctxt].cr_dcr_e_r)&1ull) {
+                    cr_br0_br0_mask = cr_br0_br0_wmask_dbg;
+                } else {
+                    cr_br0_br0_mask = cr_br0_br0_wmask;
+                }
+                st.cx[ctxt].cxregState.cr_br0_br0_r = ((oldCxregState[ctxt].cr_br0_br0_r) & (~(cr_br0_br0_mask))) | ((cr_br0_br0_write) & (cr_br0_br0_mask)); /* GENERATED */
+                cr_br0_br0_read = oldCxregState[ctxt].cr_br0_br0_r;
+                st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints.addr[0] = oldCxregState[ctxt].cr_br0_br0_r;
+            }
+            cr_br1_br1_write = bus_writeData>>(0ull);
+            cr_br1_br1_wmask_dbg = (bus_writeMaskDbg>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (9ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_br1_br1_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (9ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_br1_br1_mask = 0ull;
+            if ((CFG.numBreakpoints) > (1ull)) {
+                if ((oldCxregState[ctxt].cr_dcr_e_r)&1ull) {
+                    cr_br1_br1_mask = cr_br1_br1_wmask_dbg;                                          /* GENERATED */
+                } else {
+                    cr_br1_br1_mask = cr_br1_br1_wmask;
+                }
+                st.cx[ctxt].cxregState.cr_br1_br1_r = ((oldCxregState[ctxt].cr_br1_br1_r) & (~(cr_br1_br1_mask))) | ((cr_br1_br1_write) & (cr_br1_br1_mask));
+                cr_br1_br1_read = oldCxregState[ctxt].cr_br1_br1_r;
+                st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints.addr[1] = oldCxregState[ctxt].cr_br1_br1_r;
+            }
+            cr_br2_br2_write = bus_writeData>>(0ull);
+            cr_br2_br2_wmask_dbg = (bus_writeMaskDbg>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (10ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_br2_br2_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (10ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull)); /* GENERATED */
+            cr_br2_br2_mask = 0ull;
+            if ((CFG.numBreakpoints) > (2ull)) {
+                if ((oldCxregState[ctxt].cr_dcr_e_r)&1ull) {
+                    cr_br2_br2_mask = cr_br2_br2_wmask_dbg;
+                } else {
+                    cr_br2_br2_mask = cr_br2_br2_wmask;
+                }
+                st.cx[ctxt].cxregState.cr_br2_br2_r = ((oldCxregState[ctxt].cr_br2_br2_r) & (~(cr_br2_br2_mask))) | ((cr_br2_br2_write) & (cr_br2_br2_mask));
+                cr_br2_br2_read = oldCxregState[ctxt].cr_br2_br2_r;
+                st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints.addr[2] = oldCxregState[ctxt].cr_br2_br2_r; /* GENERATED */
+            }
+            cr_br3_br3_write = bus_writeData>>(0ull);
+            cr_br3_br3_wmask_dbg = (bus_writeMaskDbg>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (11ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_br3_br3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (11ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_br3_br3_mask = 0ull;
+            if ((CFG.numBreakpoints) > (3ull)) {
+                if ((oldCxregState[ctxt].cr_dcr_e_r)&1ull) {
+                    cr_br3_br3_mask = cr_br3_br3_wmask_dbg;
+                } else {
+                    cr_br3_br3_mask = cr_br3_br3_wmask;                                              /* GENERATED */
+                }
+                st.cx[ctxt].cxregState.cr_br3_br3_r = ((oldCxregState[ctxt].cr_br3_br3_r) & (~(cr_br3_br3_mask))) | ((cr_br3_br3_write) & (cr_br3_br3_mask));
+                cr_br3_br3_read = oldCxregState[ctxt].cr_br3_br3_r;
+                st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints.addr[3] = oldCxregState[ctxt].cr_br3_br3_r;
+            }
+            cr_dcr_d_write = bus_writeData>>(31ull);
+            cr_dcr_d_wmask_dbg = (bus_writeMaskDbg>>(31ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cregIface.cxreg2rv_reset = !!(((cr_dcr_d_write) & (cr_dcr_d_wmask_dbg))&0x1ull);
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && ((st.cx[ctxt].cregIface.cxplif2cxreg_stop)&1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_d_r = 1ull;                                            /* GENERATED */
+            }
+            cr_dcr_d_read = (oldCxregState[ctxt].cr_dcr_d_r)&1ull;
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && ((st.cx[ctxt].cregIface.cxplif2cxreg_overridePC_ack)&1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_j_r = 0ull;
+            }
+            cr_dcr_j_read = (oldCxregState[ctxt].cr_dcr_j_r)&1ull;
+            cr_dcr_i_write = bus_writeData>>(28ull);
+            cr_dcr_i_wmask_dbg = (bus_writeMaskDbg>>(28ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (!!(((cr_dcr_i_write) & (cr_dcr_i_wmask_dbg))&0x1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_e_r = 0ull;                                            /* GENERATED */
+            }
+            cr_dcr_i_read = (~(oldCxregState[ctxt].cr_dcr_e_r))&1ull;
+            cr_dcr_e_write = bus_writeData>>(27ull);
+            cr_dcr_e_wmask_dbg = (bus_writeMaskDbg>>(27ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (!!(((cr_dcr_e_write) & (cr_dcr_e_wmask_dbg))&0x1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_e_r = 1ull;
+            }
+            cr_dcr_e_read = (oldCxregState[ctxt].cr_dcr_e_r)&1ull;
+            cr_dcr_r_write = bus_writeData>>(26ull);
+            cr_dcr_r_wmask_dbg = (bus_writeMaskDbg>>(26ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull)); /* GENERATED */
+            if (!!(((cr_dcr_r_write) & (cr_dcr_r_wmask_dbg))&0x1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_r_r = 1ull;
+                st.cx[ctxt].cxregState.cr_dcr_d_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dcr_b_r = 0ull;
+            }
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && ((st.cx[ctxt].cregIface.cxplif2cxreg_resuming_ack)&1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_r_r = 0ull;
+            }
+            cr_dcr_r_read = (oldCxregState[ctxt].cr_dcr_r_r)&1ull;
+            cr_dcr_s_write = bus_writeData>>(25ull);                                                 /* GENERATED */
+            cr_dcr_s_wmask_dbg = (bus_writeMaskDbg>>(25ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dcr_s_wmask_core = (bus_writeMaskCore>>(25ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (!!(((cr_dcr_s_write) & (cr_dcr_s_wmask_dbg))&0x1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_s_r = 1ull;
+                st.cx[ctxt].cxregState.cr_dcr_r_r = 1ull;
+                st.cx[ctxt].cxregState.cr_dcr_d_r = 0ull;
+                st.cx[ctxt].cxregState.cr_dcr_b_r = 0ull;
+            }
+            if (!!((((cr_dcr_s_write) & (cr_dcr_s_wmask_core)) & ((((~(oldCxregState[ctxt].cr_dcr_e_r))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull)))&0x1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_s_r = 1ull;                                            /* GENERATED */
+            }
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && (((((st.cx[ctxt].cregIface.cxplif2cxreg_trapInfo.active) & (st.cx[ctxt].cregIface.cxplif2cxreg_trapIsDebug)) | (st.cx[ctxt].cregIface.cxplif2cxreg_exDbgTrapInfo.active)) | (st.cx[ctxt].cregIface.cxplif2cxreg_stop))&1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_s_r = 0ull;
+            }
+            cr_dcr_s_read = (oldCxregState[ctxt].cr_dcr_s_r)&1ull;
+            cr_dcr_b_write = bus_writeData>>(24ull);
+            cr_dcr_b_wmask_dbg = (bus_writeMaskDbg>>(24ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (!!(((cr_dcr_b_write) & (cr_dcr_b_wmask_dbg))&0x1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_b_r = 1ull;
+                st.cx[ctxt].cxregState.cr_dcr_s_r = 0ull;                                            /* GENERATED */
+            }
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && (((st.cx[ctxt].cregIface.cxplif2cxreg_exDbgTrapInfo.active) | (st.cx[ctxt].cregIface.cxplif2cxreg_stop))&1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_b_r = 1ull;
+            }
+            cr_dcr_b_read = (oldCxregState[ctxt].cr_dcr_b_r)&1ull;
+            cr_dcr_cause_write = bus_writeData>>(16ull);
+            cr_dcr_cause_wmask_dbg = (bus_writeMaskDbg>>(16ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_dcr_cause_r = ((oldCxregState[ctxt].cr_dcr_cause_r) & (~(cr_dcr_cause_wmask_dbg))) | ((cr_dcr_cause_write) & (cr_dcr_cause_wmask_dbg));
+            if ((!((st.cx[ctxt].cregIface.cxplif2cxreg_stall)&1ull)) && ((st.cx[ctxt].cregIface.cxplif2cxreg_exDbgTrapInfo.active)&1ull)) {
+                st.cx[ctxt].cxregState.cr_dcr_cause_r = st.cx[ctxt].cregIface.cxplif2cxreg_exDbgTrapInfo.cause; /* GENERATED */
+            }
+            cr_dcr_cause_read = oldCxregState[ctxt].cr_dcr_cause_r;
+            cr_dcr_br3_write = bus_writeData>>(12ull);
+            cr_dcr_br3_wmask_dbg = (bus_writeMaskDbg>>(12ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dcr_br3_wmask = ((bus_writeMaskDbg>>(12ull)) | (bus_writeMaskCore>>(12ull))) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dcr_br3_mask = 0ull;
+            cr_dcr_br3_v = 0ull;
+            if ((CFG.numBreakpoints) > (3ull)) {
+                cr_dcr_br3_v = oldCxregState[ctxt].cr_dcr_br3_r;
+                if ((oldCxregState[ctxt].cr_dcr_e_r)&1ull) {                                         /* GENERATED */
+                    cr_dcr_br3_mask = cr_dcr_br3_wmask_dbg;
+                } else {
+                    cr_dcr_br3_mask = cr_dcr_br3_wmask;
+                }
+                cr_dcr_br3_v = ((cr_dcr_br3_v) & (~(cr_dcr_br3_mask))) | ((cr_dcr_br3_write) & (cr_dcr_br3_mask));
+                cr_dcr_br3_read = oldCxregState[ctxt].cr_dcr_br3_r;
+                st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints.cfg[3] = oldCxregState[ctxt].cr_dcr_br3_r;
+                st.cx[ctxt].cxregState.cr_dcr_br3_r = cr_dcr_br3_v;
+            }
+            cr_dcr_br2_write = bus_writeData>>(8ull);                                                /* GENERATED */
+            cr_dcr_br2_wmask_dbg = (bus_writeMaskDbg>>(8ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dcr_br2_wmask = ((bus_writeMaskDbg>>(8ull)) | (bus_writeMaskCore>>(8ull))) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dcr_br2_mask = 0ull;
+            cr_dcr_br2_v = 0ull;
+            if ((CFG.numBreakpoints) > (2ull)) {
+                cr_dcr_br2_v = oldCxregState[ctxt].cr_dcr_br2_r;
+                if ((oldCxregState[ctxt].cr_dcr_e_r)&1ull) {
+                    cr_dcr_br2_mask = cr_dcr_br2_wmask_dbg;
+                } else {
+                    cr_dcr_br2_mask = cr_dcr_br2_wmask;                                              /* GENERATED */
+                }
+                cr_dcr_br2_v = ((cr_dcr_br2_v) & (~(cr_dcr_br2_mask))) | ((cr_dcr_br2_write) & (cr_dcr_br2_mask));
+                cr_dcr_br2_read = oldCxregState[ctxt].cr_dcr_br2_r;
+                st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints.cfg[2] = oldCxregState[ctxt].cr_dcr_br2_r;
+                st.cx[ctxt].cxregState.cr_dcr_br2_r = cr_dcr_br2_v;
+            }
+            cr_dcr_br1_write = bus_writeData>>(4ull);
+            cr_dcr_br1_wmask_dbg = (bus_writeMaskDbg>>(4ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dcr_br1_wmask = ((bus_writeMaskDbg>>(4ull)) | (bus_writeMaskCore>>(4ull))) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dcr_br1_mask = 0ull;                                                                  /* GENERATED */
+            cr_dcr_br1_v = 0ull;
+            if ((CFG.numBreakpoints) > (1ull)) {
+                cr_dcr_br1_v = oldCxregState[ctxt].cr_dcr_br1_r;
+                if ((oldCxregState[ctxt].cr_dcr_e_r)&1ull) {
+                    cr_dcr_br1_mask = cr_dcr_br1_wmask_dbg;
+                } else {
+                    cr_dcr_br1_mask = cr_dcr_br1_wmask;
+                }
+                cr_dcr_br1_v = ((cr_dcr_br1_v) & (~(cr_dcr_br1_mask))) | ((cr_dcr_br1_write) & (cr_dcr_br1_mask));
+                cr_dcr_br1_read = oldCxregState[ctxt].cr_dcr_br1_r;                                  /* GENERATED */
+                st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints.cfg[1] = oldCxregState[ctxt].cr_dcr_br1_r;
+                st.cx[ctxt].cxregState.cr_dcr_br1_r = cr_dcr_br1_v;
+            }
+            cr_dcr_br0_write = bus_writeData>>(0ull);
+            cr_dcr_br0_wmask_dbg = (bus_writeMaskDbg>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dcr_br0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (12ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dcr_br0_mask = 0ull;
+            cr_dcr_br0_v = 0ull;
+            if ((CFG.numBreakpoints) > (0ull)) {
+                cr_dcr_br0_v = oldCxregState[ctxt].cr_dcr_br0_r;                                     /* GENERATED */
+                if ((oldCxregState[ctxt].cr_dcr_e_r)&1ull) {
+                    cr_dcr_br0_mask = cr_dcr_br0_wmask_dbg;
+                } else {
+                    cr_dcr_br0_mask = cr_dcr_br0_wmask;
+                }
+                cr_dcr_br0_v = ((cr_dcr_br0_v) & (~(cr_dcr_br0_mask))) | ((cr_dcr_br0_write) & (cr_dcr_br0_mask));
+                cr_dcr_br0_read = oldCxregState[ctxt].cr_dcr_br0_r;
+                st.cx[ctxt].cregIface.cxreg2cxplif_breakpoints.cfg[0] = oldCxregState[ctxt].cr_dcr_br0_r;
+                st.cx[ctxt].cxregState.cr_dcr_br0_r = cr_dcr_br0_v;
+            }                                                                                        /* GENERATED */
+            cr_dcr2_result_write = bus_writeData>>(24ull);
+            cr_dcr2_result_wmask = ((bus_writeMaskDbg>>(24ull)) | (bus_writeMaskCore>>(24ull))) & ((((((bus_wordAddr)&0x1FFull) == (13ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_dcr2_result_r = ((oldCxregState[ctxt].cr_dcr2_result_r) & (~(cr_dcr2_result_wmask))) | ((cr_dcr2_result_write) & (cr_dcr2_result_wmask));
+            cr_dcr2_result_read = oldCxregState[ctxt].cr_dcr2_result_r;
+            if (CFG.traceEnable) {
+                cr_dcr2_trcap_read = 249ull;
+            } else {
+                cr_dcr2_trcap_read = 0ull;
+            }
+            cr_dcr2_t_write = bus_writeData>>(7ull);                                                 /* GENERATED */
+            cr_dcr2_t_wmask = ((bus_writeMaskDbg>>(7ull)) | (bus_writeMaskCore>>(7ull))) & ((((((bus_wordAddr)&0x1FFull) == (13ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (CFG.traceEnable) {
+                st.cx[ctxt].cxregState.cr_dcr2_t_r = !!((((~(cr_dcr2_t_wmask)) & ((((oldCxregState[ctxt].cr_dcr2_t_r)&1ull)?0xFFFFFFFFFFFFFFFFull:0ull))) | ((cr_dcr2_t_write) & (cr_dcr2_t_wmask)))&0x1ull);
+                cr_dcr2_t_read = (oldCxregState[ctxt].cr_dcr2_t_r)&1ull;
+            } else {
+                cr_dcr2_t_read = (0ull)&1ull;
+            }
+            cr_dcr2_m_write = bus_writeData>>(6ull);
+            cr_dcr2_m_wmask = ((bus_writeMaskDbg>>(6ull)) | (bus_writeMaskCore>>(6ull))) & ((((((bus_wordAddr)&0x1FFull) == (13ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (CFG.traceEnable) {                                                                   /* GENERATED */
+                st.cx[ctxt].cxregState.cr_dcr2_m_r = !!((((~(cr_dcr2_m_wmask)) & ((((oldCxregState[ctxt].cr_dcr2_m_r)&1ull)?0xFFFFFFFFFFFFFFFFull:0ull))) | ((cr_dcr2_m_write) & (cr_dcr2_m_wmask)))&0x1ull);
+                cr_dcr2_m_read = (oldCxregState[ctxt].cr_dcr2_m_r)&1ull;
+            } else {
+                cr_dcr2_m_read = (0ull)&1ull;
+            }
+            cr_dcr2_r_write = bus_writeData>>(5ull);
+            cr_dcr2_r_wmask = ((bus_writeMaskDbg>>(5ull)) | (bus_writeMaskCore>>(5ull))) & ((((((bus_wordAddr)&0x1FFull) == (13ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (CFG.traceEnable) {
+                st.cx[ctxt].cxregState.cr_dcr2_r_r = !!((((~(cr_dcr2_r_wmask)) & ((((oldCxregState[ctxt].cr_dcr2_r_r)&1ull)?0xFFFFFFFFFFFFFFFFull:0ull))) | ((cr_dcr2_r_write) & (cr_dcr2_r_wmask)))&0x1ull);
+                cr_dcr2_r_read = (oldCxregState[ctxt].cr_dcr2_r_r)&1ull;                             /* GENERATED */
+            } else {
+                cr_dcr2_r_read = (0ull)&1ull;
+            }
+            cr_dcr2_c_write = bus_writeData>>(4ull);
+            cr_dcr2_c_wmask = ((bus_writeMaskDbg>>(4ull)) | (bus_writeMaskCore>>(4ull))) & ((((((bus_wordAddr)&0x1FFull) == (13ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (CFG.traceEnable) {
+                st.cx[ctxt].cxregState.cr_dcr2_c_r = !!((((~(cr_dcr2_c_wmask)) & ((((oldCxregState[ctxt].cr_dcr2_c_r)&1ull)?0xFFFFFFFFFFFFFFFFull:0ull))) | ((cr_dcr2_c_write) & (cr_dcr2_c_wmask)))&0x1ull);
+                cr_dcr2_c_read = (oldCxregState[ctxt].cr_dcr2_c_r)&1ull;
+            } else {
+                cr_dcr2_c_read = (0ull)&1ull;                                                        /* GENERATED */
+            }
+            cr_dcr2_i_write = bus_writeData>>(3ull);
+            cr_dcr2_i_wmask = ((bus_writeMaskDbg>>(3ull)) | (bus_writeMaskCore>>(3ull))) & ((((((bus_wordAddr)&0x1FFull) == (13ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (CFG.traceEnable) {
+                st.cx[ctxt].cxregState.cr_dcr2_i_r = !!((((~(cr_dcr2_i_wmask)) & ((((oldCxregState[ctxt].cr_dcr2_i_r)&1ull)?0xFFFFFFFFFFFFFFFFull:0ull))) | ((cr_dcr2_i_write) & (cr_dcr2_i_wmask)))&0x1ull);
+                cr_dcr2_i_read = (oldCxregState[ctxt].cr_dcr2_i_r)&1ull;
+            } else {
+                cr_dcr2_i_read = (0ull)&1ull;
+            }
+            cr_dcr2_e_write = bus_writeData>>(0ull);                                                 /* GENERATED */
+            cr_dcr2_e_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (13ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (CFG.traceEnable) {
+                st.cx[ctxt].cxregState.cr_dcr2_e_r = !!((((~(cr_dcr2_e_wmask)) & ((((oldCxregState[ctxt].cr_dcr2_e_r)&1ull)?0xFFFFFFFFFFFFFFFFull:0ull))) | ((cr_dcr2_e_write) & (cr_dcr2_e_wmask)))&0x1ull);
+                cr_dcr2_e_read = (oldCxregState[ctxt].cr_dcr2_e_r)&1ull;
+            } else {
+                cr_dcr2_e_read = (0ull)&1ull;
+            }
+            cr_crr_crr_write = bus_writeData>>(0ull);
+            cr_crr_crr_wmask_core = (bus_writeMaskCore>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (16ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_crr_crr_r = ((oldCxregState[ctxt].cr_crr_crr_r) & (~(cr_crr_crr_wmask_core))) | ((cr_crr_crr_write) & (cr_crr_crr_wmask_core)); /* GENERATED */
+            cr_crr_crr_read = oldCxregState[ctxt].cr_crr_crr_r;
+            st.cx[ctxt].cregIface.cxreg2cfg_requestEnable = cr_crr_crr_wmask_core>>(0ull);
+            cr_wcfg_wcfg_write = bus_writeData>>(0ull);
+            cr_wcfg_wcfg_wmask_core = (bus_writeMaskCore>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (18ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((ctxt) == (0ull)) {
+                st.cx[ctxt].cxregState.cr_wcfg_wcfg_r = ((oldCxregState[ctxt].cr_wcfg_wcfg_r) & (~(cr_wcfg_wcfg_wmask_core))) | ((cr_wcfg_wcfg_write) & (cr_wcfg_wcfg_wmask_core));
+                cr_wcfg_wcfg_read = oldCxregState[ctxt].cr_wcfg_wcfg_r;
+                if ((cr_wcfg_wcfg_wmask_core>>(0ull))&1ull) {
+                    st.cx[ctxt].cxregState.cr_sawc_s_r = 1ull;
+                }                                                                                    /* GENERATED */
+                if ((st.cregIface.cfg2cxreg_wakeupAck)&1ull) {
+                    st.cx[ctxt].cxregState.cr_wcfg_wcfg_r = st.cregIface.cfg2cxreg_currentConfig;
+                }
+            }
+            cr_sawc_run_write = bus_writeData>>(1ull);
+            cr_sawc_run_wmask = ((bus_writeMaskDbg>>(1ull)) | (bus_writeMaskCore>>(1ull))) & ((((((bus_wordAddr)&0x1FFull) == (19ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((ctxt) == (0ull)) {
+                if ((CFG.numContextsLog2) >= (1ull)) {
+                    if (((cr_sawc_run_write>>(0ull)) & (cr_sawc_run_wmask>>(0ull)))&1ull) {
+                        st.cx[1].cxregState.cr_dcr_d_r = 0ull;                                       /* GENERATED */
+                        st.cx[1].cxregState.cr_dcr_b_r = 0ull;
+                        st.cx[1].cxregState.cr_dcr_r_r = 1ull;
+                    }
+                    if (1) {
+                        uint64_t __shift = 0ull;
+                        cr_sawc_run_read &= ~(1ull << __shift);
+                        cr_sawc_run_read |= ((~(oldCxregState[1].cr_dcr_b_r))&1) << __shift;
+                    }
+                }
+                if ((CFG.numContextsLog2) >= (2ull)) {                                               /* GENERATED */
+                    if (((cr_sawc_run_write>>(1ull)) & (cr_sawc_run_wmask>>(1ull)))&1ull) {
+                        st.cx[2].cxregState.cr_dcr_d_r = 0ull;
+                        st.cx[2].cxregState.cr_dcr_b_r = 0ull;
+                        st.cx[2].cxregState.cr_dcr_r_r = 1ull;
+                    }
+                    if (1) {
+                        uint64_t __shift = 1ull;
+                        cr_sawc_run_read &= ~(1ull << __shift);
+                        cr_sawc_run_read |= ((~(oldCxregState[2].cr_dcr_b_r))&1) << __shift;
+                    }                                                                                /* GENERATED */
+                    if (((cr_sawc_run_write>>(2ull)) & (cr_sawc_run_wmask>>(2ull)))&1ull) {
+                        st.cx[3].cxregState.cr_dcr_d_r = 0ull;
+                        st.cx[3].cxregState.cr_dcr_b_r = 0ull;
+                        st.cx[3].cxregState.cr_dcr_r_r = 1ull;
+                    }
+                    if (1) {
+                        uint64_t __shift = 2ull;
+                        cr_sawc_run_read &= ~(1ull << __shift);
+                        cr_sawc_run_read |= ((~(oldCxregState[3].cr_dcr_b_r))&1) << __shift;
+                    }                                                                                /* GENERATED */
+                }
+                if ((CFG.numContextsLog2) >= (3ull)) {
+                    if (((cr_sawc_run_write>>(3ull)) & (cr_sawc_run_wmask>>(3ull)))&1ull) {
+                        st.cx[4].cxregState.cr_dcr_d_r = 0ull;
+                        st.cx[4].cxregState.cr_dcr_b_r = 0ull;
+                        st.cx[4].cxregState.cr_dcr_r_r = 1ull;
+                    }
+                    if (1) {
+                        uint64_t __shift = 3ull;
+                        cr_sawc_run_read &= ~(1ull << __shift);                                      /* GENERATED */
+                        cr_sawc_run_read |= ((~(oldCxregState[4].cr_dcr_b_r))&1) << __shift;
+                    }
+                    if (((cr_sawc_run_write>>(4ull)) & (cr_sawc_run_wmask>>(4ull)))&1ull) {
+                        st.cx[5].cxregState.cr_dcr_d_r = 0ull;
+                        st.cx[5].cxregState.cr_dcr_b_r = 0ull;
+                        st.cx[5].cxregState.cr_dcr_r_r = 1ull;
+                    }
+                    if (1) {
+                        uint64_t __shift = 4ull;
+                        cr_sawc_run_read &= ~(1ull << __shift);                                      /* GENERATED */
+                        cr_sawc_run_read |= ((~(oldCxregState[5].cr_dcr_b_r))&1) << __shift;
+                    }
+                    if (((cr_sawc_run_write>>(5ull)) & (cr_sawc_run_wmask>>(5ull)))&1ull) {
+                        st.cx[6].cxregState.cr_dcr_d_r = 0ull;
+                        st.cx[6].cxregState.cr_dcr_b_r = 0ull;
+                        st.cx[6].cxregState.cr_dcr_r_r = 1ull;
+                    }
+                    if (1) {
+                        uint64_t __shift = 5ull;
+                        cr_sawc_run_read &= ~(1ull << __shift);                                      /* GENERATED */
+                        cr_sawc_run_read |= ((~(oldCxregState[6].cr_dcr_b_r))&1) << __shift;
+                    }
+                    if (((cr_sawc_run_write>>(6ull)) & (cr_sawc_run_wmask>>(6ull)))&1ull) {
+                        st.cx[7].cxregState.cr_dcr_d_r = 0ull;
+                        st.cx[7].cxregState.cr_dcr_b_r = 0ull;
+                        st.cx[7].cxregState.cr_dcr_r_r = 1ull;
+                    }
+                    if (1) {
+                        uint64_t __shift = 6ull;
+                        cr_sawc_run_read &= ~(1ull << __shift);                                      /* GENERATED */
+                        cr_sawc_run_read |= ((~(oldCxregState[7].cr_dcr_b_r))&1) << __shift;
+                    }
+                }
+            }
+            cr_sawc_s_write = bus_writeData>>(0ull);
+            cr_sawc_s_wmask_core = (bus_writeMaskCore>>(0ull)) & ((((((bus_wordAddr)&0x1FFull) == (19ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((ctxt) == (0ull)) {
+                st.cx[ctxt].cxregState.cr_sawc_s_r = !!((((~(cr_sawc_s_wmask_core)) & ((((oldCxregState[ctxt].cr_sawc_s_r)&1ull)?0xFFFFFFFFFFFFFFFFull:0ull))) | ((cr_sawc_s_write) & (cr_sawc_s_wmask_core)))&0x1ull);
+                cr_sawc_s_read = (oldCxregState[ctxt].cr_sawc_s_r)&1ull;
+                if ((st.cregIface.cfg2cxreg_wakeupAck)&1ull) {                                       /* GENERATED */
+                    st.cx[ctxt].cxregState.cr_sawc_s_r = 0ull;
+                }
+            }
+            cr_scrp1_scrp1_write = bus_writeData>>(0ull);
+            cr_scrp1_scrp1_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (20ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_scrp1_scrp1_r = ((oldCxregState[ctxt].cr_scrp1_scrp1_r) & (~(cr_scrp1_scrp1_wmask))) | ((cr_scrp1_scrp1_write) & (cr_scrp1_scrp1_wmask));
+            cr_scrp1_scrp1_read = oldCxregState[ctxt].cr_scrp1_scrp1_r;
+            cr_scrp2_scrp2_write = bus_writeData>>(0ull);
+            cr_scrp2_scrp2_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (21ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_scrp2_scrp2_r = ((oldCxregState[ctxt].cr_scrp2_scrp2_r) & (~(cr_scrp2_scrp2_wmask))) | ((cr_scrp2_scrp2_write) & (cr_scrp2_scrp2_wmask)); /* GENERATED */
+            cr_scrp2_scrp2_read = oldCxregState[ctxt].cr_scrp2_scrp2_r;
+            cr_scrp3_scrp3_write = bus_writeData>>(0ull);
+            cr_scrp3_scrp3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (22ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_scrp3_scrp3_r = ((oldCxregState[ctxt].cr_scrp3_scrp3_r) & (~(cr_scrp3_scrp3_wmask))) | ((cr_scrp3_scrp3_write) & (cr_scrp3_scrp3_wmask));
+            cr_scrp3_scrp3_read = oldCxregState[ctxt].cr_scrp3_scrp3_r;
+            cr_scrp4_scrp4_write = bus_writeData>>(0ull);
+            cr_scrp4_scrp4_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (23ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            st.cx[ctxt].cxregState.cr_scrp4_scrp4_r = ((oldCxregState[ctxt].cr_scrp4_scrp4_r) & (~(cr_scrp4_scrp4_wmask))) | ((cr_scrp4_scrp4_write) & (cr_scrp4_scrp4_wmask));
+            cr_scrp4_scrp4_read = oldCxregState[ctxt].cr_scrp4_scrp4_r;
+            if ((ctxt) != (0ull)) {                                                                  /* GENERATED */
+                cr_rsc_rsc_read = oldCxregState[ctxt].cr_rsc_rsc_r;
+            }
+            cr_csc_csc_write = bus_writeData>>(0ull);
+            cr_csc_csc_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (25ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((ctxt) != (0ull)) {
+                st.cx[ctxt].cxregState.cr_csc_csc_r = ((oldCxregState[ctxt].cr_csc_csc_r) & (~(cr_csc_csc_wmask))) | ((cr_csc_csc_write) & (cr_csc_csc_wmask));
+                cr_csc_csc_read = oldCxregState[ctxt].cr_csc_csc_r;
+                st.cx[ctxt].cxregState.cr_csc_csc_neq = (oldCxregState[ctxt].cr_csc_csc_r) != (oldCxregState[ctxt].cr_rsc_rsc_r);
+            }
+            cr_rsc1_rsc1_write = bus_writeData>>(0ull);                                              /* GENERATED */
+            cr_rsc1_rsc1_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (26ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (((ctxt) == (0ull)) && ((1ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                st.cx[1].cxregState.cr_rsc_rsc_r = ((oldCxregState[1].cr_rsc_rsc_r) & (~(cr_rsc1_rsc1_wmask))) | ((cr_rsc1_rsc1_write) & (cr_rsc1_rsc1_wmask));
+                cr_rsc1_rsc1_read = oldCxregState[1].cr_rsc_rsc_r;
+            }
+            if (((ctxt) == (0ull)) && ((1ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                cr_csc1_csc1_read = oldCxregState[1].cr_csc_csc_r;
+            }
+            cr_rsc2_rsc2_write = bus_writeData>>(0ull);
+            cr_rsc2_rsc2_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (28ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull)); /* GENERATED */
+            if (((ctxt) == (0ull)) && ((2ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                st.cx[2].cxregState.cr_rsc_rsc_r = ((oldCxregState[2].cr_rsc_rsc_r) & (~(cr_rsc2_rsc2_wmask))) | ((cr_rsc2_rsc2_write) & (cr_rsc2_rsc2_wmask));
+                cr_rsc2_rsc2_read = oldCxregState[2].cr_rsc_rsc_r;
+            }
+            if (((ctxt) == (0ull)) && ((2ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                cr_csc2_csc2_read = oldCxregState[2].cr_csc_csc_r;
+            }
+            cr_rsc3_rsc3_write = bus_writeData>>(0ull);
+            cr_rsc3_rsc3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (30ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (((ctxt) == (0ull)) && ((3ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) { /* GENERATED */
+                st.cx[3].cxregState.cr_rsc_rsc_r = ((oldCxregState[3].cr_rsc_rsc_r) & (~(cr_rsc3_rsc3_wmask))) | ((cr_rsc3_rsc3_write) & (cr_rsc3_rsc3_wmask));
+                cr_rsc3_rsc3_read = oldCxregState[3].cr_rsc_rsc_r;
+            }
+            if (((ctxt) == (0ull)) && ((3ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                cr_csc3_csc3_read = oldCxregState[3].cr_csc_csc_r;
+            }
+            cr_rsc4_rsc4_write = bus_writeData>>(0ull);
+            cr_rsc4_rsc4_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (32ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (((ctxt) == (0ull)) && ((4ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                st.cx[4].cxregState.cr_rsc_rsc_r = ((oldCxregState[4].cr_rsc_rsc_r) & (~(cr_rsc4_rsc4_wmask))) | ((cr_rsc4_rsc4_write) & (cr_rsc4_rsc4_wmask)); /* GENERATED */
+                cr_rsc4_rsc4_read = oldCxregState[4].cr_rsc_rsc_r;
+            }
+            if (((ctxt) == (0ull)) && ((4ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                cr_csc4_csc4_read = oldCxregState[4].cr_csc_csc_r;
+            }
+            cr_rsc5_rsc5_write = bus_writeData>>(0ull);
+            cr_rsc5_rsc5_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (34ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (((ctxt) == (0ull)) && ((5ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                st.cx[5].cxregState.cr_rsc_rsc_r = ((oldCxregState[5].cr_rsc_rsc_r) & (~(cr_rsc5_rsc5_wmask))) | ((cr_rsc5_rsc5_write) & (cr_rsc5_rsc5_wmask));
+                cr_rsc5_rsc5_read = oldCxregState[5].cr_rsc_rsc_r;                                   /* GENERATED */
+            }
+            if (((ctxt) == (0ull)) && ((5ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                cr_csc5_csc5_read = oldCxregState[5].cr_csc_csc_r;
+            }
+            cr_rsc6_rsc6_write = bus_writeData>>(0ull);
+            cr_rsc6_rsc6_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (36ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (((ctxt) == (0ull)) && ((6ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                st.cx[6].cxregState.cr_rsc_rsc_r = ((oldCxregState[6].cr_rsc_rsc_r) & (~(cr_rsc6_rsc6_wmask))) | ((cr_rsc6_rsc6_write) & (cr_rsc6_rsc6_wmask));
+                cr_rsc6_rsc6_read = oldCxregState[6].cr_rsc_rsc_r;
+            }                                                                                        /* GENERATED */
+            if (((ctxt) == (0ull)) && ((6ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                cr_csc6_csc6_read = oldCxregState[6].cr_csc_csc_r;
+            }
+            cr_rsc7_rsc7_write = bus_writeData>>(0ull);
+            cr_rsc7_rsc7_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (38ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if (((ctxt) == (0ull)) && ((7ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) {
+                st.cx[7].cxregState.cr_rsc_rsc_r = ((oldCxregState[7].cr_rsc_rsc_r) & (~(cr_rsc7_rsc7_wmask))) | ((cr_rsc7_rsc7_write) & (cr_rsc7_rsc7_wmask));
+                cr_rsc7_rsc7_read = oldCxregState[7].cr_rsc_rsc_r;
+            }
+            if (((ctxt) == (0ull)) && ((7ull) < (((1ull) << (CFG.numContextsLog2))&0x7FFFFFFFull))) { /* GENERATED */
+                cr_csc7_csc7_read = oldCxregState[7].cr_csc_csc_r;
+            }
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_cyc_cyc3_read = oldCxregState[ctxt].cr_cyc_cyc0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_cyc_cyc2_read = oldCxregState[ctxt].cr_cyc_cyc0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_cyc_cyc1_read = oldCxregState[ctxt].cr_cyc_cyc0_r>>(8ull);                        /* GENERATED */
+            }
+            cr_cyc_cyc0_write = bus_writeData>>(0ull);
+            cr_cyc_cyc0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (64ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_cyc_cyc0_add = 0ull;
+            cr_cyc_cyc0_add = (~(st.cx[ctxt].cregIface.cxplif2cxreg_idle))&1ull;
+            st.cx[ctxt].cxregState.cr_cyc_cyc0_add_r = cr_cyc_cyc0_add;
+            st.cx[ctxt].cxregState.cr_cyc_cyc0_r = (((oldCxregState[ctxt].cr_cyc_cyc0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_cyc_cyc0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_cyc_cyc0_read = oldCxregState[ctxt].cr_cyc_cyc0_r>>(0ull);
+            }                                                                                        /* GENERATED */
+            if ((cr_cyc_cyc0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_cyc_cyc0_r = 0ull;
+                if ((cr_cyc_cyc0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_cych_cyc6_read = oldCxregState[ctxt].cr_cyc_cyc0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {                                                     /* GENERATED */
+                cr_cych_cyc5_read = oldCxregState[ctxt].cr_cyc_cyc0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_cych_cyc4_read = oldCxregState[ctxt].cr_cyc_cyc0_r>>(32ull);
+            }
+            cr_cych_cyc3_write = bus_writeData>>(0ull);
+            cr_cych_cyc3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (65ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_cych_cyc3_read = oldCxregState[ctxt].cr_cyc_cyc0_r>>(24ull);
+            }                                                                                        /* GENERATED */
+            if ((cr_cych_cyc3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_cyc_cyc0_r = 0ull;
+                if ((cr_cych_cyc3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_stall_stall3_read = oldCxregState[ctxt].cr_stall_stall0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {                                                     /* GENERATED */
+                cr_stall_stall2_read = oldCxregState[ctxt].cr_stall_stall0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_stall_stall1_read = oldCxregState[ctxt].cr_stall_stall0_r>>(8ull);
+            }
+            cr_stall_stall0_write = bus_writeData>>(0ull);
+            cr_stall_stall0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (66ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_stall_stall0_add = 0ull;
+            cr_stall_stall0_add = ((st.cx[ctxt].cregIface.cxplif2cxreg_stall) & (~(st.cx[ctxt].cregIface.cxplif2cxreg_idle)))&1ull;
+            st.cx[ctxt].cxregState.cr_stall_stall0_add_r = cr_stall_stall0_add;                      /* GENERATED */
+            st.cx[ctxt].cxregState.cr_stall_stall0_r = (((oldCxregState[ctxt].cr_stall_stall0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_stall_stall0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_stall_stall0_read = oldCxregState[ctxt].cr_stall_stall0_r>>(0ull);
+            }
+            if ((cr_stall_stall0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_stall_stall0_r = 0ull;
+                if ((cr_stall_stall0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_stallh_stall6_read = oldCxregState[ctxt].cr_stall_stall0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_stallh_stall5_read = oldCxregState[ctxt].cr_stall_stall0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_stallh_stall4_read = oldCxregState[ctxt].cr_stall_stall0_r>>(32ull);
+            }
+            cr_stallh_stall3_write = bus_writeData>>(0ull);                                          /* GENERATED */
+            cr_stallh_stall3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (67ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_stallh_stall3_read = oldCxregState[ctxt].cr_stall_stall0_r>>(24ull);
+            }
+            if ((cr_stallh_stall3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_stall_stall0_r = 0ull;
+                if ((cr_stallh_stall3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_bun_bun3_read = oldCxregState[ctxt].cr_bun_bun0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_bun_bun2_read = oldCxregState[ctxt].cr_bun_bun0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_bun_bun1_read = oldCxregState[ctxt].cr_bun_bun0_r>>(8ull);
+            }
+            cr_bun_bun0_write = bus_writeData>>(0ull);                                               /* GENERATED */
+            cr_bun_bun0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (68ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_bun_bun0_add = 0ull;
+            cr_bun_bun0_add = ((((st.cx[ctxt].cregIface.cxplif2cxreg_sylCommit)&0xFFFFull) != (0ull)) & (~(st.cx[ctxt].cregIface.cxplif2cxreg_stall)))&1ull;
+            st.cx[ctxt].cxregState.cr_bun_bun0_add_r = cr_bun_bun0_add;
+            st.cx[ctxt].cxregState.cr_bun_bun0_r = (((oldCxregState[ctxt].cr_bun_bun0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_bun_bun0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_bun_bun0_read = oldCxregState[ctxt].cr_bun_bun0_r>>(0ull);
+            }
+            if ((cr_bun_bun0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_bun_bun0_r = 0ull;                                         /* GENERATED */
+                if ((cr_bun_bun0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_bunh_bun6_read = oldCxregState[ctxt].cr_bun_bun0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_bunh_bun5_read = oldCxregState[ctxt].cr_bun_bun0_r>>(40ull);
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_bunh_bun4_read = oldCxregState[ctxt].cr_bun_bun0_r>>(32ull);
+            }
+            cr_bunh_bun3_write = bus_writeData>>(0ull);
+            cr_bunh_bun3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (69ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_bunh_bun3_read = oldCxregState[ctxt].cr_bun_bun0_r>>(24ull);
+            }
+            if ((cr_bunh_bun3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_bun_bun0_r = 0ull;                                         /* GENERATED */
+                if ((cr_bunh_bun3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_syl_syl3_read = oldCxregState[ctxt].cr_syl_syl0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_syl_syl2_read = oldCxregState[ctxt].cr_syl_syl0_r>>(16ull);
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_syl_syl1_read = oldCxregState[ctxt].cr_syl_syl0_r>>(8ull);
+            }
+            cr_syl_syl0_write = bus_writeData>>(0ull);
+            cr_syl_syl0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (70ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_syl_syl0_vec = 0ull;
+            cr_syl_syl0_add = 0ull;
+            cr_syl_syl0_vec = (st.cx[ctxt].cregIface.cxplif2cxreg_sylCommit) & ((((~(st.cx[ctxt].cregIface.cxplif2cxreg_stall))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_syl_syl0_add = (((((((((cr_syl_syl0_vec>>(0ull))&1ull) + ((cr_syl_syl0_vec>>(1ull))&1ull))&0x3ull) + ((((cr_syl_syl0_vec>>(2ull))&1ull) + ((cr_syl_syl0_vec>>(3ull))&1ull))&0x3ull))&0x7ull) + ((((((cr_syl_syl0_vec>>(4ull))&1ull) + ((cr_syl_syl0_vec>>(5ull))&1ull))&0x3ull) + ((((cr_syl_syl0_vec>>(6ull))&1ull) + ((cr_syl_syl0_vec>>(7ull))&1ull))&0x3ull))&0x7ull))&0xFull) + ((((((((cr_syl_syl0_vec>>(8ull))&1ull) + ((cr_syl_syl0_vec>>(9ull))&1ull))&0x3ull) + ((((cr_syl_syl0_vec>>(10ull))&1ull) + ((cr_syl_syl0_vec>>(11ull))&1ull))&0x3ull))&0x7ull) + ((((((cr_syl_syl0_vec>>(12ull))&1ull) + ((cr_syl_syl0_vec>>(13ull))&1ull))&0x3ull) + ((((cr_syl_syl0_vec>>(14ull))&1ull) + ((cr_syl_syl0_vec>>(15ull))&1ull))&0x3ull))&0x7ull))&0xFull))&0x1Full;
+            st.cx[ctxt].cxregState.cr_syl_syl0_add_r = cr_syl_syl0_add;                              /* GENERATED */
+            st.cx[ctxt].cxregState.cr_syl_syl0_r = (((oldCxregState[ctxt].cr_syl_syl0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_syl_syl0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_syl_syl0_read = oldCxregState[ctxt].cr_syl_syl0_r>>(0ull);
+            }
+            if ((cr_syl_syl0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_syl_syl0_r = 0ull;
+                if ((cr_syl_syl0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_sylh_syl6_read = oldCxregState[ctxt].cr_syl_syl0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_sylh_syl5_read = oldCxregState[ctxt].cr_syl_syl0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_sylh_syl4_read = oldCxregState[ctxt].cr_syl_syl0_r>>(32ull);
+            }
+            cr_sylh_syl3_write = bus_writeData>>(0ull);                                              /* GENERATED */
+            cr_sylh_syl3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (71ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_sylh_syl3_read = oldCxregState[ctxt].cr_syl_syl0_r>>(24ull);
+            }
+            if ((cr_sylh_syl3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_syl_syl0_r = 0ull;
+                if ((cr_sylh_syl3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_nop_nop3_read = oldCxregState[ctxt].cr_nop_nop0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_nop_nop2_read = oldCxregState[ctxt].cr_nop_nop0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_nop_nop1_read = oldCxregState[ctxt].cr_nop_nop0_r>>(8ull);
+            }
+            cr_nop_nop0_write = bus_writeData>>(0ull);                                               /* GENERATED */
+            cr_nop_nop0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (72ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_nop_nop0_vec = 0ull;
+            cr_nop_nop0_add = 0ull;
+            cr_nop_nop0_vec = ((st.cx[ctxt].cregIface.cxplif2cxreg_sylCommit) & (st.cx[ctxt].cregIface.cxplif2cxreg_sylNop)) & ((((~(st.cx[ctxt].cregIface.cxplif2cxreg_stall))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_nop_nop0_add = (((((((((cr_nop_nop0_vec>>(0ull))&1ull) + ((cr_nop_nop0_vec>>(1ull))&1ull))&0x3ull) + ((((cr_nop_nop0_vec>>(2ull))&1ull) + ((cr_nop_nop0_vec>>(3ull))&1ull))&0x3ull))&0x7ull) + ((((((cr_nop_nop0_vec>>(4ull))&1ull) + ((cr_nop_nop0_vec>>(5ull))&1ull))&0x3ull) + ((((cr_nop_nop0_vec>>(6ull))&1ull) + ((cr_nop_nop0_vec>>(7ull))&1ull))&0x3ull))&0x7ull))&0xFull) + ((((((((cr_nop_nop0_vec>>(8ull))&1ull) + ((cr_nop_nop0_vec>>(9ull))&1ull))&0x3ull) + ((((cr_nop_nop0_vec>>(10ull))&1ull) + ((cr_nop_nop0_vec>>(11ull))&1ull))&0x3ull))&0x7ull) + ((((((cr_nop_nop0_vec>>(12ull))&1ull) + ((cr_nop_nop0_vec>>(13ull))&1ull))&0x3ull) + ((((cr_nop_nop0_vec>>(14ull))&1ull) + ((cr_nop_nop0_vec>>(15ull))&1ull))&0x3ull))&0x7ull))&0xFull))&0x1Full;
+            st.cx[ctxt].cxregState.cr_nop_nop0_add_r = cr_nop_nop0_add;
+            st.cx[ctxt].cxregState.cr_nop_nop0_r = (((oldCxregState[ctxt].cr_nop_nop0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_nop_nop0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_nop_nop0_read = oldCxregState[ctxt].cr_nop_nop0_r>>(0ull);
+            }                                                                                        /* GENERATED */
+            if ((cr_nop_nop0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_nop_nop0_r = 0ull;
+                if ((cr_nop_nop0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_noph_nop6_read = oldCxregState[ctxt].cr_nop_nop0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {                                                     /* GENERATED */
+                cr_noph_nop5_read = oldCxregState[ctxt].cr_nop_nop0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_noph_nop4_read = oldCxregState[ctxt].cr_nop_nop0_r>>(32ull);
+            }
+            cr_noph_nop3_write = bus_writeData>>(0ull);
+            cr_noph_nop3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (73ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_noph_nop3_read = oldCxregState[ctxt].cr_nop_nop0_r>>(24ull);
+            }                                                                                        /* GENERATED */
+            if ((cr_noph_nop3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_nop_nop0_r = 0ull;
+                if ((cr_noph_nop3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_iacc_iacc3_read = oldCxregState[ctxt].cr_iacc_iacc0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {                                                     /* GENERATED */
+                cr_iacc_iacc2_read = oldCxregState[ctxt].cr_iacc_iacc0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_iacc_iacc1_read = oldCxregState[ctxt].cr_iacc_iacc0_r>>(8ull);
+            }
+            cr_iacc_iacc0_write = bus_writeData>>(0ull);
+            cr_iacc_iacc0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (74ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_iacc_iacc0_add = 0ull;
+            cr_iacc_iacc0_add = (st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.instr_access)&1ull;
+            st.cx[ctxt].cxregState.cr_iacc_iacc0_add_r = cr_iacc_iacc0_add;                          /* GENERATED */
+            st.cx[ctxt].cxregState.cr_iacc_iacc0_r = (((oldCxregState[ctxt].cr_iacc_iacc0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_iacc_iacc0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_iacc_iacc0_read = oldCxregState[ctxt].cr_iacc_iacc0_r>>(0ull);
+            }
+            if ((cr_iacc_iacc0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_iacc_iacc0_r = 0ull;
+                if ((cr_iacc_iacc0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_iacch_iacc6_read = oldCxregState[ctxt].cr_iacc_iacc0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_iacch_iacc5_read = oldCxregState[ctxt].cr_iacc_iacc0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_iacch_iacc4_read = oldCxregState[ctxt].cr_iacc_iacc0_r>>(32ull);
+            }
+            cr_iacch_iacc3_write = bus_writeData>>(0ull);                                            /* GENERATED */
+            cr_iacch_iacc3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (75ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_iacch_iacc3_read = oldCxregState[ctxt].cr_iacc_iacc0_r>>(24ull);
+            }
+            if ((cr_iacch_iacc3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_iacc_iacc0_r = 0ull;
+                if ((cr_iacch_iacc3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_imiss_imiss3_read = oldCxregState[ctxt].cr_imiss_imiss0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_imiss_imiss2_read = oldCxregState[ctxt].cr_imiss_imiss0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_imiss_imiss1_read = oldCxregState[ctxt].cr_imiss_imiss0_r>>(8ull);
+            }
+            cr_imiss_imiss0_write = bus_writeData>>(0ull);                                           /* GENERATED */
+            cr_imiss_imiss0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (76ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_imiss_imiss0_add = 0ull;
+            cr_imiss_imiss0_add = ((st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.instr_access) & (st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.instr_miss))&1ull;
+            st.cx[ctxt].cxregState.cr_imiss_imiss0_add_r = cr_imiss_imiss0_add;
+            st.cx[ctxt].cxregState.cr_imiss_imiss0_r = (((oldCxregState[ctxt].cr_imiss_imiss0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_imiss_imiss0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_imiss_imiss0_read = oldCxregState[ctxt].cr_imiss_imiss0_r>>(0ull);
+            }
+            if ((cr_imiss_imiss0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_imiss_imiss0_r = 0ull;                                     /* GENERATED */
+                if ((cr_imiss_imiss0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_imissh_imiss6_read = oldCxregState[ctxt].cr_imiss_imiss0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_imissh_imiss5_read = oldCxregState[ctxt].cr_imiss_imiss0_r>>(40ull);
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_imissh_imiss4_read = oldCxregState[ctxt].cr_imiss_imiss0_r>>(32ull);
+            }
+            cr_imissh_imiss3_write = bus_writeData>>(0ull);
+            cr_imissh_imiss3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (77ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_imissh_imiss3_read = oldCxregState[ctxt].cr_imiss_imiss0_r>>(24ull);
+            }
+            if ((cr_imissh_imiss3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_imiss_imiss0_r = 0ull;                                     /* GENERATED */
+                if ((cr_imissh_imiss3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_dracc_dracc3_read = oldCxregState[ctxt].cr_dracc_dracc0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_dracc_dracc2_read = oldCxregState[ctxt].cr_dracc_dracc0_r>>(16ull);
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_dracc_dracc1_read = oldCxregState[ctxt].cr_dracc_dracc0_r>>(8ull);
+            }
+            cr_dracc_dracc0_write = bus_writeData>>(0ull);
+            cr_dracc_dracc0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (78ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dracc_dracc0_add = 0ull;
+            cr_dracc_dracc0_add = ((st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_accessType) == (1ull))&1ull;
+            st.cx[ctxt].cxregState.cr_dracc_dracc0_add_r = cr_dracc_dracc0_add;
+            st.cx[ctxt].cxregState.cr_dracc_dracc0_r = (((oldCxregState[ctxt].cr_dracc_dracc0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_dracc_dracc0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {                                                     /* GENERATED */
+                cr_dracc_dracc0_read = oldCxregState[ctxt].cr_dracc_dracc0_r>>(0ull);
+            }
+            if ((cr_dracc_dracc0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dracc_dracc0_r = 0ull;
+                if ((cr_dracc_dracc0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_dracch_dracc6_read = oldCxregState[ctxt].cr_dracc_dracc0_r>>(48ull);              /* GENERATED */
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_dracch_dracc5_read = oldCxregState[ctxt].cr_dracc_dracc0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_dracch_dracc4_read = oldCxregState[ctxt].cr_dracc_dracc0_r>>(32ull);
+            }
+            cr_dracch_dracc3_write = bus_writeData>>(0ull);
+            cr_dracch_dracc3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (79ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {                                                     /* GENERATED */
+                cr_dracch_dracc3_read = oldCxregState[ctxt].cr_dracc_dracc0_r>>(24ull);
+            }
+            if ((cr_dracch_dracc3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dracc_dracc0_r = 0ull;
+                if ((cr_dracch_dracc3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_drmiss_drmiss3_read = oldCxregState[ctxt].cr_drmiss_drmiss0_r>>(24ull);           /* GENERATED */
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_drmiss_drmiss2_read = oldCxregState[ctxt].cr_drmiss_drmiss0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_drmiss_drmiss1_read = oldCxregState[ctxt].cr_drmiss_drmiss0_r>>(8ull);
+            }
+            cr_drmiss_drmiss0_write = bus_writeData>>(0ull);
+            cr_drmiss_drmiss0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (80ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_drmiss_drmiss0_add = 0ull;                                                            /* GENERATED */
+            cr_drmiss_drmiss0_add = (((st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_accessType) == (1ull)) & (st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_miss))&1ull;
+            st.cx[ctxt].cxregState.cr_drmiss_drmiss0_add_r = cr_drmiss_drmiss0_add;
+            st.cx[ctxt].cxregState.cr_drmiss_drmiss0_r = (((oldCxregState[ctxt].cr_drmiss_drmiss0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_drmiss_drmiss0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_drmiss_drmiss0_read = oldCxregState[ctxt].cr_drmiss_drmiss0_r>>(0ull);
+            }
+            if ((cr_drmiss_drmiss0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_drmiss_drmiss0_r = 0ull;
+                if ((cr_drmiss_drmiss0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;                                                         /* GENERATED */
+                }
+            }
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_drmissh_drmiss6_read = oldCxregState[ctxt].cr_drmiss_drmiss0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_drmissh_drmiss5_read = oldCxregState[ctxt].cr_drmiss_drmiss0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_drmissh_drmiss4_read = oldCxregState[ctxt].cr_drmiss_drmiss0_r>>(32ull);          /* GENERATED */
+            }
+            cr_drmissh_drmiss3_write = bus_writeData>>(0ull);
+            cr_drmissh_drmiss3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (81ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_drmissh_drmiss3_read = oldCxregState[ctxt].cr_drmiss_drmiss0_r>>(24ull);
+            }
+            if ((cr_drmissh_drmiss3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_drmiss_drmiss0_r = 0ull;
+                if ((cr_drmissh_drmiss3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;                                                         /* GENERATED */
+                }
+            }
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_dwacc_dwacc3_read = oldCxregState[ctxt].cr_dwacc_dwacc0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_dwacc_dwacc2_read = oldCxregState[ctxt].cr_dwacc_dwacc0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_dwacc_dwacc1_read = oldCxregState[ctxt].cr_dwacc_dwacc0_r>>(8ull);                /* GENERATED */
+            }
+            cr_dwacc_dwacc0_write = bus_writeData>>(0ull);
+            cr_dwacc_dwacc0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (82ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dwacc_dwacc0_add = 0ull;
+            cr_dwacc_dwacc0_add = (st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_accessType>>(1ull))&1ull;
+            st.cx[ctxt].cxregState.cr_dwacc_dwacc0_add_r = cr_dwacc_dwacc0_add;
+            st.cx[ctxt].cxregState.cr_dwacc_dwacc0_r = (((oldCxregState[ctxt].cr_dwacc_dwacc0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_dwacc_dwacc0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_dwacc_dwacc0_read = oldCxregState[ctxt].cr_dwacc_dwacc0_r>>(0ull);
+            }                                                                                        /* GENERATED */
+            if ((cr_dwacc_dwacc0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dwacc_dwacc0_r = 0ull;
+                if ((cr_dwacc_dwacc0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_dwacch_dwacc6_read = oldCxregState[ctxt].cr_dwacc_dwacc0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {                                                     /* GENERATED */
+                cr_dwacch_dwacc5_read = oldCxregState[ctxt].cr_dwacc_dwacc0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_dwacch_dwacc4_read = oldCxregState[ctxt].cr_dwacc_dwacc0_r>>(32ull);
+            }
+            cr_dwacch_dwacc3_write = bus_writeData>>(0ull);
+            cr_dwacch_dwacc3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (83ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_dwacch_dwacc3_read = oldCxregState[ctxt].cr_dwacc_dwacc0_r>>(24ull);
+            }                                                                                        /* GENERATED */
+            if ((cr_dwacch_dwacc3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dwacc_dwacc0_r = 0ull;
+                if ((cr_dwacch_dwacc3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_dwmiss_dwmiss3_read = oldCxregState[ctxt].cr_dwmiss_dwmiss0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {                                                     /* GENERATED */
+                cr_dwmiss_dwmiss2_read = oldCxregState[ctxt].cr_dwmiss_dwmiss0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_dwmiss_dwmiss1_read = oldCxregState[ctxt].cr_dwmiss_dwmiss0_r>>(8ull);
+            }
+            cr_dwmiss_dwmiss0_write = bus_writeData>>(0ull);
+            cr_dwmiss_dwmiss0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (84ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dwmiss_dwmiss0_add = 0ull;
+            cr_dwmiss_dwmiss0_add = ((st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_accessType>>(1ull)) & (st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_miss))&1ull;
+            st.cx[ctxt].cxregState.cr_dwmiss_dwmiss0_add_r = cr_dwmiss_dwmiss0_add;                  /* GENERATED */
+            st.cx[ctxt].cxregState.cr_dwmiss_dwmiss0_r = (((oldCxregState[ctxt].cr_dwmiss_dwmiss0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_dwmiss_dwmiss0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_dwmiss_dwmiss0_read = oldCxregState[ctxt].cr_dwmiss_dwmiss0_r>>(0ull);
+            }
+            if ((cr_dwmiss_dwmiss0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dwmiss_dwmiss0_r = 0ull;
+                if ((cr_dwmiss_dwmiss0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_dwmissh_dwmiss6_read = oldCxregState[ctxt].cr_dwmiss_dwmiss0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_dwmissh_dwmiss5_read = oldCxregState[ctxt].cr_dwmiss_dwmiss0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_dwmissh_dwmiss4_read = oldCxregState[ctxt].cr_dwmiss_dwmiss0_r>>(32ull);
+            }
+            cr_dwmissh_dwmiss3_write = bus_writeData>>(0ull);                                        /* GENERATED */
+            cr_dwmissh_dwmiss3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (85ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_dwmissh_dwmiss3_read = oldCxregState[ctxt].cr_dwmiss_dwmiss0_r>>(24ull);
+            }
+            if ((cr_dwmissh_dwmiss3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dwmiss_dwmiss0_r = 0ull;
+                if ((cr_dwmissh_dwmiss3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_dbypass_dbypass3_read = oldCxregState[ctxt].cr_dbypass_dbypass0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_dbypass_dbypass2_read = oldCxregState[ctxt].cr_dbypass_dbypass0_r>>(16ull);
+            }
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_dbypass_dbypass1_read = oldCxregState[ctxt].cr_dbypass_dbypass0_r>>(8ull);
+            }
+            cr_dbypass_dbypass0_write = bus_writeData>>(0ull);                                       /* GENERATED */
+            cr_dbypass_dbypass0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (86ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dbypass_dbypass0_add = 0ull;
+            cr_dbypass_dbypass0_add = (((st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_accessType) != (0ull)) & (st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_bypass))&1ull;
+            st.cx[ctxt].cxregState.cr_dbypass_dbypass0_add_r = cr_dbypass_dbypass0_add;
+            st.cx[ctxt].cxregState.cr_dbypass_dbypass0_r = (((oldCxregState[ctxt].cr_dbypass_dbypass0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_dbypass_dbypass0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {
+                cr_dbypass_dbypass0_read = oldCxregState[ctxt].cr_dbypass_dbypass0_r>>(0ull);
+            }
+            if ((cr_dbypass_dbypass0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dbypass_dbypass0_r = 0ull;                                 /* GENERATED */
+                if ((cr_dbypass_dbypass0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_dbypassh_dbypass6_read = oldCxregState[ctxt].cr_dbypass_dbypass0_r>>(48ull);
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_dbypassh_dbypass5_read = oldCxregState[ctxt].cr_dbypass_dbypass0_r>>(40ull);
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_dbypassh_dbypass4_read = oldCxregState[ctxt].cr_dbypass_dbypass0_r>>(32ull);
+            }
+            cr_dbypassh_dbypass3_write = bus_writeData>>(0ull);
+            cr_dbypassh_dbypass3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (87ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_dbypassh_dbypass3_read = oldCxregState[ctxt].cr_dbypass_dbypass0_r>>(24ull);
+            }
+            if ((cr_dbypassh_dbypass3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dbypass_dbypass0_r = 0ull;                                 /* GENERATED */
+                if ((cr_dbypassh_dbypass3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (4ull)) {
+                cr_dwbuf_dwbuf3_read = oldCxregState[ctxt].cr_dwbuf_dwbuf0_r>>(24ull);
+            }
+            if ((CFG.perfCountSize) >= (3ull)) {
+                cr_dwbuf_dwbuf2_read = oldCxregState[ctxt].cr_dwbuf_dwbuf0_r>>(16ull);
+            }                                                                                        /* GENERATED */
+            if ((CFG.perfCountSize) >= (2ull)) {
+                cr_dwbuf_dwbuf1_read = oldCxregState[ctxt].cr_dwbuf_dwbuf0_r>>(8ull);
+            }
+            cr_dwbuf_dwbuf0_write = bus_writeData>>(0ull);
+            cr_dwbuf_dwbuf0_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (88ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            cr_dwbuf_dwbuf0_add = 0ull;
+            cr_dwbuf_dwbuf0_add = ((((st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_accessType) != (0ull)) & (st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_writePending)) & (((st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_accessType>>(1ull)) | (st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_miss)) | (st.cx[ctxt].cregIface.mem2cxreg_cacheStatus.data_bypass)))&1ull;
+            st.cx[ctxt].cxregState.cr_dwbuf_dwbuf0_add_r = cr_dwbuf_dwbuf0_add;
+            st.cx[ctxt].cxregState.cr_dwbuf_dwbuf0_r = (((oldCxregState[ctxt].cr_dwbuf_dwbuf0_r)&0xFFFFFFFFFFFFFFull) + ((oldCxregState[ctxt].cr_dwbuf_dwbuf0_add_r)&0xFFull))&0x1FFFFFFFFFFFFFFull;
+            if ((CFG.perfCountSize) >= (1ull)) {                                                     /* GENERATED */
+                cr_dwbuf_dwbuf0_read = oldCxregState[ctxt].cr_dwbuf_dwbuf0_r>>(0ull);
+            }
+            if ((cr_dwbuf_dwbuf0_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dwbuf_dwbuf0_r = 0ull;
+                if ((cr_dwbuf_dwbuf0_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((CFG.perfCountSize) >= (7ull)) {
+                cr_dwbufh_dwbuf6_read = oldCxregState[ctxt].cr_dwbuf_dwbuf0_r>>(48ull);              /* GENERATED */
+            }
+            if ((CFG.perfCountSize) >= (6ull)) {
+                cr_dwbufh_dwbuf5_read = oldCxregState[ctxt].cr_dwbuf_dwbuf0_r>>(40ull);
+            }
+            if ((CFG.perfCountSize) >= (5ull)) {
+                cr_dwbufh_dwbuf4_read = oldCxregState[ctxt].cr_dwbuf_dwbuf0_r>>(32ull);
+            }
+            cr_dwbufh_dwbuf3_write = bus_writeData>>(0ull);
+            cr_dwbufh_dwbuf3_wmask = ((bus_writeMaskDbg>>(0ull)) | (bus_writeMaskCore>>(0ull))) & ((((((bus_wordAddr)&0x1FFull) == (89ull))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull));
+            if ((CFG.perfCountSize) >= (5ull)) {                                                     /* GENERATED */
+                cr_dwbufh_dwbuf3_read = oldCxregState[ctxt].cr_dwbuf_dwbuf0_r>>(24ull);
+            }
+            if ((cr_dwbufh_dwbuf3_wmask>>(0ull))&1ull) {
+                st.cx[ctxt].cxregState.cr_dwbuf_dwbuf0_r = 0ull;
+                if ((cr_dwbufh_dwbuf3_write>>(0ull))&1ull) {
+                    perf_count_clear = 1ull;
+                }
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_cyc_cyc0_r = 0ull;                                         /* GENERATED */
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_stall_stall0_r = 0ull;
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_bun_bun0_r = 0ull;
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_syl_syl0_r = 0ull;
+            }                                                                                        /* GENERATED */
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_nop_nop0_r = 0ull;
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_iacc_iacc0_r = 0ull;
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_imiss_imiss0_r = 0ull;
+            }
+            if ((perf_count_clear)&1ull) {                                                           /* GENERATED */
+                st.cx[ctxt].cxregState.cr_dracc_dracc0_r = 0ull;
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_drmiss_drmiss0_r = 0ull;
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_dwacc_dwacc0_r = 0ull;
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_dwmiss_dwmiss0_r = 0ull;                                   /* GENERATED */
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_dbypass_dbypass0_r = 0ull;
+            }
+            if ((perf_count_clear)&1ull) {
+                st.cx[ctxt].cxregState.cr_dwbuf_dwbuf0_r = 0ull;
+            }
+
+            // Bus read demuxing.
+            if (st.cx[ctxt].cregIface.cxreg_address < 0) {                                           /* GENERATED */
+                st.cx[ctxt].cregIface.cxreg_readData = 0xDEADC0DE;
+                continue;
+            } else {
+                st.cx[ctxt].cregIface.cxreg_readData = 0;
+            }
+            switch (bus_wordAddr & 0x7F) {
+            case 0: st.cx[ctxt].cregIface.cxreg_readData = ((((((((((((((cr_ccr_cause_read)<<8ull)|((cr_ccr_branch_read)&0xFFull))<<6ull)|((0ull)&0x3Full))<<2ull)|((cr_ccr_k_read)&0x3ull))<<2ull)|((cr_ccr_c_read)&0x3ull))<<2ull)|((cr_ccr_b_read)&0x3ull))<<2ull)|((cr_ccr_r_read)&0x3ull))<<2ull)|((cr_ccr_i_read)&0x3ull); break;
+            case 1: st.cx[ctxt].cregIface.cxreg_readData = ((((((((((((cr_sccr_id_read)<<14ull)|((0ull)&0x3FFFull))<<2ull)|((cr_sccr_k_read)&0x3ull))<<2ull)|((cr_sccr_c_read)&0x3ull))<<2ull)|((cr_sccr_b_read)&0x3ull))<<2ull)|((cr_sccr_r_read)&0x3ull))<<2ull)|((cr_sccr_i_read)&0x3ull); break;
+            case 2: st.cx[ctxt].cregIface.cxreg_readData = cr_lr_lr_read; break;
+            case 3: st.cx[ctxt].cregIface.cxreg_readData = cr_pc_pc_read; break;                     /* GENERATED */
+            case 4: st.cx[ctxt].cregIface.cxreg_readData = cr_th_th_read; break;
+            case 5: st.cx[ctxt].cregIface.cxreg_readData = cr_ph_ph_read; break;
+            case 6: st.cx[ctxt].cregIface.cxreg_readData = cr_tp_tp_read; break;
+            case 7: st.cx[ctxt].cregIface.cxreg_readData = cr_ta_ta_read; break;
+            case 8: st.cx[ctxt].cregIface.cxreg_readData = cr_br0_br0_read; break;
+            case 9: st.cx[ctxt].cregIface.cxreg_readData = cr_br1_br1_read; break;
+            case 10: st.cx[ctxt].cregIface.cxreg_readData = cr_br2_br2_read; break;
+            case 11: st.cx[ctxt].cregIface.cxreg_readData = cr_br3_br3_read; break;
+            case 12: st.cx[ctxt].cregIface.cxreg_readData = ((((((((((((((((((((((((((((((((cr_dcr_d_read)<<1ull)|((cr_dcr_j_read)&0x1ull))<<1ull)|((0ull)&0x1ull))<<1ull)|((cr_dcr_i_read)&0x1ull))<<1ull)|((cr_dcr_e_read)&0x1ull))<<1ull)|((cr_dcr_r_read)&0x1ull))<<1ull)|((cr_dcr_s_read)&0x1ull))<<1ull)|((cr_dcr_b_read)&0x1ull))<<8ull)|((cr_dcr_cause_read)&0xFFull))<<2ull)|((0ull)&0x3ull))<<2ull)|((cr_dcr_br3_read)&0x3ull))<<2ull)|((0ull)&0x3ull))<<2ull)|((cr_dcr_br2_read)&0x3ull))<<2ull)|((0ull)&0x3ull))<<2ull)|((cr_dcr_br1_read)&0x3ull))<<2ull)|((0ull)&0x3ull))<<2ull)|((cr_dcr_br0_read)&0x3ull); break;
+            case 13: st.cx[ctxt].cregIface.cxreg_readData = ((((((((((((((((((cr_dcr2_result_read)<<8ull)|((0ull)&0xFFull))<<8ull)|((cr_dcr2_trcap_read)&0xFFull))<<1ull)|((cr_dcr2_t_read)&0x1ull))<<1ull)|((cr_dcr2_m_read)&0x1ull))<<1ull)|((cr_dcr2_r_read)&0x1ull))<<1ull)|((cr_dcr2_c_read)&0x1ull))<<1ull)|((cr_dcr2_i_read)&0x1ull))<<2ull)|((0ull)&0x3ull))<<1ull)|((cr_dcr2_e_read)&0x1ull); break; /* GENERATED */
+            case 16: st.cx[ctxt].cregIface.cxreg_readData = cr_crr_crr_read; break;
+            case 18: st.cx[ctxt].cregIface.cxreg_readData = cr_wcfg_wcfg_read; break;
+            case 19: st.cx[ctxt].cregIface.cxreg_readData = ((((0ull)<<7ull)|((cr_sawc_run_read)&0x7Full))<<1ull)|((cr_sawc_s_read)&0x1ull); break;
+            case 20: st.cx[ctxt].cregIface.cxreg_readData = cr_scrp1_scrp1_read; break;
+            case 21: st.cx[ctxt].cregIface.cxreg_readData = cr_scrp2_scrp2_read; break;
+            case 22: st.cx[ctxt].cregIface.cxreg_readData = cr_scrp3_scrp3_read; break;
+            case 23: st.cx[ctxt].cregIface.cxreg_readData = cr_scrp4_scrp4_read; break;
+            case 24: st.cx[ctxt].cregIface.cxreg_readData = cr_rsc_rsc_read; break;
+            case 25: st.cx[ctxt].cregIface.cxreg_readData = cr_csc_csc_read; break;
+            case 26: st.cx[ctxt].cregIface.cxreg_readData = cr_rsc1_rsc1_read; break;                /* GENERATED */
+            case 27: st.cx[ctxt].cregIface.cxreg_readData = cr_csc1_csc1_read; break;
+            case 28: st.cx[ctxt].cregIface.cxreg_readData = cr_rsc2_rsc2_read; break;
+            case 29: st.cx[ctxt].cregIface.cxreg_readData = cr_csc2_csc2_read; break;
+            case 30: st.cx[ctxt].cregIface.cxreg_readData = cr_rsc3_rsc3_read; break;
+            case 31: st.cx[ctxt].cregIface.cxreg_readData = cr_csc3_csc3_read; break;
+            case 32: st.cx[ctxt].cregIface.cxreg_readData = cr_rsc4_rsc4_read; break;
+            case 33: st.cx[ctxt].cregIface.cxreg_readData = cr_csc4_csc4_read; break;
+            case 34: st.cx[ctxt].cregIface.cxreg_readData = cr_rsc5_rsc5_read; break;
+            case 35: st.cx[ctxt].cregIface.cxreg_readData = cr_csc5_csc5_read; break;
+            case 36: st.cx[ctxt].cregIface.cxreg_readData = cr_rsc6_rsc6_read; break;                /* GENERATED */
+            case 37: st.cx[ctxt].cregIface.cxreg_readData = cr_csc6_csc6_read; break;
+            case 38: st.cx[ctxt].cregIface.cxreg_readData = cr_rsc7_rsc7_read; break;
+            case 39: st.cx[ctxt].cregIface.cxreg_readData = cr_csc7_csc7_read; break;
+            case 64: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_cyc_cyc3_read)<<8ull)|((cr_cyc_cyc2_read)&0xFFull))<<8ull)|((cr_cyc_cyc1_read)&0xFFull))<<8ull)|((cr_cyc_cyc0_read)&0xFFull); break;
+            case 65: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_cych_cyc6_read)<<8ull)|((cr_cych_cyc5_read)&0xFFull))<<8ull)|((cr_cych_cyc4_read)&0xFFull))<<8ull)|((cr_cych_cyc3_read)&0xFFull); break;
+            case 66: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_stall_stall3_read)<<8ull)|((cr_stall_stall2_read)&0xFFull))<<8ull)|((cr_stall_stall1_read)&0xFFull))<<8ull)|((cr_stall_stall0_read)&0xFFull); break;
+            case 67: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_stallh_stall6_read)<<8ull)|((cr_stallh_stall5_read)&0xFFull))<<8ull)|((cr_stallh_stall4_read)&0xFFull))<<8ull)|((cr_stallh_stall3_read)&0xFFull); break;
+            case 68: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_bun_bun3_read)<<8ull)|((cr_bun_bun2_read)&0xFFull))<<8ull)|((cr_bun_bun1_read)&0xFFull))<<8ull)|((cr_bun_bun0_read)&0xFFull); break;
+            case 69: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_bunh_bun6_read)<<8ull)|((cr_bunh_bun5_read)&0xFFull))<<8ull)|((cr_bunh_bun4_read)&0xFFull))<<8ull)|((cr_bunh_bun3_read)&0xFFull); break;
+            case 70: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_syl_syl3_read)<<8ull)|((cr_syl_syl2_read)&0xFFull))<<8ull)|((cr_syl_syl1_read)&0xFFull))<<8ull)|((cr_syl_syl0_read)&0xFFull); break; /* GENERATED */
+            case 71: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_sylh_syl6_read)<<8ull)|((cr_sylh_syl5_read)&0xFFull))<<8ull)|((cr_sylh_syl4_read)&0xFFull))<<8ull)|((cr_sylh_syl3_read)&0xFFull); break;
+            case 72: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_nop_nop3_read)<<8ull)|((cr_nop_nop2_read)&0xFFull))<<8ull)|((cr_nop_nop1_read)&0xFFull))<<8ull)|((cr_nop_nop0_read)&0xFFull); break;
+            case 73: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_noph_nop6_read)<<8ull)|((cr_noph_nop5_read)&0xFFull))<<8ull)|((cr_noph_nop4_read)&0xFFull))<<8ull)|((cr_noph_nop3_read)&0xFFull); break;
+            case 74: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_iacc_iacc3_read)<<8ull)|((cr_iacc_iacc2_read)&0xFFull))<<8ull)|((cr_iacc_iacc1_read)&0xFFull))<<8ull)|((cr_iacc_iacc0_read)&0xFFull); break;
+            case 75: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_iacch_iacc6_read)<<8ull)|((cr_iacch_iacc5_read)&0xFFull))<<8ull)|((cr_iacch_iacc4_read)&0xFFull))<<8ull)|((cr_iacch_iacc3_read)&0xFFull); break;
+            case 76: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_imiss_imiss3_read)<<8ull)|((cr_imiss_imiss2_read)&0xFFull))<<8ull)|((cr_imiss_imiss1_read)&0xFFull))<<8ull)|((cr_imiss_imiss0_read)&0xFFull); break;
+            case 77: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_imissh_imiss6_read)<<8ull)|((cr_imissh_imiss5_read)&0xFFull))<<8ull)|((cr_imissh_imiss4_read)&0xFFull))<<8ull)|((cr_imissh_imiss3_read)&0xFFull); break;
+            case 78: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dracc_dracc3_read)<<8ull)|((cr_dracc_dracc2_read)&0xFFull))<<8ull)|((cr_dracc_dracc1_read)&0xFFull))<<8ull)|((cr_dracc_dracc0_read)&0xFFull); break;
+            case 79: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dracch_dracc6_read)<<8ull)|((cr_dracch_dracc5_read)&0xFFull))<<8ull)|((cr_dracch_dracc4_read)&0xFFull))<<8ull)|((cr_dracch_dracc3_read)&0xFFull); break;
+            case 80: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_drmiss_drmiss3_read)<<8ull)|((cr_drmiss_drmiss2_read)&0xFFull))<<8ull)|((cr_drmiss_drmiss1_read)&0xFFull))<<8ull)|((cr_drmiss_drmiss0_read)&0xFFull); break; /* GENERATED */
+            case 81: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_drmissh_drmiss6_read)<<8ull)|((cr_drmissh_drmiss5_read)&0xFFull))<<8ull)|((cr_drmissh_drmiss4_read)&0xFFull))<<8ull)|((cr_drmissh_drmiss3_read)&0xFFull); break;
+            case 82: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dwacc_dwacc3_read)<<8ull)|((cr_dwacc_dwacc2_read)&0xFFull))<<8ull)|((cr_dwacc_dwacc1_read)&0xFFull))<<8ull)|((cr_dwacc_dwacc0_read)&0xFFull); break;
+            case 83: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dwacch_dwacc6_read)<<8ull)|((cr_dwacch_dwacc5_read)&0xFFull))<<8ull)|((cr_dwacch_dwacc4_read)&0xFFull))<<8ull)|((cr_dwacch_dwacc3_read)&0xFFull); break;
+            case 84: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dwmiss_dwmiss3_read)<<8ull)|((cr_dwmiss_dwmiss2_read)&0xFFull))<<8ull)|((cr_dwmiss_dwmiss1_read)&0xFFull))<<8ull)|((cr_dwmiss_dwmiss0_read)&0xFFull); break;
+            case 85: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dwmissh_dwmiss6_read)<<8ull)|((cr_dwmissh_dwmiss5_read)&0xFFull))<<8ull)|((cr_dwmissh_dwmiss4_read)&0xFFull))<<8ull)|((cr_dwmissh_dwmiss3_read)&0xFFull); break;
+            case 86: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dbypass_dbypass3_read)<<8ull)|((cr_dbypass_dbypass2_read)&0xFFull))<<8ull)|((cr_dbypass_dbypass1_read)&0xFFull))<<8ull)|((cr_dbypass_dbypass0_read)&0xFFull); break;
+            case 87: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dbypassh_dbypass6_read)<<8ull)|((cr_dbypassh_dbypass5_read)&0xFFull))<<8ull)|((cr_dbypassh_dbypass4_read)&0xFFull))<<8ull)|((cr_dbypassh_dbypass3_read)&0xFFull); break;
+            case 88: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dwbuf_dwbuf3_read)<<8ull)|((cr_dwbuf_dwbuf2_read)&0xFFull))<<8ull)|((cr_dwbuf_dwbuf1_read)&0xFFull))<<8ull)|((cr_dwbuf_dwbuf0_read)&0xFFull); break;
+            case 89: st.cx[ctxt].cregIface.cxreg_readData = ((((((cr_dwbufh_dwbuf6_read)<<8ull)|((cr_dwbufh_dwbuf5_read)&0xFFull))<<8ull)|((cr_dwbufh_dwbuf4_read)&0xFFull))<<8ull)|((cr_dwbufh_dwbuf3_read)&0xFFull); break;
+            }                                                                                        /* GENERATED */
+        }
+
+    } else {
+        return;
+    }
+
+    // Tie states immediately to outputs.
+    st.cregIface.cxreg2cfg_wakeupConfig = oldCxregState[0].cr_wcfg_wcfg_r;
+    st.cregIface.gbreg2cfg_requestData = oldGbregState.cr_bcrr_bcrr_r;
+    st.cregIface.cxreg2cfg_wakeupEnable = oldCxregState[0].cr_sawc_s_r;                              /* GENERATED */
+    for (int ctxt = 0; ctxt < (1 << CFG.numContextsLog2); ctxt++) {
+        st.cx[ctxt].cregIface.cxreg2cxplif_stepping = oldCxregState[ctxt].cr_dcr_s_r;
+        st.cx[ctxt].cregIface.cxreg2rctrl_done = oldCxregState[ctxt].cr_dcr_d_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_resuming = oldCxregState[ctxt].cr_dcr_r_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_linkReadData = oldCxregState[ctxt].cr_lr_lr_r;
+        st.cx[ctxt].cregIface.cxreg2trace_cacheEn = oldCxregState[ctxt].cr_dcr2_c_r;
+        st.cx[ctxt].cregIface.cxreg2cfg_requestData = oldCxregState[ctxt].cr_crr_crr_r;
+        st.cx[ctxt].cregIface.cxreg2trace_instrEn = oldCxregState[ctxt].cr_dcr2_i_r;
+        st.cx[ctxt].cregIface.cxreg2trace_memEn = oldCxregState[ctxt].cr_dcr2_m_r;
+        st.cx[ctxt].cregIface.cxreg2trace_regEn = oldCxregState[ctxt].cr_dcr2_r_r;                   /* GENERATED */
+        st.cx[ctxt].cregIface.cxreg2trace_trapEn = oldCxregState[ctxt].cr_dcr2_t_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_brk = oldCxregState[ctxt].cr_dcr_b_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_currentPC = oldCxregState[ctxt].cr_pc_pc_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_extDebug = oldCxregState[ctxt].cr_dcr_e_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_trapReturn = oldCxregState[ctxt].cr_tp_tp_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_brReadData = oldCxregState[ctxt].cr_ccr_branch_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_overridePC = oldCxregState[ctxt].cr_dcr_j_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_interruptEnable = oldCxregState[ctxt].cr_ccr_i_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_debugTrapEnable = oldCxregState[ctxt].cr_ccr_b_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_softCtxtSwitch = (oldCxregState[ctxt].cr_csc_csc_neq) & (oldCxregState[ctxt].cr_ccr_c_r); /* GENERATED */
+        st.cx[ctxt].cregIface.cxreg2trace_enable = oldCxregState[ctxt].cr_dcr2_e_r;
+        st.cx[ctxt].cregIface.cxreg2cxplif_trapHandler = ((oldCxregState[ctxt].cr_th_th_r) & ((((oldCxregState[ctxt].cr_ccr_r_r)&1ull)?0xFFFFFFFFFFFFFFFFull:0ull))) | ((oldCxregState[ctxt].cr_ph_ph_r) & ((((~(oldCxregState[ctxt].cr_ccr_r_r))&1ull)?0xFFFFFFFFFFFFFFFFull:0ull)));
+    }
+
+}
+
+//==============================================================================
+// Opcode decoding table
+//==============================================================================
+                                                                                                     /* GENERATED */
 const opcodeTableEntry_t OPCODE_TABLE[256] = {
     { /* 0x00 = MPYLL */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -60,9 +3058,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 1 }},
-    { /* 0x01 = MPYLLU */ { 1, 1 },                                                                  /* GENERATED */
+    { /* 0x01 = MPYLLU */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 1, 1, 1 }},
@@ -70,9 +3068,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
-    { /* 0x03 = MPYLHU */ { 1, 1 },
+    { /* 0x03 = MPYLHU */ { 1, 1 },                                                                  /* GENERATED */
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -80,9 +3078,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_HIGH_HALF, 1, 1, 1 }},
     { /* 0x04 = MPYHH */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_HIGH_HALF, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
     { /* 0x05 = MPYHHU */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -90,9 +3088,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_HIGH_HALF, U_OP2SEL_HIGH_HALF, 1, 1, 1 }},
-    { /* 0x06 = MPYL */ { 1, 1 },                                                                    /* GENERATED */
+    { /* 0x06 = MPYL */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_WORD, U_OP2SEL_LOW_HALF, 0, 0, 1 }},
@@ -100,9 +3098,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_WORD, U_OP2SEL_LOW_HALF, 1, 1, 1 }},
-    { /* 0x08 = MPYH */ { 1, 1 },
+    { /* 0x08 = MPYH */ { 1, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -110,9 +3108,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_WORD, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
     { /* 0x09 = MPYHU */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_WORD, U_OP2SEL_HIGH_HALF, 1, 1, 1 }},
     { /* 0x0A = MPYHS */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -120,9 +3118,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_SHL16, U_OP1SEL_WORD, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
-    { /* 0x0B = MOVTL */ { 1, 1 },                                                                   /* GENERATED */
+    { /* 0x0B = MOVTL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -130,9 +3128,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x0D = LDW */ { 0, 1 },
+    { /* 0x0D = LDW */ { 0, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_MEM, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -140,9 +3138,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x0E = STW */ { 0, 1 },
         { D_FUNCSEL_ALU, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 1, 0, 0, 1 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 1, 0, 0, 1 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x0F = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -150,9 +3148,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x10 = LDW */ { 0, 1 },                                                                     /* GENERATED */
+    { /* 0x10 = LDW */ { 0, 1 },
         { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 1, 0, 1, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -160,9 +3158,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD, 1, 0, 1, 0 },                                      /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD, 1, 0, 1, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x12 = LDHU */ { 0, 1 },
+    { /* 0x12 = LDHU */ { 0, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -170,9 +3168,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x13 = LDB */ { 0, 1 },
         { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 0, 1, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 0, 1, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x14 = LDBU */ { 0, 1 },
         { D_FUNCSEL_MEM, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -180,9 +3178,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 1, 1, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x15 = STW */ { 0, 1 },                                                                     /* GENERATED */
+    { /* 0x15 = STW */ { 0, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 1, 0, 0, 1 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -190,9 +3188,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD, 1, 0, 0, 1 },                                      /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_HALFWORD, 1, 0, 0, 1 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x17 = STB */ { 0, 1 },
+    { /* 0x17 = STB */ { 0, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -200,9 +3198,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x18 = SHR */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_SHIFTER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_SHIFTER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x19 = SHRU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -210,9 +3208,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x1A = SUB */ { 1, 1 },                                                                     /* GENERATED */
+    { /* 0x1A = SUB */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_TRUE, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_TRUE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -220,9 +3218,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND8, A_OP2MUX_ZERO, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x1C = SXTH */ { 1, 0 },
+    { /* 0x1C = SXTH */ { 1, 0 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND16, A_OP2MUX_ZERO, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -230,9 +3228,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x1D = ZXTB */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND8, A_OP2MUX_ZERO, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 1, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND8, A_OP2MUX_ZERO, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x1E = ZXTH */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -240,9 +3238,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x1F = XOR */ { 1, 1 },                                                                     /* GENERATED */
+    { /* 0x1F = XOR */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_XOR, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_XOR, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -250,9 +3248,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 1, 0, 1, 0, 0, 1, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x21 = IGOTO */ { 1, 1 },
+    { /* 0x21 = IGOTO */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 1, 0, 1, 1, 0, 1, 0 },
@@ -260,9 +3258,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x22 = CALL */ { 1, 1 },
         { D_FUNCSEL_PCP1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 1, 0, 1, 0, 1, 1, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x23 = ICALL */ { 1, 1 },
         { D_FUNCSEL_PCP1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0 },
@@ -270,9 +3268,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 1, 0, 1, 1, 1, 1, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x24 = BR */ { 1, 1 },                                                                      /* GENERATED */
+    { /* 0x24 = BR */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 1, 0, 0, 0, 0, 1, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -280,9 +3278,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 1, 0, 1, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x26 = RETURN */ { 1, 1 },
+    { /* 0x26 = RETURN */ { 1, 1 },                                                                  /* GENERATED */
         { D_FUNCSEL_ALU, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 1, 0, 1, 1, 0, 1, 0 },
@@ -290,9 +3288,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x27 = RFI */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 1, 0, 0, 0, 0, 0, 1 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x28 = STOP */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 },
@@ -300,9 +3298,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 1, 1, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x29 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0x29 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -310,9 +3308,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x2B = undefined */ { 0, 0 },
+    { /* 0x2B = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -320,9 +3318,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x2C = SBIT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_SET_BIT, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_TRUE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_SET_BIT, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_TRUE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x2D = SBITF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -330,9 +3328,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x2E = LDBR */ { 0, 1 },                                                                    /* GENERATED */
+    { /* 0x2E = LDBR */ { 0, 1 },
         { D_FUNCSEL_MEM, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 1, 1, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -340,9 +3338,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 0, 0, 1 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_BYTE, 1, 0, 0, 1 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x30 = SLCTF */ { 1, 1 },
+    { /* 0x30 = SLCTF */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -350,9 +3348,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x31 = SLCTF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x32 = SLCTF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -360,9 +3358,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x33 = SLCTF */ { 1, 1 },                                                                   /* GENERATED */
+    { /* 0x33 = SLCTF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -370,9 +3368,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x35 = SLCTF */ { 1, 1 },
+    { /* 0x35 = SLCTF */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -380,9 +3378,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x36 = SLCTF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_INVERT, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x37 = SLCTF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -390,9 +3388,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x38 = SLCT */ { 1, 1 },                                                                    /* GENERATED */
+    { /* 0x38 = SLCT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -400,9 +3398,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x3A = SLCT */ { 1, 1 },
+    { /* 0x3A = SLCT */ { 1, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -410,9 +3408,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x3B = SLCT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x3C = SLCT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -420,9 +3418,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x3D = SLCT */ { 1, 1 },                                                                    /* GENERATED */
+    { /* 0x3D = SLCT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -430,9 +3428,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x3F = SLCT */ { 1, 1 },
+    { /* 0x3F = SLCT */ { 1, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -440,9 +3438,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x40 = CMPEQ */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_EQ, A_OPBRMUX_TRUE, 1, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_EQ, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x41 = CMPEQ */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
@@ -450,9 +3448,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x42 = CMPGE */ { 1, 1 },                                                                   /* GENERATED */
+    { /* 0x42 = CMPGE */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -460,9 +3458,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x44 = CMPGEU */ { 1, 1 },
+    { /* 0x44 = CMPGEU */ { 1, 1 },                                                                  /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -470,9 +3468,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x45 = CMPGEU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 1, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x46 = CMPGT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -480,9 +3478,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x47 = CMPGT */ { 1, 1 },                                                                   /* GENERATED */
+    { /* 0x47 = CMPGT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GT, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GT, A_OPBRMUX_TRUE, 1, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -490,9 +3488,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GT, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x49 = CMPGTU */ { 1, 1 },
+    { /* 0x49 = CMPGTU */ { 1, 1 },                                                                  /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_GT, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -500,9 +3498,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x4A = CMPLE */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x4B = CMPLE */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
@@ -510,9 +3508,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x4C = CMPLEU */ { 1, 1 },                                                                  /* GENERATED */
+    { /* 0x4C = CMPLEU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 1, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -520,9 +3518,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x4E = CMPLT */ { 1, 1 },
+    { /* 0x4E = CMPLT */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LT, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -530,9 +3528,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x4F = CMPLT */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LT, A_OPBRMUX_TRUE, 1, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LT, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x50 = CMPLTU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -540,9 +3538,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x51 = CMPLTU */ { 1, 1 },                                                                  /* GENERATED */
+    { /* 0x51 = CMPLTU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LT, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_LT, A_OPBRMUX_TRUE, 1, 0, 1, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -550,9 +3548,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_NE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x53 = CMPNE */ { 1, 1 },
+    { /* 0x53 = CMPNE */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_CMP_NE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -560,9 +3558,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x54 = NANDL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NAND, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NAND, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x55 = NANDL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
@@ -570,9 +3568,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x56 = NORL */ { 1, 1 },                                                                    /* GENERATED */
+    { /* 0x56 = NORL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NOR, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NOR, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -580,9 +3578,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_NOR, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x58 = ORL */ { 1, 1 },
+    { /* 0x58 = ORL */ { 1, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_OR, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -590,9 +3588,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x59 = ORL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_OR, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_OR, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x5A = ANDL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -600,9 +3598,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x5B = ANDL */ { 1, 1 },                                                                    /* GENERATED */
+    { /* 0x5B = ANDL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_AND, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_LOGIC_AND, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -610,9 +3608,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_TBIT, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x5D = TBIT */ { 1, 1 },
+    { /* 0x5D = TBIT */ { 1, 1 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_TBIT, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -620,9 +3618,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x5E = TBITF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_TBITF, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BOOL, A_BRRESULTMUX_TBITF, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x5F = TBITF */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 },
@@ -630,9 +3628,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x60 = NOP */ { 1, 1 },                                                                     /* GENERATED */
+    { /* 0x60 = NOP */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -640,9 +3638,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x62 = ADD */ { 1, 1 },
+    { /* 0x62 = ADD */ { 1, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -650,9 +3648,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x63 = AND */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x64 = ANDC */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -660,9 +3658,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x65 = MAX */ { 1, 1 },                                                                     /* GENERATED */
+    { /* 0x65 = MAX */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -670,9 +3668,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_GE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x67 = MIN */ { 1, 1 },
+    { /* 0x67 = MIN */ { 1, 1 },                                                                     /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -680,9 +3678,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x68 = MINU */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 1, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_OP_SEL, A_BRRESULTMUX_CMP_LE, A_OPBRMUX_TRUE, 1, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x69 = OR */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -690,9 +3688,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x6A = ORC */ { 1, 1 },                                                                     /* GENERATED */
+    { /* 0x6A = ORC */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32INV, A_OP2MUX_EXTEND32, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -700,9 +3698,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x6C = SH2ADD */ { 1, 1 },
+    { /* 0x6C = SH2ADD */ { 1, 1 },                                                                  /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL2, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -710,9 +3708,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x6D = SH3ADD */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL3, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL3, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x6E = SH4ADD */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -720,9 +3718,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x6F = SHL */ { 1, 1 },                                                                     /* GENERATED */
+    { /* 0x6F = SHL */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_SHIFTER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 1, 1, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_SHIFTER, A_BRRESULTMUX_PASS, A_OPBRMUX_FALSE, 0, 1, 1, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -730,9 +3728,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x71 = DIVS */ { 1, 0 },
+    { /* 0x71 = DIVS */ { 1, 0 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -740,9 +3738,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x72 = DIVS */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x73 = DIVS */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
@@ -750,9 +3748,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x74 = DIVS */ { 1, 0 },                                                                    /* GENERATED */
+    { /* 0x74 = DIVS */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -760,9 +3758,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x76 = DIVS */ { 1, 0 },
+    { /* 0x76 = DIVS */ { 1, 0 },                                                                    /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -770,9 +3768,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x77 = DIVS */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_SHL1, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_DIVS, A_OPBRMUX_PASS, 0, 0, 0, 1 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x78 = ADDCG */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
@@ -780,9 +3778,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x79 = ADDCG */ { 1, 0 },                                                                   /* GENERATED */
+    { /* 0x79 = ADDCG */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -790,9 +3788,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x7B = ADDCG */ { 1, 0 },
+    { /* 0x7B = ADDCG */ { 1, 0 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -800,9 +3798,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x7C = ADDCG */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x7D = ADDCG */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
@@ -810,9 +3808,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x7E = ADDCG */ { 1, 0 },                                                                   /* GENERATED */
+    { /* 0x7E = ADDCG */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
-        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
+        { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -820,9 +3818,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 0, 0 },
         { A_BITWISEOP_BITW_AND, A_OP1MUX_EXTEND32, A_OP2MUX_EXTEND32, A_INTRESULTMUX_ADDER, A_BRRESULTMUX_CARRY_OUT, A_OPBRMUX_PASS, 0, 0, 1, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x80 = LIMMH */ { 1, 1 },
+    { /* 0x80 = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -830,9 +3828,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x81 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x82 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
@@ -840,9 +3838,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x83 = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
+    { /* 0x83 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -850,9 +3848,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x85 = LIMMH */ { 1, 1 },
+    { /* 0x85 = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -860,9 +3858,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x86 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x87 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
@@ -870,9 +3868,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x88 = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
+    { /* 0x88 = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -880,9 +3878,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x8A = LIMMH */ { 1, 1 },
+    { /* 0x8A = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -890,9 +3888,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x8B = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x8C = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
@@ -900,9 +3898,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x8D = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
+    { /* 0x8D = LIMMH */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -910,9 +3908,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x8F = LIMMH */ { 1, 1 },
+    { /* 0x8F = LIMMH */ { 1, 1 },                                                                   /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -920,9 +3918,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x90 = TRAP */ { 1, 1 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x91 = CLZ */ { 1, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0 },
@@ -930,9 +3928,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x92 = MPYLHUS */ { 1, 1 },                                                                 /* GENERATED */
+    { /* 0x92 = MPYLHUS */ { 1, 1 },
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_SHR32, U_OP1SEL_WORD, U_OP2SEL_LOW_HALF, 1, 0, 1 }},
@@ -940,9 +3938,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_MUL, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_SHR16, U_OP1SEL_WORD, U_OP2SEL_HIGH_HALF, 0, 0, 1 }},
-    { /* 0x94 = undefined */ { 0, 0 },
+    { /* 0x94 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -950,9 +3948,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x95 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x96 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -960,9 +3958,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x97 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0x97 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -970,9 +3968,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x99 = undefined */ { 0, 0 },
+    { /* 0x99 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -980,9 +3978,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x9A = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x9B = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -990,9 +3988,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x9C = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0x9C = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1000,9 +3998,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0x9E = undefined */ { 0, 0 },
+    { /* 0x9E = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1010,9 +4008,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0x9F = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xA0 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1020,9 +4018,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xA1 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xA1 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1030,9 +4028,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xA3 = undefined */ { 0, 0 },
+    { /* 0xA3 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1040,9 +4038,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xA4 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xA5 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1050,9 +4048,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xA6 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xA6 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1060,9 +4058,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xA8 = undefined */ { 0, 0 },
+    { /* 0xA8 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1070,9 +4068,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xA9 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xAA = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1080,9 +4078,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xAB = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xAB = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1090,9 +4088,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xAD = undefined */ { 0, 0 },
+    { /* 0xAD = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1100,9 +4098,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xAE = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xAF = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1110,9 +4108,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xB0 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xB0 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1120,9 +4118,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xB2 = undefined */ { 0, 0 },
+    { /* 0xB2 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1130,9 +4128,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xB3 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xB4 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1140,9 +4138,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xB5 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xB5 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1150,9 +4148,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xB7 = undefined */ { 0, 0 },
+    { /* 0xB7 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1160,9 +4158,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xB8 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xB9 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1170,9 +4168,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xBA = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xBA = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1180,9 +4178,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xBC = undefined */ { 0, 0 },
+    { /* 0xBC = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1190,9 +4188,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xBD = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xBE = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1200,9 +4198,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xBF = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xBF = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1210,9 +4208,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xC1 = undefined */ { 0, 0 },
+    { /* 0xC1 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1220,9 +4218,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xC2 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xC3 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1230,9 +4228,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xC4 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xC4 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1240,9 +4238,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xC6 = undefined */ { 0, 0 },
+    { /* 0xC6 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1250,9 +4248,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xC7 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xC8 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1260,9 +4258,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xC9 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xC9 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1270,9 +4268,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xCB = undefined */ { 0, 0 },
+    { /* 0xCB = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1280,9 +4278,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xCC = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xCD = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1290,9 +4288,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xCE = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xCE = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1300,9 +4298,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xD0 = undefined */ { 0, 0 },
+    { /* 0xD0 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1310,9 +4308,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xD1 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xD2 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1320,9 +4318,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xD3 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xD3 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1330,9 +4328,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xD5 = undefined */ { 0, 0 },
+    { /* 0xD5 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1340,9 +4338,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xD6 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xD7 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1350,9 +4348,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xD8 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xD8 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1360,9 +4358,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xDA = undefined */ { 0, 0 },
+    { /* 0xDA = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1370,9 +4368,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xDB = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xDC = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1380,9 +4378,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xDD = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xDD = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1390,9 +4388,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xDF = undefined */ { 0, 0 },
+    { /* 0xDF = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1400,9 +4398,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xE0 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xE1 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1410,9 +4408,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xE2 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xE2 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1420,9 +4418,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xE4 = undefined */ { 0, 0 },
+    { /* 0xE4 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1430,9 +4428,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xE5 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xE6 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1440,9 +4438,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xE7 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xE7 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1450,9 +4448,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xE9 = undefined */ { 0, 0 },
+    { /* 0xE9 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1460,9 +4458,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xEA = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xEB = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1470,9 +4468,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xEC = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xEC = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1480,9 +4478,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xEE = undefined */ { 0, 0 },
+    { /* 0xEE = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1490,9 +4488,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xEF = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xF0 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1500,9 +4498,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xF1 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xF1 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1510,9 +4508,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xF3 = undefined */ { 0, 0 },
+    { /* 0xF3 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1520,9 +4518,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xF4 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xF5 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1530,9 +4528,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xF6 = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xF6 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1540,9 +4538,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xF8 = undefined */ { 0, 0 },
+    { /* 0xF8 = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1550,9 +4548,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xF9 = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xFA = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1560,9 +4558,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xFB = undefined */ { 0, 0 },                                                               /* GENERATED */
+    { /* 0xFB = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
@@ -1570,9 +4568,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
-    { /* 0xFD = undefined */ { 0, 0 },
+    { /* 0xFD = undefined */ { 0, 0 },                                                               /* GENERATED */
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
         { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
@@ -1580,9 +4578,9 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xFE = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
-        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 }, /* GENERATED */
+        { A_BITWISEOP_BITW_OR, A_OP1MUX_EXTEND32, A_OP2MUX_ZERO, A_INTRESULTMUX_BITWISE, A_BRRESULTMUX_PASS, A_OPBRMUX_PASS, 0, 0, 0, 0 },
         { 0, 0, 0, 0, 0, 0, 0 },
-        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
+        { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },                                          /* GENERATED */
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }},
     { /* 0xFF = undefined */ { 0, 0 },
         { D_FUNCSEL_ALU, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0 },
@@ -1590,5 +4588,269 @@ const opcodeTableEntry_t OPCODE_TABLE[256] = {
         { 0, 0, 0, 0, 0, 0, 0 },
         { M_ACCESSSIZEBLOG2_ACCESS_SIZE_WORD, 0, 0, 0, 0 },
         { U_RESULTSEL_PASS, U_OP1SEL_LOW_HALF, U_OP2SEL_LOW_HALF, 0, 0, 0 }}
-};                                                                                                   /* GENERATED */
+};
+
+                                                                                                     /* GENERATED */
+//==============================================================================
+// Traps
+//==============================================================================
+
+const trapTableEntry_t TRAP_TABLE[256] = {
+    { "trap %c: none", 0, 0 },
+    { "trap %c: invalid opcode in lane %u%@", 0, 0 },
+    { "trap %c: misaligned branch%@; target was %x", 0, 0 },
+    { "trap %c: instr. fetch fault%@", 0, 0 },
+    { "trap %c: misaligned access%@; address was %x", 0, 0 },                                        /* GENERATED */
+    { "trap %c: dmem fault%@; address was %x", 0, 0 },
+    { "trap %c: LIMMH fwd. fault in lane %u%@", 0, 0 },
+    { "trap %c: external interrupt %d", 0, 1 },
+    { "trap %c: stop request%@", 1, 0 },
+    { "trap %c: soft ctxt sw. request%@", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },                                                                  /* GENERATED */
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c@ (unknown)", 0, 0 },
+    { "trap %c: soft debug trap 0%@", 1, 0 },
+    { "trap %c: soft debug trap 1%@", 1, 0 },
+    { "trap %c: soft debug trap 2%@", 1, 0 },
+    { "trap %c: step complete trap%@", 1, 0 },
+    { "trap %c: breakpoint 0%@, address/PC %x", 1, 0 },
+    { "trap %c: breakpoint 1%@, address/PC %x", 1, 0 },
+    { "trap %c: breakpoint 2%@, address/PC %x", 1, 0 },                                              /* GENERATED */
+    { "trap %c: breakpoint 3%@, address/PC %x", 1, 0 }
+};
 

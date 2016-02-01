@@ -42,7 +42,7 @@ if (!cxplif2cxreg_stall) {
 <?vhdl
 @lvalue cxreg2cxplif_handlingDebugTrap <= TRAP_TABLE(vect2uint(@read _v)).isDebugTrap;
 ?><?c
-#error "Need to implement this!"
+@lvalue cxreg2cxplif_handlingDebugTrap = TRAP_TABLE[(@read _v) & 0xFF].isDebugTrap;
 ?>
 
 _r = _v;

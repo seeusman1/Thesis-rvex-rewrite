@@ -370,7 +370,8 @@ typedef struct busSlave_t {
  * belong to the given slave. If it does belong, it should return the address
  * which is to be forwarded to the slave.
  */
-typedef int64_t (*busDemuxFunPtr_t)(busSlave_t *slave, uint32_t address);
+typedef int64_t (*busDemuxFunPtr_t)(busSlave_t *slave, uint32_t address,
+		void *param);
 
 /**
  * Slave demuxer configuration.
@@ -386,6 +387,11 @@ typedef struct busDemuxEntry_t {
 	 * Bus demuxing function.
 	 */
 	busDemuxFunPtr_t fun;
+
+	/**
+	 * Parameter to pass to the bus demuxing function.
+	 */
+	void *param;
 
 } busDemuxEntry_t;
 
@@ -504,7 +510,7 @@ public:
 	 * Adds a slave to the bus. May not be called after clock() or
 	 * synchronize() are called.
 	 */
-	void addSlave(busSlave_t *slave, busDemuxFunPtr_t demuxFun);
+	void addSlave(busSlave_t *slave, busDemuxFunPtr_t demuxFun, void *param);
 
 };
 

@@ -75,21 +75,29 @@ void Simulation::run() {
 	// Determine the number of entities.
 	ec = entities.size();
 
-	// Initialize the simulation.
-	printf("Starting simulation with the following entities:\n");
-	int error = 0;
+	// List the entities.
+	printf("\033[1mStarting simulation with the following entities:\033[0m\n");
 	for (i = 0; i < ec; i++) {
 		printf(" - %s\n", entities[i]->name);
-		if (entities[i]->init()) {
-			printf("   This entity had some trouble initializing...\n");
-			error = 1;
-		}
 	}
 	printf("That's %d entities total.\n\n", ec);
 
+	// Initialize the simulation.
+	printf("\033[1mInitializing components...\033[0m\n", ec);
+	int error = 0;
+	for (i = 0; i < ec; i++) {
+		if (entities[i]->init()) {
+			printf("\033[31;1mEntity '%s' had some trouble initializing.\033[0m\n",
+					entities[i]->name);
+			error = 1;
+		}
+	}
+	printf("\n", ec);
+
+	printf("\033[1mStarting simulation.\033[0m\n", ec);
 	cycles = 0;
 	if (error) {
-		printf("One or more entities did not initialize properly.\n");
+		printf("\033[31;1mOne or more entities did not initialize properly.\033[0m\n");
 	} else {
 
 		// Run the simulation loop.
@@ -131,7 +139,7 @@ void Simulation::run() {
 				// Synchronization and signal propagation.
 				for (i = 0; i < ec; i++) {
 					if (entities[i]->synchronize() < 0) {
-						printf("Entity '%s' is stopping the simulation!\n",
+						printf("\033[1mEntity '%s' is stopping the simulation!\033[0m\n",
 								entities[i]->name);
 						stopped = 1;
 					}
@@ -143,7 +151,7 @@ void Simulation::run() {
 			// Occasional synchronization stuff.
 			for (i = 0; i < ec; i++) {
 				if (entities[i]->occasional() < 0) {
-					printf("Entity '%s' is stopping the simulation!\n",
+					printf("\033[1mEntity '%s' is stopping the simulation!\033[0m\n",
 							entities[i]->name);
 					stopped = 1;
 				}
@@ -157,6 +165,6 @@ void Simulation::run() {
 	}
 
 	// Print the ending message.
-	printf("Simulation ended at %lld cycles.\n", cycles);
+	printf("\033[1mSimulation ended at %lld cycles.\033[0m\n", cycles);
 
 }

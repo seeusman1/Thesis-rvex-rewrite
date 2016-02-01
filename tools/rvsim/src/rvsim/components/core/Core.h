@@ -56,6 +56,13 @@
 namespace Core {
 
 /**
+ * Maximum supported core sizes.
+ */
+#define CORE_MAX_CONTEXTS     8
+#define CORE_MAX_LANES        16
+#define CORE_MAX_LANE_GROUPS  8
+
+/**
  * Include generated stuff.
  */
 #include "Generated.h.inc"
@@ -67,17 +74,15 @@ typedef bitvec4_t mask_t;
 typedef bitvec32_t syllable_t;
 typedef char *charPtr_t;
 
-/**
- * Maximum supported core sizes.
- */
-#define CORE_MAX_CONTEXTS     8
-#define CORE_MAX_LANES        16
-#define CORE_MAX_LANE_GROUPS  8
+
+//==============================================================================
+// Core toplevel interface
+//==============================================================================
 
 /**
  * All rvex core generics.
  */
-typedef struct {
+typedef struct coreInterfaceGenerics_t {
 
 	cfgVect_t  CFG;
     natural_t  CORE_ID;
@@ -88,7 +93,7 @@ typedef struct {
 /**
  * All rvex core input signals.
  */
-typedef struct {
+typedef struct coreInterfaceIn_t {
 
 	// System control.
 	bit_t      reset;
@@ -131,7 +136,7 @@ typedef struct {
 /**
  * All rvex core output signals.
  */
-typedef struct {
+typedef struct coreInterfaceOut_t {
 
 	// System control.
 	bit_t      resetOut;
@@ -170,6 +175,60 @@ typedef struct {
 
 } coreInterfaceOut_t;
 
+
+//==============================================================================
+// Core state and buffers
+//==============================================================================
+
+/**
+ * State information per context.
+ */
+typedef struct contextData_t {
+
+	/**
+	 * Control register file interface (per-context signals).
+	 */
+	CtrlRegInterfacePerCtxt_t cregIface;
+
+	/**
+	 * State of the context control registers.
+	 */
+	contextRegState_t cxregState;
+
+	/**
+	 * General purpose registers.
+	 */
+	uint32_t gpreg[64];
+
+} contextState_t;
+
+/**
+ * Overall state.
+ */
+typedef struct coreData_t {
+
+	/**
+	 * State of all the contexts.
+	 */
+	contextState_t cx[CORE_MAX_CONTEXTS];
+
+	/**
+	 * Control register file interface (global signals).
+	 */
+	CtrlRegInterface_t cregIface;
+
+	/**
+	 * State of the global control registers.
+	 */
+	globalRegState_t gbregState;
+
+} coreState_t;
+
+
+//==============================================================================
+// Core simulator class
+//==============================================================================
+
 /**
  * Typedef for a printf-like function pointer, used for the debug function.
  */
@@ -193,6 +252,21 @@ private:
 	 */
 	printfFuncPtr_t printf;
 
+	/**
+	 * Internal state of the core.
+	 */
+	coreState_t st;
+
+	/**
+	 * Simulates the control registers.
+	 */
+	void simulateControlRegs();
+
+	/**
+	 * Simulates the control register logic. This function is generated.
+	 */
+	void simulateControlRegLogic();
+
 public:
 
 	/**
@@ -213,8 +287,7 @@ public:
 	 * MEANS THAT THE DESTRUCTOR IS NOT NECESSARILY CALLED, AND MUST THUS BE
 	 * NO-OP.
 	 */
-	Core(const coreInterfaceGenerics_t *generics, printfFuncPtr_t printf)
-		throw(GenericsException);
+	Core(const coreInterfaceGenerics_t *generics, printfFuncPtr_t printf);
 	virtual ~Core() { };
 
 	/**

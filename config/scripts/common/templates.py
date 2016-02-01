@@ -29,6 +29,45 @@ def generate_footer(lang, infile, outfile, footer):
         f.write(_post_process(footer, com_start, com_end))
 
 
+class TemplateException(Exception):
+    pass
+
+
+def process_template(template, data):
+    """Does template processing.
+    
+    Any line which starts with an @ is interpreted to be a template command.
+    The remainder of the line is the command name, indexing into the data
+    dictionary. The amount of spacing before the @ command is interpreted as
+    indentation to be added to the template expansion.
+    """
+    output = []
+    if isinstance(template, str):
+        template = [x + '\n' for x in template.split('\n')]
+        template[-1] = template[-1][:-1]
+    for i, line in enumerate(template):
+        if line.lstrip().startswith('@'):
+            
+            # Template command.
+            cmd = line.strip()[1:]
+            indent = line[0:line.find('@')]
+            
+            # Make sure we have data for this command.
+            if cmd not in data:
+                raise TemplateException(
+                    'Unknown template expansion command @%s on line %d' %
+                    (cmd, i+1))
+            
+            # Apply indentation.
+            expansion = [indent + line for line in data[cmd].split('\n')]
+            expansion[-1] = expansion[-1].rstrip()
+            output.append('\n'.join(expansion))
+            
+        else:
+            output.append(line)
+    return ''.join(output)
+    
+
 def generate(lang, templatefile, outfile, data):
     """Writes a generated file to outfile, using a template file.
     
@@ -45,27 +84,10 @@ def generate(lang, templatefile, outfile, data):
         template = f.readlines()
     
     # Generate from the template.
-    output = []
-    for i, line in enumerate(template):
-        if line.lstrip().startswith('@'):
-            
-            # Template command.
-            cmd = line.strip()[1:]
-            indent = line[0:line.find('@')]
-            
-            # Make sure we have data for this command.
-            if cmd not in data:
-                raise Exception('Unknown template expansion command @%s on line %s:%d' %
-                                (cmd, templatefile, i+1))
-            
-            # Apply indentation.
-            expansion = [indent + line for line in data[cmd].split('\n')]
-            expansion[-1] = expansion[-1].rstrip()
-            output.append('\n'.join(expansion))
-            
-        else:
-            output.append(line)
-    output = ''.join(output)
+    try:
+        output = process_template(template, data)
+    except TemplateException as e:
+        raise Exception(str(e) + ' in file ' + templatefile)
     
     # Write the output file.
     generate_raw(lang, outfile, output)

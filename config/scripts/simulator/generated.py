@@ -3,6 +3,8 @@ from __future__ import print_function
 import common.templates
 import code.type_sys
 import opcode_table
+import cregs
+import trap_table
 
 def generate(opc, regs, trps, pl, dirs):
     
@@ -70,6 +72,26 @@ def generate(opc, regs, trps, pl, dirs):
     header.append(code.type_sys.generate_c_typedefs())
     header.append('\n')
     
+    # Control register code.
+    header.append(separator % 'Control registers')
+    source.append(separator % 'Control registers')
+    cregs.generate(regs, header, source)
+    for ent in regs['defs']:
+        if ent[0] == 'reg':
+            header.append('#define %s 0x%03X\n' % (ent[1], ent[3]))
+        elif ent[0] == 'field':
+            header.append('#define %s_BIT %d\n#define %s_MASK 0x%08X\n'
+                % (ent[1], ent[2], ent[1], ent[3]))
+    header.append('\n')
+    
+    # Misc. defines.
+    header.append(separator % 'Misc. defines')
+    header.append('#define BRANCH_OFFS_SHIFT %d\n' % opc['branch_offset_shift'])
+    header.append('#define RVEX_CORE_TAG 0x')
+    for c in 'rvexsim':
+        header.append('%02X' % ord(c))
+    header.append('\n\n')
+    
     # Opcode table.
     header.append(separator % 'Opcode decoding table')
     source.append(separator % 'Opcode decoding table')
@@ -79,23 +101,17 @@ def generate(opc, regs, trps, pl, dirs):
     
     # Trap name definitions.
     header.append(separator % 'Traps')
+    source.append(separator % 'Traps')
+    trap_table.generate(trps, header, source)
+    header.append('\n')
+    source.append('\n')
     for index, trap in enumerate(trps['table']):
         if trap is None:
             continue
         header.append('#define TRAP_%s 0x%02X\n' % (trap['mnemonic'], index))
     header.append('\n')
     
-    # Control register definitions in header file.
-    header.append(separator % 'Control register definitions')
-    for ent in regs['defs']:
-        if ent[0] == 'reg':
-            header.append('#define %s 0x%03X\n' % (ent[1], ent[3]))
-        elif ent[0] == 'field':
-            header.append('#define %s_BIT %d\n#define %s_MASK 0x%08X\n'
-                % (ent[1], ent[2], ent[1], ent[3]))
-    header.append('\n')
-    
-    # Pipeline stage definitions/
+    # Pipeline stage definitions.
     header.append(separator % 'Pipeline definitions')
     for key in pl['defs']:
         header.append('#define %s %d\n' % (key, pl['defs'][key]))
