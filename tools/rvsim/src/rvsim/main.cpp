@@ -8,7 +8,7 @@
 #include "components/bus/Bus.h"
 #include "components/periph/Memory.h"
 #include "components/periph/DebugPort.h"
-#include "components/core/System.h"
+#include "components/rvex-system/System.h"
 
 using namespace std;
 

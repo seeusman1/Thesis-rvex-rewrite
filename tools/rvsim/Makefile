@@ -8,11 +8,11 @@ endif
 
 # Toolchain.
 CC = g++
-CFLAGS = $(OPTIM_FLAGS) -std=c++11 -fopenmp
+CFLAGS = $(OPTIM_FLAGS) -fopenmp -Wall -ansi -fms-extensions -std=gnu++11 -pedantic
 ENSURE_DIR = mkdir -p
 
 # Modelsim .so file flags. Taken from FLI examples.
-MSIM_CFLAGS = $(OPTIM_FLAGS) -Wall -ansi -fms-extensions
+MSIM_CFLAGS = $(OPTIM_FLAGS) -Wall -ansi -fms-extensions -std=gnu++11
 MSIM_CFLAGS += -pedantic
 MSIM_LDFLAGS = $(OPTIM_FLAGS) -shared -Wl,-Bsymbolic -Wl,-export-dynamic
 ifeq ($(shell uname -m), x86_64)
@@ -32,7 +32,7 @@ BINDIR = bin
 MAGIC = -name "*.cpp" -or -name "*.c" | sed -e "s/\\.c\(pp\)\?$$//g"
 MSIM_OBS_ = $(shell find src/modelsim $(MAGIC))
 RVSIM_OBS = $(shell find src/rvsim $(MAGIC))
-MSIM_OBS  = $(MSIM_OBS_) $(shell find src/rvsim/components/core $(MAGIC))
+MSIM_OBS  = $(MSIM_OBS_) $(shell find src/rvsim/components/rvex $(MAGIC))
 ALL_OBS   = $(MSIM_OBS_) $(RVSIM_OBS)
 
 

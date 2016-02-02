@@ -50,8 +50,8 @@
 #ifndef RVSIM_COMPONENTS_CORE_CORE_H
 #define RVSIM_COMPONENTS_CORE_CORE_H
 
-#include "GenericsException.h"
 #include <inttypes.h>
+#include "../rvex/GenericsException.h"
 
 namespace Core {
 
@@ -65,7 +65,7 @@ namespace Core {
 /**
  * Include generated stuff.
  */
-#include "Generated.h.inc"
+#include "../rvex/Generated.h.inc"
 
 /**
  * VHDL typedefs which are not known by the configuration scripts.
@@ -181,9 +181,197 @@ typedef struct coreInterfaceOut_t {
 //==============================================================================
 
 /**
+ * List of all the normal registers in the rvex.
+ */
+typedef enum registerId_t {
+
+	RVREG_GP0  =  0, RVREG_GP1  =  1, RVREG_GP2  =  2, RVREG_GP3  =  3,
+	RVREG_GP4  =  4, RVREG_GP5  =  5, RVREG_GP6  =  6, RVREG_GP7  =  7,
+	RVREG_GP8  =  8, RVREG_GP9  =  9, RVREG_GP10 = 10, RVREG_GP11 = 11,
+	RVREG_GP12 = 12, RVREG_GP13 = 13, RVREG_GP14 = 14, RVREG_GP15 = 15,
+
+    RVREG_GP16 = 16, RVREG_GP17 = 17, RVREG_GP18 = 18, RVREG_GP19 = 19,
+    RVREG_GP20 = 20, RVREG_GP21 = 21, RVREG_GP22 = 22, RVREG_GP23 = 23,
+    RVREG_GP24 = 24, RVREG_GP25 = 25, RVREG_GP26 = 26, RVREG_GP27 = 27,
+    RVREG_GP28 = 28, RVREG_GP29 = 29, RVREG_GP30 = 30, RVREG_GP31 = 31,
+
+    RVREG_GP32 = 32, RVREG_GP33 = 33, RVREG_GP34 = 34, RVREG_GP35 = 35,
+    RVREG_GP36 = 36, RVREG_GP37 = 37, RVREG_GP38 = 38, RVREG_GP39 = 39,
+    RVREG_GP40 = 40, RVREG_GP41 = 41, RVREG_GP42 = 42, RVREG_GP43 = 43,
+    RVREG_GP44 = 44, RVREG_GP45 = 45, RVREG_GP46 = 46, RVREG_GP47 = 47,
+
+    RVREG_GP48 = 48, RVREG_GP49 = 49, RVREG_GP50 = 50, RVREG_GP51 = 51,
+    RVREG_GP52 = 52, RVREG_GP53 = 53, RVREG_GP54 = 54, RVREG_GP55 = 55,
+    RVREG_GP56 = 56, RVREG_GP57 = 57, RVREG_GP58 = 58, RVREG_GP59 = 59,
+    RVREG_GP60 = 60, RVREG_GP61 = 61, RVREG_GP62 = 62, RVREG_GP63 = 63,
+
+    RVREG_BR0  = 64, RVREG_BR1  = 65, RVREG_BR2  = 66, RVREG_BR3  = 67,
+    RVREG_BR4  = 68, RVREG_BR5  = 69, RVREG_BR6  = 70, RVREG_BR7  = 71,
+
+    RVREG_LINK = 72,
+
+    RVREG_COUNT = 73
+
+} registerId_t;
+
+/**
+ * Stores a single stage's worth of forwarding data.
+ */
+typedef struct fwdState_t {
+
+	/**
+	 * Register state.
+	 */
+	uint32_t r[RVREG_COUNT];
+
+	/**
+	 * Valid bits.
+	 */
+	uint64_t v[2];
+
+} regFile_t;
+
+/**
+ * Defines whether the two-cycle latency of the general purpose register file
+ * is modelled. NOTE: this is NOT modelled correctly when clkEn is not always
+ * high, as the register logic is only updated when clkEn is active.
+ */
+#define SIM_GPREG_2CYCLE_LATENCY 1
+
+/**
+ * State of the general purpose register file and gp/br/link forwarding for a
+ * context.
+ */
+class RegistersAndForwarding {
+private:
+
+	/**
+	 * Pointer to the control register interface for this context.
+	 */
+	CtrlRegInterfacePerCtxt_t *cregIface = 0;
+
+	/**
+	 * Pointer to the generic configuration vector.
+	 */
+	const cfgVect_t *CFG = 0;
+
+	/**
+	 * General purpose register file without forwarding, read values.
+	 */
+	uint32_t gpreg[64];
+
+#if SIM_GPREG_2CYCLE_LATENCY
+	/**
+	 * The general purpose register file has a cycle delay on the FPGA. We need
+	 * to account for that. When a write to the register file goes through, it
+	 * is put in here, then in the next call to afterRead() or afterReadStall(),
+	 * it is actually committed.
+	 */
+	uint32_t gpregBuf[64];
+	uint64_t gpregBufValid = 0;
+	void updateGpRegDelay();
+#endif
+
+	/**
+	 * Forwarded data. This is the set of registers which is normally read
+	 * from by the core, unless a register is marked as invalid. When a
+	 * register is submitted to the forwarding logic, it is placed both in here
+	 * as well as in stages. When a register is committed completely, it is
+	 * written to gpreg or the appropriate context control registers. When a
+	 * stage is invalidated, those registers written by that stage are also
+	 * invalidated in fwdCache. When an invalid register is read from fwdCache,
+	 * the stages table is walked in order to find the present apparent state of
+	 * the register. When this is found, it is also written back into the cache.
+	 *
+	 * This is only used when there is only one forwarding output, i.e.
+	 * S_RD+L_RD == S_FW and S_SRD == S_SFW. If the former is not true, all
+	 * reads are processed as a cache miss.
+	 */
+	fwdState_t cache;
+
+	/**
+	 * Commit information for each stage.
+	 */
+	fwdState_t stages[S_LAST_POW2];
+
+	/**
+	 * Stage offset. This is added to a stage before indexing stages (modulo
+	 * S_LAST_POW2). offset decrements every cycle, so each index in stages
+	 * maps to a single instruction in the pipelane.
+	 */
+	int offset = 0;
+
+public:
+
+	/**
+	 * Creates/destroys a new forwarding controller.
+	 * NOTE: NONE OF THE FUCNTIONS IN THIS CLASS ARE ALLOWED TO USE DYNAMIC
+	 * MEMORY ALLOCATION, AS THE MODELSIM INTERFACE REQUIRES THE USAGE OF
+	 * SPECIALIZED, GARBAGE COLLECTED MEMORY ALLOCATION FUNCTIONS. THIS ALSO
+	 * MEANS THAT THE DESTRUCTOR IS NOT NECESSARILY CALLED, AND MUST THUS BE
+	 * NO-OP.
+	 */
+	RegistersAndForwarding() { };
+	virtual ~RegistersAndForwarding() { };
+	void init(CtrlRegInterfacePerCtxt_t *cregIface, const cfgVect_t *CFG);
+
+	/**
+	 * Resets the forwarding logic. Must be called in every clock cycle where
+	 * reset is asserted, instead of afterRead(), afterReadStalled() and
+	 * afterWrite().
+	 */
+	void reset();
+
+	/**
+	 * Prepares the debug bus read value for the general purpose registers. This
+	 * just copies the specified register into debugBusRegBuffer. This is needed
+	 * to properly model the latency of the general purpose register file RAM
+	 * blocks, as the control registers are simulated after the pipeline, which
+	 * is the next cycle as far as this class is concerned.
+	 */
+	void prepDbgBusGetGpReg(registerId_t reg);
+	uint32_t debugBusGpRegBuffer = 0;
+
+	/**
+	 * Returns the value of a register, taking forwarding etc. into account.
+	 * This also handles the reg63isLink generic and makes sure REG_GP0 always
+	 * returns 0.
+	 */
+	uint32_t getReg(int stage, registerId_t reg);
+
+	/**
+	 * Must be called in every unstalled clock cycle after all reads.
+	 */
+	void afterRead();
+
+	/**
+	 * Must be called in every stalled clock cycle after all reads.
+	 */
+	void afterReadStalled();
+
+	/**
+	 * Supplies a new register value to the forwarding logic.
+	 */
+	void fwdReg(int stage, registerId_t reg, uint32_t value);
+
+	/**
+	 * Must be called in every unstalled clock cycle after all reads and fwdReg
+	 * calls.
+	 */
+	void afterFwd();
+
+	/**
+	 * Commits a register to the register file. This must be called even if
+	 * fwdReg has already been called.
+	 */
+	void commitReg(registerId_t reg, uint32_t value);
+
+};
+
+/**
  * State information per context.
  */
-typedef struct contextData_t {
+typedef struct contextState_t {
 
 	/**
 	 * Control register file interface (per-context signals).
@@ -196,21 +384,28 @@ typedef struct contextData_t {
 	contextRegState_t cxregState;
 
 	/**
-	 * General purpose registers.
+	 * Register files and forwarding logic.
 	 */
-	uint32_t gpreg[64];
+	RegistersAndForwarding regFwd;
 
 } contextState_t;
 
 /**
  * Overall state.
  */
-typedef struct coreData_t {
+typedef struct coreState_t {
 
 	/**
 	 * State of all the contexts.
 	 */
 	contextState_t cx[CORE_MAX_CONTEXTS];
+
+	/**
+	 * Syscon signals which are used often.
+	 */
+	uint8_t reset;
+	uint8_t clkEn;
+	uint16_t cxStall;
 
 	/**
 	 * Control register file interface (global signals).
@@ -246,21 +441,22 @@ private:
 	coreInterfaceOut_t out;
 
 	/**
-	 * Debugging printf function to use. This is just the usual printf for the
-	 * standalone simulator, but is overridden to mti_PrintFormatted within a
-	 * modelsim environment.
-	 */
-	printfFuncPtr_t printf;
-
-	/**
 	 * Internal state of the core.
 	 */
 	coreState_t st;
 
 	/**
+	 * Shorthandes for the number of lanes, lane groups and contexts in the
+	 * current configuration.
+	 */
+	const int NUM_LANES;
+	const int NUM_GROUPS;
+	const int NUM_CONTEXTS;
+
+	/**
 	 * Simulates the control registers.
 	 */
-	void simulateControlRegs();
+	void simulateControlRegs() throw(GenericsException);
 
 	/**
 	 * Simulates the control register logic. This function is generated.
@@ -268,6 +464,13 @@ private:
 	void simulateControlRegLogic();
 
 public:
+
+	/**
+	 * Debugging printf function to use. This is just the usual printf for the
+	 * standalone simulator, but is overridden to mti_PrintFormatted within a
+	 * modelsim environment.
+	 */
+	const printfFuncPtr_t printf;
 
 	/**
 	 * Core generics.

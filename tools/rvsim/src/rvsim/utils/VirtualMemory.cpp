@@ -136,7 +136,7 @@ void VirtualMemory::access(uint32_t addr, char *buffer, int count, int direction
 
 		//printf("addr 0x%08X after masking with 0x%08X...\n", addr, (uint32_t)((1ull << bits) - 1ull));
 
-		int len = count;
+		unsigned int len = count;
 
 		if (memory) {
 
@@ -154,7 +154,7 @@ void VirtualMemory::access(uint32_t addr, char *buffer, int count, int direction
 		} else {
 
 			// Access a submemory.
-			int idx = addr >> lookupTableShift;
+			unsigned int idx = addr >> lookupTableShift;
 			uint32_t offs = addr & ((1 << lookupTableShift) - 1);
 
 			// Allocate the submemory if it hasn't been already.

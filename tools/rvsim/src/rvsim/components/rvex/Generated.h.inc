@@ -1342,4 +1342,5 @@ extern const trapTableEntry_t TRAP_TABLE[256];
 #define L_MUL1 1
 #define L_IF_MEM 1                                                                                   /* GENERATED */
 #define S_SFW 3
+#define S_LAST_POW2 8
 

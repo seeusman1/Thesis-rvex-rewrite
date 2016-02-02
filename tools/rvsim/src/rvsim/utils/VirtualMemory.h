@@ -76,7 +76,7 @@ private:
 	 * Actual memory.
 	 */
 	char *memory;
-	int memorySize;
+	unsigned int memorySize;
 
 public:
 

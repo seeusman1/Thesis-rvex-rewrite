@@ -143,7 +143,7 @@ int DebugServerConnection::update(void) {
 					// overrun.
 					j = snprintf(xmitCmdBuffer, sizeof(xmitCmdBuffer),
 							"Error,%s,CmdBufferOverrun;", cmdName);
-					if (j >= sizeof(xmitCmdBuffer)) {
+					if (j >= (int)sizeof(xmitCmdBuffer)) {
 						j = snprintf(xmitCmdBuffer, sizeof(xmitCmdBuffer),
 								"Error,CmdNameOverrun,CmdBufferOverrun;");
 					}
@@ -202,7 +202,7 @@ int DebugServer::handleCommand(const char *cmdName, char *params,
 	if (rd || wr || ro) {
 
 		uint32_t addr;
-		int count, ret;
+		int count;
 
 		// Try to scan the address and count.
 		if (sscanf(params, "%8X,%d", &addr, &count) < 2) {
@@ -261,7 +261,7 @@ int DebugServer::handleCommand(const char *cmdName, char *params,
 			}
 
 			// Return an error if the byte count does not match the data length.
-			if (strlen(params) != count*2) {
+			if ((int)strlen(params) != count*2) {
 				*replyBufLen = snprintf(replyBuf, replyBufSize,
 						"Error,%s,DataSizeIncorrect;", cmdName);
 				return 1;
@@ -366,7 +366,6 @@ void DebugServer::finishBusAccess(accessResult_t result) {
 
 		// Append data to the reply if necessary.
 		if (!pendingAccess.direction) {
-			int c;
 
 			// Replace the command termination character with a comma.
 			char *buf = pendingCommand.replyBuf;

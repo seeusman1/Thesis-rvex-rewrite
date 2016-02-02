@@ -47,7 +47,8 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#include "System.h"
+#include "../rvex-system/System.h"
+
 #include <stdio.h>
 #include <cstdarg>
 

@@ -83,7 +83,7 @@ void Simulation::run() {
 	printf("That's %d entities total.\n\n", ec);
 
 	// Initialize the simulation.
-	printf("\033[1mInitializing components...\033[0m\n", ec);
+	printf("\033[1mInitializing components...\033[0m\n");
 	int error = 0;
 	for (i = 0; i < ec; i++) {
 		if (entities[i]->init()) {
@@ -92,9 +92,9 @@ void Simulation::run() {
 			error = 1;
 		}
 	}
-	printf("\n", ec);
+	printf("\n");
 
-	printf("\033[1mStarting simulation.\033[0m\n", ec);
+	printf("\033[1mStarting simulation.\033[0m\n");
 	cycles = 0;
 	if (error) {
 		printf("\033[31;1mOne or more entities did not initialize properly.\033[0m\n");

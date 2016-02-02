@@ -12,6 +12,9 @@ CREGS_SIM_FUNC_TEMPLATE = r"""
  * Simulates the control register logic. This function is generated.
  */
 #pragma GCC diagnostic ignored "-Woverflow"
+#pragma GCC diagnostic ignored "-Wunused-variable"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+#pragma GCC diagnostic ignored "-Wpedantic"
 void Core::simulateControlRegLogic() {
 
     // Make CFG available to the code, as it is in VHDL.
@@ -25,7 +28,7 @@ void Core::simulateControlRegLogic() {
         oldCxregState[ctxt] = st.cx[ctxt].cxregState;
     }
 
-    if (in.reset & 1) {
+    if (st.reset) {
 
         // Reset code.
         st.cregIface.gbreg_dbgReadData = 0;
@@ -38,7 +41,7 @@ void Core::simulateControlRegLogic() {
             @CONTEXT_RESET
         }
 
-    } else if (in.clkEn & 1) {
+    } else if (st.clkEn) {
 
         // Global control register file.
         if (1) {

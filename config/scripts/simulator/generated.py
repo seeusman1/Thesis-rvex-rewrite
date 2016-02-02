@@ -115,6 +115,7 @@ def generate(opc, regs, trps, pl, dirs):
     header.append(separator % 'Pipeline definitions')
     for key in pl['defs']:
         header.append('#define %s %d\n' % (key, pl['defs'][key]))
+    header.append('#define S_LAST_POW2 %d\n' % (1<<(pl['defs']['S_LAST']-1).bit_length()))
     header.append('\n')
     
     # Write the files.

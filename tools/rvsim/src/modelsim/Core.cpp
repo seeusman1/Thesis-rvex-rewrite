@@ -47,7 +47,8 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#include "../rvsim/components/core/Core.h"
+#include "../rvsim/components/rvex/Core.h"
+
 #include "MtiHelper.h"
 #include "Updaters.h"
 

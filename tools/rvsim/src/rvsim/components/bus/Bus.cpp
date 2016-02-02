@@ -86,7 +86,7 @@ void Bus::clock() {
 int Bus::synchronize() {
 
 	// Acknowledge all idle requests, nack all non-idle requests.
-	for (int i = 0; i < masters.size(); i++) {
+	for (int i = 0; i < (int)masters.size(); i++) {
 		masters[i]->request.ack = masters[i]->request.state == BQS_IDLE;
 	}
 
@@ -132,7 +132,7 @@ int Bus::synchronize() {
 		locked |= currentRequest.state == BQS_LOCK;
 		if (!locked) {
 			int startIdx = currentMasterIdx + 1;
-			if (startIdx == masters.size()) {
+			if (startIdx == (int)masters.size()) {
 				startIdx = 0;
 			}
 			int masterIdx = startIdx;
@@ -142,7 +142,7 @@ int Bus::synchronize() {
 					break;
 				}
 				masterIdx++;
-				if (masterIdx == masters.size()) {
+				if (masterIdx == (int)masters.size()) {
 					masterIdx = 0;
 				}
 			} while (masterIdx != startIdx);
@@ -196,7 +196,7 @@ void Bus::fini() {
  * address to put it in the slave address space.
  */
 busSlave_t *Bus::demux(uint32_t *address) {
-	for (int i = 0; i < slaves.size(); i++) {
+	for (int i = 0; i < (int)slaves.size(); i++) {
 		int64_t ret = slaves[i].fun(slaves[i].slave, *address, slaves[i].param);
 		if (ret >= 0) {
 			*address = ret;

@@ -52,7 +52,7 @@
 
 #include "../Simulation.h"
 #include "../bus/Bus.h"
-#include "Core.h"
+#include "../rvex/Core.h"
 
 namespace Core {
 

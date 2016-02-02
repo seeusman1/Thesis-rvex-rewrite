@@ -338,12 +338,12 @@ typedef struct busMaster_t {
 	 * Bus response. The response is only intended for this master if
 	 * response->master points to this struct.
 	 */
-	const busResponse_t *response;
+	const busResponse_t *response = 0;
 
 	/**
 	 * Address and write mask to go along with the response for bus snooping.
 	 */
-	const busSnoop_t *snoop;
+	const busSnoop_t *snoop = 0;
 
 } busMaster_t;
 
@@ -356,7 +356,7 @@ typedef struct busSlave_t {
 	 * Bus request from the master, or 0 if there is no pending or ongoing
 	 * request.
 	 */
-	const busRequest_t *request;
+	const busRequest_t *request = 0;
 
 	/**
 	 * Bus response.

@@ -47,7 +47,7 @@
  * Copyright (C) 2008-2015 by TU Delft.
  */
 
-#include "GenericsException.h"
+#include "../rvex/GenericsException.h"
 
 #include <stdlib.h>
 #include <cstdio>
