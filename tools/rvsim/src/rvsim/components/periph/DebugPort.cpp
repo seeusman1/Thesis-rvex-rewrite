@@ -184,42 +184,6 @@ void DebugPort::handleAccess(pendingAccess_t *access) {
 		requestCounter = 0;
 		responseCounter = 0;
 
-
-		/*for (int i = 0; i < access->numWords; i++) {
-			uint32_t *d = &(test[(i + access->address/4) & 7]);
-
-			if (access->direction) {
-
-				// Write.
-				uint8_t mask = 0xF;
-				if (i == 0) {
-					mask = access->firstMask;
-				} else if (i == access->numWords - 1) {
-					mask = access->lastMask;
-				}
-				if (mask == 0xF) {
-					*d = access->buffer[i];
-				} else {
-					uint32_t bitmask = 0;
-					if (mask & 1) bitmask |= 0x000000FF;
-					if (mask & 2) bitmask |= 0x0000FF00;
-					if (mask & 4) bitmask |= 0x00FF0000;
-					if (mask & 8) bitmask |= 0xFF000000;
-					*d &= ~bitmask;
-					*d |= access->buffer[i] & bitmask;
-				}
-
-			} else {
-
-				// Read.
-				access->buffer[i] = *d;
-
-			}
-
-		}
-
-		finishBusAccess(AR_OK);*/
-
 	}
 }
 

@@ -55,6 +55,12 @@
 
 using namespace std;
 
+// HINT: if your editor supports code folding, fold the namespace Core {}
+// blocks which you don't want to see.
+
+//==============================================================================
+// Generated stuff.
+//==============================================================================
 namespace Core {
 
 /**
@@ -63,10 +69,12 @@ namespace Core {
  */
 #include "../rvex/Generated.cpp.inc"
 
+} /* namespace Core */
 
 //==============================================================================
-// Forwarding stuff.
+// Register and forwarding logic class.
 //==============================================================================
+namespace Core {
 
 /**
  * Creates/destroys a new forwarding controller.
@@ -158,7 +166,7 @@ uint32_t RegistersAndForwarding::getReg(int stage, registerId_t reg) {
 	uint64_t vi = reg > 64;
 	uint64_t vm = 1ull << (reg & 63);
 
-#if (S_RD+L_RD == S_FW) && (S_SRD == S_SFW)
+#if SIM_CACHE_FORWARDING
 	// Handle cache hits.
 	if (cache.v[vi] & vm) {
 		return cache.r[reg];
@@ -216,7 +224,7 @@ uint32_t RegistersAndForwarding::getReg(int stage, registerId_t reg) {
 
 	}
 
-#if (S_RD+L_RD == S_FW) && (S_SRD == S_SFW)
+#if SIM_CACHE_FORWARDING
 	// Update the cache.
 	cache.r[reg] = val;
 	cache.v[vi] |= vm;
@@ -268,7 +276,7 @@ void RegistersAndForwarding::fwdReg(int stage, registerId_t reg,
 		uint64_t vi = reg > 64;
 		uint64_t vm = 1ull << (reg & 63);
 
-#if (S_RD+L_RD == S_FW) && (S_SRD == S_SFW)
+#if SIM_CACHE_FORWARDING
 		// Update the cache. Don't validate it if it was invalid though, there
 		// may be a write in an earlier stage which needs to override this one.
 		// We'll figure all that out during the next read.
@@ -284,10 +292,29 @@ void RegistersAndForwarding::fwdReg(int stage, registerId_t reg,
 }
 
 /**
+ * Invalidates a pipeline stage, removing all values which it supplied to
+ * the forwarding system.
+ */
+void RegistersAndForwarding::invalidate(int stage) {
+	fwdState_t *stage_ = &(stages[(offset + stage) & (S_LAST_POW2-1)]);
+
+#if SIM_CACHE_FORWARDING
+	// Invalidate the cache for the registers which were written by this stage.
+	cache.v[0] &= ~stage_->v[0];
+	cache.v[1] &= ~stage_->v[1];
+#endif
+
+	// Disable the writes from this stage.
+	stage_->v[0] = 0;
+	stage_->v[1] = 0;
+
+}
+
+/**
  * Must be called in every unstalled clock cycle after all reads and fwdReg
  * calls.
  */
-void RegistersAndForwarding::afterFwd() {
+void RegistersAndForwarding::afterFwdAndInval() {
 
 	// Shift the stages array offset to make it seem like each instruction stays
 	// in the same array index.
@@ -334,10 +361,12 @@ void RegistersAndForwarding::commitReg(registerId_t reg, uint32_t value) {
 
 }
 
+} /* namespace Core */
 
 //==============================================================================
-// Main core stuff.
+// Core simulator class.
 //==============================================================================
+namespace Core {
 
 /**
  * Creates a new core with the specified generic configuration.
@@ -362,6 +391,7 @@ Core::Core(const coreInterfaceGenerics_t *generics, printfFuncPtr_t printf) :
 	for (int ctxt = 0; ctxt < NUM_CONTEXTS; ctxt++) {
 		st.cx[ctxt].regFwd.init(&(st.cx[ctxt].cregIface), &(generics->CFG));
 	}
+	commitConfiguration(0);
 }
 
 /**
@@ -419,7 +449,29 @@ const coreInterfaceOut_t *Core::clock(void) throw(GenericsException) {
 	// Determine the basic system control signals.
 	st.reset = (in.reset | st.cregIface.gbreg2rv_reset) & 1;
 	st.clkEn = in.clkEn & 1;
-	// TODO cxStall
+	st.cxStall = 0;
+	for (int lg = 0; lg < NUM_GROUPS; lg++) {
+		int ctxt = (st.rcfgState.currentCfg >> (lg*4)) & 0xF;
+		if (!(ctxt & 8)) {
+			if (out.rv2mem_stallOut[lg] & 1) {
+				st.cxStall |= 1 << ctxt;
+			}
+		}
+	}
+	for (int lg = 0; lg < NUM_GROUPS; lg++) {
+		int ctxt = (st.rcfgState.currentCfg >> (lg*4)) & 0xF;
+		if (!(ctxt & 8)) {
+			if (out.rv2mem_stallOut[lg] & 1) {
+				if (!(st.cxStall & (1 << ctxt))) {
+					throw GenericsException("The stall signals for some "
+							"coupled lane groups are not equal. This is very "
+							"bad. There's no point in simulating further, and "
+							"even if there were, the C model does not support "
+							"it.");
+				}
+			}
+		}
+	}
 
 	// Only operate if clkEn is high or if we're resetting.
 	if (st.reset || st.clkEn) {
@@ -433,7 +485,7 @@ const coreInterfaceOut_t *Core::clock(void) throw(GenericsException) {
 			st.cx[ctxt].regFwd.prepDbgBusGetGpReg(reg);
 		}
 
-		// Simulate the contexts.
+		// SIMULATE THE CONTEXTS UP TO THE REGISTER BOUNDARY.
 		for (int ctxt = 0; ctxt < NUM_CONTEXTS; ctxt++) {
 			contextState_t *cst = &(st.cx[ctxt]);
 			if (st.reset) {
@@ -450,17 +502,345 @@ const coreInterfaceOut_t *Core::clock(void) throw(GenericsException) {
 
 				// Context normal.
 				cst->regFwd.afterRead();
-				cst->regFwd.afterFwd();
+				cst->regFwd.afterFwdAndInval();
 
 			}
 		}
 
-		// Simulate the control registers.
+		// SIMULATE THE RECONFIGURATION CONTROLLER. This uses only registered
+		// signals from the control registers and combinatorial signals from the
+		// pipelanes and inputs. Its outputs are all registered, except for the
+		// wakeupAck sigal to the control registers. This means we must simulate
+		// the control registers after the reconfiguration control, and thus
+		// also that the registered signals from the reconfiguration controller
+		// to the control registers must actually be delayed.
+		simulateReconfigurationCtrl();
+
+		// SIMULATE THE CONTROL REGISTERS. This uses combinatorial signals from
+		// other blocks and inputs exclusively, and only has registered outputs.
+		// Therefore, this is the last thing we do before the clock edge, so we
+		// don't need to copy the old outputs for use by later blocks before the
+		// clock cycle.
 		simulateControlRegs();
+
+		// CLOCK EDGE IS HERE. At this point, all units will have set up their
+		// register outputs. From here onwards, those can be used to generate
+		// combinatorial outputs to the outside world.
+
 
 	}
 
 	return &out;
+}
+
+/**
+ * Simulates the reconfiguration controller.
+ */
+void Core::simulateReconfigurationCtrl() {
+
+	printfFuncPtr_t debug = printf;
+
+	// Update the registered signals from the reconfiguration controller to the
+	// control registers using the values from the previous cycle.
+	st.cregIface.cfg2gbreg_currentCfg = st.rcfgState.currentCfg;
+	st.cregIface.cfg2gbreg_busy = st.rcfgState.busy;
+	st.cregIface.cfg2gbreg_error = st.rcfgState.error;
+	st.cregIface.cfg2gbreg_requesterID = st.rcfgState.requesterID;
+	st.cregIface.cfg2cxreg_currentConfig = st.rcfgState.currentCfg;
+
+	// Handle resets.
+	if (st.reset) {
+		st.rcfgState.currentCfg = 0;
+		st.rcfgState.error = 0;
+		st.rcfgState.requesterID = 0xF;
+		st.rcfgState.busy = 0;
+		commitConfiguration(0);
+		return;
+	}
+
+	// Handle reconfigurations that are already in progress.
+	if (st.rcfgState.busy) {
+
+		// Handle wakeup system: there is never a wakeup while there is already
+		// a reconfiguation in progress.
+		st.cregIface.cfg2cxreg_wakeupAck = 0;
+
+		// Simulate erroneous reconfiguration request timing.
+		if (!st.rcfgState.newCfgValid) {
+			st.rcfgState.busy--;
+			if (!st.rcfgState.busy) {
+				if (debug) debug("Concluding reconfiguration: error\n");
+				st.rcfgState.error = 1;
+			} else {
+				if (debug) debug("Reconfiguring...\n");
+			}
+			return;
+		}
+
+		// Check whether contexts are blocking reconfiguration. If they are,
+		// don't do anything and return.
+		if (st.rcfgState.busy == SIM_RECONFIG_COMMIT_LATENCY) {
+			for (int ctxt = 0; ctxt < NUM_CONTEXTS; ctxt++) {
+				if (st.rcfgState.affectedContexts & (1 << ctxt)) {
+
+					// The lane groups not being idle blocks reconfiguration.
+					// The blockReconfig signal is driven to not idle in cxplif.
+					if (!(out.rv2rctrl_idle[ctxt] & 1)) {
+						if (debug) debug("Reconfiguring: waiting for context "
+								"%d.\n", ctxt);
+						return;
+					}
+
+					// Check if the memory system is blocking reconfiguration in
+					// the same way the core does: only the last lane group
+					// input is checked.
+					if (st.cx[ctxt].rcfg.laneCount) {
+						uint8_t group = st.cx[ctxt].rcfg.lastGroup;
+						if (in.mem2rv_blockReconfig[group] & 1) {
+							if (debug) debug("Reconfiguring: waiting for "
+									"memory block %d mapped to context %d.\n",
+									group, ctxt);
+							return;
+						}
+					}
+
+				}
+			}
+		}
+
+		// Wait while reconfiguration is in progress.
+		st.rcfgState.busy--;
+		switch (st.rcfgState.busy) {
+
+		// When we're passed the decoding stage of the reconfiguration process,
+		// assert the relevant requestReconfig signals.
+		case SIM_RECONFIG_COMMIT_LATENCY:
+			for (int ctxt = 0; ctxt < NUM_CONTEXTS; ctxt++) {
+				if (st.rcfgState.affectedContexts & (1 << ctxt)) {
+					st.cx[ctxt].rcfg.requestReconfig = 1;
+				}
+			}
+			break;
+
+		// Handle reconfiguration completion.
+		case 0:
+			commitConfiguration(st.rcfgState.newCfg);
+			if (debug) debug("Concluding reconfiguration: new config 0x%08X\n",
+					st.rcfgState.newCfg);
+			return;
+		}
+
+		if (debug) debug("Reconfiguring...\n");
+		return;
+	}
+
+	// Handle wakeup system. Wake up if the wakeup system is enabled, context 0
+	// has a pending interrupt, context 0 is not currently active, and there is
+	// not already a reconfiguration in progress.
+	int wakeup = 0;
+	if (!st.cx[0].rcfg.laneCount) {
+		wakeup = st.cregIface.cxreg2cfg_wakeupEnable & in.rctrl2rv_irq[0] & 1;
+	}
+	st.cregIface.cfg2cxreg_wakeupAck = wakeup;
+
+	// Arbitrate among the requests.
+	int rid = -1;
+	uint32_t cfg;
+	if (wakeup) {
+
+		// Sleep system requesting reconfiguration to wake up.
+		rid = 0x8;
+		cfg = st.cregIface.cxreg2cfg_wakeupConfig;
+
+	} else {
+		for (int ctxt = 0; ctxt < NUM_CONTEXTS; ctxt++) {
+			if (st.cx[ctxt].cregIface.cxreg2cfg_requestEnable & 1) {
+
+				// Context requesting reconfiguration.
+				rid = ctxt;
+				cfg = st.cx[ctxt].cregIface.cxreg2cfg_requestData;
+				break;
+			}
+		}
+		if (rid == -1 && (st.cregIface.gbreg2cfg_requestEnable & 1)) {
+
+			// Debug bus requesting reconfiguration.
+			rid = 0xF;
+			cfg = st.cregIface.gbreg2cfg_requestData;
+
+		}
+	}
+
+	// If no request, we're done.
+	if (rid == -1) {
+		return;
+	}
+
+	// Acknowledge the reconfiguration request.
+	st.rcfgState.requesterID = rid;
+	st.rcfgState.newCfg = cfg;
+	if (debug) debug("Accepted reconfiguration to 0x%08X from source 0x%X.\n",
+			cfg, rid);
+
+	// If the request has reserved bits set, we should immediately set the
+	// error flag. Note that the generation of the mask is done by the
+	// determineConfigMask function in the VHDL source during static
+	// elaboration (its result is put in CONFIGURATION_MASK).
+	uint32_t mask = 0;
+	for (int lg = 0; lg < NUM_GROUPS; lg++) {
+		mask |= 1 << ((lg*4) + 3); // Run bit.
+		mask |= (NUM_CONTEXTS-1) << (lg*4); // Context selection bits.
+	}
+	if (cfg & ~mask) {
+		if (debug) debug("Reconfiguring request error.\n");
+		st.rcfgState.error = 1;
+		return;
+	}
+
+	// Check for misaligned/noncontiguous contexts in the word. At the same
+	// time, deduce how many cycles the hardware would need to decode the word
+	// or find the first error, and figure out which contexts are affected by
+	// the reconfiguration.
+	int complexity = 0;
+	int error = 0;
+	for (int lg = NUM_GROUPS-1; lg >= 0;) {
+
+		// Each loop iteration here represents one cycle's worth of decoding in
+		// hardware.
+		complexity++;
+
+		// Handle disabled lane groups.
+		int ctxt = cfg >> (lg*4);
+		if (ctxt & 0x8) {
+			lg--;
+			continue;
+		}
+		ctxt &= NUM_CONTEXTS-1;
+
+		// Find the number of lane groups associated with this context and check
+		// alignment and contiguity.
+		int numlg = 1;
+		int contig = 1;
+		for (int lg2 = lg-1; lg2 >= 0; lg2--) {
+			int ctxt2 = cfg >> (lg2*4);
+			ctxt2 &= NUM_CONTEXTS-1;
+			if (ctxt2 != ctxt) {
+
+				// Found a lane group mapped to a different context.
+				contig = 0;
+
+			} else if (contig) {
+
+				// Found a contiguous lane group mapped to this context.
+				numlg++;
+
+			} else {
+
+				// Found a noncontiguous lane group mapped to this context,
+				// which is an error.
+				error = 1;
+				if (debug) debug("Requested configuration is not contiguous "
+						"for context %d.\n", ctxt);
+				break;
+
+			}
+		}
+		if (error) {
+			break;
+		} else {
+
+			// The number of lane groups must be a power of two.
+			int i = numlg;
+			while (i > 1) {
+				if (i & 1) {
+					error = 1;
+					if (debug) debug("Requested configuration does not have a "
+							"power of 2 number of lane groups mapped to "
+							"context %d.\n", ctxt);
+					break;
+				}
+				i >>= 1;
+			};
+
+			// The start position must be aligned by the number of lane groups.
+			int start = lg - numlg + 1;
+			if (start & (numlg - 1)) {
+				if (debug) debug("Requested configuration is not aligned "
+						"for context %d.\n", ctxt);
+				error = 1;
+			}
+
+		}
+		if (error) {
+			break;
+		}
+
+		// Continue on to the next context.
+		lg -= numlg;
+
+	}
+
+	// Starting a new configuration clears the error flag. So we need to do
+	// this here regardless of whether we've already determined that the
+	// configuration will be erroneous.
+	st.rcfgState.error = 0;
+
+	// Determine timing.
+	if (error) {
+
+		// New configuration is invalid. It would take the hardware
+		// reconfiguration controller complexity cycles to figure that out.
+		st.rcfgState.newCfgValid = 0;
+		st.rcfgState.busy = complexity;
+
+	} else {
+
+		// New configuration is valid. The reconfiguration controller latency is
+		// 2 + complexity cycles. The state in which the controller appears to
+		// check whether the reconfiguration is blocked or not is
+		st.rcfgState.newCfgValid = 1;
+		st.rcfgState.busy = SIM_RECONFIG_COMMIT_LATENCY + complexity;
+
+	}
+
+}
+
+/**
+ * Commits a new configuration and cleans up after the reconfiguration
+ * controller. st.cx[...].rcfg is completely written and validated. The
+ * given configuration is assumed to be a valid configuration word.
+ */
+void Core::commitConfiguration(uint32_t cfg) {
+
+	// Set the current configuration register.
+	st.rcfgState.currentCfg = cfg;
+
+	// Reset all the context to a defined state.
+	for (int ctxt = 0; ctxt < NUM_CONTEXTS; ctxt++) {
+		st.cx[ctxt].rcfg.laneCount = 0;
+		st.cx[ctxt].rcfg.requestReconfig = 0;
+	}
+
+	// Load the context configuration and decouple output from the config
+	// vector.
+	int prevCtxt = -1;
+	for (int lg = NUM_GROUPS-1; lg >= 0; lg--) {
+		int ctxt = (cfg >> (lg*4)) & 0x8;
+		if (ctxt & 8) ctxt = -1;
+
+		// Generate decouple output.
+		out.rv2mem_decouple[lg] = prevCtxt != ctxt || prevCtxt == -1;
+
+		// Generate internal control values.
+		if (ctxt >= 0) {
+			if (!st.cx[ctxt].rcfg.laneCount) {
+				st.cx[ctxt].rcfg.lastGroup = lg;
+			}
+			st.cx[ctxt].rcfg.firstGroup = lg;
+			st.cx[ctxt].rcfg.laneCount += NUM_LANES / NUM_GROUPS;
+		}
+	}
+
 }
 
 /**
@@ -578,6 +958,7 @@ void Core::simulateControlRegs() throw(GenericsException) {
 	}
 
 }
+
 
 /**
  * Returns the output signal structure.

@@ -53,14 +53,38 @@
 #include <inttypes.h>
 #include "../rvex/GenericsException.h"
 
-namespace Core {
-
 /**
  * Maximum supported core sizes.
  */
 #define CORE_MAX_CONTEXTS     8
 #define CORE_MAX_LANES        16
 #define CORE_MAX_LANE_GROUPS  8
+
+/**
+ * Defines whether the two-cycle latency of the general purpose register file
+ * is modelled. NOTE: this is NOT modelled correctly when clkEn is not always
+ * high, as the register logic is only updated when clkEn is active.
+ */
+#define SIM_GPREG_2CYCLE_LATENCY 1
+
+/**
+ * Whether the forwarding logic cache should be used or not. This is only
+ * supported when there is only one stage which is being forwarded to.
+ */
+#define SIM_CACHE_FORWARDING ((S_RD+L_RD == S_FW) && (S_SRD == S_SFW))
+
+/**
+ * Number of cycles during which requestReconfig is high and all relevant
+ * blockReconfig signals are low before a new runtime configuration is
+ * committed.
+ */
+#define SIM_RECONFIG_COMMIT_LATENCY 2
+
+
+//==============================================================================
+// Generated stuff and basic types.
+//==============================================================================
+namespace Core {
 
 /**
  * Include generated stuff.
@@ -74,10 +98,12 @@ typedef bitvec4_t mask_t;
 typedef bitvec32_t syllable_t;
 typedef char *charPtr_t;
 
+} /* namespace Core */
 
 //==============================================================================
-// Core toplevel interface
+// Core toplevel interface structures.
 //==============================================================================
+namespace Core {
 
 /**
  * All rvex core generics.
@@ -175,10 +201,12 @@ typedef struct coreInterfaceOut_t {
 
 } coreInterfaceOut_t;
 
+} /* namespace Core */
 
 //==============================================================================
-// Core state and buffers
+// Register and forwarding logic class.
 //==============================================================================
+namespace Core {
 
 /**
  * List of all the normal registers in the rvex.
@@ -230,13 +258,6 @@ typedef struct fwdState_t {
 	uint64_t v[2];
 
 } regFile_t;
-
-/**
- * Defines whether the two-cycle latency of the general purpose register file
- * is modelled. NOTE: this is NOT modelled correctly when clkEn is not always
- * high, as the register logic is only updated when clkEn is active.
- */
-#define SIM_GPREG_2CYCLE_LATENCY 1
 
 /**
  * State of the general purpose register file and gp/br/link forwarding for a
@@ -355,23 +376,63 @@ public:
 	void fwdReg(int stage, registerId_t reg, uint32_t value);
 
 	/**
+	 * Invalidates a pipeline stage, removing all values which it supplied to
+	 * the forwarding system.
+	 */
+	void invalidate(int stage);
+
+	/**
 	 * Must be called in every unstalled clock cycle after all reads and fwdReg
 	 * calls.
 	 */
-	void afterFwd();
+	void afterFwdAndInval();
 
 	/**
-	 * Commits a register to the register file. This must be called even if
+	 * Commits a register to the register file. This may be called even if
 	 * fwdReg has already been called.
 	 */
 	void commitReg(registerId_t reg, uint32_t value);
 
 };
 
+} /* namespace Core */
+
+//==============================================================================
+// Core state structures.
+//==============================================================================
+namespace Core {
+
 /**
  * State information per context.
  */
 typedef struct contextState_t {
+
+	/**
+	 * Runtime configuration signals.
+	 */
+	struct {
+
+		/**
+		 * Number of lanes allocated to this context.
+		 */
+		uint8_t laneCount;
+
+		/**
+		 * First lane group for this context. Undefined if laneCount is 0.
+		 */
+		uint8_t firstGroup;
+
+		/**
+		 * Last lane group for this context. Undefined if laneCount is 0.
+		 */
+		uint8_t lastGroup;
+
+		/**
+		 * Whether a reconfiguration is requested which affects this context.
+		 */
+		uint8_t requestReconfig;
+
+	} rcfg;
 
 	/**
 	 * Control register file interface (per-context signals).
@@ -391,6 +452,43 @@ typedef struct contextState_t {
 } contextState_t;
 
 /**
+ * Reconfiguration control unit state.
+ */
+typedef struct reconfigCtrlState_t {
+
+	/**
+	 * Status signals to the control registers.
+	 */
+    uint32_t currentCfg;
+    unsigned int error : 1;
+    unsigned int requesterID : 4;
+
+    /**
+     * Marks whether the new configuration is valid or erroneous. Undefined when
+     * busy is zero.
+     */
+    unsigned int newCfgValid : 1;
+
+    /**
+     * Number of busy cycles remaining.
+     */
+    uint8_t busy;
+
+    /**
+     * New configuration word. Undefined when busy is zero.
+     */
+    uint32_t newCfg;
+
+    /**
+     * Each bit represents whether a context is affected by the ongoing
+     * reconfiguration. Undefined when busy is zero.
+     */
+    uint8_t affectedContexts;
+
+
+} reconfigCtrlState_t;
+
+/**
  * Overall state.
  */
 typedef struct coreState_t {
@@ -405,7 +503,12 @@ typedef struct coreState_t {
 	 */
 	uint8_t reset;
 	uint8_t clkEn;
-	uint16_t cxStall;
+	uint8_t cxStall;
+
+	/**
+	 * Reconfiguration unit state.
+	 */
+	reconfigCtrlState_t rcfgState;
 
 	/**
 	 * Control register file interface (global signals).
@@ -419,10 +522,12 @@ typedef struct coreState_t {
 
 } coreState_t;
 
+} /* namespace Core */
 
 //==============================================================================
-// Core simulator class
+// Core simulator class.
 //==============================================================================
+namespace Core {
 
 /**
  * Typedef for a printf-like function pointer, used for the debug function.
@@ -452,6 +557,18 @@ private:
 	const int NUM_LANES;
 	const int NUM_GROUPS;
 	const int NUM_CONTEXTS;
+
+	/**
+	 * Simulates the reconfiguration controller.
+	 */
+	void simulateReconfigurationCtrl();
+
+	/**
+	 * Commits a new configuration and cleans up after the reconfiguration
+	 * controller. st.cx[...].rcfg is completely written and validated. The
+	 * given configuration is assumed to be a valid configuration word.
+	 */
+	void commitConfiguration(uint32_t cfg);
 
 	/**
 	 * Simulates the control registers.

@@ -216,10 +216,17 @@ def generate_aggregate(members, typ):
     return (''.join(vhdl), ''.join(c))
 
 
+# This global is a very ugly hack which forces generate_reference() to use the
+# write mode of a register object even if it is being read from. This is needed
+# for the combinatorial output connections from register to different signals.
+force_read_from_reg = False
+
 def generate_reference(ob, ctxt, direction='r'):
     """Generates the code for reading from or writing to an object. Returns a
     two-tuple with the VHDL code in the first entry and the C code in the
     second."""
+    
+    global force_read_from_reg
     
     name = ob.name
     
@@ -243,16 +250,16 @@ def generate_reference(ob, ctxt, direction='r'):
         else:
             c = 'st.cregIface.%s' % name
     elif ob.atyp.name() in ['register']:
-        if direction == 'r':
-            if ctxt is not None:
-                c = 'oldCxregState[%s].%s' % (ctxt, name)
-            else:
-                c = 'oldGbregState.%s' % name
-        else:
+        if (direction != 'r') or force_read_from_reg:
             if ctxt is not None:
                 c = 'st.cx[%s].cxregState.%s' % (ctxt, name)
             else:
                 c = 'st.gbregState.%s' % name
+        else:
+            if ctxt is not None:
+                c = 'oldCxregState[%s].%s' % (ctxt, name)
+            else:
+                c = 'oldGbregState.%s' % name
     else:
         if ctxt is not None:
             c = '%s[%s]' % (name, ctxt)

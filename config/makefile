@@ -15,7 +15,7 @@ DOCS = ../doc/src/refman/generated
 RVEX_H = ../examples/src/rvex.h
 MEMORY_MAP = ../tools/debug-interface/core.map
 PLATFORMS = ../platform
-SIM_CORE = ../tools/rvsim/src/rvsim/components/core
+SIM_CORE = ../tools/rvsim/src/rvsim/components/rvex
 
 # Set python search path.
 PYTHONP = PYTHONPATH=$(SCRIPTS) $(PYTHON)
