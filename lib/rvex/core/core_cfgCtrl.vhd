@@ -314,7 +314,7 @@ begin -- architecture
     -- Don't activate when context 0 is already running. This ensures that the
     -- wakeup system can never disable itself while context 0 may still be
     -- preparing to go to sleep.
-    for i in 2**CFG.numContextsLog2-1 downto 0 loop
+    for i in 2**CFG.numLaneGroupsLog2-1 downto 0 loop
       if curConfiguration_r(i*4+3 downto i*4) = "0000" then
         active := '0';
       end if;

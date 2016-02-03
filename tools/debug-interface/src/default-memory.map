@@ -178,6 +178,9 @@ all:_STATE {
   FANCY_PRINT;
 }
 
+# This must be mapped to the trace unit control byte.
+all:_TRACE_CTRL { CREG_DCR2 + 3 }
+
 
 ################################################################################
 #                              GDB BRIDGING DEFS                               #
