@@ -61,6 +61,11 @@
 #define CORE_MAX_LANE_GROUPS  8
 
 /**
+ * Size of the simulation output string buffers.
+ */
+#define SIM_STR_BUF_LEN 256
+
+/**
  * Defines whether the two-cycle latency of the general purpose register file
  * is modelled. NOTE: this is NOT modelled correctly when clkEn is not always
  * high, as the register logic is only updated when clkEn is active.
@@ -403,6 +408,152 @@ public:
 namespace Core {
 
 /**
+ * State of execution of a single syllable. The items in this structure
+ * correspond to the "s" record in core_pipelane.vhd for as far as the signals
+ * are necessary. Refer to the documentation there for their purpose.
+ */
+typedef struct sylState_t {
+
+    uint32_t syllable;
+	uint32_t PC;
+    unsigned int valid : 1;
+	unsigned int limmValid : 1;
+	unsigned int brkValid : 1;
+    unsigned int memRequested : 1;
+    unsigned int memError : 1;
+    unsigned int gpRegWriteRequested : 1;
+    unsigned int linkRegWriteRequested : 1;
+    unsigned int invalidDueToStop : 1;
+    unsigned int idle : 1;
+    uint8_t brRegWriteRequested;
+
+    // Datapath signals.
+    struct {
+        uint8_t src1;
+		uint8_t src2;
+        uint8_t srcBr;
+        uint8_t readBr;
+        uint32_t read1lo;
+        uint32_t read2lo;
+        uint32_t readLink;
+        uint32_t imm;
+        uint8_t useImm;
+		uint32_t op1;
+		uint32_t op2;
+		uint32_t op3;
+        uint8_t opBr;
+        uint32_t resALU;
+        uint32_t resAdd;
+        uint32_t resMul;
+        uint32_t resMem;
+        uint8_t dest;
+        uint32_t res;
+        uint8_t resValid;
+        uint8_t resLinkValid;
+        uint8_t destBr;
+        uint8_t resBr;
+        uint8_t resBrValid;
+    } dp;
+
+    // Branch/next PC related signals.
+    struct {
+        uint32_t branchOffset;
+        trapInfo_t trapInfo;
+        uint32_t trapPoint;
+        uint32_t trapHandler;
+        unsigned int trapPending : 1;
+        unsigned int RFI : 1;
+        unsigned int isBranch : 1;
+        unsigned int isBranching : 1;
+        char br2sim[SIM_STR_BUF_LEN];
+    } br;
+
+    // Trap-related signals.
+    struct {
+        trapInfo_t trap;
+        trapInfo_t debugTrap;
+        uint32_t trapHandler;
+    } tr;
+
+    // Trace-related signals.
+    struct {
+        uint32_t mem_address;
+        uint32_t mem_writeData;
+        cacheStatus_t cache_status;
+        uint32_t instr_syllable;
+        trapInfo_t trap_info;
+        uint32_t trap_point;
+        uint8_t mem_writeMask;
+        unsigned int stop : 1;
+        unsigned int mem_enable : 1;
+        unsigned int instr_enable : 1;
+    } trace;
+
+} sylState_t;
+
+/**
+ * Pipelane state.
+ */
+typedef struct laneState_t {
+
+	/**
+	 * Instruction/pipeline state for each instruction in the pipeline of this
+	 * lane, offset by soffs.
+	 */
+	sylState_t sbuf[S_LAST_POW2];
+
+	/**
+	 * Stage offset. This is added to a stage before indexing s (modulo
+	 * S_LAST_POW2). offset decrements every non-stalled cycle, so each index in
+	 * stages maps to a single instruction in the pipelane.
+	 */
+	int soffs = 0;
+
+	/**
+	 * Instruction/pipeline state for each instruction in the pipeline, indexed
+	 * by stage.
+	 */
+	sylState_t *s[S_LAST + 1];
+
+	/**
+	 * Pipeline capabilities.
+	 */
+	unsigned int HAS_MUL  : 1;
+	unsigned int HAS_MEM  : 1;
+	unsigned int HAS_BRK  : 1;
+	unsigned int HAS_BR   : 1;
+	unsigned int HAS_STOP : 1;
+
+	/**
+	 * Instruction buffer.
+	 */
+	uint32_t insnBuf;
+
+} laneState_t;
+
+/**
+ * Branch unit state and outputs.
+ */
+typedef struct branchState_t {
+
+	// PC addition value for PC+1, based on stop bits and/or the number of
+	// active lanes.
+	uint32_t bundleSize;
+
+	// Outputs. These correspond to the output signals in core_br.vhd, where
+	// applicable.
+    uint32_t br2cxplif_PC;
+    unsigned int br2cxplif_branch : 1;
+    unsigned int br2cxplif_imemFetch : 1;
+    unsigned int br2cxplif_limmValid : 1;
+    unsigned int br2cxplif_valid : 1;
+    unsigned int br2cxplif_brkValid : 1;
+    unsigned int br2cxplif_imemCancel : 1;
+    unsigned int br2cxplif_invalUntilBR : 1;
+
+} branchState_t;
+
+/**
  * State information per context.
  */
 typedef struct contextState_t {
@@ -411,6 +562,17 @@ typedef struct contextState_t {
 	 * Runtime configuration signals.
 	 */
 	struct {
+
+		/**
+		 * Pointer into the laneState_t array, mapping to the first lane mapped
+		 * to this context if laneCount is nonzero.
+		 */
+		laneState_t *firstLane;
+
+		/**
+		 * Index of the first lane.
+		 */
+		uint8_t firstLaneIdx;
 
 		/**
 		 * Number of lanes allocated to this context.
@@ -433,6 +595,11 @@ typedef struct contextState_t {
 		uint8_t requestReconfig;
 
 	} rcfg;
+
+	/**
+	 * State of the active branch unit in this context.
+	 */
+	branchState_t branch;
 
 	/**
 	 * Control register file interface (per-context signals).
@@ -485,13 +652,17 @@ typedef struct reconfigCtrlState_t {
      */
     uint8_t affectedContexts;
 
-
 } reconfigCtrlState_t;
 
 /**
  * Overall state.
  */
 typedef struct coreState_t {
+
+	/**
+	 * State of all the lanes.
+	 */
+	laneState_t lane[CORE_MAX_LANES];
 
 	/**
 	 * State of all the contexts.
@@ -558,28 +729,6 @@ private:
 	const int NUM_GROUPS;
 	const int NUM_CONTEXTS;
 
-	/**
-	 * Simulates the reconfiguration controller.
-	 */
-	void simulateReconfigurationCtrl();
-
-	/**
-	 * Commits a new configuration and cleans up after the reconfiguration
-	 * controller. st.cx[...].rcfg is completely written and validated. The
-	 * given configuration is assumed to be a valid configuration word.
-	 */
-	void commitConfiguration(uint32_t cfg);
-
-	/**
-	 * Simulates the control registers.
-	 */
-	void simulateControlRegs() throw(GenericsException);
-
-	/**
-	 * Simulates the control register logic. This function is generated.
-	 */
-	void simulateControlRegLogic();
-
 public:
 
 	/**
@@ -616,6 +765,9 @@ public:
 	 */
 	const coreInterfaceOut_t *stallOut(void) throw(GenericsException);
 
+	// TODO/FIXME: combinatorially deactivate memory read/write enable output if
+	// a memory trap is incoming.
+
 	/**
 	 * Simulates a clock cycle and returns the output signal structure. Note
 	 * that comb() must also be called every cycle.
@@ -626,6 +778,50 @@ public:
 	 * Returns the output signal structure.
 	 */
 	const coreInterfaceOut_t *getOut() const;
+
+private:
+
+	//--------------------------------------------------------------------------
+	// Contexts.
+	//--------------------------------------------------------------------------
+
+	/**
+	 * Simulates one processing cycle for the given context. Should only be
+	 * called when reset and stall are low.
+	 */
+	void simulateContext(int ctxt, contextState_t *cst);
+
+
+	//--------------------------------------------------------------------------
+	// Reconfiguration.
+	//--------------------------------------------------------------------------
+
+	/**
+	 * Simulates the reconfiguration controller.
+	 */
+	void simulateReconfigurationCtrl();
+
+	/**
+	 * Commits a new configuration and cleans up after the reconfiguration
+	 * controller. st.cx[...].rcfg is completely written and validated. The
+	 * given configuration is assumed to be a valid configuration word.
+	 */
+	void commitConfiguration(uint32_t cfg);
+
+
+	//--------------------------------------------------------------------------
+	// Control registers.
+	//--------------------------------------------------------------------------
+
+	/**
+	 * Simulates the control registers.
+	 */
+	void simulateControlRegs() throw(GenericsException);
+
+	/**
+	 * Simulates the control register logic. This function is generated.
+	 */
+	void simulateControlRegLogic();
 
 };
 

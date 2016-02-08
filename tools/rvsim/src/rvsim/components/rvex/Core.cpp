@@ -59,6 +59,300 @@ using namespace std;
 // blocks which you don't want to see.
 
 //==============================================================================
+// Syllable execution function.
+//==============================================================================
+namespace Core {
+
+/**
+ * This function is the kernel which handles syllable execution simulation. It
+ * simulates a lot of the VHDL code from core_pipelane.vhd, as well as all the
+ * functional units. This function is encapsulated by generated functions which
+ * provide it with a constant value for o, so any branches based on values in o
+ * are optimized away. This should result in, for instance, the ALU result not
+ * being computed if it is never used by a certain syllable.
+ */
+static inline __attribute__((always_inline)) void simSyl(
+		laneState_t *s,
+		const contextState_t *c,
+		const int st,
+		const opcodeTableEntry_t o
+) {
+	// [OPMUX], ALU, MUL, MEM, BRK -> uses inputs, generates outputs & traps
+
+}
+
+/**
+ * Function pointer for an encapsulated simSyl function.
+ */
+typedef void (*simSylFunPtr_t)(
+		laneState_t *s,
+		const contextState_t *c,
+		const int st);
+
+} /* namespace Core */
+
+
+//==============================================================================
+// Context execution function.
+//==============================================================================
+namespace Core {
+
+/**
+ * This function is the kernel which handles context simulation. It simulates
+ * pretty much everything aside from the register files, reconfiguration and
+ * what's done centrally in Core::simulateContext(). This is encapsulated and
+ * inlined by generated functions for which stage is constant, so branches based
+ * on stage are free.
+ */
+static inline __attribute__((always_inline)) void simCtxt(
+		const cfgVect_t *CFG,
+		const coreInterfaceIn_t *in,
+		coreInterfaceOut_t *out,
+		coreState_t *cost,
+		const int ctxt,
+		contextState_t *cst,
+		const int stage
+) {
+	const int NUM_LANES = 1 << CFG->numLanesLog2;
+	const int NUM_GROUPS = 1 << CFG->numLaneGroupsLog2;
+	const int NUM_CONTEXTS = 1 << CFG->numContextsLog2;
+
+	// Initialize all signals which aren't undefined.
+	if (stage == L_IF) {
+		for (int l = 0; l < (int)cst->rcfg.laneCount; l++) {
+			int lane = l + cst->rcfg.firstLaneIdx;
+			laneState_t *lst = l + cst->rcfg.firstLane;
+			sylState_t *ss = lst->s[stage];
+			ss->valid = 0;
+			ss->limmValid = 0;
+			ss->brkValid = 0;
+			ss->gpRegWriteRequested = 0;
+			ss->brRegWriteRequested = 0;
+			ss->linkRegWriteRequested = 0;
+			ss->invalidDueToStop = 0;
+			ss->idle = 1;
+		    ss->dp.resValid = 0;
+			ss->dp.resLinkValid = 0;
+			ss->dp.resBrValid = 0;
+			ss->br.trapPending = 0;
+			ss->tr.trap.active = 0;
+			ss->tr.debugTrap.active = 0;
+			ss->trace.stop = 0;
+			ss->trace.instr_enable = 0;
+		}
+	}
+
+	//--------------------------------------------------------------------------
+	// VHDL: "Handle instruction fetch result and instruction validity signals"
+	//--------------------------------------------------------------------------
+	for (int l = 0; l < (int)cst->rcfg.laneCount; l++) {
+		int lane = l + cst->rcfg.firstLaneIdx;
+		laneState_t *lst = l + cst->rcfg.firstLane;
+		sylState_t *ss = lst->s[stage];
+
+		// VHDL: "Copy the signals broadcast by the active branch unit into the
+		// pipeline." These signals come from cxplif. We must thus also simulate
+		// cxplif here.
+		if (stage == S_IF) {
+			ss->PC        = cst->branch.br2cxplif_PC;
+			ss->valid     = cst->branch.br2cxplif_valid;
+			ss->limmValid = cst->branch.br2cxplif_limmValid;
+			ss->brkValid  = cst->branch.br2cxplif_brkValid
+					&& !(cst->cregIface.cxreg2cxplif_resuming & 1);
+
+			// cxplif invalidates lanes which come before the current program
+			// counter. This handles the weird cases where the program counter
+			// is not properly aligned to a bundle boundary due to returning
+			// from a trap which occurred in a more narrow configuration than
+			// the current configuration.
+			int pcIndex = ss->PC >> 2;
+			pcIndex &= (1 << CFG->bundleAlignLog2) - 1;
+			pcIndex &= cst->rcfg.laneCount - 1;
+			int laneIdx = lane - cst->rcfg.firstLaneIdx;
+			if (laneIdx < pcIndex) {
+				ss->valid = 0;
+			}
+		}
+
+		// VHDL: "Copy the instruction fetch result into the pipeline." These
+		// signals come from the instruction buffer. We must thus also simulate
+		// ibuf here.
+		if (stage == S_IF + L_IF) {
+
+			// Get the syllable.
+			int shift = 0;
+			if (CFG->bundleAlignLog2 < CFG->numLanesLog2) {
+
+				// Determine the number of instructions to shift by. For
+				// example, if the PC is two syllables after the cache alignment
+				// point, shift will be 2.
+				shift = ss->PC;
+				shift >>= 2;
+				shift &= NUM_LANES - 1;
+				shift &= ~((1 << CFG->bundleAlignLog2) - 1);
+
+			}
+
+			// If shift is nonzero, we need to take the right syllables from
+			// the instruction buffers and the incoming instructions. If can
+			// be thought of as indexing into the concatenation of all the
+			// instruction buffers and all the
+			if (shift) {
+
+				int fromLane = l - cst->rcfg.laneCount + shift;
+				if (fromLane < 0) {
+
+					// From an instruction buffer.
+					fromLane += cst->rcfg.laneCount;
+					ss->syllable = cst->rcfg.firstLane[fromLane].insnBuf;
+
+				} else {
+
+					// From the memory.
+					fromLane += cst->rcfg.firstLaneIdx;
+					ss->syllable = in->imem2rv_instr[fromLane];
+
+				}
+
+			} else {
+
+				// No instruction buffer shift needed.
+				ss->syllable = in->imem2rv_instr[lane];
+
+			}
+
+			// Handle the instruction fetch trap.
+			if ((ss->valid) && (!ss->tr.trap.active)) {
+				if (in->imem2rv_busFault[lane] & 1) {
+					ss->tr.trap.active = 1;
+					ss->tr.trap.cause = TRAP_FETCH_FAULT;
+					ss->tr.trap.arg = 0;
+				}
+			}
+
+		}
+
+		// VHDL: "Copy the instruction fetch data into the trace record as well,
+		// before it is maybe modified further on in the pipeline."
+		if (stage == S_IF) {
+			ss->trace.instr_enable = ss->limmValid;
+		}
+		if (stage == S_IF + L_IF) {
+			ss->trace.instr_syllable = in->imem2rv_instr[lane];
+		}
+
+		// VHDL: "Copy instruction cache performance data into the trace
+		// records."
+		if (stage == S_IF + L_IF) {
+			int laneGroup = lane >> (CFG->numLanesLog2 - CFG->numLaneGroupsLog2);
+			ss->trace.cache_status.instr_access =
+					in->mem2rv_cacheStatus[laneGroup].instr_access;
+			ss->trace.cache_status.instr_miss =
+					in->mem2rv_cacheStatus[laneGroup].instr_miss;
+		}
+
+	}
+
+    //--------------------------------------------------------------------------
+    // VHDL: "Compute PC+1 related signals"
+    //--------------------------------------------------------------------------
+	// Nothing needs to be done here. We do all PC+1 stuff in the next section
+	// along with the stop bits.
+
+    //--------------------------------------------------------------------------
+    // VHDL: "Handle stop bits and move the branch syllable to the last lane"
+    //--------------------------------------------------------------------------
+	// We simulate the stop bit logic behaviorally here.
+	if (stage == S_STOP) {
+		if (CFG->genBundleSizeLog2 != CFG->bundleAlignLog2) {
+
+			// Whether we've encountered a stop bit yet.
+			int stopFound = 0;
+
+			// Whether the syllable with the stop bit set is a branch syllable
+			// and if it is, the syllable.
+			int branchSylFound = 0;
+			uint32_t branchSyl;
+
+			cst->branch.bundleSize = 0;
+			for (int l = 0; l < (int)cst->rcfg.laneCount; l++) {
+				laneState_t *lst = l + cst->rcfg.firstLane;
+				sylState_t *ss = lst->s[stage];
+
+				if (!stopFound) {
+					int stop = (ss->syllable & 2) && lst->HAS_STOP;
+					if (stop) {
+
+						// Last instruction (stop bit set).
+						int brinst = OPCODE_TABLE[ss->syllable >> 24]
+										  .branchCtrl.isBranchInstruction;
+						if (brinst) {
+
+							// Last instruction = branch instruction.
+							stopFound = 1;
+
+							// Move the syllable to the last lane.
+							branchSylFound = ss->valid;
+							branchSyl = ss->syllable;
+							ss->invalidDueToStop = ss->valid;
+							ss->limmValid = 0;
+							ss->valid = 0;
+
+						} else {
+
+							// Last instruction != branch instruction.
+							stopFound = 1;
+
+						}
+					}
+
+					// Increment bundle size.
+					cst->branch.bundleSize += 4;
+
+				} else if (branchSylFound && (l == (int)cst->rcfg.laneCount-1)){
+
+					// Branch syllable was found, and this is the last lane.
+					ss->syllable = branchSyl;
+					ss->valid = 1;
+
+				} else {
+
+					// Instruction after the stop bit.
+					ss->invalidDueToStop = ss->valid;
+					ss->limmValid = 0;
+					ss->valid = 0;
+
+				}
+
+			}
+
+		} else {
+
+			// Stop bits not enabled. Bundle size (PC add value) is always the
+			// full issue width.
+			cst->branch.bundleSize = cst->rcfg.laneCount * 4;
+
+		}
+
+	}
+}
+
+/**
+ * Function pointer for an encapsulated simCtxt function.
+ */
+typedef void (*simCtxtFunPtr_t)(
+		const cfgVect_t *CFG,
+		const coreInterfaceIn_t *in,
+		coreInterfaceOut_t *out,
+		coreState_t *cost,
+		const int ctxt,
+		contextState_t *cst,
+		const int lane,
+		laneState_t *lst);
+
+} /* namespace Core */
+
+//==============================================================================
 // Generated stuff.
 //==============================================================================
 namespace Core {
@@ -196,7 +490,6 @@ uint32_t RegistersAndForwarding::getReg(int stage, registerId_t reg) {
 				fwdState_t *stage = &(stages[(offset + s) & (S_LAST_POW2-1)]);
 				if (stage->v[vi] & vm) {
 					val = stage->r[reg];
-
 				}
 			}
 		}
@@ -364,7 +657,7 @@ void RegistersAndForwarding::commitReg(registerId_t reg, uint32_t value) {
 } /* namespace Core */
 
 //==============================================================================
-// Core simulator class.
+// Core simulator class: public methods.
 //==============================================================================
 namespace Core {
 
@@ -392,6 +685,18 @@ Core::Core(const coreInterfaceGenerics_t *generics, printfFuncPtr_t printf) :
 		st.cx[ctxt].regFwd.init(&(st.cx[ctxt].cregIface), &(generics->CFG));
 	}
 	commitConfiguration(0);
+
+	// Determine the capabilities of each lane (see also core_pipelanes.vhd).
+	int lanesPerGroup = NUM_LANES / NUM_GROUPS;
+	for (int lane = 0; lane < NUM_LANES; lane++) {
+		int laneIndexRev = lanesPerGroup - (lane % lanesPerGroup) - 1;
+		st.lane[lane].HAS_MUL = !!(generics->CFG.multiplierLanes & (1 << lane));
+		st.lane[lane].HAS_MEM = laneIndexRev == generics->CFG.memLaneRevIndex;
+		st.lane[lane].HAS_BRK = st.lane[lane].HAS_MEM;
+		st.lane[lane].HAS_BR = laneIndexRev == 0;
+		st.lane[lane].HAS_STOP = st.lane[lane].HAS_BR ||
+				(lane+1) % (1 << generics->CFG.bundleAlignLog2) == 0;
+	}
 }
 
 /**
@@ -399,8 +704,6 @@ Core::Core(const coreInterfaceGenerics_t *generics, printfFuncPtr_t printf) :
  * stall input and the debug bus. Returns the output signal structure.
  */
 const coreInterfaceOut_t *Core::stallOut(void) throw(GenericsException) {
-
-	//printf("Core::stallOut()\n");
 
 	// Determine stall output.
 	// Sources:
@@ -443,8 +746,6 @@ const coreInterfaceOut_t *Core::stallOut(void) throw(GenericsException) {
  * Simulates a clock cycle and returns the output signal structure.
  */
 const coreInterfaceOut_t *Core::clock(void) throw(GenericsException) {
-
-	//printf("Core::clock()\n");
 
 	// Determine the basic system control signals.
 	st.reset = (in.reset | st.cregIface.gbreg2rv_reset) & 1;
@@ -501,11 +802,62 @@ const coreInterfaceOut_t *Core::clock(void) throw(GenericsException) {
 			} else {
 
 				// Context normal.
-				cst->regFwd.afterRead();
-				cst->regFwd.afterFwdAndInval();
+				simulateContext(ctxt, cst);
 
 			}
 		}
+
+		/* A WILD NOTE APPEARS
+		 *
+		 * *** IBUF RESULT ***
+		 * per group:
+		 *
+		 *   # Handle traps.
+		 *   if in.imem2rv_busFault:
+		 *     cause TRAP_FETCH_FAULT (arg = 0) in S_IF+1
+		 *
+		 *   # Handle instruction muxing.
+		 *   instr = mux(ibuf.buffer
+		 *
+		 *
+		 * *** IBUF SETUP ***
+		 * per group:
+		 *   inputs from branch unit: PC, branching, fetch, cancel
+		 *
+		 *   # Drive the memory outputs.
+		 *   if branching:
+		 *     fetchPC = floor(PC)
+		 *   else:
+		 *     fetchPC = ceil(PC)
+		 *   out.rv2imem_PCs = fetchPC
+		 *   out.rv2imem_cancel = cancel
+		 *   out.rv2imem_fetch = fetch
+		 *
+		 *   # Load the instruction buffer when the PC bit at the buffer size
+		 *   # position changes.
+		 *   PC_LSB = PC(2 + num coupled lanes)
+		 *   if PC_LSB != ibuf.prevPC_LSB:
+		 *     ibuf.buffer = in.imem2rv_instr
+		 *   ibuf.PC_LSB_r = PC_LSB
+		 *
+		 *   # Figure out which mux positions should be used in the next cycle.
+		 *   ibuf.mux = mux magic
+		 *
+		 *
+		 */
+
+
+		// IF result, STOP, DEC, LIMM -> uses inputs, generates traps
+		// RD, SRD -> uses regFwd.read
+		// TRAP result, PCP1, BTGT, BR, IF setup -> generates outputs & traps
+		// simsyl
+		// (STRAP)
+		// [TRAP setup]
+		// (RFI)
+		// WB, SWB -> uses regFwd.write/fwd
+		// [DIAG]
+
+
 
 		// SIMULATE THE RECONFIGURATION CONTROLLER. This uses only registered
 		// signals from the control registers and combinatorial signals from the
@@ -532,6 +884,67 @@ const coreInterfaceOut_t *Core::clock(void) throw(GenericsException) {
 
 	return &out;
 }
+
+/**
+ * Returns the output signal structure.
+ */
+const coreInterfaceOut_t *Core::getOut() const {
+	// FYI: the modelsim interface code assumes that this address never changes.
+	return &out;
+}
+
+}
+
+//==============================================================================
+// Core simulator class: contexts.
+//==============================================================================
+namespace Core {
+
+#if (L_IF != 1) || (L_IF_MEM != 1)
+#error "L_IF and L_IF_MEM must be one."
+#endif
+
+void Core::simulateContext(int ctxt, contextState_t *cst) {
+
+	// Set up the lookup table from stage to state.
+	for (int l = 0; l < (int)cst->rcfg.laneCount; l++) {
+		laneState_t *lst = cst->rcfg.firstLane + l;
+		for (int i = S_FIRST; i <= S_LAST; i++) {
+			lst->s[i] = lst->sbuf + ((lst->soffs + i) & (S_LAST_POW2-1));
+		}
+	}
+
+	// Simulate the contexts. Later stages are processed first, because
+	// forwarding stuff from traps and the branch unit may move combinatorially
+	// from later stages to earlier stages, but not the other way around.
+	// Commits to the register files and forwarding logic are not processed yet.
+	for (int stage = S_LAST; stage >= S_FIRST; stage--) {
+		// TODO: generate per stage and lookup.
+		simCtxt(&(generics.CFG), &in, &out, &st, ctxt, cst, stage);
+	}
+	cst->regFwd.afterRead();
+
+	// Commit to the register files and forwarding logic.
+	// TODO
+
+	// Update the forwarding logic.
+	cst->regFwd.afterFwdAndInval();
+
+	// Move every instruction in the pipeline to the next stage by
+	// decrementing the stage offset.
+	for (int l = 0; l < (int)cst->rcfg.laneCount; l++) {
+		laneState_t *lst = cst->rcfg.firstLane + l;
+		lst->soffs--;
+	}
+
+}
+
+}
+
+//==============================================================================
+// Core simulator class: reconfiguration.
+//==============================================================================
+namespace Core {
 
 /**
  * Simulates the reconfiguration controller.
@@ -824,6 +1237,7 @@ void Core::commitConfiguration(uint32_t cfg) {
 	// Load the context configuration and decouple output from the config
 	// vector.
 	int prevCtxt = -1;
+	int lanesPerGroup = NUM_LANES / NUM_GROUPS;
 	for (int lg = NUM_GROUPS-1; lg >= 0; lg--) {
 		int ctxt = (cfg >> (lg*4)) & 0x8;
 		if (ctxt & 8) ctxt = -1;
@@ -833,15 +1247,24 @@ void Core::commitConfiguration(uint32_t cfg) {
 
 		// Generate internal control values.
 		if (ctxt >= 0) {
+			st.cx[ctxt].rcfg.firstLane = st.lane + lanesPerGroup * lg;
+			st.cx[ctxt].rcfg.firstLaneIdx = lanesPerGroup * lg;
 			if (!st.cx[ctxt].rcfg.laneCount) {
 				st.cx[ctxt].rcfg.lastGroup = lg;
 			}
 			st.cx[ctxt].rcfg.firstGroup = lg;
-			st.cx[ctxt].rcfg.laneCount += NUM_LANES / NUM_GROUPS;
+			st.cx[ctxt].rcfg.laneCount += lanesPerGroup;
 		}
 	}
 
 }
+
+}
+
+//==============================================================================
+// Core simulator class: control registers.
+//==============================================================================
+namespace Core {
 
 /**
  * Simulates the control registers.
@@ -959,13 +1382,5 @@ void Core::simulateControlRegs() throw(GenericsException) {
 
 }
 
-
-/**
- * Returns the output signal structure.
- */
-const coreInterfaceOut_t *Core::getOut() const {
-	// FYI: the modelsim interface code assumes that this address never changes.
-	return &out;
-}
 
 } /* namespace Core */
