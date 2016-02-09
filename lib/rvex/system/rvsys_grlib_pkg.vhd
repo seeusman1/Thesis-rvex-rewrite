@@ -97,6 +97,12 @@ package rvsys_grlib_pkg is
     cache                       : cache_generic_config_type := CACHE_DEFAULT_CONFIG;
     cache_valid                 : boolean := false
   ) return rvex_grlib_generic_config_type;
+
+  -- Calulates the total number of lane groups in a GRLIB system based on the
+  -- provided configuration.
+  function rvex_grlib_num_lane_groups(
+    config : rvex_grlib_generic_config_array
+  ) return integer;
     
 end rvsys_grlib_pkg;
 
@@ -119,5 +125,18 @@ package body rvsys_grlib_pkg is
     if cache_valid  then cfg.cache  := cache; end if;
     return cfg;
   end rvex_grlib_cfg;
+
+  -- Calulates the total number of lange groups in a GRLIB system based on the
+  -- provided configuration.
+  function rvex_grlib_num_lane_groups(
+    config : rvex_grlib_generic_config_array
+  ) return integer is
+    variable count : integer := 0;
+  begin
+      for index in config'low to config'high loop
+          count := count + 2**config(index).core.numLaneGroupsLog2;
+      end loop;
+      return count;
+  end rvex_grlib_num_lane_groups;
   
 end rvsys_grlib_pkg;
