@@ -817,7 +817,7 @@
 // Requested software context
 // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 #define CR_RSC_ADDR                     (CREG_BASE + 0x260)
-#define CR_RSC                          CREG_UINT32_R(CR_RSC_ADDR)
+#define CR_RSC                          CREG_UINT32_RW(CR_RSC_ADDR)
 
 #define CR_RSC_RSC_BIT                  0
 #define CR_RSC_RSC_MASK                 0xFFFFFFFF                                                   /* GENERATED */

@@ -670,7 +670,9 @@ begin -- architecture
     variable cr_scrp4_scrp4_write: std_logic_vector(31 downto 0);
     variable cr_scrp4_scrp4_wmask: std_logic_vector(31 downto 0);
     variable cr_scrp4_scrp4_read: std_logic_vector(31 downto 0);
-    variable cr_rsc_rsc_read    : std_logic_vector(31 downto 0);                                     -- GENERATED --
+    variable cr_rsc_rsc_write   : std_logic_vector(31 downto 0);                                     -- GENERATED --
+    variable cr_rsc_rsc_wmask   : std_logic_vector(31 downto 0);
+    variable cr_rsc_rsc_read    : std_logic_vector(31 downto 0);
     variable cr_csc_csc_write   : std_logic_vector(31 downto 0);
     variable cr_csc_csc_wmask   : std_logic_vector(31 downto 0);
     variable cr_csc_csc_read    : std_logic_vector(31 downto 0);
@@ -678,9 +680,9 @@ begin -- architecture
     variable cr_rsc1_rsc1_wmask : std_logic_vector(31 downto 0);
     variable cr_rsc1_rsc1_read  : std_logic_vector(31 downto 0);
     variable cr_csc1_csc1_read  : std_logic_vector(31 downto 0);
-    variable cr_rsc2_rsc2_write : std_logic_vector(31 downto 0);
+    variable cr_rsc2_rsc2_write : std_logic_vector(31 downto 0);                                     -- GENERATED --
     variable cr_rsc2_rsc2_wmask : std_logic_vector(31 downto 0);
-    variable cr_rsc2_rsc2_read  : std_logic_vector(31 downto 0);                                     -- GENERATED --
+    variable cr_rsc2_rsc2_read  : std_logic_vector(31 downto 0);
     variable cr_csc2_csc2_read  : std_logic_vector(31 downto 0);
     variable cr_rsc3_rsc3_write : std_logic_vector(31 downto 0);
     variable cr_rsc3_rsc3_wmask : std_logic_vector(31 downto 0);
@@ -688,9 +690,9 @@ begin -- architecture
     variable cr_csc3_csc3_read  : std_logic_vector(31 downto 0);
     variable cr_rsc4_rsc4_write : std_logic_vector(31 downto 0);
     variable cr_rsc4_rsc4_wmask : std_logic_vector(31 downto 0);
-    variable cr_rsc4_rsc4_read  : std_logic_vector(31 downto 0);
+    variable cr_rsc4_rsc4_read  : std_logic_vector(31 downto 0);                                     -- GENERATED --
     variable cr_csc4_csc4_read  : std_logic_vector(31 downto 0);
-    variable cr_rsc5_rsc5_write : std_logic_vector(31 downto 0);                                     -- GENERATED --
+    variable cr_rsc5_rsc5_write : std_logic_vector(31 downto 0);
     variable cr_rsc5_rsc5_wmask : std_logic_vector(31 downto 0);
     variable cr_rsc5_rsc5_read  : std_logic_vector(31 downto 0);
     variable cr_csc5_csc5_read  : std_logic_vector(31 downto 0);
@@ -698,9 +700,9 @@ begin -- architecture
     variable cr_rsc6_rsc6_wmask : std_logic_vector(31 downto 0);
     variable cr_rsc6_rsc6_read  : std_logic_vector(31 downto 0);
     variable cr_csc6_csc6_read  : std_logic_vector(31 downto 0);
-    variable cr_rsc7_rsc7_write : std_logic_vector(31 downto 0);
+    variable cr_rsc7_rsc7_write : std_logic_vector(31 downto 0);                                     -- GENERATED --
     variable cr_rsc7_rsc7_wmask : std_logic_vector(31 downto 0);
-    variable cr_rsc7_rsc7_read  : std_logic_vector(31 downto 0);                                     -- GENERATED --
+    variable cr_rsc7_rsc7_read  : std_logic_vector(31 downto 0);
     variable cr_csc7_csc7_read  : std_logic_vector(31 downto 0);
     variable cr_cyc_cyc3_read   : std_logic_vector(7 downto 0);
     variable cr_cyc_cyc2_read   : std_logic_vector(7 downto 0);
@@ -708,9 +710,9 @@ begin -- architecture
     variable cr_cyc_cyc0_write  : std_logic_vector(7 downto 0);
     variable cr_cyc_cyc0_wmask  : std_logic_vector(7 downto 0);
     variable cr_cyc_cyc0_read   : std_logic_vector(7 downto 0);
-    variable cr_cyc_cyc0_add    : rvex_byte_type;
+    variable cr_cyc_cyc0_add    : rvex_byte_type;                                                    -- GENERATED --
     variable cr_cych_cyc6_read  : std_logic_vector(7 downto 0);
-    variable cr_cych_cyc5_read  : std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_cych_cyc5_read  : std_logic_vector(7 downto 0);
     variable cr_cych_cyc4_read  : std_logic_vector(7 downto 0);
     variable cr_cych_cyc3_write : std_logic_vector(7 downto 0);
     variable cr_cych_cyc3_wmask : std_logic_vector(7 downto 0);
@@ -718,9 +720,9 @@ begin -- architecture
     variable cr_stall_stall3_read: std_logic_vector(7 downto 0);
     variable cr_stall_stall2_read: std_logic_vector(7 downto 0);
     variable cr_stall_stall1_read: std_logic_vector(7 downto 0);
-    variable cr_stall_stall0_write: std_logic_vector(7 downto 0);
+    variable cr_stall_stall0_write: std_logic_vector(7 downto 0);                                    -- GENERATED --
     variable cr_stall_stall0_wmask: std_logic_vector(7 downto 0);
-    variable cr_stall_stall0_read: std_logic_vector(7 downto 0);                                     -- GENERATED --
+    variable cr_stall_stall0_read: std_logic_vector(7 downto 0);
     variable cr_stall_stall0_add: rvex_byte_type;
     variable cr_stallh_stall6_read: std_logic_vector(7 downto 0);
     variable cr_stallh_stall5_read: std_logic_vector(7 downto 0);
@@ -728,9 +730,9 @@ begin -- architecture
     variable cr_stallh_stall3_write: std_logic_vector(7 downto 0);
     variable cr_stallh_stall3_wmask: std_logic_vector(7 downto 0);
     variable cr_stallh_stall3_read: std_logic_vector(7 downto 0);
-    variable cr_bun_bun3_read   : std_logic_vector(7 downto 0);
+    variable cr_bun_bun3_read   : std_logic_vector(7 downto 0);                                      -- GENERATED --
     variable cr_bun_bun2_read   : std_logic_vector(7 downto 0);
-    variable cr_bun_bun1_read   : std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_bun_bun1_read   : std_logic_vector(7 downto 0);
     variable cr_bun_bun0_write  : std_logic_vector(7 downto 0);
     variable cr_bun_bun0_wmask  : std_logic_vector(7 downto 0);
     variable cr_bun_bun0_read   : std_logic_vector(7 downto 0);
@@ -738,9 +740,9 @@ begin -- architecture
     variable cr_bunh_bun6_read  : std_logic_vector(7 downto 0);
     variable cr_bunh_bun5_read  : std_logic_vector(7 downto 0);
     variable cr_bunh_bun4_read  : std_logic_vector(7 downto 0);
-    variable cr_bunh_bun3_write : std_logic_vector(7 downto 0);
+    variable cr_bunh_bun3_write : std_logic_vector(7 downto 0);                                      -- GENERATED --
     variable cr_bunh_bun3_wmask : std_logic_vector(7 downto 0);
-    variable cr_bunh_bun3_read  : std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_bunh_bun3_read  : std_logic_vector(7 downto 0);
     variable cr_syl_syl3_read   : std_logic_vector(7 downto 0);
     variable cr_syl_syl2_read   : std_logic_vector(7 downto 0);
     variable cr_syl_syl1_read   : std_logic_vector(7 downto 0);
@@ -748,9 +750,9 @@ begin -- architecture
     variable cr_syl_syl0_wmask  : std_logic_vector(7 downto 0);
     variable cr_syl_syl0_read   : std_logic_vector(7 downto 0);
     variable cr_syl_syl0_vec    : rvex_sylStatus_type;
-    variable cr_syl_syl0_add    : rvex_byte_type;
+    variable cr_syl_syl0_add    : rvex_byte_type;                                                    -- GENERATED --
     variable cr_sylh_syl6_read  : std_logic_vector(7 downto 0);
-    variable cr_sylh_syl5_read  : std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_sylh_syl5_read  : std_logic_vector(7 downto 0);
     variable cr_sylh_syl4_read  : std_logic_vector(7 downto 0);
     variable cr_sylh_syl3_write : std_logic_vector(7 downto 0);
     variable cr_sylh_syl3_wmask : std_logic_vector(7 downto 0);
@@ -758,9 +760,9 @@ begin -- architecture
     variable cr_nop_nop3_read   : std_logic_vector(7 downto 0);
     variable cr_nop_nop2_read   : std_logic_vector(7 downto 0);
     variable cr_nop_nop1_read   : std_logic_vector(7 downto 0);
-    variable cr_nop_nop0_write  : std_logic_vector(7 downto 0);
+    variable cr_nop_nop0_write  : std_logic_vector(7 downto 0);                                      -- GENERATED --
     variable cr_nop_nop0_wmask  : std_logic_vector(7 downto 0);
-    variable cr_nop_nop0_read   : std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_nop_nop0_read   : std_logic_vector(7 downto 0);
     variable cr_nop_nop0_vec    : rvex_sylStatus_type;
     variable cr_nop_nop0_add    : rvex_byte_type;
     variable cr_noph_nop6_read  : std_logic_vector(7 downto 0);
@@ -768,9 +770,9 @@ begin -- architecture
     variable cr_noph_nop4_read  : std_logic_vector(7 downto 0);
     variable cr_noph_nop3_write : std_logic_vector(7 downto 0);
     variable cr_noph_nop3_wmask : std_logic_vector(7 downto 0);
-    variable cr_noph_nop3_read  : std_logic_vector(7 downto 0);
+    variable cr_noph_nop3_read  : std_logic_vector(7 downto 0);                                      -- GENERATED --
     variable cr_iacc_iacc3_read : std_logic_vector(7 downto 0);
-    variable cr_iacc_iacc2_read : std_logic_vector(7 downto 0);                                      -- GENERATED --
+    variable cr_iacc_iacc2_read : std_logic_vector(7 downto 0);
     variable cr_iacc_iacc1_read : std_logic_vector(7 downto 0);
     variable cr_iacc_iacc0_write: std_logic_vector(7 downto 0);
     variable cr_iacc_iacc0_wmask: std_logic_vector(7 downto 0);
@@ -778,9 +780,9 @@ begin -- architecture
     variable cr_iacc_iacc0_add  : rvex_byte_type;
     variable cr_iacch_iacc6_read: std_logic_vector(7 downto 0);
     variable cr_iacch_iacc5_read: std_logic_vector(7 downto 0);
-    variable cr_iacch_iacc4_read: std_logic_vector(7 downto 0);
+    variable cr_iacch_iacc4_read: std_logic_vector(7 downto 0);                                      -- GENERATED --
     variable cr_iacch_iacc3_write: std_logic_vector(7 downto 0);
-    variable cr_iacch_iacc3_wmask: std_logic_vector(7 downto 0);                                     -- GENERATED --
+    variable cr_iacch_iacc3_wmask: std_logic_vector(7 downto 0);
     variable cr_iacch_iacc3_read: std_logic_vector(7 downto 0);
     variable cr_imiss_imiss3_read: std_logic_vector(7 downto 0);
     variable cr_imiss_imiss2_read: std_logic_vector(7 downto 0);
@@ -788,9 +790,9 @@ begin -- architecture
     variable cr_imiss_imiss0_write: std_logic_vector(7 downto 0);
     variable cr_imiss_imiss0_wmask: std_logic_vector(7 downto 0);
     variable cr_imiss_imiss0_read: std_logic_vector(7 downto 0);
-    variable cr_imiss_imiss0_add: rvex_byte_type;
+    variable cr_imiss_imiss0_add: rvex_byte_type;                                                    -- GENERATED --
     variable cr_imissh_imiss6_read: std_logic_vector(7 downto 0);
-    variable cr_imissh_imiss5_read: std_logic_vector(7 downto 0);                                    -- GENERATED --
+    variable cr_imissh_imiss5_read: std_logic_vector(7 downto 0);
     variable cr_imissh_imiss4_read: std_logic_vector(7 downto 0);
     variable cr_imissh_imiss3_write: std_logic_vector(7 downto 0);
     variable cr_imissh_imiss3_wmask: std_logic_vector(7 downto 0);
@@ -798,9 +800,9 @@ begin -- architecture
     variable cr_dracc_dracc3_read: std_logic_vector(7 downto 0);
     variable cr_dracc_dracc2_read: std_logic_vector(7 downto 0);
     variable cr_dracc_dracc1_read: std_logic_vector(7 downto 0);
-    variable cr_dracc_dracc0_write: std_logic_vector(7 downto 0);
+    variable cr_dracc_dracc0_write: std_logic_vector(7 downto 0);                                    -- GENERATED --
     variable cr_dracc_dracc0_wmask: std_logic_vector(7 downto 0);
-    variable cr_dracc_dracc0_read: std_logic_vector(7 downto 0);                                     -- GENERATED --
+    variable cr_dracc_dracc0_read: std_logic_vector(7 downto 0);
     variable cr_dracc_dracc0_add: rvex_byte_type;
     variable cr_dracch_dracc6_read: std_logic_vector(7 downto 0);
     variable cr_dracch_dracc5_read: std_logic_vector(7 downto 0);
@@ -808,9 +810,9 @@ begin -- architecture
     variable cr_dracch_dracc3_write: std_logic_vector(7 downto 0);
     variable cr_dracch_dracc3_wmask: std_logic_vector(7 downto 0);
     variable cr_dracch_dracc3_read: std_logic_vector(7 downto 0);
-    variable cr_drmiss_drmiss3_read: std_logic_vector(7 downto 0);
+    variable cr_drmiss_drmiss3_read: std_logic_vector(7 downto 0);                                   -- GENERATED --
     variable cr_drmiss_drmiss2_read: std_logic_vector(7 downto 0);
-    variable cr_drmiss_drmiss1_read: std_logic_vector(7 downto 0);                                   -- GENERATED --
+    variable cr_drmiss_drmiss1_read: std_logic_vector(7 downto 0);
     variable cr_drmiss_drmiss0_write: std_logic_vector(7 downto 0);
     variable cr_drmiss_drmiss0_wmask: std_logic_vector(7 downto 0);
     variable cr_drmiss_drmiss0_read: std_logic_vector(7 downto 0);
@@ -818,9 +820,9 @@ begin -- architecture
     variable cr_drmissh_drmiss6_read: std_logic_vector(7 downto 0);
     variable cr_drmissh_drmiss5_read: std_logic_vector(7 downto 0);
     variable cr_drmissh_drmiss4_read: std_logic_vector(7 downto 0);
-    variable cr_drmissh_drmiss3_write: std_logic_vector(7 downto 0);
+    variable cr_drmissh_drmiss3_write: std_logic_vector(7 downto 0);                                 -- GENERATED --
     variable cr_drmissh_drmiss3_wmask: std_logic_vector(7 downto 0);
-    variable cr_drmissh_drmiss3_read: std_logic_vector(7 downto 0);                                  -- GENERATED --
+    variable cr_drmissh_drmiss3_read: std_logic_vector(7 downto 0);
     variable cr_dwacc_dwacc3_read: std_logic_vector(7 downto 0);
     variable cr_dwacc_dwacc2_read: std_logic_vector(7 downto 0);
     variable cr_dwacc_dwacc1_read: std_logic_vector(7 downto 0);
@@ -828,9 +830,9 @@ begin -- architecture
     variable cr_dwacc_dwacc0_wmask: std_logic_vector(7 downto 0);
     variable cr_dwacc_dwacc0_read: std_logic_vector(7 downto 0);
     variable cr_dwacc_dwacc0_add: rvex_byte_type;
-    variable cr_dwacch_dwacc6_read: std_logic_vector(7 downto 0);
+    variable cr_dwacch_dwacc6_read: std_logic_vector(7 downto 0);                                    -- GENERATED --
     variable cr_dwacch_dwacc5_read: std_logic_vector(7 downto 0);
-    variable cr_dwacch_dwacc4_read: std_logic_vector(7 downto 0);                                    -- GENERATED --
+    variable cr_dwacch_dwacc4_read: std_logic_vector(7 downto 0);
     variable cr_dwacch_dwacc3_write: std_logic_vector(7 downto 0);
     variable cr_dwacch_dwacc3_wmask: std_logic_vector(7 downto 0);
     variable cr_dwacch_dwacc3_read: std_logic_vector(7 downto 0);
@@ -838,9 +840,9 @@ begin -- architecture
     variable cr_dwmiss_dwmiss2_read: std_logic_vector(7 downto 0);
     variable cr_dwmiss_dwmiss1_read: std_logic_vector(7 downto 0);
     variable cr_dwmiss_dwmiss0_write: std_logic_vector(7 downto 0);
-    variable cr_dwmiss_dwmiss0_wmask: std_logic_vector(7 downto 0);
+    variable cr_dwmiss_dwmiss0_wmask: std_logic_vector(7 downto 0);                                  -- GENERATED --
     variable cr_dwmiss_dwmiss0_read: std_logic_vector(7 downto 0);
-    variable cr_dwmiss_dwmiss0_add: rvex_byte_type;                                                  -- GENERATED --
+    variable cr_dwmiss_dwmiss0_add: rvex_byte_type;
     variable cr_dwmissh_dwmiss6_read: std_logic_vector(7 downto 0);
     variable cr_dwmissh_dwmiss5_read: std_logic_vector(7 downto 0);
     variable cr_dwmissh_dwmiss4_read: std_logic_vector(7 downto 0);
@@ -848,9 +850,9 @@ begin -- architecture
     variable cr_dwmissh_dwmiss3_wmask: std_logic_vector(7 downto 0);
     variable cr_dwmissh_dwmiss3_read: std_logic_vector(7 downto 0);
     variable cr_dbypass_dbypass3_read: std_logic_vector(7 downto 0);
-    variable cr_dbypass_dbypass2_read: std_logic_vector(7 downto 0);
+    variable cr_dbypass_dbypass2_read: std_logic_vector(7 downto 0);                                 -- GENERATED --
     variable cr_dbypass_dbypass1_read: std_logic_vector(7 downto 0);
-    variable cr_dbypass_dbypass0_write: std_logic_vector(7 downto 0);                                -- GENERATED --
+    variable cr_dbypass_dbypass0_write: std_logic_vector(7 downto 0);
     variable cr_dbypass_dbypass0_wmask: std_logic_vector(7 downto 0);
     variable cr_dbypass_dbypass0_read: std_logic_vector(7 downto 0);
     variable cr_dbypass_dbypass0_add: rvex_byte_type;
@@ -858,9 +860,9 @@ begin -- architecture
     variable cr_dbypassh_dbypass5_read: std_logic_vector(7 downto 0);
     variable cr_dbypassh_dbypass4_read: std_logic_vector(7 downto 0);
     variable cr_dbypassh_dbypass3_write: std_logic_vector(7 downto 0);
-    variable cr_dbypassh_dbypass3_wmask: std_logic_vector(7 downto 0);
+    variable cr_dbypassh_dbypass3_wmask: std_logic_vector(7 downto 0);                               -- GENERATED --
     variable cr_dbypassh_dbypass3_read: std_logic_vector(7 downto 0);
-    variable cr_dwbuf_dwbuf3_read: std_logic_vector(7 downto 0);                                     -- GENERATED --
+    variable cr_dwbuf_dwbuf3_read: std_logic_vector(7 downto 0);
     variable cr_dwbuf_dwbuf2_read: std_logic_vector(7 downto 0);
     variable cr_dwbuf_dwbuf1_read: std_logic_vector(7 downto 0);
     variable cr_dwbuf_dwbuf0_write: std_logic_vector(7 downto 0);
@@ -868,9 +870,9 @@ begin -- architecture
     variable cr_dwbuf_dwbuf0_read: std_logic_vector(7 downto 0);
     variable cr_dwbuf_dwbuf0_add: rvex_byte_type;
     variable cr_dwbufh_dwbuf6_read: std_logic_vector(7 downto 0);
-    variable cr_dwbufh_dwbuf5_read: std_logic_vector(7 downto 0);
+    variable cr_dwbufh_dwbuf5_read: std_logic_vector(7 downto 0);                                    -- GENERATED --
     variable cr_dwbufh_dwbuf4_read: std_logic_vector(7 downto 0);
-    variable cr_dwbufh_dwbuf3_write: std_logic_vector(7 downto 0);                                   -- GENERATED --
+    variable cr_dwbufh_dwbuf3_write: std_logic_vector(7 downto 0);
     variable cr_dwbufh_dwbuf3_wmask: std_logic_vector(7 downto 0);
     variable cr_dwbufh_dwbuf3_read: std_logic_vector(7 downto 0);
 
@@ -878,9 +880,9 @@ begin -- architecture
     if rising_edge(clk) then
       for ctxt in 0 to 2**CFG.numContextsLog2-1 loop
 
-        if reset = '1' then
+        if reset = '1' then                                                                          -- GENERATED --
 
-          -- Reset all registers and ports.                                                          -- GENERATED --
+          -- Reset all registers and ports.
           cxreg2creg_readData(ctxt) <= (others => '0');
           cxreg2rv_reset(ctxt) <= bool2bit(int2bool(0));
           cxreg2cxplif_handlingDebugTrap(ctxt) <= bool2bit(int2bool(0));
@@ -888,9 +890,9 @@ begin -- architecture
             addr => (
               0 => std_logic_vector(to_unsigned(0, 32)),
               1 => std_logic_vector(to_unsigned(0, 32)),
-              2 => std_logic_vector(to_unsigned(0, 32)),
+              2 => std_logic_vector(to_unsigned(0, 32)),                                             -- GENERATED --
               3 => std_logic_vector(to_unsigned(0, 32))
-            ),                                                                                       -- GENERATED --
+            ),
             cfg => (
               0 => std_logic_vector(to_unsigned(0, 2)),
               1 => std_logic_vector(to_unsigned(0, 2)),
@@ -898,9 +900,9 @@ begin -- architecture
               3 => std_logic_vector(to_unsigned(0, 2))
             )
           );
-          cxreg2cfg_requestEnable(ctxt) <= bool2bit(int2bool(0));
+          cxreg2cfg_requestEnable(ctxt) <= bool2bit(int2bool(0));                                    -- GENERATED --
           cr_ccr_cause_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
-          cr_ccr_branch_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));                              -- GENERATED --
+          cr_ccr_branch_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
           cr_ccr_k_r(ctxt) <= bool2bit(int2bool(1));
           cr_ccr_c_r(ctxt) <= bool2bit(int2bool(0));
           cr_ccr_b_r(ctxt) <= bool2bit(int2bool(0));
@@ -908,9 +910,9 @@ begin -- architecture
           cr_ccr_i_r(ctxt) <= bool2bit(int2bool(0));
           cr_sccr_k_r(ctxt) <= bool2bit(int2bool(0));
           cr_sccr_c_r(ctxt) <= bool2bit(int2bool(0));
-          cr_sccr_b_r(ctxt) <= bool2bit(int2bool(0));
+          cr_sccr_b_r(ctxt) <= bool2bit(int2bool(0));                                                -- GENERATED --
           cr_sccr_r_r(ctxt) <= bool2bit(int2bool(0));
-          cr_sccr_i_r(ctxt) <= bool2bit(int2bool(0));                                                -- GENERATED --
+          cr_sccr_i_r(ctxt) <= bool2bit(int2bool(0));
           cr_lr_lr_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_pc_pc_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_th_th_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
@@ -918,9 +920,9 @@ begin -- architecture
           cr_tp_tp_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_ta_ta_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_br0_br0_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
-          cr_br1_br1_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
+          cr_br1_br1_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));                                -- GENERATED --
           cr_br2_br2_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
-          cr_br3_br3_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));                                -- GENERATED --
+          cr_br3_br3_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_dcr_d_r(ctxt) <= bool2bit(int2bool(0));
           cr_dcr_j_r(ctxt) <= bool2bit(int2bool(0));
           cr_dcr_e_r(ctxt) <= bool2bit(int2bool(0));
@@ -928,9 +930,9 @@ begin -- architecture
           cr_dcr_s_r(ctxt) <= bool2bit(int2bool(0));
           cr_dcr_b_r(ctxt) <= bool2bit(int2bool(0));
           cr_dcr_cause_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
-          cr_dcr_br3_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));
+          cr_dcr_br3_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));                                 -- GENERATED --
           cr_dcr_br2_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));
-          cr_dcr_br1_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));                                 -- GENERATED --
+          cr_dcr_br1_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));
           cr_dcr_br0_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));
           cr_dcr2_result_r(ctxt) <= std_logic_vector(to_unsigned(255, 8));
           cr_dcr2_t_r(ctxt) <= bool2bit(int2bool(0));
@@ -938,9 +940,9 @@ begin -- architecture
           cr_dcr2_r_r(ctxt) <= bool2bit(int2bool(0));
           cr_dcr2_c_r(ctxt) <= bool2bit(int2bool(0));
           cr_dcr2_i_r(ctxt) <= bool2bit(int2bool(0));
-          cr_dcr2_e_r(ctxt) <= bool2bit(int2bool(0));
+          cr_dcr2_e_r(ctxt) <= bool2bit(int2bool(0));                                                -- GENERATED --
           cr_crr_crr_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
-          cr_wcfg_wcfg_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));                              -- GENERATED --
+          cr_wcfg_wcfg_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_sawc_s_r(ctxt) <= bool2bit(int2bool(0));
           cr_scrp1_scrp1_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_scrp2_scrp2_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
@@ -948,9 +950,9 @@ begin -- architecture
           cr_scrp4_scrp4_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_rsc_rsc_r(ctxt) <= bitvec_lit("11111111111111111111111111111111");
           cr_csc_csc_r(ctxt) <= bitvec_lit("11111111111111111111111111111111");
-          cr_csc_csc_neq(ctxt) <= bool2bit(int2bool(0));
+          cr_csc_csc_neq(ctxt) <= bool2bit(int2bool(0));                                             -- GENERATED --
           cr_cyc_cyc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
-          cr_cyc_cyc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                               -- GENERATED --
+          cr_cyc_cyc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
           cr_stall_stall0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
           cr_stall_stall0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
           cr_bun_bun0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
@@ -958,9 +960,9 @@ begin -- architecture
           cr_syl_syl0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
           cr_syl_syl0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
           cr_nop_nop0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
-          cr_nop_nop0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
+          cr_nop_nop0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                               -- GENERATED --
           cr_iacc_iacc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
-          cr_iacc_iacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                             -- GENERATED --
+          cr_iacc_iacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
           cr_imiss_imiss0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
           cr_imiss_imiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
           cr_dracc_dracc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
@@ -968,9 +970,9 @@ begin -- architecture
           cr_drmiss_drmiss0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
           cr_drmiss_drmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
           cr_dwacc_dwacc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
-          cr_dwacc_dwacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
+          cr_dwacc_dwacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                           -- GENERATED --
           cr_dwmiss_dwmiss0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
-          cr_dwmiss_dwmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                         -- GENERATED --
+          cr_dwmiss_dwmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
           cr_dbypass_dbypass0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
           cr_dbypass_dbypass0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
           cr_dwbuf_dwbuf0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
@@ -978,9 +980,9 @@ begin -- architecture
 
         elsif clkEn = '1' then
           if ctxtReset(ctxt) = '1' then
-
+                                                                                                     -- GENERATED --
             -- Reset all registers and ports.
-            cxreg2creg_readData(ctxt) <= (others => '0');                                            -- GENERATED --
+            cxreg2creg_readData(ctxt) <= (others => '0');
             cxreg2rv_reset(ctxt) <= bool2bit(int2bool(0));
             cxreg2cxplif_handlingDebugTrap(ctxt) <= bool2bit(int2bool(0));
             cxreg2cxplif_breakpoints(ctxt) <= (
@@ -988,9 +990,9 @@ begin -- architecture
                 0 => std_logic_vector(to_unsigned(0, 32)),
                 1 => std_logic_vector(to_unsigned(0, 32)),
                 2 => std_logic_vector(to_unsigned(0, 32)),
-                3 => std_logic_vector(to_unsigned(0, 32))
+                3 => std_logic_vector(to_unsigned(0, 32))                                            -- GENERATED --
               ),
-              cfg => (                                                                               -- GENERATED --
+              cfg => (
                 0 => std_logic_vector(to_unsigned(0, 2)),
                 1 => std_logic_vector(to_unsigned(0, 2)),
                 2 => std_logic_vector(to_unsigned(0, 2)),
@@ -998,9 +1000,9 @@ begin -- architecture
               )
             );
             cxreg2cfg_requestEnable(ctxt) <= bool2bit(int2bool(0));
-            cr_ccr_cause_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
+            cr_ccr_cause_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));                             -- GENERATED --
             cr_ccr_branch_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
-            cr_ccr_k_r(ctxt) <= bool2bit(int2bool(1));                                               -- GENERATED --
+            cr_ccr_k_r(ctxt) <= bool2bit(int2bool(1));
             cr_ccr_c_r(ctxt) <= bool2bit(int2bool(0));
             cr_ccr_b_r(ctxt) <= bool2bit(int2bool(0));
             cr_ccr_r_r(ctxt) <= bool2bit(int2bool(0));
@@ -1008,9 +1010,9 @@ begin -- architecture
             cr_sccr_k_r(ctxt) <= bool2bit(int2bool(0));
             cr_sccr_c_r(ctxt) <= bool2bit(int2bool(0));
             cr_sccr_b_r(ctxt) <= bool2bit(int2bool(0));
-            cr_sccr_r_r(ctxt) <= bool2bit(int2bool(0));
+            cr_sccr_r_r(ctxt) <= bool2bit(int2bool(0));                                              -- GENERATED --
             cr_sccr_i_r(ctxt) <= bool2bit(int2bool(0));
-            cr_lr_lr_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));                                -- GENERATED --
+            cr_lr_lr_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             cr_pc_pc_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             cr_th_th_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             cr_ph_ph_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
@@ -1018,9 +1020,9 @@ begin -- architecture
             cr_ta_ta_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             cr_br0_br0_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             cr_br1_br1_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
-            cr_br2_br2_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
+            cr_br2_br2_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));                              -- GENERATED --
             cr_br3_br3_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
-            cr_dcr_d_r(ctxt) <= bool2bit(int2bool(0));                                               -- GENERATED --
+            cr_dcr_d_r(ctxt) <= bool2bit(int2bool(0));
             cr_dcr_j_r(ctxt) <= bool2bit(int2bool(0));
             cr_dcr_e_r(ctxt) <= bool2bit(int2bool(0));
             cr_dcr_r_r(ctxt) <= bool2bit(int2bool(0));
@@ -1028,9 +1030,9 @@ begin -- architecture
             cr_dcr_b_r(ctxt) <= bool2bit(int2bool(0));
             cr_dcr_cause_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
             cr_dcr_br3_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));
-            cr_dcr_br2_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));
+            cr_dcr_br2_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));                               -- GENERATED --
             cr_dcr_br1_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));
-            cr_dcr_br0_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));                               -- GENERATED --
+            cr_dcr_br0_r(ctxt) <= std_logic_vector(to_unsigned(0, 2));
             cr_dcr2_result_r(ctxt) <= std_logic_vector(to_unsigned(255, 8));
             cr_dcr2_t_r(ctxt) <= bool2bit(int2bool(0));
             cr_dcr2_m_r(ctxt) <= bool2bit(int2bool(0));
@@ -1038,9 +1040,9 @@ begin -- architecture
             cr_dcr2_c_r(ctxt) <= bool2bit(int2bool(0));
             cr_dcr2_i_r(ctxt) <= bool2bit(int2bool(0));
             cr_dcr2_e_r(ctxt) <= bool2bit(int2bool(0));
-            cr_crr_crr_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
+            cr_crr_crr_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));                              -- GENERATED --
             cr_wcfg_wcfg_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
-            cr_sawc_s_r(ctxt) <= bool2bit(int2bool(0));                                              -- GENERATED --
+            cr_sawc_s_r(ctxt) <= bool2bit(int2bool(0));
             cr_scrp1_scrp1_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             cr_scrp2_scrp2_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             cr_scrp3_scrp3_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
@@ -1048,9 +1050,9 @@ begin -- architecture
             cr_rsc_rsc_r(ctxt) <= bitvec_lit("11111111111111111111111111111111");
             cr_csc_csc_r(ctxt) <= bitvec_lit("11111111111111111111111111111111");
             cr_csc_csc_neq(ctxt) <= bool2bit(int2bool(0));
-            cr_cyc_cyc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
+            cr_cyc_cyc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));                          -- GENERATED --
             cr_cyc_cyc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-            cr_stall_stall0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));                      -- GENERATED --
+            cr_stall_stall0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
             cr_stall_stall0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             cr_bun_bun0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
             cr_bun_bun0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
@@ -1058,9 +1060,9 @@ begin -- architecture
             cr_syl_syl0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             cr_nop_nop0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
             cr_nop_nop0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-            cr_iacc_iacc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
+            cr_iacc_iacc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));                        -- GENERATED --
             cr_iacc_iacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-            cr_imiss_imiss0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));                      -- GENERATED --
+            cr_imiss_imiss0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
             cr_imiss_imiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             cr_dracc_dracc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
             cr_dracc_dracc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
@@ -1068,9 +1070,9 @@ begin -- architecture
             cr_drmiss_drmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             cr_dwacc_dwacc0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
             cr_dwacc_dwacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-            cr_dwmiss_dwmiss0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
+            cr_dwmiss_dwmiss0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));                    -- GENERATED --
             cr_dwmiss_dwmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-            cr_dbypass_dbypass0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));                  -- GENERATED --
+            cr_dbypass_dbypass0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
             cr_dbypass_dbypass0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             cr_dwbuf_dwbuf0_add_r(ctxt) <= std_logic_vector(to_unsigned(0, 8));
             cr_dwbuf_dwbuf0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
@@ -1078,9 +1080,9 @@ begin -- architecture
             -- Generated special reset stuff.
             cr_dcr_e_r(ctxt) <= cr_dcr_e_r(ctxt);
             cr_dcr_s_r(ctxt) <= cr_dcr_s_r(ctxt);
-            cr_dcr_b_r(ctxt) <= cr_dcr_b_r(ctxt);
+            cr_dcr_b_r(ctxt) <= cr_dcr_b_r(ctxt);                                                    -- GENERATED --
 
-          else                                                                                       -- GENERATED --
+          else
 
             -- Setup the bus write command variables which are expected by the
             -- generated code.
@@ -1088,9 +1090,9 @@ begin -- architecture
             bus_writeMaskDbg := (
               31 downto 24 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(3) and creg2cxreg_origin(ctxt),
               23 downto 16 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(2) and creg2cxreg_origin(ctxt),
-              15 downto  8 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(1) and creg2cxreg_origin(ctxt),
+              15 downto  8 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(1) and creg2cxreg_origin(ctxt), -- GENERATED --
                7 downto  0 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(0) and creg2cxreg_origin(ctxt)
-            );                                                                                       -- GENERATED --
+            );
             bus_writeMaskCore := (
               31 downto 24 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(3) and not creg2cxreg_origin(ctxt),
               23 downto 16 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(2) and not creg2cxreg_origin(ctxt),
@@ -1098,9 +1100,9 @@ begin -- architecture
                7 downto  0 => creg2cxreg_writeEnable(ctxt) and creg2cxreg_writeMask(ctxt)(0) and not creg2cxreg_origin(ctxt)
             );
             bus_wordAddr := unsigned(creg2cxreg_addr(ctxt)(8 downto 2));
-            perf_count_clear := '0';
+            perf_count_clear := '0';                                                                 -- GENERATED --
 
-            -- Set readData to 0 by default.                                                         -- GENERATED --
+            -- Set readData to 0 by default.
             cxreg2creg_readData(ctxt) <= (others => '0');
 
             -- Generated register implementation code.
@@ -1108,9 +1110,9 @@ begin -- architecture
             cr_ccr_cause_wmask_dbg := (bus_writeMaskDbg((24)+7 downto 24)) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(0, 31)))));
             cr_ccr_cause_v := std_logic_vector(to_unsigned(0, 8));
             cr_ccr_cause_v := cr_ccr_cause_r(ctxt);
-            cr_ccr_cause_v := ((cr_ccr_cause_v) and (not (cr_ccr_cause_wmask_dbg))) or ((cr_ccr_cause_write) and (cr_ccr_cause_wmask_dbg));
+            cr_ccr_cause_v := ((cr_ccr_cause_v) and (not (cr_ccr_cause_wmask_dbg))) or ((cr_ccr_cause_write) and (cr_ccr_cause_wmask_dbg)); -- GENERATED --
             cr_ccr_cause_read := cr_ccr_cause_r(ctxt);
-            if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then                                       -- GENERATED --
+            if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
               if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then
                 cr_ccr_cause_v := cxplif2cxreg_trapInfo(ctxt).cause;
               end if;
@@ -1118,9 +1120,9 @@ begin -- architecture
                 cr_ccr_cause_v := std_logic_vector(to_unsigned(0, 8));
               end if;
             end if;
-            --@user--
+            --@user--                                                                                -- GENERATED --
 
-            cxreg2cxplif_handlingDebugTrap(ctxt) <= TRAP_TABLE(vect2uint(cr_ccr_cause_v)).isDebugTrap; -- GENERATED --
+            cxreg2cxplif_handlingDebugTrap(ctxt) <= TRAP_TABLE(vect2uint(cr_ccr_cause_v)).isDebugTrap;
             --@generated--
             cr_ccr_cause_r(ctxt) <= cr_ccr_cause_v;
             cr_ccr_branch_write := bus_writeData((16)+7 downto 16);
@@ -1128,9 +1130,9 @@ begin -- architecture
             cr_ccr_branch_v := std_logic_vector(to_unsigned(0, 8));
             cr_ccr_branch_v := cr_ccr_branch_r(ctxt);
             cr_ccr_branch_v := ((cr_ccr_branch_v) and (not (cr_ccr_branch_wmask_dbg))) or ((cr_ccr_branch_write) and (cr_ccr_branch_wmask_dbg));
-            cr_ccr_branch_read := cr_ccr_branch_r(ctxt);
+            cr_ccr_branch_read := cr_ccr_branch_r(ctxt);                                             -- GENERATED --
             if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
-              cr_ccr_branch_v := ((cr_ccr_branch_v) and (not (cxplif2cxreg_brWriteEnable(ctxt)))) or ((cxplif2cxreg_brWriteData(ctxt)) and (cxplif2cxreg_brWriteEnable(ctxt))); -- GENERATED --
+              cr_ccr_branch_v := ((cr_ccr_branch_v) and (not (cxplif2cxreg_brWriteEnable(ctxt)))) or ((cxplif2cxreg_brWriteData(ctxt)) and (cxplif2cxreg_brWriteEnable(ctxt)));
             end if;
             cr_ccr_branch_r(ctxt) <= cr_ccr_branch_v;
             cr_ccr_k_v := bool2bit(int2bool(0));
@@ -1138,9 +1140,9 @@ begin -- architecture
             cr_ccr_k_read := (bit2vec(not (cr_ccr_k_r(ctxt)), 1)) & (bit2vec(cr_ccr_k_r(ctxt), 1));
             if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
               if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then
-                cr_ccr_k_v := bool2bit(int2bool(1));
+                cr_ccr_k_v := bool2bit(int2bool(1));                                                 -- GENERATED --
               end if;
-              if (bit2bool(cxplif2cxreg_rfi(ctxt))) then                                             -- GENERATED --
+              if (bit2bool(cxplif2cxreg_rfi(ctxt))) then
                 cr_ccr_k_v := cr_sccr_k_r(ctxt);
               end if;
             end if;
@@ -1148,9 +1150,9 @@ begin -- architecture
             cr_ccr_c_write := bus_writeData((6)+1 downto 6);
             cr_ccr_c_wmask := ((bus_writeMaskDbg((6)+1 downto 6)) or (bus_writeMaskCore((6)+1 downto 6))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(0, 31)))));
             cr_ccr_c_v := bool2bit(int2bool(0));
-            cr_ccr_c_cmd := std_logic_vector(to_unsigned(0, 2));
+            cr_ccr_c_cmd := std_logic_vector(to_unsigned(0, 2));                                     -- GENERATED --
             cr_ccr_c_v := cr_ccr_c_r(ctxt);
-            cr_ccr_c_cmd := (cr_ccr_c_wmask) and (cr_ccr_c_write);                                   -- GENERATED --
+            cr_ccr_c_cmd := (cr_ccr_c_wmask) and (cr_ccr_c_write);
             if ((unsigned(cr_ccr_c_cmd)) = (unsigned(bitvec_lit("11")))) then
               cr_ccr_c_v := not (cr_ccr_c_v);
             else
@@ -1158,9 +1160,9 @@ begin -- architecture
             end if;
             cr_ccr_c_read := (bit2vec(not (cr_ccr_c_r(ctxt)), 1)) & (bit2vec(cr_ccr_c_r(ctxt), 1));
             if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
-              if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then
+              if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then                                 -- GENERATED --
                 cr_ccr_c_v := bool2bit(int2bool(0));
-              end if;                                                                                -- GENERATED --
+              end if;
               if (bit2bool(cxplif2cxreg_rfi(ctxt))) then
                 cr_ccr_c_v := cr_sccr_c_r(ctxt);
               end if;
@@ -1168,9 +1170,9 @@ begin -- architecture
             cr_ccr_c_r(ctxt) <= cr_ccr_c_v;
             cr_ccr_b_write := bus_writeData((4)+1 downto 4);
             cr_ccr_b_wmask := ((bus_writeMaskDbg((4)+1 downto 4)) or (bus_writeMaskCore((4)+1 downto 4))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(0, 31)))));
-            cr_ccr_b_v := bool2bit(int2bool(0));
+            cr_ccr_b_v := bool2bit(int2bool(0));                                                     -- GENERATED --
             cr_ccr_b_cmd := std_logic_vector(to_unsigned(0, 2));
-            cr_ccr_b_v := cr_ccr_b_r(ctxt);                                                          -- GENERATED --
+            cr_ccr_b_v := cr_ccr_b_r(ctxt);
             cr_ccr_b_cmd := (cr_ccr_b_wmask) and (cr_ccr_b_write);
             if ((unsigned(cr_ccr_b_cmd)) = (unsigned(bitvec_lit("11")))) then
               cr_ccr_b_v := not (cr_ccr_b_v);
@@ -1178,9 +1180,9 @@ begin -- architecture
               cr_ccr_b_v := ((cr_ccr_b_v) or (cr_ccr_b_cmd(0))) and (not (cr_ccr_b_cmd(1)));
             end if;
             cr_ccr_b_read := (bit2vec(not (cr_ccr_b_r(ctxt)), 1)) & (bit2vec(cr_ccr_b_r(ctxt), 1));
-            if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
+            if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then                                       -- GENERATED --
               if (bit2bool((cxplif2cxreg_trapInfo(ctxt).active) and (cxplif2cxreg_trapIsDebug(ctxt)))) then
-                cr_ccr_b_v := bool2bit(int2bool(0));                                                 -- GENERATED --
+                cr_ccr_b_v := bool2bit(int2bool(0));
               end if;
               if (bit2bool(cxplif2cxreg_rfi(ctxt))) then
                 cr_ccr_b_v := cr_sccr_b_r(ctxt);
@@ -1188,9 +1190,9 @@ begin -- architecture
             end if;
             cr_ccr_b_r(ctxt) <= cr_ccr_b_v;
             cr_ccr_r_write := bus_writeData((2)+1 downto 2);
-            cr_ccr_r_wmask := ((bus_writeMaskDbg((2)+1 downto 2)) or (bus_writeMaskCore((2)+1 downto 2))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(0, 31)))));
+            cr_ccr_r_wmask := ((bus_writeMaskDbg((2)+1 downto 2)) or (bus_writeMaskCore((2)+1 downto 2))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(0, 31))))); -- GENERATED --
             cr_ccr_r_v := bool2bit(int2bool(0));
-            cr_ccr_r_cmd := std_logic_vector(to_unsigned(0, 2));                                     -- GENERATED --
+            cr_ccr_r_cmd := std_logic_vector(to_unsigned(0, 2));
             cr_ccr_r_v := cr_ccr_r_r(ctxt);
             cr_ccr_r_cmd := (cr_ccr_r_wmask) and (cr_ccr_r_write);
             if ((unsigned(cr_ccr_r_cmd)) = (unsigned(bitvec_lit("11")))) then
@@ -1198,9 +1200,9 @@ begin -- architecture
             else
               cr_ccr_r_v := ((cr_ccr_r_v) or (cr_ccr_r_cmd(0))) and (not (cr_ccr_r_cmd(1)));
             end if;
-            cr_ccr_r_read := (bit2vec(not (cr_ccr_r_r(ctxt)), 1)) & (bit2vec(cr_ccr_r_r(ctxt), 1));
+            cr_ccr_r_read := (bit2vec(not (cr_ccr_r_r(ctxt)), 1)) & (bit2vec(cr_ccr_r_r(ctxt), 1));  -- GENERATED --
             if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
-              if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then                                 -- GENERATED --
+              if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then
                 cr_ccr_r_v := bool2bit(int2bool(0));
               end if;
               if (bit2bool(cxplif2cxreg_rfi(ctxt))) then
@@ -1208,9 +1210,9 @@ begin -- architecture
               end if;
             end if;
             cr_ccr_r_r(ctxt) <= cr_ccr_r_v;
-            cr_ccr_i_write := bus_writeData((0)+1 downto 0);
+            cr_ccr_i_write := bus_writeData((0)+1 downto 0);                                         -- GENERATED --
             cr_ccr_i_wmask := ((bus_writeMaskDbg((0)+1 downto 0)) or (bus_writeMaskCore((0)+1 downto 0))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(0, 31)))));
-            cr_ccr_i_v := bool2bit(int2bool(0));                                                     -- GENERATED --
+            cr_ccr_i_v := bool2bit(int2bool(0));
             cr_ccr_i_cmd := std_logic_vector(to_unsigned(0, 2));
             cr_ccr_i_v := cr_ccr_i_r(ctxt);
             cr_ccr_i_cmd := (cr_ccr_i_wmask) and (cr_ccr_i_write);
@@ -1218,9 +1220,9 @@ begin -- architecture
               cr_ccr_i_v := not (cr_ccr_i_v);
             else
               cr_ccr_i_v := ((cr_ccr_i_v) or (cr_ccr_i_cmd(0))) and (not (cr_ccr_i_cmd(1)));
-            end if;
+            end if;                                                                                  -- GENERATED --
             cr_ccr_i_read := (bit2vec(not (cr_ccr_i_r(ctxt)), 1)) & (bit2vec(cr_ccr_i_r(ctxt), 1));
-            if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then                                       -- GENERATED --
+            if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
               if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then
                 cr_ccr_i_v := bool2bit(int2bool(0));
               end if;
@@ -1228,9 +1230,9 @@ begin -- architecture
                 cr_ccr_i_v := cr_sccr_i_r(ctxt);
               end if;
             end if;
-            cr_ccr_i_r(ctxt) <= cr_ccr_i_v;
+            cr_ccr_i_r(ctxt) <= cr_ccr_i_v;                                                          -- GENERATED --
             cr_sccr_id_read := std_logic_vector(to_unsigned(ctxt, 8));
-            cr_sccr_k_write := bus_writeData((8)+1 downto 8);                                        -- GENERATED --
+            cr_sccr_k_write := bus_writeData((8)+1 downto 8);
             cr_sccr_k_wmask_dbg := (bus_writeMaskDbg((8)+1 downto 8)) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(1, 31)))));
             cr_sccr_k_wmask_core := (bus_writeMaskCore((8)+1 downto 8)) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(1, 31)))));
             cr_sccr_k_v := bool2bit(int2bool(0));
@@ -1238,9 +1240,9 @@ begin -- architecture
             cr_sccr_k_v := cr_sccr_k_r(ctxt);
             cr_sccr_k_cmd := ((cr_sccr_k_wmask_dbg) or ((cr_sccr_k_wmask_core) and (bitvec_lit("10")))) and (cr_sccr_k_write);
             if ((unsigned(cr_sccr_k_cmd)) = (unsigned(bitvec_lit("11")))) then
-              cr_sccr_k_v := not (cr_sccr_k_v);
+              cr_sccr_k_v := not (cr_sccr_k_v);                                                      -- GENERATED --
             else
-              cr_sccr_k_v := ((cr_sccr_k_v) or (cr_sccr_k_cmd(0))) and (not (cr_sccr_k_cmd(1)));     -- GENERATED --
+              cr_sccr_k_v := ((cr_sccr_k_v) or (cr_sccr_k_cmd(0))) and (not (cr_sccr_k_cmd(1)));
             end if;
             cr_sccr_k_read := (bit2vec(not (cr_sccr_k_r(ctxt)), 1)) & (bit2vec(cr_sccr_k_r(ctxt), 1));
             if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
@@ -1248,9 +1250,9 @@ begin -- architecture
                 cr_sccr_k_v := cr_ccr_k_r(ctxt);
               end if;
             end if;
-            cr_sccr_k_r(ctxt) <= cr_sccr_k_v;
+            cr_sccr_k_r(ctxt) <= cr_sccr_k_v;                                                        -- GENERATED --
             cr_sccr_c_write := bus_writeData((6)+1 downto 6);
-            cr_sccr_c_wmask := ((bus_writeMaskDbg((6)+1 downto 6)) or (bus_writeMaskCore((6)+1 downto 6))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(1, 31))))); -- GENERATED --
+            cr_sccr_c_wmask := ((bus_writeMaskDbg((6)+1 downto 6)) or (bus_writeMaskCore((6)+1 downto 6))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(1, 31)))));
             cr_sccr_c_v := bool2bit(int2bool(0));
             cr_sccr_c_cmd := std_logic_vector(to_unsigned(0, 2));
             cr_sccr_c_v := cr_sccr_c_r(ctxt);
@@ -1258,9 +1260,9 @@ begin -- architecture
             if ((unsigned(cr_sccr_c_cmd)) = (unsigned(bitvec_lit("11")))) then
               cr_sccr_c_v := not (cr_sccr_c_v);
             else
-              cr_sccr_c_v := ((cr_sccr_c_v) or (cr_sccr_c_cmd(0))) and (not (cr_sccr_c_cmd(1)));
+              cr_sccr_c_v := ((cr_sccr_c_v) or (cr_sccr_c_cmd(0))) and (not (cr_sccr_c_cmd(1)));     -- GENERATED --
             end if;
-            cr_sccr_c_read := (bit2vec(not (cr_sccr_c_r(ctxt)), 1)) & (bit2vec(cr_sccr_c_r(ctxt), 1)); -- GENERATED --
+            cr_sccr_c_read := (bit2vec(not (cr_sccr_c_r(ctxt)), 1)) & (bit2vec(cr_sccr_c_r(ctxt), 1));
             if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
               if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then
                 cr_sccr_c_v := cr_ccr_c_r(ctxt);
@@ -1268,9 +1270,9 @@ begin -- architecture
             end if;
             cr_sccr_c_r(ctxt) <= cr_sccr_c_v;
             cr_sccr_b_write := bus_writeData((4)+1 downto 4);
-            cr_sccr_b_wmask := ((bus_writeMaskDbg((4)+1 downto 4)) or (bus_writeMaskCore((4)+1 downto 4))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(1, 31)))));
+            cr_sccr_b_wmask := ((bus_writeMaskDbg((4)+1 downto 4)) or (bus_writeMaskCore((4)+1 downto 4))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(1, 31))))); -- GENERATED --
             cr_sccr_b_v := bool2bit(int2bool(0));
-            cr_sccr_b_cmd := std_logic_vector(to_unsigned(0, 2));                                    -- GENERATED --
+            cr_sccr_b_cmd := std_logic_vector(to_unsigned(0, 2));
             cr_sccr_b_v := cr_sccr_b_r(ctxt);
             cr_sccr_b_cmd := (cr_sccr_b_wmask) and (cr_sccr_b_write);
             if ((unsigned(cr_sccr_b_cmd)) = (unsigned(bitvec_lit("11")))) then
@@ -1278,9 +1280,9 @@ begin -- architecture
             else
               cr_sccr_b_v := ((cr_sccr_b_v) or (cr_sccr_b_cmd(0))) and (not (cr_sccr_b_cmd(1)));
             end if;
-            cr_sccr_b_read := (bit2vec(not (cr_sccr_b_r(ctxt)), 1)) & (bit2vec(cr_sccr_b_r(ctxt), 1));
+            cr_sccr_b_read := (bit2vec(not (cr_sccr_b_r(ctxt)), 1)) & (bit2vec(cr_sccr_b_r(ctxt), 1)); -- GENERATED --
             if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
-              if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then                                 -- GENERATED --
+              if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then
                 cr_sccr_b_v := cr_ccr_b_r(ctxt);
               end if;
             end if;
@@ -1288,9 +1290,9 @@ begin -- architecture
             cr_sccr_r_write := bus_writeData((2)+1 downto 2);
             cr_sccr_r_wmask := ((bus_writeMaskDbg((2)+1 downto 2)) or (bus_writeMaskCore((2)+1 downto 2))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(1, 31)))));
             cr_sccr_r_v := bool2bit(int2bool(0));
-            cr_sccr_r_cmd := std_logic_vector(to_unsigned(0, 2));
+            cr_sccr_r_cmd := std_logic_vector(to_unsigned(0, 2));                                    -- GENERATED --
             cr_sccr_r_v := cr_sccr_r_r(ctxt);
-            cr_sccr_r_cmd := (cr_sccr_r_wmask) and (cr_sccr_r_write);                                -- GENERATED --
+            cr_sccr_r_cmd := (cr_sccr_r_wmask) and (cr_sccr_r_write);
             if ((unsigned(cr_sccr_r_cmd)) = (unsigned(bitvec_lit("11")))) then
               cr_sccr_r_v := not (cr_sccr_r_v);
             else
@@ -1298,9 +1300,9 @@ begin -- architecture
             end if;
             cr_sccr_r_read := (bit2vec(not (cr_sccr_r_r(ctxt)), 1)) & (bit2vec(cr_sccr_r_r(ctxt), 1));
             if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
-              if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then
+              if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then                                 -- GENERATED --
                 cr_sccr_r_v := cr_ccr_r_r(ctxt);
-              end if;                                                                                -- GENERATED --
+              end if;
             end if;
             cr_sccr_r_r(ctxt) <= cr_sccr_r_v;
             cr_sccr_i_write := bus_writeData((0)+1 downto 0);
@@ -1308,9 +1310,9 @@ begin -- architecture
             cr_sccr_i_v := bool2bit(int2bool(0));
             cr_sccr_i_cmd := std_logic_vector(to_unsigned(0, 2));
             cr_sccr_i_v := cr_sccr_i_r(ctxt);
-            cr_sccr_i_cmd := (cr_sccr_i_wmask) and (cr_sccr_i_write);
+            cr_sccr_i_cmd := (cr_sccr_i_wmask) and (cr_sccr_i_write);                                -- GENERATED --
             if ((unsigned(cr_sccr_i_cmd)) = (unsigned(bitvec_lit("11")))) then
-              cr_sccr_i_v := not (cr_sccr_i_v);                                                      -- GENERATED --
+              cr_sccr_i_v := not (cr_sccr_i_v);
             else
               cr_sccr_i_v := ((cr_sccr_i_v) or (cr_sccr_i_cmd(0))) and (not (cr_sccr_i_cmd(1)));
             end if;
@@ -1318,9 +1320,9 @@ begin -- architecture
             if (not (bit2bool(cxplif2cxreg_stall(ctxt)))) then
               if (bit2bool(cxplif2cxreg_trapInfo(ctxt).active)) then
                 cr_sccr_i_v := cr_ccr_i_r(ctxt);
-              end if;
+              end if;                                                                                -- GENERATED --
             end if;
-            cr_sccr_i_r(ctxt) <= cr_sccr_i_v;                                                        -- GENERATED --
+            cr_sccr_i_r(ctxt) <= cr_sccr_i_v;
             cr_lr_lr_write := bus_writeData((0)+31 downto 0);
             cr_lr_lr_wmask_dbg := (bus_writeMaskDbg((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(2, 31)))));
             cr_lr_lr_r(ctxt) <= ((cr_lr_lr_r(ctxt)) and (not (cr_lr_lr_wmask_dbg))) or ((cr_lr_lr_write) and (cr_lr_lr_wmask_dbg));
@@ -1328,9 +1330,9 @@ begin -- architecture
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool(cxplif2cxreg_linkWriteEnable(ctxt)))) then
               cr_lr_lr_r(ctxt) <= cxplif2cxreg_linkWriteData(ctxt);
             end if;
-            cr_pc_pc_write := bus_writeData((0)+31 downto 0);
+            cr_pc_pc_write := bus_writeData((0)+31 downto 0);                                        -- GENERATED --
             cr_pc_pc_wmask_dbg := (bus_writeMaskDbg((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(3, 31)))));
-            cr_pc_pc_v := std_logic_vector(to_unsigned(0, 32));                                      -- GENERATED --
+            cr_pc_pc_v := std_logic_vector(to_unsigned(0, 32));
             cr_pc_pc_v := cr_pc_pc_r(ctxt);
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (not (bit2bool(cr_dcr_j_r(ctxt))))) then
               cr_pc_pc_v := cxplif2cxreg_nextPC(ctxt);
@@ -1338,9 +1340,9 @@ begin -- architecture
             cr_pc_pc_v := ((cr_pc_pc_v) and (not (cr_pc_pc_wmask_dbg))) or ((cr_pc_pc_write) and (cr_pc_pc_wmask_dbg));
             if (bit2bool(cr_pc_pc_wmask_dbg(0))) then
               cr_dcr_j_r(ctxt) <= '1';
-            end if;
+            end if;                                                                                  -- GENERATED --
             cr_pc_pc_r(ctxt) <= cr_pc_pc_v;
-            cr_pc_pc_read := cr_pc_pc_r(ctxt);                                                       -- GENERATED --
+            cr_pc_pc_read := cr_pc_pc_r(ctxt);
             cr_th_th_write := bus_writeData((0)+31 downto 0);
             cr_th_th_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(4, 31)))));
             cr_th_th_r(ctxt) <= ((cr_th_th_r(ctxt)) and (not (cr_th_th_wmask))) or ((cr_th_th_write) and (cr_th_th_wmask));
@@ -1348,9 +1350,9 @@ begin -- architecture
             cr_ph_ph_write := bus_writeData((0)+31 downto 0);
             cr_ph_ph_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(5, 31)))));
             cr_ph_ph_r(ctxt) <= ((cr_ph_ph_r(ctxt)) and (not (cr_ph_ph_wmask))) or ((cr_ph_ph_write) and (cr_ph_ph_wmask));
-            cr_ph_ph_read := cr_ph_ph_r(ctxt);
+            cr_ph_ph_read := cr_ph_ph_r(ctxt);                                                       -- GENERATED --
             cr_tp_tp_write := bus_writeData((0)+31 downto 0);
-            cr_tp_tp_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(6, 31))))); -- GENERATED --
+            cr_tp_tp_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(6, 31)))));
             cr_tp_tp_r(ctxt) <= ((cr_tp_tp_r(ctxt)) and (not (cr_tp_tp_wmask))) or ((cr_tp_tp_write) and (cr_tp_tp_wmask));
             cr_tp_tp_read := cr_tp_tp_r(ctxt);
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool(cxplif2cxreg_trapInfo(ctxt).active))) then
@@ -1358,9 +1360,9 @@ begin -- architecture
             end if;
             cr_ta_ta_write := bus_writeData((0)+31 downto 0);
             cr_ta_ta_wmask_dbg := (bus_writeMaskDbg((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(7, 31)))));
-            cr_ta_ta_r(ctxt) <= ((cr_ta_ta_r(ctxt)) and (not (cr_ta_ta_wmask_dbg))) or ((cr_ta_ta_write) and (cr_ta_ta_wmask_dbg));
+            cr_ta_ta_r(ctxt) <= ((cr_ta_ta_r(ctxt)) and (not (cr_ta_ta_wmask_dbg))) or ((cr_ta_ta_write) and (cr_ta_ta_wmask_dbg)); -- GENERATED --
             cr_ta_ta_read := cr_ta_ta_r(ctxt);
-            if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool(cxplif2cxreg_trapInfo(ctxt).active))) then -- GENERATED --
+            if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool(cxplif2cxreg_trapInfo(ctxt).active))) then
               cr_ta_ta_r(ctxt) <= cxplif2cxreg_trapInfo(ctxt).arg;
             end if;
             cr_br0_br0_write := bus_writeData((0)+31 downto 0);
@@ -1368,9 +1370,9 @@ begin -- architecture
             cr_br0_br0_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(8, 31)))));
             cr_br0_br0_mask := std_logic_vector(to_unsigned(0, 32));
             if ((CFG.numBreakpoints) > (0)) then
-              if (bit2bool(cr_dcr_e_r(ctxt))) then
+              if (bit2bool(cr_dcr_e_r(ctxt))) then                                                   -- GENERATED --
                 cr_br0_br0_mask := cr_br0_br0_wmask_dbg;
-              else                                                                                   -- GENERATED --
+              else
                 cr_br0_br0_mask := cr_br0_br0_wmask;
               end if;
               cr_br0_br0_r(ctxt) <= ((cr_br0_br0_r(ctxt)) and (not (cr_br0_br0_mask))) or ((cr_br0_br0_write) and (cr_br0_br0_mask));
@@ -1378,9 +1380,9 @@ begin -- architecture
               cxreg2cxplif_breakpoints(ctxt).addr(0) <= cr_br0_br0_r(ctxt);
             end if;
             cr_br1_br1_write := bus_writeData((0)+31 downto 0);
-            cr_br1_br1_wmask_dbg := (bus_writeMaskDbg((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(9, 31)))));
+            cr_br1_br1_wmask_dbg := (bus_writeMaskDbg((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(9, 31))))); -- GENERATED --
             cr_br1_br1_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(9, 31)))));
-            cr_br1_br1_mask := std_logic_vector(to_unsigned(0, 32));                                 -- GENERATED --
+            cr_br1_br1_mask := std_logic_vector(to_unsigned(0, 32));
             if ((CFG.numBreakpoints) > (1)) then
               if (bit2bool(cr_dcr_e_r(ctxt))) then
                 cr_br1_br1_mask := cr_br1_br1_wmask_dbg;
@@ -1388,9 +1390,9 @@ begin -- architecture
                 cr_br1_br1_mask := cr_br1_br1_wmask;
               end if;
               cr_br1_br1_r(ctxt) <= ((cr_br1_br1_r(ctxt)) and (not (cr_br1_br1_mask))) or ((cr_br1_br1_write) and (cr_br1_br1_mask));
-              cr_br1_br1_read := cr_br1_br1_r(ctxt);
+              cr_br1_br1_read := cr_br1_br1_r(ctxt);                                                 -- GENERATED --
               cxreg2cxplif_breakpoints(ctxt).addr(1) <= cr_br1_br1_r(ctxt);
-            end if;                                                                                  -- GENERATED --
+            end if;
             cr_br2_br2_write := bus_writeData((0)+31 downto 0);
             cr_br2_br2_wmask_dbg := (bus_writeMaskDbg((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(10, 31)))));
             cr_br2_br2_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(10, 31)))));
@@ -1398,9 +1400,9 @@ begin -- architecture
             if ((CFG.numBreakpoints) > (2)) then
               if (bit2bool(cr_dcr_e_r(ctxt))) then
                 cr_br2_br2_mask := cr_br2_br2_wmask_dbg;
-              else
+              else                                                                                   -- GENERATED --
                 cr_br2_br2_mask := cr_br2_br2_wmask;
-              end if;                                                                                -- GENERATED --
+              end if;
               cr_br2_br2_r(ctxt) <= ((cr_br2_br2_r(ctxt)) and (not (cr_br2_br2_mask))) or ((cr_br2_br2_write) and (cr_br2_br2_mask));
               cr_br2_br2_read := cr_br2_br2_r(ctxt);
               cxreg2cxplif_breakpoints(ctxt).addr(2) <= cr_br2_br2_r(ctxt);
@@ -1408,9 +1410,9 @@ begin -- architecture
             cr_br3_br3_write := bus_writeData((0)+31 downto 0);
             cr_br3_br3_wmask_dbg := (bus_writeMaskDbg((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(11, 31)))));
             cr_br3_br3_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(11, 31)))));
-            cr_br3_br3_mask := std_logic_vector(to_unsigned(0, 32));
+            cr_br3_br3_mask := std_logic_vector(to_unsigned(0, 32));                                 -- GENERATED --
             if ((CFG.numBreakpoints) > (3)) then
-              if (bit2bool(cr_dcr_e_r(ctxt))) then                                                   -- GENERATED --
+              if (bit2bool(cr_dcr_e_r(ctxt))) then
                 cr_br3_br3_mask := cr_br3_br3_wmask_dbg;
               else
                 cr_br3_br3_mask := cr_br3_br3_wmask;
@@ -1418,9 +1420,9 @@ begin -- architecture
               cr_br3_br3_r(ctxt) <= ((cr_br3_br3_r(ctxt)) and (not (cr_br3_br3_mask))) or ((cr_br3_br3_write) and (cr_br3_br3_mask));
               cr_br3_br3_read := cr_br3_br3_r(ctxt);
               cxreg2cxplif_breakpoints(ctxt).addr(3) <= cr_br3_br3_r(ctxt);
-            end if;
+            end if;                                                                                  -- GENERATED --
             cr_dcr_d_write := bus_writeData((31)+0 downto 31);
-            cr_dcr_d_wmask_dbg := (bus_writeMaskDbg((31)+0 downto 31)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31))))); -- GENERATED --
+            cr_dcr_d_wmask_dbg := (bus_writeMaskDbg((31)+0 downto 31)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
             cxreg2rv_reset(ctxt) <= vec2bit((cr_dcr_d_write) and (cr_dcr_d_wmask_dbg));
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool(cxplif2cxreg_stop(ctxt)))) then
               cr_dcr_d_r(ctxt) <= '1';
@@ -1428,9 +1430,9 @@ begin -- architecture
             cr_dcr_d_read := bit2vec(cr_dcr_d_r(ctxt), 1);
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool(cxplif2cxreg_overridePC_ack(ctxt)))) then
               cr_dcr_j_r(ctxt) <= '0';
-            end if;
+            end if;                                                                                  -- GENERATED --
             cr_dcr_j_read := bit2vec(cr_dcr_j_r(ctxt), 1);
-            cr_dcr_i_write := bus_writeData((28)+0 downto 28);                                       -- GENERATED --
+            cr_dcr_i_write := bus_writeData((28)+0 downto 28);
             cr_dcr_i_wmask_dbg := (bus_writeMaskDbg((28)+0 downto 28)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
             if (bit2bool(vec2bit((cr_dcr_i_write) and (cr_dcr_i_wmask_dbg)))) then
               cr_dcr_e_r(ctxt) <= '0';
@@ -1438,9 +1440,9 @@ begin -- architecture
             cr_dcr_i_read := bit2vec(not (cr_dcr_e_r(ctxt)), 1);
             cr_dcr_e_write := bus_writeData((27)+0 downto 27);
             cr_dcr_e_wmask_dbg := (bus_writeMaskDbg((27)+0 downto 27)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
-            if (bit2bool(vec2bit((cr_dcr_e_write) and (cr_dcr_e_wmask_dbg)))) then
+            if (bit2bool(vec2bit((cr_dcr_e_write) and (cr_dcr_e_wmask_dbg)))) then                   -- GENERATED --
               cr_dcr_e_r(ctxt) <= '1';
-            end if;                                                                                  -- GENERATED --
+            end if;
             cr_dcr_e_read := bit2vec(cr_dcr_e_r(ctxt), 1);
             cr_dcr_r_write := bus_writeData((26)+0 downto 26);
             cr_dcr_r_wmask_dbg := (bus_writeMaskDbg((26)+0 downto 26)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
@@ -1448,9 +1450,9 @@ begin -- architecture
               cr_dcr_r_r(ctxt) <= '1';
               cr_dcr_d_r(ctxt) <= '0';
               cr_dcr_b_r(ctxt) <= '0';
-            end if;
+            end if;                                                                                  -- GENERATED --
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool(cxplif2cxreg_resuming_ack(ctxt)))) then
-              cr_dcr_r_r(ctxt) <= '0';                                                               -- GENERATED --
+              cr_dcr_r_r(ctxt) <= '0';
             end if;
             cr_dcr_r_read := bit2vec(cr_dcr_r_r(ctxt), 1);
             cr_dcr_s_write := bus_writeData((25)+0 downto 25);
@@ -1458,9 +1460,9 @@ begin -- architecture
             cr_dcr_s_wmask_core := (bus_writeMaskCore((25)+0 downto 25)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
             if (bit2bool(vec2bit((cr_dcr_s_write) and (cr_dcr_s_wmask_dbg)))) then
               cr_dcr_s_r(ctxt) <= '1';
-              cr_dcr_r_r(ctxt) <= '1';
+              cr_dcr_r_r(ctxt) <= '1';                                                               -- GENERATED --
               cr_dcr_d_r(ctxt) <= '0';
-              cr_dcr_b_r(ctxt) <= '0';                                                               -- GENERATED --
+              cr_dcr_b_r(ctxt) <= '0';
             end if;
             if (bit2bool(vec2bit(((cr_dcr_s_write) and (cr_dcr_s_wmask_core)) and ((0 downto 0 => not (cr_dcr_e_r(ctxt))))))) then
               cr_dcr_s_r(ctxt) <= '1';
@@ -1468,9 +1470,9 @@ begin -- architecture
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool((((cxplif2cxreg_trapInfo(ctxt).active) and (cxplif2cxreg_trapIsDebug(ctxt))) or (cxplif2cxreg_exDbgTrapInfo(ctxt).active)) or (cxplif2cxreg_stop(ctxt))))) then
               cr_dcr_s_r(ctxt) <= '0';
             end if;
-            cr_dcr_s_read := bit2vec(cr_dcr_s_r(ctxt), 1);
+            cr_dcr_s_read := bit2vec(cr_dcr_s_r(ctxt), 1);                                           -- GENERATED --
             cr_dcr_b_write := bus_writeData((24)+0 downto 24);
-            cr_dcr_b_wmask_dbg := (bus_writeMaskDbg((24)+0 downto 24)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31))))); -- GENERATED --
+            cr_dcr_b_wmask_dbg := (bus_writeMaskDbg((24)+0 downto 24)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
             if (bit2bool(vec2bit((cr_dcr_b_write) and (cr_dcr_b_wmask_dbg)))) then
               cr_dcr_b_r(ctxt) <= '1';
               cr_dcr_s_r(ctxt) <= '0';
@@ -1478,9 +1480,9 @@ begin -- architecture
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool((cxplif2cxreg_exDbgTrapInfo(ctxt).active) or (cxplif2cxreg_stop(ctxt))))) then
               cr_dcr_b_r(ctxt) <= '1';
             end if;
-            cr_dcr_b_read := bit2vec(cr_dcr_b_r(ctxt), 1);
+            cr_dcr_b_read := bit2vec(cr_dcr_b_r(ctxt), 1);                                           -- GENERATED --
             cr_dcr_cause_write := bus_writeData((16)+7 downto 16);
-            cr_dcr_cause_wmask_dbg := (bus_writeMaskDbg((16)+7 downto 16)) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31))))); -- GENERATED --
+            cr_dcr_cause_wmask_dbg := (bus_writeMaskDbg((16)+7 downto 16)) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
             cr_dcr_cause_r(ctxt) <= ((cr_dcr_cause_r(ctxt)) and (not (cr_dcr_cause_wmask_dbg))) or ((cr_dcr_cause_write) and (cr_dcr_cause_wmask_dbg));
             if ((not (bit2bool(cxplif2cxreg_stall(ctxt)))) and (bit2bool(cxplif2cxreg_exDbgTrapInfo(ctxt).active))) then
               cr_dcr_cause_r(ctxt) <= cxplif2cxreg_exDbgTrapInfo(ctxt).cause;
@@ -1488,9 +1490,9 @@ begin -- architecture
             cr_dcr_cause_read := cr_dcr_cause_r(ctxt);
             cr_dcr_br3_write := bus_writeData((12)+1 downto 12);
             cr_dcr_br3_wmask_dbg := (bus_writeMaskDbg((12)+1 downto 12)) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
-            cr_dcr_br3_wmask := ((bus_writeMaskDbg((12)+1 downto 12)) or (bus_writeMaskCore((12)+1 downto 12))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
+            cr_dcr_br3_wmask := ((bus_writeMaskDbg((12)+1 downto 12)) or (bus_writeMaskCore((12)+1 downto 12))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31))))); -- GENERATED --
             cr_dcr_br3_mask := std_logic_vector(to_unsigned(0, 2));
-            cr_dcr_br3_v := std_logic_vector(to_unsigned(0, 2));                                     -- GENERATED --
+            cr_dcr_br3_v := std_logic_vector(to_unsigned(0, 2));
             if ((CFG.numBreakpoints) > (3)) then
               cr_dcr_br3_v := cr_dcr_br3_r(ctxt);
               if (bit2bool(cr_dcr_e_r(ctxt))) then
@@ -1498,9 +1500,9 @@ begin -- architecture
               else
                 cr_dcr_br3_mask := cr_dcr_br3_wmask;
               end if;
-              cr_dcr_br3_v := ((cr_dcr_br3_v) and (not (cr_dcr_br3_mask))) or ((cr_dcr_br3_write) and (cr_dcr_br3_mask));
+              cr_dcr_br3_v := ((cr_dcr_br3_v) and (not (cr_dcr_br3_mask))) or ((cr_dcr_br3_write) and (cr_dcr_br3_mask)); -- GENERATED --
               cr_dcr_br3_read := cr_dcr_br3_r(ctxt);
-              cxreg2cxplif_breakpoints(ctxt).cfg(3) <= cr_dcr_br3_r(ctxt);                           -- GENERATED --
+              cxreg2cxplif_breakpoints(ctxt).cfg(3) <= cr_dcr_br3_r(ctxt);
               cr_dcr_br3_r(ctxt) <= cr_dcr_br3_v;
             end if;
             cr_dcr_br2_write := bus_writeData((8)+1 downto 8);
@@ -1508,9 +1510,9 @@ begin -- architecture
             cr_dcr_br2_wmask := ((bus_writeMaskDbg((8)+1 downto 8)) or (bus_writeMaskCore((8)+1 downto 8))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
             cr_dcr_br2_mask := std_logic_vector(to_unsigned(0, 2));
             cr_dcr_br2_v := std_logic_vector(to_unsigned(0, 2));
-            if ((CFG.numBreakpoints) > (2)) then
+            if ((CFG.numBreakpoints) > (2)) then                                                     -- GENERATED --
               cr_dcr_br2_v := cr_dcr_br2_r(ctxt);
-              if (bit2bool(cr_dcr_e_r(ctxt))) then                                                   -- GENERATED --
+              if (bit2bool(cr_dcr_e_r(ctxt))) then
                 cr_dcr_br2_mask := cr_dcr_br2_wmask_dbg;
               else
                 cr_dcr_br2_mask := cr_dcr_br2_wmask;
@@ -1518,9 +1520,9 @@ begin -- architecture
               cr_dcr_br2_v := ((cr_dcr_br2_v) and (not (cr_dcr_br2_mask))) or ((cr_dcr_br2_write) and (cr_dcr_br2_mask));
               cr_dcr_br2_read := cr_dcr_br2_r(ctxt);
               cxreg2cxplif_breakpoints(ctxt).cfg(2) <= cr_dcr_br2_r(ctxt);
-              cr_dcr_br2_r(ctxt) <= cr_dcr_br2_v;
+              cr_dcr_br2_r(ctxt) <= cr_dcr_br2_v;                                                    -- GENERATED --
             end if;
-            cr_dcr_br1_write := bus_writeData((4)+1 downto 4);                                       -- GENERATED --
+            cr_dcr_br1_write := bus_writeData((4)+1 downto 4);
             cr_dcr_br1_wmask_dbg := (bus_writeMaskDbg((4)+1 downto 4)) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
             cr_dcr_br1_wmask := ((bus_writeMaskDbg((4)+1 downto 4)) or (bus_writeMaskCore((4)+1 downto 4))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
             cr_dcr_br1_mask := std_logic_vector(to_unsigned(0, 2));
@@ -1528,9 +1530,9 @@ begin -- architecture
             if ((CFG.numBreakpoints) > (1)) then
               cr_dcr_br1_v := cr_dcr_br1_r(ctxt);
               if (bit2bool(cr_dcr_e_r(ctxt))) then
-                cr_dcr_br1_mask := cr_dcr_br1_wmask_dbg;
+                cr_dcr_br1_mask := cr_dcr_br1_wmask_dbg;                                             -- GENERATED --
               else
-                cr_dcr_br1_mask := cr_dcr_br1_wmask;                                                 -- GENERATED --
+                cr_dcr_br1_mask := cr_dcr_br1_wmask;
               end if;
               cr_dcr_br1_v := ((cr_dcr_br1_v) and (not (cr_dcr_br1_mask))) or ((cr_dcr_br1_write) and (cr_dcr_br1_mask));
               cr_dcr_br1_read := cr_dcr_br1_r(ctxt);
@@ -1538,9 +1540,9 @@ begin -- architecture
               cr_dcr_br1_r(ctxt) <= cr_dcr_br1_v;
             end if;
             cr_dcr_br0_write := bus_writeData((0)+1 downto 0);
-            cr_dcr_br0_wmask_dbg := (bus_writeMaskDbg((0)+1 downto 0)) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
+            cr_dcr_br0_wmask_dbg := (bus_writeMaskDbg((0)+1 downto 0)) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31))))); -- GENERATED --
             cr_dcr_br0_wmask := ((bus_writeMaskDbg((0)+1 downto 0)) or (bus_writeMaskCore((0)+1 downto 0))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(12, 31)))));
-            cr_dcr_br0_mask := std_logic_vector(to_unsigned(0, 2));                                  -- GENERATED --
+            cr_dcr_br0_mask := std_logic_vector(to_unsigned(0, 2));
             cr_dcr_br0_v := std_logic_vector(to_unsigned(0, 2));
             if ((CFG.numBreakpoints) > (0)) then
               cr_dcr_br0_v := cr_dcr_br0_r(ctxt);
@@ -1548,9 +1550,9 @@ begin -- architecture
                 cr_dcr_br0_mask := cr_dcr_br0_wmask_dbg;
               else
                 cr_dcr_br0_mask := cr_dcr_br0_wmask;
-              end if;
+              end if;                                                                                -- GENERATED --
               cr_dcr_br0_v := ((cr_dcr_br0_v) and (not (cr_dcr_br0_mask))) or ((cr_dcr_br0_write) and (cr_dcr_br0_mask));
-              cr_dcr_br0_read := cr_dcr_br0_r(ctxt);                                                 -- GENERATED --
+              cr_dcr_br0_read := cr_dcr_br0_r(ctxt);
               cxreg2cxplif_breakpoints(ctxt).cfg(0) <= cr_dcr_br0_r(ctxt);
               cr_dcr_br0_r(ctxt) <= cr_dcr_br0_v;
             end if;
@@ -1558,9 +1560,9 @@ begin -- architecture
             cr_dcr2_result_wmask := ((bus_writeMaskDbg((24)+7 downto 24)) or (bus_writeMaskCore((24)+7 downto 24))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(13, 31)))));
             cr_dcr2_result_r(ctxt) <= ((cr_dcr2_result_r(ctxt)) and (not (cr_dcr2_result_wmask))) or ((cr_dcr2_result_write) and (cr_dcr2_result_wmask));
             cr_dcr2_result_read := cr_dcr2_result_r(ctxt);
-            if (CFG.traceEnable) then
+            if (CFG.traceEnable) then                                                                -- GENERATED --
               cr_dcr2_trcap_read := bitvec_lit("11111001");
-            else                                                                                     -- GENERATED --
+            else
               cr_dcr2_trcap_read := bitvec_lit("00000000");
             end if;
             cr_dcr2_t_write := bus_writeData((7)+0 downto 7);
@@ -1568,9 +1570,9 @@ begin -- architecture
             if (CFG.traceEnable) then
               cr_dcr2_t_r(ctxt) <= vec2bit(((not (cr_dcr2_t_wmask)) and ((0 downto 0 => cr_dcr2_t_r(ctxt)))) or ((cr_dcr2_t_write) and (cr_dcr2_t_wmask)));
               cr_dcr2_t_read := bit2vec(cr_dcr2_t_r(ctxt), 1);
-            else
+            else                                                                                     -- GENERATED --
               cr_dcr2_t_read := bit2vec('0', 1);
-            end if;                                                                                  -- GENERATED --
+            end if;
             cr_dcr2_m_write := bus_writeData((6)+0 downto 6);
             cr_dcr2_m_wmask := ((bus_writeMaskDbg((6)+0 downto 6)) or (bus_writeMaskCore((6)+0 downto 6))) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(13, 31)))));
             if (CFG.traceEnable) then
@@ -1578,9 +1580,9 @@ begin -- architecture
               cr_dcr2_m_read := bit2vec(cr_dcr2_m_r(ctxt), 1);
             else
               cr_dcr2_m_read := bit2vec('0', 1);
-            end if;
+            end if;                                                                                  -- GENERATED --
             cr_dcr2_r_write := bus_writeData((5)+0 downto 5);
-            cr_dcr2_r_wmask := ((bus_writeMaskDbg((5)+0 downto 5)) or (bus_writeMaskCore((5)+0 downto 5))) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(13, 31))))); -- GENERATED --
+            cr_dcr2_r_wmask := ((bus_writeMaskDbg((5)+0 downto 5)) or (bus_writeMaskCore((5)+0 downto 5))) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(13, 31)))));
             if (CFG.traceEnable) then
               cr_dcr2_r_r(ctxt) <= vec2bit(((not (cr_dcr2_r_wmask)) and ((0 downto 0 => cr_dcr2_r_r(ctxt)))) or ((cr_dcr2_r_write) and (cr_dcr2_r_wmask)));
               cr_dcr2_r_read := bit2vec(cr_dcr2_r_r(ctxt), 1);
@@ -1588,9 +1590,9 @@ begin -- architecture
               cr_dcr2_r_read := bit2vec('0', 1);
             end if;
             cr_dcr2_c_write := bus_writeData((4)+0 downto 4);
-            cr_dcr2_c_wmask := ((bus_writeMaskDbg((4)+0 downto 4)) or (bus_writeMaskCore((4)+0 downto 4))) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(13, 31)))));
+            cr_dcr2_c_wmask := ((bus_writeMaskDbg((4)+0 downto 4)) or (bus_writeMaskCore((4)+0 downto 4))) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(13, 31))))); -- GENERATED --
             if (CFG.traceEnable) then
-              cr_dcr2_c_r(ctxt) <= vec2bit(((not (cr_dcr2_c_wmask)) and ((0 downto 0 => cr_dcr2_c_r(ctxt)))) or ((cr_dcr2_c_write) and (cr_dcr2_c_wmask))); -- GENERATED --
+              cr_dcr2_c_r(ctxt) <= vec2bit(((not (cr_dcr2_c_wmask)) and ((0 downto 0 => cr_dcr2_c_r(ctxt)))) or ((cr_dcr2_c_write) and (cr_dcr2_c_wmask)));
               cr_dcr2_c_read := bit2vec(cr_dcr2_c_r(ctxt), 1);
             else
               cr_dcr2_c_read := bit2vec('0', 1);
@@ -1598,9 +1600,9 @@ begin -- architecture
             cr_dcr2_i_write := bus_writeData((3)+0 downto 3);
             cr_dcr2_i_wmask := ((bus_writeMaskDbg((3)+0 downto 3)) or (bus_writeMaskCore((3)+0 downto 3))) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(13, 31)))));
             if (CFG.traceEnable) then
-              cr_dcr2_i_r(ctxt) <= vec2bit(((not (cr_dcr2_i_wmask)) and ((0 downto 0 => cr_dcr2_i_r(ctxt)))) or ((cr_dcr2_i_write) and (cr_dcr2_i_wmask)));
+              cr_dcr2_i_r(ctxt) <= vec2bit(((not (cr_dcr2_i_wmask)) and ((0 downto 0 => cr_dcr2_i_r(ctxt)))) or ((cr_dcr2_i_write) and (cr_dcr2_i_wmask))); -- GENERATED --
               cr_dcr2_i_read := bit2vec(cr_dcr2_i_r(ctxt), 1);
-            else                                                                                     -- GENERATED --
+            else
               cr_dcr2_i_read := bit2vec('0', 1);
             end if;
             cr_dcr2_e_write := bus_writeData((0)+0 downto 0);
@@ -1608,9 +1610,9 @@ begin -- architecture
             if (CFG.traceEnable) then
               cr_dcr2_e_r(ctxt) <= vec2bit(((not (cr_dcr2_e_wmask)) and ((0 downto 0 => cr_dcr2_e_r(ctxt)))) or ((cr_dcr2_e_write) and (cr_dcr2_e_wmask)));
               cr_dcr2_e_read := bit2vec(cr_dcr2_e_r(ctxt), 1);
-            else
+            else                                                                                     -- GENERATED --
               cr_dcr2_e_read := bit2vec('0', 1);
-            end if;                                                                                  -- GENERATED --
+            end if;
             cr_crr_crr_write := bus_writeData((0)+31 downto 0);
             cr_crr_crr_wmask_core := (bus_writeMaskCore((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(16, 31)))));
             cr_crr_crr_r(ctxt) <= ((cr_crr_crr_r(ctxt)) and (not (cr_crr_crr_wmask_core))) or ((cr_crr_crr_write) and (cr_crr_crr_wmask_core));
@@ -1618,9 +1620,9 @@ begin -- architecture
             cxreg2cfg_requestEnable(ctxt) <= cr_crr_crr_wmask_core(0);
             cr_wcfg_wcfg_write := bus_writeData((0)+31 downto 0);
             cr_wcfg_wcfg_wmask_core := (bus_writeMaskCore((0)+31 downto 0)) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(18, 31)))));
-            if ((ctxt) = (0)) then
+            if ((ctxt) = (0)) then                                                                   -- GENERATED --
               cr_wcfg_wcfg_r(ctxt) <= ((cr_wcfg_wcfg_r(ctxt)) and (not (cr_wcfg_wcfg_wmask_core))) or ((cr_wcfg_wcfg_write) and (cr_wcfg_wcfg_wmask_core));
-              cr_wcfg_wcfg_read := cr_wcfg_wcfg_r(ctxt);                                             -- GENERATED --
+              cr_wcfg_wcfg_read := cr_wcfg_wcfg_r(ctxt);
               if (bit2bool(cr_wcfg_wcfg_wmask_core(0))) then
                 cr_sawc_s_r(ctxt) <= '1';
               end if;
@@ -1628,9 +1630,9 @@ begin -- architecture
                 cr_wcfg_wcfg_r(ctxt) <= cfg2cxreg_currentConfig;
               end if;
             end if;
-            cr_sawc_run_write := bus_writeData((1)+6 downto 1);
+            cr_sawc_run_write := bus_writeData((1)+6 downto 1);                                      -- GENERATED --
             cr_sawc_run_wmask := ((bus_writeMaskDbg((1)+6 downto 1)) or (bus_writeMaskCore((1)+6 downto 1))) and ((6 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(19, 31)))));
-            if ((ctxt) = (0)) then                                                                   -- GENERATED --
+            if ((ctxt) = (0)) then
               if ((CFG.numContextsLog2) >= (1)) then
                 if (bit2bool((cr_sawc_run_write(0)) and (cr_sawc_run_wmask(0)))) then
                   cr_dcr_d_r(1 mod 2**CFG.numContextsLog2) <= '0';
@@ -1638,9 +1640,9 @@ begin -- architecture
                   cr_dcr_r_r(1 mod 2**CFG.numContextsLog2) <= '1';
                 end if;
                 cr_sawc_run_read(0) := not (cr_dcr_b_r(1 mod 2**CFG.numContextsLog2));
-              end if;
+              end if;                                                                                -- GENERATED --
               if ((CFG.numContextsLog2) >= (2)) then
-                if (bit2bool((cr_sawc_run_write(1)) and (cr_sawc_run_wmask(1)))) then                -- GENERATED --
+                if (bit2bool((cr_sawc_run_write(1)) and (cr_sawc_run_wmask(1)))) then
                   cr_dcr_d_r(2 mod 2**CFG.numContextsLog2) <= '0';
                   cr_dcr_b_r(2 mod 2**CFG.numContextsLog2) <= '0';
                   cr_dcr_r_r(2 mod 2**CFG.numContextsLog2) <= '1';
@@ -1648,9 +1650,9 @@ begin -- architecture
                 cr_sawc_run_read(1) := not (cr_dcr_b_r(2 mod 2**CFG.numContextsLog2));
                 if (bit2bool((cr_sawc_run_write(2)) and (cr_sawc_run_wmask(2)))) then
                   cr_dcr_d_r(3 mod 2**CFG.numContextsLog2) <= '0';
-                  cr_dcr_b_r(3 mod 2**CFG.numContextsLog2) <= '0';
+                  cr_dcr_b_r(3 mod 2**CFG.numContextsLog2) <= '0';                                   -- GENERATED --
                   cr_dcr_r_r(3 mod 2**CFG.numContextsLog2) <= '1';
-                end if;                                                                              -- GENERATED --
+                end if;
                 cr_sawc_run_read(2) := not (cr_dcr_b_r(3 mod 2**CFG.numContextsLog2));
               end if;
               if ((CFG.numContextsLog2) >= (3)) then
@@ -1658,9 +1660,9 @@ begin -- architecture
                   cr_dcr_d_r(4 mod 2**CFG.numContextsLog2) <= '0';
                   cr_dcr_b_r(4 mod 2**CFG.numContextsLog2) <= '0';
                   cr_dcr_r_r(4 mod 2**CFG.numContextsLog2) <= '1';
-                end if;
+                end if;                                                                              -- GENERATED --
                 cr_sawc_run_read(3) := not (cr_dcr_b_r(4 mod 2**CFG.numContextsLog2));
-                if (bit2bool((cr_sawc_run_write(4)) and (cr_sawc_run_wmask(4)))) then                -- GENERATED --
+                if (bit2bool((cr_sawc_run_write(4)) and (cr_sawc_run_wmask(4)))) then
                   cr_dcr_d_r(5 mod 2**CFG.numContextsLog2) <= '0';
                   cr_dcr_b_r(5 mod 2**CFG.numContextsLog2) <= '0';
                   cr_dcr_r_r(5 mod 2**CFG.numContextsLog2) <= '1';
@@ -1668,9 +1670,9 @@ begin -- architecture
                 cr_sawc_run_read(4) := not (cr_dcr_b_r(5 mod 2**CFG.numContextsLog2));
                 if (bit2bool((cr_sawc_run_write(5)) and (cr_sawc_run_wmask(5)))) then
                   cr_dcr_d_r(6 mod 2**CFG.numContextsLog2) <= '0';
-                  cr_dcr_b_r(6 mod 2**CFG.numContextsLog2) <= '0';
+                  cr_dcr_b_r(6 mod 2**CFG.numContextsLog2) <= '0';                                   -- GENERATED --
                   cr_dcr_r_r(6 mod 2**CFG.numContextsLog2) <= '1';
-                end if;                                                                              -- GENERATED --
+                end if;
                 cr_sawc_run_read(5) := not (cr_dcr_b_r(6 mod 2**CFG.numContextsLog2));
                 if (bit2bool((cr_sawc_run_write(6)) and (cr_sawc_run_wmask(6)))) then
                   cr_dcr_d_r(7 mod 2**CFG.numContextsLog2) <= '0';
@@ -1678,9 +1680,9 @@ begin -- architecture
                   cr_dcr_r_r(7 mod 2**CFG.numContextsLog2) <= '1';
                 end if;
                 cr_sawc_run_read(6) := not (cr_dcr_b_r(7 mod 2**CFG.numContextsLog2));
-              end if;
+              end if;                                                                                -- GENERATED --
             end if;
-            cr_sawc_s_write := bus_writeData((0)+0 downto 0);                                        -- GENERATED --
+            cr_sawc_s_write := bus_writeData((0)+0 downto 0);
             cr_sawc_s_wmask_core := (bus_writeMaskCore((0)+0 downto 0)) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(19, 31)))));
             if ((ctxt) = (0)) then
               cr_sawc_s_r(ctxt) <= vec2bit(((not (cr_sawc_s_wmask_core)) and ((0 downto 0 => cr_sawc_s_r(ctxt)))) or ((cr_sawc_s_write) and (cr_sawc_s_wmask_core)));
@@ -1688,9 +1690,9 @@ begin -- architecture
               if (bit2bool(cfg2cxreg_wakeupAck)) then
                 cr_sawc_s_r(ctxt) <= '0';
               end if;
-            end if;
+            end if;                                                                                  -- GENERATED --
             cr_scrp1_scrp1_write := bus_writeData((0)+31 downto 0);
-            cr_scrp1_scrp1_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(20, 31))))); -- GENERATED --
+            cr_scrp1_scrp1_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(20, 31)))));
             cr_scrp1_scrp1_r(ctxt) <= ((cr_scrp1_scrp1_r(ctxt)) and (not (cr_scrp1_scrp1_wmask))) or ((cr_scrp1_scrp1_write) and (cr_scrp1_scrp1_wmask));
             cr_scrp1_scrp1_read := cr_scrp1_scrp1_r(ctxt);
             cr_scrp2_scrp2_write := bus_writeData((0)+31 downto 0);
@@ -1698,89 +1700,108 @@ begin -- architecture
             cr_scrp2_scrp2_r(ctxt) <= ((cr_scrp2_scrp2_r(ctxt)) and (not (cr_scrp2_scrp2_wmask))) or ((cr_scrp2_scrp2_write) and (cr_scrp2_scrp2_wmask));
             cr_scrp2_scrp2_read := cr_scrp2_scrp2_r(ctxt);
             cr_scrp3_scrp3_write := bus_writeData((0)+31 downto 0);
-            cr_scrp3_scrp3_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(22, 31)))));
+            cr_scrp3_scrp3_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(22, 31))))); -- GENERATED --
             cr_scrp3_scrp3_r(ctxt) <= ((cr_scrp3_scrp3_r(ctxt)) and (not (cr_scrp3_scrp3_wmask))) or ((cr_scrp3_scrp3_write) and (cr_scrp3_scrp3_wmask));
-            cr_scrp3_scrp3_read := cr_scrp3_scrp3_r(ctxt);                                           -- GENERATED --
+            cr_scrp3_scrp3_read := cr_scrp3_scrp3_r(ctxt);
             cr_scrp4_scrp4_write := bus_writeData((0)+31 downto 0);
             cr_scrp4_scrp4_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(23, 31)))));
             cr_scrp4_scrp4_r(ctxt) <= ((cr_scrp4_scrp4_r(ctxt)) and (not (cr_scrp4_scrp4_wmask))) or ((cr_scrp4_scrp4_write) and (cr_scrp4_scrp4_wmask));
             cr_scrp4_scrp4_read := cr_scrp4_scrp4_r(ctxt);
+            cr_rsc_rsc_write := bus_writeData((0)+31 downto 0);
+            cr_rsc_rsc_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(24, 31)))));
             if ((ctxt) /= (0)) then
+              if (bit2bool(vec2bit(cr_rsc_rsc_wmask))) then                                          -- GENERATED --
+                cr_rsc_rsc_r(ctxt) <= ((cr_rsc_rsc_r(ctxt)) and (not (cr_rsc_rsc_wmask))) or ((cr_rsc_rsc_write) and (cr_rsc_rsc_wmask));
+              end if;
               cr_rsc_rsc_read := cr_rsc_rsc_r(ctxt);
             end if;
             cr_csc_csc_write := bus_writeData((0)+31 downto 0);
             cr_csc_csc_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(25, 31)))));
-            if ((ctxt) /= (0)) then                                                                  -- GENERATED --
+            if ((ctxt) /= (0)) then
               cr_csc_csc_r(ctxt) <= ((cr_csc_csc_r(ctxt)) and (not (cr_csc_csc_wmask))) or ((cr_csc_csc_write) and (cr_csc_csc_wmask));
               cr_csc_csc_read := cr_csc_csc_r(ctxt);
-              cr_csc_csc_neq(ctxt) <= bool2bit((unsigned(cr_csc_csc_r(ctxt))) /= (unsigned(cr_rsc_rsc_r(ctxt))));
+              cr_csc_csc_neq(ctxt) <= bool2bit((unsigned(cr_csc_csc_r(ctxt))) /= (unsigned(cr_rsc_rsc_r(ctxt)))); -- GENERATED --
             end if;
             cr_rsc1_rsc1_write := bus_writeData((0)+31 downto 0);
             cr_rsc1_rsc1_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(26, 31)))));
             if (((ctxt) = (0)) and ((1) < ((1) * 2**(CFG.numContextsLog2)))) then
-              cr_rsc_rsc_r(1 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(1 mod 2**CFG.numContextsLog2)) and (not (cr_rsc1_rsc1_wmask))) or ((cr_rsc1_rsc1_write) and (cr_rsc1_rsc1_wmask));
+              if (bit2bool(vec2bit(cr_rsc1_rsc1_wmask))) then
+                cr_rsc_rsc_r(1 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(1 mod 2**CFG.numContextsLog2)) and (not (cr_rsc1_rsc1_wmask))) or ((cr_rsc1_rsc1_write) and (cr_rsc1_rsc1_wmask));
+              end if;
               cr_rsc1_rsc1_read := cr_rsc_rsc_r(1 mod 2**CFG.numContextsLog2);
-            end if;                                                                                  -- GENERATED --
-            if (((ctxt) = (0)) and ((1) < ((1) * 2**(CFG.numContextsLog2)))) then
+            end if;
+            if (((ctxt) = (0)) and ((1) < ((1) * 2**(CFG.numContextsLog2)))) then                    -- GENERATED --
               cr_csc1_csc1_read := cr_csc_csc_r(1 mod 2**CFG.numContextsLog2);
             end if;
             cr_rsc2_rsc2_write := bus_writeData((0)+31 downto 0);
             cr_rsc2_rsc2_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(28, 31)))));
             if (((ctxt) = (0)) and ((2) < ((1) * 2**(CFG.numContextsLog2)))) then
-              cr_rsc_rsc_r(2 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(2 mod 2**CFG.numContextsLog2)) and (not (cr_rsc2_rsc2_wmask))) or ((cr_rsc2_rsc2_write) and (cr_rsc2_rsc2_wmask));
+              if (bit2bool(vec2bit(cr_rsc2_rsc2_wmask))) then
+                cr_rsc_rsc_r(2 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(2 mod 2**CFG.numContextsLog2)) and (not (cr_rsc2_rsc2_wmask))) or ((cr_rsc2_rsc2_write) and (cr_rsc2_rsc2_wmask));
+              end if;
               cr_rsc2_rsc2_read := cr_rsc_rsc_r(2 mod 2**CFG.numContextsLog2);
-            end if;
-            if (((ctxt) = (0)) and ((2) < ((1) * 2**(CFG.numContextsLog2)))) then                    -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (((ctxt) = (0)) and ((2) < ((1) * 2**(CFG.numContextsLog2)))) then
               cr_csc2_csc2_read := cr_csc_csc_r(2 mod 2**CFG.numContextsLog2);
             end if;
             cr_rsc3_rsc3_write := bus_writeData((0)+31 downto 0);
             cr_rsc3_rsc3_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(30, 31)))));
             if (((ctxt) = (0)) and ((3) < ((1) * 2**(CFG.numContextsLog2)))) then
-              cr_rsc_rsc_r(3 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(3 mod 2**CFG.numContextsLog2)) and (not (cr_rsc3_rsc3_wmask))) or ((cr_rsc3_rsc3_write) and (cr_rsc3_rsc3_wmask));
-              cr_rsc3_rsc3_read := cr_rsc_rsc_r(3 mod 2**CFG.numContextsLog2);
+              if (bit2bool(vec2bit(cr_rsc3_rsc3_wmask))) then
+                cr_rsc_rsc_r(3 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(3 mod 2**CFG.numContextsLog2)) and (not (cr_rsc3_rsc3_wmask))) or ((cr_rsc3_rsc3_write) and (cr_rsc3_rsc3_wmask));
+              end if;
+              cr_rsc3_rsc3_read := cr_rsc_rsc_r(3 mod 2**CFG.numContextsLog2);                       -- GENERATED --
             end if;
             if (((ctxt) = (0)) and ((3) < ((1) * 2**(CFG.numContextsLog2)))) then
-              cr_csc3_csc3_read := cr_csc_csc_r(3 mod 2**CFG.numContextsLog2);                       -- GENERATED --
+              cr_csc3_csc3_read := cr_csc_csc_r(3 mod 2**CFG.numContextsLog2);
             end if;
             cr_rsc4_rsc4_write := bus_writeData((0)+31 downto 0);
             cr_rsc4_rsc4_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(32, 31)))));
             if (((ctxt) = (0)) and ((4) < ((1) * 2**(CFG.numContextsLog2)))) then
-              cr_rsc_rsc_r(4 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(4 mod 2**CFG.numContextsLog2)) and (not (cr_rsc4_rsc4_wmask))) or ((cr_rsc4_rsc4_write) and (cr_rsc4_rsc4_wmask));
+              if (bit2bool(vec2bit(cr_rsc4_rsc4_wmask))) then
+                cr_rsc_rsc_r(4 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(4 mod 2**CFG.numContextsLog2)) and (not (cr_rsc4_rsc4_wmask))) or ((cr_rsc4_rsc4_write) and (cr_rsc4_rsc4_wmask));
+              end if;                                                                                -- GENERATED --
               cr_rsc4_rsc4_read := cr_rsc_rsc_r(4 mod 2**CFG.numContextsLog2);
             end if;
             if (((ctxt) = (0)) and ((4) < ((1) * 2**(CFG.numContextsLog2)))) then
               cr_csc4_csc4_read := cr_csc_csc_r(4 mod 2**CFG.numContextsLog2);
-            end if;                                                                                  -- GENERATED --
+            end if;
             cr_rsc5_rsc5_write := bus_writeData((0)+31 downto 0);
             cr_rsc5_rsc5_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(34, 31)))));
             if (((ctxt) = (0)) and ((5) < ((1) * 2**(CFG.numContextsLog2)))) then
-              cr_rsc_rsc_r(5 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(5 mod 2**CFG.numContextsLog2)) and (not (cr_rsc5_rsc5_wmask))) or ((cr_rsc5_rsc5_write) and (cr_rsc5_rsc5_wmask));
+              if (bit2bool(vec2bit(cr_rsc5_rsc5_wmask))) then
+                cr_rsc_rsc_r(5 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(5 mod 2**CFG.numContextsLog2)) and (not (cr_rsc5_rsc5_wmask))) or ((cr_rsc5_rsc5_write) and (cr_rsc5_rsc5_wmask)); -- GENERATED --
+              end if;
               cr_rsc5_rsc5_read := cr_rsc_rsc_r(5 mod 2**CFG.numContextsLog2);
             end if;
             if (((ctxt) = (0)) and ((5) < ((1) * 2**(CFG.numContextsLog2)))) then
               cr_csc5_csc5_read := cr_csc_csc_r(5 mod 2**CFG.numContextsLog2);
             end if;
-            cr_rsc6_rsc6_write := bus_writeData((0)+31 downto 0);                                    -- GENERATED --
+            cr_rsc6_rsc6_write := bus_writeData((0)+31 downto 0);
             cr_rsc6_rsc6_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(36, 31)))));
             if (((ctxt) = (0)) and ((6) < ((1) * 2**(CFG.numContextsLog2)))) then
-              cr_rsc_rsc_r(6 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(6 mod 2**CFG.numContextsLog2)) and (not (cr_rsc6_rsc6_wmask))) or ((cr_rsc6_rsc6_write) and (cr_rsc6_rsc6_wmask));
+              if (bit2bool(vec2bit(cr_rsc6_rsc6_wmask))) then                                        -- GENERATED --
+                cr_rsc_rsc_r(6 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(6 mod 2**CFG.numContextsLog2)) and (not (cr_rsc6_rsc6_wmask))) or ((cr_rsc6_rsc6_write) and (cr_rsc6_rsc6_wmask));
+              end if;
               cr_rsc6_rsc6_read := cr_rsc_rsc_r(6 mod 2**CFG.numContextsLog2);
             end if;
             if (((ctxt) = (0)) and ((6) < ((1) * 2**(CFG.numContextsLog2)))) then
               cr_csc6_csc6_read := cr_csc_csc_r(6 mod 2**CFG.numContextsLog2);
             end if;
             cr_rsc7_rsc7_write := bus_writeData((0)+31 downto 0);
-            cr_rsc7_rsc7_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(38, 31))))); -- GENERATED --
-            if (((ctxt) = (0)) and ((7) < ((1) * 2**(CFG.numContextsLog2)))) then
-              cr_rsc_rsc_r(7 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(7 mod 2**CFG.numContextsLog2)) and (not (cr_rsc7_rsc7_wmask))) or ((cr_rsc7_rsc7_write) and (cr_rsc7_rsc7_wmask));
+            cr_rsc7_rsc7_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(38, 31)))));
+            if (((ctxt) = (0)) and ((7) < ((1) * 2**(CFG.numContextsLog2)))) then                    -- GENERATED --
+              if (bit2bool(vec2bit(cr_rsc7_rsc7_wmask))) then
+                cr_rsc_rsc_r(7 mod 2**CFG.numContextsLog2) <= ((cr_rsc_rsc_r(7 mod 2**CFG.numContextsLog2)) and (not (cr_rsc7_rsc7_wmask))) or ((cr_rsc7_rsc7_write) and (cr_rsc7_rsc7_wmask));
+              end if;
               cr_rsc7_rsc7_read := cr_rsc_rsc_r(7 mod 2**CFG.numContextsLog2);
             end if;
             if (((ctxt) = (0)) and ((7) < ((1) * 2**(CFG.numContextsLog2)))) then
               cr_csc7_csc7_read := cr_csc_csc_r(7 mod 2**CFG.numContextsLog2);
             end if;
             if ((CFG.perfCountSize) >= (4)) then
-              cr_cyc_cyc3_read := cr_cyc_cyc0_r(ctxt)((24)+7 downto 24);
-            end if;                                                                                  -- GENERATED --
+              cr_cyc_cyc3_read := cr_cyc_cyc0_r(ctxt)((24)+7 downto 24);                             -- GENERATED --
+            end if;
             if ((CFG.perfCountSize) >= (3)) then
               cr_cyc_cyc2_read := cr_cyc_cyc0_r(ctxt)((16)+7 downto 16);
             end if;
@@ -1789,8 +1810,8 @@ begin -- architecture
             end if;
             cr_cyc_cyc0_write := bus_writeData((0)+7 downto 0);
             cr_cyc_cyc0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(64, 31)))));
-            cr_cyc_cyc0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_cyc_cyc0_add := bit2vec(not (cxplif2cxreg_idle(ctxt)), 8);                            -- GENERATED --
+            cr_cyc_cyc0_add := std_logic_vector(to_unsigned(0, 8));                                  -- GENERATED --
+            cr_cyc_cyc0_add := bit2vec(not (cxplif2cxreg_idle(ctxt)), 8);
             cr_cyc_cyc0_add_r(ctxt) <= cr_cyc_cyc0_add;
             cr_cyc_cyc0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_cyc_cyc0_r(ctxt)), 57)) + (resize(unsigned(cr_cyc_cyc0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
@@ -1799,8 +1820,8 @@ begin -- architecture
             if (bit2bool(cr_cyc_cyc0_wmask(0))) then
               cr_cyc_cyc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_cyc_cyc0_write(0))) then
-                perf_count_clear := '1';
-              end if;                                                                                -- GENERATED --
+                perf_count_clear := '1';                                                             -- GENERATED --
+              end if;
             end if;
             if ((CFG.perfCountSize) >= (7)) then
               cr_cych_cyc6_read := cr_cyc_cyc0_r(ctxt)((48)+7 downto 48);
@@ -1809,8 +1830,8 @@ begin -- architecture
               cr_cych_cyc5_read := cr_cyc_cyc0_r(ctxt)((40)+7 downto 40);
             end if;
             if ((CFG.perfCountSize) >= (5)) then
-              cr_cych_cyc4_read := cr_cyc_cyc0_r(ctxt)((32)+7 downto 32);
-            end if;                                                                                  -- GENERATED --
+              cr_cych_cyc4_read := cr_cyc_cyc0_r(ctxt)((32)+7 downto 32);                            -- GENERATED --
+            end if;
             cr_cych_cyc3_write := bus_writeData((0)+7 downto 0);
             cr_cych_cyc3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(65, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
@@ -1819,8 +1840,8 @@ begin -- architecture
             if (bit2bool(cr_cych_cyc3_wmask(0))) then
               cr_cyc_cyc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_cych_cyc3_write(0))) then
-                perf_count_clear := '1';
-              end if;                                                                                -- GENERATED --
+                perf_count_clear := '1';                                                             -- GENERATED --
+              end if;
             end if;
             if ((CFG.perfCountSize) >= (4)) then
               cr_stall_stall3_read := cr_stall_stall0_r(ctxt)((24)+7 downto 24);
@@ -1829,8 +1850,8 @@ begin -- architecture
               cr_stall_stall2_read := cr_stall_stall0_r(ctxt)((16)+7 downto 16);
             end if;
             if ((CFG.perfCountSize) >= (2)) then
-              cr_stall_stall1_read := cr_stall_stall0_r(ctxt)((8)+7 downto 8);
-            end if;                                                                                  -- GENERATED --
+              cr_stall_stall1_read := cr_stall_stall0_r(ctxt)((8)+7 downto 8);                       -- GENERATED --
+            end if;
             cr_stall_stall0_write := bus_writeData((0)+7 downto 0);
             cr_stall_stall0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(66, 31)))));
             cr_stall_stall0_add := std_logic_vector(to_unsigned(0, 8));
@@ -1839,8 +1860,8 @@ begin -- architecture
             cr_stall_stall0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_stall_stall0_r(ctxt)), 57)) + (resize(unsigned(cr_stall_stall0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
               cr_stall_stall0_read := cr_stall_stall0_r(ctxt)((0)+7 downto 0);
-            end if;
-            if (bit2bool(cr_stall_stall0_wmask(0))) then                                             -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(cr_stall_stall0_wmask(0))) then
               cr_stall_stall0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_stall_stall0_write(0))) then
                 perf_count_clear := '1';
@@ -1849,8 +1870,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (7)) then
               cr_stallh_stall6_read := cr_stall_stall0_r(ctxt)((48)+7 downto 48);
             end if;
-            if ((CFG.perfCountSize) >= (6)) then
-              cr_stallh_stall5_read := cr_stall_stall0_r(ctxt)((40)+7 downto 40);                    -- GENERATED --
+            if ((CFG.perfCountSize) >= (6)) then                                                     -- GENERATED --
+              cr_stallh_stall5_read := cr_stall_stall0_r(ctxt)((40)+7 downto 40);
             end if;
             if ((CFG.perfCountSize) >= (5)) then
               cr_stallh_stall4_read := cr_stall_stall0_r(ctxt)((32)+7 downto 32);
@@ -1859,8 +1880,8 @@ begin -- architecture
             cr_stallh_stall3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(67, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
               cr_stallh_stall3_read := cr_stall_stall0_r(ctxt)((24)+7 downto 24);
-            end if;
-            if (bit2bool(cr_stallh_stall3_wmask(0))) then                                            -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(cr_stallh_stall3_wmask(0))) then
               cr_stall_stall0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_stallh_stall3_write(0))) then
                 perf_count_clear := '1';
@@ -1869,8 +1890,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (4)) then
               cr_bun_bun3_read := cr_bun_bun0_r(ctxt)((24)+7 downto 24);
             end if;
-            if ((CFG.perfCountSize) >= (3)) then
-              cr_bun_bun2_read := cr_bun_bun0_r(ctxt)((16)+7 downto 16);                             -- GENERATED --
+            if ((CFG.perfCountSize) >= (3)) then                                                     -- GENERATED --
+              cr_bun_bun2_read := cr_bun_bun0_r(ctxt)((16)+7 downto 16);
             end if;
             if ((CFG.perfCountSize) >= (2)) then
               cr_bun_bun1_read := cr_bun_bun0_r(ctxt)((8)+7 downto 8);
@@ -1879,8 +1900,8 @@ begin -- architecture
             cr_bun_bun0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(68, 31)))));
             cr_bun_bun0_add := std_logic_vector(to_unsigned(0, 8));
             cr_bun_bun0_add := bit2vec((bool2bit((resize(unsigned(cxplif2cxreg_sylCommit(ctxt)), 31)) /= (to_unsigned(0, 31)))) and (not (cxplif2cxreg_stall(ctxt))), 8);
-            cr_bun_bun0_add_r(ctxt) <= cr_bun_bun0_add;
-            cr_bun_bun0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_bun_bun0_r(ctxt)), 57)) + (resize(unsigned(cr_bun_bun0_add_r(ctxt)), 57)), 56)); -- GENERATED --
+            cr_bun_bun0_add_r(ctxt) <= cr_bun_bun0_add;                                              -- GENERATED --
+            cr_bun_bun0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_bun_bun0_r(ctxt)), 57)) + (resize(unsigned(cr_bun_bun0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
               cr_bun_bun0_read := cr_bun_bun0_r(ctxt)((0)+7 downto 0);
             end if;
@@ -1889,8 +1910,8 @@ begin -- architecture
               if (bit2bool(cr_bun_bun0_write(0))) then
                 perf_count_clear := '1';
               end if;
-            end if;
-            if ((CFG.perfCountSize) >= (7)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if ((CFG.perfCountSize) >= (7)) then
               cr_bunh_bun6_read := cr_bun_bun0_r(ctxt)((48)+7 downto 48);
             end if;
             if ((CFG.perfCountSize) >= (6)) then
@@ -1899,8 +1920,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (5)) then
               cr_bunh_bun4_read := cr_bun_bun0_r(ctxt)((32)+7 downto 32);
             end if;
-            cr_bunh_bun3_write := bus_writeData((0)+7 downto 0);
-            cr_bunh_bun3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(69, 31))))); -- GENERATED --
+            cr_bunh_bun3_write := bus_writeData((0)+7 downto 0);                                     -- GENERATED --
+            cr_bunh_bun3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(69, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
               cr_bunh_bun3_read := cr_bun_bun0_r(ctxt)((24)+7 downto 24);
             end if;
@@ -1909,8 +1930,8 @@ begin -- architecture
               if (bit2bool(cr_bunh_bun3_write(0))) then
                 perf_count_clear := '1';
               end if;
-            end if;
-            if ((CFG.perfCountSize) >= (4)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if ((CFG.perfCountSize) >= (4)) then
               cr_syl_syl3_read := cr_syl_syl0_r(ctxt)((24)+7 downto 24);
             end if;
             if ((CFG.perfCountSize) >= (3)) then
@@ -1919,8 +1940,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (2)) then
               cr_syl_syl1_read := cr_syl_syl0_r(ctxt)((8)+7 downto 8);
             end if;
-            cr_syl_syl0_write := bus_writeData((0)+7 downto 0);
-            cr_syl_syl0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(70, 31))))); -- GENERATED --
+            cr_syl_syl0_write := bus_writeData((0)+7 downto 0);                                      -- GENERATED --
+            cr_syl_syl0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(70, 31)))));
             cr_syl_syl0_vec := std_logic_vector(to_unsigned(0, 16));
             cr_syl_syl0_add := std_logic_vector(to_unsigned(0, 8));
             cr_syl_syl0_vec := (cxplif2cxreg_sylCommit(ctxt)) and ((15 downto 0 => not (cxplif2cxreg_stall(ctxt))));
@@ -1929,8 +1950,8 @@ begin -- architecture
             cr_syl_syl0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_syl_syl0_r(ctxt)), 57)) + (resize(unsigned(cr_syl_syl0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
               cr_syl_syl0_read := cr_syl_syl0_r(ctxt)((0)+7 downto 0);
-            end if;
-            if (bit2bool(cr_syl_syl0_wmask(0))) then                                                 -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(cr_syl_syl0_wmask(0))) then
               cr_syl_syl0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_syl_syl0_write(0))) then
                 perf_count_clear := '1';
@@ -1939,8 +1960,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (7)) then
               cr_sylh_syl6_read := cr_syl_syl0_r(ctxt)((48)+7 downto 48);
             end if;
-            if ((CFG.perfCountSize) >= (6)) then
-              cr_sylh_syl5_read := cr_syl_syl0_r(ctxt)((40)+7 downto 40);                            -- GENERATED --
+            if ((CFG.perfCountSize) >= (6)) then                                                     -- GENERATED --
+              cr_sylh_syl5_read := cr_syl_syl0_r(ctxt)((40)+7 downto 40);
             end if;
             if ((CFG.perfCountSize) >= (5)) then
               cr_sylh_syl4_read := cr_syl_syl0_r(ctxt)((32)+7 downto 32);
@@ -1949,8 +1970,8 @@ begin -- architecture
             cr_sylh_syl3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(71, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
               cr_sylh_syl3_read := cr_syl_syl0_r(ctxt)((24)+7 downto 24);
-            end if;
-            if (bit2bool(cr_sylh_syl3_wmask(0))) then                                                -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(cr_sylh_syl3_wmask(0))) then
               cr_syl_syl0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_sylh_syl3_write(0))) then
                 perf_count_clear := '1';
@@ -1959,8 +1980,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (4)) then
               cr_nop_nop3_read := cr_nop_nop0_r(ctxt)((24)+7 downto 24);
             end if;
-            if ((CFG.perfCountSize) >= (3)) then
-              cr_nop_nop2_read := cr_nop_nop0_r(ctxt)((16)+7 downto 16);                             -- GENERATED --
+            if ((CFG.perfCountSize) >= (3)) then                                                     -- GENERATED --
+              cr_nop_nop2_read := cr_nop_nop0_r(ctxt)((16)+7 downto 16);
             end if;
             if ((CFG.perfCountSize) >= (2)) then
               cr_nop_nop1_read := cr_nop_nop0_r(ctxt)((8)+7 downto 8);
@@ -1969,8 +1990,8 @@ begin -- architecture
             cr_nop_nop0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(72, 31)))));
             cr_nop_nop0_vec := std_logic_vector(to_unsigned(0, 16));
             cr_nop_nop0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_nop_nop0_vec := ((cxplif2cxreg_sylCommit(ctxt)) and (cxplif2cxreg_sylNop(ctxt))) and ((15 downto 0 => not (cxplif2cxreg_stall(ctxt))));
-            cr_nop_nop0_add := std_logic_vector(resize((resize((resize((resize((unsigned(bit2vec(cr_nop_nop0_vec(0), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(1), 2))), 3)) + (resize((unsigned(bit2vec(cr_nop_nop0_vec(2), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(3), 2))), 3)), 4)) + (resize((resize((unsigned(bit2vec(cr_nop_nop0_vec(4), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(5), 2))), 3)) + (resize((unsigned(bit2vec(cr_nop_nop0_vec(6), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(7), 2))), 3)), 4)), 5)) + (resize((resize((resize((unsigned(bit2vec(cr_nop_nop0_vec(8), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(9), 2))), 3)) + (resize((unsigned(bit2vec(cr_nop_nop0_vec(10), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(11), 2))), 3)), 4)) + (resize((resize((unsigned(bit2vec(cr_nop_nop0_vec(12), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(13), 2))), 3)) + (resize((unsigned(bit2vec(cr_nop_nop0_vec(14), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(15), 2))), 3)), 4)), 5)), 8)); -- GENERATED --
+            cr_nop_nop0_vec := ((cxplif2cxreg_sylCommit(ctxt)) and (cxplif2cxreg_sylNop(ctxt))) and ((15 downto 0 => not (cxplif2cxreg_stall(ctxt)))); -- GENERATED --
+            cr_nop_nop0_add := std_logic_vector(resize((resize((resize((resize((unsigned(bit2vec(cr_nop_nop0_vec(0), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(1), 2))), 3)) + (resize((unsigned(bit2vec(cr_nop_nop0_vec(2), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(3), 2))), 3)), 4)) + (resize((resize((unsigned(bit2vec(cr_nop_nop0_vec(4), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(5), 2))), 3)) + (resize((unsigned(bit2vec(cr_nop_nop0_vec(6), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(7), 2))), 3)), 4)), 5)) + (resize((resize((resize((unsigned(bit2vec(cr_nop_nop0_vec(8), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(9), 2))), 3)) + (resize((unsigned(bit2vec(cr_nop_nop0_vec(10), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(11), 2))), 3)), 4)) + (resize((resize((unsigned(bit2vec(cr_nop_nop0_vec(12), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(13), 2))), 3)) + (resize((unsigned(bit2vec(cr_nop_nop0_vec(14), 2))) + (unsigned(bit2vec(cr_nop_nop0_vec(15), 2))), 3)), 4)), 5)), 8));
             cr_nop_nop0_add_r(ctxt) <= cr_nop_nop0_add;
             cr_nop_nop0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_nop_nop0_r(ctxt)), 57)) + (resize(unsigned(cr_nop_nop0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
@@ -1979,8 +2000,8 @@ begin -- architecture
             if (bit2bool(cr_nop_nop0_wmask(0))) then
               cr_nop_nop0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_nop_nop0_write(0))) then
-                perf_count_clear := '1';
-              end if;                                                                                -- GENERATED --
+                perf_count_clear := '1';                                                             -- GENERATED --
+              end if;
             end if;
             if ((CFG.perfCountSize) >= (7)) then
               cr_noph_nop6_read := cr_nop_nop0_r(ctxt)((48)+7 downto 48);
@@ -1989,8 +2010,8 @@ begin -- architecture
               cr_noph_nop5_read := cr_nop_nop0_r(ctxt)((40)+7 downto 40);
             end if;
             if ((CFG.perfCountSize) >= (5)) then
-              cr_noph_nop4_read := cr_nop_nop0_r(ctxt)((32)+7 downto 32);
-            end if;                                                                                  -- GENERATED --
+              cr_noph_nop4_read := cr_nop_nop0_r(ctxt)((32)+7 downto 32);                            -- GENERATED --
+            end if;
             cr_noph_nop3_write := bus_writeData((0)+7 downto 0);
             cr_noph_nop3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(73, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
@@ -1999,8 +2020,8 @@ begin -- architecture
             if (bit2bool(cr_noph_nop3_wmask(0))) then
               cr_nop_nop0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_noph_nop3_write(0))) then
-                perf_count_clear := '1';
-              end if;                                                                                -- GENERATED --
+                perf_count_clear := '1';                                                             -- GENERATED --
+              end if;
             end if;
             if ((CFG.perfCountSize) >= (4)) then
               cr_iacc_iacc3_read := cr_iacc_iacc0_r(ctxt)((24)+7 downto 24);
@@ -2009,8 +2030,8 @@ begin -- architecture
               cr_iacc_iacc2_read := cr_iacc_iacc0_r(ctxt)((16)+7 downto 16);
             end if;
             if ((CFG.perfCountSize) >= (2)) then
-              cr_iacc_iacc1_read := cr_iacc_iacc0_r(ctxt)((8)+7 downto 8);
-            end if;                                                                                  -- GENERATED --
+              cr_iacc_iacc1_read := cr_iacc_iacc0_r(ctxt)((8)+7 downto 8);                           -- GENERATED --
+            end if;
             cr_iacc_iacc0_write := bus_writeData((0)+7 downto 0);
             cr_iacc_iacc0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(74, 31)))));
             cr_iacc_iacc0_add := std_logic_vector(to_unsigned(0, 8));
@@ -2019,8 +2040,8 @@ begin -- architecture
             cr_iacc_iacc0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_iacc_iacc0_r(ctxt)), 57)) + (resize(unsigned(cr_iacc_iacc0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
               cr_iacc_iacc0_read := cr_iacc_iacc0_r(ctxt)((0)+7 downto 0);
-            end if;
-            if (bit2bool(cr_iacc_iacc0_wmask(0))) then                                               -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(cr_iacc_iacc0_wmask(0))) then
               cr_iacc_iacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_iacc_iacc0_write(0))) then
                 perf_count_clear := '1';
@@ -2029,8 +2050,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (7)) then
               cr_iacch_iacc6_read := cr_iacc_iacc0_r(ctxt)((48)+7 downto 48);
             end if;
-            if ((CFG.perfCountSize) >= (6)) then
-              cr_iacch_iacc5_read := cr_iacc_iacc0_r(ctxt)((40)+7 downto 40);                        -- GENERATED --
+            if ((CFG.perfCountSize) >= (6)) then                                                     -- GENERATED --
+              cr_iacch_iacc5_read := cr_iacc_iacc0_r(ctxt)((40)+7 downto 40);
             end if;
             if ((CFG.perfCountSize) >= (5)) then
               cr_iacch_iacc4_read := cr_iacc_iacc0_r(ctxt)((32)+7 downto 32);
@@ -2039,8 +2060,8 @@ begin -- architecture
             cr_iacch_iacc3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(75, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
               cr_iacch_iacc3_read := cr_iacc_iacc0_r(ctxt)((24)+7 downto 24);
-            end if;
-            if (bit2bool(cr_iacch_iacc3_wmask(0))) then                                              -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(cr_iacch_iacc3_wmask(0))) then
               cr_iacc_iacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_iacch_iacc3_write(0))) then
                 perf_count_clear := '1';
@@ -2049,8 +2070,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (4)) then
               cr_imiss_imiss3_read := cr_imiss_imiss0_r(ctxt)((24)+7 downto 24);
             end if;
-            if ((CFG.perfCountSize) >= (3)) then
-              cr_imiss_imiss2_read := cr_imiss_imiss0_r(ctxt)((16)+7 downto 16);                     -- GENERATED --
+            if ((CFG.perfCountSize) >= (3)) then                                                     -- GENERATED --
+              cr_imiss_imiss2_read := cr_imiss_imiss0_r(ctxt)((16)+7 downto 16);
             end if;
             if ((CFG.perfCountSize) >= (2)) then
               cr_imiss_imiss1_read := cr_imiss_imiss0_r(ctxt)((8)+7 downto 8);
@@ -2059,8 +2080,8 @@ begin -- architecture
             cr_imiss_imiss0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(76, 31)))));
             cr_imiss_imiss0_add := std_logic_vector(to_unsigned(0, 8));
             cr_imiss_imiss0_add := bit2vec((mem2cxreg_cacheStatus(ctxt).instr_access) and (mem2cxreg_cacheStatus(ctxt).instr_miss), 8);
-            cr_imiss_imiss0_add_r(ctxt) <= cr_imiss_imiss0_add;
-            cr_imiss_imiss0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_imiss_imiss0_r(ctxt)), 57)) + (resize(unsigned(cr_imiss_imiss0_add_r(ctxt)), 57)), 56)); -- GENERATED --
+            cr_imiss_imiss0_add_r(ctxt) <= cr_imiss_imiss0_add;                                      -- GENERATED --
+            cr_imiss_imiss0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_imiss_imiss0_r(ctxt)), 57)) + (resize(unsigned(cr_imiss_imiss0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
               cr_imiss_imiss0_read := cr_imiss_imiss0_r(ctxt)((0)+7 downto 0);
             end if;
@@ -2069,8 +2090,8 @@ begin -- architecture
               if (bit2bool(cr_imiss_imiss0_write(0))) then
                 perf_count_clear := '1';
               end if;
-            end if;
-            if ((CFG.perfCountSize) >= (7)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if ((CFG.perfCountSize) >= (7)) then
               cr_imissh_imiss6_read := cr_imiss_imiss0_r(ctxt)((48)+7 downto 48);
             end if;
             if ((CFG.perfCountSize) >= (6)) then
@@ -2079,8 +2100,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (5)) then
               cr_imissh_imiss4_read := cr_imiss_imiss0_r(ctxt)((32)+7 downto 32);
             end if;
-            cr_imissh_imiss3_write := bus_writeData((0)+7 downto 0);
-            cr_imissh_imiss3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(77, 31))))); -- GENERATED --
+            cr_imissh_imiss3_write := bus_writeData((0)+7 downto 0);                                 -- GENERATED --
+            cr_imissh_imiss3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(77, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
               cr_imissh_imiss3_read := cr_imiss_imiss0_r(ctxt)((24)+7 downto 24);
             end if;
@@ -2089,8 +2110,8 @@ begin -- architecture
               if (bit2bool(cr_imissh_imiss3_write(0))) then
                 perf_count_clear := '1';
               end if;
-            end if;
-            if ((CFG.perfCountSize) >= (4)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if ((CFG.perfCountSize) >= (4)) then
               cr_dracc_dracc3_read := cr_dracc_dracc0_r(ctxt)((24)+7 downto 24);
             end if;
             if ((CFG.perfCountSize) >= (3)) then
@@ -2099,8 +2120,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (2)) then
               cr_dracc_dracc1_read := cr_dracc_dracc0_r(ctxt)((8)+7 downto 8);
             end if;
-            cr_dracc_dracc0_write := bus_writeData((0)+7 downto 0);
-            cr_dracc_dracc0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(78, 31))))); -- GENERATED --
+            cr_dracc_dracc0_write := bus_writeData((0)+7 downto 0);                                  -- GENERATED --
+            cr_dracc_dracc0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(78, 31)))));
             cr_dracc_dracc0_add := std_logic_vector(to_unsigned(0, 8));
             cr_dracc_dracc0_add := bit2vec(bool2bit((unsigned(mem2cxreg_cacheStatus(ctxt).data_accessType)) = (unsigned(bitvec_lit("01")))), 8);
             cr_dracc_dracc0_add_r(ctxt) <= cr_dracc_dracc0_add;
@@ -2109,8 +2130,8 @@ begin -- architecture
               cr_dracc_dracc0_read := cr_dracc_dracc0_r(ctxt)((0)+7 downto 0);
             end if;
             if (bit2bool(cr_dracc_dracc0_wmask(0))) then
-              cr_dracc_dracc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-              if (bit2bool(cr_dracc_dracc0_write(0))) then                                           -- GENERATED --
+              cr_dracc_dracc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                       -- GENERATED --
+              if (bit2bool(cr_dracc_dracc0_write(0))) then
                 perf_count_clear := '1';
               end if;
             end if;
@@ -2119,8 +2140,8 @@ begin -- architecture
             end if;
             if ((CFG.perfCountSize) >= (6)) then
               cr_dracch_dracc5_read := cr_dracc_dracc0_r(ctxt)((40)+7 downto 40);
-            end if;
-            if ((CFG.perfCountSize) >= (5)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if ((CFG.perfCountSize) >= (5)) then
               cr_dracch_dracc4_read := cr_dracc_dracc0_r(ctxt)((32)+7 downto 32);
             end if;
             cr_dracch_dracc3_write := bus_writeData((0)+7 downto 0);
@@ -2129,8 +2150,8 @@ begin -- architecture
               cr_dracch_dracc3_read := cr_dracc_dracc0_r(ctxt)((24)+7 downto 24);
             end if;
             if (bit2bool(cr_dracch_dracc3_wmask(0))) then
-              cr_dracc_dracc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-              if (bit2bool(cr_dracch_dracc3_write(0))) then                                          -- GENERATED --
+              cr_dracc_dracc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                       -- GENERATED --
+              if (bit2bool(cr_dracch_dracc3_write(0))) then
                 perf_count_clear := '1';
               end if;
             end if;
@@ -2139,8 +2160,8 @@ begin -- architecture
             end if;
             if ((CFG.perfCountSize) >= (3)) then
               cr_drmiss_drmiss2_read := cr_drmiss_drmiss0_r(ctxt)((16)+7 downto 16);
-            end if;
-            if ((CFG.perfCountSize) >= (2)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if ((CFG.perfCountSize) >= (2)) then
               cr_drmiss_drmiss1_read := cr_drmiss_drmiss0_r(ctxt)((8)+7 downto 8);
             end if;
             cr_drmiss_drmiss0_write := bus_writeData((0)+7 downto 0);
@@ -2149,8 +2170,8 @@ begin -- architecture
             cr_drmiss_drmiss0_add := bit2vec((bool2bit((unsigned(mem2cxreg_cacheStatus(ctxt).data_accessType)) = (unsigned(bitvec_lit("01"))))) and (mem2cxreg_cacheStatus(ctxt).data_miss), 8);
             cr_drmiss_drmiss0_add_r(ctxt) <= cr_drmiss_drmiss0_add;
             cr_drmiss_drmiss0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_drmiss_drmiss0_r(ctxt)), 57)) + (resize(unsigned(cr_drmiss_drmiss0_add_r(ctxt)), 57)), 56));
-            if ((CFG.perfCountSize) >= (1)) then
-              cr_drmiss_drmiss0_read := cr_drmiss_drmiss0_r(ctxt)((0)+7 downto 0);                   -- GENERATED --
+            if ((CFG.perfCountSize) >= (1)) then                                                     -- GENERATED --
+              cr_drmiss_drmiss0_read := cr_drmiss_drmiss0_r(ctxt)((0)+7 downto 0);
             end if;
             if (bit2bool(cr_drmiss_drmiss0_wmask(0))) then
               cr_drmiss_drmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
@@ -2159,8 +2180,8 @@ begin -- architecture
               end if;
             end if;
             if ((CFG.perfCountSize) >= (7)) then
-              cr_drmissh_drmiss6_read := cr_drmiss_drmiss0_r(ctxt)((48)+7 downto 48);
-            end if;                                                                                  -- GENERATED --
+              cr_drmissh_drmiss6_read := cr_drmiss_drmiss0_r(ctxt)((48)+7 downto 48);                -- GENERATED --
+            end if;
             if ((CFG.perfCountSize) >= (6)) then
               cr_drmissh_drmiss5_read := cr_drmiss_drmiss0_r(ctxt)((40)+7 downto 40);
             end if;
@@ -2169,8 +2190,8 @@ begin -- architecture
             end if;
             cr_drmissh_drmiss3_write := bus_writeData((0)+7 downto 0);
             cr_drmissh_drmiss3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(81, 31)))));
-            if ((CFG.perfCountSize) >= (5)) then
-              cr_drmissh_drmiss3_read := cr_drmiss_drmiss0_r(ctxt)((24)+7 downto 24);                -- GENERATED --
+            if ((CFG.perfCountSize) >= (5)) then                                                     -- GENERATED --
+              cr_drmissh_drmiss3_read := cr_drmiss_drmiss0_r(ctxt)((24)+7 downto 24);
             end if;
             if (bit2bool(cr_drmissh_drmiss3_wmask(0))) then
               cr_drmiss_drmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
@@ -2179,8 +2200,8 @@ begin -- architecture
               end if;
             end if;
             if ((CFG.perfCountSize) >= (4)) then
-              cr_dwacc_dwacc3_read := cr_dwacc_dwacc0_r(ctxt)((24)+7 downto 24);
-            end if;                                                                                  -- GENERATED --
+              cr_dwacc_dwacc3_read := cr_dwacc_dwacc0_r(ctxt)((24)+7 downto 24);                     -- GENERATED --
+            end if;
             if ((CFG.perfCountSize) >= (3)) then
               cr_dwacc_dwacc2_read := cr_dwacc_dwacc0_r(ctxt)((16)+7 downto 16);
             end if;
@@ -2189,8 +2210,8 @@ begin -- architecture
             end if;
             cr_dwacc_dwacc0_write := bus_writeData((0)+7 downto 0);
             cr_dwacc_dwacc0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(82, 31)))));
-            cr_dwacc_dwacc0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_dwacc_dwacc0_add := bit2vec(mem2cxreg_cacheStatus(ctxt).data_accessType(1), 8);       -- GENERATED --
+            cr_dwacc_dwacc0_add := std_logic_vector(to_unsigned(0, 8));                              -- GENERATED --
+            cr_dwacc_dwacc0_add := bit2vec(mem2cxreg_cacheStatus(ctxt).data_accessType(1), 8);
             cr_dwacc_dwacc0_add_r(ctxt) <= cr_dwacc_dwacc0_add;
             cr_dwacc_dwacc0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dwacc_dwacc0_r(ctxt)), 57)) + (resize(unsigned(cr_dwacc_dwacc0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
@@ -2199,8 +2220,8 @@ begin -- architecture
             if (bit2bool(cr_dwacc_dwacc0_wmask(0))) then
               cr_dwacc_dwacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_dwacc_dwacc0_write(0))) then
-                perf_count_clear := '1';
-              end if;                                                                                -- GENERATED --
+                perf_count_clear := '1';                                                             -- GENERATED --
+              end if;
             end if;
             if ((CFG.perfCountSize) >= (7)) then
               cr_dwacch_dwacc6_read := cr_dwacc_dwacc0_r(ctxt)((48)+7 downto 48);
@@ -2209,8 +2230,8 @@ begin -- architecture
               cr_dwacch_dwacc5_read := cr_dwacc_dwacc0_r(ctxt)((40)+7 downto 40);
             end if;
             if ((CFG.perfCountSize) >= (5)) then
-              cr_dwacch_dwacc4_read := cr_dwacc_dwacc0_r(ctxt)((32)+7 downto 32);
-            end if;                                                                                  -- GENERATED --
+              cr_dwacch_dwacc4_read := cr_dwacc_dwacc0_r(ctxt)((32)+7 downto 32);                    -- GENERATED --
+            end if;
             cr_dwacch_dwacc3_write := bus_writeData((0)+7 downto 0);
             cr_dwacch_dwacc3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(83, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
@@ -2219,8 +2240,8 @@ begin -- architecture
             if (bit2bool(cr_dwacch_dwacc3_wmask(0))) then
               cr_dwacc_dwacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_dwacch_dwacc3_write(0))) then
-                perf_count_clear := '1';
-              end if;                                                                                -- GENERATED --
+                perf_count_clear := '1';                                                             -- GENERATED --
+              end if;
             end if;
             if ((CFG.perfCountSize) >= (4)) then
               cr_dwmiss_dwmiss3_read := cr_dwmiss_dwmiss0_r(ctxt)((24)+7 downto 24);
@@ -2229,8 +2250,8 @@ begin -- architecture
               cr_dwmiss_dwmiss2_read := cr_dwmiss_dwmiss0_r(ctxt)((16)+7 downto 16);
             end if;
             if ((CFG.perfCountSize) >= (2)) then
-              cr_dwmiss_dwmiss1_read := cr_dwmiss_dwmiss0_r(ctxt)((8)+7 downto 8);
-            end if;                                                                                  -- GENERATED --
+              cr_dwmiss_dwmiss1_read := cr_dwmiss_dwmiss0_r(ctxt)((8)+7 downto 8);                   -- GENERATED --
+            end if;
             cr_dwmiss_dwmiss0_write := bus_writeData((0)+7 downto 0);
             cr_dwmiss_dwmiss0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(84, 31)))));
             cr_dwmiss_dwmiss0_add := std_logic_vector(to_unsigned(0, 8));
@@ -2239,8 +2260,8 @@ begin -- architecture
             cr_dwmiss_dwmiss0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dwmiss_dwmiss0_r(ctxt)), 57)) + (resize(unsigned(cr_dwmiss_dwmiss0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
               cr_dwmiss_dwmiss0_read := cr_dwmiss_dwmiss0_r(ctxt)((0)+7 downto 0);
-            end if;
-            if (bit2bool(cr_dwmiss_dwmiss0_wmask(0))) then                                           -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(cr_dwmiss_dwmiss0_wmask(0))) then
               cr_dwmiss_dwmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_dwmiss_dwmiss0_write(0))) then
                 perf_count_clear := '1';
@@ -2249,8 +2270,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (7)) then
               cr_dwmissh_dwmiss6_read := cr_dwmiss_dwmiss0_r(ctxt)((48)+7 downto 48);
             end if;
-            if ((CFG.perfCountSize) >= (6)) then
-              cr_dwmissh_dwmiss5_read := cr_dwmiss_dwmiss0_r(ctxt)((40)+7 downto 40);                -- GENERATED --
+            if ((CFG.perfCountSize) >= (6)) then                                                     -- GENERATED --
+              cr_dwmissh_dwmiss5_read := cr_dwmiss_dwmiss0_r(ctxt)((40)+7 downto 40);
             end if;
             if ((CFG.perfCountSize) >= (5)) then
               cr_dwmissh_dwmiss4_read := cr_dwmiss_dwmiss0_r(ctxt)((32)+7 downto 32);
@@ -2259,8 +2280,8 @@ begin -- architecture
             cr_dwmissh_dwmiss3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(85, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
               cr_dwmissh_dwmiss3_read := cr_dwmiss_dwmiss0_r(ctxt)((24)+7 downto 24);
-            end if;
-            if (bit2bool(cr_dwmissh_dwmiss3_wmask(0))) then                                          -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(cr_dwmissh_dwmiss3_wmask(0))) then
               cr_dwmiss_dwmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
               if (bit2bool(cr_dwmissh_dwmiss3_write(0))) then
                 perf_count_clear := '1';
@@ -2269,8 +2290,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (4)) then
               cr_dbypass_dbypass3_read := cr_dbypass_dbypass0_r(ctxt)((24)+7 downto 24);
             end if;
-            if ((CFG.perfCountSize) >= (3)) then
-              cr_dbypass_dbypass2_read := cr_dbypass_dbypass0_r(ctxt)((16)+7 downto 16);             -- GENERATED --
+            if ((CFG.perfCountSize) >= (3)) then                                                     -- GENERATED --
+              cr_dbypass_dbypass2_read := cr_dbypass_dbypass0_r(ctxt)((16)+7 downto 16);
             end if;
             if ((CFG.perfCountSize) >= (2)) then
               cr_dbypass_dbypass1_read := cr_dbypass_dbypass0_r(ctxt)((8)+7 downto 8);
@@ -2279,8 +2300,8 @@ begin -- architecture
             cr_dbypass_dbypass0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(86, 31)))));
             cr_dbypass_dbypass0_add := std_logic_vector(to_unsigned(0, 8));
             cr_dbypass_dbypass0_add := bit2vec((bool2bit((unsigned(mem2cxreg_cacheStatus(ctxt).data_accessType)) /= (unsigned(bitvec_lit("00"))))) and (mem2cxreg_cacheStatus(ctxt).data_bypass), 8);
-            cr_dbypass_dbypass0_add_r(ctxt) <= cr_dbypass_dbypass0_add;
-            cr_dbypass_dbypass0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dbypass_dbypass0_r(ctxt)), 57)) + (resize(unsigned(cr_dbypass_dbypass0_add_r(ctxt)), 57)), 56)); -- GENERATED --
+            cr_dbypass_dbypass0_add_r(ctxt) <= cr_dbypass_dbypass0_add;                              -- GENERATED --
+            cr_dbypass_dbypass0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dbypass_dbypass0_r(ctxt)), 57)) + (resize(unsigned(cr_dbypass_dbypass0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
               cr_dbypass_dbypass0_read := cr_dbypass_dbypass0_r(ctxt)((0)+7 downto 0);
             end if;
@@ -2289,8 +2310,8 @@ begin -- architecture
               if (bit2bool(cr_dbypass_dbypass0_write(0))) then
                 perf_count_clear := '1';
               end if;
-            end if;
-            if ((CFG.perfCountSize) >= (7)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if ((CFG.perfCountSize) >= (7)) then
               cr_dbypassh_dbypass6_read := cr_dbypass_dbypass0_r(ctxt)((48)+7 downto 48);
             end if;
             if ((CFG.perfCountSize) >= (6)) then
@@ -2299,8 +2320,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (5)) then
               cr_dbypassh_dbypass4_read := cr_dbypass_dbypass0_r(ctxt)((32)+7 downto 32);
             end if;
-            cr_dbypassh_dbypass3_write := bus_writeData((0)+7 downto 0);
-            cr_dbypassh_dbypass3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(87, 31))))); -- GENERATED --
+            cr_dbypassh_dbypass3_write := bus_writeData((0)+7 downto 0);                             -- GENERATED --
+            cr_dbypassh_dbypass3_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(87, 31)))));
             if ((CFG.perfCountSize) >= (5)) then
               cr_dbypassh_dbypass3_read := cr_dbypass_dbypass0_r(ctxt)((24)+7 downto 24);
             end if;
@@ -2309,8 +2330,8 @@ begin -- architecture
               if (bit2bool(cr_dbypassh_dbypass3_write(0))) then
                 perf_count_clear := '1';
               end if;
-            end if;
-            if ((CFG.perfCountSize) >= (4)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if ((CFG.perfCountSize) >= (4)) then
               cr_dwbuf_dwbuf3_read := cr_dwbuf_dwbuf0_r(ctxt)((24)+7 downto 24);
             end if;
             if ((CFG.perfCountSize) >= (3)) then
@@ -2319,8 +2340,8 @@ begin -- architecture
             if ((CFG.perfCountSize) >= (2)) then
               cr_dwbuf_dwbuf1_read := cr_dwbuf_dwbuf0_r(ctxt)((8)+7 downto 8);
             end if;
-            cr_dwbuf_dwbuf0_write := bus_writeData((0)+7 downto 0);
-            cr_dwbuf_dwbuf0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(88, 31))))); -- GENERATED --
+            cr_dwbuf_dwbuf0_write := bus_writeData((0)+7 downto 0);                                  -- GENERATED --
+            cr_dwbuf_dwbuf0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(88, 31)))));
             cr_dwbuf_dwbuf0_add := std_logic_vector(to_unsigned(0, 8));
             cr_dwbuf_dwbuf0_add := bit2vec(((bool2bit((unsigned(mem2cxreg_cacheStatus(ctxt).data_accessType)) /= (unsigned(bitvec_lit("00"))))) and (mem2cxreg_cacheStatus(ctxt).data_writepending)) and (((mem2cxreg_cacheStatus(ctxt).data_accessType(1)) or (mem2cxreg_cacheStatus(ctxt).data_miss)) or (mem2cxreg_cacheStatus(ctxt).data_bypass)), 8);
             cr_dwbuf_dwbuf0_add_r(ctxt) <= cr_dwbuf_dwbuf0_add;
@@ -2329,8 +2350,8 @@ begin -- architecture
               cr_dwbuf_dwbuf0_read := cr_dwbuf_dwbuf0_r(ctxt)((0)+7 downto 0);
             end if;
             if (bit2bool(cr_dwbuf_dwbuf0_wmask(0))) then
-              cr_dwbuf_dwbuf0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-              if (bit2bool(cr_dwbuf_dwbuf0_write(0))) then                                           -- GENERATED --
+              cr_dwbuf_dwbuf0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                       -- GENERATED --
+              if (bit2bool(cr_dwbuf_dwbuf0_write(0))) then
                 perf_count_clear := '1';
               end if;
             end if;
@@ -2339,8 +2360,8 @@ begin -- architecture
             end if;
             if ((CFG.perfCountSize) >= (6)) then
               cr_dwbufh_dwbuf5_read := cr_dwbuf_dwbuf0_r(ctxt)((40)+7 downto 40);
-            end if;
-            if ((CFG.perfCountSize) >= (5)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if ((CFG.perfCountSize) >= (5)) then
               cr_dwbufh_dwbuf4_read := cr_dwbuf_dwbuf0_r(ctxt)((32)+7 downto 32);
             end if;
             cr_dwbufh_dwbuf3_write := bus_writeData((0)+7 downto 0);
@@ -2349,8 +2370,8 @@ begin -- architecture
               cr_dwbufh_dwbuf3_read := cr_dwbuf_dwbuf0_r(ctxt)((24)+7 downto 24);
             end if;
             if (bit2bool(cr_dwbufh_dwbuf3_wmask(0))) then
-              cr_dwbuf_dwbuf0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-              if (bit2bool(cr_dwbufh_dwbuf3_write(0))) then                                          -- GENERATED --
+              cr_dwbuf_dwbuf0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                       -- GENERATED --
+              if (bit2bool(cr_dwbufh_dwbuf3_write(0))) then
                 perf_count_clear := '1';
               end if;
             end if;
@@ -2359,8 +2380,8 @@ begin -- architecture
             end if;
             if (bit2bool(perf_count_clear)) then
               cr_stall_stall0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-            end if;
-            if (bit2bool(perf_count_clear)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(perf_count_clear)) then
               cr_bun_bun0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             end if;
             if (bit2bool(perf_count_clear)) then
@@ -2369,8 +2390,8 @@ begin -- architecture
             if (bit2bool(perf_count_clear)) then
               cr_nop_nop0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             end if;
-            if (bit2bool(perf_count_clear)) then
-              cr_iacc_iacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                         -- GENERATED --
+            if (bit2bool(perf_count_clear)) then                                                     -- GENERATED --
+              cr_iacc_iacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             end if;
             if (bit2bool(perf_count_clear)) then
               cr_imiss_imiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
@@ -2379,8 +2400,8 @@ begin -- architecture
               cr_dracc_dracc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             end if;
             if (bit2bool(perf_count_clear)) then
-              cr_drmiss_drmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-            end if;                                                                                  -- GENERATED --
+              cr_drmiss_drmiss0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));                     -- GENERATED --
+            end if;
             if (bit2bool(perf_count_clear)) then
               cr_dwacc_dwacc0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             end if;
@@ -2389,8 +2410,8 @@ begin -- architecture
             end if;
             if (bit2bool(perf_count_clear)) then
               cr_dbypass_dbypass0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
-            end if;
-            if (bit2bool(perf_count_clear)) then                                                     -- GENERATED --
+            end if;                                                                                  -- GENERATED --
+            if (bit2bool(perf_count_clear)) then
               cr_dwbuf_dwbuf0_r(ctxt) <= std_logic_vector(to_unsigned(0, 56));
             end if;
 
@@ -2399,8 +2420,8 @@ begin -- architecture
               when "0000000" => cxreg2creg_readData(ctxt) <= (((((((cr_ccr_cause_read) & (cr_ccr_branch_read)) & (bitvec_lit("000000"))) & (cr_ccr_k_read)) & (cr_ccr_c_read)) & (cr_ccr_b_read)) & (cr_ccr_r_read)) & (cr_ccr_i_read);
               when "0000001" => cxreg2creg_readData(ctxt) <= ((((((cr_sccr_id_read) & (bitvec_lit("00000000000000"))) & (cr_sccr_k_read)) & (cr_sccr_c_read)) & (cr_sccr_b_read)) & (cr_sccr_r_read)) & (cr_sccr_i_read);
               when "0000010" => cxreg2creg_readData(ctxt) <= cr_lr_lr_read;
-              when "0000011" => cxreg2creg_readData(ctxt) <= cr_pc_pc_read;
-              when "0000100" => cxreg2creg_readData(ctxt) <= cr_th_th_read;                          -- GENERATED --
+              when "0000011" => cxreg2creg_readData(ctxt) <= cr_pc_pc_read;                          -- GENERATED --
+              when "0000100" => cxreg2creg_readData(ctxt) <= cr_th_th_read;
               when "0000101" => cxreg2creg_readData(ctxt) <= cr_ph_ph_read;
               when "0000110" => cxreg2creg_readData(ctxt) <= cr_tp_tp_read;
               when "0000111" => cxreg2creg_readData(ctxt) <= cr_ta_ta_read;
@@ -2409,8 +2430,8 @@ begin -- architecture
               when "0001010" => cxreg2creg_readData(ctxt) <= cr_br2_br2_read;
               when "0001011" => cxreg2creg_readData(ctxt) <= cr_br3_br3_read;
               when "0001100" => cxreg2creg_readData(ctxt) <= ((((((((((((((((cr_dcr_d_read) & (cr_dcr_j_read)) & (bitvec_lit("0"))) & (cr_dcr_i_read)) & (cr_dcr_e_read)) & (cr_dcr_r_read)) & (cr_dcr_s_read)) & (cr_dcr_b_read)) & (cr_dcr_cause_read)) & (bitvec_lit("00"))) & (cr_dcr_br3_read)) & (bitvec_lit("00"))) & (cr_dcr_br2_read)) & (bitvec_lit("00"))) & (cr_dcr_br1_read)) & (bitvec_lit("00"))) & (cr_dcr_br0_read);
-              when "0001101" => cxreg2creg_readData(ctxt) <= (((((((((cr_dcr2_result_read) & (bitvec_lit("00000000"))) & (cr_dcr2_trcap_read)) & (cr_dcr2_t_read)) & (cr_dcr2_m_read)) & (cr_dcr2_r_read)) & (cr_dcr2_c_read)) & (cr_dcr2_i_read)) & (bitvec_lit("00"))) & (cr_dcr2_e_read);
-              when "0010000" => cxreg2creg_readData(ctxt) <= cr_crr_crr_read;                        -- GENERATED --
+              when "0001101" => cxreg2creg_readData(ctxt) <= (((((((((cr_dcr2_result_read) & (bitvec_lit("00000000"))) & (cr_dcr2_trcap_read)) & (cr_dcr2_t_read)) & (cr_dcr2_m_read)) & (cr_dcr2_r_read)) & (cr_dcr2_c_read)) & (cr_dcr2_i_read)) & (bitvec_lit("00"))) & (cr_dcr2_e_read); -- GENERATED --
+              when "0010000" => cxreg2creg_readData(ctxt) <= cr_crr_crr_read;
               when "0010010" => cxreg2creg_readData(ctxt) <= cr_wcfg_wcfg_read;
               when "0010011" => cxreg2creg_readData(ctxt) <= ((bitvec_lit("000000000000000000000000")) & (cr_sawc_run_read)) & (cr_sawc_s_read);
               when "0010100" => cxreg2creg_readData(ctxt) <= cr_scrp1_scrp1_read;
@@ -2419,8 +2440,8 @@ begin -- architecture
               when "0010111" => cxreg2creg_readData(ctxt) <= cr_scrp4_scrp4_read;
               when "0011000" => cxreg2creg_readData(ctxt) <= cr_rsc_rsc_read;
               when "0011001" => cxreg2creg_readData(ctxt) <= cr_csc_csc_read;
-              when "0011010" => cxreg2creg_readData(ctxt) <= cr_rsc1_rsc1_read;
-              when "0011011" => cxreg2creg_readData(ctxt) <= cr_csc1_csc1_read;                      -- GENERATED --
+              when "0011010" => cxreg2creg_readData(ctxt) <= cr_rsc1_rsc1_read;                      -- GENERATED --
+              when "0011011" => cxreg2creg_readData(ctxt) <= cr_csc1_csc1_read;
               when "0011100" => cxreg2creg_readData(ctxt) <= cr_rsc2_rsc2_read;
               when "0011101" => cxreg2creg_readData(ctxt) <= cr_csc2_csc2_read;
               when "0011110" => cxreg2creg_readData(ctxt) <= cr_rsc3_rsc3_read;
@@ -2429,8 +2450,8 @@ begin -- architecture
               when "0100001" => cxreg2creg_readData(ctxt) <= cr_csc4_csc4_read;
               when "0100010" => cxreg2creg_readData(ctxt) <= cr_rsc5_rsc5_read;
               when "0100011" => cxreg2creg_readData(ctxt) <= cr_csc5_csc5_read;
-              when "0100100" => cxreg2creg_readData(ctxt) <= cr_rsc6_rsc6_read;
-              when "0100101" => cxreg2creg_readData(ctxt) <= cr_csc6_csc6_read;                      -- GENERATED --
+              when "0100100" => cxreg2creg_readData(ctxt) <= cr_rsc6_rsc6_read;                      -- GENERATED --
+              when "0100101" => cxreg2creg_readData(ctxt) <= cr_csc6_csc6_read;
               when "0100110" => cxreg2creg_readData(ctxt) <= cr_rsc7_rsc7_read;
               when "0100111" => cxreg2creg_readData(ctxt) <= cr_csc7_csc7_read;
               when "1000000" => cxreg2creg_readData(ctxt) <= (((cr_cyc_cyc3_read) & (cr_cyc_cyc2_read)) & (cr_cyc_cyc1_read)) & (cr_cyc_cyc0_read);
@@ -2439,8 +2460,8 @@ begin -- architecture
               when "1000011" => cxreg2creg_readData(ctxt) <= (((cr_stallh_stall6_read) & (cr_stallh_stall5_read)) & (cr_stallh_stall4_read)) & (cr_stallh_stall3_read);
               when "1000100" => cxreg2creg_readData(ctxt) <= (((cr_bun_bun3_read) & (cr_bun_bun2_read)) & (cr_bun_bun1_read)) & (cr_bun_bun0_read);
               when "1000101" => cxreg2creg_readData(ctxt) <= (((cr_bunh_bun6_read) & (cr_bunh_bun5_read)) & (cr_bunh_bun4_read)) & (cr_bunh_bun3_read);
-              when "1000110" => cxreg2creg_readData(ctxt) <= (((cr_syl_syl3_read) & (cr_syl_syl2_read)) & (cr_syl_syl1_read)) & (cr_syl_syl0_read);
-              when "1000111" => cxreg2creg_readData(ctxt) <= (((cr_sylh_syl6_read) & (cr_sylh_syl5_read)) & (cr_sylh_syl4_read)) & (cr_sylh_syl3_read); -- GENERATED --
+              when "1000110" => cxreg2creg_readData(ctxt) <= (((cr_syl_syl3_read) & (cr_syl_syl2_read)) & (cr_syl_syl1_read)) & (cr_syl_syl0_read); -- GENERATED --
+              when "1000111" => cxreg2creg_readData(ctxt) <= (((cr_sylh_syl6_read) & (cr_sylh_syl5_read)) & (cr_sylh_syl4_read)) & (cr_sylh_syl3_read);
               when "1001000" => cxreg2creg_readData(ctxt) <= (((cr_nop_nop3_read) & (cr_nop_nop2_read)) & (cr_nop_nop1_read)) & (cr_nop_nop0_read);
               when "1001001" => cxreg2creg_readData(ctxt) <= (((cr_noph_nop6_read) & (cr_noph_nop5_read)) & (cr_noph_nop4_read)) & (cr_noph_nop3_read);
               when "1001010" => cxreg2creg_readData(ctxt) <= (((cr_iacc_iacc3_read) & (cr_iacc_iacc2_read)) & (cr_iacc_iacc1_read)) & (cr_iacc_iacc0_read);
@@ -2449,8 +2470,8 @@ begin -- architecture
               when "1001101" => cxreg2creg_readData(ctxt) <= (((cr_imissh_imiss6_read) & (cr_imissh_imiss5_read)) & (cr_imissh_imiss4_read)) & (cr_imissh_imiss3_read);
               when "1001110" => cxreg2creg_readData(ctxt) <= (((cr_dracc_dracc3_read) & (cr_dracc_dracc2_read)) & (cr_dracc_dracc1_read)) & (cr_dracc_dracc0_read);
               when "1001111" => cxreg2creg_readData(ctxt) <= (((cr_dracch_dracc6_read) & (cr_dracch_dracc5_read)) & (cr_dracch_dracc4_read)) & (cr_dracch_dracc3_read);
-              when "1010000" => cxreg2creg_readData(ctxt) <= (((cr_drmiss_drmiss3_read) & (cr_drmiss_drmiss2_read)) & (cr_drmiss_drmiss1_read)) & (cr_drmiss_drmiss0_read);
-              when "1010001" => cxreg2creg_readData(ctxt) <= (((cr_drmissh_drmiss6_read) & (cr_drmissh_drmiss5_read)) & (cr_drmissh_drmiss4_read)) & (cr_drmissh_drmiss3_read); -- GENERATED --
+              when "1010000" => cxreg2creg_readData(ctxt) <= (((cr_drmiss_drmiss3_read) & (cr_drmiss_drmiss2_read)) & (cr_drmiss_drmiss1_read)) & (cr_drmiss_drmiss0_read); -- GENERATED --
+              when "1010001" => cxreg2creg_readData(ctxt) <= (((cr_drmissh_drmiss6_read) & (cr_drmissh_drmiss5_read)) & (cr_drmissh_drmiss4_read)) & (cr_drmissh_drmiss3_read);
               when "1010010" => cxreg2creg_readData(ctxt) <= (((cr_dwacc_dwacc3_read) & (cr_dwacc_dwacc2_read)) & (cr_dwacc_dwacc1_read)) & (cr_dwacc_dwacc0_read);
               when "1010011" => cxreg2creg_readData(ctxt) <= (((cr_dwacch_dwacc6_read) & (cr_dwacch_dwacc5_read)) & (cr_dwacch_dwacc4_read)) & (cr_dwacch_dwacc3_read);
               when "1010100" => cxreg2creg_readData(ctxt) <= (((cr_dwmiss_dwmiss3_read) & (cr_dwmiss_dwmiss2_read)) & (cr_dwmiss_dwmiss1_read)) & (cr_dwmiss_dwmiss0_read);
@@ -2459,8 +2480,8 @@ begin -- architecture
               when "1010111" => cxreg2creg_readData(ctxt) <= (((cr_dbypassh_dbypass6_read) & (cr_dbypassh_dbypass5_read)) & (cr_dbypassh_dbypass4_read)) & (cr_dbypassh_dbypass3_read);
               when "1011000" => cxreg2creg_readData(ctxt) <= (((cr_dwbuf_dwbuf3_read) & (cr_dwbuf_dwbuf2_read)) & (cr_dwbuf_dwbuf1_read)) & (cr_dwbuf_dwbuf0_read);
               when "1011001" => cxreg2creg_readData(ctxt) <= (((cr_dwbufh_dwbuf6_read) & (cr_dwbufh_dwbuf5_read)) & (cr_dwbufh_dwbuf4_read)) & (cr_dwbufh_dwbuf3_read);
-              when others => cxreg2creg_readData(ctxt) <= (others => '0');
-            end case;                                                                                -- GENERATED --
+              when others => cxreg2creg_readData(ctxt) <= (others => '0');                           -- GENERATED --
+            end case;
 
           end if;
         end if;
@@ -2469,8 +2490,8 @@ begin -- architecture
   end process;
 
   connect_gen: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
-    cxreg2cxplif_extDebug(ctxt) <= cr_dcr_e_r(ctxt);
-    cxreg2rctrl_done(ctxt) <= cr_dcr_d_r(ctxt);                                                      -- GENERATED --
+    cxreg2cxplif_extDebug(ctxt) <= cr_dcr_e_r(ctxt);                                                 -- GENERATED --
+    cxreg2rctrl_done(ctxt) <= cr_dcr_d_r(ctxt);
     cxreg2cxplif_resuming(ctxt) <= cr_dcr_r_r(ctxt);
     cxreg2cxplif_linkReadData(ctxt) <= cr_lr_lr_r(ctxt);
     cxreg2trace_cacheEn(ctxt) <= cr_dcr2_c_r(ctxt);
@@ -2479,8 +2500,8 @@ begin -- architecture
     cxreg2cxplif_currentPC(ctxt) <= cr_pc_pc_r(ctxt);
     cxreg2cxplif_stepping(ctxt) <= cr_dcr_s_r(ctxt);
     cxreg2cxplif_trapReturn(ctxt) <= cr_tp_tp_r(ctxt);
-    cxreg2cxplif_trapHandler(ctxt) <= ((cr_th_th_r(ctxt)) and ((31 downto 0 => cr_ccr_r_r(ctxt)))) or ((cr_ph_ph_r(ctxt)) and ((31 downto 0 => not (cr_ccr_r_r(ctxt)))));
-    cxreg2cfg_requestData(ctxt) <= cr_crr_crr_r(ctxt);                                               -- GENERATED --
+    cxreg2cxplif_trapHandler(ctxt) <= ((cr_th_th_r(ctxt)) and ((31 downto 0 => cr_ccr_r_r(ctxt)))) or ((cr_ph_ph_r(ctxt)) and ((31 downto 0 => not (cr_ccr_r_r(ctxt))))); -- GENERATED --
+    cxreg2cfg_requestData(ctxt) <= cr_crr_crr_r(ctxt);
     cxreg2cxplif_interruptEnable(ctxt) <= cr_ccr_i_r(ctxt);
     cxreg2trace_regEn(ctxt) <= cr_dcr2_r_r(ctxt);
     cxreg2trace_instrEn(ctxt) <= cr_dcr2_i_r(ctxt);
@@ -2489,8 +2510,8 @@ begin -- architecture
     cxreg2cxplif_overridePC(ctxt) <= cr_dcr_j_r(ctxt);
     cxreg2cxplif_debugTrapEnable(ctxt) <= cr_ccr_b_r(ctxt);
     cxreg2cxplif_softCtxtSwitch(ctxt) <= (cr_csc_csc_neq(ctxt)) and (cr_ccr_c_r(ctxt));
-    cxreg2trace_enable(ctxt) <= cr_dcr2_e_r(ctxt);
-  end generate;                                                                                      -- GENERATED --
+    cxreg2trace_enable(ctxt) <= cr_dcr2_e_r(ctxt);                                                   -- GENERATED --
+  end generate;
   cxreg2cfg_wakeupConfig <= cr_wcfg_wcfg_r(0 mod 2**CFG.numContextsLog2);
   cxreg2cfg_wakeupEnable <= cr_sawc_s_r(0 mod 2**CFG.numContextsLog2);
 

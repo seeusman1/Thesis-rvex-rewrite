@@ -8,10 +8,10 @@ should be loaded into our hardware context, if it is not already loaded. The
 encoding of the register is at the user's discretion, but it is intended that
 this points to a memory region that contains the to be loaded context.
 
-The contents of this register are controlled by hardware context 0, which is 
-expected to run the scheduler. When this value does not equal the value in 
-\code{CSC} and context switching is enabled in \creg{CCR}, the 
-\trap{SOFT_CTXT_SWITCH} trap is caused. Refer to its documentation in
+The contents of this register may also be written by hardware context 0 through
+\code{RSC}$n$, which is expected to run the scheduler. When this value does not
+equal the value in  \code{CSC} and context switching is enabled in \creg{CCR},
+the \trap{SOFT_CTXT_SWITCH} trap is caused. Refer to its documentation in
 Section~\ref{sec:core-ug-traps} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -24,6 +24,12 @@ Section~\ref{sec:core-ug-traps} for more information.
 if (ctxt != 0) {
     
     // Handle bus access.
+    if (_wmask) {
+        // _r can be written from here or from RSCn, so we need the if() so as
+        // to not override the new value of _r from the other register code with
+        // the current value if there is no write here.
+        _r = (_r & ~_wmask) | (_write & _wmask);
+    }
     _read = _r;
     
 }
@@ -75,7 +81,12 @@ information.
 if ((ctxt == 0) && (\n{} < (1 << CFG.numContextsLog2))) {
     
     // Handle bus access.
-    cr_rsc_rsc_r@\n{} = (cr_rsc_rsc_r@\n{} & ~_wmask) | (_write & _wmask);
+    if (_wmask) {
+        // cr_rsc_rsc_r can be written from here or from RSC, so we need the
+        // if() so as to not override the new value of _r from the other
+        // register code with the current value if there is no write here.
+        cr_rsc_rsc_r@\n{} = (cr_rsc_rsc_r@\n{} & ~_wmask) | (_write & _wmask);
+    }
     _read = cr_rsc_rsc_r@\n{};
     
 }
