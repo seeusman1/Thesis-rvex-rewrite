@@ -1,0 +1,58 @@
+
+\clearpage
+\section{Design-time configuration}
+\label{sec:core-ug-cfg}
+
+\todo[inline]{The design-time configuration section is an incomplete mess.}
+
+The \rvex{} platform is highly design-time configurable. The important metrics
+of the core, such as the issue width and the degree of reconfigurability, are
+controlled by VHDL generics. This allows for heterogeneous multicore systems,
+where \rvex{} processors of different sizes are combined. Capability registers
+in the global control registers of each \rvex{} core may be used by the software
+running on the core to determine which features it can use. These registers can
+also be read through the debug bus, allowing debug support software to detect
+the configuration as well. The available generics are listed in detail in
+Section~\ref{sec:core-ug-cfg-inst-iface-generics}.
+
+In addition to the VHDL generics based configuration system, a second system is
+in place. This system resides in the \code{config} directory in the root of the
+\rvex{} git repository. It consists of a set of LaTeX-formatted configuration
+files, interpreted by a set of python scripts. These scripts generate various
+configuration and source files in the repository, including some of the LaTeX
+sources for this very document, related to the following things.
+
+\begin{itemize}
+
+\item Global and context control register file functionality, memory map and
+      documentation (Section~\ref{sec:core-ug-cfg-cregs}).
+
+\item Instruction set decoding and documentation, as well as assembly syntax
+      (Section~\ref{sec:core-ug-cfg-opcodes}).
+
+\item Pipeline configuration of the \rvex{} core
+      (Section~\ref{sec:core-ug-cfg-pipeline}).
+
+\item Trap decoding and documentation (Section~\ref{sec:core-ug-cfg-traps}).
+
+\end{itemize}
+
+\noindent The purpose of this configuration system is primarily to have a 
+centralized set of files which control the interfaces between the VHDL files of 
+the processor, the assembly and compilation toolchain, the debug system and this 
+documentation. Thus, if it is necessary to change something, it only needs to be 
+changed in one place, so everything necessarily remains synchronized.
+
+However, as this system directly affects the source files of the core, it is 
+impossible to have different core configurations in the same design. In 
+addition, it would be impractical to encode all this information in the 
+capability registers of the core. Differences in configuration can be detected 
+as a change of the core version tag, however. The automated versioning system is 
+described in Section~\ref{sec:core-ug-version}.
+
+All configuration files share a LaTeX-like syntax. This allows for comfortable
+editing of the LaTeX documentation sections using text editors which support
+LaTeX syntax highlighting. It is, however, not possible or intended to supply
+the files directly to the LaTeX toolchain. They are only intended to be read by
+the configuration scripts.
+

@@ -19,17 +19,16 @@ Section~\ref{sec:core-ug-traps} for more information.
 \reset{11111111111111111111111111111111}
 \declaration{}
 \declRegister{_r}{data}{X"FFFFFFFF"}
+\declRegister{_c0data}{data}{0}
+\declRegister{_c0mask}{data}{0}
 \implementation{}
 \begin{lstlisting}
 if (ctxt != 0) {
     
-    // Handle bus access.
-    if (_wmask) {
-        // _r can be written from here or from RSCn, so we need the if() so as
-        // to not override the new value of _r from the other register code with
-        // the current value if there is no write here.
-        _r = (_r & ~_wmask) | (_write & _wmask);
-    }
+    // Handle bus access. The request from context 0 is taken from _c0data and
+    // _c0mask, which are driven by the RSCn implementation. For some reason,
+    // the placer did not appreciate doing this single-cycle.
+    _r = (((_r & ~_wmask) | (_write & _wmask)) & ~_c0mask) | (_c0data & _c0mask);
     _read = _r;
     
 }
@@ -81,12 +80,8 @@ information.
 if ((ctxt == 0) && (\n{} < (1 << CFG.numContextsLog2))) {
     
     // Handle bus access.
-    if (_wmask) {
-        // cr_rsc_rsc_r can be written from here or from RSC, so we need the
-        // if() so as to not override the new value of _r from the other
-        // register code with the current value if there is no write here.
-        cr_rsc_rsc_r@\n{} = (cr_rsc_rsc_r@\n{} & ~_wmask) | (_write & _wmask);
-    }
+    cr_rsc_rsc_c0data@\n{} = _write;
+    cr_rsc_rsc_c0mask@\n{} = _wmask;
     _read = cr_rsc_rsc_r@\n{};
     
 }
