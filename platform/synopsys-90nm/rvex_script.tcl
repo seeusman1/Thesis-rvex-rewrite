@@ -70,16 +70,13 @@ core/core_pkg.vhd \
 core/core_trap_pkg.vhd \
 core/core_trapRouting.vhd \
 core/core.vhd \
-utils/simUtils_mem_pkg.vhd \
 utils/simUtils_pkg.vhd \
 utils/simUtils_scanner_pkg.vhd \
 utils/utils_pkg.vhd \
 common/common_pkg.vhd \
 bus/bus_arbiter.vhd \
-system/rvsys_standalone.vhd \
 bus/bus_pkg.vhd \
 bus/bus_demux.vhd \
-bus/bus_ramBlock.vhd \
 system/rvsys_standalone_core.vhd \
 system/rvsys_standalone_pkg.vhd \
 bus/bus_addrConv_pkg.vhd \
@@ -113,12 +110,11 @@ cache/cache_instr.vhd \
 cache/cache_pkg.vhd \
 system/rvsys_standalone_cachedCore.vhd \
 core/core_trace.vhd \
-periph/periph_trace.vhd \
 core/core_stopBitRouting.vhd \
 core/core_instructionBuffer.vhd \
 core/core_version_pkg.vhd}
 
-#elaborate RVSYS_STANDALONE_CORE -library RVEX
+elaborate RVSYS_STANDALONE_CORE -library RVEX
 #create_clock -name "clk" -period 10 -waveform { 0 5  }  { core/clk  }
 
 #check_design?
