@@ -185,6 +185,10 @@ chain.
 Subtractions can be performed by setting the carry input to 1 using \insn{CMPEQ}
 and ones-complementing one of the inputs using \insn{XOR}.
 
+Notice that \insn{ADDCG} reduces to rotate left by one through a branch register
+when \code{x} equals \code{y}. This may be used for for shift left by one
+operations on integers wider than 32 bits.
+
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 long long tmp = $r0.x + $r0.y + ($b0.bs ? 1 : 0);
 $r0.d = (int)tmp;
@@ -206,12 +210,41 @@ $b0.bd = (tmp & 0x100000000) != 0;
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Primitive for integer divisions, used in conjunction with \insn{ADDCG}.
-\todo[inline]{Figure out how divisions work so it can be explained here.}
+\noindent Primitive for integer divisions. The following assembly code performs a single
+nonrestoring division step.
 
-Notice that \insn{DIVS} reduces to rotate left by one through a branch register
-when \code{y} is zero. This may be used for for shift left by one
-operations on integers wider than 32 bits.
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=vexasm]
+addcg  s_lo, shift_bit    = s_lo, s_lo, <zero>
+;;
+divs   s_hi, quotient_bit = s_hi, divisor, shift_bit
+;;
+addcg  quotient, <unused> = quotient, quotient, quotient_bit
+;;
+\end{lstlisting}
+
+\noindent Here, \code{s_lo} and \code{s_hi} represent the partial remainder,
+initialized to the dividend before the first division step. The first
+\insn{ADDCG} and the \insn{DIVS} instruction together perform a 64-bit
+shift-left-by-1 operation. Depending on the sign of the partial remainder before
+the shift (i.e., the MSB which was shifted out), the dividend is added to or
+subtracted from the partial remainder. If an addition was performed,
+\code{quotient_bit} is set to 1, representing that the current quotient bit is
+-1 in binary signed digit representation. Otherwise, the current quotient bit is
+1. The final \insn{ADDCG} stores the result by left-shifting the bit into
+\code{quotient}. Post-processing is required to convert the quotient from binary
+signed digit representation to two's complement.
+
+It should be noted that a division step can be done in a single cycle using just
+two syllables. This division step has to be applied many times in a loop, and
+benefits from modulo-scheduling (also known as software pipelining), allowing
+each step to be performed in a single cycle. Furthermore, the
+\code{quotient_bit}s can be shifted into \code{s_lo} instead of a different
+register, as the zero bits shifted into \code{s_lo} are unused. This eliminates
+the need for the second \insn{ADDCG}, as well as the zero and scratch branch
+registers.
+
+The prologue and epilogue code for various divisions are beyond the scope of
+this manual, as the compilers take care of expanding divisions.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 int tmp = ($r0.x << 1) | ($b0.bs ? 1 : 0);
@@ -1694,9 +1727,6 @@ unit. This unit supports 16x16 and 16x32 multiplications.
 In the default pipeline configuration, these instructions are pipelined by
 two cycles. That is, the result of a multiply instruction is not available yet
 in the subsequent instruction.
-
-\todo[inline]{Properly document the multiply instructions. This is a bit of a
-pain due to the fact that they make no sense to me at all.}
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
 \refstepcounter{InstructionCounter}\label{opc:MPYLL}
@@ -1716,7 +1746,11 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply signed low 16 x low 16 bits.
+\noindent Signed 16x16-bit to 32-bit multiplication.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (short)$r0.x * (short)[$r0.y|imm];
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1737,7 +1771,11 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply unsigned low 16 x low 16 bits.
+\noindent Unsigned 16x16-bit to 32-bit multiplication.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (unsigned short)$r0.x * (unsigned short)[$r0.y|imm];
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1758,7 +1796,12 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply signed low 16 (s1) x high 16 (s2) bits.
+\noindent Signed 16x16-bit to 32-bit multiplication, using the high halfword of
+\code{[$r0.y|imm]}.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (short)$r0.x * (short)([$r0.y|imm] >> 16);
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1779,7 +1822,12 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply unsigned low 16 (s1) x high 16 (s2) bits.
+\noindent Unsigned 16x16-bit to 32-bit multiplication, using the high halfword of
+\code{[$r0.y|imm]}.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (unsigned short)$r0.x * (unsigned short)([$r0.y|imm] >> 16);
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1800,7 +1848,12 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply signed high 16 x high 16 bits.
+\noindent Signed 16x16-bit to 32-bit multiplication, using the high halfword of both
+operands.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (short)($r0.x >> 16) * (short)([$r0.y|imm] >> 16);
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1821,7 +1874,12 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply unsigned high 16 x high 16 bits.
+\noindent Unsigned 16x16-bit to 32-bit multiplication, using the high halfword of both
+operands.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (unsigned short)($r0.x >> 16) * (unsigned short)([$r0.y|imm] >> 16);
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1842,7 +1900,13 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply signed low 16 (s2) x 32 (s1) bits.
+\noindent Signed 16x32-bit to 32-bit multiplication. \code{$r0.x} is the 32-bit operand,
+\code{[$r0.y|imm]} is the 16-bit operand. The upper 16 bits of the multiplication result
+are discarded.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (int)$r0.x * (short)[$r0.y|imm];
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1863,7 +1927,18 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply unsigned low 16 (s2) x 32 (s1) bits.
+\noindent Unsigned 16x32-bit to 32-bit multiplication. \code{$r0.x} is the 32-bit operand,
+\code{[$r0.y|imm]} is the 16-bit operand. The upper 16 bits of the multiplication result
+are discarded.
+
+This operation may be used as a primitive for 32x32-bit to 32-bit
+multiplication, computing the partial product of \code{$r0.x} and the lower half
+of \code{[$r0.y|imm]}. \insn{MPYHS} is then used to compute the other partial product. A
+final \insn{ADD} instruction combines the partial products.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (unsigned int)$r0.x * (unsigned short)[$r0.y|imm];
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1884,7 +1959,13 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply signed high 16 (s2) x 32 (s1) bits.
+\noindent Signed 16x32-bit to 32-bit multiplication. \code{$r0.x} is the 32-bit operand, the
+upper halfword of \code{[$r0.y|imm]} is the 16-bit operand. The upper 16 bits of the
+multiplication result are discarded.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (int)$r0.x * (short)([$r0.y|imm] >> 16);
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1905,7 +1986,13 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply unsigned high 16 (s2) x 32 (s1) bits.
+\noindent Unsigned 16x32-bit to 32-bit multiplication. \code{$r0.x} is the 32-bit operand,
+the upper halfword of \code{[$r0.y|imm]} is the 16-bit operand. The upper 16 bits of the
+multiplication result are discarded.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (unsigned int)$r0.x * (unsigned short)([$r0.y|imm] >> 16);
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1926,7 +2013,18 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply signed high 16 (s2) x 32 (s1) bits, shift left 16.
+\noindent Signed 16x32-bit to 32-bit multiplication. \code{$r0.x} is the 32-bit operand, the
+upper halfword of \code{[$r0.y|imm]} is the 16-bit operand. The result is shifted left
+by 16, discarding the upper 32 bits of the 48-bit result.
+
+This operation may be used as a primitive for 32x32-bit to 32-bit
+multiplication, computing the partial product of \code{$r0.x} and the upper half
+of \code{[$r0.y|imm]}. \insn{MPYLU} is then used to compute the other partial product. A
+final \insn{ADD} instruction combines the partial products.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = ((int)$r0.x * (short)[$r0.y|imm]) << 16;
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1947,7 +2045,34 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply unsigned low 16 (s2) x signed 32 (s1) bits, shift right 32.
+\noindent Mixed 16x32-bit to 32-bit multiplication. \code{$r0.x} is the 32-bit operand,
+interpreted as a signed number. \code{[$r0.y|imm]} is the 16-bit operand, interpreted as
+an unsigned number. The 48-bit result is shifted right by 32 bits.
+
+Together with \insn{MPYHS}, \insn{MPYLU}, \insn{MPYHHS}, \insn{ADD} and
+\insn{ADDCG}, a full signed 32x32-bit to 64-bit multiplication may be realized
+as follows.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=vexasm]
+mpylu   low1  = op1, op2
+mpyhs   low2  = op1, op2
+;;
+mpylhus high1 = op1, op2
+mpyhhs  high2 = op1, op2
+;;
+addcg   low, carry = <zero>, low1, low2
+;;
+addcg   high, carry = carry, high1, high2
+;;
+\end{lstlisting}
+
+\noindent The first two multiply instructions and the first \insn{ADDCG} compute
+the low word of the multiplication and carry bit for the high word. The
+remaining instructions do the same for the high part of the result.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = ((long long)$r0.x * (short)[$r0.y|imm]) >> 32;
+\end{lstlisting}
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
@@ -1968,7 +2093,17 @@ pain due to the fact that they make no sense to me at all.}
 \end{tabular}
 \normalsize
 \end{minipage}\vskip 10pt
-\noindent Multiply signed high 16 (s2) x 32 (s1) bits, shift right 16.
+\noindent Signed 16x32-bit to 32-bit multiplication. \code{$r0.x} is the 32-bit operand,
+the upper halfword of \code{[$r0.y|imm]} is the 16-bit operand. The 48-bit result is
+shifted right by 16 bits.
+
+This syllable is used in conjunction with other multiplication syllables for a
+32x32-bit to 64-bit signed multiplication. Refer to \insn{MPYLHUS} for more
+information.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = ((long long)$r0.x * (short)[$r0.y|imm]) >> 32;
+\end{lstlisting}
 
 \insndocsection{Memory instructions}
 Some \rvex{} pipelanes have a memory unit. The memory unit supports byte,

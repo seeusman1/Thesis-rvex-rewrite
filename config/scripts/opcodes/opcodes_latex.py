@@ -8,12 +8,13 @@ bitfields = common.bitfields
 
 def generate(opc, dirs):
     # Parse the opcode configuration file.
-    sections      = opc['sections']
-    table         = opc['table']
-    def_params    = opc['def_params']
-    stats_outfile = dirs['outdir'] + '/opcode-stats.generated.tex'
-    table_outfile = dirs['outdir'] + '/opcode-table.generated.tex'
-    doc_outfile   = dirs['outdir'] + '/opcode-docs.generated.tex'
+    sections       = opc['sections']
+    table          = opc['table']
+    def_params     = opc['def_params']
+    stats_outfile  = dirs['outdir'] + '/opcode-stats.generated.tex'
+    table_outfile  = dirs['outdir'] + '/opcode-table.generated.tex'
+    doc_outfile    = dirs['outdir'] + '/opcode-docs.generated.tex'
+    vexasm_outfile = dirs['outdir'] + '/vexasm.generated.tex'
 
     # Generate the table. While doing so, count the number of instructions and the
     # number of free opcodes.
@@ -57,12 +58,12 @@ def generate(opc, dirs):
         # longtable footer.
         f.write('\\end{longtable}\n')
         f.write('\\normalsize\\vskip 6pt\n')
-
+    
     # Generate the file containing just the number of instructions.
     with open(stats_outfile, 'w') as f:
         f.write('\\newcommand{\\instructioncount}{' + str(insn_count) + '}\n')
         f.write('\\newcommand{\\freeopcodecount}{' + str(free_opcode_count) + '}\n')
-
+    
     # Generate the instruction documentation.
     with open(doc_outfile, 'w') as f:
         f.write('\\newcounter{InstructionCounter}\n')
@@ -106,5 +107,17 @@ def generate(opc, dirs):
                     doc_imm_sw = None
                 f.write('\\noindent ' + opcodes.format_syntax(syl['doc'], 'plain', syl, doc_imm_sw))
                 f.write('\n\n')
-                
-                
+    
+    # Generate the header file which generates a LaTeX listings language for
+    # VEX assembly.
+    with open(vexasm_outfile, 'w') as f:
+        output = ['\lstdefinelanguage{vexasm}{morekeywords={']
+        for opc, syl in enumerate(table):
+            if syl is None:
+                continue
+            output.append(syl['name'])
+            output.append(',')
+        output[-1] = '},sensitive=false}\n'
+        f.write(''.join(output))
+    
+    

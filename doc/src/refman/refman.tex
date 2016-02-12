@@ -20,9 +20,13 @@
 \usepackage{todonotes}
 \usepackage{amssymb}
 \usepackage{pifont}
-\lstdefinelanguage{vexasm}
-{morekeywords={stw, add, call},
-sensitive=false}
+
+
+%===============================================================================
+% Code listings
+%===============================================================================
+
+\input{generated/vexasm.generated}
 
 \lstset{language=VHDL}
 \definecolor{codeBackgroundColor}{rgb}{0.97,0.98,0.99}
@@ -47,6 +51,11 @@ sensitive=false}
   tabsize=2
 }
 
+
+%===============================================================================
+% Custom LaTeX commands
+%===============================================================================
+
 % rho-VEX style command.
 \newcommand{\rvex}{$\rho$-VEX}
 
@@ -65,7 +74,18 @@ sensitive=false}
 }
 \makeatother
 
+\hypersetup{bookmarksdepth=4}
+%\setcounter{secnumdepth}{4}
+%\setcounter{tocdepth}{4}
+
+%===============================================================================
 \begin{document}
+%===============================================================================
+
+
+%-------------------------------------------------------------------------------
+% Title page
+%-------------------------------------------------------------------------------
 
 \begin{titlepage}
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
@@ -76,16 +96,42 @@ sensitive=false}
 { \huge \bfseries \rvex{} reference manual}\\[0.2cm]
 \HRule \\[0.5cm]
 \vskip 1em
-Jeroen van Straten \\[0.4cm]
+Computer Engineering Laboratory, TU Delft \\[0.4cm]
 \today
 \vfill
 \end{titlepage}
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
-% Manual structure
+%-------------------------------------------------------------------------------
+% Table of contents
+%-------------------------------------------------------------------------------
+
 \tableofcontents
-\listoftodos
+
+
+%-------------------------------------------------------------------------------
+% Todo list
+%-------------------------------------------------------------------------------
+
+\chapter*{Todo list}
+\addcontentsline{toc}{chapter}{Todo list}
+
+This chapter lists `todos' for both this reference manual. This includes notes
+indicating that the current implementation differs from what is described in the
+manual.
+
+\vskip 20 pt
+
+\makeatletter
+\@starttoc{tdo}
+\makeatother
+
+
+%-------------------------------------------------------------------------------
+% Content
+%-------------------------------------------------------------------------------
+
 \subimport{1-introduction/}{introduction.tex}
 \subimport{2-core-ug/}{core-ug.tex}
 \subimport{3-core-int/}{core-int.tex}
@@ -96,7 +142,15 @@ Jeroen van Straten \\[0.4cm]
 \subimport{8-host/}{host.tex}
 \subimport{9-target/}{target.tex}
 
+
+%-------------------------------------------------------------------------------
+% Bibliography
+%-------------------------------------------------------------------------------
+
 \bibliographystyle{ieeetr}
 \bibliography{bib}
+\addcontentsline{toc}{chapter}{Bibliography}
 
+%===============================================================================
 \end{document}
+%===============================================================================

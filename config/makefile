@@ -43,6 +43,7 @@ all: $(TEMP)
 	$(CP) $(TEMP)/gbreg.generated.tex $(DOCS)/gbreg.generated.tex
 	$(CP) $(TEMP)/cxreg.generated.tex $(DOCS)/cxreg.generated.tex
 	$(CP) $(TEMP)/traps.generated.tex $(DOCS)/traps.generated.tex
+	$(CP) $(TEMP)/vexasm.generated.tex $(DOCS)/vexasm.generated.tex
 	@echo ""
 	@echo "Cleaning up..."
 	@$(RM_DIR) $(TEMP)

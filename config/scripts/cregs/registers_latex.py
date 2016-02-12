@@ -99,7 +99,8 @@ def output_file(outfile, regmap, regdoc, regtype):
                 continue
             
             # Section header and labels.
-            f.write('\\subsubsection{\\code{CR_' + doc['mnemonic'] + '} - ' + doc['title'] + '}\n')
+            f.write('\\subsubsection[CR\_' + doc['mnemonic'] + ' - ' + doc['title'] + ']')
+            f.write('{\\code{CR_' + doc['mnemonic'] + '} - ' + doc['title'] + '}\n')
             for reg in doc['registers']:
                 f.write('\\label{reg:' + reg['mnemonic'] + '}\n')
             f.write('\\label{reg:' + doc['mnemonic'] + '}\n')

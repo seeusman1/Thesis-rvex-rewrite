@@ -82,20 +82,22 @@ _r = _v;
 %-------------------------------------------------------------------------------
 \field{9..8}{K}
 %-------------------------------------------------------------------------------
-\todo{The kernel mode/MMU enable flag exists, but the MMU is not in the design
-yet.}
-This register selects between kernel mode and user mode. Currently, this flag 
-only controls whether the MMU is enabled; the \rvex{} processor does not have 
-any security features yet. In kernel mode, the MMU is bypassed; in user mode, it 
-is activated. Kernel mode is activated when the core is reset and when entering 
-the trap or panic handlers. These must thus always point to code in hardware 
-memory space. When \insn{RFI} is executed, the state is restored from
-\creg{SCCR}.
+This register selects between kernel mode and user mode. Kernel mode is 
+activated when the core is reset and when entering the trap or panic handlers. 
+These must thus always point to code in hardware memory space. When \insn{RFI} 
+is executed, the state is restored from \creg{SCCR}.
 
 In kernel mode, the register reads as \code{01}, while in user mode, it reads as 
 \code{10}. The only way to enter user mode is by writing the user mode command 
 to \creg{SCCR} and subsequently executing \insn{RFI}. Neither the core nor the 
 debug bus can write to this field directly.
+
+Currently, the status of the kernel mode flag has no effect on the \rvex{}.
+However, it is intended that this register will be used in the future for memory
+protection and/or security features. In particular, the reason that this flag
+can only be set by entering a trap and cleared by executing \insn{RFI}, is that
+both of these mechanisms can be configured to do a full pipeline flush, which
+allows this flag to control whether address translation is enabled or disabled.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \reset{01}
@@ -333,10 +335,10 @@ the processor was in kernel mode or user mode. When \insn{RFI} is executed,
 the state is set to this value.
 
 Unlike the kernal mode field in \creg{CCR}, this field can be written. Writing 
-\code{00} has no effect, writing \code{01} enables external interrupts, writing 
-\code{10} disables them and writing \code{11} toggles the state. This prevents 
-the need for read-modify-write operations. Read behavior is identical to the
-K field in \creg{CCR}.
+\code{00} has no effect, writing \code{01} selects kernel mode, writing 
+\code{10} selects user mode and writing \code{11} toggles the state. This 
+prevents the need for read-modify-write operations. Read behavior is identical 
+to the K field in \creg{CCR}.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \reset{10}
