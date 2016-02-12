@@ -24,7 +24,7 @@ vsim-%: compile.do
 
 .PHONY: clean
 clean:
-	rm -rf *.wlf wlft* transcript work rvex unisim
+	rm -rf *.wlf wlft* transcript *stacktrace.vstf work rvex unisim
 	rm -rf compile*.do unisim_*.vhd
 
 unisim_VCOMP.vhd unisim_VPKG.vhd:
