@@ -702,6 +702,10 @@ architecture Behavioral of core_pipelane is
   -- Default/initialization value for datapath state.
   constant DATAPATH_STATE_DEFAULT : datapathState_type := (
     c                           => DP_CTRL_NOP,
+    src1                        => (others => RVEX_UNDEF),
+    src2                        => (others => RVEX_UNDEF),
+    srcBr                       => (others => RVEX_UNDEF),
+    readBr                      => (others => RVEX_UNDEF),
     useImm                      => RVEX_UNDEF,
     opBr                        => RVEX_UNDEF,
     resValid                    => '0',
@@ -709,6 +713,11 @@ architecture Behavioral of core_pipelane is
     gpRegWE_lo                  => RVEX_UNDEF,
     linkWE_lo                   => RVEX_UNDEF,
     resBrValid                  => (others => '0'),
+    resBr                       => (others => RVEX_UNDEF),
+    destBr                      => (others => RVEX_UNDEF),
+    dest                        => (others => RVEX_UNDEF),
+    res                         => (others => RVEX_UNDEF),
+    resadd                      => (others => RVEX_UNDEF),
     others                      => (others => RVEX_UNDEF)
   );
   
@@ -862,6 +871,10 @@ architecture Behavioral of core_pipelane is
     cache_status                => (data_accessType => (others => RVEX_UNDEF), others => RVEX_UNDEF),
     instr_enable                => '0',
     trap_info                   => TRAP_INFO_NONE,
+    mem_address                 => (others => RVEX_UNDEF),
+    mem_writeMask               => (others => RVEX_UNDEF),
+    instr_syllable              => (others => RVEX_UNDEF),
+    trap_point                  => (others => RVEX_UNDEF),
     others                      => (others => RVEX_UNDEF)
   );
   
@@ -951,7 +964,9 @@ architecture Behavioral of core_pipelane is
       invalidDueToStop          => '0',
       idle                      => '1',
     -- pragma translate_on
-    others                      => (others => RVEX_UNDEF)
+    opcode                      => (others => RVEX_UNDEF),
+    pc                          => (others => RVEX_UNDEF),
+    syllable                    => (others => RVEX_UNDEF)
   );
   
   -- Array type for syllable state.
@@ -1604,20 +1619,21 @@ begin -- architecture
       
       -- Determine a mask for the smallest alignment which can be handled by
       -- the stop bit logic.
-      sbitMask := (
-        SYLLABLE_SIZE_LOG2B + CFG.bundleAlignLog2 - 1 downto 0 => '0',
-        others => '1'
+      sbitMask := (others => '1');
+      sbitMask(SYLLABLE_SIZE_LOG2B + CFG.bundleAlignLog2 - 1 downto 0) := (
+        others => '0'
       );
       
       -- Determine a mask for the smallest alignment which can be handled by
       -- the reconfiguration logic (less groups working together means less
       -- alignment requirements).
       i := SYLLABLE_SIZE_LOG2B + (CFG.numLanesLog2-CFG.numLaneGroupsLog2);
+      reconfMask := (others => '1');
       case numGroupsLog2 is
-        when "00"   => reconfMask := (i-1 downto 0 => '0', others => '1');
-        when "01"   => reconfMask := (i   downto 0 => '0', others => '1');
-        when "10"   => reconfMask := (i+1 downto 0 => '0', others => '1');
-        when others => reconfMask := (i+2 downto 0 => '0', others => '1');
+        when "00"   => reconfMask(i-1 downto 0) := (others => '0');
+        when "01"   => reconfMask(i   downto 0) := (others => '0');
+        when "10"   => reconfMask(i+1 downto 0) := (others => '0');
+        when others => reconfMask(i+2 downto 0) := (others => '0');
       end case;
       
       -- Mask the PC with the larger of the two masks to align it.
@@ -1733,11 +1749,12 @@ begin -- architecture
         
         -- Determine numCoupledLanes - 1.
         i := SYLLABLE_SIZE_LOG2B + (CFG.numLanesLog2-CFG.numLaneGroupsLog2);
+        a1 := (others =>'0');
         case cfg2pl_numGroupsLog2 is
-          when "00"   => a1 := (i-1 downto SYLLABLE_SIZE_LOG2B => '1', others => '0');
-          when "01"   => a1 := (i   downto SYLLABLE_SIZE_LOG2B => '1', others => '0');
-          when "10"   => a1 := (i+1 downto SYLLABLE_SIZE_LOG2B => '1', others => '0');
-          when others => a1 := (i+2 downto SYLLABLE_SIZE_LOG2B => '1', others => '0');
+          when "00"   => a1(i-1 downto SYLLABLE_SIZE_LOG2B) := (others => '1');
+          when "01"   => a1(i   downto SYLLABLE_SIZE_LOG2B) := (others => '1');
+          when "10"   => a1(i+1 downto SYLLABLE_SIZE_LOG2B) := (others => '1');
+          when others => a1(i+2 downto SYLLABLE_SIZE_LOG2B) := (others => '1');
         end case;
         
         -- Perform the addition for PC_plusSbitFetchInd and align the result.
@@ -1760,10 +1777,8 @@ begin -- architecture
         end if;
         
         -- Determine how much to add to it.
-        a2 := (
-          1 + CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B => '1',
-          others => '0'
-        );
+        a2 := (others => '0');
+        a2(1 + CFG.numLanesLog2 + SYLLABLE_SIZE_LOG2B) := '1';
         
         -- Perform the addition. We don't need to align it, because we're not
         -- going to use the LSBs anyway.

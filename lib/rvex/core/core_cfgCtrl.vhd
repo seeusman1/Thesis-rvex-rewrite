@@ -698,7 +698,8 @@ begin -- architecture
         
         -- Reset configuration is all pipelane groups connected to context 0.
         curConfiguration_r <= (others => '0');
-        curContextEnable_r <= (0 => '1', others => '0');
+        curContextEnable_r <= (others => '0');
+        curContextEnable_r(0) <= '1';
         curLastPipelaneGroupForContext_r <= (others =>
           uint2vect(2**CFG.numLaneGroupsLog2-1, 3));
         curNumPipelaneGroupsLog2ForContext_r <= (others =>

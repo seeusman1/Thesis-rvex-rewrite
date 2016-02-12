@@ -229,7 +229,8 @@ begin -- architecture
         -- Load the configuration output for having context 0 run on all
         -- pipelanes.
         newConfiguration_r <= (others => '0');
-        contextEnable <= (0 => '1', others => '0');
+        contextEnable <= (others => '0');
+        contextEnable(0) <= '1';
         lastPipelaneGroupForContext <= (others =>
           uint2vect(2**CFG.numLaneGroupsLog2-1, 3));
         numPipelaneGroupsLog2ForContext <= (others =>

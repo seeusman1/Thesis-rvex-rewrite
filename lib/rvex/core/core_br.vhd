@@ -765,9 +765,9 @@ begin -- architecture
       -- example, we can't handle the misalignment here. In that case, cxplif
       -- will take care of it by disabling lanes which would end up getting
       -- instructions preceding the PC.
-      mask := (
-        SYLLABLE_SIZE_LOG2B + CFG.bundleAlignLog2 - 1 downto 0 => '0',
-        others => '1'
+      mask := (others => '1');
+      mask(SYLLABLE_SIZE_LOG2B + CFG.bundleAlignLog2 - 1 downto 0) := (
+        others => '0'
       );
       nextPC_v := nextPC(S_IF) and mask;
       

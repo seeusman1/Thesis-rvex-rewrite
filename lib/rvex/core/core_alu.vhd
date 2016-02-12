@@ -180,6 +180,8 @@ architecture Behavioral of core_alu is
     cmp1Result                  => RVEX_UNDEF,
     cmp2Result                  => RVEX_UNDEF,
     resultBr                    => RVEX_UNDEF,
+    op1Muxed                    => (others => RVEX_UNDEF),
+    op2Muxed                    => (others => RVEX_UNDEF),
     others                      => (others => RVEX_UNDEF)
   );
   
