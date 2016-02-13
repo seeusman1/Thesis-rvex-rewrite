@@ -333,15 +333,17 @@ class Resolve(Transformation):
         if node.value.endswith('{others}'):
             raise CodeError('the \'others\' keyword can only be used in aggregates.')
         typ = ob['typ'].member_type(node.value)
-        if typ is None:
+        name = ob['typ'].member_name(node.value)
+        if typ is None or name is None:
             raise CodeError('%s is not a member of type %s.' %
                             (node.value, ob['typ']))
         node['typ'] = typ
+        node['name'] = name
     
     def member(self, node):
         # Put the data from the member_name node in here as annotations and get
         # rid of the name node.
-        node['member'] = node[1].value
+        node['member'] = node[1]['name']
         node['typ'] = node[1]['typ']
         node.children = node.children[0:1]
         
