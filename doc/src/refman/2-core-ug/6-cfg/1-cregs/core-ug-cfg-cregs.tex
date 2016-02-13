@@ -1,0 +1,42 @@
+
+\subsection{Control register files}
+\label{sec:core-ug-cfg-cregs}
+
+The control register file configuration files reside in the \code{config/cregs}
+directory of the \rvex{} repository. The configuration consists of a set of
+LaTeX-styled files. The configuration controls roughly the following things.
+
+\begin{itemize}
+
+\item The address of each control register, within hardcoded limits. The global
+      register file is mapped from \code{0x000} to \code{0x100}, whereas the
+      context control register file is mapped from \code{0x200} to \code{0x400}.
+
+\item The documentation for each control register, as it appears in
+      Sections~\ref{sec:core-ug-creg-gb} and \ref{sec:core-ug-creg-cx} of this
+      manual.
+      
+\item The functionality of each register, described using a special C-like
+      language, which may be compiled to VHDL and C. The latter is intended for
+      a cycle-accurate simulator, but this does not exist yet.
+      
+\item The VHDL entity interface of the \rvexent{cxreg} and \rvexent{gbreg},
+      such that the implementations of the registers can communicate with the
+      rest of the processor. If the interface is changed, the instantiation of
+      \rvexent{cxreg} and \rvexent{gbreg} in \code{core.vhd} must be changed
+      accordingly to make the connections.
+
+\end{itemize}
+
+\noindent The files are interpreted ordered alphabetical by their filenames.
+
+The first of the following sections describes the LaTeX-style commands which are
+recognized by the configuration scripts. Any other commands are interpreted as
+being part of the LaTeX documentation sections. The remaining sections document
+the `language-agnostic' mini-language used to describe the register logic
+implementations. This language-agnostic code can be transformed by the
+configuration scripts into both VHDL for the hardware and C for a simulator,
+although the latter is not yet utilized.
+
+\subimport{1-cref/}{core-ug-cfg-cregs-cref.tex}
+\subimport{2-code/}{core-ug-cfg-cregs-code.tex}

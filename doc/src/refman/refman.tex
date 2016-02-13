@@ -21,12 +21,20 @@
 \usepackage{amssymb}
 \usepackage{pifont}
 
+%===============================================================================
+% Hyperref stuff
+%===============================================================================
+
+% Also list subsubsections in the PDF contents.
+\hypersetup{bookmarksdepth=4}
+
 
 %===============================================================================
 % Code listings
 %===============================================================================
 
 \input{generated/vexasm.generated}
+\lstdefinelanguage{nothing}{sensitive=false}
 
 \lstset{language=VHDL}
 \definecolor{codeBackgroundColor}{rgb}{0.97,0.98,0.99}
@@ -57,15 +65,20 @@
 %===============================================================================
 
 % rho-VEX style command.
-\newcommand{\rvex}{$\rho$-VEX}
+\newcommand{\rvex}{\texorpdfstring{$\rho$}{r}-VEX}
 
 % Inline code command.
-\newcommand{\code}[1]{{\color{codeInlineColor}\small{\texttt{\detokenize{#1}}}}}
+\newcommand{\codenodetok}[1]{{\color{codeInlineColor}\small{\texttt{#1}}}}
+\newcommand{\code}[1]{\codenodetok{\detokenize{#1}}}
+
+% Code headers.
+\newcommand{\codehead}[1]{\noindent\textbf{\footnotesize\texttt{\detokenize{#1}}}}
 
 % Hyperlink commands to the documentation of basic core features.
 \newcommand{\creg}[1]{\hyperref[reg:#1]{\code{CR_#1}}}
 \newcommand{\insn}[1]{\hyperref[opc:#1]{\code{#1}}}
 \newcommand{\trap}[1]{\hyperref[trap:#1]{\code{TRAP_#1}}}
+\newcommand{\rvexent}[1]{\hyperref[ent:#1]{\code{#1}}}
 
 % Magic command which allows lengths to be divided. Thanks, stackoverflow!
 \makeatletter
@@ -74,9 +87,6 @@
 }
 \makeatother
 
-\hypersetup{bookmarksdepth=4}
-%\setcounter{secnumdepth}{4}
-%\setcounter{tocdepth}{4}
 
 %===============================================================================
 \begin{document}

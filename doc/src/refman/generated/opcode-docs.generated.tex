@@ -549,7 +549,6 @@ $r0.d = ($r0.x & (1 << [$r0.y|imm])) != 0;
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:TBIT}
 \noindent\textbf{\footnotesize\texttt{\detokenize{tbit $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{tbit $b0.bd = $r0.x, imm}}}
@@ -599,7 +598,6 @@ $r0.d = ($r0.x & (1 << [$r0.y|imm])) == 0;
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:TBITF}
 \noindent\textbf{\footnotesize\texttt{\detokenize{tbitf $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{tbitf $b0.bd = $r0.x, imm}}}
@@ -655,7 +653,6 @@ $r0.d = $r0.x && [$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:ANDL}
 \noindent\textbf{\footnotesize\texttt{\detokenize{andl $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{andl $b0.bd = $r0.x, imm}}}
@@ -707,7 +704,6 @@ $r0.d = $r0.x || [$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:ORL}
 \noindent\textbf{\footnotesize\texttt{\detokenize{orl $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{orl $b0.bd = $r0.x, imm}}}
@@ -759,7 +755,6 @@ $r0.d = !($r0.x && [$r0.y|imm]);
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:NANDL}
 \noindent\textbf{\footnotesize\texttt{\detokenize{nandl $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{nandl $b0.bd = $r0.x, imm}}}
@@ -811,7 +806,6 @@ $r0.d = !($r0.x || [$r0.y|imm]);
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:NORL}
 \noindent\textbf{\footnotesize\texttt{\detokenize{norl $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{norl $b0.bd = $r0.x, imm}}}
@@ -867,7 +861,6 @@ $r0.d = $r0.x == [$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPEQ}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpeq $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpeq $b0.bd = $r0.x, imm}}}
@@ -919,7 +912,6 @@ $r0.d = $r0.x >= [$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPGE}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpge $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpge $b0.bd = $r0.x, imm}}}
@@ -971,7 +963,6 @@ $r0.d = (unsigned int)$r0.x >= (unsigned int)[$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPGEU}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpgeu $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpgeu $b0.bd = $r0.x, imm}}}
@@ -1023,7 +1014,6 @@ $r0.d = $r0.x > [$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPGT}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpgt $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpgt $b0.bd = $r0.x, imm}}}
@@ -1075,7 +1065,6 @@ $r0.d = (unsigned int)$r0.x > (unsigned int)[$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPGTU}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpgtu $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpgtu $b0.bd = $r0.x, imm}}}
@@ -1127,7 +1116,6 @@ $r0.d = $r0.x <= [$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPLE}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmple $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmple $b0.bd = $r0.x, imm}}}
@@ -1179,7 +1167,6 @@ $r0.d = (unsigned int)$r0.x <= (unsigned int)[$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPLEU}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpleu $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpleu $b0.bd = $r0.x, imm}}}
@@ -1231,7 +1218,6 @@ $r0.d = $r0.x <= [$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPLT}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmplt $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmplt $b0.bd = $r0.x, imm}}}
@@ -1283,7 +1269,6 @@ $r0.d = (unsigned int)$r0.x <= (unsigned int)[$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPLTU}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpltu $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpltu $b0.bd = $r0.x, imm}}}
@@ -1335,7 +1320,6 @@ $r0.d = $r0.x != [$r0.y|imm];
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:CMPNE}
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpne $b0.bd = $r0.x, $r0.y}}}
 
 \noindent\textbf{\footnotesize\texttt{\detokenize{cmpne $b0.bd = $r0.x, imm}}}
@@ -2225,7 +2209,6 @@ $r0.d = *(unsigned char*)($r0.x + imm);
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:LDW}
 \noindent\textbf{\footnotesize\texttt{\detokenize{ldw $l0.0 = imm[$r0.x]}}}
 
 \noindent\footnotesize
@@ -2340,7 +2323,6 @@ $b0.7 = tmp & 128;
 
 \vskip 10pt
 \noindent\begin{minipage}{\textwidth}
-\refstepcounter{InstructionCounter}\label{opc:STW}
 \noindent\textbf{\footnotesize\texttt{\detokenize{stw imm[$r0.x] = $l0.0}}}
 
 \noindent\footnotesize

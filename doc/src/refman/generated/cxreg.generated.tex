@@ -142,7 +142,6 @@
 \normalsize\vskip 6pt
 \subsubsection[CR\_CCR - Main context control register]{\code{CR_CCR} - Main context control register}
 \label{reg:CCR}
-\label{reg:CCR}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -239,7 +238,6 @@ external interrupts, writing \code{10} disables them and writing \code{11}
 toggles the state. This prevents the need for read-modify-write operations.
 \subsubsection[CR\_SCCR - Saved context control register]{\code{CR_SCCR} - Saved context control register}
 \label{reg:SCCR}
-\label{reg:SCCR}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -300,7 +298,6 @@ value.
 Core and debug bus access behavior is identical to the I field in \creg{CCR}.
 \subsubsection[CR\_LR - Link register]{\code{CR_LR} - Link register}
 \label{reg:LR}
-\label{reg:LR}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -317,7 +314,6 @@ Core and debug bus access behavior is identical to the I field in \creg{CCR}.
 use by the debug bus. While the core is running, accessing this register is
 undefined due to it being dependent on the pipeline and forwarding state.
 \subsubsection[CR\_PC - Program counter]{\code{CR_PC} - Program counter}
-\label{reg:PC}
 \label{reg:PC}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -337,7 +333,6 @@ set, to ensure that the branch unit properly jumps to the new PC. This works
 even if the processor is running.
 \subsubsection[CR\_TH - Trap handler]{\code{CR_TH} - Trap handler}
 \label{reg:TH}
-\label{reg:TH}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -355,7 +350,6 @@ will jump to if a trap occurs while ready-for-trap in \creg{CCR} is set. Even if
 the design contains an MMU, this should be a hardware address, as the MMU is
 disabled when a trap occurs.
 \subsubsection[CR\_PH - Panic handler]{\code{CR_PH} - Panic handler}
-\label{reg:PH}
 \label{reg:PH}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -382,7 +376,6 @@ state information of the processor is incomplete. Refer to
 Section~\ref{sec:core-ug-traps} for more information.
 \subsubsection[CR\_TP - Trap point]{\code{CR_TP} - Trap point}
 \label{reg:TP}
-\label{reg:TP}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -408,7 +401,6 @@ resumed in the new software context, assuming the rest of the processor state
 has been swapped in as well.
 \subsubsection[CR\_TA - Trap argument]{\code{CR_TA} - Trap argument}
 \label{reg:TA}
-\label{reg:TA}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -425,7 +417,7 @@ has been swapped in as well.
 of this value depends on the trap, which can be identified from the trap cause
 field in \creg{CCR}. Refer to Section~\ref{sec:core-ug-traps} for more
 information.
-\subsubsection[CR\_BRn - Breakpoint $n$]{\code{CR_BRn} - Breakpoint $n$}
+\subsubsection[CR\_BRn - Breakpoint n]{\code{CR_BRn} - Breakpoint $n$}
 \label{reg:BR0}
 \label{reg:BR1}
 \label{reg:BR2}
@@ -456,7 +448,6 @@ the breakpoints is configured in \creg{DCR}. These registers are always writable
 by the debug bus, but they are only writable by the core when the E flag is
 cleared, i.e. when self-hosted debug mode is selected.
 \subsubsection[CR\_DCR - Debug control register 1]{\code{CR_DCR} - Debug control register 1}
-\label{reg:DCR}
 \label{reg:DCR}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -570,7 +561,6 @@ BR$n$ = \code{11}: & \ data read/write watchpoint enabled. \\
 \end{tabularx}
 \subsubsection[CR\_DCR2 - Debug control register 2]{\code{CR_DCR2} - Debug control register 2}
 \label{reg:DCR2}
-\label{reg:DCR2}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -617,7 +607,6 @@ support it. If no other bits are set, only branch origins and destinations are
 traced.
 \subsubsection[CR\_CRR - Context reconfiguration request register]{\code{CR_CRR} - Context reconfiguration request register}
 \label{reg:CRR}
-\label{reg:CRR}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -635,7 +624,6 @@ reconfiguration is requested. Refer to Section~\ref{sec:core-ug-reconf} for more
 information.
 \subsubsection[CR\_WCFG - Wakeup configuration]{\code{CR_WCFG} - Wakeup configuration}
 \label{reg:WCFG}
-\label{reg:WCFG}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -652,7 +640,6 @@ information.
 used in conjunction with the S flag in \creg{SAWC}. Refer to
 Section~\ref{sec:core-ug-reconf-saw} for more information.
 \subsubsection[CR\_SAWC - Sleep and wake-up control register]{\code{CR_SAWC} - Sleep and wake-up control register}
-\label{reg:SAWC}
 \label{reg:SAWC}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -686,7 +673,7 @@ using these flags.
 \paragraph*{S flag, bit 0}
 Sleep flag. This enables or disables the sleep and wake-up system. Refer to
 Section~\ref{sec:core-ug-reconf-saw} for more information.
-\subsubsection[CR\_SCRPn - Scratchpad register $n$]{\code{CR_SCRPn} - Scratchpad register $n$}
+\subsubsection[CR\_SCRPn - Scratchpad register n]{\code{CR_SCRPn} - Scratchpad register $n$}
 \label{reg:SCRP1}
 \label{reg:SCRP2}
 \label{reg:SCRP3}
@@ -714,7 +701,6 @@ Section~\ref{sec:core-ug-reconf-saw} for more information.
 debug system.
 \subsubsection[CR\_RSC - Requested software context]{\code{CR_RSC} - Requested software context}
 \label{reg:RSC}
-\label{reg:RSC}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -740,7 +726,6 @@ the \trap{SOFT_CTXT_SWITCH} trap is caused. Refer to its documentation in
 Section~\ref{sec:core-ug-traps} for more information.
 \subsubsection[CR\_CSC - Current software context]{\code{CR_CSC} - Current software context}
 \label{reg:CSC}
-\label{reg:CSC}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -756,7 +741,7 @@ Section~\ref{sec:core-ug-traps} for more information.
 \noindent \emph{This register does not exist on context 0.} It is hardwired to
 \code{CSC}$n$ in hardware context 0. The value in this register should be set
 to the value in \creg{RSC} by the \trap{SOFT_CTXT_SWITCH} trap.
-\subsubsection[CR\_RSCn - Requested swctxt on hwctxt $n$]{\code{CR_RSCn} - Requested swctxt on hwctxt $n$}
+\subsubsection[CR\_RSCn - Requested swctxt on hwctxt n]{\code{CR_RSCn} - Requested swctxt on hwctxt $n$}
 \label{reg:RSC1}
 \label{reg:RSC2}
 \label{reg:RSC3}
@@ -793,7 +778,7 @@ to the value in \creg{RSC} by the \trap{SOFT_CTXT_SWITCH} trap.
 design-time configured to support hardware context $n$.} This register is
 hardwired to \creg{RSC} in hardware context $n$. Refer to \creg{RSC} for more
 information.
-\subsubsection[CR\_CSCn - Current swctxt on hwctxt $n$]{\code{CR_CSCn} - Current swctxt on hwctxt $n$}
+\subsubsection[CR\_CSCn - Current swctxt on hwctxt n]{\code{CR_CSCn} - Current swctxt on hwctxt $n$}
 \label{reg:CSC1}
 \label{reg:CSC2}
 \label{reg:CSC3}
@@ -833,7 +818,6 @@ information.
 \subsubsection[CR\_CYC - Cycle counter]{\code{CR_CYC} - Cycle counter}
 \label{reg:CYC}
 \label{reg:CYCH}
-\label{reg:CYC}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -856,7 +840,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_STALL - Stall cycle counter]{\code{CR_STALL} - Stall cycle counter}
 \label{reg:STALL}
 \label{reg:STALLH}
-\label{reg:STALL}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -881,7 +864,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_BUN - Committed bundle counter]{\code{CR_BUN} - Committed bundle counter}
 \label{reg:BUN}
 \label{reg:BUNH}
-\label{reg:BUN}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -907,7 +889,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_SYL - Committed syllable counter]{\code{CR_SYL} - Committed syllable counter}
 \label{reg:SYL}
 \label{reg:SYLH}
-\label{reg:SYL}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -932,7 +913,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_NOP - Committed NOP counter]{\code{CR_NOP} - Committed NOP counter}
 \label{reg:NOP}
 \label{reg:NOPH}
-\label{reg:NOP}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -957,7 +937,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_IACC - Instruction cache access counter]{\code{CR_IACC} - Instruction cache access counter}
 \label{reg:IACC}
 \label{reg:IACCH}
-\label{reg:IACC}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -979,7 +958,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_IMISS - Instruction cache miss counter]{\code{CR_IMISS} - Instruction cache miss counter}
 \label{reg:IMISS}
 \label{reg:IMISSH}
-\label{reg:IMISS}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -1002,7 +980,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_DRACC - Data cache read access counter]{\code{CR_DRACC} - Data cache read access counter}
 \label{reg:DRACC}
 \label{reg:DRACCH}
-\label{reg:DRACC}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -1025,7 +1002,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_DRMISS - Data cache read miss counter]{\code{CR_DRMISS} - Data cache read miss counter}
 \label{reg:DRMISS}
 \label{reg:DRMISSH}
-\label{reg:DRMISS}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -1048,7 +1024,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_DWACC - Data cache write access counter]{\code{CR_DWACC} - Data cache write access counter}
 \label{reg:DWACC}
 \label{reg:DWACCH}
-\label{reg:DWACC}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -1071,7 +1046,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_DWMISS - Data cache write miss counter]{\code{CR_DWMISS} - Data cache write miss counter}
 \label{reg:DWMISS}
 \label{reg:DWMISSH}
-\label{reg:DWMISS}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -1094,7 +1068,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_DBYPASS - Data cache bypass counter]{\code{CR_DBYPASS} - Data cache bypass counter}
 \label{reg:DBYPASS}
 \label{reg:DBYPASSH}
-\label{reg:DBYPASS}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
@@ -1117,7 +1090,6 @@ Refer to Section~\ref{sec:core-ug-creg-perf} for more information about the stru
 \subsubsection[CR\_DWBUF - Data cache write buffer counter]{\code{CR_DWBUF} - Data cache write buffer counter}
 \label{reg:DWBUF}
 \label{reg:DWBUFH}
-\label{reg:DWBUF}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
  & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\

@@ -68,6 +68,7 @@ def generate(opc, dirs):
     with open(doc_outfile, 'w') as f:
         f.write('\\newcounter{InstructionCounter}\n')
         
+        labels = set()
         for section in sections:
             
             # Write the section header and documentation.
@@ -81,7 +82,9 @@ def generate(opc, dirs):
                 f.write('\\noindent\\begin{minipage}{\\textwidth}\n')
                 
                 # Write the label.
-                f.write('\\refstepcounter{InstructionCounter}\\label{opc:' + syl['name'] + '}\n')
+                if syl['name'] not in labels:
+                    labels.add(syl['name'])
+                    f.write('\\refstepcounter{InstructionCounter}\\label{opc:' + syl['name'] + '}\n')
                 
                 # Write the syntax of the instruction as the title.
                 for imm_sw in imm_sws:

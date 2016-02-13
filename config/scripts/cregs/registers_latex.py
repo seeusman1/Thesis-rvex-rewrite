@@ -74,6 +74,13 @@ def print_reg_foot(f, wrap=False):
     f.write('\\end{' + ('longtable' if wrap else 'tabular') + '}\n\\normalsize\\vskip 6pt\n')
 
 def output_file(outfile, regmap, regdoc, regtype):
+    
+    labels = set()
+    def reglabel(f, name):
+        if name not in labels:
+            labels.add(name)
+            f.write('\\label{reg:' + name + '}\n')
+    
     with open(outfile, 'w') as f:
         
         # Print the register table.
@@ -99,11 +106,11 @@ def output_file(outfile, regmap, regdoc, regtype):
                 continue
             
             # Section header and labels.
-            f.write('\\subsubsection[CR\_' + doc['mnemonic'] + ' - ' + doc['title'] + ']')
+            f.write('\\subsubsection[CR\_' + doc['mnemonic'] + ' - ' + doc['title'].replace('$n$', 'n') + ']')
             f.write('{\\code{CR_' + doc['mnemonic'] + '} - ' + doc['title'] + '}\n')
             for reg in doc['registers']:
-                f.write('\\label{reg:' + reg['mnemonic'] + '}\n')
-            f.write('\\label{reg:' + doc['mnemonic'] + '}\n')
+                reglabel(f, reg['mnemonic'])
+            reglabel(f, doc['mnemonic'])
             
             # Print the register field table.
             print_reg_head(f)
@@ -132,6 +139,6 @@ def output_file(outfile, regmap, regdoc, regtype):
                     f.write(', a.k.a. \\creg{' + '}, \\creg{'.join(field['alt_ids']) + '}')
                 f.write('}\n')
                 for alt_id in field['alt_ids']:
-                    f.write('\\label{reg:' + alt_id + '}\n')
+                    reglabel(f, alt_id)
                 f.write(field['doc'] + '\n')
 
