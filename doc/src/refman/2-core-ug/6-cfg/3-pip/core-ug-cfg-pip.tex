@@ -2,4 +2,10 @@
 \subsection{Pipeline}
 \label{sec:core-ug-cfg-pip}
 
-\todo[inline]{Write about pipeline configuration.}
+The pipeline configuration consists of a single key-value file in the
+\code{config/pipeline} directory of the \rvex{} repository. The configuration
+describes how the \rvex{} pipeline is organized by specifying the first stage
+and latencies of a multitude of configurable blocks, such as register read and
+writeback, branch unit determination, PC+1 computation, etc. The file is
+self-documenting by means of its comments.
+

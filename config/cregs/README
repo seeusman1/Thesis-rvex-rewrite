@@ -345,6 +345,9 @@ slices if you need to do this.
 
 Literals
 --------
+
+Scalar literals:
+
  - true and false:        boolean
  - decimal number:        natural
  - 0 octal number:        natural
@@ -356,11 +359,6 @@ Literals
  - U"0101":               unsigned
  - UX"0101":              unsigned
 
-Note that there is no aggregate literal.
-
-
-Aggregates
-----------
 Aggregate types can be assigned and initialized using an aggregate/compound
 literal. The syntax is similar to VHDL aggregates:
 

@@ -1,0 +1,27 @@
+
+\subsubsection{LAC predefined constants}
+\label{sec:core-ug-cfg-cregs-predef}
+
+The following predefined constants are available. These are hardcoded into the
+Python scripts.
+
+\begin{itemize}
+
+\item In context control register code only: \code{natural ctxt}. Represents the
+context to which the current register belongs.
+
+\item \code{cfgvect CFG} maps to the \code{CFG} generic.
+
+\item \code{bitvec65 RVEX_CORE_TAG} maps to the core version tag. Refer to
+\ref{sec:core-ug-version} for more information.
+
+\item \code{natural BRANCH_OFFS_SHIFT} maps to the package constant of the same
+name, representing the way in which the branch offset field of instructions is
+encoded.
+
+\item \code{natural S_*} and \code{natural L_*} map to the pipeline stage and
+latency definitions defined in \code{core_pipeline_pkg.vhd}.
+
+\end{itemize}
+
+

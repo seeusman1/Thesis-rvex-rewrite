@@ -4,7 +4,8 @@
 
 The control register file configuration files reside in the \code{config/cregs}
 directory of the \rvex{} repository. The configuration consists of a set of
-LaTeX-styled files. The configuration controls roughly the following things.
+LaTeX-styled files, interpreted ordered alphabetically by their filenames. The
+configuration controls roughly the following things.
 
 \begin{itemize}
 
@@ -28,15 +29,19 @@ LaTeX-styled files. The configuration controls roughly the following things.
 
 \end{itemize}
 
-\noindent The files are interpreted ordered alphabetical by their filenames.
-
-The first of the following sections describes the LaTeX-style commands which are
-recognized by the configuration scripts. Any other commands are interpreted as
-being part of the LaTeX documentation sections. The remaining sections document
-the `language-agnostic' mini-language used to describe the register logic
-implementations. This language-agnostic code can be transformed by the
-configuration scripts into both VHDL for the hardware and C for a simulator,
-although the latter is not yet utilized.
+\noindent The first of the following sections describes the LaTeX-style commands 
+that are recognized by the configuration scripts. Any other commands are 
+interpreted as being part of the LaTeX documentation sections. The remaining 
+sections document the `language-agnostic' mini-language used to describe the 
+register logic implementations. This language-agnostic code can be transformed 
+by the configuration scripts into both VHDL for the hardware and C for a 
+simulator, although the latter is not yet utilized.
 
 \subimport{1-cref/}{core-ug-cfg-cregs-cref.tex}
 \subimport{2-code/}{core-ug-cfg-cregs-code.tex}
+\subimport{3-types/}{core-ug-cfg-cregs-types.tex}
+\subimport{4-predef/}{core-ug-cfg-cregs-predef.tex}
+\subimport{5-literals/}{core-ug-cfg-cregs-literals.tex}
+\subimport{6-refs/}{core-ug-cfg-cregs-refs.tex}
+\subimport{7-ops/}{core-ug-cfg-cregs-ops.tex}
+\subimport{8-stmts/}{core-ug-cfg-cregs-stmts.tex}
