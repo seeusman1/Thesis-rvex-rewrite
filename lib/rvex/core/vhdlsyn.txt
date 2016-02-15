@@ -26,6 +26,7 @@ core_dmemSwitch.vhd
 core_globalRegLogic.vhd
 core_gpRegs_mem.vhd
 core_gpRegs_sim.vhd
+core_gpRegs_simple.vhd
 core_gpRegs.vhd
 core_limmRouting.vhd
 core_memu.vhd
