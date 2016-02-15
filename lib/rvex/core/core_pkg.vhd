@@ -139,6 +139,9 @@ package core_pkg is
     -- core.
     unifiedStall                : boolean;
     
+    -- Whether to use the very simple register file implementation or not.
+    gpRegImpl                   : boolean;
+
     -- Whether the trace unit should be instantiated.
     traceEnable                 : boolean;
     
@@ -172,6 +175,7 @@ package core_pkg is
     cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
     unifiedStall                => false,
+    gpRegImpl                   => false,
     traceEnable                 => false,
     perfCountSize               => 4,
     cachePerfCountEnable        => false
@@ -194,6 +198,7 @@ package core_pkg is
     cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
     unifiedStall                => true,
+    gpRegImpl                   => false,
     traceEnable                 => false,
     perfCountSize               => 0,
     cachePerfCountEnable        => false
@@ -225,6 +230,7 @@ package core_pkg is
     cregStartAddress            : rvex_address_type := (others => '-');
     resetVectors                : rvex_address_array(7 downto 0) := (others => (others => '-'));
     unifiedStall                : integer := -1;
+    gpRegImpl                   : integer := -1;
     traceEnable                 : integer := -1;
     perfCountSize               : integer := -1;
     cachePerfCountEnable        : integer := -1
@@ -345,6 +351,7 @@ package body core_pkg is
     cregStartAddress            : rvex_address_type := (others => '-');
     resetVectors                : rvex_address_array(7 downto 0) := (others => (others => '-'));
     unifiedStall                : integer := -1;
+    gpRegImpl                   : integer := -1;
     traceEnable                 : integer := -1;
     perfCountSize               : integer := -1;
     cachePerfCountEnable        : integer := -1
@@ -375,6 +382,7 @@ package body core_pkg is
     if limmhFromPreviousPair  >= 0 then cfg.limmhFromPreviousPair := int2bool(limmhFromPreviousPair); end if;
     if reg63isLink            >= 0 then cfg.reg63isLink           := int2bool(reg63isLink); end if;
     if unifiedStall           >= 0 then cfg.unifiedStall          := int2bool(unifiedStall); end if;
+    if gpRegImpl              >= 0 then cfg.gpRegImpl             := int2bool(gpRegImpl); end if;
     if traceEnable            >= 0 then cfg.traceEnable           := int2bool(traceEnable); end if;
     if perfCountSize          >= 0 then cfg.perfCountSize         := perfCountSize; end if;
     if cachePerfCountEnable   >= 0 then cfg.cachePerfCountEnable  := int2bool(cachePerfCountEnable); end if;

@@ -50,6 +50,11 @@ use IEEE.numeric_std.all;
 
 library rvex;
 use rvex.rvsys_standalone_pkg.all;
+use rvex.common_pkg.all;
+use rvex.utils_pkg.all;
+use rvex.bus_addrConv_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
 
 --=============================================================================
 -- This package contains the definition of the configuration for the synopsis
@@ -58,8 +63,45 @@ use rvex.rvsys_standalone_pkg.all;
 package rvsys_synopsis_pkg is
 --=============================================================================
   
+  -- Minimal rvex core configuration.
+  constant RVEX_CORE_CONFIG  : rvex_generic_config_type := (
+    numLanesLog2                => 3,
+    numLaneGroupsLog2           => 2,
+    numContextsLog2             => 2,
+    genBundleSizeLog2           => 3,
+    bundleAlignLog2             => 1,
+    multiplierLanes             => 2#11111111#,
+    memLaneRevIndex             => 1,
+    numBreakpoints              => 4,
+    forwarding                  => true,
+    limmhFromNeighbor           => true,
+    limmhFromPreviousPair       => false,
+    reg63isLink                 => false,
+    cregStartAddress            => X"FFFFFC00",
+    resetVectors                => (others => (others => '0')),
+    unifiedStall                => false,
+    gpRegImpl                   => true,
+    traceEnable                 => false,
+    perfCountSize               => 4,
+    cachePerfCountEnable        => false
+  );
+  constant RVEX_SYNOPSYS_CONFIG  : rvex_sa_generic_config_type := (
+    core                        => RVEX_CORE_CONFIG,
+    cache_enable                => false,
+    cache_config                => CACHE_DEFAULT_CONFIG,
+    cache_bypassRange           => addrRange(match => "1-------------------------------"),
+    imemDepthLog2B              => 8,
+    dmemDepthLog2B              => 8,
+    debugBusMap_imem            => addrRangeAndMap(match => "00-1----------------------------"),
+    debugBusMap_dmem            => addrRangeAndMap(match => "001-----------------------------"),
+    debugBusMap_rvex            => addrRangeAndMap(match => "1111----------------------------"),
+    debugBusMap_trace           => addrRangeAndMap(match => "1110----------------------------"),
+    debugBusMap_mutex           => false,
+    rvexDataMap_dmem            => addrRangeAndMap(match => "0-------------------------------"),
+    rvexDataMap_bus             => addrRangeAndMap(match => "1-------------------------------")
+  );
   constant rvex_synopsis_cfg : rvex_sa_generic_config_type :=
-    RVEX_SA_DEFAULT_CONFIG;
+    RVEX_SYNOPSYS_CONFIG;
 
 end rvsys_synopsis_pkg;
 

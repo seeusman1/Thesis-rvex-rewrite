@@ -158,7 +158,7 @@ architecture Behavioral of core_gpRegs is
   signal readData_comb            : rvex_data_array(NUM_READ_PORTS-1 downto 0);
   signal readData_reg             : rvex_data_array(NUM_READ_PORTS-1 downto 0);
   signal readData                 : rvex_data_array(NUM_READ_PORTS-1 downto 0);
-  
+
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -332,12 +332,12 @@ begin -- architecture
       
     end generate;
   end generate;
-  
+
   -----------------------------------------------------------------------------
   -- Instantiate memory
   -----------------------------------------------------------------------------
   -- Block RAM based memory for synthesis.
-  synth_mem_gen: if INST_SYNTH_MEM generate
+  synth_mem_gen: if INST_SYNTH_MEM and not CFG.gpRegImpl generate
     synth_mem: entity rvex.core_gpRegs_mem
       generic map (
         NUM_REGS_LOG2           => NUM_REGS_LOG2,
@@ -363,6 +363,32 @@ begin -- architecture
       );
   end generate;
   
+  simple_mem_gen: if INST_SYNTH_MEM and CFG.gpRegImpl generate
+    synth_mem: entity rvex.core_gpRegs_simple
+      generic map (
+        NUM_REGS_LOG2           => NUM_REGS_LOG2,
+        NUM_WRITE_PORTS         => NUM_WRITE_PORTS,
+        NUM_READ_PORTS          => NUM_READ_PORTS
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- Write ports.
+        writeEnable             => writeEnable,
+        writeAddr               => writeAddr,
+        writeData               => writeData,
+        
+        -- Read ports.
+        readAddr                => readAddr,
+        readData                => readData_comb
+        
+      );
+  end generate;
+
   -- Simulation only model of the block RAM based memory.
   sim_mem_gen: if not INST_SYNTH_MEM generate
     sim_mem: entity rvex.core_gpRegs_sim

@@ -49,6 +49,7 @@ core/core_ctrlRegs.vhd \
 core/core_dmemSwitch.vhd \
 core/core_forward.vhd \
 core/core_globalRegLogic.vhd \
+core/core_gpRegs_simple.vhd \
 core/core_gpRegs_mem.vhd \
 core/core_gpRegs_sim.vhd \
 core/core_gpRegs.vhd \
@@ -116,97 +117,17 @@ core/core_instructionBuffer.vhd \
 core/core_version_pkg.vhd}
 
 elaborate RVSYS_SYNOPSIS -library RVEX
-#create_clock -name "clk" -period 10 -waveform { 0 5  }  { core/clk  }
+create_clock -name "clk" -period 10 -waveform { 0 5  }  { core/clk  }
 
-#check_design?
+check_design -summary -html_file_name check_report.html
 
-#compile -exact_map
+compile -exact_map -map_effort high
 
-#report_design -nosplit -hierarchy
-#report_area -hierarchy
+report_design -nosplit > Design_Report.txt
+report_area -hierarchy > Area_report.txt
+report_power -analysis_effort low > Power_report.txt
+report_timing -path full -delay max -nworst 1 -max_paths 1 -significant_digits 2 -sort_by group > timing_report.txt
 
 exit
 
 
-    #common/common_pkg.vhd \
-    #utils/utils_pkg.vhd \
-    #utils/utils_sync.vhd \
-    #utils/utils_fracDiv.vhd \
-    #utils/utils_crc.vhd \
-    #utils/simUtils_pkg.vhd \
-    #utils/simUtils_mem_pkg.vhd \
-    #utils/simUtils_scanner_pkg.vhd \
-    #utils/utils_uart_rxBit.vhd \
-    #utils/utils_uart_rxByte.vhd \
-    #utils/utils_uart_tx.vhd \
-    #utils/utils_uart.vhd \
-    #bus/bus_pkg.vhd \
-    #bus/bus_addrConv_pkg.vhd \
-    #bus/bus_ramBlock_singlePort.vhd \
-    #bus/bus_ramBlock.vhd \
-    #bus/bus_arbiter.vhd \
-    #bus/bus_demux.vhd \
-    #bus/bus_crossClock.vhd \
-    #core/core_pkg.vhd \
-    #core/core_pipeline_pkg.vhd \
-    #core/core_ctrlRegs_pkg.vhd \
-    #core/core_intIface_pkg.vhd \
-    #core/core_opcodeDatapath_pkg.vhd \
-    #core/core_opcodeAlu_pkg.vhd \
-    #core/core_opcodeBranch_pkg.vhd \
-    #core/core_opcodeMemory_pkg.vhd \
-    #core/core_opcodeMultiplier_pkg.vhd \
-    #core/core_opcode_pkg.vhd \
-    #core/core_trap_pkg.vhd \
-    #core/core_asDisas_pkg.vhd \
-    #core/core_alu.vhd \
-    #core/core_brku.vhd \
-    #core/core_br.vhd \
-    #core/core_cfgCtrl_decode.vhd \
-    #core/core_cfgCtrl.vhd \
-    #core/core_forward.vhd \
-    #core/core_contextPipelaneIFace.vhd \
-    #core/core_contextRegLogic.vhd \
-    #core/core_ctrlRegs_bank.vhd \
-    #core/core_ctrlRegs_busSwitch.vhd \
-    #core/core_ctrlRegs_contextLaneSwitch.vhd \
-    #core/core_ctrlRegs_readPort.vhd \
-    #core/core_ctrlRegs.vhd \
-    #core/core_dmemSwitch.vhd \
-    #core/core_globalRegLogic.vhd \
-    #core/core_gpRegs_mem.vhd \
-    #core/core_gpRegs.vhd \
-    #core/core_limmRouting.vhd \
-    #core/core_memu.vhd \
-    #core/core_mulu.vhd \
-    #core/core_pipelane.vhd \
-    #core/core_stopBitRouting.vhd \
-    #core/core_trapRouting.vhd \
-    #core/core_pipelanes.vhd \
-    #core/core_instructionBuffer.vhd \
-    #core/core_trace.vhd \
-    #core/core.vhd \
-    #cache/cache_pkg.vhd \
-    #cache/cache_data_blockData.vhd \
-    #cache/cache_data_blockTag.vhd \
-    #cache/cache_data_blockValid.vhd \
-    #cache/cache_data_mainCtrl.vhd \
-    #cache/cache_data_block.vhd \
-    #cache/cache_data.vhd \
-    #cache/cache_instr_blockData.vhd \
-    #cache/cache_instr_blockTag.vhd \
-    #cache/cache_instr_blockValid.vhd \
-    #cache/cache_instr_missCtrl.vhd \
-    #cache/cache_instr_block.vhd \
-    #cache/cache_instr.vhd \
-    #cache/cache.vhd \
-    #periph/periph_uart_packetHandler.vhd \
-    #periph/periph_uart_packetBuffer.vhd \
-    #periph/periph_uart_packetControl.vhd \
-    #periph/periph_uart_fifo.vhd \
-    #periph/periph_uart_busIface.vhd \
-    #periph/periph_uart_switch.vhd \
-    #periph/periph_uart.vhd \
-    #periph/periph_trace.vhd \
-    #system/rvsys_standalone_pkg.vhd \
-    #system/rvsys_standalone_core.vhd }

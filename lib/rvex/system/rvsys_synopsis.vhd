@@ -165,6 +165,11 @@ architecture Behavioral of rvsys_synopsis is
 begin -- architecture
 --=============================================================================
   
+  -- Check configuration.
+  assert not CFG.core.gpRegImpl
+    report "rvsys_synopsis instantiated with wrong register file arch."
+    severity failure;
+
     -- Instantiate the standalone core.
     core: entity rvex.rvsys_standalone_core
       generic map (
