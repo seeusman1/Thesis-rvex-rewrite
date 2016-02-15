@@ -217,7 +217,11 @@ begin -- architecture
         -- This should always be true, but it might not always be for as far as
         -- VHDL is concerned.
         if sel < NUM_LANES*NUM_STAGES_TO_FORWARD then
-          readDataOut <= writeDatas(DATA_WIDTH*sel+DATA_WIDTH-1 downto DATA_WIDTH*sel);
+          for index in 0 to NUM_LANES*NUM_STAGES_TO_FORWARD-1 loop
+            if sel = index then
+              readDataOut <= writeDatas(DATA_WIDTH*(index+1)-1 downto DATA_WIDTH*index);
+            end if;
+          end loop;
           readDataForwarded <= '1';
         end if;
       end if;
