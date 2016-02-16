@@ -446,6 +446,38 @@ all:FANCY_PERFORMANCE {
   ));
 }
 
+all:PRINT_CHAR {
+  prioritize(
+    
+    # Decimal digits.
+    char ==  48, printf("0"), char ==  49, printf("1"), char ==  50, printf("2"), char ==  51, printf("3"),
+    char ==  52, printf("4"), char ==  53, printf("5"), char ==  54, printf("6"), char ==  55, printf("7"),
+    char ==  56, printf("8"), char ==  57, printf("9"),
+    
+    # Uppercase letters.
+    char ==  65, printf("A"), char ==  66, printf("B"), char ==  67, printf("C"), char ==  68, printf("D"),
+    char ==  69, printf("E"), char ==  70, printf("F"), char ==  71, printf("G"), char ==  72, printf("H"),
+    char ==  73, printf("I"), char ==  74, printf("J"), char ==  75, printf("K"), char ==  76, printf("L"),
+    char ==  77, printf("M"), char ==  78, printf("N"), char ==  79, printf("O"), char ==  80, printf("P"),
+    char ==  81, printf("Q"), char ==  82, printf("R"), char ==  83, printf("S"), char ==  84, printf("T"),
+    char ==  85, printf("U"), char ==  86, printf("V"), char ==  87, printf("W"), char ==  88, printf("X"),
+    char ==  89, printf("Y"), char ==  90, printf("Z"),
+    
+    # Lowercase letters.
+    char ==  97, printf("a"), char ==  98, printf("b"), char ==  99, printf("c"), char == 100, printf("d"),
+    char == 101, printf("e"), char == 102, printf("f"), char == 103, printf("g"), char == 104, printf("h"),
+    char == 105, printf("i"), char == 106, printf("j"), char == 107, printf("k"), char == 108, printf("l"),
+    char == 109, printf("m"), char == 110, printf("n"), char == 111, printf("o"), char == 112, printf("p"),
+    char == 113, printf("q"), char == 114, printf("r"), char == 115, printf("s"), char == 116, printf("t"),
+    char == 117, printf("u"), char == 118, printf("v"), char == 119, printf("w"), char == 120, printf("x"),
+    char == 121, printf("y"), char == 122, printf("z"),
+    
+    # Misc.
+    char ==  45, printf("-"), char ==  95, printf("_"), 1, printf("?")
+    
+  );
+}
+
 all:FANCY_PRINT {
   
   printf("\n");
@@ -456,9 +488,19 @@ all:FANCY_PRINT {
   printf("\033[1mConfiguration:\033[0m\n");
   
   printf("  Version: core-\033[4m");
-  printf("TODO"); # TODO
+  set(reg, CTAG);
+  while (reg < CTAG+7, (
+    set(char, readBytePreload(reg));
+    PRINT_CHAR;
+    set(reg, reg+1);
+  ));
   printf("\033[0m, platform-\033[4m");
-  printf("TODO"); # TODO
+  set(reg, PTAG);
+  while (reg < PTAG+7, (
+    set(char, readBytePreload(reg));
+    PRINT_CHAR;
+    set(reg, reg+1);
+  ));
   set(val, readWordPreload(EXT0));
   printf("\033[0m, branch offset in units of %d bits\n", (64-(32*FIELD_EXT0_O)));
   

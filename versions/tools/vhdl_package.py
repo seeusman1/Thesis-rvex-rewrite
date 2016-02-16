@@ -1,42 +1,6 @@
-#!/usr/bin/python
-import vhdtag
-import os
-import sys
-import tarfile
 
-# Find the :/versions and :/lib/rvex/core/ paths regardless of current
-# directory.
-p = os.path.dirname(os.path.realpath(__file__))
-rvex_rewrite_dir = os.path.realpath(p + '/../..')
-archive_dir = os.path.realpath(p + '/../cores')
-source_dir = os.path.realpath(p + '/../../lib/rvex/core')
-version_file = 'core_version_pkg.vhd'
-
-# Load the source file lists.
-source_files = []
-print('Reading "' + source_dir + '/deps.txt"...')
-with open(source_dir + '/deps.txt', 'r') as f:
-    source_files += list(filter(None, (source_dir + '/' + line.strip() for line in f)))
-print('Reading "' + source_dir + '/vhdlsyn.txt"...')
-with open(source_dir + '/vhdlsyn.txt', 'r') as f:
-    source_files += list(filter(None, (source_dir + '/' + line.strip() for line in f)))
-for i in range(len(source_files)):
-    source_files[i] = os.path.realpath(source_files[i])
-
-# Generate the tag for everything but the version file.
-fs = []
-for f in source_files:
-    if not f.endswith(version_file):
-        fs += [f]
-tag = vhdtag.tag(fs, sys.stdout)
-print('################################################################################')
-print('##     The core version tag is:  \033[1;4m' + tag['tag'] + '\033[0m-' + tag['md5'] + '     ##')
-print('################################################################################')
-
-# (Re)generate the version file.
-print('Updating "' + source_dir + '/' + version_file + '"...')
-with open(source_dir + '/' + version_file, 'w') as f:
-    f.write("""-- r-VEX processor
+def gen(tag, typ):
+    return """-- r-VEX processor
 -- Copyright (C) 2008-2016 by TU Delft.
 
 -- All Rights Reserved.
@@ -90,26 +54,21 @@ with open(source_dir + '/' + version_file, 'w') as f:
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-package core_version_pkg is
-  
-  -- The value below is the version tag for the core, which is automatically
-  -- generated based on the MD5 hash of the contents of the other source files.
-  -- ASCII tag = %s
-  constant RVEX_CORE_TAG : std_logic_vector(55 downto 0) := X"%s%s";
-  
-end core_version_pkg;
+package {typ}_version_pkg is
 
-package body core_version_pkg is
-end core_version_pkg;
-""" % (tag['tag'], tag['hexhi'], tag['hexlo']))
+-- The value below is the version tag for the {typ}, which is automatically
+-- generated based on the MD5 hash of the contents of the other source files.
+-- ASCII tag = {tag}
+constant RVEX_{TYP}_TAG : std_logic_vector(55 downto 0) := X"{hexhi}{hexlo}";
 
-# TODO: generate the archive and put it in the right place!
-archive_file = 'core-' + tag['tag'] + '-' + tag['md5'] + '.tar.gz'
-print('Creating "' + archive_dir + '/' + archive_file + '"...')
-with tarfile.open(archive_dir + '/' + archive_file, 'w:gz') as arch:
-    for fname in source_files:
-        arcname = os.path.relpath(fname, rvex_rewrite_dir)
-        print('Packing "' + arcname + '"...')
-        arch.add(fname, arcname)
+end {typ}_version_pkg;
 
-
+package body {typ}_version_pkg is
+end {typ}_version_pkg;
+""".format(
+    tag = tag['tag'],
+    hexhi = tag['hexhi'],
+    hexlo = tag['hexlo'],
+    typ = typ,
+    TYP = typ.upper()
+)

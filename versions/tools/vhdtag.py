@@ -83,24 +83,41 @@ def _b64(tag):
     tag = int(tag, 16)
     return table[tag // 64] + table[tag % 64]
 
-def tag(files, log=None):
-    """Generates the tag for a given list of VHDL filenames."""
+def tag(files, log=None, mode='vhdl'):
+    """Generates the tag for a given list of filenames. If mode is 'vhdl', the
+    tag is generated in a way which attempts to preserve the same tag if the
+    functionality remains the same, i.e. ignoring comments etc. This only works
+    for VHDL files. If the input contains other kinds of files, set mode to
+    'md5'; then the tag source is just the MD5 sum of all input files."""
     
-    # Load and strip the contents of all the files.
-    contents = [_load_file(fname, log) for fname in files]
+    if mode == 'vhdl':
+        
+        # Load and strip the contents of all the files.
+        contents = [_load_file(fname, log) for fname in files]
+        
+        if log is not None:
+            print('Computing tag...', file=log)
+        
+        # Sort the files by their content, so the order in which the files are
+        # passed to this function doesn't affect the tag.
+        contents.sort()
+        
+        # Append all the files to a single string for hashing.
+        contents = '\n'.join(contents)
+        
+        # Generate an MD5 of the contents.
+        h = hashlib.md5(contents).hexdigest()
     
-    if log is not None:
-        print('Computing tag...', file=log)
+    else:
+        
+        # Simply compute the MD5 hash of all files in any order.
+        h = hashlib.md5()
+        for fname in files:
+            with open(fname, "rb") as f:
+                for chunk in iter(lambda: f.read(4096), b""):
+                    h.update(chunk)
+        h = h.hexdigest()
     
-    # Sort the files by their content, so the order in which the files are
-    # passed to this function doesn't affect the tag.
-    contents.sort()
-    
-    # Append all the files to a single string for hashing.
-    contents = '\n'.join(contents)
-    
-    # Generate an MD5 of the contents.
-    h = hashlib.md5(contents).hexdigest()
     result = {'md5': h}
     
     # Generate 7 base64 characters from it.

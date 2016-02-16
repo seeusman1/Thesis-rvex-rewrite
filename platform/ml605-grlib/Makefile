@@ -84,7 +84,7 @@ help: work
 #------------------------------------------------------------------------------
 
 # Random seed for placer.
-MAP_COST_TABLE = 1
+MAP_COST_TABLE = 2
 
 
 #------------------------------------------------------------------------------
@@ -97,24 +97,36 @@ MAP_COST_TABLE = 1
 
 # Copies the base project from grlib into work and patches it.
 work: ../../grlib/grlib-gpl-1.3.7-b4144
-	cp -r ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605 .
-	mv ./leon3-xilinx-ml605 ./work
-#	cd work && dos2unix *.ucf && patch -p1 < ../work.patch
-	cd work && patch -p1 < ../work.patch
+	@if [ -d work ]; then \
+		touch work; \
+		echo "Touched work directory for make..."; \
+	else \
+		cp -r ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605 .; \
+		mv ./leon3-xilinx-ml605 ./work; \
+		cd work && patch -p1 < ../work.patch; \
+		echo "Rebuilt work directory from patchfile..."; \
+	fi
 
 # Updates the patchfile based upon the differences between the grlib base
 # project and the current contents of work. Kind of the inverse operation of
 # the "work" target.
-.PHONY: update-patch
-update-patch: clean
+.PHONY: update-patch update-%.patch
+update-patch: update-work.patch
+update-%.patch: clean
 	@cd work && $(MAKE) distclean
-	diff -rupN --exclude="ram.srec" ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/ work/ > work.patch ; true
+	diff -rupN --exclude="ram.srec" --exclude="ptag.vhd" \
+		../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/ work/ \
+		> $(patsubst update-%,%,$@) ; true
 
 # Cleans all grlib and rvex compilation intermediate files.
 .PHONY: clean
 clean: clean-ex
 	-cd work && $(MAKE) distclean scripts-clean migclean pcieclean
 	rm -f work/*_beh.prj
+	rm -f work/xilinx.log
+	rm -f work/timing.twr
+	rm -rf work/archive
+	rm -f synth.patch
 
 # Removes the entire working directory; use with care (because the work dir might contain
 # source files as well, which may not have been put in the patch file yet).
@@ -156,18 +168,28 @@ resim-%: work compile-%
 		map_xilinx_verilog_lib\
 		vsim-launch
 
-# Shorthand notations for synthesizing, as descibed in the grlib leon project
-# readme.
+# Runs synthesis. This also archives the core when it finishes generating.
+ARCHIVE_TOOLS = ../../versions/tools
+ARCHIVE_DIR = work/archive
 .PHONY: synth
 synth: work
-	cd work && $(MAKE) \
-		distclean\
-		scripts-clean\
-		migclean\
-		mig39\
-		pcie\
-		planahead\
-		MAP_COST_TABLE=$(MAP_COST_TABLE)
+	
+	# Version management.
+	$(MAKE) update-synth.patch
+	$(ARCHIVE_TOOLS)/archive_platform_prepare.py $(ARCHIVE_DIR)
+	rm -f synth.patch
+	
+	# Synthesis.
+	cd work && $(MAKE) mig39 pcie planahead MAP_COST_TABLE=$(MAP_COST_TABLE)
+	#cp -r ../../../version-stuff/work/planahead work/planahead
+	#cp ../../../version-stuff/work/leon3mp.bit work/leon3mp.bit
+	
+	# More version management.
+	touch work/xilinx.log
+	cat work/planahead/leon3-*/*.runs/synth_1/runme.log >> work/xilinx.log
+	cat work/planahead/leon3-*/*.runs/impl_1/runme.log >> work/xilinx.log
+	cat work/planahead/leon3-*/*.runs/impl_1/*.twr > work/timing.twr
+	$(ARCHIVE_TOOLS)/archive_platform_complete.py $(ARCHIVE_DIR)
 
 # Shorthand for launching ISE.
 ise: work

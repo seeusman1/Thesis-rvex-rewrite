@@ -72,6 +72,13 @@ entity rvsys_standalone is
     -- Configuration.
     CFG                         : rvex_sa_generic_config_type := rvex_sa_cfg;
     
+    -- This is used as the core index register in the global control registers.
+    CORE_ID                     : natural := 0;
+    
+    -- Platform version tag. This is put in the global control registers of the
+    -- processor.
+    PLATFORM_TAG                : std_logic_vector(55 downto 0) := (others => '0');
+    
     -- Initial contents for the memory.
     MEM_INIT                    : rvex_data_array := RVEX_DATA_ARRAY_NULL
     
@@ -261,7 +268,9 @@ begin -- architecture
     -- Instantiate the standalone core.
     core: entity rvex.rvsys_standalone_core
       generic map (
-        CFG                     => CFG
+        CFG                     => CFG,
+        CORE_ID                 => CORE_ID,
+        PLATFORM_TAG            => PLATFORM_TAG
       )
       port map (
         
@@ -305,7 +314,9 @@ begin -- architecture
     -- Instantiate the cached system.
     cached_core: entity rvex.rvsys_standalone_cachedCore
       generic map (
-        CFG                     => CFG
+        CFG                     => CFG,
+        CORE_ID                 => CORE_ID,
+        PLATFORM_TAG            => PLATFORM_TAG
       )
       port map (
         

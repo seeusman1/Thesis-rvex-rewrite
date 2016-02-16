@@ -65,7 +65,14 @@ entity rvsys_standalone_core is
   generic (
     
     -- Standalone system configuration.
-    CFG                         : rvex_sa_generic_config_type
+    CFG                         : rvex_sa_generic_config_type;
+    
+    -- This is used as the core index register in the global control registers.
+    CORE_ID                     : natural := 0;
+    
+    -- Platform version tag. This is put in the global control registers of the
+    -- processor.
+    PLATFORM_TAG                : std_logic_vector(55 downto 0) := (others => '0')
     
   );
   port (
@@ -208,7 +215,9 @@ begin -- architecture
   -----------------------------------------------------------------------------
   core: entity rvex.core
     generic map (
-      CFG                       => CFG.core
+      CFG                       => CFG.core,
+      CORE_ID                   => CORE_ID,
+      PLATFORM_TAG              => PLATFORM_TAG
     )
     port map (
       
