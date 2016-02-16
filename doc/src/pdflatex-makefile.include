@@ -19,17 +19,25 @@
 ###           # do something...
 ###
 
-PDFLATEX	?= pdflatex -halt-on-error -file-line-error $(LATEXFLAGS)
-BIBTEX		?= bibtex
-
-ifneq ($(QUIET),)
-PDFLATEX	+= -interaction=batchmode
-ERRFILTER	:= > /dev/null || (egrep ':[[:digit:]]+:' *.log && false)
-BIBTEX		+= -terse
+ifdef ROOT
+TEXFOT      = $(ROOT)/texfot.pl
 else
-PDFLATEX	+= -interaction=nonstopmode
-ERRFILTER=
+TEXFOT      = texfot.pl
 endif
+PDFLATEX   ?= max_print_line=1000 $(TEXFOT) pdflatex -halt-on-error -file-line-error $(LATEXFLAGS)
+BIBTEX     ?= bibtex
+BIBTEX     += -terse
+PDFLATEX   += -interaction=nonstopmode
+ERRFILTER  := > errlog || (cat errlog && false)
+
+#ifneq ($(QUIET),)
+#PDFLATEX	+= -interaction=batchmode
+#ERRFILTER	:= > /dev/null || (egrep ':[[:digit:]]+:' *.log && false)
+#BIBTEX		+= -terse
+#else
+#PDFLATEX	+= -interaction=nonstopmode
+#ERRFILTER=
+#endif
 
 ## Action for 'make view'
 OS=$(shell uname -s)
@@ -94,6 +102,7 @@ endif
 .PHONY: pdf-clean pdf view snapshot distill pdf-distclean
 
 pdf: $(PDFTARGETS)
+	cat errlog
 
 view: $(PDFTARGETS)
 	$(PDFVIEWER) $(PDFTARGETS)
@@ -152,4 +161,5 @@ pdf-clean:
 		$(T).nav $(T).snm $(T).vtc) \
 		$(REVDEPS) $(AUXFILES) $(LOGFILES) \
 		$(EXTRACLEAN)
+	$(RM) errlog
 

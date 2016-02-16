@@ -22,4 +22,5 @@ assets/rvex-block-diagram/rvex-block-diagram-linked.tex: assets/rvex-block-diagr
 	@cd assets/rvex-block-diagram && ./hyperlink.sh
 
 # Include the makefile with pdflatex magic.
+ROOT=..
 include ../pdflatex-makefile.include

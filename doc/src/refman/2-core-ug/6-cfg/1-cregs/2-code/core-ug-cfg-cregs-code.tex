@@ -1,0 +1,19 @@
+
+\subsubsection{Language-agnostic code (LAC) sections}
+\label{sec:core-ug-cfg-cregs-code}
+
+The `language-agnostic code' sections define the behavior of control registers. 
+Language-agnostic code, or LAC, is a C-like domain-specific language developed 
+specifically for describing registers in the \rvex{}. The configuration scripts 
+are capable of transforming LAC into both VHDL and C with relative ease. The 
+latter is intended for a cycle-accurate simulator, but at the time of writing 
+this simulator does not exist yet.
+
+As LAC is C-like, LaTeX-style comments cannot coexist with it, due to the C 
+\codenodetok{\%} operator for modulo. Because of this, C-styled comments are 
+used within the LAC sections. In order to prevent confusion with 
+syntax-highlighting editors and ambiguity about where the section ends, LAC 
+sections may be enclosed by \code{\begin{lstlisting}} and 
+\code{\end{lstlisting}} tags. LaTeX syntax highlighters should disable 
+highlighting in these blocks.
+

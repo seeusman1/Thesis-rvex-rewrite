@@ -70,8 +70,7 @@
 \cline{2-33}
 \end{longtable}
 \normalsize\vskip 6pt
-\subsubsection{\code{CR_GSR} - Global status register}
-\label{reg:GSR}
+\subsubsection[CR\_GSR - Global status register]{\code{CR_GSR} - Global status register}
 \label{reg:GSR}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -101,8 +100,7 @@ set to the context ID of the context that requested the configuration, or to
 0xF if the request was from the debug bus. This may be used by the
 reconfiguration sources to see if they have won arbitration. Refer to
 Section~\ref{sec:core-ug-reconf-request} for more information.
-\subsubsection{\code{CR_BCRR} - Bus reconfiguration request register}
-\label{reg:BCRR}
+\subsubsection[CR\_BCRR - Bus reconfiguration request register]{\code{CR_BCRR} - Bus reconfiguration request register}
 \label{reg:BCRR}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -119,8 +117,7 @@ Section~\ref{sec:core-ug-reconf-request} for more information.
 \noindent This register may be written to by the debug bus only. When it is written, a
 reconfiguration is requested. Refer to Sections~\ref{sec:core-ug-reconf-word}
 and \ref{sec:core-ug-reconf-request} for more information.
-\subsubsection{\code{CR_CC} - Current configuration register}
-\label{reg:CC}
+\subsubsection[CR\_CC - Current configuration register]{\code{CR_CC} - Current configuration register}
 \label{reg:CC}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -136,8 +133,7 @@ and \ref{sec:core-ug-reconf-request} for more information.
 \normalsize\vskip 6pt
 \noindent This register is hardwired to the current configuration vector. Refer to
 Section~\ref{sec:core-ug-reconf-word} for more information.
-\subsubsection{\code{CR_AFF} - Cache affinity register}
-\label{reg:AFF}
+\subsubsection[CR\_AFF - Cache affinity register]{\code{CR_AFF} - Cache affinity register}
 \label{reg:AFF}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -156,8 +152,7 @@ recently serviced an instruction fetch for a given context. This may be used for
 achieving the maximum possible instruction cache locality when reconfiguring.
 
 Each nibble represents a lane group. The nibble value is the context index.
-\subsubsection{\code{CR_CNT} - Cycle counter register}
-\label{reg:CNT}
+\subsubsection[CR\_CNT - Cycle counter register]{\code{CR_CNT} - Cycle counter register}
 \label{reg:CNT}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -175,8 +170,7 @@ Each nibble represents a lane group. The nibble value is the context index.
 Simply overflows when it reaches 0xFFFFFFFF. Its intended use is to monitor
 real time. As an indication, this register overflows approximately every 85
 seconds at 50 MHz.
-\subsubsection{\code{CR_CNTH} - Cycle counter register high}
-\label{reg:CNTH}
+\subsubsection[CR\_CNTH - Cycle counter register high]{\code{CR_CNTH} - Cycle counter register high}
 \label{reg:CNTH}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -196,7 +190,7 @@ allows the same algorithm to be used in order to read the value. Refer to
 Section~\ref{sec:core-ug-creg-perf} for more information. Note however, that
 unlike the other performance counters, this register always exists, regardless
 of the design-time configured performance counter width.
-\subsubsection{\code{CR_LIMCn} - Long immediate capability register $n$}
+\subsubsection[CR\_LIMCn - Long immediate capability register n]{\code{CR_LIMCn} - Long immediate capability register $n$}
 \label{reg:LIMC7}
 \label{reg:LIMC6}
 \label{reg:LIMC5}
@@ -238,19 +232,18 @@ routes.
 \label{reg:BORROWi}
 \
 \paragraph*{BORROW$2n$ field, bits 15..0, a.k.a. \creg{BORROWi}}
-\label{reg:BORROWi}
 Each bit in these fields represents a possible \insn{LIMMH} forwarding route.
 The bit index within the field specifies the source syllable index, i.e. the
 \insn{LIMMH} syllable; $i = \left ( 2n, 2n+1 \right )$ is the index of the
 syllable that uses the immediate.
 
-As an example, if bit 2 in \creg{BORROW4} (\creg{LIMC2}) is set, it means that
+As an example, if bit 2 in \code{BORROW4} (\creg{LIMC2}) is set, it means that
 the third syllable in a bundle (index 2) can be a \insn{LIMMH} instruction that
 forwards to the fifth syllable in a bundle (index 4).
 
 For the purpose of generic binaries, the configuration is repeated beyond the
 number of physically available lanes.
-\subsubsection{\code{CR_SICn} - Syllable index capability register $n$}
+\subsubsection[CR\_SICn - Syllable index capability register n]{\code{CR_SICn} - Syllable index capability register $n$}
 \label{reg:SIC3}
 \label{reg:SIC2}
 \label{reg:SIC1}
@@ -280,13 +273,10 @@ within a bundle.
 \label{reg:SYLiCAP}
 \
 \paragraph*{SYL$4n+2$CAP field, bits 23..16, a.k.a. \creg{SYLiCAP}}
-\label{reg:SYLiCAP}
 \
 \paragraph*{SYL$4n+1$CAP field, bits 15..8, a.k.a. \creg{SYLiCAP}}
-\label{reg:SYLiCAP}
 \
 \paragraph*{SYL$4n$CAP field, bits 7..0, a.k.a. \creg{SYLiCAP}}
-\label{reg:SYLiCAP}
 Each bit within the field represents a functional unit or resource that is
 available to syllable index $i$ within a bundle. The following encoding is used.
 
@@ -308,8 +298,7 @@ available to syllable index $i$ within a bundle. The following encoding is used.
 
 \vskip 6 pt\noindent For the purpose of generic binaries, the configuration is
 repeated beyond the number of physically available lanes.
-\subsubsection{\code{CR_GPS1} - General purpose register delay register B}
-\label{reg:GPS1}
+\subsubsection[CR\_GPS1 - General purpose register delay register B]{\code{CR_GPS1} - General purpose register delay register B}
 \label{reg:GPS1}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -324,8 +313,7 @@ repeated beyond the number of physically available lanes.
 \end{tabular}
 \normalsize\vskip 6pt
 \noindent This register is reserved for future expansion.
-\subsubsection{\code{CR_GPS0} - General purpose register delay register A}
-\label{reg:GPS0}
+\subsubsection[CR\_GPS0 - General purpose register delay register A]{\code{CR_GPS0} - General purpose register delay register A}
 \label{reg:GPS0}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -368,8 +356,7 @@ general purpose registers.
 \paragraph*{ALUR field, bits 3..0}
 Hardwired to the stage in which the ALU appears to read its operands from the
 general purpose registers.
-\subsubsection{\code{CR_SPS1} - Special delay register B}
-\label{reg:SPS1}
+\subsubsection[CR\_SPS1 - Special delay register B]{\code{CR_SPS1} - Special delay register B}
 \label{reg:SPS1}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -384,8 +371,7 @@ general purpose registers.
 \end{tabular}
 \normalsize\vskip 6pt
 \noindent This register is reserved for future expansion.
-\subsubsection{\code{CR_SPS0} - Special delay register A}
-\label{reg:SPS0}
+\subsubsection[CR\_SPS0 - Special delay register A]{\code{CR_SPS0} - Special delay register A}
 \label{reg:SPS0}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -430,8 +416,7 @@ branch and link registers.
 \paragraph*{ALUR field, bits 3..0}
 Hardwired to the stage in which the ALU appears to read its operands from the
 branch and link registers.
-\subsubsection{\code{CR_EXT2} - Extension register 2}
-\label{reg:EXT2}
+\subsubsection[CR\_EXT2 - Extension register 2]{\code{CR_EXT2} - Extension register 2}
 \label{reg:EXT2}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -446,8 +431,7 @@ branch and link registers.
 \end{tabular}
 \normalsize\vskip 6pt
 \noindent This register is reserved for future expansion.
-\subsubsection{\code{CR_EXT1} - Extension register 1}
-\label{reg:EXT1}
+\subsubsection[CR\_EXT1 - Extension register 1]{\code{CR_EXT1} - Extension register 1}
 \label{reg:EXT1}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -462,8 +446,7 @@ branch and link registers.
 \end{tabular}
 \normalsize\vskip 6pt
 \noindent This register is reserved for future expansion.
-\subsubsection{\code{CR_EXT0} - Extension register 0}
-\label{reg:EXT0}
+\subsubsection[CR\_EXT0 - Extension register 0]{\code{CR_EXT0} - Extension register 0}
 \label{reg:EXT0}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -500,8 +483,7 @@ allow arithmetic to be performed on the link register directly. If it is
 cleared, these registers are independent.
 \paragraph*{F flag, bit 0}
 This flag is set when forwarding is enabled.
-\subsubsection{\code{CR_DCFG} - Design-time configuration register}
-\label{reg:DCFG}
+\subsubsection[CR\_DCFG - Design-time configuration register]{\code{CR_DCFG} - Design-time configuration register}
 \label{reg:DCFG}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -529,8 +511,7 @@ reconfigurability. Together with NC, it fully specifies the number of valid
 configuration words.
 \paragraph*{NL field, bits 3..0}
 Number of pipelanes in the design, minus one.
-\subsubsection{\code{CR_CVER1} - Core version register 1}
-\label{reg:CVER1}
+\subsubsection[CR\_CVER1 - Core version register 1]{\code{CR_CVER1} - Core version register 1}
 \label{reg:CVER1}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -556,8 +537,7 @@ First ASCII character in a string of seven characters, which together identify
 the core version, similar to how a license plate identifies a car. It is
 intended that a database will be set up which maps each tag to an immutable
 archive containing the source code for the core and a mutable errata/notes file.
-\subsubsection{\code{CR_CVER0} - Core version register 0}
-\label{reg:CVER0}
+\subsubsection[CR\_CVER0 - Core version register 0]{\code{CR_CVER0} - Core version register 0}
 \label{reg:CVER0}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -572,8 +552,7 @@ archive containing the source code for the core and a mutable errata/notes file.
 \end{tabular}
 \normalsize\vskip 6pt
 \noindent Refer to \creg{CVER1} for more information.
-\subsubsection{\code{CR_PVER1} - Platform version register 1}
-\label{reg:PVER1}
+\subsubsection[CR\_PVER1 - Platform version register 1]{\code{CR_PVER1} - Platform version register 1}
 \label{reg:PVER1}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}
@@ -601,8 +580,7 @@ is intended that a database will be set up which maps each tag to an immutable
 archive containing the source code for the platform, synthesis logs and a bit
 file, as well as mutable \code{memory.map}, \code{rvex.h} and errata/notes
 files.
-\subsubsection{\code{CR_PVER0} - Platform version register 0}
-\label{reg:PVER0}
+\subsubsection[CR\_PVER0 - Platform version register 0]{\code{CR_PVER0} - Platform version register 0}
 \label{reg:PVER0}
 \vskip -10 pt\relax\noindent\footnotesize
 \begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{24mm}@{}}

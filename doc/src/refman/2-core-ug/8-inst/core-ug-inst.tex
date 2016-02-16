@@ -1,7 +1,7 @@
 
 \clearpage
-\section{Configuration and instantiation}
-\label{sec:core-ug-cfg-inst}
+\section{Instantiation}
+\label{sec:core-ug-inst}
 
 This section describes how the core should be instantiated, what the function of
 all the external signals are, and how the core may be design-time configured. It
@@ -10,7 +10,7 @@ their design. \todo{Refer to some place that designers can turn to if they want
 to instantiate higher-level \rvex{} core blocks, such as the cached core.}
 
 \subsection{Data types}
-\label{sec:core-ug-cfg-inst-types}
+\label{sec:core-ug-inst-types}
 
 The following basic VHDL data types are used for the ports and generics. They
 are defined in \code{common_pkg}.
@@ -43,7 +43,7 @@ lowest byte address, as the \rvex{} system is big endian.
 The \code{byte} type should be self-explanatory.
 
 \subsection{Instantiation template}
-\label{sec:core-ug-cfg-inst-template}
+\label{sec:core-ug-inst-template}
 
 The following listing serves as an instantiation template for the core. The code
 is documented in the following sections.
@@ -51,9 +51,6 @@ is documented in the following sections.
 If you get errors when instantiating the core with this template, the
 documentation might be out of date. Fear not, for the signals are also
 documented in the entity description in \code{core.vhdl}.
-
-\todo[inline]{Make sure the instantiation template is at least up-to-date at the
-time of writing; this was copied from the manual from a year ago.}
 
 \begin{lstlisting}[numbers=none, basicstyle=\tiny]
 library rvex;
@@ -71,7 +68,9 @@ rvex_inst: entity rvex.core
       numLaneGroupsLog2         => 2,
       numContextsLog2           => 2
       -- ...
-    )
+    ),
+    CORE_ID                     => CORE_ID,
+    PLATFORM_TAG                => PLATFORM_TAG
     
   )
   port map (
@@ -135,27 +134,19 @@ rvex_inst: entity rvex.core
 
 \end{lstlisting}
 
-\subsection{Port description}
-\label{sec:core-ug-cfg-inst-port}
+\subsection{Interface description}
+\label{sec:core-ug-inst-iface}
 
-As you can see in the template, signals are grouped by their function. The
-following subsections will document each group of signals.
+As you can see in the template, the generics and signals are grouped by their 
+function. The following subsections will document each group.
 
-\subimport{ports/}{1-core-ug-cfg-inst-port-syscon}
-\subimport{ports/}{2-core-ug-cfg-inst-port-rctrl}
-\subimport{ports/}{3-core-ug-cfg-inst-port-cmem}
-\subimport{ports/}{4-core-ug-cfg-inst-port-imem}
-\subimport{ports/}{5-core-ug-cfg-inst-port-dmem}
-\subimport{ports/}{6-core-ug-cfg-inst-port-debug}
-\subimport{ports/}{7-core-ug-cfg-inst-port-trace}
+\subimport{iface/}{1-core-ug-cfg-inst-iface-generics}
+\subimport{iface/}{2-core-ug-cfg-inst-iface-syscon}
+\subimport{iface/}{3-core-ug-cfg-inst-iface-rctrl}
+\subimport{iface/}{4-core-ug-cfg-inst-iface-cmem}
+\subimport{iface/}{5-core-ug-cfg-inst-iface-imem}
+\subimport{iface/}{6-core-ug-cfg-inst-iface-dmem}
+\subimport{iface/}{7-core-ug-cfg-inst-iface-debug}
+\subimport{iface/}{8-core-ug-cfg-inst-iface-trace}
 
-\subsection{Generic configuration}
-\label{sec:core-ug-cfg-inst-generic}
 
-\todo[inline]{Write about the CFG generic.}
-
-\subsection{Package configuration}
-\label{sec:core-ug-cfg-inst-package}
-
-The \rvex{} processor has more configuration options than those described by the
-\code{CFG} generic. These configuration options are instead 

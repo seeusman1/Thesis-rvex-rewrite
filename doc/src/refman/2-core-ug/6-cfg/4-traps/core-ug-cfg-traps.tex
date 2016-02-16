@@ -1,0 +1,99 @@
+
+\subsection{Traps}
+\label{sec:core-ug-cfg-traps}
+
+The trap configuration files reside in the \code{config/traps} directory of the 
+\rvex{} repository. The configuration consists of a set of LaTeX-styled files, 
+interpreted ordered alphabetically by their filenames. The configuration 
+controls roughly the following things.
+
+\begin{itemize}
+
+\item The trap names and numeric identifiers.
+
+\item Decoding signals for each trap; debug and interrupt traps are handled
+      differently by the processor.
+      
+\item A pretty-printing macro for each trap.
+      
+\item Documentation for each trap, as it appears in
+      Section~\ref{sec:core-ug-traps-ids}.
+
+\end{itemize}
+
+\noindent The next section describes the structure of the LaTeX-style
+configuration files. The subsequent section provides a command reference.
+
+
+\subsubsection[.tex file structure]{\texttt{.tex} file structure}
+\label{sec:core-ug-cfg-opc-struct}
+
+The \code{\trap} and \code{\trapgen} commands start the definition of a trap or
+a number of similar traps respectively. Any unrecognized command or text
+following such a command is interpreted as being LaTeX documentation for the
+trap. The obligatory \code{\description} command defines the formatting string
+used to pretty-print the trap information. The remaining commands are optional
+decoding attributes for the traps.
+
+
+\subsubsection[.tex command reference]{\texttt{.tex} command reference}
+\label{sec:core-ug-cfg-opc-cref}
+
+The following LaTeX-like commands are interpreted by the Python scripts to 
+define the traps. They must be the only thing on a certain line aside from 
+optional LaTeX-style comments at the end of the line, otherwise they are 
+interpreted as part of a documentation section.
+
+\vskip 6 pt
+\codehead{\trap{<index>}{<mnemonic>}{<name>}}
+
+\noindent The command starts a trap description. \code{<index>} is the trap 
+index, which may range from 1 to 255. \code{<mnemonic>} is the trap identifier, 
+which must be a valid C and VHDL identifier and should be uppercase. It is 
+prefixed with \code{RVEX_TRAP_} in the header files. \code{<name>} is the 
+LaTeX-formatted friendly name of the trap, used as the section title in the 
+documentation.
+
+\vskip 6 pt
+\codehead{\trapgen{<python range>}{<start index>}{<mnemonic>}{<name>}}
+
+\noindent This command works the same as \code{\trap}, but specifies a list of 
+traps. \code{<python range>} is executed as a Python expression, expected to 
+generate an iterable of integers. A trap specification is generated for each of 
+these iterations. The index for each trap is computed as \code{<offset>}$ + 
+iter$. \code{\n{}} expands to the iterator value when used inline in 
+\code{<mnemonic>} and \code{<name>}, as well as in \code{\description{<desc>}} 
+below. In the documentation it expands to \code{$n$}.
+
+\vskip 6 pt
+\codehead{\description{<desc>}}
+
+\noindent This command defines a formatting string used to pretty-print the trap 
+information. It is used by the debug systems to allow the user to quickly 
+identify the trap. In this description, the following commands may be used 
+inline.
+
+\begin{itemize}
+
+\item \code{\at{}} expands to ``\code{ at <trap point>}'' if the trap point is 
+known, or to nothing if the trap point is not known. The trap point is expressed 
+in hexadecimal notation.
+
+\item \code{\arg{u}} expands to the trap argument in unsigned decimal notation.
+
+\item \code{\arg{s}} expands to the trap argument in signed decimal notation.
+
+\item \code{\arg{x}} expands to the trap argument in hexadecimal notation.
+
+\end{itemize}
+
+\vskip 6 pt
+\codehead{\debug{}}
+
+\noindent Marks that this trap is a debug trap. The \code{{}} is required.
+
+\vskip 6 pt
+\codehead{\interrupt{}}
+
+\noindent Marks that this trap is an interrupt trap. The \code{{}} is required.
+

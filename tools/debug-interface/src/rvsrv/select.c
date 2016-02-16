@@ -1,6 +1,6 @@
 /* Debug interface for standalone r-VEX processor
  * 
- * Copyright (C) 2008-2015 by TU Delft.
+ * Copyright (C) 2008-2016 by TU Delft.
  * All Rights Reserved.
  * 
  * THIS IS A LEGAL DOCUMENT, BY USING r-VEX,
@@ -43,7 +43,7 @@
  * Roel Seedorf, Anthony Brandon, Jeroen van Straten. r-VEX is currently
  * maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).
  * 
- * Copyright (C) 2008-2015 by TU Delft.
+ * Copyright (C) 2008-2016 by TU Delft.
  */
 
 #include <stdio.h>
@@ -134,7 +134,10 @@ int select_wait(int quick) {
   readyDescriptors = registeredDescriptors;
   
   // Call select.
-  if ((numReady = select(maxRegisteredDescriptor + 1, &readyDescriptors, 0, 0, ptimeout)) < 0) {
+  while ((numReady = select(maxRegisteredDescriptor + 1, &readyDescriptors, 0, 0, ptimeout)) < 0) {
+    if (errno == EINTR) {
+      continue;
+    }
     perror("Call to select failed");
     return -1;
   }

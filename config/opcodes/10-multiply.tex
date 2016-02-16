@@ -15,15 +15,16 @@ In the default pipeline configuration, these instructions are pipelined by
 two cycles. That is, the result of a multiply instruction is not available yet
 in the subsequent instruction.
 
-\todo[inline]{Properly document the multiply instructions. This is a bit of a
-pain due to the fact that they make no sense to me at all.}
-
 %-------------------------------------------------------------------------------
 \syllable{00000000-}{MPYLL}{\rd = \rx, \ry}
 \multiplier{op1sel}{LOW_HALF}
 \multiplier{op2sel}{LOW_HALF}
 \multiplier{resultSel}{PASS}
-Multiply signed low 16 x low 16 bits.
+Signed 16x16-bit to 32-bit multiplication.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (short)\rx * (short)\ry;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00000001-}{MPYLLU}{\rd = \rx, \ry}
@@ -32,14 +33,23 @@ Multiply signed low 16 x low 16 bits.
 \multiplier{op2sel}{LOW_HALF}
 \multiplier{op2unsigned}{'1'}
 \multiplier{resultSel}{PASS}
-Multiply unsigned low 16 x low 16 bits.
+Unsigned 16x16-bit to 32-bit multiplication.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned short)\rx * (unsigned short)\ry;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00000010-}{MPYLH}{\rd = \rx, \ry}
 \multiplier{op1sel}{LOW_HALF}
 \multiplier{op2sel}{HIGH_HALF}
 \multiplier{resultSel}{PASS}
-Multiply signed low 16 (s1) x high 16 (s2) bits.
+Signed 16x16-bit to 32-bit multiplication, using the high halfword of
+\code{\ry}.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (short)\rx * (short)(\ry >> 16);
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00000011-}{MPYLHU}{\rd = \rx, \ry}
@@ -48,14 +58,24 @@ Multiply signed low 16 (s1) x high 16 (s2) bits.
 \multiplier{op2sel}{HIGH_HALF}
 \multiplier{op2unsigned}{'1'}
 \multiplier{resultSel}{PASS}
-Multiply unsigned low 16 (s1) x high 16 (s2) bits.
+Unsigned 16x16-bit to 32-bit multiplication, using the high halfword of
+\code{\ry}.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned short)\rx * (unsigned short)(\ry >> 16);
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00000100-}{MPYHH}{\rd = \rx, \ry}
 \multiplier{op1sel}{HIGH_HALF}
 \multiplier{op2sel}{HIGH_HALF}
 \multiplier{resultSel}{PASS}
-Multiply signed high 16 x high 16 bits.
+Signed 16x16-bit to 32-bit multiplication, using the high halfword of both
+operands.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (short)(\rx >> 16) * (short)(\ry >> 16);
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00000101-}{MPYHHU}{\rd = \rx, \ry}
@@ -64,14 +84,25 @@ Multiply signed high 16 x high 16 bits.
 \multiplier{op2sel}{HIGH_HALF}
 \multiplier{op2unsigned}{'1'}
 \multiplier{resultSel}{PASS}
-Multiply unsigned high 16 x high 16 bits.
+Unsigned 16x16-bit to 32-bit multiplication, using the high halfword of both
+operands.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned short)(\rx >> 16) * (unsigned short)(\ry >> 16);
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00000110-}{MPYL}{\rd = \rx, \ry}
 \multiplier{op1sel}{WORD}
 \multiplier{op2sel}{LOW_HALF}
 \multiplier{resultSel}{PASS}
-Multiply signed low 16 (s2) x 32 (s1) bits.
+Signed 16x32-bit to 32-bit multiplication. \code{\rx} is the 32-bit operand,
+\code{\ry} is the 16-bit operand. The upper 16 bits of the multiplication result
+are discarded.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (int)\rx * (short)\ry;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00000111-}{MPYLU}{\rd = \rx, \ry}
@@ -80,14 +111,31 @@ Multiply signed low 16 (s2) x 32 (s1) bits.
 \multiplier{op2sel}{LOW_HALF}
 \multiplier{op2unsigned}{'1'}
 \multiplier{resultSel}{PASS}
-Multiply unsigned low 16 (s2) x 32 (s1) bits.
+Unsigned 16x32-bit to 32-bit multiplication. \code{\rx} is the 32-bit operand,
+\code{\ry} is the 16-bit operand. The upper 16 bits of the multiplication result
+are discarded.
+
+This operation may be used as a primitive for 32x32-bit to 32-bit
+multiplication, computing the partial product of \code{\rx} and the lower half
+of \code{\ry}. \insn{MPYHS} is then used to compute the other partial product. A
+final \insn{ADD} instruction combines the partial products.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned int)\rx * (unsigned short)\ry;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00001000-}{MPYH}{\rd = \rx, \ry}
 \multiplier{op1sel}{WORD}
 \multiplier{op2sel}{HIGH_HALF}
 \multiplier{resultSel}{PASS}
-Multiply signed high 16 (s2) x 32 (s1) bits.
+Signed 16x32-bit to 32-bit multiplication. \code{\rx} is the 32-bit operand, the 
+upper halfword of \code{\ry} is the 16-bit operand. The upper 16 bits of the 
+multiplication result are discarded.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (int)\rx * (short)(\ry >> 16);
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00001001-}{MPYHU}{\rd = \rx, \ry}
@@ -96,14 +144,31 @@ Multiply signed high 16 (s2) x 32 (s1) bits.
 \multiplier{op2sel}{HIGH_HALF}
 \multiplier{op2unsigned}{'1'}
 \multiplier{resultSel}{PASS}
-Multiply unsigned high 16 (s2) x 32 (s1) bits.
+Unsigned 16x32-bit to 32-bit multiplication. \code{\rx} is the 32-bit operand, 
+the upper halfword of \code{\ry} is the 16-bit operand. The upper 16 bits of the 
+multiplication result are discarded.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = (unsigned int)\rx * (unsigned short)(\ry >> 16);
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{00001010-}{MPYHS}{\rd = \rx, \ry}
 \multiplier{op1sel}{WORD}
 \multiplier{op2sel}{HIGH_HALF}
 \multiplier{resultSel}{SHL16}
-Multiply signed high 16 (s2) x 32 (s1) bits, shift left 16.
+Signed 16x32-bit to 32-bit multiplication. \code{\rx} is the 32-bit operand, the 
+upper halfword of \code{\ry} is the 16-bit operand. The result is shifted left
+by 16, discarding the upper 32 bits of the 48-bit result.
+
+This operation may be used as a primitive for 32x32-bit to 32-bit
+multiplication, computing the partial product of \code{\rx} and the upper half
+of \code{\ry}. \insn{MPYLU} is then used to compute the other partial product. A
+final \insn{ADD} instruction combines the partial products.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = ((int)\rx * (short)\ry) << 16;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{10010010-}{MPYLHUS}{\rd = \rx, \ry}
@@ -111,11 +176,48 @@ Multiply signed high 16 (s2) x 32 (s1) bits, shift left 16.
 \multiplier{op2sel}{LOW_HALF}
 \multiplier{op2unsigned}{'1'}
 \multiplier{resultSel}{SHR32}
-Multiply unsigned low 16 (s2) x signed 32 (s1) bits, shift right 32.
+Mixed 16x32-bit to 32-bit multiplication. \code{\rx} is the 32-bit operand,
+interpreted as a signed number. \code{\ry} is the 16-bit operand, interpreted as
+an unsigned number. The 48-bit result is shifted right by 32 bits.
+
+Together with \insn{MPYHS}, \insn{MPYLU}, \insn{MPYHHS}, \insn{ADD} and
+\insn{ADDCG}, a full signed 32x32-bit to 64-bit multiplication may be realized
+as follows.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=vexasm]
+mpylu   low1  = op1, op2
+mpyhs   low2  = op1, op2
+;;
+mpylhus high1 = op1, op2
+mpyhhs  high2 = op1, op2
+;;
+addcg   low, carry = <zero>, low1, low2
+;;
+addcg   high, carry = carry, high1, high2
+;;
+\end{lstlisting}
+
+\noindent The first two multiply instructions and the first \insn{ADDCG} compute
+the low word of the multiplication and carry bit for the high word. The
+remaining instructions do the same for the high part of the result.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = ((long long)\rx * (short)\ry) >> 32;
+\end{lstlisting}
 
 %-------------------------------------------------------------------------------
 \syllable{10010011-}{MPYHHS}{\rd = \rx, \ry}
 \multiplier{op1sel}{WORD}
 \multiplier{op2sel}{HIGH_HALF}
 \multiplier{resultSel}{SHR16}
-Multiply signed high 16 (s2) x 32 (s1) bits, shift right 16.
+Signed 16x32-bit to 32-bit multiplication. \code{\rx} is the 32-bit operand,
+the upper halfword of \code{\ry} is the 16-bit operand. The 48-bit result is
+shifted right by 16 bits.
+
+This syllable is used in conjunction with other multiplication syllables for a
+32x32-bit to 64-bit signed multiplication. Refer to \insn{MPYLHUS} for more
+information.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+\rd = ((long long)\rx * (short)\ry) >> 32;
+\end{lstlisting}

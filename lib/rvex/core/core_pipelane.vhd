@@ -1,5 +1,5 @@
 -- r-VEX processor
--- Copyright (C) 2008-2015 by TU Delft.
+-- Copyright (C) 2008-2016 by TU Delft.
 -- All Rights Reserved.
 
 -- THIS IS A LEGAL DOCUMENT, BY USING r-VEX,
@@ -42,7 +42,7 @@
 -- Roel Seedorf, Anthony Brandon, Jeroen van Straten. r-VEX is currently
 -- maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).
 
--- Copyright (C) 2008-2015 by TU Delft.
+-- Copyright (C) 2008-2016 by TU Delft.
 
 
 
@@ -1823,15 +1823,6 @@ begin -- architecture
       pl2sbit_PC_ind(S_STOP)          <= s(S_STOP).br.PC_plusSbitInd;
       pl2sbit_PC_fetchInd(S_STOP)     <= s(S_STOP).br.PC_plusSbitFetchInd;
       
-      -- Handle stop-bit based lane invalidation.
-      if sbit2pl_invalidate(S_STOP) = '1' then
-        s(S_STOP).valid := '0';
-        s(S_STOP).limmValid := '0';
-        -- pragma translate_off
-        s(S_STOP).invalidDueToStop := '1';
-        -- pragma translate_on
-      end if;
-      
       -- Handle branch operation forwarding.
       if HAS_BR and sbit2pl_valid(S_STOP) = '1' then
         s(S_STOP).valid           := '1';
@@ -1874,11 +1865,11 @@ begin -- architecture
     -- Handle stop-bit based lane invalidation.
     if CFG.genBundleSizeLog2 /= CFG.bundleAlignLog2 then
       if sbit2pl_invalidate(S_STOP) = '1' then
+        -- pragma translate_off
+        s(S_STOP).invalidDueToStop := s(S_STOP).valid;
+        -- pragma translate_on
         s(S_STOP).valid := '0';
         s(S_STOP).limmValid := '0';
-        -- pragma translate_off
-        s(S_STOP).invalidDueToStop := '1';
-        -- pragma translate_on
       end if;
     end if;
     

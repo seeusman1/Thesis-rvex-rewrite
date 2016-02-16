@@ -20,9 +20,22 @@
 \usepackage{todonotes}
 \usepackage{amssymb}
 \usepackage{pifont}
-\lstdefinelanguage{vexasm}
-{morekeywords={stw, add, call},
-sensitive=false}
+\usepackage{placeins}
+
+%===============================================================================
+% Hyperref stuff
+%===============================================================================
+
+% Also list subsubsections in the PDF contents.
+\hypersetup{bookmarksdepth=4}
+
+
+%===============================================================================
+% Code listings
+%===============================================================================
+
+\input{generated/vexasm.generated}
+\lstdefinelanguage{nothing}{sensitive=false}
 
 \lstset{language=VHDL}
 \definecolor{codeBackgroundColor}{rgb}{0.97,0.98,0.99}
@@ -47,16 +60,26 @@ sensitive=false}
   tabsize=2
 }
 
+
+%===============================================================================
+% Custom LaTeX commands
+%===============================================================================
+
 % rho-VEX style command.
-\newcommand{\rvex}{$\rho$-VEX}
+\newcommand{\rvex}{\texorpdfstring{$\rho$}{r}-VEX}
 
 % Inline code command.
-\newcommand{\code}[1]{{\color{codeInlineColor}\small{\texttt{\detokenize{#1}}}}}
+\newcommand{\codenodetok}[1]{{\color{codeInlineColor}\small{\texttt{#1}}}}
+\newcommand{\code}[1]{\codenodetok{\detokenize{#1}}}
+
+% Code headers.
+\newcommand{\codehead}[1]{\noindent\textbf{\footnotesize\texttt{\detokenize{#1}}}}
 
 % Hyperlink commands to the documentation of basic core features.
 \newcommand{\creg}[1]{\hyperref[reg:#1]{\code{CR_#1}}}
 \newcommand{\insn}[1]{\hyperref[opc:#1]{\code{#1}}}
 \newcommand{\trap}[1]{\hyperref[trap:#1]{\code{TRAP_#1}}}
+\newcommand{\rvexent}[1]{\hyperref[ent:#1]{\code{#1}}}
 
 % Magic command which allows lengths to be divided. Thanks, stackoverflow!
 \makeatletter
@@ -65,7 +88,15 @@ sensitive=false}
 }
 \makeatother
 
+
+%===============================================================================
 \begin{document}
+%===============================================================================
+
+
+%-------------------------------------------------------------------------------
+% Title page
+%-------------------------------------------------------------------------------
 
 \begin{titlepage}
 \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
@@ -76,16 +107,42 @@ sensitive=false}
 { \huge \bfseries \rvex{} reference manual}\\[0.2cm]
 \HRule \\[0.5cm]
 \vskip 1em
-Jeroen van Straten \\[0.4cm]
+Computer Engineering Laboratory, TU Delft \\[0.4cm]
 \today
 \vfill
 \end{titlepage}
 \pagenumbering{arabic}
 \setcounter{page}{1}
 
-% Manual structure
+%-------------------------------------------------------------------------------
+% Table of contents
+%-------------------------------------------------------------------------------
+
 \tableofcontents
-\listoftodos
+
+
+%-------------------------------------------------------------------------------
+% Todo list
+%-------------------------------------------------------------------------------
+
+\chapter*{Todo list}
+\addcontentsline{toc}{chapter}{Todo list}
+
+This chapter lists `todos' for both this reference manual. This includes notes
+indicating that the current implementation differs from what is described in the
+manual.
+
+\vskip 20 pt
+
+\makeatletter
+\@starttoc{tdo}
+\makeatother
+
+
+%-------------------------------------------------------------------------------
+% Content
+%-------------------------------------------------------------------------------
+
 \subimport{1-introduction/}{introduction.tex}
 \subimport{2-core-ug/}{core-ug.tex}
 \subimport{3-core-int/}{core-int.tex}
@@ -96,7 +153,15 @@ Jeroen van Straten \\[0.4cm]
 \subimport{8-host/}{host.tex}
 \subimport{9-target/}{target.tex}
 
+
+%-------------------------------------------------------------------------------
+% Bibliography
+%-------------------------------------------------------------------------------
+
 \bibliographystyle{ieeetr}
 \bibliography{bib}
+\addcontentsline{toc}{chapter}{Bibliography}
 
+%===============================================================================
 \end{document}
+%===============================================================================

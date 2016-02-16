@@ -30,7 +30,11 @@ class Type(object):
         
     def name_c(self):
         """Returns the C name of the type, or None if it does not exist."""
-        return name(self)
+        return '%s_t' % self.name()
+    
+    def typedef_c(self):
+        """Returns the C typedef for this type."""
+        return None
     
     def can_slice(self):
         """Returns whether this type can be sliced."""
@@ -62,6 +66,10 @@ class Type(object):
         after a dot. Returns None if the member does not exist."""
         return None
 
+    def member_name(self, member):
+        """Properly capitalizes the member name."""
+        return None
+
     def __eq__(self, other):
         if type(self) is type(other):
             return self.__dict__ == other.__dict__
@@ -78,8 +86,82 @@ class Type(object):
         return 'Type(%s)' % self.name()
 
 
+class Aggregate(Type):
+    """Record/struct type. Aggregates may kind of contain arrays (although they
+    can only be indexed by decimal numbers, not even just any literal), but they
+    cannot contain PerCtxt() types. The members also need to be hardcoded as
+    subclasses of this type."""
+    
+    def __init__(self):
+        self.member_order = []
+        self.members = {}
+        self.member_names = {}
+        self.c_typedef = []
+    
+    def add_entry(self, name, typ):
+        """Adds a scalar to the aggregate."""
+        namel = name.lower()
+        if namel in self.member_order:
+            raise CodeError(('duplicate entry name \'%s\' in \'%s\' aggregate ' +
+                            'definition.') % (name, self.name()))
+        self.member_order.append(namel)
+        self.members[namel] = typ
+        self.member_names[namel] = name
+        self.c_typedef.append('    %s_t %s;\n' % (typ.name(), name))
+    
+    def add_array(self, name, size, typ):
+        """Adds an array to the aggregate."""
+        namel = name.lower()
+        if namel in self.member_order:
+            raise CodeError(('duplicate entry name \'%s\' in \'%s\' aggregate ' +
+                            'definition.') % (name, self.name()))
+        self.member_order.append(namel)
+        self.member_names[namel] = name
+        for i in range(size):
+            self.members['%s{%d}' % (namel, i)] = typ
+            self.member_names['%s{%d}' % (namel, i)] = '%s{%d}' % (name, i)
+        self.c_typedef.append('    %s_t %s[%d];\n' % (typ.name(), name, size))
+    
+    def name(self):
+        return 'aggregate'
+        
+    def cls(self):
+        return 'aggregate %s' % self.name()
+    
+    def typedef_c(self):
+        return 'typedef struct {\n%s} %s;\n' % (''.join(self.c_typedef), self.name_c())
+    
+    def get_members(self):
+        return self.members
+    
+    def get_member_order(self):
+        return self.member_order
+    
+    def member_type(self, member):
+        member = member.lower().split(r'\.', 1)
+        if member[0] not in self.members:
+            return None
+        member_typ = self.members[member[0]]
+        if len(member) == 1:
+            return member_typ
+        else:
+            return member_typ.member_type(member[1])
+
+    def member_name(self, member):
+        member = member.lower().split(r'\.', 1)
+        if member[0] not in self.member_names:
+            return member
+        member_name = self.member_names[member[0]]
+        if len(member) == 1:
+            return member_name
+        else:
+            member_typ = self.members[member[0]]
+            return member_name + '.' + member_typ.member_name(member[1])
+
+
 def cls_size(cls):
     """Returns the size of a type class."""
+    # FIXME: I am very ugly indeed.
     if cls.startswith('bitvec'):
         return int(cls[6:])
     elif cls.startswith('unsigned'):
@@ -88,30 +170,46 @@ def cls_size(cls):
         raise ValueError()
 
 
+#===============================================================================
+# Type definitions
+#===============================================================================
+TYPE_LIST = []
+
+
 class Boolean(Type):
-    """Boolean/predicate data type, used for conditional statements."""
+    """Boolean/predicate data type, used for conditional statements.
+    
+    C storage: 0 for false, 1 for true. All other values are illegal."""
 
     def name(self):
         return 'boolean'
         
-    def name_c(self):
-        # Storage: 0 for false, 1 for true. All other values are illegal.
-        return 'uint32_t'
+    def typedef_c(self):
+        """Returns the C typedef for this type."""
+        return 'typedef uint8_t %s;\n' % self.name_c()
 
+TYPE_LIST.append(Boolean())
+    
 
 class Natural(Type):
-    """31-bit natural number data type, used for indexing operations."""
+    """31-bit natural number data type, used for indexing operations.
+    
+    C storage: 0..0x7FFFFFFF. All other values are illegal."""
 
     def name(self):
         return 'natural'
         
-    def name_c(self):
-        # Storage: 0..0x7FFFFFFF. All other values are illegal.
-        return 'uint32_t'
+    def typedef_c(self):
+        """Returns the C typedef for this type."""
+        return 'typedef uint32_t %s;\n' % self.name_c()
+
+TYPE_LIST.append(Natural())
 
 
 class Bit(Type):
-    """Bit data type."""
+    """Bit data type.
+    
+    C storage: LSB determines value. All other bits should be ignored."""
 
     def name(self):
         return 'bit'
@@ -122,13 +220,18 @@ class Bit(Type):
     def name_vhdl_array(self):
         return 'std_logic_vector'
     
-    def name_c(self):
-        # Storage: LSB determines value. All other bits should be ignored.
-        return 'uint32_t'
+    def typedef_c(self):
+        """Returns the C typedef for this type."""
+        return 'typedef uint8_t %s;\n' % self.name_c()
+
+TYPE_LIST.append(Bit())
 
 
 class BitVector(Type):
-    """Bit vector data type."""
+    """Bit vector data type.
+    
+    Storage: first size LSBs determine value. All other bits should be
+    ignored."""
     
     def __init__(self, size):
         self.size = size
@@ -142,11 +245,18 @@ class BitVector(Type):
     def name_vhdl(self):
         return 'std_logic_vector(%d downto 0)' % (self.size-1)
     
-    def name_c(self):
-        # Storage: first size LSBs determine value. All other bits should be
-        # ignored. Note that the low bit position is not encoded.
-        return 'uint64_t' if self.size > 32 else 'uint32_t'
-
+    def typedef_c(self):
+        """Returns the C typedef for this type."""
+        if self.size > 32:
+            size = 64
+        elif self.size > 16:
+            size = 32
+        elif self.size > 8:
+            size = 16
+        else:
+            size = 8
+        return 'typedef uint%d_t %s;\n' % (size, self.name_c())
+    
     def can_slice(self):
         return True
     
@@ -158,6 +268,8 @@ class BitVector(Type):
         if size < 1:
             return None
         return BitVector(size)
+
+TYPE_LIST += [BitVector(x) for x in range(1, 64+1)]
 
 
 class Unsigned(BitVector):
@@ -181,6 +293,8 @@ class Unsigned(BitVector):
             return None
         return Unsigned(size)
 
+TYPE_LIST += [Unsigned(x) for x in range(1, 64+1)]
+
 
 class Byte(BitVector):
     """8-bit data data type."""
@@ -197,6 +311,8 @@ class Byte(BitVector):
     def name_vhdl_array(self):
         return 'rvex_byte_array'
     
+TYPE_LIST.append(Byte())
+
 
 class Data(BitVector):
     """32-bit data data type."""
@@ -212,7 +328,9 @@ class Data(BitVector):
     
     def name_vhdl_array(self):
         return 'rvex_data_array'
-    
+
+TYPE_LIST.append(Data())
+
 
 class Address(BitVector):
     """32-bit address type."""
@@ -229,6 +347,8 @@ class Address(BitVector):
     def name_vhdl_array(self):
         return 'rvex_address_array'
     
+TYPE_LIST.append(Address())
+
 
 class SylStatus(BitVector):
     """One bit for each possible pipelane, so 16 bits."""
@@ -245,6 +365,8 @@ class SylStatus(BitVector):
     def name_vhdl_array(self):
         return 'rvex_sylStatus_array'
     
+TYPE_LIST.append(SylStatus())
+
 
 class BrRegData(BitVector):
     """One bit for each branch register, so 8 bits."""
@@ -260,7 +382,9 @@ class BrRegData(BitVector):
     
     def name_vhdl_array(self):
         return 'rvex_brRegData_array'
-    
+
+TYPE_LIST.append(BrRegData())
+
 
 class TrapCause(BitVector):
     """Trap cause type."""
@@ -276,7 +400,9 @@ class TrapCause(BitVector):
     
     def name_vhdl_array(self):
         return 'rvex_trap_array'
-    
+
+TYPE_LIST.append(TrapCause())
+
 
 class TwoBit(BitVector):
     """Misc. 2-bit type."""
@@ -292,7 +418,9 @@ class TwoBit(BitVector):
     
     def name_vhdl_array(self):
         return 'rvex_2bit_array'
-    
+
+TYPE_LIST.append(TwoBit())
+
 
 class ThreeBit(BitVector):
     """Misc. 3-bit type."""
@@ -308,7 +436,9 @@ class ThreeBit(BitVector):
     
     def name_vhdl_array(self):
         return 'rvex_3bit_array'
-    
+
+TYPE_LIST.append(ThreeBit())
+
 
 class FourBit(BitVector):
     """Misc. 4-bit type."""
@@ -324,7 +454,9 @@ class FourBit(BitVector):
     
     def name_vhdl_array(self):
         return 'rvex_4bit_array'
-    
+
+TYPE_LIST.append(FourBit())
+
 
 class SevenByte(BitVector):
     """Misc. 4-bit type."""
@@ -340,58 +472,8 @@ class SevenByte(BitVector):
     
     def name_vhdl_array(self):
         return 'rvex_7byte_array'
-    
 
-class Aggregate(Type):
-    """Record/struct type. Aggregates may kind of contain arrays (although they
-    can only be indexed by decimal numbers, not even just any literal), but they
-    cannot contain PerCtxt() types. The members also need to be hardcoded as
-    subclasses of this type."""
-    
-    def __init__(self):
-        self.members = {}
-        self.member_order = []
-    
-    def add_entry(self, name, typ):
-        """Adds a scalar to the aggregate."""
-        name = name.lower()
-        if name in self.member_order:
-            raise CodeError(('duplicate entry name \'%s\' in \'%s\' aggregate ' +
-                            'definition.') % (name, self.name()))
-        self.member_order.append(name)
-        self.members[name] = typ
-    
-    def add_array(self, name, size, typ):
-        """Adds an array to the aggregate."""
-        name = name.lower()
-        if name in self.member_order:
-            raise CodeError(('duplicate entry name \'%s\' in \'%s\' aggregate ' +
-                            'definition.') % (name, self.name()))
-        self.member_order.append(name)
-        for i in range(size):
-            self.members['%s{%d}' % (name, i)] = typ
-    
-    def name(self):
-        return 'aggregate'
-        
-    def cls(self):
-        return 'aggregate %s' % self.name()
-    
-    def get_members(self):
-        return self.members
-    
-    def get_member_order(self):
-        return self.member_order
-    
-    def member_type(self, member):
-        member = member.lower().split(r'\.', 1)
-        if member[0] not in self.members:
-            return None
-        member_typ = self.members[member[0]]
-        if len(member) == 1:
-            return member_typ
-        else:
-            return member_typ.member_type(member[1])
+TYPE_LIST.append(SevenByte())
 
 
 class TrapInfo(Aggregate):
@@ -414,7 +496,9 @@ class TrapInfo(Aggregate):
 
     def name_c(self):
         return 'trapInfo_t'
-    
+
+TYPE_LIST.append(TrapInfo())
+
         
 class BreakpointInfo(Aggregate):
     """Breakpoint information structure."""
@@ -435,6 +519,8 @@ class BreakpointInfo(Aggregate):
 
     def name_c(self):
         return 'breakpointInfo_t'
+
+TYPE_LIST.append(BreakpointInfo())
 
 
 class CacheStatus(Aggregate):
@@ -461,88 +547,7 @@ class CacheStatus(Aggregate):
     def name_c(self):
         return 'cacheStatus_t'
 
-
-def parse_type(text):
-    """Converts a textual type (using the language agnostic names) which can be
-    instantiated by the user into an internal Type. Raises a CodeError if 
-    something goes wrong."""
-    
-    text = text.lower()
-    
-    SIMPLE_TYPES = {
-        
-        # Primitive types.
-        'natural':          Natural(),
-        'boolean':          Boolean(),
-        'bit':              Bit(),
-        
-        # bitvec's with special names to permit VHDL arrays.
-        'byte':             Byte(),
-        'data':             Data(),
-        'address':          Address(),
-        'sylstatus':        SylStatus(),
-        'brregdata':        BrRegData(),
-        'trapcause':        TrapCause(),
-        'twobit':           TwoBit(),
-        'threebit':         ThreeBit(),
-        'fourbit':          FourBit(),
-        'sevenbyte':        SevenByte(),
-        
-        # Aggregate types.
-        'trapinfo':         TrapInfo(),
-        'breakpointinfo':   BreakpointInfo(),
-        'cachestatus':      CacheStatus()
-        
-    }
-    if text in SIMPLE_TYPES:
-        return SIMPLE_TYPES[text]
-    elif text.startswith('bitvec'):
-        try:
-            size = int(text[6:])
-            if size > 64:
-                raise CodeError('bit vectors greater than 64 bits are not supported.')
-            elif size > 0:
-                return BitVector(size)
-        except ValueError:
-            pass
-    elif text.startswith('unsigned'):
-        try:
-            size = int(text[8:])
-            if size > 64:
-                raise CodeError('unsigned vectors greater than 64 bits are not supported.')
-            elif size > 0:
-                return Unsigned(size)
-        except ValueError:
-            pass
-    else:
-        raise CodeError('unknown type \'%s\'.' % text)
-
-
-class PerCtxt(Type):
-    """Array data type for stuff which exists per context."""
-    
-    def __init__(self, el_typ):
-        self.el_typ = el_typ
-        if el_typ.name_vhdl_array() is None:
-            raise CodeError('cannot instantiate type ' + self.name() + ' per context.')
-
-    def name(self):
-        return self.el_typ.name()
-        
-    def cls(self):
-        return self.el_typ.cls() + ' per context'
-        
-    def name_vhdl(self):
-        return '%s(2**CFG.numContextsLog2-1 downto 0)' % self.el_typ.name_vhdl_array()
-    
-    def name_c(self):
-        return self.el_typ.name_c()
-
-    def exists_per_context(self):
-        return True
-    
-    def __str__(self):
-        return '%s per context' % self.name()
+TYPE_LIST.append(CacheStatus())
 
 
 class CfgVectType(Aggregate):
@@ -576,7 +581,62 @@ class CfgVectType(Aggregate):
     
     def name_c(self):
         return 'cfgVect_t'
+
+TYPE_LIST.append(CfgVectType())
+
+
+#===============================================================================
+# No more type definitions from here onwards.
+#===============================================================================
+
+TYPE_LOOKUP = {typ.name().lower(): typ for typ in TYPE_LIST}
+
+def parse_type(text):
+    """Converts a textual type (using the language agnostic names) which can be
+    instantiated by the user into an internal Type. Raises a CodeError if 
+    something goes wrong."""
     
+    global TYPE_LOOKUP
+    typ = TYPE_LOOKUP.get(text.lower())
+    if typ is not None:
+        return typ
+    
+    raise CodeError('unknown type \'%s\'.' % text)
+
+
+def generate_c_typedefs():
+    """Generates C typedefs for all the types defined here."""
+    
+    global TYPE_LIST
+    return ''.join([typ.typedef_c() for typ in TYPE_LIST])
+
+
+class PerCtxt(Type):
+    """Array data type for stuff which exists per context."""
+    
+    def __init__(self, el_typ):
+        self.el_typ = el_typ
+        if el_typ.name_vhdl_array() is None:
+            raise CodeError('cannot instantiate type ' + self.name() + ' per context.')
+
+    def name(self):
+        return self.el_typ.name()
+        
+    def cls(self):
+        return self.el_typ.cls() + ' per context'
+        
+    def name_vhdl(self):
+        return '%s(2**CFG.numContextsLog2-1 downto 0)' % self.el_typ.name_vhdl_array()
+    
+    def name_c(self):
+        return self.el_typ.name_c()
+
+    def exists_per_context(self):
+        return True
+    
+    def __str__(self):
+        return '%s per context' % self.name()
+
 
 class AccessibleType(object):
     

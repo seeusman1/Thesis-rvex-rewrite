@@ -18,12 +18,15 @@ grlib-gpl-%.tar.gz:
 	wget http://ftp.tudelft.nl/TUDelft/rvex/grlib/$@
 
 # Extracts and patches grlib.
-grlib-gpl-%: grlib-gpl-%.tar.gz
+grlib-gpl-%: patch-%.patch
+	$(MAKE) $@.tar.gz
 	tar -xzf $@.tar.gz
 	cd $@ && patch -p1 < ../patch-$(patsubst grlib-gpl-%,%,$@).patch ; true
+	touch $@
 
 # Updates the patchfile.
-patch-%: grlib-gpl-%.tar.gz
+patch-%:
+	$(MAKE) $@.tar.gz
 	mkdir clean
 	cd clean && tar -xzf ../$(patsubst patch-%,grlib-gpl-%,$@).tar.gz
 	diff -rupN\
@@ -33,6 +36,6 @@ patch-%: grlib-gpl-%.tar.gz
 	  > $@.patch ; true
 	rm -rf clean
 
-# Removes all downloaded content which is not redistributable.
+# Removes all downloaded content.
 clean:
 	rm -rf grlib-*

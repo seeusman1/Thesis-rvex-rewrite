@@ -3,14 +3,22 @@
 \section{Instruction set architecture}
 \label{sec:core-ug-isa}
 
-The instruction set architecture (ISA) of the \rvex{} processor is based on the 
-HP VEX ISA \todo{Insert reference to HP VEX ISA} and the ST200 processor family 
-by STMicroelectronics \todo{Insert reference to information about ST200 family}. 
-More specifically, the ISA is mostly copied from the previous version of the 
-\rvex processor \todo{Insert reference to Ro\"el's thesis if applicable (I never 
-read it...)}. Instead of noting the differences between these architectures, 
-this section functions as a reference for the \rvex{} processor ISA in its 
-current state, to save the reader from cross-referencing.
+The instruction set architecture (ISA) of the \rvex{} processor is primarily 
+based on VEX, an example VLIW architecture used in \cite{fisher2005} to explain 
+VLIW concepts. A compiler was developed for this architecture by HP, which is 
+available as a free download for commercial use \cite{hpvex}. In addition, some 
+enhancements were made to the instruction set to be compatible with the Lx 
+architecture, introduced in \cite{faraboschi2000}. Lx was designed by HP and 
+STMicroelectronics for use in SoC (system-on-chip) designs, among which is the 
+ST200 family of processors. This architecture comes with an Open64-based 
+compiler and Linux port, available for download under the GNU GPL \cite{st200}. 
+These tools together provide the basis for the toolchain used for the \rvex{}. 
+The instruction encoding for this version of the \rvex{} processor is based on 
+that of the previous major version of the \rvex{} \cite{seedorf2010}.
+
+Instead of noting the differences between these architectures, this section 
+functions as a reference for the \rvex{} processor ISA in its current state, to 
+save the reader from cross-referencing.
 
 \subimport{1-assembly/}{core-ug-isa-assembly.tex}
 \subimport{2-regs/}{core-ug-isa-regs.tex}

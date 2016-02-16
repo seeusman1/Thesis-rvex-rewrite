@@ -80,6 +80,14 @@ help: work
 
 
 #------------------------------------------------------------------------------
+# Additional planahead options
+#------------------------------------------------------------------------------
+
+# Random seed for placer.
+MAP_COST_TABLE = 1
+
+
+#------------------------------------------------------------------------------
 # GRLIB project management
 #------------------------------------------------------------------------------
 
@@ -158,7 +166,8 @@ synth: work
 		migclean\
 		mig39\
 		pcie\
-		planahead
+		planahead\
+		MAP_COST_TABLE=$(MAP_COST_TABLE)
 
 # Shorthand for launching ISE.
 ise: work

@@ -94,6 +94,10 @@ chain.
 Subtractions can be performed by setting the carry input to 1 using \insn{CMPEQ} 
 and ones-complementing one of the inputs using \insn{XOR}.
 
+Notice that \insn{ADDCG} reduces to rotate left by one through a branch register
+when \code{x} equals \code{y}. This may be used for for shift left by one
+operations on integers wider than 32 bits.
+
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 long long tmp = \rx + \ry + (\bs ? 1 : 0);
 \rd = (int)tmp;
@@ -108,12 +112,41 @@ long long tmp = \rx + \ry + (\bs ? 1 : 0);
 \alu{opBrMux}{PASS}
 \alu{divs}{'1'}
 \alu{brResultMux}{DIVS}
-Primitive for integer divisions, used in conjunction with \insn{ADDCG}.
-\todo[inline]{Figure out how divisions work so it can be explained here.}
+Primitive for integer divisions. The following assembly code performs a single 
+nonrestoring division step.
 
-Notice that \insn{DIVS} reduces to rotate left by one through a branch register
-when \code{y} is zero. This may be used for for shift left by one
-operations on integers wider than 32 bits.
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=vexasm]
+addcg  s_lo, shift_bit    = s_lo, s_lo, <zero>
+;;
+divs   s_hi, quotient_bit = s_hi, divisor, shift_bit
+;;
+addcg  quotient, <unused> = quotient, quotient, quotient_bit
+;;
+\end{lstlisting}
+
+\noindent Here, \code{s_lo} and \code{s_hi} represent the partial remainder,
+initialized to the dividend before the first division step. The first
+\insn{ADDCG} and the \insn{DIVS} instruction together perform a 64-bit
+shift-left-by-1 operation. Depending on the sign of the partial remainder before
+the shift (i.e., the MSB which was shifted out), the dividend is added to or
+subtracted from the partial remainder. If an addition was performed,
+\code{quotient_bit} is set to 1, representing that the current quotient bit is
+-1 in binary signed digit representation. Otherwise, the current quotient bit is
+1. The final \insn{ADDCG} stores the result by left-shifting the bit into
+\code{quotient}. Post-processing is required to convert the quotient from binary
+signed digit representation to two's complement.
+
+It should be noted that a division step can be done in a single cycle using just 
+two syllables. This division step has to be applied many times in a loop, and 
+benefits from modulo-scheduling (also known as software pipelining), allowing 
+each step to be performed in a single cycle. Furthermore, the
+\code{quotient_bit}s can be shifted into \code{s_lo} instead of a different
+register, as the zero bits shifted into \code{s_lo} are unused. This eliminates
+the need for the second \insn{ADDCG}, as well as the zero and scratch branch
+registers.
+
+The prologue and epilogue code for various divisions are beyond the scope of
+this manual, as the compilers take care of expanding divisions.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 int tmp = (\rx << 1) | (\bs ? 1 : 0);

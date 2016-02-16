@@ -12,6 +12,7 @@ from code.excepts import *
 from code.type_sys import *
 from code.environment import *
 from code.transform import *
+import code.back_end
 
 
 # Global register size configuration.
@@ -1170,9 +1171,11 @@ def compile_finally_and_outconn(reg, env, combenv):
             if outconn['port_ob'].atyp.typ.exists_per_context():
                 make_env_per_ctxt(combenvf)
                 outconn['per_ctxt'] = True
+            code.back_end.force_read_from_reg = True
             outconn['vhdl'], outconn['c'] = transform_assignment(
                 outconn['port_ob'], outconn['expr'], outconn['origin'], {}, combenvf,
                 'In the \\connect{} expression for port %s: ' % outconn['port'])
+            code.back_end.force_read_from_reg = False
             
     
     # Add the compiled code to the register.
