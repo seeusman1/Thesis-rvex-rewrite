@@ -79,6 +79,10 @@ entity rvsys_grlib is
     -- Configuration vector.
     CFG                         : rvex_grlib_generic_config_type := rvex_grlib_cfg;
     
+    -- Platform version tag. This is put in the global control registers of the
+    -- processors.
+    PLATFORM_TAG                : std_logic_vector(55 downto 0) := (others => '0');
+    
     -- AHB master starting index. There will be as many AHB masters as there
     -- are lane groups in the core.
     AHB_MASTER_INDEX_START      : integer range 0 to NAHBMST-1 := 0;
@@ -326,7 +330,8 @@ begin -- architecture
     rvex_inst: entity rvex.core
       generic map (
         CFG                       => CFG.core,
-        coreID                    => AHB_MASTER_INDEX_START
+        coreID                    => AHB_MASTER_INDEX_START,
+        PLATFORM_TAG              => PLATFORM_TAG
       )
       port map (
         
