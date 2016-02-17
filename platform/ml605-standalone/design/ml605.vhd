@@ -64,6 +64,8 @@ use rvex.cache_pkg.all;
 
 library work;
 use work.mem_init_pkg.all;
+use work.platform_version_pkg.all;
+
 
 --=============================================================================
 -- This is the toplevel file for synthesizing a basic rvex platform on a Xilinx
@@ -222,6 +224,9 @@ begin -- architecture
         
         -- Configuration.
         CFG                       => CFG,
+        
+        -- Platform version tag.
+        PLATFORM_TAG              => RVEX_PLATFORM_TAG,
         
         -- S-rec file specifying the initial contents for the memories.
         MEM_INIT                  => MEM_INIT

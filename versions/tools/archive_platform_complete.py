@@ -18,7 +18,7 @@ with open(paths.dirs['arg'] + os.sep + 'build-in-progress', 'rb') as f:
 # Put the logs in the archive.
 print('Populating archive with logfiles...')
 odirs = set()
-for i, o in manifest.logs:
+for i, o in manifest.logs_f():
     o = paths.dirs['arg'] + os.sep + 'logs' + os.sep + o
     if o.endswith('/'):
         o = o[:-1]
@@ -43,8 +43,10 @@ arch = os.path.realpath(
     name + '.tar.gz'
 )
 
-# Copy the bit file.
+# Copy the bit file to the archive directory and to latest-<platform>.bit in
+# the versions directory.
 run_command(['cp', manifest.bitfile, paths.dirs['arg'] + os.sep + name + '.bit'])
+run_command(['cp', '-f', manifest.bitfile, paths.dirs['versions'] + os.sep + 'latest-' + manifest.name + '.bit'])
 
 # Get rid of the pickle file.
 run_command(['rm', '-f', paths.dirs['arg'] + os.sep + 'build-in-progress'])
@@ -53,6 +55,12 @@ run_command(['rm', '-f', paths.dirs['arg'] + os.sep + 'build-in-progress'])
 cwd = os.getcwd()
 os.chdir(paths.dirs['arg'])
 run_command(['tar', 'czvf', arch, '.'])
+os.chdir(cwd)
+
+# Make a symlink to the archive.
+cwd = os.getcwd()
+os.chdir(paths.dirs['versions'])
+run_command(['ln', '-sf', 'platforms' + os.sep + name + '.tar.gz', 'latest-' + manifest.name + '.tar.gz'])
 os.chdir(cwd)
 
 # We're done, remove the temporary directory.

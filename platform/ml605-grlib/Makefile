@@ -181,8 +181,6 @@ synth: work
 	
 	# Synthesis.
 	cd work && $(MAKE) mig39 pcie planahead MAP_COST_TABLE=$(MAP_COST_TABLE)
-	#cp -r ../../../version-stuff/work/planahead work/planahead
-	#cp ../../../version-stuff/work/leon3mp.bit work/leon3mp.bit
 	
 	# More version management.
 	touch work/xilinx.log

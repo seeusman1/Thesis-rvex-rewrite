@@ -90,15 +90,19 @@ def process_filenames(ls):
             fs.append((i, o))
     return fs
 
-# Process the sources file list.
-if 'sources' in data:
-    sources = process_filenames(data['sources'])
-else:
-    sources = []
+# Processes the sources file list.
+def sources_f():
+    global data
+    if 'sources' in data:
+        return process_filenames(data['sources'])
+    else:
+        return []
 
-# Process the logs file list.
-if 'logs' in data:
-    logs = process_filenames(data['logs'])
-else:
-    logs = []
+# Processes the logs file list.
+def logs_f():
+    global data
+    if 'logs' in data:
+        return process_filenames(data['logs'])
+    else:
+        return []
 

@@ -64,12 +64,12 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_ctrlRegs_busSwitch.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="42"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="40"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="41"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_ctrlRegs_contextLaneSwitch.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="41"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="39"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="40"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_ctrlRegs_pkg.vhd" xil_pn:type="FILE_VHDL">
@@ -84,7 +84,7 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_dmemSwitch.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="40"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="37"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="39"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_forward.vhd" xil_pn:type="FILE_VHDL">
@@ -99,12 +99,12 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_gpRegs_mem.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="39"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="36"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="38"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_gpRegs_sim.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="38"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="35"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="37"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_gpRegs.vhd" xil_pn:type="FILE_VHDL">
@@ -114,12 +114,12 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_intIface_pkg.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="5"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="4"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="5"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_limmRouting.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="37"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="34"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="35"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_listOpcodes_tb.vhd" xil_pn:type="FILE_VHDL">
@@ -171,7 +171,7 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_pipelane.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="36"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="33"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="34"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_pipelanes.vhd" xil_pn:type="FILE_VHDL">
@@ -181,12 +181,12 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_pipeline_pkg.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="4"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="1"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="4"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_pkg.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="3"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="5"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="3"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_trap_pkg.vhd" xil_pn:type="FILE_VHDL">
@@ -196,7 +196,7 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_trapRouting.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="34"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="31"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="32"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core.vhd" xil_pn:type="FILE_VHDL">
@@ -221,12 +221,12 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/utils/utils_pkg.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="2"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="3"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="2"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/common/common_pkg.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="1"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="2"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="1"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/bus/bus_arbiter.vhd" xil_pn:type="FILE_VHDL">
@@ -449,7 +449,7 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_stopBitRouting.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="35"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="32"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="33"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_instructionBuffer.vhd" xil_pn:type="FILE_VHDL">
@@ -459,7 +459,12 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/core/core_version_pkg.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="33"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="138"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="31"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_gpRegs_simple.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="91"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="36"/>
       <library xil_pn:name="rvex"/>
     </file>
   </files>

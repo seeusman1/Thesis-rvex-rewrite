@@ -20,7 +20,7 @@ if 'arg' not in paths.dirs:
 ctag = archive_core.run()
 
 # Compute the platform tag.
-ptag = vhdtag.tag([x[0] for x in manifest.sources], mode='md5')
+ptag = vhdtag.tag([x[0] for x in manifest.sources_f()], mode='md5')
 print('################################################################################')
 print('##   The platform version tag is:  \033[1;4m' + ptag['tag'] + '\033[0m-' + ptag['md5'] + '   ##')
 print('################################################################################')
@@ -30,7 +30,7 @@ with open(manifest.ptagfile, 'w') as f:
 # Put the sources in the archive.
 print('Populating archive with sources...')
 odirs = set()
-for i, o in manifest.sources:
+for i, o in manifest.sources_f():
     o = paths.dirs['arg'] + os.sep + 'sources' + os.sep + o
     if o.endswith('/'):
         o = o[:-1]

@@ -7,8 +7,8 @@ PART = xc6vlx240t-ff1156-1
 endif
 
 # Creates a .prj file for XST from the contents of the vhdl directory.
-project.prj: vhdl
-	find vhdl | grep -E '(^vhdl\/([^\/]+)\/.*\.vhd$$)' | sed -r 's/(^vhdl\/([^\/]+)\/.*\.vhd$$)/vhdl \2 "\1"/g' > project.prj
+#project.prj: vhdl
+#	find vhdl | grep -E '(^vhdl\/([^\/]+)\/.*\.vhd$$)' | sed -r 's/(^vhdl\/([^\/]+)\/.*\.vhd$$)/vhdl \2 "\1"/g' > project.prj
 
 # Runs synthesis (XST).
 synthesized.ngc: project.prj
@@ -36,6 +36,10 @@ mapped.ncd constraints.pcf: synthesized.ngd
 # Runs router (par).
 routed.ncd: mapped.ncd constraints.pcf
 	par -w $(shell cat opts-par.cfg) mapped.ncd routed.ncd constraints.pcf
+
+# Creates timing report (trce).
+timing.twr: routed.ncd constraints.pcf
+	trce -intstyle ise -o timing.twr -v 30 -l 30 routed.ncd constraints.pcf
 
 # Creates bitstream (bitgen).
 routed.bit: routed.ncd constraints.pcf
