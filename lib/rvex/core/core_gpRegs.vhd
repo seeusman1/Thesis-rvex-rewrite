@@ -337,7 +337,7 @@ begin -- architecture
   -- Instantiate memory
   -----------------------------------------------------------------------------
   -- Block RAM based memory for synthesis.
-  synth_mem_gen: if INST_SYNTH_MEM and not CFG.gpRegImpl generate
+  synth_mem_gen: if INST_SYNTH_MEM and CFG.gpRegImpl = RVEX_GPREG_IMPL_MEM generate
     synth_mem: entity rvex.core_gpRegs_mem
       generic map (
         NUM_REGS_LOG2           => NUM_REGS_LOG2,
@@ -363,7 +363,7 @@ begin -- architecture
       );
   end generate;
   
-  simple_mem_gen: if INST_SYNTH_MEM and CFG.gpRegImpl generate
+  simple_mem_gen: if INST_SYNTH_MEM and CFG.gpRegImpl = RVEX_GPREG_IMPL_SIMPLE generate
     synth_mem: entity rvex.core_gpRegs_simple
       generic map (
         NUM_REGS_LOG2           => NUM_REGS_LOG2,

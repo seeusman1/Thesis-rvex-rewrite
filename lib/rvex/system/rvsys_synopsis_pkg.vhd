@@ -80,7 +80,7 @@ package rvsys_synopsis_pkg is
     cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
     unifiedStall                => false,
-    gpRegImpl                   => true,
+    gpRegImpl                   => RVEX_GPREG_IMPL_SIMPLE,
     traceEnable                 => false,
     perfCountSize               => 4,
     cachePerfCountEnable        => false

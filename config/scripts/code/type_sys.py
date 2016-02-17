@@ -569,6 +569,7 @@ class CfgVectType(Aggregate):
         self.add_entry('cregStartAddress',      Address())
         self.add_array('resetVectors',       8, Address())
         self.add_entry('unifiedStall',          Boolean())
+        self.add_entry('gpRegImpl',             Natural())
         self.add_entry('traceEnable',           Boolean())
         self.add_entry('perfCountSize',         Natural())
         self.add_entry('cachePerfCountEnable',  Boolean())

@@ -166,49 +166,50 @@ begin -- architecture
 --=============================================================================
   
   -- Check configuration.
-  assert not CFG.core.gpRegImpl
-    report "rvsys_synopsis instantiated with wrong register file arch."
+  assert CFG.core.gpRegImpl /= RVEX_GPREG_IMPL_SIMPLE
+    report "rvsys_synopsis instantiated with wrong register file arch "
+         & "(CFG.gpRegImpl). It should be set to RVEX_GPREG_IMPL_SIMPLE."
     severity failure;
 
-    -- Instantiate the standalone core.
-    core: entity rvex.rvsys_standalone_core
-      generic map (
-        CFG                     => CFG
-      )
-      port map (
-        
-        -- System control.
-        reset                   => reset,
-        clk                     => clk,
-        clkEn                   => clkEn,
-        
-        -- Run control interface.
-        rctrl2rvsa_irq          => rctrl2rvsa_irq,
-        rctrl2rvsa_irqID        => rctrl2rvsa_irqID,
-        rvsa2rctrl_irqAck       => rvsa2rctrl_irqAck,
-        rctrl2rvsa_run          => rctrl2rvsa_run,
-        rvsa2rctrl_idle         => rvsa2rctrl_idle,
-        rctrl2rvsa_reset        => rctrl2rvsa_reset,
-        rvsa2rctrl_done         => rvsa2rctrl_done,
-        
-        -- Instruction memory busses.
-        rv2imem                 => rv2imem,
-        imem2rv                 => imem2rv,
-        
-        -- Data memory busses.
-        rv2dmem                 => rv2dmem,
-        dmem2rv                 => dmem2rv,
-        
-        -- Debug bus.
-        dbg2rv                  => dbg2rv,
-        rv2dbg                  => rv2dbg,
-        
-        -- Trace interface.
-        rv2trsink_push          => rv2trsink_push,
-        rv2trsink_data          => rv2trsink_data,
-        trsink2rv_busy          => trsink2rv_busy
-        
-      );
+  -- Instantiate the standalone core.
+  core: entity rvex.rvsys_standalone_core
+    generic map (
+      CFG                     => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                   => reset,
+      clk                     => clk,
+      clkEn                   => clkEn,
+      
+      -- Run control interface.
+      rctrl2rvsa_irq          => rctrl2rvsa_irq,
+      rctrl2rvsa_irqID        => rctrl2rvsa_irqID,
+      rvsa2rctrl_irqAck       => rvsa2rctrl_irqAck,
+      rctrl2rvsa_run          => rctrl2rvsa_run,
+      rvsa2rctrl_idle         => rvsa2rctrl_idle,
+      rctrl2rvsa_reset        => rctrl2rvsa_reset,
+      rvsa2rctrl_done         => rvsa2rctrl_done,
+      
+      -- Instruction memory busses.
+      rv2imem                 => rv2imem,
+      imem2rv                 => imem2rv,
+      
+      -- Data memory busses.
+      rv2dmem                 => rv2dmem,
+      dmem2rv                 => dmem2rv,
+      
+      -- Debug bus.
+      dbg2rv                  => dbg2rv,
+      rv2dbg                  => rv2dbg,
+      
+      -- Trace interface.
+      rv2trsink_push          => rv2trsink_push,
+      rv2trsink_data          => rv2trsink_data,
+      trsink2rv_busy          => trsink2rv_busy
+      
+    );
   
 end Behavioral;
 

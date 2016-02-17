@@ -139,8 +139,10 @@ package core_pkg is
     -- core.
     unifiedStall                : boolean;
     
-    -- Whether to use the very simple register file implementation or not.
-    gpRegImpl                   : boolean;
+    -- General purpose register implementation. Accepted values are:
+    --  - RVEX_GPREG_IMPL_MEM (0, default): BRAM + LVT implementation.
+    --  - RVEX_GPREG_IMPL_SIMPLE (1): behavioral implementation.
+    gpRegImpl                   : natural;
 
     -- Whether the trace unit should be instantiated.
     traceEnable                 : boolean;
@@ -157,6 +159,10 @@ package core_pkg is
     cachePerfCountEnable        : boolean;
     
   end record;
+  
+  -- Values for gpRegImpl.
+  constant RVEX_GPREG_IMPL_MEM    : natural := 0;
+  constant RVEX_GPREG_IMPL_SIMPLE : natural := 1;
   
   -- Default rvex core configuration.
   constant RVEX_DEFAULT_CONFIG  : rvex_generic_config_type := (
@@ -175,7 +181,7 @@ package core_pkg is
     cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
     unifiedStall                => false,
-    gpRegImpl                   => false,
+    gpRegImpl                   => RVEX_GPREG_IMPL_MEM,
     traceEnable                 => false,
     perfCountSize               => 4,
     cachePerfCountEnable        => false
@@ -198,7 +204,7 @@ package core_pkg is
     cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
     unifiedStall                => true,
-    gpRegImpl                   => false,
+    gpRegImpl                   => RVEX_GPREG_IMPL_MEM,
     traceEnable                 => false,
     perfCountSize               => 0,
     cachePerfCountEnable        => false
@@ -382,7 +388,7 @@ package body core_pkg is
     if limmhFromPreviousPair  >= 0 then cfg.limmhFromPreviousPair := int2bool(limmhFromPreviousPair); end if;
     if reg63isLink            >= 0 then cfg.reg63isLink           := int2bool(reg63isLink); end if;
     if unifiedStall           >= 0 then cfg.unifiedStall          := int2bool(unifiedStall); end if;
-    if gpRegImpl              >= 0 then cfg.gpRegImpl             := int2bool(gpRegImpl); end if;
+    if gpRegImpl              >= 0 then cfg.gpRegImpl             := gpRegImpl; end if;
     if traceEnable            >= 0 then cfg.traceEnable           := int2bool(traceEnable); end if;
     if perfCountSize          >= 0 then cfg.perfCountSize         := perfCountSize; end if;
     if cachePerfCountEnable   >= 0 then cfg.cachePerfCountEnable  := int2bool(cachePerfCountEnable); end if;
