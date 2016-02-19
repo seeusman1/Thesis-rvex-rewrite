@@ -179,7 +179,7 @@ all:_STATE {
 }
 
 # This must be mapped to the trace unit control byte.
-all:_TRACE_CTRL { CREG_DCR2 + 3 }
+all:_TRACE_CTRL { DCR2 + 3 }
 
 
 ################################################################################
