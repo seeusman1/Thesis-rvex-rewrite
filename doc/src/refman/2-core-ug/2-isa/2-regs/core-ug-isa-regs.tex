@@ -15,14 +15,14 @@ to it. This allows the register to be used for debugging on rare occasions.
 
 Register 1 is intended to be used as the stack pointer. The \insn{RETURN} and
 \insn{RFI} instructions can add an immediate value to it for stack adjustment,
-but otherwise the register is not special.
+but otherwise it behaves just as any other general purpose register.
 
 Register 63 can optionally be mapped to the link register at design time using
 generics. This allows arithmetic instructions to be performed on the link
 register without needing to use \insn{MOVFL} and \insn{MOVTL}, at the cost of a
 general purpose register.
 
-There are no explicit move or load immediate operations, as the following
+There are no explicit move or load-immediate operations, as the following
 syllables are already capable of these operations.
 
 \begin{lstlisting}[numbers=none, basicstyle=\footnotesize, language=vexasm]
@@ -74,7 +74,7 @@ from a general purpose register or memory respectively. \insn{MOVFL} and
 \label{sec:core-ug-isa-regs-creg}
 
 These two register files contain special-purpose registers. The global control
-registers contain status information not related to any context, whereas the
+registers contain status information not specific to any context, whereas the
 context control registers are context specific.
 
 The processor can access these register files through memory operations only. 
@@ -84,14 +84,14 @@ block is design-time configurable. Note that it is impossible for the processor
 to perform actual memory operations to this region, so the location of the block 
 should be chosen wisely.
 
-The global register file is read-only from the perspective of the program.
-The context register file is writable, but it should be noted that each program
-can only access its own hardware context register file. If an application
-requires that programs can write to the global register file or the other
-context register files, the debug bus can be made accessible by memory
-operations outside the core. In most platforms this happens coincidentally,
-as the processor can access the main bus of the platform, and the main bus is
-wired to the debug bus.
+The global register file is read-only from the perspective of the program. The 
+context register file is writable, but it should be noted that each program can 
+only access its own hardware context register file. If an application requires 
+that programs can write to the global register file or the other context 
+register files, the debug bus can be made accessible for memory operations by 
+the bus interconnect outside the core. In most platforms this happens 
+coincidentally, as the processor can access the main bus of the platform, and 
+the debug bus is wired as a slave peripheral on this bus.
  
 For more information about the control registers, refer to
 Section~\ref{sec:core-ug-creg}.

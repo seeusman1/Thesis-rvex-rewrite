@@ -4,24 +4,24 @@
 
 The following listing shows the syntax for a single instruction bundle.
 
-\begin{lstlisting}[numbers=none, basicstyle=\footnotesize, language=vexasm]
+\begin{lstlisting}[numbers=none, language=vexasm]
 start:
   c0 stw  0x10[$r0.1] = $r0.53
-  c0 add  $r0.3       = $r0.0, $r0.55
+  c0 add  $r0.3       = $r0.0, -32
   c0 and  $b0.2       = $r0.0, $r0.10
   c0 call $l0.0       = interrupt
 ;;
 \end{lstlisting}
 
-The first line represents a label, as it ends in a colon. Each non-empty line 
-that does not start with a semicolon and is not a label represents a syllable. 
-The first part of the syllable, \code{c0}, is optional. It specifies the cluster 
-that the syllable belongs to. Since the \rvex{} processor currently does not 
-support clusters, only cluster zero is allowed if specified. The second part 
-represents the opcode of the syllable, defining the operation to be performed. 
-The third part is the parameter list. Anything that is written to is placed 
-before the equals sign, anything that is read is placed after. Finally, a 
-double semicolon is used to mark bundle boundaries.
+\noindent The first line represents a label, as it ends in a colon. Each 
+non-empty line that does not start with a semicolon and is not a label 
+represents a syllable. The first part of the syllable, \code{c0}, is optional. 
+It specifies the cluster that the syllable belongs to. Since the \rvex{} 
+processor currently does not support clusters, only cluster zero is allowed if 
+specified. The second part represents the opcode of the syllable, defining the 
+operation to be performed. The third part is the parameter list. Anything that 
+is written to is placed before the equals sign, anything that is read is placed 
+after. Finally, a double semicolon is used to mark bundle boundaries.
 
 The syntax for a general purpose register is \code{$r0.}\textit{index}, where 
 \textit{index} is a number from 0 to 63. The first 0 is used to specify the 
@@ -30,12 +30,16 @@ and the link register have the same syntax, substituting the `r' with a `b' or
 an `l' respectively. The \textit{index} for branch registers ranges from 0 to 7. 
 For link registers only 0 is allowed.
 
-Memory references use the following syntax:
-\textit{literal}\code{[$r0.}\textit{index}\code{]}. At runtime, the literal is
-added to the register value to get the address.
+Most instructions also accept a literal as their second operand. Literals may be 
+a decimal or hexadecimal number (using \code{0x} notation), a label reference, 
+or a basic C-like integer expression. Literals represent 32-bit values with
+undefined signedness, i.e., \code{0xFFFFFFFF} and -1 specify the same value.
 
-Any literal may be a decimal or hexadecimal number (using \code{0x} notation),
-a label reference, or a basic C-like integer expression.
+Finally, the load and store instructions require a memory reference as one of 
+their operands. Memory references use the following syntax: 
+\textit{literal}\code{[$r0.}\textit{index}\code{]}. At runtime, the literal is 
+added to the register value to get the address, i.e. base $+$ offset addressing 
+is used.
 
 A port of the GNU assembler (\code{gas}) is used for assembly. Please refer to
 its manual for information on target-independent directives or more information
