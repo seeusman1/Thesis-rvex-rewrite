@@ -1,0 +1,8 @@
+old/
+downloads/
+boot/
+temp
+config.makefile
+system.bit
+*.jou
+*.log
