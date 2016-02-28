@@ -316,9 +316,11 @@ $(UBOOT_OUT): $(UBOOT_DEP) $(UBOOT_PATCH)
 
 ifdef USE_OOB_KERNEL
 $(UBOOT_ELF): $(OOB_UBOOT_ELF)
+	$(MKDIR) -p $(BOOT)
 	$(CP) -f $< $@
 else
 $(UBOOT_ELF): $(UBOOT_OUT)
+	$(MKDIR) -p $(BOOT)
 	$(CP) -f $< $@
 endif
 
@@ -358,9 +360,11 @@ $(KERNEL_UIMAGE): $(KERNEL_DEP) $(UBOOT_OUT)
 
 ifdef USE_OOB_KERNEL
 $(KERNEL_IMAGE): $(OOB_DEP)
+	$(MKDIR) -p $(BOOT_IMG)
 	$(CP) -f $(OOB_ZIMAGE) $(KERNEL_IMAGE)
 else
 $(KERNEL_IMAGE): $(KERNEL_UIMAGE)
+	$(MKDIR) -p $(BOOT_IMG)
 	$(CP) -f $(KERNEL_UIMAGE) $(KERNEL_IMAGE)
 endif
 
@@ -379,7 +383,7 @@ $(LINARO_TGZ):
 #-------------------------------------------------------------------------------
 
 .PHONY: sdcard-deps
-ifndef DEV
+ifdef DEV
 sdcard-deps:
 	@echo ""
 	@echo " Please run"
