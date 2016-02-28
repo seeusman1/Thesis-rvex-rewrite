@@ -146,7 +146,7 @@ help:
 	@echo "                      device file unless you specified it in config.makefile,"
 	@echo "                      and ALWAYS asks for confirmation."
 	@echo ""
-	@echo "  ssh               : SSHs to the board. You will need to install
+	@echo "  ssh               : SSHs to the board. You will need to install"
 	@echo "                      openssh-server with apt-get on the board before this will"
 	@echo "                      work."
 	@echo ""
@@ -156,7 +156,7 @@ help:
 	@echo ""
 	@echo " Subtargets:"
 	@echo ""
-	@echo "  bitfile           : forcibly regenerates the Zedboard bit file and copies it
+	@echo "  bitfile           : forcibly regenerates the Zedboard bit file and copies it"
 	@echo "                      to system.bit in this directory."
 	@echo ""
 	@echo "  uboot             : builds the u-boot bootloader."
