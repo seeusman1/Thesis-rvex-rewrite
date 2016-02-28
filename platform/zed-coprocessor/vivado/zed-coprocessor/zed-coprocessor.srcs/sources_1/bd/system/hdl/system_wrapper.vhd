@@ -1,7 +1,7 @@
 --Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.
 ----------------------------------------------------------------------------------
 --Tool Version: Vivado v.2015.2.1 (lin64) Build 1302555 Wed Aug  5 13:06:02 MDT 2015
---Date        : Wed Feb 24 21:31:44 2016
+--Date        : Thu Feb 25 18:16:30 2016
 --Host        : linux-u9mo.site running 64-bit openSUSE 13.1 (Bottle) (x86_64)
 --Command     : generate_target system_wrapper.bd
 --Design      : system_wrapper
