@@ -122,7 +122,14 @@ help:
 	@echo "                      openssh-server with apt-get on the board before this will"
 	@echo "                      work."
 	@echo ""
-	@echo "  clean             : removes all generated files."
+	@echo "  clean             : removes all generated files except for the following:"
+	@echo "                       - boot/image/devicetree_linaro.dtb"
+	@echo "                       - boot/image/zImage"
+	@echo "                       - boot/u-boot.elf"
+	@echo "                      While these files *can* be generated, you don't really"
+	@echo "                      want to do that all the time."
+	@echo ""
+	@echo "  all-clean         : same as clean, but includes its exceptions."
 	@echo ""
 	@echo "  dl-clean          : removes all downloaded files."
 	@echo ""
@@ -151,8 +158,13 @@ help:
 
 .PHONY: clean
 clean: pl-clean uboot-clean kernel-clean
-	$(RM) -r $(BOOT) temp-*
+	$(RM) -r temp-*
+	$(RM) $(shell $(FIND) boot -type f | $(GREP) -vE "boot/u-boot\.elf|boot/image/devicetree_linaro\.dtb|boot/image/zImage")
 	$(RM) system.bit *.jou *.log
+
+.PHONY: clean
+all-clean: clean
+	$(RM) -r $(BOOT)
 
 .PHONY: dl-clean
 dl-clean:
@@ -247,6 +259,7 @@ $(DEVTREE): oob-kernel-nopl.dts
 	$(MKDIR) -p $(BOOT_IMG)
 	$(DTC) -I dts -O dtb -o $@ $<
 else
+ifeq ($(wildcard $(DEVTREE)),)
 $(DEVTREE): $(KERNEL_DEP)
 	$(MKDIR) -p $(BOOT_IMG)
 	@echo "/dts-v1/;" > $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
@@ -266,6 +279,9 @@ $(DEVTREE): $(KERNEL_DEP)
 	@echo "	};" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
 	@echo "};" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
 	$(DTC) -I dts -O dtb -o $@ $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
+else
+$(DEVTREE):
+endif
 endif
 endif
 
@@ -295,6 +311,7 @@ $(UBOOT_OUT): $(UBOOT_DEP) $(UBOOT_PATCH)
 	$(ARM_CROSS) cd $(UBOOT_PATH) && make zynq_zed_config
 	$(ARM_CROSS) cd $(UBOOT_PATH) && make -j 8
 
+ifeq ($(wildcard $(UBOOT_ELF)),)
 ifdef USE_OOB_KERNEL
 $(UBOOT_ELF): $(OOB_UBOOT_ELF)
 	$(MKDIR) -p $(BOOT)
@@ -303,6 +320,9 @@ else
 $(UBOOT_ELF): $(UBOOT_OUT)
 	$(MKDIR) -p $(BOOT)
 	$(CP) -f $< $@
+endif
+else
+$(UBOOT_ELF):
 endif
 
 # BOOT.BIN  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -344,9 +364,13 @@ $(KERNEL_IMAGE): $(OOB_DEP)
 	$(MKDIR) -p $(BOOT_IMG)
 	$(CP) -f $(OOB_ZIMAGE) $(KERNEL_IMAGE)
 else
+ifeq ($(wildcard $(KERNEL_IMAGE)),)
 $(KERNEL_IMAGE): $(KERNEL_UIMAGE)
 	$(MKDIR) -p $(BOOT_IMG)
 	$(CP) -f $(KERNEL_UIMAGE) $(KERNEL_IMAGE)
+else:
+$(KERNEL_IMAGE):
+endif
 endif
 
 

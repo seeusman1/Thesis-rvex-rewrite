@@ -2,10 +2,11 @@
 # Clean before building.
 reset_project
 
+# Generate the block diagram.
+generate_target all [get_files pl.srcs/sources_1/bd/system/system.bd]
+
 # Upgrade IP blocks.
 upgrade_ip [get_ips]
-
-# Generate the block diagram.
 generate_target all [get_files pl.srcs/sources_1/bd/system/system.bd]
 
 # Make a VHD wrapper for the block diagram and set it as the toplevel entity.

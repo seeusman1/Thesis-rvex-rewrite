@@ -46,6 +46,8 @@ help:
 	@echo ""
 	@echo " Targets:"
 	@echo ""
+	@echo "  all               : currently the same as zed, see below."
+	@echo ""
 	@echo "  ip                : compiles all IP blocks."
 	@echo ""
 	@echo "  ip-<ip>           : compiles the given IP block."
@@ -60,8 +62,8 @@ help:
 	@echo "                      the Zedboard. This includes the PL bitfile, u-boot and"
 	@echo "                      the Linux kernel. Linaro is downloaded pre-built."
 	@echo ""
-	@echo "  zed-sdcard        : correctly formats an SD card for the Zedboard. This needs"
-	@echo "                      root permissions. The target will ask you for the SD card"
+	@echo "  zed-sdcard        : formats an SD card for the Zedboard. This needs root"
+	@echo "                      permissions. The target will ask you for the SD card"
 	@echo "                      device file unless you specified it in config.makefile,"
 	@echo "                      and ALWAYS asks for confirmation."
 	@echo ""
@@ -73,6 +75,9 @@ help:
 	@echo ""
 	@echo "  dl-clean          : removes all downloaded files."
 	@echo ""
+
+.PHONY: all
+all: zed
 
 .PHONY: clean
 clean: zed-clean $(patsubst %,clean-%,$(IP))

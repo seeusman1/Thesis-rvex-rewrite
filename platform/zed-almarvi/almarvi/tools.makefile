@@ -3,6 +3,7 @@
 CP             = cp
 RM             = rm -f
 MKDIR          = mkdir
+TOUCH          = touch
 CHMOD          = chmod
 CHOWN          = chown
 FIND           = find
