@@ -32,6 +32,7 @@ RM             = rm -f
 MKDIR          = mkdir
 CHMOD          = chmod
 CHOWN          = chown
+FIND           = find
 GIT            = git
 WGET           = wget
 TAR            = tar
@@ -43,6 +44,12 @@ EXPECT         = expect
 SSH            = ssh
 SSH_KEYGEN     = ssh-keygen
 DTC            = dtc
+DD             = dd
+MOUNT          = mount
+UMOUNT         = umount
+SFDISK         = sfdisk
+MKFS_FAT       = mkfs.vfat
+MKFS_EXT4      = mkfs.ext4
 
 # Xilinx tools.
 WITH_VIVADO    = source $(VIVADO_ENV) &&
@@ -51,18 +58,23 @@ HSI            = $(WITH_VIVADO) hsi
 BOOTGEN        = $(WITH_VIVADO) bootgen
 ARM_CROSS      = $(WITH_VIVADO) export CROSS_COMPILE=arm-xilinx-linux-gnueabi- &&
 
-# SD card formatting tools.
-DD             = dd
-MOUNT          = mount
-UMOUNT         = umount
-SFDISK         = sfdisk
-MKFS_FAT       = mkfs.vfat
-MKFS_EXT4      = mkfs.ext4
-
-# Basic paths and URLs.
-TEMP           = temp
-DL             = downloads
+# Common directories.
+DL             = dl
 BOOT           = boot
+
+# Temporary file.
+TEMP          := temp-$(shell date +"%N")
+
+# Programmable logic Vivado project paths.
+PL_PATH        = pl
+PL_GEN_TCL     = pl-project-gen.tcl
+PL_CFG_TCL     = pl-project-cfg.tcl
+PL_SYN_TCL     = pl-project-syn.tcl
+PL_GIT_BD      = pl-project.bd
+PL_PRJ_BD      = $(PL_PATH)/pl.srcs/sources_1/bd/system/system.bd
+PL_XPR         = $(PL_PATH)/pl.xpr
+PL_BIT         = $(PL_PATH)/pl.runs/impl_1/system_wrapper.bit
+PL_HDF         = $(PL_PATH)/pl.runs/impl_1/system_wrapper.sysdef
 
 # Zedboard pre-built/out-of-the-box design files.
 OOB_URL        = https://reference.digilentinc.com/_media/zedboard:zedboard_oob_design.zip
@@ -72,13 +84,6 @@ OOB_UBOOT_ELF  = $(OOB_PATH)/ZedBoard_OOB_Design/boot_image/u-boot.elf
 OOB_FSBL_ELF   = $(OOB_PATH)/ZedBoard_OOB_Design/boot_image/zynq_fsbl.elf
 OOB_BOOT_BIN   = $(OOB_PATH)/ZedBoard_OOB_Design/sd_image/BOOT.BIN
 OOB_ZIMAGE     = $(OOB_PATH)/ZedBoard_OOB_Design/sd_image/zImage
-
-# Programmable logic Vivado project paths.
-VIV_PLSYS_PATH = vivado/zed-coprocessor
-VIV_PLSYS_XPR  = zed-coprocessor.xpr
-VIV_PLSYS_BD   = $(VIV_PLSYS_PATH)/zed-coprocessor.srcs/sources_1/bd/system/system.bd
-VIV_PLSYS_BIT  = $(VIV_PLSYS_PATH)/zed-coprocessor.runs/impl_1/system_wrapper.bit
-VIV_PLSYS_HDF  = $(VIV_PLSYS_PATH)/zed-coprocessor.runs/impl_1/system_wrapper.sysdef
 
 # Device tree stuff.
 DTB_XLNX_REPO  = git://github.com/Xilinx/device-tree-xlnx.git
@@ -92,7 +97,7 @@ UBOOT_TAG      = xilinx-v14.4
 UBOOT_COMMIT   = b7aa48eabf62c25ee78e7660eb658ca35466597f
 UBOOT_PATH     = $(DL)/u-boot
 UBOOT_DEP      = $(DL)/.u-boot-time-downloaded
-UBOOT_PATCH    = design/u-boot.patch
+UBOOT_PATCH    = u-boot.patch
 UBOOT_OUT      = $(UBOOT_PATH)/u-boot
 UBOOT_ELF      = $(BOOT)/u-boot.elf
 
@@ -125,19 +130,20 @@ LINARO_DEP     = $(LINARO_TGZ)
 .PHONY: help
 help:
 	@echo ""
-	@echo " This platform consists of the rvex processor running as a coprocessor for"
-	@echo " Linaro Ubuntu linux running on the ARM core in the Zynq SoC on the Zedboard."
+	@echo " This directory/makefile is used to create a bootable SD card for the Zedboard"
+	@echo " with Linaro linux running headless, i.e. without PL dependencies. The PL is"
+	@echo " configured using a Vivado IP block diagram."
 	@echo ""
-	@echo " This platform requires Vivado 2015.2. It will automatically source the"
-	@echo " environment script when needed; don't do this manually! The location of the"
-	@echo " script is configured in config.makefile."
+	@echo " The script requires Vivado and assume version 2015.2. It will automatically
+	@echo " source the environment script when needed; don't do this manually! The location
+	@echo " of the script is configured in config.makefile."
 	@echo ""
-	@echo " Common make targets:"
+	@echo " Main targets:"
 	@echo ""
-	@echo "  reconfigure       : opens the programmable logic block diagram in Vivado, to"
-	@echo "                      let you reconfigure the PL peripherals."
+	@echo "  configure         : opens the programmable logic block diagram in Vivado, to"
+	@echo "                      let you configure the PL peripherals."
 	@echo ""
-	@echo "  sdcard-deps       : builds all files needed to make the bootable SD card for"
+	@echo "  all               : builds all files needed to make the bootable SD card for"
 	@echo "                      the Zedboard. This includes the PL bitfile, u-boot and"
 	@echo "                      the Linux kernel. Linaro is downloaded pre-built."
 	@echo ""
@@ -146,18 +152,20 @@ help:
 	@echo "                      device file unless you specified it in config.makefile,"
 	@echo "                      and ALWAYS asks for confirmation."
 	@echo ""
-	@echo "  ssh               : SSHs to the board. You will need to install"
+	@echo "  ssh               : shortcut to SSH to the board. You will need to install"
 	@echo "                      openssh-server with apt-get on the board before this will"
 	@echo "                      work."
 	@echo ""
 	@echo "  clean             : removes all generated files."
 	@echo ""
-	@echo "  clean-dl          : removes all downloaded files."
+	@echo "  dl-clean          : removes all downloaded files."
 	@echo ""
 	@echo " Subtargets:"
 	@echo ""
 	@echo "  bitfile           : forcibly regenerates the Zedboard bit file and copies it"
 	@echo "                      to system.bit in this directory."
+	@echo ""
+	@echo "  pl-clean          : cleans/resets the PL Vivado project."
 	@echo ""
 	@echo "  uboot             : builds the u-boot bootloader."
 	@echo ""
@@ -176,15 +184,10 @@ help:
 	@echo ""
 
 .PHONY: clean
-clean: uboot-clean kernel-clean
-	$(RM) -r $(TEMP)
-	@echo "reset_project" > $(TEMP)
-	cd $(VIV_PLSYS_PATH) && $(VIVADO) -mode batch -source ../../$(TEMP) $(VIV_PLSYS_XPR)
-	$(RM) -r $(TEMP) $(BOOT)
-	$(RM) *.jou *.log
+clean: pl-clean uboot-clean kernel-clean
 
-.PHONY: clean-dl
-clean-dl:
+.PHONY: dl-clean
+dl-clean:
 	$(RM) -rf $(DL)
 
 
@@ -192,34 +195,44 @@ clean-dl:
 # PL (programmable logic) configuration and synthesis
 #-------------------------------------------------------------------------------
 
+# Creates the PL project from the tcl script.
+$(PL_PATH):
+	@if [ ! -f $@ ]; then \
+		echo "$(VIVADO) -mode tcl -source $(PL_GEN_TCL)"; \
+		$(VIVADO) -mode batch -source $(PL_GEN_TCL); \
+	fi
+
+# Copies the block diagram design from the git-ignored Vivado project into this
+# directory for versioning.
+$(PL_GIT_BD): $(PL_PRJ_BD)
+	$(CP) -f $< $@
+
+# Deletes the PL project. The block diagram is first copied from the project to
+# its versioned location.
+.PHONY: pl-clean
+pl-clean:
+	@if [ -f $(PL_PRJ_BD) ]; then \
+		echo "$(CP) -f $(PL_PRJ_BD) $(PL_GIT_BD)"; \
+		$(CP) -f $(PL_PRJ_BD) $(PL_GIT_BD); \
+	fi
+	$(RM) -r $(PL_PATH)
+	$(RM) -f *.jou *.log
+
 # Opens the PL system Vivado project to allow the user to (re)configure the
 # available peripherals.
-.PHONY: reconfigure
-reconfigure:
-	$(RM) -r $(TEMP)
-	@echo "start_gui" >> $(TEMP)
-	@echo "open_bd_design {zed-coprocessor.srcs/sources_1/bd/system/system.bd}" >> $(TEMP)
-	cd $(VIV_PLSYS_PATH) && $(VIVADO) -mode tcl -source ../../$(TEMP) $(VIV_PLSYS_XPR)
-	$(RM) -r $(TEMP)
+.PHONY: configure
+configure: $(PL_PATH)
+	cd $(PL_PATH) && $(VIVADO) -mode tcl -source $(realpath $(PL_CFG_TCL)) $(realpath $(PL_XPR))
+	$(CP) -f $(PL_PRJ_BD) $(PL_GIT_BD)
 
-.PHONY: bitfile
-bitfile:
-	$(MAKE) -B $(VIV_PLSYS_BIT)
-	$(CP) $(VIV_PLSYS_BIT) system.bit
+# Runs PL system synthesis and implementation.
+$(PL_BIT) $(PL_HDF): $(PL_PATH)
+	$(CP) -f $(PL_PRJ_BD) $(PL_GIT_BD)
+	cd $(PL_PATH) && $(VIVADO) -mode batch -source $(realpath $(PL_SYN_TCL)) $(realpath $(PL_XPR))
+	$(CP) $(PL_BIT) system.bit
 
-# Cleans and subsequently rebuilds the Vivado PL system project to get the
-# bitfile, as well as the HDF file for the SDK.
-$(VIV_PLSYS_BIT) $(VIV_PLSYS_HDF): $(VIV_PLSYS_BD)
-	$(RM) -r $(TEMP)
-	@echo "reset_project" > $(TEMP)
-	@echo "generate_target all [get_files zed-coprocessor.srcs/sources_1/bd/system/system.bd]" >> $(TEMP)
-	@echo "make_wrapper -files [get_files zed-coprocessor.srcs/sources_1/bd/system/system.bd] -top" >> $(TEMP)
-	@echo "launch_runs synth_1 -jobs 4" >> $(TEMP)
-	@echo "wait_on_run synth_1" >> $(TEMP)
-	@echo "launch_runs impl_1 -to_step write_bitstream -jobs 4" >> $(TEMP)
-	@echo "wait_on_run impl_1" >> $(TEMP)
-	cd $(VIV_PLSYS_PATH) && $(VIVADO) -mode batch -source ../../$(TEMP) $(VIV_PLSYS_XPR)
-	$(RM) -r $(TEMP)
+# Forcibly (re)runs PL system synthesis and implementation.
+bitfile: pl-clean $(PL_BIT)
 
 
 #-------------------------------------------------------------------------------
@@ -245,11 +258,11 @@ $(DTB_XLNX_DEP):
 	$(GIT) clone $(DTB_XLNX_REPO) $(DTB_XLNX_PATH)
 	@echo "" > $@
 
-$(DEVTREE_DTS): $(DTB_XLNX_DEP) $(VIV_PLSYS_HDF)
+$(DEVTREE_DTS): $(DTB_XLNX_DEP) $(PL_HDF)
 	$(RM) -r $(BOOT)/hsi
 	$(RM) -r $(BOOT)/dts
 	$(MKDIR) -p $(BOOT)/hsi
-	$(CP) $(VIV_PLSYS_HDF) $(BOOT)/hsi/system_wrapper.hdf
+	$(CP) $(PL_HDF) $(BOOT)/hsi/system_wrapper.hdf
 	@echo "open_hw_design system_wrapper.hdf" > $(BOOT)/hsi/source_hsi.tcl
 	@echo "set_repo_path $(realpath $(DTB_XLNX_PATH))" >> $(BOOT)/hsi/source_hsi.tcl
 	@echo "create_sw_design device-tree -os device_tree -proc ps7_cortexa9_0" >> $(BOOT)/hsi/source_hsi.tcl
@@ -262,7 +275,7 @@ $(DEVTREE): $(DEVTREE_DTS)
 	$(DTC) -I dts -O dtb -o $@ $<
 else
 ifdef USE_OOB_KERNEL
-$(DEVTREE): design/devicetree-nopl.dts
+$(DEVTREE): oob-kernel-nopl.dts
 	$(MKDIR) -p $(BOOT_IMG)
 	$(DTC) -I dts -O dtb -o $@ $<
 else
@@ -316,20 +329,22 @@ $(UBOOT_OUT): $(UBOOT_DEP) $(UBOOT_PATCH)
 
 ifdef USE_OOB_KERNEL
 $(UBOOT_ELF): $(OOB_UBOOT_ELF)
+	$(MKDIR) -p $(BOOT)
 	$(CP) -f $< $@
 else
 $(UBOOT_ELF): $(UBOOT_OUT)
+	$(MKDIR) -p $(BOOT)
 	$(CP) -f $< $@
 endif
 
 # BOOT.BIN  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-$(BOOT_BIN): $(OOB_DEP) $(VIV_PLSYS_BIT) $(UBOOT_ELF)
+$(BOOT_BIN): $(OOB_DEP) $(PL_BIT) $(UBOOT_ELF)
 	$(MKDIR) -p $(BOOT_IMG)
 	@echo "the_ROM_image:" > $(BOOT)/output.bif
 	@echo "{" >> $(BOOT)/output.bif
 	@echo "	[bootloader]$(realpath $(OOB_FSBL_ELF))" >> $(BOOT)/output.bif
-	@echo "	$(realpath $(VIV_PLSYS_BIT))" >> $(BOOT)/output.bif
+	@echo "	$(realpath $(PL_BIT))" >> $(BOOT)/output.bif
 	@echo "	$(realpath $(UBOOT_ELF))" >> $(BOOT)/output.bif
 	@echo "}" >> $(BOOT)/output.bif
 	cd $(BOOT) && $(BOOTGEN) -w -image output.bif -o $(shell pwd)/$(BOOT_BIN)
@@ -358,9 +373,11 @@ $(KERNEL_UIMAGE): $(KERNEL_DEP) $(UBOOT_OUT)
 
 ifdef USE_OOB_KERNEL
 $(KERNEL_IMAGE): $(OOB_DEP)
+	$(MKDIR) -p $(BOOT_IMG)
 	$(CP) -f $(OOB_ZIMAGE) $(KERNEL_IMAGE)
 else
 $(KERNEL_IMAGE): $(KERNEL_UIMAGE)
+	$(MKDIR) -p $(BOOT_IMG)
 	$(CP) -f $(KERNEL_UIMAGE) $(KERNEL_IMAGE)
 endif
 
@@ -378,7 +395,8 @@ $(LINARO_TGZ):
 # Zedboard bootable SD card formatting
 #-------------------------------------------------------------------------------
 
-.PHONY: sdcard-deps
+.PHONY: all sdcard-deps
+all: boot $(LINARO_TGZ)
 ifndef DEV
 sdcard-deps:
 	@echo ""
@@ -503,38 +521,4 @@ else
 	-$(SSH_KEYGEN) -R $(ZED_HOST) -f ~/.ssh/known_hosts
 	$(EXPECT) -c 'spawn $(SSH) -X linaro@$(ZED_HOST); match_max 100000; expect "*continue*"; send -- "yes\r"; expect "*?assword:*"; send -- "linaro\r"; interact'
 endif
-
-
-#-------------------------------------------------------------------------------
-# Old stuff...
-#-------------------------------------------------------------------------------
-
-# XSDK           = source $(VIVADO_ENV) && xsdk
-# XSDB           = source $(VIVADO_ENV) && xsdb
-# VIV_PLSYS_SDK_HDF = $(VIV_PLSYS_PATH)/zed-coprocessor.sdk/system_wrapper.hdf
-# VIV_PLSYS_SDK  = $(VIV_PLSYS_PATH)/zed-coprocessor.sdk
-# 
-# xsdk: $(DTB_XLNX_DEP) $(VIV_PLSYS_HDF)
-# 	$(RM) -r $(VIV_PLSYS_SDK)
-# 	$(MKDIR) -p $(VIV_PLSYS_SDK)/empty
-# 	$(CP) -f $(VIV_PLSYS_HDF) $(VIV_PLSYS_SDK_HDF)
-# 	
-# 	$(XSDK) -hwspec $(VIV_PLSYS_SDK_HDF) -workspace $(VIV_PLSYS_SDK)
-# 
-# xsdk: $(DTB_XLNX_DEP) $(VIV_PLSYS_HDF)
-# 	$(RM) -r $(VIV_PLSYS_SDK)
-# 	$(MKDIR) -p $(VIV_PLSYS_SDK)/empty
-# 	$(CP) -f $(VIV_PLSYS_HDF) $(VIV_PLSYS_SDK_HDF)
-# 	
-# 	$(RM) -r $(TEMP)
-# 	@echo "sdk set_workspace $(VIV_PLSYS_SDK)" > $(TEMP)
-# 	@echo "sdk create_hw_project -name system_wrapper_hw_platform_0 -hwspec $(VIV_PLSYS_SDK_HDF)" >> $(TEMP)
-# 	@echo "sdk set_user_repo_path $(DTB_XLNX_PATH)" >> $(TEMP)
-# 	@echo "exit" >> $(TEMP)
-# 	$(XSDB) -s $(TEMP)
-# 	$(RM) -r $(TEMP)
-# 	
-# 	$(XSDK) -workspace $(VIV_PLSYS_SDK)
-
-
 

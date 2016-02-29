@@ -1,7 +1,7 @@
-old/
-downloads/
+dl/
 boot/
-temp
+pl/
+temp*
 config.makefile
 system.bit
 *.jou
