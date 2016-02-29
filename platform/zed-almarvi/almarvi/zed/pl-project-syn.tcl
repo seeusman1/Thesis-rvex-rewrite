@@ -1,4 +1,10 @@
 
+# Clean before building.
+reset_project
+
+# Upgrade IP blocks.
+upgrade_ip [get_ips]
+
 # Generate the block diagram.
 generate_target all [get_files pl.srcs/sources_1/bd/system/system.bd]
 

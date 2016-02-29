@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no" ?>
+<adf-implementation>
+
+  <ic-decoder-plugin>
+    <name>DefaultICDecoder</name>
+    <file>DefaultICDecoderPlugin.so</file>
+    <parameter name="bustrace">
+      <value>yes</value>
+    </parameter>
+    <parameter name="bustracestartingcycle">
+      <value>4</value>
+    </parameter>
+    <parameter name="debugger">
+      <value>yes</value>
+    </parameter>
+  </ic-decoder-plugin>
+
+  <fu name="mul">
+    <hdb-file>asic_130nm_1.5V.hdb</hdb-file>
+    <fu-id>122</fu-id>
+  </fu>
+
+  <fu name="LSU">
+    <hdb-file>asic_130nm_1.5V.hdb</hdb-file>
+    <fu-id>62</fu-id>
+  </fu>
+
+  <fu name="ALU">
+    <hdb-file>asic_130nm_1.5V.hdb</hdb-file>
+    <fu-id>387</fu-id>
+  </fu>
+
+  <fu name="stdout">
+    <hdb-file>io.hdb</hdb-file>
+    <fu-id>1</fu-id>
+  </fu>
+
+  <fu name="LSU_PARAM">
+    <hdb-file>asic_130nm_1.5V.hdb</hdb-file>
+    <fu-id>62</fu-id>
+  </fu>
+
+  <rf name="BOOL">
+    <hdb-file>asic_130nm_1.5V.hdb</hdb-file>
+    <rf-id>96</rf-id>
+  </rf>
+
+  <rf name="RF">
+    <hdb-file>asic_130nm_1.5V.hdb</hdb-file>
+    <rf-id>96</rf-id>
+  </rf>
+
+  <iu name="IU_1x32">
+    <hdb-file>asic_130nm_1.5V.hdb</hdb-file>
+    <rf-id>161</rf-id>
+  </iu>
+
+</adf-implementation>

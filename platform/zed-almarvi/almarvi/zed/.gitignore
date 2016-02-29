@@ -2,7 +2,7 @@ dl/
 boot/
 pl/
 temp*
-config.makefile
 system.bit
 *.jou
 *.log
+.Xil/

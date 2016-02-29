@@ -1,0 +1,18 @@
+
+# Xilinx stuff.
+*.jou
+*.log
+*.hdb
+*.bif
+ip/
+
+# Modelsim stuff.
+work/
+transcript
+*.dump
+*.wlf
+wlft*
+*stacktrace.vstf
+
+
+ise/

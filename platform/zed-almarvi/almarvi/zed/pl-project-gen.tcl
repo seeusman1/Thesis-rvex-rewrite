@@ -16,6 +16,12 @@ if {[string equal [get_filesets -quiet sources_1] ""]} {
 
 # Set 'sources_1' fileset object
 set obj [get_filesets sources_1]
+
+set_property ip_repo_paths [list \
+ "[file normalize "../rvex/ip/ip.srcs"]"
+ "[file normalize "../tta/ip/ip.srcs"]"
+] [current_fileset]
+
 set files [list \
  "[file normalize "pl/pl.srcs/sources_1/bd/system/system.bd"]"\
 ]
