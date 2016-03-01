@@ -3,8 +3,66 @@ import re
 import argparse
 
 class Rvd:
-    """A class for handling a connection to rvsrv.
-    Has methods for reading and writhing bytearrays.
+    """A class for handling the communication protocol with rvsrv.
+    Has methods for sending read, write and stop commands to rvsrv.
+    Here is a description of the protocol for communicating with rvsrv:
+
+    Tokenization
+    ------------
+
+     * All characters not in [,;a-zA-Z0-9] are completely ignored.
+     * Packet delimiter = ';'
+     * Parameter delimiter = ','
+     * The client always sends a command first, then rvsrv will send a reply as soon
+       as possible.
+
+    Structure of all replies
+    ------------------------
+
+     * Error reply: "Error,<cmd>,<code>;"
+       <cmd> equals the first parameter of the command.
+       <code> is some command-dependent error message name. rvd just prints
+       whatever's in there when an error is received.
+
+     * Acknowledgement: "OK,<cmd>[...];"
+       <cmd> equals the first parameter of the command.
+       [...] is a command-dependent reply.
+
+    Defined commands
+    ----------------
+
+    Stop command:      "Stop;"
+      OK reply:        "OK,Stop;"
+
+    This command requests that rvsrv be stopped.
+
+
+    Bus read command:  "Read,<addr>,<count>;"
+      OK reply:        "OK,Read,OK,<addr>,<count>,<data>;"
+      Fault reply:     "OK,Read,Fault,<addr>,<count>,<code>;"
+
+    Bus write command: "Write,<addr>,<count>,<data>;"
+      OK reply:        "OK,Write,OK,<addr>,<count>;"
+      Fault reply:     "OK,Write,Fault,<addr>,<count>,<code>;"
+
+    NOT YET IMPLEMENTED:
+    ROM read command:  "ROM,<addr>,<count>;"
+      OK reply:        "OK,ROM,OK,<addr>,<count>,<data>;"
+
+    <addr> is an 8-digit hex number specifying the start address.
+    <count> is a decimal integer between 1 and 4096, specifying the number of
+    bytes to read/write.
+    <data> is a hex array, <count>*2 in length, specifying the read/write data.
+    <code> is an 8-digit hex number specifying the bus fault code.
+
+    1, 2 and 4 byte read/writes are guaranteed to be in-order and atomic. Larger
+    read/writes may be read/written one or more times in any order, and bus fault
+    detection is best-effort only.
+
+    ROM read commands work the same way as normal reads, but they will go to the
+    debug support unit ROM instead of the bus. This ROM is supposed to contain
+    version information stuff.
+
     """
 
     def recv_all(self):
@@ -37,6 +95,11 @@ class Rvd:
 
     def write(self, address, data):
         """Write the bytearray data to rvsrv.
+        The return value is a tupple with the following format:
+        (code, addr, count, data)
+        Where code is either 'OK', or 'Fault', addr is the address given as
+        input, count is the number of bytes that were to be written, and data
+        contains the error code in the case of failure, and otherwise None.
         """
         command = "Write,{:08x},{:d},{};".format(address, len(data),
                 ''.join('{:02x}'.format(x) for x in data)).encode('utf-8')

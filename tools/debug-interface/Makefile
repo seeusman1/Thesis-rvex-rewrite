@@ -53,6 +53,7 @@ debug: copyconf $(BINDIR)/rvd $(BINDIR)/rvtrace
 	@chmod +x $(BINDIR)/rvd.sh
 	@echo "export PATH=\$$PATH:$(shell pwd)/$(BINDIR)" > debug
 	@echo "alias rvd=\"rvd.sh\"" >> debug
+	@echo "export PYTHONPATH=\$$PYTHONPATH:$(shell pwd)" >> debug
 	@echo "echo You should now be able to use call rvd \<command\>. Run rvd help for a command listing." >> debug
 	@echo Run source debug now...
 
