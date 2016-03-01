@@ -123,6 +123,10 @@ entity rvsys_standalone is
     -- registers (including PC, done and break flag) will be reset.
     rctrl2rvsa_reset            : in  std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0) := (others => '0');
     
+    -- Reset vector. When the context or the entire core is reset, the PC
+    -- register will be set to this value.
+    rctrl2rvsa_resetVect        : in  rvex_address_array(2**CFG.core.numContextsLog2-1 downto 0) := CFG.core.resetVectors(2**CFG.core.numContextsLog2-1 downto 0);
+    
     -- Active high done output. This is asserted when the context encounters
     -- a stop syllable. Processing a stop signal also sets the BRK control
     -- register, which stops the core. This bit can be reset by issuing a core
@@ -286,6 +290,7 @@ begin -- architecture
         rctrl2rvsa_run          => rctrl2rvsa_run,
         rvsa2rctrl_idle         => rvsa2rctrl_idle,
         rctrl2rvsa_reset        => rctrl2rvsa_reset,
+        rctrl2rvsa_resetVect    => rctrl2rvsa_resetVect,
         rvsa2rctrl_done         => rvsa2rctrl_done,
         
         -- Instruction memory busses.
@@ -332,6 +337,7 @@ begin -- architecture
         rctrl2rvsa_run          => rctrl2rvsa_run,
         rvsa2rctrl_idle         => rvsa2rctrl_idle,
         rctrl2rvsa_reset        => rctrl2rvsa_reset,
+        rctrl2rvsa_resetVect    => rctrl2rvsa_resetVect,
         rvsa2rctrl_done         => rvsa2rctrl_done,
         
         -- Memory bus.
@@ -365,6 +371,9 @@ begin -- architecture
   -- in the core, because the bus cannot write to it, so nothing would be able
   -- to affect the state of the buffers.
   trace_buffer: entity rvex.periph_trace
+    generic map (
+      DEPTH_LOG2B               => CFG.traceDepthLog2B
+    )
     port map (
       
       -- System control.

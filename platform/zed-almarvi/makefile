@@ -21,9 +21,12 @@ RVLIB_SOURCES  = $(addprefix $(realpath $(RVLIB_SOURCE)/common)/,$(shell cat $(R
 RVLIB_SOURCES += $(addprefix $(realpath $(RVLIB_SOURCE)/utils)/, $(shell cat $(RVLIB_SOURCE)/utils/vhdlsyn.txt))
 RVLIB_SOURCES += $(addprefix $(realpath $(RVLIB_SOURCE)/bus)/,   $(shell cat $(RVLIB_SOURCE)/bus/vhdlsyn.txt))
 RVLIB_SOURCES += $(addprefix $(realpath $(RVLIB_SOURCE)/core)/,  $(shell cat $(RVLIB_SOURCE)/core/vhdlsyn.txt))
-RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/cache/cache_pkg.vhd)
+RVLIB_SOURCES += $(addprefix $(realpath $(RVLIB_SOURCE)/cache)/, $(shell cat $(RVLIB_SOURCE)/cache/vhdlsyn.txt))
 RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/system/rvsys_standalone_pkg.vhd)
 RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/system/rvsys_standalone_core.vhd)
+RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/system/rvsys_standalone_cachedCore.vhd)
+RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/system/rvsys_standalone.vhd)
+RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/periph/periph_trace.vhd)
 
 RVLIB_DEPS = $(filter-out %rvex-version-pkg.vhd,$(RVLIB_SOURCES))
 

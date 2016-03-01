@@ -92,6 +92,7 @@ package rvsys_synopsis_pkg is
     cache_bypassRange           => addrRange(match => "1-------------------------------"),
     imemDepthLog2B              => 8,
     dmemDepthLog2B              => 8,
+    traceDepthLog2B             => 13,
     debugBusMap_imem            => addrRangeAndMap(match => "00-1----------------------------"),
     debugBusMap_dmem            => addrRangeAndMap(match => "001-----------------------------"),
     debugBusMap_rvex            => addrRangeAndMap(match => "1111----------------------------"),

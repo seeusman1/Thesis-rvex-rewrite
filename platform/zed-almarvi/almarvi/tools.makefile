@@ -1,4 +1,7 @@
 
+# Use bash as shell even if it's not the default.
+SHELL         := /bin/bash
+
 # Basic tools.
 CP             = cp
 RM             = rm -f

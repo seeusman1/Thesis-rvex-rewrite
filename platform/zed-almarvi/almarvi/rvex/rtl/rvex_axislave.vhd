@@ -53,6 +53,7 @@ library work;
 use work.common_pkg.all;
 use work.utils_pkg.all;
 use work.bus_pkg.all;
+use work.bus_addrConv_pkg.all;
 use work.core_pkg.all;
 use work.rvsys_standalone_pkg.all;
 
@@ -65,10 +66,8 @@ entity rvex_axislave is
 --=============================================================================
   generic (
     
-    -- Width of the AXI address ports. Must be at least 13+NUM_CONTEXTS_LOG2 to
-    -- accomodate the r-VEX control register file, at least 2+IMEM_DEPTH_LOG2
-    -- for the instruction memory and at least 2+DMEM_DEPTH_LOG2 for the data
-    -- memory.
+    -- Width of the AXI address ports. Must be at least
+    -- 2 + max(13, IMEM_DEPTH_LOG2, DMEM_DEPTH_LOG2, PMEM_DEPTH_LOG2)
     AXI_ADDRW_G                 : integer := 17;
     
     -- 2-log of the number of bytes in the instruction memory.
@@ -77,16 +76,39 @@ entity rvex_axislave is
     -- 2-log of the number of bytes in the data memory.
     DMEM_DEPTH_LOG2             : integer := 15;
     
-    -- 2-log of the number of r-VEX hardware contexts.
-    NUM_CONTEXTS_LOG2           : integer := 1;
+    -- 2-log of the number of bytes in the parameter memory.
+    PMEM_DEPTH_LOG2             : integer := 15;
     
-    -- 2-log of the number of r-VEX lane groups.
+    -- Identifier for the core within the platform, used by the control
+    -- registers (0..255).
+    CORE_ID                     : integer := 0;
+    
+    -- 2-log of the number of r-VEX lanes (1..4).
+    NUM_LANES_LOG2              : integer := 2;
+    
+    -- 2-log of the number of r-VEX lane groups (0..NUM_LANES_LOG2-1).
     NUM_GROUPS_LOG2             : integer := 1;
     
-    -- 2-log of the number of r-VEX lanes.
-    NUM_LANES_LOG2              : integer := 2
+    -- 2-log of the number of r-VEX hardware contexts (0..2).
+    NUM_CONTEXTS_LOG2           : integer := 1;
     
-    -- TODO more CFG vect stuff.
+    -- 2-log of the number of issue slots in a filled generic binary bundle
+    -- (NUM_LANES_LOG2..3).
+    GEN_BUNDLE_SIZE_LOG2        : integer := 2;
+    
+    -- 2-log of the alignment requirement of a bundle (1..NUM_LANES_LOG2). If
+    -- this is less than NUM_LANES_LOG2, the stop-bit system will be enabled.
+    -- This will automatically disable the limmhFromPreviousPair logic.
+    BUNDLE_ALIGN_LOG2           : integer := 1;
+    
+    -- Number of breakpoints supported by the core (0..4).
+    NUM_BREAKPOINTS             : integer := 4;
+    
+    -- Enable trace unit (1) or disable trace unit (0).
+    TRACE_ENABLE                : integer := 0;
+    
+    -- Number of bytes in each performance counter (0..7).
+    PERF_COUNTER_SIZE           : integer := 4
     
   );
   port (
@@ -129,13 +151,75 @@ end rvex_axislave;
 architecture Behavioral of rvex_axislave is
 --=============================================================================
   
+  --  _________                                  ___________
+  -- /   AXI   \                                / r-VEX dbg \
+  -- CTRL: 00... \                            / Debug: 00...
+  -- IMEM: 01...  }--[ALMARVI/r-VEX bridge]--/  IMEM:  01...
+  -- DMEM: 10... /                           \  DMEM:  10...
+  -- PMEM: 11... >------[dual port BRAM]      \ Trace: 11...
+  --                           |
+  --   Mapped to upper half of r-VEX 32-bit address space,
+  --              lower half is mapped to DMEM
+  --
+  -- AXI address space:
+  --   00(-*)000----------     1 kiB ALMARVI interface
+  --   00(-*)001----------     1 kiB reserved
+  --   00(-*)01-----------     2 kiB trace buffer
+  --   00(-*)1------------     Up to 4 kiB r-VEX debug bus
+  --   01(-*)-------------     2**IMEM_DEPTH_LOG2 byte instruction memory
+  --   10(-*)-------------     2**DMEM_DEPTH_LOG2 byte data memory
+  --   11(-*)-------------     2**PMEM_DEPTH_LOG2 byte parameter memory
+  --
+  -- r-VEX instruction address space:
+  --   0x00000000..0xFFFFFFFF  Instruction memory
+  --
+  -- r-VEX data address space:
+  --   0x00000000..0x7FFFFFFF  Data memory
+  --   0x80000000..0xFFFFFBFF  Paremeter memory
+  --   0xFFFFFC00..0xFFFFFFFF  Control registers
+  
+  -- Returns an address map definition with the upper two bits of the AXI
+  -- address set to section.
+  function mapSection(
+    section : std_logic_vector
+  ) return addrRangeAndMapping_type is
+    variable match : rvex_address_type;
+  begin
+    match := (others => '-');
+    match(AXI_ADDRW_G-1 downto AXI_ADDRW_G-2) := section;
+    return addrRangeAndMap(match => match);
+  end mapSection;
+  
   -- System control signals.
   signal areset                 : std_logic;
   signal reset                  : std_logic;
   
-  -- AXI to r-VEX bus.
-  signal bridge2bus             : bus_mst2slv_type;
-  signal bus2bridge             : bus_slv2mst_type;
+  -- AXI to PMEM/others demux.
+  signal axi2demux              : bus_mst2slv_type;
+  signal demux2axi              : bus_slv2mst_type;
+  
+  -- Demux to ALMARVI/r-VEX bridge.
+  signal demux2almarvi          : bus_mst2slv_type;
+  signal almarvi2demux          : bus_slv2mst_type;
+  
+  -- ALMARVI/r-VEX bridge bus to r-VEX.
+  signal almarvi2rvex           : bus_mst2slv_type;
+  signal rvex2almarvi           : bus_slv2mst_type;
+  
+  -- Demux to PMEM.
+  signal demux2pmem             : bus_mst2slv_type;
+  signal pmem2demux             : bus_slv2mst_type;
+  
+  -- r-VEX to pmem.
+  signal rvex2pmem              : bus_mst2slv_type;
+  signal pmem2rvex              : bus_slv2mst_type;
+  
+  -- Run control signals.
+  signal rvex_run               : std_logic_vector(2**NUM_CONTEXTS_LOG2-1 downto 0);
+  signal rvex_idle              : std_logic_vector(2**NUM_CONTEXTS_LOG2-1 downto 0);
+  signal rvex_reset             : std_logic_vector(2**NUM_CONTEXTS_LOG2-1 downto 0);
+  signal rvex_resetVect         : rvex_address_array(2**NUM_CONTEXTS_LOG2-1 downto 0);
+  signal rvex_done              : std_logic_vector(2**NUM_CONTEXTS_LOG2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -194,24 +278,131 @@ begin -- architecture
       s_axi_bready              => s_axi_bready,
       
       -- r-VEX bus master.
-      bridge2bus                => bridge2bus,
-      bus2bridge                => bus2bridge
+      bridge2bus                => axi2demux,
+      bus2bridge                => demux2axi
       
     );
   
   -----------------------------------------------------------------------------
-  -- Test the bridge with a simple memory
+  -- AXI bus demux
   -----------------------------------------------------------------------------
-  test_mem: entity work.bus_ramBlock_singlePort
+  demux_inst: entity work.bus_demux
     generic map (
-      DEPTH_LOG2B => IMEM_DEPTH_LOG2
-    )
+      ADDRESS_MAP(1)            => mapSection("11"), -- PMEM
+      ADDRESS_MAP(0)            => mapSection("--")  -- Others (highest indexed
+    )                                                -- matching slave is used)
     port map (
+      
+      -- System control.
       reset                     => reset,
       clk                       => s_axi_aclk,
       clkEn                     => '1',
-      mst2mem_port              => bridge2bus,
-      mem2mst_port              => bus2bridge
+      
+      -- Incoming bus from the master.
+      mst2demux                 => axi2demux,
+      demux2mst                 => demux2axi,
+      
+      -- Outgoing busses to the slaves.
+      demux2slv(1)              => demux2pmem,
+      demux2slv(0)              => demux2almarvi,
+      slv2demux(1)              => pmem2demux,
+      slv2demux(0)              => almarvi2demux
+      
+    );
+  
+  -----------------------------------------------------------------------------
+  -- ALMARVI/r-VEX bridge
+  -----------------------------------------------------------------------------
+  
+  -- TODO
+  rvex_run <= (others => '1');
+  rvex_reset <= (others => '0');
+  rvex_resetVect <= (others => (others => '0'));
+  almarvi2rvex <= demux2almarvi;
+  almarvi2demux <= rvex2almarvi;
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate parameter memory
+  -----------------------------------------------------------------------------
+  pmem_inst: entity work.bus_ramBlock
+    generic map (
+      DEPTH_LOG2B               => DMEM_DEPTH_LOG2
+    )
+    port map (
+      
+      -- System control.
+      reset                     => reset,
+      clk                       => s_axi_aclk,
+      clkEn                     => '1',
+      
+      -- Memory port A.
+      mst2mem_portA             => demux2pmem,
+      mem2mst_portA             => pmem2demux,
+      
+      -- Memory port B.
+      mst2mem_portB             => rvex2pmem,
+      mem2mst_portB             => pmem2rvex
+      
+    );  
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the r-VEX standalone platform
+  -----------------------------------------------------------------------------
+  rvsys_inst: entity work.rvsys_standalone
+    generic map (
+      CFG                       => rvex_sa_cfg(
+        core                      => rvex_cfg(
+          numLanesLog2              => NUM_LANES_LOG2,
+          numLaneGroupsLog2         => NUM_GROUPS_LOG2,
+          numContextsLog2           => NUM_CONTEXTS_LOG2,
+          genBundleSizeLog2         => GEN_BUNDLE_SIZE_LOG2,
+          bundleAlignLog2           => BUNDLE_ALIGN_LOG2,
+          multiplierLanes           => 2#11111111#,
+          numBreakpoints            => NUM_BREAKPOINTS,
+          forwarding                => 1,
+          limmhFromNeighbor         => 1,
+          limmhFromPreviousPair     => bool2int(BUNDLE_ALIGN_LOG2 >= NUM_LANES_LOG2),
+          unifiedStall              => 1,
+          traceEnable               => TRACE_ENABLE,
+          perfCountSize             => PERF_COUNTER_SIZE,
+          cachePerfCountEnable      => 0
+        ),
+        core_valid                => true,
+        cache_enable              => 0,
+        imemDepthLog2B            => IMEM_DEPTH_LOG2,
+        dmemDepthLog2B            => DMEM_DEPTH_LOG2,
+        traceDepthLog2B           => 11, -- Fixed to 2 kiB
+        debugBusMap_imem          => mapSection("01"),
+        debugBusMap_dmem          => mapSection("10"),
+        debugBusMap_rvex          => mapSection("00"),
+        debugBusMap_trace         => mapSection("11"),
+        debugBusMap_mutex         => 1
+      ),
+      CORE_ID                   => CORE_ID,
+      PLATFORM_TAG              => X"414C4D41525649" -- "ALMARVI" in ASCII
+    )
+    port map (
+      
+      -- System control.
+      reset                     => reset,
+      clk                       => s_axi_aclk,
+      clkEn                     => '1',
+    
+      -- Run control interface.
+      rctrl2rvsa_run            => rvex_run,
+      rvsa2rctrl_idle           => rvex_idle,
+      rctrl2rvsa_reset          => rvex_reset,
+      rctrl2rvsa_resetVect      => rvex_resetVect,
+      rvsa2rctrl_done           => rvex_done,
+    
+      -- Master interface, unused.
+      rvsa2bus                  => rvex2pmem,
+      bus2rvsa                  => pmem2rvex,
+      
+      -- Debug interface.
+      debug2rvsa                => almarvi2rvex,
+      rvsa2debug                => rvex2almarvi
+      
     );
   
 end Behavioral;

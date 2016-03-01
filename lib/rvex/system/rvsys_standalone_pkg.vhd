@@ -91,6 +91,9 @@ package rvsys_standalone_pkg is
     -- Depth of the instruction memory, represented as log2(number_of_bytes).
     dmemDepthLog2B              : natural;
     
+    -- Depth of the trace buffer, represented as log2(number_of_bytes).
+    traceDepthLog2B             : natural;
+    
     -- The following entries define the memory map as seen by the debug bus.
     debugBusMap_imem            : addrRangeAndMapping_type;
     debugBusMap_dmem            : addrRangeAndMapping_type;
@@ -116,6 +119,7 @@ package rvsys_standalone_pkg is
     cache_bypassRange           => addrRange(match => "1-------------------------------"),
     imemDepthLog2B              => 16,
     dmemDepthLog2B              => 16,
+    traceDepthLog2B             => 13,
     debugBusMap_imem            => addrRangeAndMap(match => "00-1----------------------------"),
     debugBusMap_dmem            => addrRangeAndMap(match => "001-----------------------------"),
     debugBusMap_rvex            => addrRangeAndMap(match => "1111----------------------------"),
@@ -146,9 +150,11 @@ package rvsys_standalone_pkg is
     cache_bypassRange           : addrRange_type := ADDR_RANGE_UNDEF;
     imemDepthLog2B              : integer := -1;
     dmemDepthLog2B              : integer := -1;
+    traceDepthLog2B             : integer := -1;
     debugBusMap_imem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_rvex            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
+    debugBusMap_trace           : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_mutex           : integer := -1;
     rvexDataMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     rvexDataMap_bus             : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF
@@ -171,9 +177,11 @@ package body rvsys_standalone_pkg is
     cache_bypassRange           : addrRange_type := ADDR_RANGE_UNDEF;
     imemDepthLog2B              : integer := -1;
     dmemDepthLog2B              : integer := -1;
+    traceDepthLog2B             : integer := -1;
     debugBusMap_imem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_rvex            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
+    debugBusMap_trace           : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     debugBusMap_mutex           : integer := -1;
     rvexDataMap_dmem            : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF;
     rvexDataMap_bus             : addrRangeAndMapping_type := ADDR_MAPPING_UNDEF
@@ -181,18 +189,20 @@ package body rvsys_standalone_pkg is
     variable cfg  : rvex_sa_generic_config_type;
   begin
     cfg := base;
-    if core_valid                             then cfg.core              := core;                           end if;
-    if cache_enable /= -1                     then cfg.cache_enable      := boolean'val(cache_enable);      end if;
-    if cache_config_valid                     then cfg.cache_config      := cache_config;                   end if;
-    if cache_bypassRange /= ADDR_RANGE_UNDEF  then cfg.cache_bypassRange := cache_bypassRange;              end if;
-    if imemDepthLog2B >= 0                    then cfg.imemDepthLog2B    := imemDepthLog2B;                 end if;
-    if dmemDepthLog2B >= 0                    then cfg.dmemDepthLog2B    := dmemDepthLog2B;                 end if;
-    if debugBusMap_imem /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_imem  := debugBusMap_imem;               end if;
-    if debugBusMap_dmem /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_dmem  := debugBusMap_dmem;               end if;
-    if debugBusMap_rvex /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_rvex  := debugBusMap_rvex;               end if;
-    if debugBusMap_mutex /= -1                then cfg.debugBusMap_mutex := boolean'val(debugBusMap_mutex); end if;
-    if rvexDataMap_dmem /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_dmem  := rvexDataMap_dmem;               end if;
-    if rvexDataMap_bus  /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_bus   := rvexDataMap_bus;                end if;
+    if core_valid                              then cfg.core              := core;                           end if;
+    if cache_enable /= -1                      then cfg.cache_enable      := boolean'val(cache_enable);      end if;
+    if cache_config_valid                      then cfg.cache_config      := cache_config;                   end if;
+    if cache_bypassRange /= ADDR_RANGE_UNDEF   then cfg.cache_bypassRange := cache_bypassRange;              end if;
+    if imemDepthLog2B >= 0                     then cfg.imemDepthLog2B    := imemDepthLog2B;                 end if;
+    if dmemDepthLog2B >= 0                     then cfg.dmemDepthLog2B    := dmemDepthLog2B;                 end if;
+    if traceDepthLog2B >= 0                    then cfg.traceDepthLog2B   := traceDepthLog2B;                end if;
+    if debugBusMap_imem  /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_imem  := debugBusMap_imem;               end if;
+    if debugBusMap_dmem  /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_dmem  := debugBusMap_dmem;               end if;
+    if debugBusMap_rvex  /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_rvex  := debugBusMap_rvex;               end if;
+    if debugBusMap_trace /= ADDR_MAPPING_UNDEF then cfg.debugBusMap_trace := debugBusMap_trace;              end if;
+    if debugBusMap_mutex /= -1                 then cfg.debugBusMap_mutex := boolean'val(debugBusMap_mutex); end if;
+    if rvexDataMap_dmem  /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_dmem  := rvexDataMap_dmem;               end if;
+    if rvexDataMap_bus   /= ADDR_MAPPING_UNDEF then cfg.rvexDataMap_bus   := rvexDataMap_bus;                end if;
     return cfg;
   end rvex_sa_cfg;
     
