@@ -14,7 +14,7 @@ CORE_LIB = ../lib/rvex/core
 DOCS = ../doc/src/refman/generated
 RVEX_H = ../examples/src/rvex.h
 MEMORY_MAP = ../tools/debug-interface/core.map
-MEMORY_MAP_PY = ../tools/debug-interface/core_map.py
+MEMORY_MAP_PY = ../tools/debug-interface/pyrvd/core_map.py
 PLATFORMS = ../platform
 
 # Set python search path.
