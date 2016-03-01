@@ -8,6 +8,9 @@ class Rvd:
     """
 
     def recv_all(self):
+        """Receive all data from the socket until there is no more data to
+        receive and return it as a string.
+        """
         chunk_size = 4096
         msg = bytearray()
         while True:
@@ -21,6 +24,8 @@ class Rvd:
 
 
     def stop(self):
+        """Send the stop command to rvsrv.
+        """
         command = "Stop;".encode('utf-8')
         res = self.socket.send(command)
         res = self.recv_all()
@@ -30,8 +35,10 @@ class Rvd:
         return True
 
 
-    def write(self, address, count, data):
-        command = "Write,{:08x},{:d},{};".format(address, count,
+    def write(self, address, data):
+        """Write the bytearray data to rvsrv.
+        """
+        command = "Write,{:08x},{:d},{};".format(address, len(data),
                 ''.join('{:02x}'.format(x) for x in data)).encode('utf-8')
         res = self.socket.send(command)
         res = self.recv_all()
@@ -47,7 +54,7 @@ class Rvd:
         count and writes them to address.
         Raises an exception on failure.
         """
-        res = self.write(address, count, data.to_bytes(count, byteorder='big'))
+        res = self.write(address, data.to_bytes(count, byteorder='big'))
         if res[0] == 'OK':
             return
         raise RuntimeError('write access failed: {}'.format(res))
