@@ -514,3 +514,23 @@ else
 	$(EXPECT) -c 'set timeout 100; spawn $(SSH) -X linaro@$(ZED_HOST); match_max 100000; expect "*continue*"; send -- "yes\r"; expect "*?assword:*"; send -- "linaro\r"; interact'
 endif
 
+.PHONY: bridge
+bridge:
+ifndef ZED_HOST
+	@echo ""
+	@echo " This command opens a port forwarding SSH connection to the zedboard at"
+	@echo " ZED_HOST for port 21079, which allows you to use rvd on your host machine if"
+	@echo " rvsrv is running on the board. It removes the host key first to prevent MitM"
+	@echo " attack warnings from popping up after re-flashing the board."
+	@echo ""
+	@echo " Call it like this:"
+	@echo ""
+	@echo "   make bridge ZED_HOST=<hostname>"
+	@echo ""
+	@echo " You can also put ZED_HOST in config.makefile if it's always the same."
+	@echo ""
+else
+	-$(SSH_KEYGEN) -R $(ZED_HOST) -f ~/.ssh/known_hosts
+	$(EXPECT) -c 'set timeout 100; spawn $(SSH) -N -L 21079:localhost:21079 linaro@$(ZED_HOST); match_max 100000; expect "*continue*"; send -- "yes\r"; expect "*?assword:*"; send -- "linaro\r"; interact'
+endif
+

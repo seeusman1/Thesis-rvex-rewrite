@@ -1,0 +1,233 @@
+
+Getting started with the Zedboard
+---------------------------------
+
+Requirements:
+ - A Zedboard.
+ - A USB A to micro B cable (should come with the Zedboard).
+ - An SD card which works with the Zedboard. I think 4 GB is large enough, but
+   I've only tested with an 8 GB card. This should also come with the Zedboard
+   assuming 4 GB is indeed enough. You may want to make a binary backup of the
+   card including the MBR if you're going to use that card though.
+ - An SD card reader.
+ - A way to connect the Zedboard ethernet port to your computer and the
+   internet (preferably at the same time, but this is not necessary).
+ - A Linux development machine with the following software:
+    - Vivado 2015.2 (other versions may or may not work)
+    - modelsim if you want to simulate stuff
+    - GNU make
+    - root access if you want the the scripts to image/format the Zedboard SD
+      card for you
+    - The tools listed in tools.makefile. Among them are:
+       - bash
+       - git
+       - python (tested with 2.7)
+       - expect
+       - dtc (device tree compiler)
+       - ssh (to connect to Linaro running on the board)
+       - wget
+    - If you're going to compile the Linux kernel and u-boot for the board, you
+      will also need whatever dependencies they have. The archive should come
+      with a pre-built kernel and bootloader, though.
+ - An internet connection. The makefile in zed/ will try to download
+   dependencies as it needs them using wget and git.
+
+To get started, open a bash terminal in this directory. In the following
+instructions, anything after a $ is a command which should be typed into the
+terminal.
+
+$ make
+
+The default make target just outputs a list of the most important targets. In
+addition, any make command will generate config.makefile if it does not exist
+yet - which it won't if you're just starting out.
+
+The generated config.makefile contains some machine-specific configuration
+settings. In particular, it needs to know what to do in order to load the Vivado
+environment, in the form of a source script. If you're at the TU Delft, the
+default settings should work. Otherwise, you have to point VIVADO_ENV to a
+script which does the following things:
+
+ - set the Xilinx license environment variable;
+ - source settings64.sh in the Vivado installation directory.
+
+When that's done,
+
+$ make zed-configure
+
+If everything is set up correctly, the scripts should now install the tta and
+r-VEX IP blocks, create a Vivado project for the Zynq programmable logic (PL)
+and open this project in Vivado. In particular, you should be presented with
+the block diagram of the design.
+
+You can change the block diagram as you see fit. When you've made your changes,
+make the design passes validation, save the block diagram and exit Vivado.
+
+$ make zed
+
+This command downloads and builds everything needed to image the Zedboard SD
+card. From a freshly unpacked almarvi.tar.gz, this means generating the bit file
+for the programmable logic, packing it in BOOT.BIN and downloading Linaro. If
+the download link breaks, you can find it in zed/makefile. You can also change
+the version there, if you want. I just used some ancient archived version that
+was used in some tutorial and was satisfied with it.
+
+almarvi.tar.gz should come with the following files pre-built:
+ - The u-boot bootloader: zed/boot/u-boot.elf
+ - The Linux kernel: zed/boot/image/zImage (actually in uImage format, don't ask)
+ - A device tree for the kernel: zed/boot/image/devicetree_linaro.dtb
+
+If you delete these files, the build system will try to rebuild them for you.
+This means a couple gigabytes' worth of downloads and a bunch more tool
+dependencies, so it's less likely to work out of the box. It works for me though
+(2016-03-02).
+
+Anyway, when this is done, the next step is formatting a Zynq-bootable SD card.
+The makefiles can try to do this for you if you have root/sudo access; if this
+works for you, you can skip the next paragraph.
+
+If you prefer to format the card manually, the SD card needs a 64MiB 
+4Mib-aligned (!) FAT32 partition as the first partition and an ext4 partition 
+for the remainder of the card. An MS-DOS/MBR is needed for the partition table.
+The FAT32 partition should be populated with the three files in zed/boot/image,
+the ext4 partition should be filled with the Linaro filesystem in
+zed/dl/linaro/linaro.tar.gz/binary/boot/filesystem.dir/. Godspeed; the Zynq is
+extremely finicky; it took me several days to get it to work.
+
+To let the tools do it for you, you first need to know what the device file for
+the SD card is. On my system (with a built-in card reader) the filename is
+/dev/mmcblk0, but it might also be /dev/sd* if you use a USB based card reader.
+Google around if you don't know how to find the device file. You want to be
+really sure you have the right one, because the scripts will nuke any existing
+data on the device. I AM NOT RESPONSIBLE FOR ANY DATA LOSS YOU MAY INCUR USING
+THIS COMMAND!
+
+When you have the device file, this is the command:
+
+$ sudo make zed-sdcard DEV=<insert device filename here>
+
+If you run into weird problems with the board, you may want to add NUKE=1 to
+that command. That will first fill the MBR and the first partition with zeroes
+to make sure everything is properly cleaned up.
+
+Make sure you let the command run, even if it seems like it froze.
+Specifically, the ext4 partition umount command takes a long time while Linux
+flushes its filesystem cache.
+
+While this command runs, make sure the Zedboard jumper configuration is
+correct. According to the Zedboard manual, you need the following jumper
+config:
+
+ - MIO6-GND      _ _
+ - MIO5-3V3    o| | |o o  3V3
+ - MIO4-3V3   |'|_|_|'|'| SIG
+ - MIO3-GND   |_|o o|_|_| GND
+ - MIO2-GND    6 5 4 3 2
+                      _
+               VADJ  | |o O
+ - VADJ-1V8   SELECT |_|o O
+                      1 2 3
+
+ - JP6 and JP2 shorted (left side of the board)
+ - All other jumpers left open/unpopulated.
+
+When the command is done, you may want to change the network configuration that
+Linaro will use, because we will be connecting to the internet with the board.
+We'll also want to make sure that the board uses the same IP address every time,
+if at all possible, so we can easily SSH to it.
+
+By default, the board will use DHCP, so you won't have to change anything if 
+that's okay. Otherwise, open the "root" partition of the board with a file 
+browser and browse to <SD card root>/etc/network. Open the 'interfaces' file 
+with some text editor with root access (for instance, use 'sudo vi' from the 
+command line if you know how vi works). Replace the file contents with the 
+following, replacing the IP addresses with whatever's appropriate for your 
+network.
+
+auto lo eth0
+iface lo inet loopback
+iface eth0 inet static
+        address 192.168.0.*
+        netmask 255.255.255.0
+        gateway 192.168.0.1
+
+If you have to use DHCP because you're on a university network or something, but
+the network will respect hostnames and allow you to use those instead of IP
+addresses, you may at least want to change the hostname of the board to
+something more unique. The hostname can be set using the 
+<SD card root>/etc/hostname file.
+
+You may also want to put some stuff in the home directory of the card, i.e.
+<SD card root>/home/linaro. Most importantly, you'll want to copy the sw and
+drivers directories to here.
+        
+When that's done, unmount the SD card, insert it into the Zedboard, and turn the 
+Zedboard on. DO NOT connect the USB cable to the board yet. When you turn on the 
+board, the power LED (green) will come on. A couple seconds later, the DONE LED 
+should come on (blue) and almost immediately after that, MIO7 (green) should 
+also come on. This means that u-boot is running. If the board does not get this 
+far, the Zynq probably does not like the SD card for whatever reason. A couple 
+seconds later, Linux will boot, using MIO7 as an SD card activity LED. Another 
+couple seconds later, the board should be ready to receive commands over the USB 
+UART connection and MIO7 won't flash as much anymore.
+
+Connect the Zedboard to your computer using USB using the UART micro-B socket.
+The device file for the USB-UART chip will most likely be /dev/ttyACM0. Connect
+to it using your favorite serial terminal at 115200 baud 8n1. I use
+
+$ screen /dev/ttyACM0 115200
+
+Now, this connection is problematic at best. As far as I can tell, the Linux
+drivers seem to think the board is a modem (which is technically what it's
+advertising to be by using the ACM device class). The problem with that is that
+the drivers seem to try to send modem commands to the Zedboard every so often,
+and interpret Linaro's helpless replies as more malformed modem commands. This
+leads to a lot of corruption in the data stream, and sometimes it doesn't work
+at all. This is also why you should not have the cable connected while the
+board boots; the garbage that your machine will send to the board will stop
+u-boot from automatically booting.
+
+Unless you have a significantly better experience than I have on my machine,
+you'll want to ditch the UART terminal for SSH as soon as possible. To do that,
+run the following command on the board (I will use > as the query symbol for
+the board, to distinguish it from host commands):
+
+> sudo apt-get install openssh-server
+
+This will install and start an SSH server daemon on the board. Hopefully, this
+will be the one and only thing you'll ever have to do with this UART. If you
+have to use DHCP and don't have working hostnames, though, you'll unfortunately
+have to use it to figure out the IP address every time the board boots using
+
+> ifconfig
+
+Look for 'inet addr:' in the 'eth0' section.
+
+You should now be able to SSH to the board. You can do this manually (log in
+with username linaro and password linaro) or you can use
+
+$ make zed-ssh ZED_HOST=<ip address/hostname>
+
+which will automatically fill in the password and make sure that SSH won't
+complain about man-in-the-middle attacks if the Zedboard's host key changes.
+If you don't want to type ZED_HOST=... every time and the IP/host name is
+fixed, you can set a default in config.makefile.
+
+You should run
+
+> sudo poweroff
+
+when you're done with the board to make sure that no filesystem corruption
+occurs. Wait until the SD card activity LED is off for a second or two before
+turning the power off. Rebooting also works, by the way.
+
+Congratulations, you now have a working Zedboard with almarvi accelerators in
+the PL!
+
+You don't have to re-image the entire card every time you change the PL. Just
+run
+
+$ make zed
+
+to make sure all the files are up-to-date, and then manually copy the files in
+zed/boot/image to the SD card BOOT partition.

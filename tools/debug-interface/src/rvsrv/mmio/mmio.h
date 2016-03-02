@@ -46,72 +46,27 @@
  * Copyright (C) 2008-2016 by TU Delft.
  */
 
-#ifndef _ENTRY_H_
-#define _ENTRY_H_
+#ifndef _MMIO_MMIO_H_
+#define _MMIO_MMIO_H_
+
+typedef struct rvex_iface rvex_iface_t;
 
 /**
- * Application entry point.
+ * Initialize memory-mapped I/O for communication.
+ *
+ * file is a path to the (device) file that is to be memory mapped.
+ * offset is the index of the first byte that will be mapped within the file.
+ *   This offset is added to incoming addresses, so the mapped section will
+ *   always appear to start at 0.
+ * length is the amount of bytes that are mapped.
+ * iface will be initialized by this method.
+ * Returns 0 on success, -1 on error.
  */
-int main(int argc, char **argv);
-
-/**
- * Structure containing the command line parameters. This is filled in main and
- * then passed to run().
- */
-typedef struct {
-  
-  /**
-   * Filename of the serial port to connect to.
-   */ 
-  char *port;
-  
-  /**
-   * Baud rate to use when opening the serial port.
-   */
-  int baudrate;
-
-  /**
-   * Path to the PCIe driver character device. NULL when PCIe is not used.
-   */
-  char *pcieCdev;
-  
-  /**
-   * Path to the memory-mapped I/O device file. NULL when mmio is not used.
-   */
-  char *mmioFile;
-  
-  /**
-   * Memory-mapped I/O offset in bytes.
-   */
-  unsigned long mmioOffset;
-  
-  /**
-   * Number of bytes to map for memory-mapped I/O.
-   */
-  unsigned long mmioLength;
-  
-  /**
-   * TCP port to listen on for application-access connections.
-   */
-  int appPort;
-  
-  /**
-   * TCP port to listen on for debug-access connections.
-   */
-  int debugPort;
-  
-  /**
-   * When set, rvsrv should keep running in the current shell, instead of
-   * turning into a daemon.
-   */
-  int foreground;
-  
-  /**
-   * When set, rvsrv will exit when there is a serial port error. The default
-   * behavior is to keep running and try to reconnect.
-   */
-  int noReconnect;
-  
-} commandLineArgs_t;
+int init_mmio_iface(
+  const char *file, 
+  unsigned long offset, 
+  unsigned long length, 
+  rvex_iface_t *iface
+);
 
 #endif

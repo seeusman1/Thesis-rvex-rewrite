@@ -63,6 +63,7 @@
 #include "tcpserv.h"
 
 #include "pcie/pcie.h"
+#include "mmio/mmio.h"
 #include "uart/uart.h"
 
 /**
@@ -476,13 +477,15 @@ int run(const commandLineArgs_t *args) {
   
   // Try to open the serial port.
   tty = serial_open(args->port, args->baudrate);
-  // Only fail when we are not using PCIe communication.
-  CHECK_FALSE(tty >= 0 || args->pcieCdev);
+  // Only fail when we are not using PCIe or mmio communication.
+  CHECK_FALSE(tty >= 0 || args->pcieCdev || args->mmioFile);
   supposed_to_have_tty = tty != 0;
 
   // Try to initalize the rvex interface.
   if (args->pcieCdev) {
     CHECK(init_pcie_iface(args->pcieCdev, &rvexIface));
+  } else if (args->mmioFile) {
+    CHECK(init_mmio_iface(args->mmioFile, args->mmioOffset, args->mmioLength, &rvexIface));
   } else {
     CHECK(init_uart_iface(tty, &rvexIface));
   }

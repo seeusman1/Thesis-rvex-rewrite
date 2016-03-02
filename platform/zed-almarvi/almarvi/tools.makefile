@@ -4,6 +4,7 @@ SHELL         := /bin/bash
 
 # Basic tools.
 CP             = cp
+MV             = mv
 RM             = rm -f
 MKDIR          = mkdir
 TOUCH          = touch

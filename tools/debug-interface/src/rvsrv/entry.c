@@ -48,6 +48,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <getopt.h>
 #include <sys/stat.h>
 
@@ -89,21 +90,22 @@ int main(int argc, char **argv) {
   while (1) {
 
     static struct option long_options[] = {
-      {"port",     required_argument, 0, 'p'},
-      {"baud",     required_argument, 0, 'b'},
-      {"pcie",     required_argument, 0, 'P'},
-      {"app",      required_argument, 0, 'a'},
-      {"debug",    required_argument, 0, 'd'},
-      {"foreground",no_argument,      0, 'f'},
-      {"help",     no_argument,       0, 'h'},
-      {"license",  no_argument,       0, 'l'},
-      {"no-reconnect",no_argument,    0, 'n'},
+      {"port",         required_argument, 0, 'p'},
+      {"baud",         required_argument, 0, 'b'},
+      {"pcie",         required_argument, 0, 'P'},
+      {"mmio",         required_argument, 0, 'm'},
+      {"app",          required_argument, 0, 'a'},
+      {"debug",        required_argument, 0, 'd'},
+      {"foreground",   no_argument,       0, 'f'},
+      {"help",         no_argument,       0, 'h'},
+      {"license",      no_argument,       0, 'l'},
+      {"no-reconnect", no_argument,       0, 'n'},
       {0, 0, 0, 0}
     };
     
     int option_index = 0;
 
-    int c = getopt_long(argc, argv, "p:b:P:a:d:h", long_options, &option_index);
+    int c = getopt_long(argc, argv, "p:b:P:m:a:d:h", long_options, &option_index);
 
     if (c == -1) {
       break;
@@ -140,6 +142,40 @@ int main(int argc, char **argv) {
             usage(argv[0], 0);
             exit(EXIT_FAILURE);
           }
+        }
+        break;
+        
+      case 'm':
+        {
+          char *token;
+          
+          // Parse filename.
+          token = strtok(optarg, ":");
+          if (token == NULL) {
+            printf("%s: --mmio syntax is malformed.\n\n", argv[0]);
+            usage(argv[0], 0);
+            exit(EXIT_FAILURE);
+          }
+          args.mmioFile = token;
+          
+          // Parse offset.
+          token = strtok(NULL, ":");
+          if (token == NULL) {
+            printf("%s: --mmio syntax is malformed.\n\n", argv[0]);
+            usage(argv[0], 0);
+            exit(EXIT_FAILURE);
+          }
+          args.mmioOffset = strtoul(token, NULL, 0);
+          
+          // Parse length.
+          token = strtok(NULL, ":");
+          if (token == NULL) {
+            printf("%s: --mmio syntax is malformed.\n\n", argv[0]);
+            usage(argv[0], 0);
+            exit(EXIT_FAILURE);
+          }
+          args.mmioLength = strtoul(token, NULL, 0);
+          
         }
         break;
         
@@ -193,6 +229,13 @@ int main(int argc, char **argv) {
     exit(EXIT_FAILURE);
   }
   
+  // Make sure that the user isn't trying to do PCIe and mmio at the same time.
+  if (args.mmioFile && args.pcieCdev) {
+    printf("%s: cannot use PCIe and memory mapped I/O at the same time\n\n", argv[0]);
+    usage(argv[0], 0);
+    exit(EXIT_FAILURE);
+  }
+  
   // Print welcome text/license header.
   welcome();
   printf("Run %s --license for the full license.\n\n", argv[0]);
@@ -228,9 +271,13 @@ static void usage(char *progName, int verbose) {
     "  -p  --port <port>  Specify serial port file to connect to. Defaults to\n"
     "                     /dev/ttyS0.\n"
     "  -b  --baud <rate>  Specify baud rate to use. Defaults to 115200.\n"
-    "  -P  --pcie <dev>   Use the PCIe driver to communicate with device instead of\n"
-    "                     the UART connection. Specify the character device to use\n"
+    "  -P  --pcie <dev>   Use the PCIe driver to communicate with the device instead\n"
+    "                     of the UART connection. Specify the character device to use\n"
     "                     to communicate with the driver.\n"
+    "  -m  --mmio <d>:<s>:<l>  Use memory-mapped I/O to communicate with the device\n"
+    "                     instead of the UART connection. <d> should be a device\n"
+    "                     filename, <s> should be an offset within the device file\n"
+    "                     and <l> should be the number of bytes to map.\n"
     "  -a  --app <port>   Listen on the specified TCP port for UART communication\n"
     "                     with application code. Defaults to port 21078.\n"
     "  -d  --debug <port> Listen on the specified TCP port for debugging commands.\n"

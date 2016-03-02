@@ -119,12 +119,15 @@ architecture Behavioral of axi_bridge is
   );
   signal state                  : state_type;
   
-  -- Bus request registers.
+  -- Bus request registers using AXI endianness.
   signal address                : rvex_address_type;
   signal readEnable             : std_logic;
   signal writeEnable            : std_logic;
   signal writeMask              : rvex_mask_type;
   signal writeData              : rvex_data_type;
+  
+  -- Bus read reply using AXI endianness.
+  signal readData               : rvex_data_type;
   
 --=============================================================================
 begin -- architecture
@@ -237,7 +240,7 @@ begin -- architecture
               readEnable <= '0';
               
               -- Forward the data to the AXI read result channel.
-              s_axi_rdata  <= bus2bridge.readData;
+              s_axi_rdata  <= readData;
               s_axi_rresp  <= (1 => bus2bridge.fault, 0 => '0');
               s_axi_rvalid <= '1';
               
@@ -315,15 +318,32 @@ begin -- architecture
   -- Handle combinatorial r-VEX bus timing and pack the master-to-slave record.
   rvex_proc: process (
     address, readEnable, writeEnable, writeMask, writeData,
-    bus2bridge.ack
+    bus2bridge.ack, bus2bridge.readData
   ) is
   begin
-    bridge2bus             <= BUS_MST2SLV_IDLE;
-    bridge2bus.address     <= address;
-    bridge2bus.readEnable  <= readEnable  and not bus2bridge.ack;
-    bridge2bus.writeEnable <= writeEnable and not bus2bridge.ack;
-    bridge2bus.writeMask   <= writeMask;
-    bridge2bus.writeData   <= writeData;
+    bridge2bus              <= BUS_MST2SLV_IDLE;
+    bridge2bus.address      <= address;
+    bridge2bus.readEnable   <= readEnable  and not bus2bridge.ack;
+    bridge2bus.writeEnable  <= writeEnable and not bus2bridge.ack;
+    
+    -- Endian-swap the write mask.
+    bridge2bus.writeMask(0) <= writeMask(3);
+    bridge2bus.writeMask(1) <= writeMask(2);
+    bridge2bus.writeMask(2) <= writeMask(1);
+    bridge2bus.writeMask(3) <= writeMask(0);
+    
+    -- Endian-swap the write data.
+    bridge2bus.writeData( 7 downto  0) <= writeData(31 downto 24);
+    bridge2bus.writeData(15 downto  8) <= writeData(23 downto 16);
+    bridge2bus.writeData(23 downto 16) <= writeData(15 downto  8);
+    bridge2bus.writeData(31 downto 24) <= writeData( 7 downto  0);
+    
+    -- Endian-swap the read data.
+    readData( 7 downto  0) <= bus2bridge.readData(31 downto 24);
+    readData(15 downto  8) <= bus2bridge.readData(23 downto 16);
+    readData(23 downto 16) <= bus2bridge.readData(15 downto  8);
+    readData(31 downto 24) <= bus2bridge.readData( 7 downto  0);
+    
   end process;
   
 end Behavioral;

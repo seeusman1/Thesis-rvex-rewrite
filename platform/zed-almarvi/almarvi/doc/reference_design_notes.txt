@@ -1,0 +1,195 @@
+Introduction:
+
+  This document describes a reference design for the ALMARVI FPGA accelerator interface (see interface specification), and gives instructions to install the design.
+
+
+Requirements:
+
+  * Xilinx Vivado
+  * Xilinx SDK
+  * Mentor Modelsim
+  * Xilinx Zynq board with installed Linux 
+    - TUT is now using Linaro Ubuntu as described in http://fpga.org/2013/05/24/yet-another-guide-to-running-linaro-ubuntu-desktop-on-xilinx-zynq-on-the-zedboard/
+  * Either:
+    - Installed compiler toolchain on the Zynq, or
+    - Working cross-compiler from Xilinx
+
+Terminology:
+  PS : the dual-core ARM section of a Zynq
+  PL : the FPGA section of a Zynq
+  PS Linux : Linux running on the PS of a Zynq
+
+
+Reference design files:
+
+  tta/rtl/tta-accel-rtl.vhdl
+    Reference TTA coprocessor, including:
+    - A microcontroller-sized TTA procesor core
+    - 32KB instruction cache
+    - Data, instruction and parameter memories
+    - Debug&control interface
+
+    The IO interface works like a single-cycle SRAM memory, and allow access to the memories and the control interface.
+
+  tta/rtl/tta-axislave-rtl.vhdl :
+    AXI4-Lite slave wrapper for the tta-accel design. The interfaces are memory-mapped as follows (as offsets to the base address of the AXI slave)
+      0x00000 .. 0x003ff : Control registers
+      0x08000 .. 0x0ffff : Instruction memory
+      0x10000 .. 0x17fff : Data memory
+      0x18000 .. 0x187ff : Parameter memory
+
+  tta/rtl/tta-axislave-tb.vhdl :
+    RTL testbench for tta-axislave:
+    - Initializes the instruction memory
+    - Flushes the parameter memory
+    - Reads info registers through control interface
+    - Starts execution through control interface
+    - Polls completion from parameter memory
+
+  tta/design/example_tta.adf :
+    Processor core architecture built with TCE toolchain
+
+  tta/rtl/proge-output
+    Processor core RTL generated from the ADF file
+
+  drivers/loader :
+    Simple program loader to control accelerators through direct memory access (/dev/mem and mmap)
+
+  drivers/mem
+    Poke/peek utility
+
+  sw/fib
+    Test program C code and images: outputs 64 numbers from the Fibonacci sequence to the data memory, then signals completion by writing 1 to address 1 in the parameter memory.
+
+
+Instructions outline:
+
+  * Try out the TTA accelerator in a simulator testbench
+  * Package the TTA accelerator (tta_ip/) into a Vivado IP block
+  * Create and implement a toplevel Vivado project which connects the ARM processing system to the IP; note the IP's address range
+  * Program the PL
+  * Run Linux on the Zynq 
+  * Compile the loader program (sw/loader/)
+  * Use the loader to run example programs on the accelerator
+
+
+Simulating the accelerator:
+
+  - cd tta/
+  - ./modsim_compile.sh
+  - vsim tta_axislave_tb
+
+
+Packaging the accelerator into a Vivado IP block:
+
+  Via GUI:
+    - Start Vivado in the 'tta' directory
+    - Create a RTL project 'ip'
+    - Add Directories -> ip/rtl
+    - Set tta_axislave as the toplevel design 
+    - Tools -> Create and package IP
+
+  Or run the included script tta/generate_ip.tcl (while in the tta/ directory):
+    - cd tta/
+    - rm -rf ip/
+    - vivado -mode tcl -source generate_ip.tcl
+
+  The most reliable way to update the IP after changing the RTL, appears to be to remove the project directory (tta/ip) and regenerate it with above script; this takes a couple of seconds.
+
+
+Creating/updating a toplevel project:
+
+  Create a project, e.g. 'tta_toplevel'
+  - Default part: select the used board from Boards
+
+  Left toolbar -> IP Catalog
+  Right-click on IP catalog, Add Repository, tta/
+
+  Left toolbar -> IP Integrator -> Create Block Design, OK
+  Right-click on block diagram, Add IP..., ZYNQ7 Processing System
+  Right-click on block diagram, Add IP..., tta_axislave_v1_0
+  Run block automation, OK (green bar on top of block diagram)
+  Run connection automation, OK
+  Double-click on Zynq processing system in block diagram
+    - Clock configuration -> PL Fabric Clocks, check that the clock frequency is OK (the reference design runs about 100MHz)
+    - OK
+  Save the block design (ctrl-S)
+  ** From Address Editor (block design view), check the offset address of the tta_axislave_0 peripheral
+  Left toolbar -> Generate bitstream, OK
+  Check that the design met timing
+
+  * Updating the toplevel project after changing the IP
+  Block design window -> Refresh IP catalog
+  Upgrade selected
+  Save the block design
+  Left toolbar -> Generate bitstream, OK
+
+  These steps can also be automated into TCL files by copying commands from the TCL console
+
+
+Running Linux on the Zynq PS:
+
+  IMO the best option is to install a desktop linux as described in http://fpga.org/2013/05/24/yet-another-guide-to-running-linaro-ubuntu-desktop-on-xilinx-zynq-on-the-zedboard/ . The advantages are:
+    - Package management: it's easy to install g++ and compile small driver programs with apt-get.
+    - Desktop environment: we could eventually e.g. show image processing results in a desktop window
+  The attached tutorial has some outdated parts. The main difficulties were:
+    - The referenced Linux package https://releases.linaro.org/12.11/ubuntu/precise-images/ubuntu-desktop/linaro-precise-ubuntu-desktop-20121124-560.tar.gz is now archived at https://releases.linaro.org/archive/12.11/ubuntu/precise-images/ubuntu-desktop/linaro-precise-ubuntu-desktop-20121124-560.tar.gz
+    - The reference design (with e.g. HDMI output) requires some modifications to work with the latest Vivado version. But this can be avoided entirely by skipping to the "Running headless" part of the tutorial.
+
+  Another option is to use the Petalinux supplied by Xilinx, which has some nice infrastructure for booting the Zedboard with new kernel and FPGA images. However, it lacks packet management.
+
+
+Programming the PL:
+
+  This is trickier than with a normal FPGA board since JTAG reconfiguration from Vivado is disabled while Linux is running on the Zedboard.
+  We're aware of four options, and are currently using no.1:
+
+  1) Reconfiguration inside PS Linux:
+    This works at least in Linaro Ubuntu, and probably also in Petalinux and/or the included Zedboard Linux.
+    The PL can be reconfigured from within Linux by writing a configuration bitstream to the /dev/xdevcfg block device. However, the bitstream format is a bit different from the .bit file generated by Vivado; which needs to be changed to the format used by the bootloader.
+    
+    * Add the 'bootgen' tool from Xilinx SDK to PATH
+    * Copy the output bitstream system_top.bit and 'output.bif' from tta/ to the same directory
+      - e.g. cp ../tta_toplevel/tta_toplevel.runs/impl_1/system_top.bit ./
+    * In that directory, run: 
+      - bootgen -image output.bif -w -process_bitstream bin
+    * Copy system_top.bit.bin to the Zynq
+    * Reprogram the FPGA:
+      - sudo su - -c "cat /home/viitanet/tta3.bit.bin > /dev/xdevcfg
+    * The FPGA asynchronous resets do not get called asynchronously; it may be useful to use the included poke/peek program to do this:
+      ./mem -g 0xf8000240 -o 15; ./mem -g 0xf8000240 -o 0;
+    (The reference design seems robust enough to work even without resetting, but e.g. Xilinx's template AXI slaves may get stuck if they haven't been reset, hanging the PS..)
+
+  2) Petalinux reconfiguration:
+    Use Xilinx's Petalinux toolchain to boot the FPGA over JTAG with the specified Linux image and FPGA bitstream.
+
+  3) Vivado Hardware Manager during bootloader sequence :
+    This seems to work with the Linux which comes with the Zedboard, after following the quick start instructions.
+    * Power on the Zedboard
+    * Vivado left toolbar -> Hardware manager, open target, program device (before the built-in bootloader starts Linux)
+
+  4) Build a Linux memory card 
+    A typical boot setup is to have a Linux kernel image, filesystem and FPGA bitstream on a MMC card or USB stick. The bootloader configures the FPGA before booting Linux. It's possible to just replace the FPGA bitstream on every configuration change, but this appears overcomplicated. 
+    Instructions for creating the boot image can be found in http://fpga.org/2013/05/24/yet-another-guide-to-running-linaro-ubuntu-desktop-on-xilinx-zynq-on-the-zedboard/
+
+
+Compiling the loader program:
+
+  Assuming g++ on Zynq PS Linux:
+  - Move the design sources from drivers/ to the Zynq PS Linux
+  - Compile the loader:
+    - cd drivers/loader
+    - g++ loader.cc -O3 -o loader
+  - The resulting program needs root privileges to use /dev/mem. Either use it as root, or:
+    - sudo chown root loader; sudo chmod u+s loader
+
+  If g++ is not installed (it isn't trivial on Petalinux), it may also be possible to cross-compile the loader with the Xilinx SDK cross-compiler.
+
+
+Running the loader program:
+
+  - Copy the program image fib_pad32_dec.img from sw/fib/ to the Zynq PS Linux
+  - Run the loader:
+    - drivers/loader/loader -m 0x80000000 -p fib_pad32_dec.img -o dump.dec -s 1 -e 65
+    (*** replace 0x80000000 with the address specified in Vivado address editor)
+  - The output file dump.dec should now show the Fibonacci sequence

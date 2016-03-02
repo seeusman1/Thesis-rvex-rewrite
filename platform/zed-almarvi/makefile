@@ -8,14 +8,11 @@ top: help
 # Include tool configuration from the almarvi repo.
 include almarvi/tools.makefile
 
-# r-VEX library sources.
-RVLIB_SOURCE   = ../../lib/rvex
-RVLIB          = almarvi/rvex/rtl/rvex
-
-
 #-------------------------------------------------------------------------------
 # r-VEX library management
 #-------------------------------------------------------------------------------
+
+RVLIB_SOURCE   = ../../lib/rvex
 
 RVLIB_SOURCES  = $(addprefix $(realpath $(RVLIB_SOURCE)/common)/,$(shell cat $(RVLIB_SOURCE)/common/vhdlsyn.txt))
 RVLIB_SOURCES += $(addprefix $(realpath $(RVLIB_SOURCE)/utils)/, $(shell cat $(RVLIB_SOURCE)/utils/vhdlsyn.txt))
@@ -28,7 +25,9 @@ RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/system/rvsys_standalone_cachedCore.v
 RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/system/rvsys_standalone.vhd)
 RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/periph/periph_trace.vhd)
 
-RVLIB_DEPS = $(filter-out %rvex-version-pkg.vhd,$(RVLIB_SOURCES))
+RVLIB_DEPS     = $(filter-out %rvex-version-pkg.vhd,$(RVLIB_SOURCES))
+
+RVLIB          = almarvi/rvex/rtl/rvex
 
 .PHONY: rvlib
 rvlib: $(RVLIB)
@@ -53,18 +52,76 @@ $(RVLIB): $(RVLIB_DEPS)
 
 
 #-------------------------------------------------------------------------------
+# rvsrv/rvd tools
+#-------------------------------------------------------------------------------
+
+RVD_SOURCE     = ../../tools/debug-interface
+RVD_INC        = rvd-inc
+RVD            = almarvi/drivers/rvd
+
+.PHONY: rvd
+rvd: $(RVD)
+$(RVD): $(RVD_SOURCE) $(RVD_INC)
+	$(RM) -rf $(RVD)
+	$(MKDIR) -p $(RVD)
+	$(CP) -r $(RVD_SOURCE)/* $(RVD)
+	$(RM) $(RVD)/configuration.cfg
+	cd $(RVD) && $(MAKE) clean
+	$(RM) $(RVD)/configuration.cfg $(RVD)/memory.map $(RVD)/core.template.map
+	$(MV) $(RVD)/core.map $(RVD)/rvex-core.map
+	$(MV) $(RVD)/src/default-memory.map $(RVD)/rvex.map
+	$(RM) $(RVD)/src/default-configuration.cfg
+	$(RM) $(RVD)/makefile $(RVD)/USAGE
+	$(CP) -r $(RVD_INC)/* $(RVD)
+
+
+#-------------------------------------------------------------------------------
+# Chain to the makefile in examples/
+#-------------------------------------------------------------------------------
+
+.PHONY: upload-%
+upload-%:
+	cd examples && $(MAKE) $@
+
+.PHONY: start-%
+start-%:
+	cd examples && $(MAKE) $@
+
+.PHONY: run-%
+run-%:
+	cd examples && $(MAKE) $@
+
+.PHONY: trace-%
+trace-%:
+	cd examples && $(MAKE) $@
+
+.PHONY: gdb-%
+gdb-%:
+	cd examples && $(MAKE) $@
+
+.PHONY: server stop monitor monitor-nobuf
+server stop monitor monitor-nobuf:
+	cd examples && $(MAKE) $@
+
+.PHONY: debug
+debug:
+	cd examples && $(MAKE) $@
+	cat ../../tools/debug-interface/debug > debug
+	echo 'export RVD_OPT="-m$(shell pwd)/rvd-inc/almarvi.map"' >> debug
+	@echo ""
+	@echo " Run \"source debug\" now..."
+	@echo ""
+
+.PHONY: clean
+clean:
+	cd examples && $(MAKE) clean
+
+
+#-------------------------------------------------------------------------------
 # Chain to the makefile in almarvi/
 #-------------------------------------------------------------------------------
 
-.PHONY: ip
-ip: rvlib
-	@cd almarvi && $(MAKE) --no-print-directory $@
-
-.PHONY: ip
-%-rvex: rvlib
-	@cd almarvi && $(MAKE) --no-print-directory $@
-
-.DEFAULT:
+.DEFAULT: rvlib rvd
 	@cd almarvi && $(MAKE) --no-print-directory $@
 
 

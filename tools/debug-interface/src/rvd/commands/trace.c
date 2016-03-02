@@ -105,6 +105,7 @@ static int flushTraceBuf(uint32_t address) {
 int runTrace(commandLineArgs_t *args) {
   unsigned char pageBuffer[RVSRV_PAGE_SIZE];
   value_t address = {0, 0};
+  uint32_t trace_size;
   int f;
   int first;
   uint32_t traceByteCount;
@@ -126,11 +127,15 @@ int runTrace(commandLineArgs_t *args) {
       "  _RESUME     - Should resume execution for the given context when executed\n"
       "              - (rvd continue)\n"
       "  _TRACE_ADDR - Should evaluate to the start address of the trace peripheral.\n"
+      "  _TRACE_SIZE - Optional. If defined, it should evaluate to the size of the\n"
+      "                trace buffer. The maximum size is %d, which is also the\n"
+      "                default value.\n"
       "  _TRACE_CTRL - Should evaluate to the byte address of the trace control\n"
       "                register for the current context.\n"
       "\n"
       "NOTE: the trace peripheral must be configured to use a %d byte buffer, i.e.\n"
-      "DEPTH_LOG2B = %d, and _TRACE_ADDR must be aligned to this size.\n"
+      "DEPTH_LOG2B = %d, and _TRACE_ADDR must be aligned to this size, if the debug\n"
+      "UART is used for communication.\n"
       "\n"
       "To perform a trace, the following actions are performed:\n"
       "\n"
@@ -150,7 +155,7 @@ int runTrace(commandLineArgs_t *args) {
       "The trace dump is a binary file, of which the format is specified in\n"
       "core_trace.vhd. Additional processing is required to get a human-readable\n"
       "trace.\n"
-      "\n", RVSRV_PAGE_SIZE*2, RVSRV_PAGE_SIZE_LOG2+1
+      "\n", RVSRV_PAGE_SIZE*2, RVSRV_PAGE_SIZE*2, RVSRV_PAGE_SIZE_LOG2+1
     );
     return 0;
   }
@@ -168,6 +173,7 @@ int runTrace(commandLineArgs_t *args) {
     if (evaluate("_BREAK",      &value, "") < 1) {
       return -1;
     }
+    
     if (evaluate("_TRACE_ADDR", &value, "") < 1) {
       return -1;
     }
@@ -179,8 +185,30 @@ int runTrace(commandLineArgs_t *args) {
       return -1;
     }
     address.value = value.value;
+    
+    if (evaluate("_TRACE_SIZE", &value, "") < 1) {
+      value.value = RVSRV_PAGE_SIZE*2;
+    }
+    if ((trace_size != value.value) && !first) {
+      fprintf(stderr,
+        "Error: _TRACE_SIZE does not evaluate to the same address for every selected\n"
+        "context.\n"
+      );
+      return -1;
+    }
+    trace_size = value.value;
     first = 0;
   );
+  
+  // Compute and check the size of a single trace buffer.
+  if ((trace_size >> 1) > RVSRV_PAGE_SIZE) {
+    fprintf(stderr,
+      "Error: _TRACE_SIZE is too large. Maximum = %d, actual = %d.\n",
+      RVSRV_PAGE_SIZE*2, trace_size
+    );
+    return -1;
+  }
+  trace_size >>= 1;
   
   // Write to the trace control registers.
   printf("Setting up trace control flags...\n");
@@ -267,9 +295,9 @@ int runTrace(commandLineArgs_t *args) {
       
       // Perform the bulk read operation.
       retval = rvsrv_readBulk(
-        address.value + page*RVSRV_PAGE_SIZE,
+        address.value + page*trace_size,
         pageBuffer,
-        RVSRV_PAGE_SIZE,
+        trace_size,
         &fault
       );
       if (retval < 0) {
@@ -286,7 +314,7 @@ int runTrace(commandLineArgs_t *args) {
       
       // Determine how many valid bytes we've received.
       remain = ((int)pageBuffer[2] << 8) + pageBuffer[3];
-      if (remain > RVSRV_PAGE_SIZE) {
+      if (remain > trace_size) {
         fprintf(stderr,
           "Error: trace buffer returned invalid byte counter value.\n"
         );

@@ -1,0 +1,34 @@
+
+# ALMARVI interface registers.
+all: A_PC        { 0x00000004 }
+all: A_CYC       { 0x00000008 }
+all: A_LCYC      { 0x0000000C }
+all: A_CMD       { 0x00000200 }
+all: A_CMD_RST   { 1 }
+all: A_CMD_RUN   { 2 }
+all: A_START     { 0x00000204 }
+all: A_DEV_CLS   { 0x00000300 }
+all: A_DEV_ID    { 0x00000304 }
+all: A_IFACE     { 0x00000308 }
+all: A_DMEM      { 0x0000030C }
+all: A_IMEM      { 0x00000310 }
+all: A_PMEM      { 0x00000314 }
+
+# Not really specified yet...
+all: A_SIZE      { 0x00000318 }
+
+# r-VEX trace buffer.
+all: _TRACE_ADDR { 0x00000800 }
+all: _TRACE_SIZE { 0x00000800 }
+
+# r-VEX control registers.
+all: CREG        { 0x00001000 }
+
+# Accelerator local memories.
+#all: IMEM        { (read(A_SIZE) / 4) * 1 }
+#all: DMEM        { (read(A_SIZE) / 4) * 2 }
+#all: PMEM        { (read(A_SIZE) / 4) * 3 }
+all: IMEM        { (131072 / 4) * 1 }
+all: DMEM        { (131072 / 4) * 2 }
+all: PMEM        { (131072 / 4) * 3 }
+
