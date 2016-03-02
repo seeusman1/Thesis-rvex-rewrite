@@ -89,6 +89,8 @@ print('Generating memory.map files...')
 import headers.core_map
 headers.core_map.generate(regs, trps, dirs)
 
+import headers.core_map_py
+headers.core_map_py.generate(regs, trps, dirs)
 
 #-------------------------------------------------------------------------------
 # LaTeX documentation generation

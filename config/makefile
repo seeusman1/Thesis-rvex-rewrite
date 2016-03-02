@@ -14,6 +14,7 @@ CORE_LIB = ../lib/rvex/core
 DOCS = ../doc/src/refman/generated
 RVEX_H = ../examples/src/rvex.h
 MEMORY_MAP = ../tools/debug-interface/core.map
+MEMORY_MAP_PY = ../tools/debug-interface/pyrvd/core_map.py
 PLATFORMS = ../platform
 
 # Set python search path.
@@ -35,6 +36,7 @@ all: $(TEMP)
 	@echo "Configuring C/assembly and rvd headers..."
 	$(CP) $(TEMP)/rvex.h $(RVEX_H)
 	$(CP) $(TEMP)/core.map $(MEMORY_MAP)
+	$(CP) $(TEMP)/core_map.py $(MEMORY_MAP_PY)
 	@echo ""
 	@echo "Configuring reference manual..."
 	$(CP) $(TEMP)/opcode-stats.generated.tex $(DOCS)/opcode-stats.generated.tex
