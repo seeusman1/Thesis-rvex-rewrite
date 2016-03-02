@@ -49,11 +49,20 @@ class Context:
 @CTXT_REGISTER_PROP
 
 class Core:
-    def __init__(self, rvd, base_address, num_contexts=4):
+
+    def __iter__(self):
+        for c in self.context:
+            yield c
+
+    def __getitem__(self, index):
+        return self.context[index]
+
+    def __init__(self, rvd, base_address):
         self._rvd = rvd
         self._CREG_GLOB = base_address
-        self.context = [Context(rvd, base_address, x) for x in range(num_contexts)]
 @CORE_REGISTER_ADDR
+        self.context = [Context(rvd, base_address, x) for x in
+                range(self.FIELD_DCFG_NC+1)]
         return
 
 @CORE_REGISTER_PROP

@@ -809,8 +809,9 @@ def gen_defs(regdoc):
                 foffs = reg['offset'] + 3 - (low // 8)
                 
                 # Output the field definition.
-                defs += [('field', fnam, low, mask, high)]
-                
+                defs += [('field', fnam, low, mask, high, (rnam, field['name']),
+                    reg['offset'], debug)]
+
                 # Output alternate IDs.
                 if size in [16, 8] and low % size == 0:
                     for alt_id in field['alt_ids']:

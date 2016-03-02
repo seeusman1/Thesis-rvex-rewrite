@@ -4,6 +4,9 @@ import pprint
 import common.templates
 
 def generateReg(core_addr, core_prop, ctxt_addr, ctxt_prop, entry):
+    name = entry[1]
+    if not name.startswith('CR_'):
+        return
     name = entry[1][3:]
     offset = entry[3]
     if entry[2][3] == 'W':
@@ -44,6 +47,32 @@ def generateReg(core_addr, core_prop, ctxt_addr, ctxt_prop, entry):
     prop.append(prop_str)
 
 
+def generateField(ent, core_prop, ctxt_prop):
+    name = ent[1]
+    if not name.startswith('CR_'):
+        return
+    regname = ent[5][0][3:]
+    name = 'FIELD_' + name[3:]
+    getter = "lambda self: (self.{1} & 0x{2:08X}) >> {3}"
+    if ent[7] == 'R':
+        setter = ("lambda self, val:raise_(" +
+                "RuntimeError('Cannot write to field'))")
+    else:
+        setter = ("lambda s, val: setattr(s, '{1}', ((val << {3}) & 0x{2:08X}) |\n" +
+                "            (self.{1} & ~0x{2:08X}))")
+    string = ("    {0} = property(\n"+
+            "        " + getter + ",\n" +
+            "        " + setter + ")\n").format(
+                    name, regname, ent[3], ent[2])
+    if ent[6] < 256:
+        core_prop.append(string)
+    elif ent[6] >= 512:
+        ctxt_prop.append(string)
+    else:
+        raise Exception('Unknown register type at address 0x{:03X}.'.format(
+                ent[6]))
+
+
 def generate(regs, trps, dirs):
 
     memmap = []
@@ -53,14 +82,9 @@ def generate(regs, trps, dirs):
     ctxt_prop = []
     for ent in regs['defs']:
         if ent[0] == 'reg':
-            name = ent[1]
-            if name.startswith('CR_'):
-                generateReg(core_addr, core_prop, ctxt_addr, ctxt_prop, ent)
+            generateReg(core_addr, core_prop, ctxt_addr, ctxt_prop, ent)
         elif ent[0] == 'field':
-            name = ent[1]
-            if name.startswith('CR_'):
-                name = 'FIELD_' + name[3:]
-                memmap.append('  %s = lambda self, val: (val & 0x%08X) >> %d\n' % (name, ent[3], ent[2]))
+            generateField(ent, core_prop, ctxt_prop)
 
     # Generate the file.
     common.templates.generate('memmap',
