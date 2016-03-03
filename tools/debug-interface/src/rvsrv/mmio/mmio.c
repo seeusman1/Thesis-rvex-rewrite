@@ -138,8 +138,22 @@ static int mmio_write(uint32_t address, unsigned char *buffer,
     }
   }
   
-  // Write the bytes.
-  memcpy(mmio_addr + address, buffer, buf_size);
+  // Write the bytes. We want to do word writes when we can, because single byte
+  // writes are not supported everywhere.
+  unsigned char *ptr = mmio_addr + address;
+  unsigned char *buf_ptr = buffer;
+  unsigned char *end = mmio_addr + address + buf_size;
+  while (ptr < end) {
+    if (((long)ptr & 3) || (ptr + 4 >= end)) {
+      // ptr misaligned or less than a word remaining.
+      *ptr++ = *buf_ptr++;
+    } else {
+      // Can do a full word at once.
+      *((uint32_t*)ptr) = *((uint32_t*)buf_ptr);
+      ptr += 4;
+      buf_ptr += 4;
+    }
+  }
 
   // Transmit response to client.
   unsigned char str[32];
@@ -192,6 +206,12 @@ int init_mmio_iface(
   unsigned long length, 
   rvex_iface_t *iface
 ) {
+  
+  // Make sure that the offset is word aligned.
+  if (offset & 3) {
+    printf("mmio: offset must be word aligned\n");
+    return -1;
+  }
   
   // Get the page size.
   unsigned long page_size = sysconf(_SC_PAGESIZE);

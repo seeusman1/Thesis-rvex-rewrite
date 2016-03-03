@@ -81,6 +81,9 @@ int main(int argc, char **argv) {
   args.port = "/dev/ttyS0";
   args.baudrate  = 115200;
   args.pcieCdev = NULL;
+  args.mmioFile = NULL;
+  args.mmioOffset = 0;
+  args.mmioLength = 0;
   args.appPort   = 21078;
   args.debugPort = 21079;
   args.foreground = 0;

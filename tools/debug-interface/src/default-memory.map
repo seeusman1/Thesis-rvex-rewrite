@@ -553,7 +553,7 @@ all:FANCY_PRINT {
   printf("\n  ");
   
   set(tc, readBytePreload(TC));
-  if ((tc != 0), (
+  if ((tc == 0), (
     printf("Not handling any trap.\n  ");
   ), (
     printf("Currently handling \033[1;31mtrap %d\033[0m, argument \033[1;31m0x%08X\033[0m.\n  ", tc, readWordPreload(TA));
