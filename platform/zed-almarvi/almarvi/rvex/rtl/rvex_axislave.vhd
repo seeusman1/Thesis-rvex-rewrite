@@ -55,6 +55,7 @@ use work.utils_pkg.all;
 use work.bus_pkg.all;
 use work.bus_addrConv_pkg.all;
 use work.core_pkg.all;
+use work.cache_pkg.all;
 use work.rvsys_standalone_pkg.all;
 
 --=============================================================================
@@ -105,7 +106,7 @@ entity rvex_axislave is
     NUM_BREAKPOINTS             : integer := 4;
     
     -- Enable trace unit (1) or disable trace unit (0).
-    TRACE_ENABLE                : integer := 0;
+    TRACE_ENABLE                : boolean := false;
     
     -- Number of bytes in each performance counter (0..7).
     PERF_COUNTER_SIZE           : integer := 4
@@ -350,25 +351,33 @@ begin -- architecture
   -----------------------------------------------------------------------------
   rvsys_inst: entity work.rvsys_standalone
     generic map (
-      CFG                       => rvex_sa_cfg(
-        core                      => rvex_cfg(
+      -- Normally, these are set using the setter functions. These are broken
+      -- in Vivado though (unspecified things will just become X)
+      CFG                       => (
+        core                      => (
           numLanesLog2              => NUM_LANES_LOG2,
           numLaneGroupsLog2         => NUM_GROUPS_LOG2,
           numContextsLog2           => NUM_CONTEXTS_LOG2,
           genBundleSizeLog2         => GEN_BUNDLE_SIZE_LOG2,
           bundleAlignLog2           => BUNDLE_ALIGN_LOG2,
           multiplierLanes           => 2#11111111#,
+          memLaneRevIndex           => 1,
           numBreakpoints            => NUM_BREAKPOINTS,
-          forwarding                => 1,
-          limmhFromNeighbor         => 1,
-          limmhFromPreviousPair     => bool2int(BUNDLE_ALIGN_LOG2 >= NUM_LANES_LOG2),
-          unifiedStall              => 1,
+          forwarding                => true,
+          limmhFromNeighbor         => true,
+          limmhFromPreviousPair     => false,--BUNDLE_ALIGN_LOG2 >= NUM_LANES_LOG2, -- doesn't work with Vivado
+          reg63isLink               => false,
+          cregStartAddress          => X"FFFFFC00",
+          resetVectors              => (others => (others => '0')),
+          unifiedStall              => true,
+          gpRegImpl                 => RVEX_GPREG_IMPL_SIMPLE,
           traceEnable               => TRACE_ENABLE,
           perfCountSize             => PERF_COUNTER_SIZE,
-          cachePerfCountEnable      => 0
+          cachePerfCountEnable      => false
         ),
-        core_valid                => true,
-        cache_enable              => 0,
+        cache_enable              => false,
+        cache_config              => CACHE_DEFAULT_CONFIG,
+        cache_bypassRange         => addrRange(match => "--------------------------------"),
         imemDepthLog2B            => IMEM_DEPTH_LOG2,
         dmemDepthLog2B            => DMEM_DEPTH_LOG2,
         traceDepthLog2B           => 11, -- Fixed to 2 kiB
@@ -376,7 +385,9 @@ begin -- architecture
         debugBusMap_dmem          => mapSection("10"),
         debugBusMap_rvex          => mapSection("00"),
         debugBusMap_trace         => mapSection("11"),
-        debugBusMap_mutex         => 1
+        debugBusMap_mutex         => true,
+        rvexDataMap_dmem          => addrRangeAndMap(match => "0-------------------------------"),
+        rvexDataMap_bus           => addrRangeAndMap(match => "1-------------------------------")
       ),
       CORE_ID                   => CORE_ID,
       PLATFORM_TAG              => X"414C4D41525649" -- "ALMARVI" in ASCII

@@ -1,5 +1,7 @@
 
 # Flags for rvsrv.
+TCP_PORT_APP = 21078
+TCP_PORT_DEBUG = 21079
 RVSRV_FLAGS  = -p/no-serial
 RVSRV_FLAGS += -a$(TCP_PORT_APP) -d$(TCP_PORT_DEBUG)
 RVSRV_FLAGS += -m/dev/mem:$(ADDR)
@@ -15,6 +17,7 @@ help:
 	@cat USAGE
 
 clean:
+	find . | xargs touch
 	rm -rf bin
 	rm -f debug
 

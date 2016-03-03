@@ -57,6 +57,10 @@ DTB_XLNX_PATH  = $(DL)/device-tree-xlnx
 DTB_XLNX_DEP   = $(DTB_XLNX_PATH)/.time-downloaded
 DEVTREE_DTS    = $(BOOT)/dts/system.dts
 
+# First stage bootloader (FSBL).
+FSBL_PATH      = $(BOOT)/fsbl
+FSBL_ELF       = $(FSBL_PATH)/fsbl/executable.elf
+
 # U-boot bootloader.
 UBOOT_REPO     = https://github.com/Xilinx/u-boot-xlnx.git
 UBOOT_TAG      = xilinx-v14.4
@@ -159,7 +163,8 @@ help:
 .PHONY: clean
 clean: pl-clean uboot-clean kernel-clean
 	$(RM) -r temp-*
-	$(RM) $(shell $(FIND) boot -type f | $(GREP) -vE "boot/u-boot\.elf|boot/image/devicetree_linaro\.dtb|boot/image/zImage")
+	$(RM) $(shell $(FIND) boot -type f | $(GREP) -vE "^(boot/u-boot\.elf|boot/image/devicetree_linaro\.dtb|boot/image/zImage)")
+	$(RM) -r $(shell $(FIND) boot/* -type d | $(GREP) -vE "^boot/image")
 	$(RM) system.bit *.jou *.log
 
 .PHONY: clean
@@ -285,6 +290,18 @@ endif
 endif
 endif
 
+# FSBL  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+FSBL_PATH      = $(BOOT)/fsbl
+
+$(FSBL_ELF): $(PL_HDF)
+	$(RM) -r $(FSBL_PATH)
+	$(MKDIR) -p $(FSBL_PATH)
+	$(CP) $(PL_HDF) $(FSBL_PATH)/system_wrapper.hdf
+	@echo "open_hw_design system_wrapper.hdf" >> $(FSBL_PATH)/hsi.tcl
+	@echo "generate_app -hw system_wrapper -os standalone -proc ps7_cortexa9_0 -app zynq_fsbl -compile -sw fsbl -dir fsbl" >> $(FSBL_PATH)/hsi.tcl
+	cd $(FSBL_PATH) && $(HSI) -mode batch -source hsi.tcl
+
 # U-boot  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 $(UBOOT_DEP):
@@ -327,11 +344,11 @@ endif
 
 # BOOT.BIN  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-$(BOOT_BIN): $(OOB_DEP) $(PL_BIT) $(UBOOT_ELF)
+$(BOOT_BIN): $(FSBL_ELF) $(PL_BIT) $(UBOOT_ELF)
 	$(MKDIR) -p $(BOOT_IMG)
 	@echo "the_ROM_image:" > $(BOOT)/output.bif
 	@echo "{" >> $(BOOT)/output.bif
-	@echo "	[bootloader]$(realpath $(OOB_FSBL_ELF))" >> $(BOOT)/output.bif
+	@echo "	[bootloader]$(realpath $(FSBL_ELF))" >> $(BOOT)/output.bif
 	@echo "	$(realpath $(PL_BIT))" >> $(BOOT)/output.bif
 	@echo "	$(realpath $(UBOOT_ELF))" >> $(BOOT)/output.bif
 	@echo "}" >> $(BOOT)/output.bif

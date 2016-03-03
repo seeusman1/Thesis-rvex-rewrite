@@ -8,10 +8,13 @@ RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 HOSTCC = gcc
 
 # Platform-specific executables.
-EXECUTABLES = 
+EXECUTABLES = test
 
 # Platform-specific object files to link.
 OBJECTS = rvex-almarvi.o
+
+# Use stop bits.
+BUNDLE_ALIGN = 2
 
 # Set default simulated bus latency to use when configuring the cache after
 # uploading. This can be overwritten to any value between 1 and 254 for an

@@ -96,7 +96,14 @@
         <spirit:componentRef spirit:library="user" spirit:name="rvex_axislave" spirit:vendor="user.org" spirit:version="1.0"/>
         <spirit:configurableElementValues>
           <spirit:configurableElementValue spirit:referenceId="bd:xciName">system_rvex_axislave_0_0</spirit:configurableElementValue>
-          <spirit:configurableElementValue spirit:referenceId="TRACE_ENABLE">1</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="AXI_ADDRW_G">19</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="IMEM_DEPTH_LOG2">17</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="DMEM_DEPTH_LOG2">17</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="NUM_LANES_LOG2">2</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="NUM_GROUPS_LOG2">1</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="NUM_CONTEXTS_LOG2">1</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="GEN_BUNDLE_SIZE_LOG2">3</spirit:configurableElementValue>
+          <spirit:configurableElementValue spirit:referenceId="TRACE_ENABLE">true</spirit:configurableElementValue>
         </spirit:configurableElementValues>
       </spirit:componentInstance>
     </spirit:componentInstances>
@@ -1195,7 +1202,7 @@
             <spirit:name>SEG_rvex_axislave_0_reg0</spirit:name>
             <spirit:displayName>/rvex_axislave_0/s_axi/reg0</spirit:displayName>
             <spirit:addressOffset>0x43C00000</spirit:addressOffset>
-            <spirit:range>128K</spirit:range>
+            <spirit:range>512K</spirit:range>
           </spirit:segment>
         </spirit:segments>
       </spirit:addressSpace>

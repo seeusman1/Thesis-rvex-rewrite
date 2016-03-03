@@ -144,7 +144,7 @@ static int mmio_write(uint32_t address, unsigned char *buffer,
   unsigned char *buf_ptr = buffer;
   unsigned char *end = mmio_addr + address + buf_size;
   while (ptr < end) {
-    if (((long)ptr & 3) || (ptr + 4 >= end)) {
+    if (((long)ptr & 3) || (ptr + 4 > end)) {
       // ptr misaligned or less than a word remaining.
       *ptr++ = *buf_ptr++;
     } else {
