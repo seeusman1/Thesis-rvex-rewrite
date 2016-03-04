@@ -20,8 +20,13 @@ def find_files(directory, ignored):
 		fname = os.path.join(directory, entry)
 		
 		# Ignore files listed as ignored by git, except for the
-		# almarvi/rvex/rtl/rvex directory, which contains the rvex sources.
-		if fname in ignored and not fname.startswith('almarvi/rvex/rtl/rvex'):
+		# almarvi/rvex/rtl/rvex and almarvi/drivers/rvd directories, which contain
+		# the rvex sources and the debug interface software.
+		if (
+			fname in ignored
+			and not fname.startswith('almarvi/rvex/rtl/rvex')
+			and not fname.startswith('almarvi/drivers/rvd')
+		):
 			ignored.discard(fname)
 			continue
 		if os.path.isdir(fname):

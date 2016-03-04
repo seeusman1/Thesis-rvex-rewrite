@@ -30,10 +30,7 @@ all:_NUM_CONTEXTS {
 }
 
 # Accelerator local memories.
-#all: IMEM         { (read(A_SIZE) / 4) * 1 }
-#all: DMEM         { (read(A_SIZE) / 4) * 2 }
-#all: PMEM         { (read(A_SIZE) / 4) * 3 }
-all: IMEM         { (524288 / 4) * 1 }
-all: DMEM         { (524288 / 4) * 2 }
-all: PMEM         { (524288 / 4) * 3 }
+all: IMEM         { (read(A_SIZE) / 4) * 1 }
+all: DMEM         { (read(A_SIZE) / 4) * 2 }
+all: PMEM         { (read(A_SIZE) / 4) * 3 }
 

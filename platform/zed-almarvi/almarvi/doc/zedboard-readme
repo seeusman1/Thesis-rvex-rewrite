@@ -5,10 +5,11 @@ Getting started with the Zedboard
 Requirements:
  - A Zedboard.
  - A USB A to micro B cable (should come with the Zedboard).
- - An SD card which works with the Zedboard. I think 4 GB is large enough, but
-   I've only tested with an 8 GB card. This should also come with the Zedboard
-   assuming 4 GB is indeed enough. You may want to make a binary backup of the
-   card including the MBR if you're going to use that card though.
+ - An SD card which works with the Zedboard at least 4 GB in size (should come
+   with the Zedboard). If you use the card that came with it, you may want to
+   make a binary backup of the card before you use it. The Zynq is very finicky
+   about how the card is formatted. If this readme doesn't work for you, you
+   can restore it to its factory state and debug.
  - An SD card reader.
  - A way to connect the Zedboard ethernet port to your computer and the
    internet (preferably at the same time, but this is not necessary).
@@ -160,7 +161,7 @@ something more unique. The hostname can be set using the
 You may also want to put some stuff in the home directory of the card, i.e.
 <SD card root>/home/linaro. Most importantly, you'll want to copy the sw and
 drivers directories to here.
-        
+
 When that's done, unmount the SD card, insert it into the Zedboard, and turn the 
 Zedboard on. DO NOT connect the USB cable to the board yet. When you turn on the 
 board, the power LED (green) will come on. A couple seconds later, the DONE LED 
@@ -203,8 +204,9 @@ have to use it to figure out the IP address every time the board boots using
 
 Look for 'inet addr:' in the 'eth0' section.
 
-You should now be able to SSH to the board. You can do this manually (log in
-with username linaro and password linaro) or you can use
+You should now be able to SSH to the board, so you can kill the screen session
+(ctrl+a, ctrl+k, y, enter). You can SSH to the board manually (log in with
+username linaro and password linaro) or you can use
 
 $ make zed-ssh ZED_HOST=<ip address/hostname>
 
@@ -213,13 +215,13 @@ complain about man-in-the-middle attacks if the Zedboard's host key changes.
 If you don't want to type ZED_HOST=... every time and the IP/host name is
 fixed, you can set a default in config.makefile.
 
-You should run
+When you're done with the board, you should run
 
 > sudo poweroff
 
-when you're done with the board to make sure that no filesystem corruption
-occurs. Wait until the SD card activity LED is off for a second or two before
-turning the power off. Rebooting also works, by the way.
+to make sure that no filesystem corruption occurs. Wait until the SD card 
+activity LED is off for a second or two before turning the power off. Rebooting 
+also works, by the way (sudo reboot).
 
 Congratulations, you now have a working Zedboard with almarvi accelerators in
 the PL!

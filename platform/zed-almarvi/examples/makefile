@@ -51,10 +51,12 @@ include $(GEN_EXAMPLES)/Makefile
 .PHONY: upload-%
 upload-%: %.imem.srec %.dmem.srec %.pmem.srec debug
 	-cd $(DEBUGIFACE) && make server
+	$(RVD) -c0 write A_CMD A_CMD_RUN
 	$(RVD) -call -d"all:PRINT_STATE{1}" break
 	$(RVD) -c0 upload srec $(patsubst upload-%,%.imem.srec,$@) IMEM
 	$(RVD) -c0 upload srec $(patsubst upload-%,%.dmem.srec,$@) DMEM
-	$(RVD) -c0 upload srec $(patsubst upload-%,%.pmem.srec,$@) DMEM
+	$(RVD) -c0 fill PMEM 1024 0
+	$(RVD) -c0 upload srec $(patsubst upload-%,%.pmem.srec,$@) PMEM
 	$(RVD) -call -d"all:PRINT_STATE{1}" reset
 
 .PHONY: start-%
@@ -64,6 +66,7 @@ start-%: upload-%
 .PHONY: run-%
 run-%: start-%
 	$(RVD) -c0 exec WAIT_COMPLETE
+	$(RVD) -c0 read byte PMEM 1024
 
 .PHONY: trace-%
 trace-%: upload-% %.disas

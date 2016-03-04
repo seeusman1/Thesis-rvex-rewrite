@@ -358,8 +358,6 @@ all:WAIT_COMPLETE {
   # Do a performance counter dump for each context.
   FANCY_PERFORMANCE;
   
-  set(cur, 0);
-  printf("Processor cycle count = \033[1m%u\033[0m\n", readWordPreload(CREG_GPREG + (63*4)));
 }
 
 

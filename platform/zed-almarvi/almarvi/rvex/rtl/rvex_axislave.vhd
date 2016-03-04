@@ -191,6 +191,19 @@ architecture Behavioral of rvex_axislave is
     return addrRangeAndMap(match => match);
   end mapSection;
   
+  -- Returns an address map definition for the core ('1') and trace buffer
+  -- ('0').
+  function mapCoreTrace(
+    which : std_logic
+  ) return addrRangeAndMapping_type is
+    variable match : rvex_address_type;
+  begin
+    match := (others => '-');
+    match(AXI_ADDRW_G-1 downto AXI_ADDRW_G-2) := "00";
+    match(12) := which;
+    return addrRangeAndMap(match => match);
+  end mapCoreTrace;
+  
   -- System control signals.
   signal areset                 : std_logic;
   signal reset                  : std_logic;
@@ -312,15 +325,39 @@ begin -- architecture
     );
   
   -----------------------------------------------------------------------------
-  -- ALMARVI/r-VEX bridge
+  -- Instantiate ALMARVI/r-VEX bridge
   -----------------------------------------------------------------------------
-  
-  -- TODO
-  rvex_run <= (others => '1');
-  rvex_reset <= (others => '0');
-  rvex_resetVect <= (others => (others => '0'));
-  almarvi2rvex <= demux2almarvi;
-  almarvi2demux <= rvex2almarvi;
+  almarvi_inst: entity work.almarvi_iface
+    generic map (
+      AXI_ADDRW_G               => AXI_ADDRW_G,
+      IMEM_DEPTH_LOG2           => IMEM_DEPTH_LOG2,
+      DMEM_DEPTH_LOG2           => DMEM_DEPTH_LOG2,
+      PMEM_DEPTH_LOG2           => PMEM_DEPTH_LOG2,
+      NUM_CONTEXTS_LOG2         => NUM_CONTEXTS_LOG2
+    )
+    port map (
+    
+      -- System control.
+      reset                     => reset,
+      clk                       => s_axi_aclk,
+      clkEn                     => '1',
+      
+      -- Bus to the AXI bridge.
+      axi2almarvi               => demux2almarvi,
+      almarvi2axi               => almarvi2demux,
+      
+      -- Bus to the r-VEX.
+      almarvi2rvex              => almarvi2rvex,
+      rvex2almarvi              => rvex2almarvi,
+      
+      -- r-VEX run control signals.
+      rvex_run                  => rvex_run,
+      rvex_idle                 => rvex_idle,
+      rvex_reset                => rvex_reset,
+      rvex_resetVect            => rvex_resetVect,
+      rvex_done                 => rvex_done
+      
+    );
   
   -----------------------------------------------------------------------------
   -- Instantiate parameter memory
@@ -370,7 +407,7 @@ begin -- architecture
           cregStartAddress          => X"FFFFFC00",
           resetVectors              => (others => (others => '0')),
           unifiedStall              => true,
-          gpRegImpl                 => RVEX_GPREG_IMPL_SIMPLE,
+          gpRegImpl                 => RVEX_GPREG_IMPL_MEM,
           traceEnable               => TRACE_ENABLE,
           perfCountSize             => PERF_COUNTER_SIZE,
           cachePerfCountEnable      => false
@@ -383,8 +420,8 @@ begin -- architecture
         traceDepthLog2B           => 11, -- Fixed to 2 kiB
         debugBusMap_imem          => mapSection("01"),
         debugBusMap_dmem          => mapSection("10"),
-        debugBusMap_rvex          => mapSection("00"),
-        debugBusMap_trace         => mapSection("11"),
+        debugBusMap_rvex          => mapCoreTrace('1'),
+        debugBusMap_trace         => mapCoreTrace('0'),
         debugBusMap_mutex         => true,
         rvexDataMap_dmem          => addrRangeAndMap(match => "0-------------------------------"),
         rvexDataMap_bus           => addrRangeAndMap(match => "1-------------------------------")
