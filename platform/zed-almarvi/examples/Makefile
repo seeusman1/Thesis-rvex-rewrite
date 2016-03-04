@@ -11,7 +11,10 @@ HOSTCC = gcc
 EXECUTABLES = test
 
 # Platform-specific object files to link.
-OBJECTS = rvex-almarvi.o
+OBJECTS = pmem_puts.o
+
+# Use a special linker script to separate IMEM and DMEM.
+LDFLAGS = -Tsrc/almarvi.x
 
 # Use stop bits.
 BUNDLE_ALIGN = 2
@@ -40,13 +43,18 @@ CLEAN = *.bin ../design/mem_init_pkg.vhd *.rawtrace *.trace
 # Include generic examples makefile.
 include $(GEN_EXAMPLES)/Makefile
 
+# How to split up srec files into the three memories.
+%.imem.srec %.dmem.srec %.pmem.srec %.img %_data.img %_param.img: %.srec
+	python src/split-mem.py $<
+
 # How to upload;
 .PHONY: upload-%
-upload-%: %.srec debug
+upload-%: %.imem.srec %.dmem.srec %.pmem.srec debug
 	-cd $(DEBUGIFACE) && make server
 	$(RVD) -call -d"all:PRINT_STATE{1}" break
-	$(RVD) -c0 upload srec $< IMEM
-	$(RVD) -c0 upload srec $< DMEM
+	$(RVD) -c0 upload srec $(patsubst upload-%,%.imem.srec,$@) IMEM
+	$(RVD) -c0 upload srec $(patsubst upload-%,%.dmem.srec,$@) DMEM
+	$(RVD) -c0 upload srec $(patsubst upload-%,%.pmem.srec,$@) DMEM
 	$(RVD) -call -d"all:PRINT_STATE{1}" reset
 
 .PHONY: start-%

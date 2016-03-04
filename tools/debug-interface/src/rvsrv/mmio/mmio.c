@@ -67,7 +67,7 @@ static int mmio_fd = -1;
 /**
  * Address marking the start offset of the file within memory.
  */
-static char *mmio_addr = NULL;
+static unsigned char *mmio_addr = NULL;
 
 /**
  * Number of memory-mapped bytes.
@@ -77,7 +77,7 @@ static unsigned long mmio_length = 0;
 /**
  * Start address of the mmap'd region (i.e. page aligned).
  */
-static char *mmio_map_addr = NULL;
+static unsigned char *mmio_map_addr = NULL;
 
 /**
  * Size of the mmap'd region (i.e. page aligned).
@@ -92,9 +92,8 @@ static int mmio_read(uint32_t address, uint32_t buf_size, int clientID) {
   
   // Make sure that the addresses are not out of the memory-mapped range.
   if ((uint64_t)address + (uint64_t)buf_size > (uint64_t)mmio_length) {
-    if (tcpServer_sendStr(debugServer, clientID, (const unsigned char *)("Error,Read,OutOfMappedRange;\n")) < 0) {
-      return 0;
-    }
+    tcpServer_sendStr(debugServer, clientID, (const unsigned char *)("Error,Read,OutOfMappedRange;\n"));
+    return 0;
   }
   
   // Transmit response to client.
@@ -133,9 +132,8 @@ static int mmio_write(uint32_t address, unsigned char *buffer,
   
   // Make sure that the addresses are not out of the memory-mapped range.
   if ((uint64_t)address + (uint64_t)buf_size > (uint64_t)mmio_length) {
-    if (tcpServer_sendStr(debugServer, clientID, (const unsigned char *)("Error,Write,OutOfMappedRange;\n")) < 0) {
-      return 0;
-    }
+    tcpServer_sendStr(debugServer, clientID, (const unsigned char *)("Error,Write,OutOfMappedRange;\n"));
+    return 0;
   }
   
   // Write the bytes. We want to do word writes when we can, because single byte
@@ -234,7 +232,7 @@ int init_mmio_iface(
   
   // Memory-map the region.
   mmio_map_length = page_index * page_size;
-  mmio_map_addr = (char*)mmap(
+  mmio_map_addr = (unsigned char*)mmap(
     NULL, 
     page_count * page_size,
     PROT_READ | PROT_WRITE,

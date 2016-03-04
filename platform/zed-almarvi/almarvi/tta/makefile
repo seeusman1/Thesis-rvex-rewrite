@@ -20,7 +20,7 @@ $(IP): rtl
 .PHONY: sim
 sim:
 	./modsim_compile.sh
-	$(CP) ../sw/fib/fib.img .
-	$(CP) ../sw/fib/fib_data.img .
+	$(CP) ../sw/fib-tta/fib.img .
+	$(CP) ../sw/fib-tta/fib_data.img .
 	$(VSIM) -t ps -novopt -L unisim work.tta_axislave_tb
 

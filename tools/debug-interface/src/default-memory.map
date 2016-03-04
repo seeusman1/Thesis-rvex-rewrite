@@ -380,27 +380,15 @@ all:GET_PERFORMANCE_COUNTER {
   ));
 }
 
-all:PRINT_PERFORMANCE_COUNTER_CYCLES {
+all:PRINT_PERFORMANCE_COUNTER {
   GET_PERFORMANCE_COUNTER;
   printf("0x%06X%08X = ", hi, lo);
   prioritize(
-    (hi & 0xFFFC0000),         printf("\033[1;32m%7u............ Tebicycles\033[0m", hi >> 8),
-    (hi & 0xFFFFFF00),         printf("   \033[1;32m%7u......... Gibicycles\033[0m", (lo >> 30) | (hi <<  2)),
-    (hi || (lo & 0xC0000000)), printf("      \033[1;32m%7u...... Mebicycles\033[0m", (lo >> 20) | (hi << 12)),
-    (hi || (lo & 0xFFF00000)), printf("         \033[1;32m%7u... kibicycles\033[0m", (lo >> 10) | (hi << 22)),
-    1,                         printf("            \033[1;32m%7u cycles\033[0m",     lo)
-  );
-}
-
-all:PRINT_PERFORMANCE_COUNTER_ACCESSES {
-  GET_PERFORMANCE_COUNTER;
-  printf("0x%06X%08X = ", hi, lo);
-  prioritize(
-    (hi & 0xFFFC0000),         printf("\033[1;32m%7u............ Tebiaccesses\033[0m", hi >> 8),
-    (hi & 0xFFFFFF00),         printf("   \033[1;32m%7u......... Gibiaccesses\033[0m", (lo >> 30) | (hi <<  2)),
-    (hi || (lo & 0xC0000000)), printf("      \033[1;32m%7u...... Mebiaccesses\033[0m", (lo >> 20) | (hi << 12)),
-    (hi || (lo & 0xFFF00000)), printf("         \033[1;32m%7u... kibiaccesses\033[0m", (lo >> 10) | (hi << 22)),
-    1,                         printf("            \033[1;32m%7u accesses\033[0m",     lo)
+    (hi & 0xFFFC0000),         printf("\033[1;32m%7u............ Tebi\033[0m", hi >> 8),
+    (hi & 0xFFFFFF00),         printf("   \033[1;32m%7u......... Gibi\033[0m", (lo >> 30) | (hi <<  2)),
+    (hi || (lo & 0xC0000000)), printf("      \033[1;32m%7u...... Mebi\033[0m", (lo >> 20) | (hi << 12)),
+    (hi || (lo & 0xFFF00000)), printf("         \033[1;32m%7u... kibi\033[0m", (lo >> 10) | (hi << 22)),
+    1,                         printf("            \033[1;32m%7u \033[0m",     lo)
   );
 }
 
@@ -414,11 +402,11 @@ all:FANCY_PERFORMANCE {
     set(_CUR_CONTEXT, cur);
     SET_BANK;
     printf("\033[1mPerformance counters for context %d:\033[0m\n", cur);
-    printf("             Active cycles = "); set(reg, CYC);     PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n");
-    printf("            Stalled cycles = "); set(reg, STALL);   PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n");
-    printf("    Committed bundle count = "); set(reg, BUN);     PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n");
-    printf("  Committed syllable count = "); set(reg, SYL);     PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n");
-    printf("       Committed NOP count = "); set(reg, NOP);     PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n");
+    printf("             Active cycles = "); set(reg, CYC);     PRINT_PERFORMANCE_COUNTER; printf("\033[1;32mcycles\033[0m\n");
+    printf("            Stalled cycles = "); set(reg, STALL);   PRINT_PERFORMANCE_COUNTER; printf("\033[1;32mcycles\033[0m\n");
+    printf("    Committed bundle count = "); set(reg, BUN);     PRINT_PERFORMANCE_COUNTER; printf("\033[1;32mbundles\033[0m\n");
+    printf("  Committed syllable count = "); set(reg, SYL);     PRINT_PERFORMANCE_COUNTER; printf("\033[1;32msyllables\033[0m\n");
+    printf("       Committed NOP count = "); set(reg, NOP);     PRINT_PERFORMANCE_COUNTER; printf("\033[1;32msyllables\033[0m\n");
     printf("\n");
     
     set(cur, cur + 1);
@@ -431,14 +419,14 @@ all:FANCY_PERFORMANCE {
       set(_CUR_CONTEXT, cur);
       SET_BANK;
       printf("\033[1mPerformance counters for cache block %d:\033[0m\n", cur);
-      printf("Instruction cache accesses = "); set(reg, IACC);    PRINT_PERFORMANCE_COUNTER_ACCESSES; printf("\n");
-      printf("  Instruction cache misses = "); set(reg, IMISS);   PRINT_PERFORMANCE_COUNTER_ACCESSES; printf("\n");
-      printf("  Data cache read accesses = "); set(reg, DRACC);   PRINT_PERFORMANCE_COUNTER_ACCESSES; printf("\n");
-      printf("    Data cache read misses = "); set(reg, DRMISS);  PRINT_PERFORMANCE_COUNTER_ACCESSES; printf("\n");
-      printf(" Data cache write accesses = "); set(reg, DWACC);   PRINT_PERFORMANCE_COUNTER_ACCESSES; printf("\n");
-      printf("   Data cache write misses = "); set(reg, DWMISS);  PRINT_PERFORMANCE_COUNTER_ACCESSES; printf("\n");
-      printf("Data cache bypass accesses = "); set(reg, DBYPASS); PRINT_PERFORMANCE_COUNTER_ACCESSES; printf("\n");
-      printf("   Data waits on write buf = "); set(reg, DWBUF);   PRINT_PERFORMANCE_COUNTER_ACCESSES; printf("\n");
+      printf("Instruction cache accesses = "); set(reg, IACC);    PRINT_PERFORMANCE_COUNTER; printf("\033[1;32maccesses\033[0m\n");
+      printf("  Instruction cache misses = "); set(reg, IMISS);   PRINT_PERFORMANCE_COUNTER; printf("\033[1;32maccesses\033[0m\n");
+      printf("  Data cache read accesses = "); set(reg, DRACC);   PRINT_PERFORMANCE_COUNTER; printf("\033[1;32maccesses\033[0m\n");
+      printf("    Data cache read misses = "); set(reg, DRMISS);  PRINT_PERFORMANCE_COUNTER; printf("\033[1;32maccesses\033[0m\n");
+      printf(" Data cache write accesses = "); set(reg, DWACC);   PRINT_PERFORMANCE_COUNTER; printf("\033[1;32maccesses\033[0m\n");
+      printf("   Data cache write misses = "); set(reg, DWMISS);  PRINT_PERFORMANCE_COUNTER; printf("\033[1;32maccesses\033[0m\n");
+      printf("Data cache bypass accesses = "); set(reg, DBYPASS); PRINT_PERFORMANCE_COUNTER; printf("\033[1;32maccesses\033[0m\n");
+      printf("   Data waits on write buf = "); set(reg, DWBUF);   PRINT_PERFORMANCE_COUNTER; printf("\033[1;32maccesses\033[0m\n");
       printf("\n");
       
       set(cur, cur + 1);
@@ -670,9 +658,9 @@ all:FANCY_PRINT {
   set(val, readWordPreload(EXT0));
   set(counter_width, FIELD_EXT0_P);
   printf("\n\033[1mPerformance counters:\033[0m (size = %d bytes)\n", counter_width);
-  printf("  Active cycles            = "); set(reg, CYC);     PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n");
-  printf("  Stalled cycles           = "); set(reg, STALL);   PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n");
-  printf("  Committed bundle count   = "); set(reg, BUN);     PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n");
-  printf("  Committed syllable count = "); set(reg, SYL);     PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n");
-  printf("  Committed NOP count      = "); set(reg, NOP);     PRINT_PERFORMANCE_COUNTER_CYCLES; printf("\n\n");
+  printf("  Active cycles            = "); set(reg, CYC);     PRINT_PERFORMANCE_COUNTER; printf("\033[1;32mcycles\033[0m\n");
+  printf("  Stalled cycles           = "); set(reg, STALL);   PRINT_PERFORMANCE_COUNTER; printf("\033[1;32mcycles\033[0m\n");
+  printf("  Committed bundle count   = "); set(reg, BUN);     PRINT_PERFORMANCE_COUNTER; printf("\033[1;32mbundles\033[0m\n");
+  printf("  Committed syllable count = "); set(reg, SYL);     PRINT_PERFORMANCE_COUNTER; printf("\033[1;32msyllables\033[0m\n");
+  printf("  Committed NOP count      = "); set(reg, NOP);     PRINT_PERFORMANCE_COUNTER; printf("\033[1;32msyllables\033[0m\n\n");
 }
