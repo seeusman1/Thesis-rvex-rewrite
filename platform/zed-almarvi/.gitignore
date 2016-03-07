@@ -3,3 +3,13 @@
 /ignored
 /almarvi.tar.gz
 /debug
+/almarvi/sw/*-rvex/*.disas
+/almarvi/sw/*-rvex/*.bin
+/almarvi/sw/*-rvex/*.objects
+/almarvi/sw/*-rvex/loader
+/almarvi/sw/*-rvex/*.dump
+/almarvi/sw/*-rvex/*.s
+/almarvi/sw/*-rvex/*.o
+/almarvi/sw/*-rvex/*.d
+/almarvi/sw/*-rvex/*.elf
+/almarvi/sw/*-rvex/*.srec

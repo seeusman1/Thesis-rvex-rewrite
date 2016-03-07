@@ -8,6 +8,7 @@ top: help
 # Include tool configuration from the almarvi repo.
 include almarvi/tools.makefile
 
+
 #-------------------------------------------------------------------------------
 # r-VEX library management
 #-------------------------------------------------------------------------------
@@ -76,7 +77,8 @@ $(RVD): $(RVD_SOURCE) $(RVD_INC)
 
 
 #-------------------------------------------------------------------------------
-# Chain to the makefile in examples/
+# Chain to the makefile in examples/ for testing the r-VEX on the board with
+# the usual programs and benchmarks
 #-------------------------------------------------------------------------------
 
 .PHONY: upload-%
@@ -136,9 +138,11 @@ clean-almarvi:
 
 .PHONY: dist
 dist: rvlib
+	cd almarvi/sw/fib-rvex && $(MAKE) clean && $(MAKE) all
 	$(GIT) ls-files -io --exclude-standard almarvi > ignored
 	$(PYTHON) dist.py
 	$(RM) ignored
+
 
 #-------------------------------------------------------------------------------
 # Cleaning

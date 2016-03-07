@@ -1,0 +1,125 @@
+
+# Use bash syntax.
+SHELL := /bin/bash
+
+# Stop make from being annoying.
+.SUFFIXES:
+.SECONDARY:
+.PRECIOUS: %.s
+
+# Objects for this program.
+OBJECTS = _start fib
+TARGET = fib
+LINKER = linker.x
+
+#-------------------------------------------------------------------------------
+# Development machine rules.
+ifeq ($(shell uname -m | grep -q arm; echo $$?),1)
+
+# Prefix for the open64 r-VEX compiler tools and gcc-like driver script.
+COMPILER_PREFIX = ../../../../../tools/o64/bin/rvex-elf32-
+
+# Compiler tools.
+CC        = $(COMPILER_PREFIX)gcc
+OBJDUMP   = $(COMPILER_PREFIX)objdump
+OBJCOPY   = $(COMPILER_PREFIX)objcopy
+
+# Test for compiler tool existence before doing anything.
+ifeq ("$(wildcard $(CC))","")
+all:
+	@echo "Error: could not find r-VEX Open64 compiler toolchain."
+else
+
+# Standard tools.
+RM        = rm
+GREP      = grep
+SED       = sed
+
+# S-record to binary image script that splits up the three memories.
+SPLIT_MEM = python split-mem.py
+
+# Toplevel rule.
+.PHONY: all
+all: | $(TARGET) clean-int
+
+# Build rule.
+.PHONY: $(TARGET)
+$(TARGET): $(TARGET).bin $(TARGET)_data.bin $(TARGET)_param.bin $(TARGET).disas $(TARGET).objects
+
+# Cleaning rule.
+.PHONY: clean
+clean: clean-int
+	$(RM) -f *.disas *.bin *.objects loader *.dump
+
+# Clean intermediate files only.
+.PHONY: clean-int
+clean-int:
+	$(RM) -f *.s *.o *.d *.elf *.srec
+
+# Assembling.
+%.s: %.S
+	$(CC) $(CFLAGS) -E $< -o $@
+%.o: %.s
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Compiling.
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Dependency generation for make.
+%.d: %.S
+	$(CC) $(CFLAGS) -MM $< > $@
+
+%.d: %.c
+	$(CC) $(CFLAGS) -MM $< > $@
+
+-include $(OBJECTS:=.d)
+
+# Linking.
+$(TARGET).elf: $(OBJECTS:=.o)
+	$(CC) $(CFLAGS) -Wl,-T$(LINKER) $^ -o $@
+
+# Disassembling.
+%.disas: %.elf
+	$(OBJDUMP) -d $^ > $@
+
+# Conversion from elf to S-record file format.
+%.srec: %.elf
+	$(OBJCOPY) -O srec $< $@
+
+# Conversion from single S-record to an S-record and binary image for each
+# accelerator memory.
+%.imem.srec %.dmem.srec %.pmem.srec %.bin %_data.bin %_param.bin: %.srec
+	$(SPLIT_MEM) $<
+
+# Generating a text file specifying where the objects are.
+%.objects: %.elf
+	@echo "DMEM:" > $@
+	$(OBJDUMP) -t $< | $(GREP) -E "^1.{14}O" | $(SED) -r -e 's/^1/0/g' >> $@
+	@echo "" >> $@
+	@echo "PMEM:" >> $@
+	$(OBJDUMP) -t $< | $(GREP) -E "^8.{14}O" | $(SED) -r -e 's/^8/0/g' >> $@
+
+endif
+
+#-------------------------------------------------------------------------------
+# Linaro/Zynq rules.
+else
+
+.PHONY: all
+all: loader
+ifndef ADDR
+	@echo "Please specify the address of the accelerator as ADDR=0x..."
+else
+	sudo ./loader -m $(ADDR) -p $(TARGET).bin -o $(TARGET).dump -s 0 -e 0x100
+endif
+
+loader:
+	g++ -o loader ../../drivers/loader/loader.cc
+
+# Cleaning rule.
+.PHONY: clean
+clean: clean-int
+	$(RM) -f loader *.dump
+
+endif

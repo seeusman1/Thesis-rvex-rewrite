@@ -26,6 +26,7 @@ def find_files(directory, ignored):
 			fname in ignored
 			and not fname.startswith('almarvi/rvex/rtl/rvex')
 			and not fname.startswith('almarvi/drivers/rvd')
+			and not fname.startswith('almarvi/sw/')
 		):
 			ignored.discard(fname)
 			continue

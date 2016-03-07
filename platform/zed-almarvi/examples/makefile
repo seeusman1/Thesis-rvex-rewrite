@@ -1,4 +1,7 @@
 
+# Don't remove random files.
+.SECONDARY:
+
 # Toolchain setup.
 TOOLS = ../../../tools
 GEN_EXAMPLES = ../../../examples
@@ -34,17 +37,15 @@ TARGETS = \
 "make gdb-<program>       upload + gdb"\
 "make run-<program>       start + wait for completion"\
 "make run-all             run-<program> for all executables"\
-"make copy-<program>      registers program files for simulation"\
-"make copy-none           unregisters files for simulation"
 
 # Additional things to clean.
-CLEAN = *.bin ../design/mem_init_pkg.vhd *.rawtrace *.trace
+CLEAN = *.bin *.rawtrace *.trace
 
 # Include generic examples makefile.
 include $(GEN_EXAMPLES)/Makefile
 
 # How to split up srec files into the three memories.
-%.imem.srec %.dmem.srec %.pmem.srec %.img %_data.img %_param.img: %.srec
+%.imem.srec %.dmem.srec %.pmem.srec %.bin %_data.bin %_param.bin: %.srec
 	python src/split-mem.py $<
 
 # How to upload;
@@ -86,4 +87,3 @@ run-all: $(patsubst %,run-%,$(BENCH_EXECUTABLES))
 .PHONY: debug server stop monitor monitor-nobuf
 debug server stop monitor monitor-nobuf:
 	cd $(DEBUGIFACE) && make $@
-

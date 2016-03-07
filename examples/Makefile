@@ -518,5 +518,7 @@ tools/sbitmod: tools/sbitmod.c
 .PHONY: clean
 clean:
 	$(RM) *.o *.s *.elf *.srec *.disas *.syms $(CLEAN)
-
+ifdef CLEAN_DIR
+	$(RM) -r $(CLEAN_DIR)
+endif
 
