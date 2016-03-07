@@ -1,5 +1,6 @@
 
-# ALMARVI interface registers.
+# ALMARVI interface registers. NOTE: these are little endian, while rvd will
+# interpret them as big endian!
 all: A_PC         { 0x00000004 }
 all: A_CYC        { 0x00000008 }
 all: A_LCYC       { 0x0000000C }
@@ -13,9 +14,19 @@ all: A_IFACE      { 0x00000308 }
 all: A_DMEM       { 0x0000030C }
 all: A_IMEM       { 0x00000310 }
 all: A_PMEM       { 0x00000314 }
+all: A_SIZE       { 0x00000318 } # Total interface size. Not in the specs currently.
 
-# Not really specified yet...
-all: A_SIZE       { 0x00000318 }
+all: A_SIZE_DEREF {
+  set(val, readWord(A_SIZE));
+  set(val, 
+    ((val & 0xFF000000) >> 24) |
+    ((val & 0x00FF0000) >>  8) |
+    ((val & 0x0000FF00) <<  8) |
+    ((val & 0x000000FF) << 24)
+  );
+  set(A_PERIPH_SIZE, val);
+  val
+}
 
 # r-VEX trace buffer.
 all: _TRACE_ADDR  { 0x00000800 }
@@ -30,7 +41,7 @@ all:_NUM_CONTEXTS {
 }
 
 # Accelerator local memories.
-all: IMEM         { (read(A_SIZE) / 4) * 1 }
-all: DMEM         { (read(A_SIZE) / 4) * 2 }
-all: PMEM         { (read(A_SIZE) / 4) * 3 }
+all: IMEM         { (A_SIZE_DEREF / 4) * 1 }
+all: DMEM         { (A_SIZE_DEREF / 4) * 2 }
+all: PMEM         { (A_SIZE_DEREF / 4) * 3 }
 

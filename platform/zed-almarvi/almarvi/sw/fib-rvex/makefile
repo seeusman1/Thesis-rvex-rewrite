@@ -44,12 +44,12 @@ all: | $(TARGET) clean-int
 
 # Build rule.
 .PHONY: $(TARGET)
-$(TARGET): $(TARGET).bin $(TARGET)_data.bin $(TARGET)_param.bin $(TARGET).disas $(TARGET).objects
+$(TARGET): $(TARGET).img $(TARGET)_data.img $(TARGET)_param.img $(TARGET).disas $(TARGET).objects
 
 # Cleaning rule.
 .PHONY: clean
 clean: clean-int
-	$(RM) -f *.disas *.bin *.objects loader *.dump
+	$(RM) -f *.disas *.img *.objects loader *.dump
 
 # Clean intermediate files only.
 .PHONY: clean-int
@@ -89,7 +89,7 @@ $(TARGET).elf: $(OBJECTS:=.o)
 
 # Conversion from single S-record to an S-record and binary image for each
 # accelerator memory.
-%.imem.srec %.dmem.srec %.pmem.srec %.bin %_data.bin %_param.bin: %.srec
+%.imem.srec %.dmem.srec %.pmem.srec %.img %_data.img %_param.img: %.srec
 	$(SPLIT_MEM) $<
 
 # Generating a text file specifying where the objects are.
@@ -111,11 +111,11 @@ all: loader
 ifndef ADDR
 	@echo "Please specify the address of the accelerator as ADDR=0x..."
 else
-	sudo ./loader -m $(ADDR) -p $(TARGET).bin -o $(TARGET).dump -s 0 -e 0x100
+	sudo ./loader -m $(ADDR) -p $(TARGET).img -o $(TARGET).dump -s 0 -e 64
 endif
 
-loader:
-	g++ -o loader ../../drivers/loader/loader.cc
+loader: ../../drivers/loader/loader.cc
+	g++ -o $@ $^
 
 # Cleaning rule.
 .PHONY: clean

@@ -62,7 +62,7 @@ use work.core_ctrlRegs_pkg.all;
 --
 -- This unit performs the following mappings:
 --
--- First 2 kiB block:
+-- First 2 kiB block (LITTLE ENDIAN to be compatible with ALMARVI tools):
 --   0x004 Program counter
 --     -> CR_PC@0
 --   0x008 Cycle count
@@ -93,7 +93,7 @@ use work.core_ctrlRegs_pkg.all;
 --   others
 --     -> 0x00000000
 --
--- Everything else:
+-- Everything else (BIG ENDIAN to be compatible with r-VEX tools):
 --   -> passthrough
 --
 -- * not part of the current ALMARVI spec.
@@ -143,7 +143,7 @@ architecture Behavioral of almarvi_iface is
 --=============================================================================
   
   -- Bus result mode register.
-  type resultMode_type is (PASSTHROUGH, OVERRIDE);
+  type resultMode_type is (PASSTHROUGH, PASSTHROUGH_SWAP, OVERRIDE_SWAP);
   signal resultMode_d           : resultMode_type;
   signal resultMode_r           : resultMode_type;
   
@@ -197,6 +197,7 @@ begin -- architecture
   
   -- Instantiate the bus request phase logic.
   request: process (axi2almarvi, rvex_resetVect_r) is
+    variable axi2almarvi_swapped: bus_mst2slv_type;
     variable almarvi2rvex_v     : bus_mst2slv_type;
     variable resultMode_v       : resultMode_type;
     variable resultOverride_v   : rvex_data_type;
@@ -222,30 +223,41 @@ begin -- architecture
     -- Handle the ALMARVI control register block.
     if unsigned(axi2almarvi.address(AXI_ADDRW_G-1 downto 11)) = 0 then
       
+      -- Swap the byte order in the request.
+      axi2almarvi_swapped := axi2almarvi;
+      axi2almarvi_swapped.writeData(31 downto 24) := axi2almarvi.writeData( 7 downto  0);
+      axi2almarvi_swapped.writeData(23 downto 16) := axi2almarvi.writeData(15 downto  8);
+      axi2almarvi_swapped.writeData(15 downto  8) := axi2almarvi.writeData(23 downto 16);
+      axi2almarvi_swapped.writeData( 7 downto  0) := axi2almarvi.writeData(31 downto 24);
+      axi2almarvi_swapped.writeMask(3) := axi2almarvi.writeMask(0);
+      axi2almarvi_swapped.writeMask(2) := axi2almarvi.writeMask(1);
+      axi2almarvi_swapped.writeMask(1) := axi2almarvi.writeMask(2);
+      axi2almarvi_swapped.writeMask(0) := axi2almarvi.writeMask(3);
+      
       -- Set default to NOP and override to 0.
       almarvi2rvex_v := BUS_MST2SLV_IDLE;
-      resultMode_v   := OVERRIDE;
+      resultMode_v   := OVERRIDE_SWAP;
       
       -- Handle the registers.
       case axi2almarvi.address(10 downto 2) is
         when "000000001" => -- 0x004 Program counter -> CR_PC@0
-          almarvi2rvex_v := axi2almarvi;
+          almarvi2rvex_v := axi2almarvi_swapped;
           almarvi2rvex_v.address := std_logic_vector(to_unsigned(4096 + 1024*0 + 4*CR_PC, 32));
-          resultMode_v := PASSTHROUGH;
+          resultMode_v := PASSTHROUGH_SWAP;
           
         when "000000010" => -- 0x008 Cycle count -> CR_CYC@0
-          almarvi2rvex_v := axi2almarvi;
+          almarvi2rvex_v := axi2almarvi_swapped;
           almarvi2rvex_v.address := std_logic_vector(to_unsigned(4096 + 1024*0 + 4*CR_CYC, 32));
-          resultMode_v := PASSTHROUGH;
+          resultMode_v := PASSTHROUGH_SWAP;
           
         when "000000011" => -- 0x00c Lock cycle count -> CR_STALL@0
-          almarvi2rvex_v := axi2almarvi;
+          almarvi2rvex_v := axi2almarvi_swapped;
           almarvi2rvex_v.address := std_logic_vector(to_unsigned(4096 + 1024*0 + 4*CR_STALL, 32));
-          resultMode_v := PASSTHROUGH;
+          resultMode_v := PASSTHROUGH_SWAP;
           
         when "010000000" => -- 0x200 Command
-          if axi2almarvi.writeEnable = '1' and axi2almarvi.writeMask(0) = '1' then
-            case axi2almarvi.writeData(7 downto 0) is
+          if axi2almarvi_swapped.writeEnable = '1' and axi2almarvi_swapped.writeMask(3) = '1' then
+            case axi2almarvi_swapped.writeData(7 downto 0) is
               when "00000001" => -- Reset
                 rvex_run_set_v     := (others => '1');
                 rvex_reset_set_v   := (others => '1');
@@ -270,19 +282,19 @@ begin -- architecture
           resultOverride_v := rvex_resetVect_r(0);
           
           -- Handle writes.
-          if axi2almarvi.writeEnable = '1' then
+          if axi2almarvi_swapped.writeEnable = '1' then
             for ctxt in 2**NUM_CONTEXTS_LOG2-1 downto 0 loop
-              if axi2almarvi.writeMask(3) = '1' then
-                rvex_resetVect_v(ctxt)(31 downto 24) := axi2almarvi.writeData(31 downto 24);
+              if axi2almarvi_swapped.writeMask(3) = '1' then
+                rvex_resetVect_v(ctxt)(31 downto 24) := axi2almarvi_swapped.writeData(31 downto 24);
               end if;
-              if axi2almarvi.writeMask(2) = '1' then
-                rvex_resetVect_v(ctxt)(23 downto 16) := axi2almarvi.writeData(23 downto 16);
+              if axi2almarvi_swapped.writeMask(2) = '1' then
+                rvex_resetVect_v(ctxt)(23 downto 16) := axi2almarvi_swapped.writeData(23 downto 16);
               end if;
-              if axi2almarvi.writeMask(1) = '1' then
-                rvex_resetVect_v(ctxt)(15 downto  8) := axi2almarvi.writeData(15 downto  8);
+              if axi2almarvi_swapped.writeMask(1) = '1' then
+                rvex_resetVect_v(ctxt)(15 downto  8) := axi2almarvi_swapped.writeData(15 downto  8);
               end if;
-              if axi2almarvi.writeMask(0) = '1' then
-                rvex_resetVect_v(ctxt)( 7 downto  0) := axi2almarvi.writeData( 7 downto  0);
+              if axi2almarvi_swapped.writeMask(0) = '1' then
+                rvex_resetVect_v(ctxt)( 7 downto  0) := axi2almarvi_swapped.writeData( 7 downto  0);
               end if;
             end loop;
           end if;
@@ -291,9 +303,9 @@ begin -- architecture
           resultOverride_v := X"000D31F7";
         
         when "011000001" => -- 0x304 Device ID -> CR_DCFG
-          almarvi2rvex_v := axi2almarvi;
+          almarvi2rvex_v := axi2almarvi_swapped;
           almarvi2rvex_v.address := std_logic_vector(to_unsigned(4096 + 4*CR_DCFG, 32));
-          resultMode_v := PASSTHROUGH;
+          resultMode_v := PASSTHROUGH_SWAP;
         
         when "011000010" => -- 0x308 Interface type -> 0x00000000
           resultOverride_v := X"00000000";
@@ -314,10 +326,11 @@ begin -- architecture
           resultOverride_v := X"00000000";
         
       end case;
+      
     end if;
     
     -- Overriding asserts the ack signal, so we should not override the result
-    -- if the bus is idle.
+    -- if the bus request is idle.
     if bus_requesting(axi2almarvi) = '0' then
       resultMode_v := PASSTHROUGH;
     end if;
@@ -337,13 +350,21 @@ begin -- architecture
   -- Instantiate the bus response phase logic.
   response: process (rvex2almarvi, resultMode_r, resultOverride_r) is
     variable almarvi2axi_v      : bus_slv2mst_type;
+    variable swapped            : rvex_data_type;
   begin
-    if resultMode_r = PASSTHROUGH then
-      almarvi2axi_v := rvex2almarvi;
-    else
+    if resultMode_r = OVERRIDE_SWAP then
       almarvi2axi_v := BUS_SLV2MST_IDLE;
       almarvi2axi_v.ack := '1';
       almarvi2axi_v.readData := resultOverride_r;
+    else
+      almarvi2axi_v := rvex2almarvi;
+    end if;
+    if resultMode_r /= PASSTHROUGH then
+      swapped(31 downto 24)  := almarvi2axi_v.readData( 7 downto  0);
+      swapped(23 downto 16)  := almarvi2axi_v.readData(15 downto  8);
+      swapped(15 downto  8)  := almarvi2axi_v.readData(23 downto 16);
+      swapped( 7 downto  0)  := almarvi2axi_v.readData(31 downto 24);
+      almarvi2axi_v.readData := swapped;
     end if;
     almarvi2axi <= almarvi2axi_v;
   end process;

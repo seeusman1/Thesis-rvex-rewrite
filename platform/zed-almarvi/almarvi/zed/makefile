@@ -92,6 +92,8 @@ LINARO_PATH    = $(DL)/linaro
 LINARO_TGZ     = $(LINARO_PATH)/linaro.tar.gz
 LINARO_DEP     = $(LINARO_TGZ)
 
+# Home directory stuff.
+HOME_DIR_SRC   = ../sw ../drivers
 
 #-------------------------------------------------------------------------------
 # Housekeeping
@@ -491,6 +493,9 @@ endif
 	$(MOUNT) $(DEVP2) $(TEMP)
 	$(TAR) xzvf $(LINARO_TGZ) -C $(TEMP) --strip-components=3 binary/boot/filesystem.dir
 	
+	# Copy the sw and drivers folders to the home directory.
+	$(CP) -r $(HOME_DIR_SRC) $(TEMP)/home/linaro
+	
 	# Remove the message-of-the-day scripts that do update checks, because they
 	# are slow as hell when logging in with SSH. Note that SSH is not available
 	# by default; you'll have to install it using
@@ -512,6 +517,11 @@ endif
 # Convenience stuff
 #-------------------------------------------------------------------------------
 
+EXP_HEAD  = set timeout 100; match_max 100000
+EXP_LOGIN = expect "*continue*"; send -- "yes\r"; expect "*?assword:*"; send -- "linaro\r"
+EXP_DATE  = expect "*$$*"; send -- "sudo date -s \"$(shell date)\"\r"
+EXP_SU    = expect "*$$*"; send -- "sudo su\r"
+
 .PHONY: ssh
 ssh:
 ifndef ZED_HOST
@@ -528,7 +538,7 @@ ifndef ZED_HOST
 	@echo ""
 else
 	-$(SSH_KEYGEN) -R $(ZED_HOST) -f ~/.ssh/known_hosts
-	$(EXPECT) -c 'set timeout 100; spawn $(SSH) -X linaro@$(ZED_HOST); match_max 100000; expect "*continue*"; send -- "yes\r"; expect "*?assword:*"; send -- "linaro\r"; interact'
+	$(EXPECT) -c '$(EXP_HEAD); spawn $(SSH) -X linaro@$(ZED_HOST); $(EXP_LOGIN); $(EXP_DATE); $(EXP_SU); interact'
 endif
 
 .PHONY: bridge
@@ -548,6 +558,6 @@ ifndef ZED_HOST
 	@echo ""
 else
 	-$(SSH_KEYGEN) -R $(ZED_HOST) -f ~/.ssh/known_hosts
-	$(EXPECT) -c 'set timeout 100; spawn $(SSH) -N -L 21079:localhost:21079 linaro@$(ZED_HOST); match_max 100000; expect "*continue*"; send -- "yes\r"; expect "*?assword:*"; send -- "linaro\r"; interact'
+	$(EXPECT) -c '$(EXP_HEAD); spawn $(SSH) -N -L 21079:localhost:21079 linaro@$(ZED_HOST); $(EXP_LOGIN); send_user "\n\nPort forwarding now active. Press ctrl+c to exit."; interact'
 endif
 

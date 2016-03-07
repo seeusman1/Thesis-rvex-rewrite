@@ -4,7 +4,7 @@
 /almarvi.tar.gz
 /debug
 /almarvi/sw/*-rvex/*.disas
-/almarvi/sw/*-rvex/*.bin
+/almarvi/sw/*-rvex/*.img
 /almarvi/sw/*-rvex/*.objects
 /almarvi/sw/*-rvex/loader
 /almarvi/sw/*-rvex/*.dump

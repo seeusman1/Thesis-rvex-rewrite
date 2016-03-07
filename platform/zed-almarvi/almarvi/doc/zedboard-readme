@@ -158,10 +158,6 @@ addresses, you may at least want to change the hostname of the board to
 something more unique. The hostname can be set using the 
 <SD card root>/etc/hostname file.
 
-You may also want to put some stuff in the home directory of the card, i.e.
-<SD card root>/home/linaro. Most importantly, you'll want to copy the sw and
-drivers directories to here.
-
 When that's done, unmount the SD card, insert it into the Zedboard, and turn the 
 Zedboard on. DO NOT connect the USB cable to the board yet. When you turn on the 
 board, the power LED (green) will come on. A couple seconds later, the DONE LED 

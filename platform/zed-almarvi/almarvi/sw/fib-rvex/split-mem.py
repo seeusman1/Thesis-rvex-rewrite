@@ -63,13 +63,14 @@ def handle_line(line, imem, dmem, pmem, data):
 			d = int(sdata[i*2:i*2+2], 16)
 			data[addr + i] = d
 
-def write_bin(fn, data):
+def write_img(fn, data):
 	print('split-mem.py: writing %s...' % fn)
 	with open(fn, 'wb') as f:
 		addr = 0
 		while data:
-			f.write(bytearray([data.pop(addr, 0)]))
-			addr += 1
+			val = data.pop(addr, 0) + 256*data.pop(addr+1, 0) + 65536*data.pop(addr+2, 0) + 16777216*data.pop(addr+3, 0)
+			f.write(str(val) + '\n')
+			addr += 4
 
 import sys
 if len(sys.argv) != 2:
@@ -82,9 +83,9 @@ parts = mem_fn.rsplit('.', 1)
 imem_srec_fn = parts[0] + '.imem.' + parts[1]
 dmem_srec_fn = parts[0] + '.dmem.' + parts[1]
 pmem_srec_fn = parts[0] + '.pmem.' + parts[1]
-imem_bin_fn = parts[0] + '.bin'
-dmem_bin_fn = parts[0] + '_data.bin'
-pmem_bin_fn = parts[0] + '_param.bin'
+imem_bin_fn = parts[0] + '.img'
+dmem_bin_fn = parts[0] + '_data.img'
+pmem_bin_fn = parts[0] + '_param.img'
 
 data = {
 	'i': {},
@@ -100,6 +101,6 @@ with open(mem_fn, 'r') as mem:
 				for line in mem:
 					handle_line(line.strip(), imem, dmem, pmem, data)
 
-write_bin(imem_bin_fn, data['i'])
-write_bin(dmem_bin_fn, data['d'])
-write_bin(pmem_bin_fn, data['p'])
+write_img(imem_bin_fn, data['i'])
+write_img(dmem_bin_fn, data['d'])
+write_img(pmem_bin_fn, data['p'])
