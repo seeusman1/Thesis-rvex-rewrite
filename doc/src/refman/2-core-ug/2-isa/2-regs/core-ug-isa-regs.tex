@@ -79,10 +79,10 @@ context control registers are context specific.
 
 The processor can access these register files through memory operations only. 
 All these accesses are single-cycle. 1 kiB of memory space has to be reserved 
-for this purpose, usually mapped to 0xFFFFFC00..0xFFFFFFFF. The location of the 
-block is design-time configurable. Note that it is impossible for the processor 
-to perform actual memory operations to this region, so the location of the block 
-should be chosen wisely.
+for this purpose, usually mapped to \code{0xFFFFFC00..0xFFFFFFFF}. The 
+location of the block is design-time configurable. Note that it is impossible 
+for the processor to perform actual memory operations to this region, so the 
+location of the block should be chosen wisely.
 
 The global register file is read-only from the perspective of the program. The 
 context register file is writable, but it should be noted that each program can 
@@ -91,7 +91,8 @@ that programs can write to the global register file or the other context
 register files, the debug bus can be made accessible for memory operations by 
 the bus interconnect outside the core. In most platforms this happens 
 coincidentally, as the processor can access the main bus of the platform, and 
-the debug bus is wired as a slave peripheral on this bus.
+the debug bus is wired as a slave peripheral on this bus. For more information
+about the debug bus, refer to Section~\ref{sec:core-ug-cfg-inst-iface-debug}.
  
-For more information about the control registers, refer to
+For more information about the control registers in general, refer to
 Section~\ref{sec:core-ug-creg}.
