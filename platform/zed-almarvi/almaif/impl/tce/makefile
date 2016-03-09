@@ -2,8 +2,8 @@
 top:
 	@echo "Please call make from the parent directory."
 
-include ../config.makefile
-include ../tools.makefile
+include ../../config.makefile
+include ../../tools.makefile
 
 IP = ip/ip.srcs/component.xml
 
@@ -15,12 +15,12 @@ clean:
 .PHONY: all
 all: $(IP)
 $(IP): rtl
-	$(VIVADO) -mode batch -source vivado_generate_ip.tcl
+	$(VIVADO) -mode batch -source generate_ip.tcl
 
 .PHONY: sim
 sim:
 	./modsim_compile.sh
-	$(CP) ../sw/fib-tta/fib.img .
-	$(CP) ../sw/fib-tta/fib_data.img .
+	$(CP) testsw/fib/fib.img .
+	$(CP) testsw/fib/fib_data.img .
 	$(VSIM) -t ps -novopt -L unisim work.tta_axislave_tb
 

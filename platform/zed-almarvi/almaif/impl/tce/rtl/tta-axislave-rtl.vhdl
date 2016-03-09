@@ -48,36 +48,6 @@ use work.tta0_globals.all;
 use work.tta0_params.all;
 use work.tta0_imem_mau.all;
 
-entity tta_axislave is
-  generic (
-    -- Must be at least 2 + mmax(mmax(IMEMADDRWIDTH+1,debreg_addr_width_c),fu_LSU_addrw-2)
-    axi_addrw_g : integer := 17
-  );
-  port (
-    clk       : in std_logic;
-    nreset    : in std_logic;
-
-    -- AXI slave port
-    s_axi_awaddr   : in  STD_LOGIC_VECTOR (axi_addrw_g-1 downto 0);
-    s_axi_awvalid  : in  STD_LOGIC;
-    s_axi_awready  : out STD_LOGIC;
-    s_axi_wdata    : in  STD_LOGIC_VECTOR (31 downto 0);
-    s_axi_wstrb    : in  STD_LOGIC_VECTOR (3 downto 0);
-    s_axi_wvalid   : in  STD_LOGIC;
-    s_axi_wready   : out STD_LOGIC;
-    s_axi_bresp    : out STD_LOGIC_VECTOR (2-1 downto 0);
-    s_axi_bvalid   : out STD_LOGIC;
-    s_axi_bready   : in  STD_LOGIC;
-    s_axi_araddr   : in  STD_LOGIC_VECTOR (axi_addrw_g-1 downto 0);
-    s_axi_arvalid  : in  STD_LOGIC;
-    s_axi_arready  : out STD_LOGIC;
-    s_axi_rdata    : out STD_LOGIC_VECTOR (31 downto 0);
-    s_axi_rresp    : out STD_LOGIC_VECTOR (2-1 downto 0);
-    s_axi_rvalid   : out STD_LOGIC;
-    s_axi_rready   : in  STD_LOGIC
-  );
-end entity tta_axislave;
-
 architecture rtl of tta_axislave is
 
   constant io_dataw_c : integer := 32;

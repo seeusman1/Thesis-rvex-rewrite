@@ -2,8 +2,8 @@
 top:
 	@echo "Please call make from the parent directory."
 
-include ../config.makefile
-include ../tools.makefile
+include ../../config.makefile
+include ../../tools.makefile
 
 IP = ip/ip.srcs/component.xml
 
@@ -15,7 +15,7 @@ clean:
 .PHONY: all
 all: $(IP)
 $(IP): rtl
-	$(VIVADO) -mode batch -source vivado_generate_ip.tcl
+	$(VIVADO) -mode batch -source generate_ip.tcl
 
 .PHONY: sim
 sim:

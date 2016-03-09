@@ -29,12 +29,18 @@ config.makefile:
 # Tools.
 include tools.makefile
 
-# IP directories.
+# IP directories. Adding an accelerator/IP block to the system involves the
+# following:
+#  - Adding the IP name here;
+#  - Adding the IP project files to impl/<ip-name>/, along with a makefile to
+#    build it (use the makefiles from the existing IP blocks as a template);
+#  - Adding the IP repository to the zedboard PL project in
+#    boards/zed/pl-project-gen.tcl. FIXME: this should probably be automated.
 IP            += rvex
-IP            += tta
+#IP            += tce  # Disabled because it's not compiling right now.
 
 # Zedboard directory.
-ZED            = zed
+ZED            = boards/zed
 
 
 #-------------------------------------------------------------------------------
@@ -94,30 +100,31 @@ dl-clean: zed-dl-clean
 ip: $(patsubst %,ip-%,$(IP))
 
 .PHONY: clean-%
-clean-%: %
+clean-%: impl/%
 	cd $< && $(MAKE) clean
 
 .PHONY: ip-%
-ip-%: %
+ip-%: impl/%
 	cd $< && $(MAKE) all
 
 .PHONY: sim-%
-sim-%: %
+sim-%: impl/%
 	cd $< && $(MAKE) sim
 
 
 #-------------------------------------------------------------------------------
-# zed/ directory targets
+# boards/zed directory targets
 #-------------------------------------------------------------------------------
 
 .PHONY: zed-configure
 zed-configure: ip
-	cd zed && $(MAKE) configure
+	cd $(ZED) && $(MAKE) configure
 
 .PHONY: zed
 zed: ip
-	cd zed && $(MAKE) all
+	cd $(ZED) && $(MAKE) all
 
 .PHONY: zed-%
 zed-%:
-	cd zed && $(MAKE) $(patsubst zed-%,%,$@)
+	cd $(ZED) && $(MAKE) $(patsubst zed-%,%,$@)
+

@@ -2,9 +2,9 @@
 top: help
 
 # User configuration.
-../config.makefile:
-	cd .. && $(MAKE) config.makefile
--include ../config.makefile
+../../config.makefile:
+	cd ../.. && $(MAKE) config.makefile
+-include ../../config.makefile
 
 # Uncomment to use the Xilinx-generated device tree instead of the confirmed
 # working no-pl device tree.
@@ -22,7 +22,7 @@ endif
 endif
 
 # Include tool names.
-include ../tools.makefile
+include ../../tools.makefile
 
 # Common directories.
 DL             = dl
@@ -93,7 +93,7 @@ LINARO_TGZ     = $(LINARO_PATH)/linaro.tar.gz
 LINARO_DEP     = $(LINARO_TGZ)
 
 # Home directory stuff.
-HOME_DIR_SRC   = ../sw ../drivers
+HOME_DIR_SRC   = ../../impl ../../utils
 
 #-------------------------------------------------------------------------------
 # Housekeeping

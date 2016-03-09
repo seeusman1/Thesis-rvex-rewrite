@@ -67,8 +67,13 @@ entity rvex_axislave is
 --=============================================================================
   generic (
     
-    -- Width of the AXI address ports. Must be at least
-    -- 2 + max(13, IMEM_DEPTH_LOG2, DMEM_DEPTH_LOG2, PMEM_DEPTH_LOG2)
+    -- Width of the AXI address ports. Must be equal to
+    -- 2 + max(
+    --   12 + NUM_CONTEXTS_LOG2,
+    --   IMEM_DEPTH_LOG2,
+    --   DMEM_DEPTH_LOG2,
+    --   PMEM_DEPTH_LOG2
+    -- )
     AXI_ADDRW_G                 : integer := 17;
     
     -- 2-log of the number of bytes in the instruction memory.
@@ -154,22 +159,21 @@ architecture Behavioral of rvex_axislave is
   
   --  _________                                  ___________
   -- /   AXI   \                                / r-VEX dbg \
-  -- CTRL: 00... \                            / Debug: 00...
+  -- CTRL: 00... \                            / Trace: 00...
   -- IMEM: 01...  }--[ALMARVI/r-VEX bridge]--/  IMEM:  01...
   -- DMEM: 10... /                           \  DMEM:  10...
-  -- PMEM: 11... >------[dual port BRAM]      \ Trace: 11...
+  -- PMEM: 11... >------[dual port BRAM]      \ Debug: 11...
   --                           |
   --   Mapped to upper half of r-VEX 32-bit address space,
   --              lower half is mapped to DMEM
   --
   -- AXI address space:
-  --   00(-*)000----------     1 kiB ALMARVI interface
-  --   00(-*)001----------     1 kiB reserved
-  --   00(-*)01-----------     2 kiB trace buffer
-  --   00(-*)1------------     Up to 4 kiB r-VEX debug bus
-  --   01(-*)-------------     2**IMEM_DEPTH_LOG2 byte instruction memory
-  --   10(-*)-------------     2**DMEM_DEPTH_LOG2 byte data memory
-  --   11(-*)-------------     2**PMEM_DEPTH_LOG2 byte parameter memory
+  --   00 ii00 ----------    1 kiB ALMARVI interface for core/context i
+  --   00 ii01 ----------    1 kiB r-VEX registers for context i
+  --   00 --1- ----------    2 kiB trace buffer
+  --   01 ---- ----------    2**IMEM_DEPTH_LOG2 byte instruction memory
+  --   10 ---- ----------    2**DMEM_DEPTH_LOG2 byte data memory
+  --   11 ---- ----------    2**PMEM_DEPTH_LOG2 byte parameter memory
   --
   -- r-VEX instruction address space:
   --   0x00000000..0xFFFFFFFF  Instruction memory
@@ -190,19 +194,6 @@ architecture Behavioral of rvex_axislave is
     match(AXI_ADDRW_G-1 downto AXI_ADDRW_G-2) := section;
     return addrRangeAndMap(match => match);
   end mapSection;
-  
-  -- Returns an address map definition for the core ('1') and trace buffer
-  -- ('0').
-  function mapCoreTrace(
-    which : std_logic
-  ) return addrRangeAndMapping_type is
-    variable match : rvex_address_type;
-  begin
-    match := (others => '-');
-    match(AXI_ADDRW_G-1 downto AXI_ADDRW_G-2) := "00";
-    match(12) := which;
-    return addrRangeAndMap(match => match);
-  end mapCoreTrace;
   
   -- System control signals.
   signal areset                 : std_logic;
@@ -229,11 +220,7 @@ architecture Behavioral of rvex_axislave is
   signal pmem2rvex              : bus_slv2mst_type;
   
   -- Run control signals.
-  signal rvex_run               : std_logic_vector(2**NUM_CONTEXTS_LOG2-1 downto 0);
-  signal rvex_idle              : std_logic_vector(2**NUM_CONTEXTS_LOG2-1 downto 0);
-  signal rvex_reset             : std_logic_vector(2**NUM_CONTEXTS_LOG2-1 downto 0);
   signal rvex_resetVect         : rvex_address_array(2**NUM_CONTEXTS_LOG2-1 downto 0);
-  signal rvex_done              : std_logic_vector(2**NUM_CONTEXTS_LOG2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -333,7 +320,8 @@ begin -- architecture
       IMEM_DEPTH_LOG2           => IMEM_DEPTH_LOG2,
       DMEM_DEPTH_LOG2           => DMEM_DEPTH_LOG2,
       PMEM_DEPTH_LOG2           => PMEM_DEPTH_LOG2,
-      NUM_CONTEXTS_LOG2         => NUM_CONTEXTS_LOG2
+      NUM_CONTEXTS_LOG2         => NUM_CONTEXTS_LOG2,
+      NUM_BREAKPOINTS           => NUM_BREAKPOINTS
     )
     port map (
     
@@ -351,11 +339,7 @@ begin -- architecture
       rvex2almarvi              => rvex2almarvi,
       
       -- r-VEX run control signals.
-      rvex_run                  => rvex_run,
-      rvex_idle                 => rvex_idle,
-      rvex_reset                => rvex_reset,
-      rvex_resetVect            => rvex_resetVect,
-      rvex_done                 => rvex_done
+      rvex_resetVect            => rvex_resetVect
       
     );
   
@@ -420,8 +404,8 @@ begin -- architecture
         traceDepthLog2B           => 11, -- Fixed to 2 kiB
         debugBusMap_imem          => mapSection("01"),
         debugBusMap_dmem          => mapSection("10"),
-        debugBusMap_rvex          => mapCoreTrace('1'),
-        debugBusMap_trace         => mapCoreTrace('0'),
+        debugBusMap_rvex          => mapSection("11"),
+        debugBusMap_trace         => mapSection("00"),
         debugBusMap_mutex         => true,
         rvexDataMap_dmem          => addrRangeAndMap(match => "0-------------------------------"),
         rvexDataMap_bus           => addrRangeAndMap(match => "1-------------------------------")
@@ -437,11 +421,7 @@ begin -- architecture
       clkEn                     => '1',
     
       -- Run control interface.
-      rctrl2rvsa_run            => rvex_run,
-      rvsa2rctrl_idle           => rvex_idle,
-      rctrl2rvsa_reset          => rvex_reset,
       rctrl2rvsa_resetVect      => rvex_resetVect,
-      rvsa2rctrl_done           => rvex_done,
     
       -- Master interface, unused.
       rvsa2bus                  => rvex2pmem,

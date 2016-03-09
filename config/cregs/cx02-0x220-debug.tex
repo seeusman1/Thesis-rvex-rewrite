@@ -181,9 +181,10 @@ single stepping; see below.
 
 // Handle the debug bus writing a one to this flag.
 if (_write & _wmask_dbg) {
-    _r = '1';         // Set ourselves.
-    cr_dcr_d_r = '0'; // Clear done.
-    cr_dcr_b_r = '0'; // Clear break.
+    _r = '1';           // Set ourselves.
+    cr_dcr_d_r = '0';   // Clear done.
+    cr_dcr_b_r = '0';   // Clear break.
+    cr_dcr_cause_r = 0; // Clear break cause.
 }
 
 // Clear the flag if resumption is acknowledged by the pipelanes.
@@ -219,10 +220,11 @@ external debugger and the self-hosted debug system to single-step.
 
 // Handle the debug bus writing a one to this flag.
 if (_write & _wmask_dbg) {
-    _r = '1';         // Set ourselves.
-    cr_dcr_r_r = '1'; // Set resume.
-    cr_dcr_d_r = '0'; // Clear done.
-    cr_dcr_b_r = '0'; // Clear break.
+    _r = '1';           // Set ourselves.
+    cr_dcr_r_r = '1';   // Set resume.
+    cr_dcr_d_r = '0';   // Clear done.
+    cr_dcr_b_r = '0';   // Clear break.
+    cr_dcr_cause_r = 0; // Clear break cause.
 }
 
 // Handle the core writing a one to this flag with external debug disabled.
@@ -271,8 +273,9 @@ instruction is executed.
 
 // Handle the debug bus writing a one to this flag.
 if (_write & _wmask_dbg) {
-    _r = '1';         // Set ourselves.
-    cr_dcr_s_r = '0'; // Clear step.
+    _r = '1';           // Set ourselves.
+    cr_dcr_s_r = '0';   // Clear step.
+    cr_dcr_cause_r = 1; // Set break cause to 0x01.
 }
 
 // Handle all the pipelane events which set this flag.
@@ -300,16 +303,14 @@ _r = _r;
 \id{DCRC}
 Trap cause for debug traps that should be handled by the external debug system.
 This is set to the debug trap cause by hardware when the B flag is set due to a
-debug trap.
+debug trap. It is cleared when a one is written to resume or step, and set to
+\code{0x01} if a one is written to the B flag.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \declaration{}
 \declRegister{_r}{trapCause}{0}
 \implementation{}
 \begin{lstlisting}
-
-// Handle bus interface.
-_r = (_r & ~_wmask_dbg) | (_write & _wmask_dbg);
 
 // Set the register when an external debug request is active.
 if (!cxplif2cxreg_stall && cxplif2cxreg_exDbgTrapInfo.active) {

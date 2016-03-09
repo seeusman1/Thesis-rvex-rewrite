@@ -1,47 +1,116 @@
 
-# ALMARVI interface registers. NOTE: these are little endian, while rvd will
-# interpret them as big endian!
-all: A_PC         { 0x00000004 }
-all: A_CYC        { 0x00000008 }
-all: A_LCYC       { 0x0000000C }
-all: A_CMD        { 0x00000200 }
-all: A_CMD_RST    { 1 }
-all: A_CMD_RUN    { 2 }
-all: A_START      { 0x00000204 }
-all: A_DEV_CLS    { 0x00000300 }
-all: A_DEV_ID     { 0x00000304 }
-all: A_IFACE      { 0x00000308 }
-all: A_DMEM       { 0x0000030C }
-all: A_IMEM       { 0x00000310 }
-all: A_PMEM       { 0x00000314 }
-all: A_SIZE       { 0x00000318 } # Total interface size. Not in the specs currently.
+#===============================================================================
+# ALMARVI plug and play stuff
+#===============================================================================
 
-all: A_SIZE_DEREF {
-  set(val, readWord(A_SIZE));
-  set(val, 
-    ((val & 0xFF000000) >> 24) |
-    ((val & 0x00FF0000) >>  8) |
-    ((val & 0x0000FF00) <<  8) |
-    ((val & 0x000000FF) << 24)
-  );
-  set(A_PERIPH_SIZE, val);
-  val
+# Reads the word at address addr as little endian.
+all: READ_WORD_LE {
+  set(read_word_le_val, readWord(addr));
+  ((read_word_le_val & 0xFF000000) >> 24) |
+  ((read_word_le_val & 0x00FF0000) >>  8) |
+  ((read_word_le_val & 0x0000FF00) <<  8) |
+  ((read_word_le_val & 0x000000FF) << 24)
 }
 
-# r-VEX trace buffer.
+# The following macros read the size metric registers with endianness correction
+# and then override themselves with the value, so they're only evaluated once.
+all: A_CORE_COUNT_VAL { set(addr, A_CORE_CNT); set(A_CORE_COUNT_VAL, READ_WORD_LE) }
+all: A_CTRL_SIZE      { set(addr, A_CTRL);     set(A_CTRL_SIZE,      READ_WORD_LE) }
+all: A_DMEM_SIZE      { set(addr, A_DMEM);     set(A_DMEM_SIZE,      READ_WORD_LE) }
+all: A_IMEM_SIZE      { set(addr, A_IMEM);     set(A_IMEM_SIZE,      READ_WORD_LE) }
+all: A_PMEM_SIZE      { set(addr, A_PMEM);     set(A_PMEM_SIZE,      READ_WORD_LE) }
+
+# Block size macro similar to the macros above. Figures out the address space
+# needed for the four blocks.
+all: A_BLOCK_SIZE {
+  set(val, A_CORE_COUNT_VAL * A_CTRL_SIZE);
+  if (val < A_DMEM_SIZE, set(val, A_DMEM_SIZE));
+  if (val < A_IMEM_SIZE, set(val, A_IMEM_SIZE));
+  if (val < A_PMEM_SIZE, set(val, A_PMEM_SIZE));
+  set(A_BLOCK_SIZE, val)
+}
+
+# The number of rvd contexts equals the number of accelerator cores.
+all:_NUM_CONTEXTS { A_CORE_COUNT_VAL }
+
+
+#===============================================================================
+# ALMARVI registers
+#===============================================================================
+# NOTE: these are little endian!
+
+#----------------------------------------------------------------
+all: A_STAT         { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x00000000 }
+all: A_PC           { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x00000004 }
+all: A_CYC          { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x00000008 }
+all: A_STALL        { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x0000000C }
+#----------------------------------------------------------------
+all: A_CMD          { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x00000200 }
+all: A_START        { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x00000204 }
+all: A_BRK_ENA      { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x00000208 }
+all: A_BRK_A1       { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x0000020C }
+all: A_BRK_A2       { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x00000210 }
+all: A_BRK_A3       { (_CUR_CONTEXT * A_CTRL_SIZE) + 0x00000214 }
+#----------------------------------------------------------------
+all: A_DEV_CLS      {                                0x00000300 }
+all: A_DEV_ID       {                                0x00000304 }
+all: A_IFACE        {                                0x00000308 }
+all: A_CORE_CNT     {                                0x0000030C }
+all: A_CTRL         {                                0x00000310 }
+all: A_DMEM         {                                0x00000314 }
+all: A_IMEM         {                                0x00000318 }
+all: A_PMEM         {                                0x0000031C }
+all: A_DBG_CAP      {                                0x00000320 }
+all: A_BRK_CAP      {                                0x00000324 }
+#----------------------------------------------------------------
+
+# ALMARVI special registers values.
+all: A_CMD_RST      { 1 }
+all: A_CMD_RUN      { 2 }
+all: A_CMD_BRK      { 4 }
+
+all: A_BRK_ENA_STEP { 1 << 2 }
+all: A_BRK_ENA_1    { 1 << 3 }
+all: A_BRK_ENA_2    { 1 << 4 }
+all: A_BRK_ENA_3    { 1 << 5 }
+
+all: A_STAT_STEP    { 1 << 0 }
+all: A_STAT_BRK1    { 1 << 1 }
+all: A_STAT_BRK2    { 1 << 2 }
+all: A_STAT_BRK3    { 1 << 3 }
+all: A_STAT_USER    { 1 << 4 }
+
+all: A_DEV_CLS_TTA  { 0x00000774 }
+all: A_DEV_CLS_RVEX { 0x000D31F7 }
+all: A_DEV_CLS_EDK  { 0x03D1CD59 }
+
+
+#===============================================================================
+# r-VEX registers
+#===============================================================================
+# NOTE: these are mostly described in the r-VEX memory map file.
+
+# r-VEX native control registers.
+all:CREG         { 0x00000400 }
+all:CREG_GLOB    { CREG + 0x000 }
+all:CREG_GPREG   { CREG + 0x100 + (_CUR_CONTEXT * A_CTRL_SIZE) }
+all:CREG_CTXT    { CREG + 0x200 + (_CUR_CONTEXT * A_CTRL_SIZE) }
+
+# Trace buffer.
 all: _TRACE_ADDR  { 0x00000800 }
 all: _TRACE_SIZE  { 0x00000800 }
 
-# r-VEX control registers.
-all: CREG         { 0x00001000 }
-all:_NUM_CONTEXTS {
-  set(val, readWord(DCFG));
-  set(_NUM_CONTEXTS, FIELD_DCFG_NC+1);
-  FIELD_DCFG_NC+1
-}
 
-# Accelerator local memories.
-all: IMEM         { (A_SIZE_DEREF / 4) * 1 }
-all: DMEM         { (A_SIZE_DEREF / 4) * 2 }
-all: PMEM         { (A_SIZE_DEREF / 4) * 3 }
+#===============================================================================
+# Memories
+#===============================================================================
+
+# Instruction memory.
+all: IMEM         { A_BLOCK_SIZE * 1 }
+
+# Data memory.
+all: DMEM         { A_BLOCK_SIZE * 2 }
+
+# Instruction memory.
+all: PMEM         { A_BLOCK_SIZE * 3 }
 

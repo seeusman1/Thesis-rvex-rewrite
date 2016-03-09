@@ -1,0 +1,89 @@
+
+Directory refectoring:
+  almarvi/drivers     -> almaif/utils
+  almarvi/tta         -> almaif/impl/tce
+  almarvi/rvex        -> almaif/impl/rvex
+  almarvi/sw/fib-tta  -> almaif/impl/tta/testsw/fib
+  almarvi/sw/fib-rvex -> almaif/impl/rvex/testsw/fib
+  almarvi/zed         -> almaif/boards/zed
+
+
+
+
+Additions:
+  0x000  Status
+  0x208  Breakpoint enable
+  0x20C  Breakpoint address 0
+  0x210  Breakpoint address 1
+  0x214  Breakpoint address 2
+  0x30C  Core count
+  0x310  CTRL size
+  0x320  Debug feature
+  0x324  Breakpoint count
+
+Address changed:
+  0x30C -> 0x314
+  0x310 -> 0x318
+  0x314 -> 0x31C
+  
+
+
+
+Read from status:
+  read DCR
+  -------
+  Transform bus result:
+    0x--FB---- => 0x00000001  (single step)
+    0x--FC---- => 0x00000002  (breakpoint 1)
+    0x--FD---- => 0x00000004  (breakpoint 2)
+    0x--FE---- => 0x00000008  (breakpoint 3)
+    0x--01---- => 0x00000010  (manual break)
+    others     => 0x00000000  (not stopped for any known reason)
+
+
+Write to command:
+
+  Case reset:
+    Assert context reset
+
+  Case run:
+    If step mode:
+      DCRF <= step
+    Else:
+      DCRF <= resume
+    Release context reset
+
+  Case break:
+    DCRF <= break
+    Release context reset
+
+
+Write to breakpoint enable:
+  DCR, step mode <= transform:
+    Step mode  <= Bit 2
+    DCR bit 0  <= Bit 3
+    DCR bit 4  <= Bit 4
+    DCR bit 8  <= Bit 5
+    DCR others <= 0
+  Set step mode
+
+
+Read from breakpoint enable:
+  read DCR
+  -------
+  Transform bus result:
+    Bit 2  <= step mode
+    Bit 3  <= Bits 0:1 != 0
+    Bit 4  <= Bits 4:5 != 0
+    Bit 5  <= Bits 8:9 != 0
+    Others <= 0
+
+
+Read from debug feature support:
+  return 0x00000001
+
+
+Read from breakpoint count:
+  return min(3, rvex breakpoint count from CFG)
+
+

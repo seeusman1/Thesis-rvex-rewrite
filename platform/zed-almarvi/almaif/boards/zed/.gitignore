@@ -1,0 +1,13 @@
+dl/
+boot/*
+!boot/u-boot.elf
+!boot/image
+boot/image/*
+!boot/image/devicetree_linaro.dtb
+!boot/image/zImage
+pl/
+temp*
+system.bit
+*.jou
+*.log
+.Xil/

@@ -17,7 +17,7 @@ LINKER = linker.x
 ifeq ($(shell uname -m | grep -q arm; echo $$?),1)
 
 # Prefix for the open64 r-VEX compiler tools and gcc-like driver script.
-COMPILER_PREFIX = ../../../../../tools/o64/bin/rvex-elf32-
+COMPILER_PREFIX = ../../../../../../../tools/o64/bin/rvex-elf32-
 
 # Compiler tools.
 CC        = $(COMPILER_PREFIX)gcc

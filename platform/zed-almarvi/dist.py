@@ -19,14 +19,13 @@ def find_files(directory, ignored):
 	for entry in entries:
 		fname = os.path.join(directory, entry)
 		
-		# Ignore files listed as ignored by git, except for the
-		# almarvi/rvex/rtl/rvex and almarvi/drivers/rvd directories, which contain
-		# the rvex sources and the debug interface software.
+		# Ignore files listed as ignored by git, except for some stuff which should
+		# be in the almarvi repo but not in the rvex-rewrite one.
 		if (
 			fname in ignored
-			and not fname.startswith('almarvi/rvex/rtl/rvex')
-			and not fname.startswith('almarvi/drivers/rvd')
-			and not fname.startswith('almarvi/sw/')
+			and not fname.startswith('almaif/impl/rvex/rtl/rvex')
+      and not fname.startswith('almaif/impl/rvex/sw')
+			and not fname.startswith('almaif/utils/rvd')
 		):
 			ignored.discard(fname)
 			continue
@@ -36,9 +35,9 @@ def find_files(directory, ignored):
 			files.append(fname)
 	return files
 
-files = find_files('almarvi', ignored)
+files = find_files('almaif', ignored)
 
-with tarfile.open('almarvi.tar.gz', mode='w:gz') as tgz:
+with tarfile.open('almaif.tar.gz', mode='w:gz') as tgz:
 	for file in files:
 		tgz.add(file)
 

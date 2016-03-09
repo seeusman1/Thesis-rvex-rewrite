@@ -1,12 +1,12 @@
 
-# This makefile contains extensions of the targets in the almarvi/ directory
+# This makefile contains extensions of the targets in the almaif/ directory
 # that only work as a platform within the rvex-rewrite repository. All targets
-# within the almarvi/ directory operate independently.
+# within the almaif/ directory operate independently.
 
 top: help
 
-# Include tool configuration from the almarvi repo.
-include almarvi/tools.makefile
+# Include tool configuration from the almaif repo.
+include almaif/tools.makefile
 
 
 #-------------------------------------------------------------------------------
@@ -28,7 +28,7 @@ RVLIB_SOURCES += $(realpath $(RVLIB_SOURCE)/periph/periph_trace.vhd)
 
 RVLIB_DEPS     = $(filter-out %rvex-version-pkg.vhd,$(RVLIB_SOURCES))
 
-RVLIB          = almarvi/rvex/rtl/rvex
+RVLIB          = almaif/impl/rvex/rtl/rvex
 
 .PHONY: rvlib
 rvlib: $(RVLIB)
@@ -37,7 +37,7 @@ $(RVLIB): $(RVLIB_DEPS)
 	# Generate core version tag and archive the core files.
 	$(PYTHON) ../../versions/tools/archive_core.py
 	
-	# Copy the core files into the almarvi repo.
+	# Copy the core files into the almaif repo.
 	$(RM) -r $(RVLIB)
 	$(MKDIR) -p $(RVLIB)
 	$(CP) $(RVLIB_SOURCES) $(RVLIB)
@@ -58,7 +58,7 @@ $(RVLIB): $(RVLIB_DEPS)
 
 RVD_SOURCE     = ../../tools/debug-interface
 RVD_INC        = rvd-inc
-RVD            = almarvi/drivers/rvd
+RVD            = almaif/utils/rvd
 
 .PHONY: rvd
 rvd: $(RVD)
@@ -120,16 +120,16 @@ clean-ex:
 
 
 #-------------------------------------------------------------------------------
-# Chain to the makefile in almarvi/
+# Chain to the makefile in almaif/
 #-------------------------------------------------------------------------------
 
 .DEFAULT:
 	$(MAKE) rvlib rvd
-	@cd almarvi && $(MAKE) --no-print-directory $@
+	@cd almaif && $(MAKE) --no-print-directory $@
 
 .PHONY: clean-almarvi
 clean-almarvi:
-	cd almarvi && $(MAKE) clean
+	cd almaif && $(MAKE) clean
 
 
 #-------------------------------------------------------------------------------
@@ -138,10 +138,21 @@ clean-almarvi:
 
 .PHONY: dist
 dist: rvlib
-	cd almarvi/sw/fib-rvex && $(MAKE) clean && $(MAKE) all
-	$(GIT) ls-files -io --exclude-standard almarvi > ignored
+	cd almaif/impl/rvex/testsw/fib && $(MAKE) clean && $(MAKE) all
+	$(GIT) ls-files -io --exclude-standard almaif > ignored
 	$(PYTHON) dist.py
 	$(RM) ignored
+
+.PHONY: dist-push
+dist-push:
+	rsync -au almaif pocl-almarvi-ipif/almaif
+
+.PHONY: dist-pull
+dist-pull:
+	rsync -au pocl-almarvi-ipif/almaif almaif
+
+.PHONY: dist-sync
+dist-sync: dist-push dist-pull
 
 
 #-------------------------------------------------------------------------------

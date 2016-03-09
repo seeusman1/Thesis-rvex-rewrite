@@ -216,7 +216,7 @@ begin -- architecture
                 
               end if;
               
-            elsif (s_axi_arvalid = '1') then
+            elsif s_axi_arvalid = '1' then
               
               -- Accept read request and store the address.
               s_axi_arready <= '1';
