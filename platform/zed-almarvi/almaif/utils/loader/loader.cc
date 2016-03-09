@@ -37,9 +37,8 @@ using namespace std;
 
 void usage(void)
 {
-	cout << "*argv[0] -m <MEMORY_ADDR> -c <CONTROL_ADDR> -p <fn> (-o <fn> -s <dump_start> -e <dump_end>)\n";
+	cout << "*argv[0] -m <MEMORY_ADDR> -p <fn> (-o <fn> -s <dump_start> -e <dump_end>)\n";
 	cout << "    -m <MEMORY_ADDR>  Accelerator memory base address\n";
-	cout << "    -c <CONTROL_ADDR> Control interface base address\n";
 	cout << "    -p <filename>     Input instruction memory image\n";
 	cout << "    -o <filename>     Output data memory dump file\n";
 	cout << "    -s <dump_start>   Dump start address (relative to MEMORY_ADDR)\n";

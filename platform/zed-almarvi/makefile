@@ -145,11 +145,11 @@ dist: rvlib
 
 .PHONY: dist-push
 dist-push:
-	rsync -au almaif pocl-almarvi-ipif/almaif
+	rsync -avu --exclude boards/zed/dl almaif/* pocl-almarvi-ipif/almaif
 
 .PHONY: dist-pull
 dist-pull:
-	rsync -au pocl-almarvi-ipif/almaif almaif
+	rsync -avu --exclude boards/zed/dl pocl-almarvi-ipif/almaif/* almaif
 
 .PHONY: dist-sync
 dist-sync: dist-push dist-pull

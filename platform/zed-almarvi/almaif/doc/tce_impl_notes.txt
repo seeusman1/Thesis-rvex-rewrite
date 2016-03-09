@@ -22,7 +22,7 @@ Terminology:
 
 Reference design files:
 
-  tta/rtl/tta-accel-rtl.vhdl
+  impl/tce/rtl/tta-accel-rtl.vhdl
     Reference TTA coprocessor, including:
     - A microcontroller-sized TTA procesor core
     - 32KB instruction cache
@@ -31,14 +31,14 @@ Reference design files:
 
     The IO interface works like a single-cycle SRAM memory, and allow access to the memories and the control interface.
 
-  tta/rtl/tta-axislave-rtl.vhdl :
+  impl/tce/rtl/tta-axislave-rtl.vhdl :
     AXI4-Lite slave wrapper for the tta-accel design. The interfaces are memory-mapped as follows (as offsets to the base address of the AXI slave)
       0x00000 .. 0x003ff : Control registers
       0x08000 .. 0x0ffff : Instruction memory
       0x10000 .. 0x17fff : Data memory
       0x18000 .. 0x187ff : Parameter memory
 
-  tta/rtl/tta-axislave-tb.vhdl :
+  impl/tce/rtl/tta-axislave-tb.vhdl :
     RTL testbench for tta-axislave:
     - Initializes the instruction memory
     - Flushes the parameter memory
@@ -46,16 +46,16 @@ Reference design files:
     - Starts execution through control interface
     - Polls completion from parameter memory
 
-  tta/design/example_tta.adf :
+  impl/tce/design/example_tta.adf :
     Processor core architecture built with TCE toolchain
 
-  tta/rtl/proge-output
+  impl/tce/rtl/proge-output
     Processor core RTL generated from the ADF file
 
-  drivers/loader :
+  utils/loader :
     Simple program loader to control accelerators through direct memory access (/dev/mem and mmap)
 
-  drivers/mem
+  utils/mem
     Poke/peek utility
 
   sw/fib
