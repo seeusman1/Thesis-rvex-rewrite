@@ -85,7 +85,7 @@ entity core_cfgCtrl_decode is
     -- Configuration request input and handshaking signals
     ---------------------------------------------------------------------------
     -- This signal describes the to-be-decoded configuration. The signal uses
-    -- the encoding defined in rvex_ctrlRegs_pkg.vhd and is valid when the
+    -- the encoding defined in core_ctrlRegs_pkg.vhd and is valid when the
     -- start signal is high.
     newConfiguration_in         : in  rvex_data_type;
     

@@ -62,11 +62,11 @@
 -- If you just want a broad idea of what the rvex pipeline looks like, you're
 -- probably better off looking at the following two diagrams instead of
 -- reading this file:
---  - the pipeline diagram in rvex_pipeline_pkg.vhd
---  - the datapath diagram in rvex_opcodeDatapath_pkg,vhd
+--  - the pipeline diagram in core_pipeline_pkg.vhd
+--  - the datapath diagram in core_opcodeDatapath_pkg.vhd
 -- 
 -- If you want to tweak the timing of the pipeline, there's also no need to
--- understand this file - just go to rvex_pipeline_pkg.vhd and adjust the
+-- understand this file - just go to core_pipeline_pkg.vhd and adjust the
 -- timing there. There's assertions in all relevant files which make sure you
 -- can't really do anything wrong there accidentally without
 -- simulation/synthesis complaining.
@@ -162,7 +162,7 @@
 -- 
 -- The execution state vector and all pipeline-related input/output signals
 -- are indexed by the stage they belong to. These stages are named S_* and
--- are defined in rvex_pipeline_pkg.vhd. In addition to these, the L_*
+-- are defined in core_pipeline_pkg.vhd. In addition to these, the L_*
 -- constants (defined in the same file) define the latency from input signal
 -- to output signal for some blocks. When this happens, we just connect the
 -- inputs of the block to the execution state vector belonging to its first
@@ -428,7 +428,7 @@ entity core_pipelane is
     ---------------------------------------------------------------------------
     -- These signals are array'd outside this entity and contain pipeline
     -- configuration dependent data types, so they need to be put in records.
-    -- The signals are documented in rvex_intIface_pkg.vhd, where the types are
+    -- The signals are documented in core_intIface_pkg.vhd, where the types are
     -- defined.
     
     -- General purpose register file read port A.
@@ -627,7 +627,7 @@ architecture Behavioral of core_pipelane is
   -- Datapath state record
   -----------------------------------------------------------------------------
   -- For additional information about the datapath, refer to the schematics in
-  -- rvex_opcodeDatapath_pkg.vhd.
+  -- core_opcodeDatapath_pkg.vhd.
   type datapathState_type is record
     
     -- Control signals decoded from opcode.

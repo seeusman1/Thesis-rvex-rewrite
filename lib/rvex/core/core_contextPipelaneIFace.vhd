@@ -186,7 +186,7 @@ entity core_contextPipelaneIFace is
     ---------------------------------------------------------------------------
     -- These signals are array'd outside this entity and contain pipeline
     -- configuration dependent data types, so they need to be put in records.
-    -- The signals are documented in rvex_intIface_pkg.vhd, where the types are
+    -- The signals are documented in core_intIface_pkg.vhd, where the types are
     -- defined.
     
     -- Branch/link register read port.

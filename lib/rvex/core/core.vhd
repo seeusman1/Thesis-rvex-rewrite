@@ -430,7 +430,7 @@ entity core is
     rv2dmem_writeEnable         : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- (L_MEM clock cycles delay with clkEn high and stallOut low; L_MEM is set
-    -- in rvex_pipeline_pkg.vhd)
+    -- in core_pipeline_pkg.vhd)
     
     -- Data output from data memory to rvex.
     dmem2rv_readData            : in  rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);

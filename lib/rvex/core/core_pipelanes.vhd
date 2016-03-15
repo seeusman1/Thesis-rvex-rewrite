@@ -261,7 +261,7 @@ entity core_pipelanes is
     -- Register file interface
     ---------------------------------------------------------------------------
     -- The general purpose register file signals are documented in
-    -- rvex_intIface_pkg.vhd, where the types are defined.
+    -- core_intIface_pkg.vhd, where the types are defined.
     
     -- General purpose register file read ports.
     pl2gpreg_readPorts          : out pl2gpreg_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);

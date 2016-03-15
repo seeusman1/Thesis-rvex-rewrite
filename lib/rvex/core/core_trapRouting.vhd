@@ -126,7 +126,7 @@ begin -- architecture
     combinedTraps := pl2trap_trap;
     
     -- Construct a binary tree to connect everything together. Refer to the
-    -- documentation of binTreeIndices in rvex_utils_pkg.vhd for more info.
+    -- documentation of binTreeIndices in utils_pkg.vhd for more info.
     for level in 0 to CFG.numLanesLog2-1 loop
       for blockIndex in 0 to (2**CFG.numLanesLog2)/2-1 loop
         binTreeIndices(level, blockIndex, laneA, laneB);

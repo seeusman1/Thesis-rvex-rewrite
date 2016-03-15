@@ -222,9 +222,9 @@ begin -- architecture
       
       -- Construct a binary tree to route the registered LIMMH data from the
       -- last lane pair to the first pair in a group. Refer to the
-      -- documentation of binTreeIndices in rvex_utils_pkg.vhd for more
-      -- info on the binary tree structure. Note that we start at level 1
-      -- because we're concerned with pairs, not single lanes.
+      -- documentation of binTreeIndices in utils_pkg.vhd for more info on the
+      -- binary tree structure. Note that we start at level 1 because we're
+      -- concerned with pairs, not single lanes.
       for level in 1 to CFG.numLanesLog2-1 loop
         for blockIndex in 0 to (2**CFG.numLanesLog2)/2-1 loop
           binTreeIndices(level, blockIndex, laneA, laneB);
