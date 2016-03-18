@@ -16,8 +16,26 @@ system of the core, and what the interconnect between the lane groups and the
 contexts looks like. Finally, the \hyperref[sec:core-int-debug]{fifth section} 
 documents the external debug and trace interfaces.
 
+\clearpage
+\section{Overview}
+\newcommand{\coreoverviewintro}{The last section documents the coding style
+employed within all \rvex{} core files.}
 \subimport{1-overview/}{core-int-overview.tex}
+\subsection{Coding style}
+\subimport{1-overview/}{core-int-overview-style.tex}
+
+\clearpage
+\section{Datapath}
 \subimport{2-datapath/}{core-int-datapath.tex}
+
+\clearpage
+\section{Flow control}
 \subimport{3-flow/}{core-int-flow.tex}
+
+\clearpage
+\section{Reconfiguration}
 \subimport{4-reconf/}{core-int-reconf.tex}
+
+\clearpage
+\section{External debug and trace interface}
 \subimport{5-debug/}{core-int-debug.tex}

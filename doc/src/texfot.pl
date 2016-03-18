@@ -171,6 +171,7 @@ sub process_output {
      |>\ [^<]            # from \show..., but not "> <img.whatever"
      |removed\ on\ input\ line  # hyperref
      |Runaway\ argument
+     |.*headheight\ is\ too\ small
      |.*Token\ not\ allowed\ in\ a\ PDF\ string\ \(PDFDocEncoding\)
     )/x) {
       &debug ("  found print_next ($1)\n");

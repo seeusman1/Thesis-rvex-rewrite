@@ -479,9 +479,15 @@
         \vspace*{-1.5cm} %{3cm}     %Move the chapter's head upward
         {
         \parindent 0pt
-        \begin{minipage}[b]{11cm}\raggedright  
-        \Huge #1
-        \end{minipage}
+        \ifthenelse{\value{chapter}>9}{
+            \begin{minipage}[b]{10cm}\raggedright  
+            \Huge #1
+            \end{minipage}
+        }{
+            \begin{minipage}[b]{11cm}\raggedright  
+            \Huge #1
+            \end{minipage}
+        }
         \hfill
         {\chapnumfont \thechapter}
         \\
@@ -497,9 +503,15 @@
         \vspace*{-1.5cm} %{\schapterheadskip}   %Move the chapter's head upward
         {
         \parindent 0pt
-        \begin{minipage}[b]{11cm}\raggedright  
-        \Huge #1
-        \end{minipage}
+        \ifthenelse{\value{chapter}>9}{
+            \begin{minipage}[b]{10cm}\raggedright  
+            \Huge #1
+            \end{minipage}
+        }{
+            \begin{minipage}[b]{11cm}\raggedright  
+            \Huge #1
+            \end{minipage}
+        }
         \\
         \rule{\textwidth}{1.5pt} \par \nobreak
         \vskip \chapterskip

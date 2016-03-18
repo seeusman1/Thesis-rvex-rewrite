@@ -1,5 +1,5 @@
 
-TARGET=refman
+TARGET=userman
 ASSETS=assets/rvex-block-diagram/rvex-block-diagram-linked.tex
 
 .PHONY: all clean
