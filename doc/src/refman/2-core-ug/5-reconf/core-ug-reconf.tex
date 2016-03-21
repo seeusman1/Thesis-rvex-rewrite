@@ -84,7 +84,7 @@ because the requested configuration is invalid. The following C function
 correctly deals with arbitration, and performs a best-effort attempt at
 detecting errors without using locks implemented in software.
 
-\begin{lstlisting}[numbers=none, basicstyle=\footnotesize, language=C]
+\begin{lstlisting}[numbers=none, language=C]
 /**
  * Requests a reconfiguration. Returns 1 if reconfiguration was successful,
  * -1 if the requested configuration is invalid or 0 if it is not known

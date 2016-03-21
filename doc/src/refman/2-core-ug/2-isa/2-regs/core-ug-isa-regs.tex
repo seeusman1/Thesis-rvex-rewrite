@@ -25,7 +25,7 @@ general purpose register.
 There are no explicit move or load-immediate operations, as the following
 syllables are already capable of these operations.
 
-\begin{lstlisting}[numbers=none, basicstyle=\footnotesize, language=vexasm]
+\begin{lstlisting}[numbers=none, language=vexasm]
 c0 or $r0.dest = $r0.0, $r0.src        // Move src to dest
 c0 or $r0.dest = $r0.0, immediate      // Load immediate
 \end{lstlisting}
@@ -45,7 +45,7 @@ Moving a branch register to another branch register cannot be done in a single
 cycle, but loading an immediate into a branch register or moving to or from a
 general purpose register can be done as follows.
 
-\begin{lstlisting}[numbers=none, basicstyle=\footnotesize, language=vexasm]
+\begin{lstlisting}[numbers=none, language=vexasm]
 c0 cmpeq $b0.dest = $r0.0, $r0.0       // Load true
 c0 cmpne $b0.dest = $r0.0, $r0.0       // Load false
 c0 cmpne $b0.dest = $r0.0, $r0.src     // Move general purpose to branch

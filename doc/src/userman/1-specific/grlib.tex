@@ -1,0 +1,305 @@
+
+\label{sec:rvsysgr}
+
+The \rvex{} GRLIB-based processing system has the following features.
+
+\begin{itemize}
+
+\item One AHB master interface per \rvex{} lane group.
+
+\item Cache snooping on the AHB bus guarantees cache coherency with other
+processors and the debug interface sharing the same bus.
+
+\item A LEON3 interrupt controller compatible interface is exposed. This allows
+the \rvex{} to use the interrupt controller that comes with GRLIB.
+
+\item For simulation, an S-record file specifying the expected memory contents
+can be specified. Every instruction fetch and data access made by the \rvex{} is
+snooped and checked against this memory. The memory automatically updates when
+the \rvex{} writes a value. Whenever the cache returns an unexpected or
+inconsistent value, a VHDL warning is printed.
+
+\end{itemize}
+
+\subsection{Instantiation template}
+\label{sec:rvsysgr-inst}
+
+The following listing serves as an instantiation template for the system. The 
+code is documented in the following sections.
+
+If you get errors when instantiating the core with this template, the
+documentation might be out of date. Fear not, for the signals are also
+documented in the entity description in \code{rvsys_standalone.vhd}.
+
+\begin{lstlisting}[numbers=none]
+library rvex;
+use rvex.common_pkg.all;
+use rvex.bus_pkg.all;
+use rvex.bus_addrConv_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
+use rvex.rvsys_grlib_pkg.all;
+
+library grlib;
+use grlib.amba.all;
+use grlib.devices.all;
+
+library gaisler;
+use gaisler.leon3.all;
+
+-- ...
+
+rvex_grlib_inst: entity rvex.rvsys_grlib
+  generic map (
+    
+    -- System configuration.
+    CFG => rvex_grlib_cfg(
+      core => rvex_cfg(
+        numLanesLog2              => 3,
+        numLaneGroupsLog2         => 2,
+        numContextsLog2           => 2
+        -- ...
+      ),
+      core_valid => true,
+      cache => cache_cfg(
+        instrCacheLinesLog2       => 18,
+        dataCacheLinesLog2        => 18
+      ),
+      cache_valid => true
+    ),
+    PLATFORM_TAG                => PLATFORM_TAG,
+    AHB_MASTER_INDEX_START      => RVEX_MST_INDEX,
+    CHECK_MEM                   => false,
+    CHECK_MEM_FILE              => ""
+  )
+  port map (
+    
+    -- System control.
+    clki                        => clki,
+    rstn                        => rstn,
+    
+    -- AHB interface.
+    ahbmi                       => ahbmi,
+    ahbmo                       => ahbmo_rvex,
+    ahbsi                       => ahbsi,
+    
+    -- Debug interface.
+    bus2dgb                     => bus2dgb,
+    dbg2bus                     => dbg2bus,
+    
+    -- LEON3 compatible interrupt controller interface.
+    irqi                        => irqi,
+    irqo                        => irqo
+    
+  );
+
+\end{lstlisting}
+
+\subsection{Interface description}
+\label{sec:rvsysgr-iface}
+
+As you can see in the template, the generics and signals are grouped by their 
+function. The following subsections will document each group.
+
+\subsubsection{System configuration}
+\label{sec:rvsysgr-iface-generics}
+
+These generics parameterize the system.
+
+\begin{itemize}
+
+\item \code{CFG : rvex_grlib_generic_config_type}
+
+This generic contains the configuration parameters for the core.
+\code{rvex_grlib_generic_config_type} is a \code{record} type with the following
+members.
+
+\begin{itemize}
+
+\item \code{core : rvex_generic_config_type}
+
+This parameter specifies the \rvex{} core configuration as passed to the bare 
+\rvex{} processor core. Refer to 
+Section~\ref{sec:core-ug-cfg-inst-iface-generics} for more information.
+
+\item \code{cache : cache_generic_config_type}
+
+This parameter specifies the size of the cache blocks. 
+\code{cache_generic_config_type} is a record type with two \code{natural}-typed 
+members: \code{instrCacheLinesLog2} and \code{dataCacheLinesLog2}. The sizes are
+determined as follows.
+
+\vskip -16 pt \begin{flalign*}
+\mathrm{Instr.\ cache\ size} = 4 \cdot N_{lanes} \cdot 
+2^{instrCacheLinesLog2} \cdot N_{laneGroups} &&
+\end{flalign*}
+
+\vskip -12 pt \noindent\begin{flalign*}
+\mathrm{Data\ cache\ size} = 4 \cdot 
+2^{dataCacheLinesLog2} \cdot N_{laneGroups} &&
+\end{flalign*}
+
+\noindent The number of lane groups is part of the equation because the number 
+of lines are specified per block, and a different block is instantiated for each 
+lane group.
+
+\end{itemize}
+
+\noindent Similar to the bare \rvex{} and the standalone platform, the
+\code{rvex_grlib_cfg} function is available to set this record.
+
+Important note: in order to allow the function to detect whether the \code{core} and \code{cache} fields are specified, the \code{core_valid} and \code{cache_valid} parameters must be set to true, or the defaults will be substituted!
+
+\item \code{PLATFORM_TAG : std_logic_vector(55 downto 0)}
+
+This value is to uniquely identify the platform as a whole. It is intended that
+this value be generated by the toolchain by hashing the source files and
+synthesis options. \todo{Reference version system.} It is made available to the
+programs running on the core and the debug system through \creg{PTAG}.
+
+\item \code{AHB_MASTER_INDEX_START : natural}
+
+This value must be set to the AHB master index of the first lane group. The 
+remaining lane groups are mapped to subsequent master indices. In addition, this 
+value is made available to the programs running on the core and the debug system 
+through \creg{COID}, to allow a program to uniquely identify which \rvex{} it is 
+running on in a multicore system.
+
+\item \code{CHECK_MEM : boolean}
+\item \code{CHECK_MEM_FILE : string}
+
+These parameters configure the simulation-only memory consistency checking
+system. \code{CHECK_MEM} enables or disables the system. If the system is
+enabled, \code{CHECK_MEM_FILE} must specify the filename of an S-record file
+holding the initial memory contents. The filename must be relative to the
+simulator search path.
+
+\end{itemize}
+
+\subsubsection{System control interface}
+\label{sec:rvsysgr-iface-sysctrl}
+
+The system control signals include the clock source and the reset signal. All
+registers are rising-edge triggered. The reset signal is active-low to comply
+with the AHB standard. It is inverted in the system before it is passed to the
+\rvex{} logic blocks, which assume an active-high reset signal.
+
+\subsubsection{AHB interface}
+\label{sec:rvsysgr-iface-ahb}
+
+\begin{itemize}
+
+\item \code{ahbmi : in ahb_mst_in_type}
+\item \code{ahbmo : out ahb_mst_out_vector_type(}\textit{number of lane groups - 1}\code{ downto 0)}
+
+These signals represent the AHB master interfaces that the cache blocks use as
+their data source. One master interface is required for each \rvex{} lane group.
+The master indices must be a contiguous range, starting at the index specified
+by the \code{AHB_MASTER_INDEX_START} generic.
+
+\item \code{ahbsi : in ahb_slv_in_type}
+
+This signal must be tied to the signal that the AHB interconnect logic 
+broadcasts to all AHB slaves. It is used by the cache to monitor the bus for 
+cache coherence purposes.
+
+\end{itemize}
+
+\subsubsection{Debug interface}
+\label{sec:rvsysgr-iface-debug}
+
+\begin{itemize}
+
+\item \code{bus2dgb : in bus_mst2slv_type}
+\item \code{dbg2bus : out bus_slv2mst_type}
+
+The debug interface is a slave \rvex{} bus device. It allows access to all 
+control registers in the system and the trace buffer. It should be connected to 
+the AHB bus using the \code{ahb2bus} bridge, possibly through additional \rvex{} 
+bus interconnect primitives. This allows a single AHB to \rvex{} bus bridge to 
+be used for multiple \rvex{} devices, similar to how an APB bridge allows 
+multiple APB peripherals to share a single AHB slave interface.
+
+The \rvex{} bus primitives are available in \code{rvex_rewrite/lib/rvex/bus}. 
+Instantiation of these primitives is beyond the scope of this manual.
+
+The debug interface port has a fixed memory map, shown below.
+
+\newcommand{\memoryMapUsedEntry}[3]{\multirow{2}{*}{#3} & \code{#2} \\ & \code{#1} \\ \cline{1-1}}
+\newcommand{\memoryMapUnusedEntry}{\emph{Unused} & ... \\ \cline{1-1}}
+\vskip 6 pt
+\noindent
+\begin{tabular}{|l|l}
+\cline{1-1}
+\memoryMapUsedEntry{0x2000}{0x3FFF}{Trace buffer}
+\memoryMapUsedEntry{0x1D00}{0x1FFF}{\rvex{} context 7 registers}
+\memoryMapUnusedEntry{}
+\memoryMapUsedEntry{0x1900}{0x1BFF}{\rvex{} context 6 registers}
+\memoryMapUnusedEntry{}
+\memoryMapUsedEntry{0x1500}{0x17FF}{\rvex{} context 5 registers}
+\memoryMapUnusedEntry{}
+\memoryMapUsedEntry{0x1100}{0x13FF}{\rvex{} context 4 registers}
+\memoryMapUnusedEntry{}
+\memoryMapUsedEntry{0x0D00}{0x0FFF}{\rvex{} context 3 registers}
+\memoryMapUnusedEntry{}
+\memoryMapUsedEntry{0x0900}{0x0BFF}{\rvex{} context 2 registers}
+\memoryMapUnusedEntry{}
+\memoryMapUsedEntry{0x0800}{0x0803}{Cache control register}
+\memoryMapUsedEntry{0x0500}{0x07FF}{\rvex{} context 1 registers}
+\memoryMapUnusedEntry{}
+Reset register & \code{0x0400} \\ \cline{1-1}
+\memoryMapUsedEntry{0x0100}{0x03FF}{\rvex{} context 0 registers}
+\memoryMapUsedEntry{0x0000}{0x01FF}{\rvex{} global control registers}
+\end{tabular}
+\vskip 6 pt
+
+\noindent The reset register resets the entire processing system when written.
+The only thing that is not reset is the AHB bus bridge to prevent deadlocks due
+to the AHB bus interconnect not being reset.
+
+The cache control register has the following layout. Note that it is different
+from the standalone system cache control register.
+
+\noindent\footnotesize
+\begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{3mm}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{@{}l@{}|}{\scriptsize Offset \ } & \multicolumn{1}{@{}c@{}}{\tiny31} & \multicolumn{1}{@{}c@{}}{\tiny30} & \multicolumn{1}{@{}c@{}}{\tiny29} & \multicolumn{1}{@{}c@{}}{\tiny28} & \multicolumn{1}{@{}c@{}}{\tiny27} & \multicolumn{1}{@{}c@{}}{\tiny26} & \multicolumn{1}{@{}c@{}}{\tiny25} & \multicolumn{1}{@{}c@{}|}{\tiny24} & \multicolumn{1}{@{}c@{}}{\tiny23} & \multicolumn{1}{@{}c@{}}{\tiny22} & \multicolumn{1}{@{}c@{}}{\tiny21} & \multicolumn{1}{@{}c@{}}{\tiny20} & \multicolumn{1}{@{}c@{}}{\tiny19} & \multicolumn{1}{@{}c@{}}{\tiny18} & \multicolumn{1}{@{}c@{}}{\tiny17} & \multicolumn{1}{@{}c@{}|}{\tiny16} & \multicolumn{1}{@{}c@{}}{\tiny15} & \multicolumn{1}{@{}c@{}}{\tiny14} & \multicolumn{1}{@{}c@{}}{\tiny13} & \multicolumn{1}{@{}c@{}}{\tiny12} & \multicolumn{1}{@{}c@{}}{\tiny11} & \multicolumn{1}{@{}c@{}}{\tiny10} & \multicolumn{1}{@{}c@{}}{\tiny9} & \multicolumn{1}{@{}c@{}|}{\tiny8} & \multicolumn{1}{@{}c@{}}{\tiny7} & \multicolumn{1}{@{}c@{}}{\tiny6} & \multicolumn{1}{@{}c@{}}{\tiny5} & \multicolumn{1}{@{}c@{}}{\tiny4} & \multicolumn{1}{@{}c@{}}{\tiny3} & \multicolumn{1}{@{}c@{}}{\tiny2} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}|}{\tiny0} & \\
+\cline{2-33}
+\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x200}} & \multicolumn{8}{@{}c@{}|}{\tiny IFL} & \multicolumn{8}{@{}c@{}|}{\tiny DFL} & \multicolumn{15}{@{}c@{}|}{} & \multicolumn{1}{@{}c@{}|}{\tiny B} & \hspace{0.6 mm} \normalsize\footnotesize \\
+\cline{2-33}
+\end{tabular}
+\normalsize\vskip 6pt
+
+\noindent\textbf{IFL field, bits 7..0}
+
+\noindent Each of these bits corresponds to an \rvex{} lane group. Writing a one 
+to a bit causes the instruction cache block corresponding to the indexed lane 
+group to be flushed. Writing a zero has no effect. The register always reads as
+0.
+
+\noindent\textbf{DFL field, bits 15..8}
+
+\noindent Each of these bits corresponds to an \rvex{} lane group. Writing a one 
+to a bit causes the data cache block corresponding to the indexed lane group to 
+be flushed. Writing a zero has no effect. The register always reads as 0.
+
+\noindent\textbf{B flag, bit 0}
+
+\noindent When this bit is set, the data cache is always bypassed. When it is 
+cleared, the cache is only bypassed for memory accesses to the upper half of the 
+address space, i.e. \code{0x80000000..0xFFFFFFFF}. The flag resets to 0.
+
+\end{itemize}
+
+\subsubsection{Interrupt controller interface}
+\label{sec:rvsysgr-iface-irq}
+
+\begin{itemize}
+
+\item \code{irqi : in  irq_in_vector(0 to }\textit{number of contexts - 1}\code{)}
+\item \code{irqo : out irq_out_vector(0 to }\textit{number of contexts - 1}\code{)}
+
+These signals should be tied to a GRLIB \code{irqmp} interrupt controller, with 
+the number of processors set to the number of \rvex{} contexts.
+
+\end{itemize}

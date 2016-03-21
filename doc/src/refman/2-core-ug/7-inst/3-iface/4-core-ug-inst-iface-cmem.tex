@@ -116,11 +116,13 @@ If an access was performed that caused a cache miss, \code{data_miss} should be
 set. If an access was performed by a cache block that had a nonempty write
 buffer when the request was made, \code{data_writePending} should be set.
 
-Note that these signals are very cache implementation dependent. They were
-designed to work with the reconfigurable cache described in
-Section~\ref{sec:cache} specifically. It may, of course, be abused by other
-cache implementations, as long as the people working with the resulting traces
-are adequatly informed.
+\todo[inline]{Uncomment this remark about the cache when the cache chapter is
+written.}
+% Note that these signals are very cache implementation dependent. They were
+% designed to work with the reconfigurable cache described in
+% Section~\ref{sec:cache} specifically. It may, of course, be abused by other
+% cache implementations, as long as the people working with the resulting traces
+% are adequatly informed.
 
 \end{itemize}
 

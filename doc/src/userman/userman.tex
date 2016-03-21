@@ -3,7 +3,7 @@
 \nonstopmode
 %\usepackage{geometry} \geometry{a4paper}
 \usepackage[T1]{fontenc}
-\usepackage[scaled=0.85]{beramono}
+\usepackage[scaled=0.79]{beramono}
 \usepackage{graphicx}
 \usepackage{float}
 \usepackage{wrapfig}
@@ -11,14 +11,16 @@
 \usepackage{subcaption}
 \usepackage{tabularx}
 \usepackage{longtable}
+\usepackage{multirow}
 \usepackage{color}
 \usepackage{tikz}
 \usepackage{tabto}
 \usepackage[hidelinks]{hyperref}
 \usepackage{listings}
 \usepackage{import}
-\usepackage{todonotes}
+\usepackage[disable]{todonotes}
 \usepackage{amssymb}
+\usepackage{amsmath}
 \usepackage{pifont}
 \usepackage{placeins}
 \usepackage{fancyhdr}
@@ -48,7 +50,7 @@
 \definecolor{codeStringColor}    {rgb}{0.5,0.5,0.5}
 \definecolor{codeInlineColor}    {rgb}{0.2,0.2,0.2}
 \lstset{ %
-  basicstyle=\scriptsize\ttfamily,
+  basicstyle=\footnotesize\ttfamily,
   frame=single,
   rulecolor=\color{codeBorderColor},
   backgroundcolor=\color{codeBackgroundColor},
@@ -81,7 +83,8 @@
 \newcommand{\creg}[1]{\hyperref[reg:#1]{\code{CR_#1}}}
 \newcommand{\insn}[1]{\hyperref[opc:#1]{\code{#1}}}
 \newcommand{\trap}[1]{\hyperref[trap:#1]{\code{TRAP_#1}}}
-\newcommand{\rvexent}[1]{\hyperlink{entity:#1}{\code{#1}}}
+%\newcommand{\rvexent}[1]{\hyperlink{entity:#1}{\code{#1}}}
+\newcommand{\rvexent}[1]{\code{#1}}
 
 % Magic command which allows lengths to be divided. Thanks, stackoverflow!
 \makeatletter
@@ -164,7 +167,7 @@
 \let\paragraph\actualsubsubsection
 
 \chapter{Introduction}
-\todo[inline]{Introduction needs to be written}
+\subimport{1-specific/}{intro}
 
 \chapter{Overview of the \rvex{} processor}
 \subimport{2-core-ug/1-intro/}{core-ug-intro.tex}
@@ -181,38 +184,66 @@
 \chapter{Reconfiguration and sleeping}
 \subimport{2-core-ug/5-reconf/}{core-ug-reconf.tex}
 
-\chapter{Debugging with rvd}
-\todo[inline]{Debugging section needs to be written}
+\chapter{Debugging \rvex{} software}
+\subimport{1-specific/}{debug}
 
 \chapter{Design-time configuration}
 \subimport{2-core-ug/6-cfg/}{core-ug-cfg.tex}
 
 \chapter{Instantiation}
-\subimport{2-core-ug/7-inst/}{core-ug-inst.tex}
+This section describes how the \rvex{} core and processing systems should be
+instantiated, what the functions of all the external signals are, and what
+generics are available. The first section lists the basic signal data types
+that will be used throughout the interfaces. The remaining sections document
+instantiation of the bare \rvex{} processor core and two processing systems
+that incorporate the processor and local memories or cache, one that does not
+depend on GRLIB and one which does.
 
+\subimport{2-core-ug/7-inst/1-types/}{core-ug-inst-types.tex}
+
+\section{Bare \rvex{} processor}
+This section describes how the bare \rvex{} core should be instantiated. It is 
+intended for HDL designers who wish to design their own processing system.
 
 \let\subsection\actualsubsection
 \let\subsubsection\actualsubsubsection
 \let\paragraph\actualparagraph
+\subimport{2-core-ug/7-inst/2-template/}{core-ug-inst-template}
+\subimport{2-core-ug/7-inst/3-iface/}{core-ug-inst-iface}
 
-\chapter{VHDL source organization}
-\todo[inline]{Introduction of source organization chapter}
+\section{Standalone processing system}
+\subimport{1-specific/}{standalone}
 
-\section{\rvex{} core}
-\newcommand{\coreoverviewintro}{\relax}
-\subimport{3-core-int/1-overview/}{core-int-overview.tex}
+\section{GRLIB processing system}
+\subimport{1-specific/}{grlib}
 
-\section{Cache}
-\todo[inline]{Cache file organization}
 
-\section{Complete systems}
-\todo[inline]{System file organization}
-
-\section{Miscellaneous}
-\todo[inline]{Misc file organization}
-
-\section{Code style}
-\subimport{3-core-int/1-overview/}{core-int-overview-style.tex}
+% The following would be nice to put in there because it already exists, but it
+% would kinda require me to write the same things about the cache and the
+% remainder of the system.
+%
+% \let\subsection\actualsubsection
+% \let\subsubsection\actualsubsubsection
+% \let\paragraph\actualparagraph
+% 
+% \chapter{VHDL source organization}
+% \todo[inline]{Introduction of source organization chapter}
+% 
+% \section{\rvex{} core}
+% \newcommand{\coreoverviewintro}{\relax}
+% \subimport{3-core-int/1-overview/}{core-int-overview.tex}
+% 
+% \section{Cache}
+% \todo[inline]{Cache file organization}
+% 
+% \section{Complete systems}
+% \todo[inline]{System file organization}
+% 
+% \section{Miscellaneous}
+% \todo[inline]{Misc file organization}
+% 
+% \section{Code style}
+% \subimport{3-core-int/1-overview/}{core-int-overview-style.tex}
 
 
 %-------------------------------------------------------------------------------

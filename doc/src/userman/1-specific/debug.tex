@@ -1,0 +1,250 @@
+\label{sec:rvd}
+
+There are two main approaches to debugging the \rvex{} processor. This chapter 
+documents the external debugger approach. In this approach, a computer is 
+connected to the \rvex{} is used to debug the processor and the software running 
+on it. The computer is connected to the \rvex{} using some interface, usually a
+serial port in the case of the \rvex{}. The alternative approach is called
+self-hosted debug, where the debugger runs on the \rvex{} itself in order to
+debug another thread. However, this approach requires a sophisticated
+multithreading operating system, such as a Linux kernel with the \code{ptrace}
+system call implemented for the \rvex{}. Although the hardware should be ready
+for such a system, the software for it has not yet been implemented.
+
+\section{Setting up}
+\label{sec:rvd-start}
+
+The connection between the computer and the \rvex{} is called the debug link.
+Currently, the following options exist.
+
+\begin{itemize}
+\item A serial port, through the \rvex{} debug support peripheral.
+\item PCI express, developed in \cite{vanderwijst2015}.
+\item Memory mapped on a Zynq FPGA, running Linaro Linux with \code{rvsrv} on
+the embedded ARM processor. The debug commands may be given in Linaro, or
+\code{rvd} can connect to the Zynq development board using ethernet.
+\end{itemize}
+
+\noindent Which connections are supported depends on the platform. The serial
+port option is available in all hardware platforms except for
+\code{zed-almarvi}. The PCI express connection is supported in addition to
+the the serial link by \code{ml605-grlib} to allow faster memory access.
+\code{zed-almarvi} only supports the memory-mapped option.
+
+Whichever platform you use, you need to execute the following commands in a
+console from the root directory of the platform you are using to set up the
+debugging environment.
+
+\begin{lstlisting}[numbers=none, language=nothing]
+make debug
+source debug
+\end{lstlisting}
+
+\noindent The first command generates a script called `debug' that sets up 
+environment variables to allow you to use \code{rvd}. The second command runs 
+that script. The next step depends on whether the FPGA board is connected to 
+your machine (Section~\ref{sec:rvd-start-local}) or to another machine 
+(Section~\ref{sec:rvd-start-remote}). In the latter case, you need to be able to 
+\code{ssh} to that machine.
+
+\subsection{Connecting to a remote machine}
+\label{sec:rvd-start-remote}
+
+To connect to the remote machine, we will use \code{ssh} to forward two TCP/IP 
+ports. You can do this by running the following command in a second terminal 
+(you will need to keep it running), obviously replacing \code{<user@host>} with 
+the computer you are connecting to and your account name on that computer.
+
+\begin{lstlisting}[numbers=none, language=nothing]
+ssh -N -L 21078:localhost:21078 -L 21079:localhost:21079 <user@host>
+\end{lstlisting}
+
+\noindent Note that you will \emph{not} drop to a terminal on the remote 
+computer as \code{ssh} normally does. It will appear like it is not doing 
+anything after requesting your password (if required). You can test the 
+connection by running \code{rvd ?} in the original terminal. If that does not 
+crash with the message \code{Failed to connect to rvsrv}, you are ready to move 
+on to Section~\ref{sec:rvd-run}. Otherwise, \code{ssh} is not working, or more 
+likely, \code{rvsrv} is not running on the remote machine. In the latter case, 
+you can try to start it yourself by \code{ssh}'ing to the machine normally and 
+following the steps in \ref{sec:rvd-start-local}. If that does not work, you 
+will have to ask the owner of the machine for help.
+
+\subsection{Connecting to the FPGA}
+\label{sec:rvd-start-local}
+
+This section assumes that you are using a serial port debug link. The PCI
+express connection is more complicated to set up due to the drivers required.
+If you are using the Zedboard, refer to the separate documentation in the
+\code{zed-almarvi} platform.
+
+If this is the first time you are connecting to the FPGA, open the following 
+file in a text editor.
+
+\begin{lstlisting}[numbers=none, language=nothing]
+<rvex-rewrite>/tools/debug-interface/configuration.cfg
+\end{lstlisting}
+
+\noindent If this file does not exist, create it by copying 
+\code{default-configuration.cfg} from the \code{src} directory. This file 
+describes the interfaces that the debug server (\code{rvsrv}) will connect to or 
+expose. The relevant configuration key is \code{SERIAL_PORT}, which needs to be
+set to the \code{tty} corresponding to the serial port.
+
+When that has been configured, the debug server can be started in the terminal
+in which we have sourced the \code{debug} script using the following command.
+
+\begin{lstlisting}[numbers=none, language=nothing]
+make server
+\end{lstlisting}
+
+\noindent You can now test the connection to the \rvex{} by running
+\code{rvd ?}.
+
+\section{Running programs}
+\label{sec:rvd-run}
+
+The procedure for uploading and running a program differs from platform to
+platform, but usually, the following three commands will work.
+
+\begin{lstlisting}[numbers=none, language=nothing]
+make upload-<program>
+make start-<program>
+make run-<program>
+\end{lstlisting}
+
+\noindent The difference between them is that \code{upload} only uploads the 
+program to the \rvex{} without starting it, \code{start} uploads and then starts 
+the program, and \code{run} also waits for completion and prints the performance 
+counter values. Usually, running \code{make} without parameters will (among 
+other things) print a list of the available programs.
+
+\section{Debugging programs}
+\label{sec:rvd-debug}
+
+The standard and recommended way to send debug commands to the \rvex{} is to use
+\code{rvd}. All documentation for using \code{rvd} is embedded inside the
+program: just run \code{rvd help}. To get command specific documentation, use
+\code{rvd help <command>}.
+
+\code{rvd} has builtin commands for halting, resuming, single stepping, 
+resetting execution and printing the current state of the processor, in addition 
+to the raw memory access commands. More complicated things, such as breakpoints, 
+need to be set manually by accessing the control registers of the \rvex{}. You 
+do not have to remember the control register addresses by heart though; you can 
+use the control register names without \code{CR_} prefix directly.
+
+\code{rvd} has a concept of contexts. By default, the debug interface for 
+context 0 is used. To select a different context, you can either specify the 
+context using the \code{-c} command line parameter (for example, \code{rvd -c3 
+resume}) or you can set it for future commands using the \code{rvd select} 
+command. In addition to specifying a single context, you can also specify a 
+range of contexts (\code{<from>..<to>} or all contexts (\code{all}). When more
+than one context is selected, \code{rvd} will simply execute the given command
+for all selected contexts sequentially.
+
+An alternative to \code{rvd}'s interface, the \code{gdb} port can be used. In
+this case, the following command should be used.
+
+\begin{lstlisting}[numbers=none, language=nothing]
+rvd gdb -- <path_to_gdb> [parameters passed to gdb]
+\end{lstlisting}
+
+\noindent This runs \code{gdb} as a child process to \code{rvd}. The appropriate
+parameters are passed to \code{gdb} to have it connect to \code{rvd} using the
+remote serial protocol, in addition to the parameters specified on the command
+line. A description of how to use the \rvex{} \code{gdb} port is beyond the
+scope of this manual.
+
+\section{Tracing execution}
+\label{sec:rvd-trace}
+
+The \rvex{} can be configured at design time to include a trace unit. This
+allows the hardware to output a stream of data describing everything that the
+processor is doing at various levels of detail. \code{rvd} supports tracing
+using the following command.
+
+\begin{lstlisting}[numbers=none, language=nothing]
+rvd trace <output_file> [level_of_detail] [condition]
+\end{lstlisting}
+
+\noindent When executed, \code{rvd} writes the specified level of detail or 1
+by default to the trace control byte in \creg{DCR2}. It then resumes execution
+on the selected contexts and reads data from the trace buffer. Tracing stops
+when the specified condition evaluates to 0, or when no more data is available
+if no condition is specified.
+
+Terminating a trace with \code{ctrl+c} is not recommended, because it prevents
+\code{rvd} from resetting the trace control byte and emptying the trace buffer.
+To terminate a trace gracefully when no condition is specified and the program
+is stuck in a loop, run \code{rvd break} in a separate terminal. This will make
+\code{rvd trace} assume that the program has finished executing.
+
+\code{rvd trace} dumps the raw trace data to a file. This file can be converted
+to a human readable format using the \code{rvtrace} tool. If a disassembly file
+generated using \code{objdump -d} is specified in addition to the binary trace
+file, the disassembled instructions will be included in the trace output file.
+
+Please note that the human readable trace files are much larger than the binary
+data format. It may thus take some time and a lot of disk space to generated the
+human readable file. You may want to pipe the output of \code{rvtrace} to
+\code{less} instead, so the output will only be saved in memory.
+
+% \section{Under the hood}
+% 
+% 
+% \label{sec:rvd-debuglink}
+% 
+% The serial port protocol implemented by the hardware debug support peripheral
+% and \code{rvsrv} supports the following things.
+% 
+% \begin{itemize}
+% \item Any single bus transaction.
+% \item Bulk memory access. This is faster than single transactions, but it is not
+% guaranteed that the memory is accessed only once and/or in order. That is fine
+% for normal memory access and most register reads in the \rvex{}, but might not
+% be good enough for memory writes.
+% \item The debugged application can use the debug support peripheral as a normal
+% serial port peripheral.
+% \end{itemize}
+% 
+% \noindent All memory transactions are error-checked and corrected at the serial 
+% port level. The application stream, however, is transmitted raw and is not 
+% error-checked. It is expected that the software running on the \rvex{} will
+% implement its own error correction protocol in applications where serial port
+% errors are significant.
+% 
+% 
+% \section{rvsrv}
+% \label{sec:rvd-debuglink}
+% 
+% 
+% \code{rvsrv} is a command line program that runs in the background to expose the
+% debug link to other programs using a generic TCP/IP interface. It exists
+% primarily to allow multiple programs access to the debug link simultaneously,
+% but the TCP/IP interface also makes it suitable for debugging an \rvex{} running
+% on an FPGA connected to another computer (such as a board server).
+% 
+% \code{rvsrv} exposes two TCP/IP servers on port 21078 and
+% 21079 by default, for debug software to connect to. The first, called the
+% application port, connects to the virtual serial port peripheral exposed to
+% the debugged application. If multiple TCP clients connect to the port, data from
+% the \rvex{} application is broadcasted to all clients, and any data sent by a
+% client is sent to the \rvex{} application. \code{netcat} may be used to
+% visualize the serial port traffic.
+% 
+% The second port is called the debug port. It supports a set of ASCII commands to
+% request bus transactions on the \rvex{}. All commands are initiated by the
+% client and responded to by \code{rvsrv}. Normally, \code{rvd} is used to connect
+% to this port, but developers may also write their own interfaces. The
+% \code{rvsrv} debug port protocol is described in Section~\ref{sec:rvd-dbgproto}.
+% 
+% \section{Debugging}
+% \label{sec:rvd-rvsrv}
+% 
+% 
+% 
+% \section{rvsrv debug port protocol}
+% \label{sec:rvd-dbgproto}
+% 
+% Kokolores.

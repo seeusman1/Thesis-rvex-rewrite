@@ -62,7 +62,7 @@ Each counter is limited to seven bytes, and the middle byte is mirrored by both
 the low and high register if the counter is larger than a 32-bit word. This 
 permits the following algorithm for a semi-reliable performance counter read.
 
-\begin{lstlisting}[numbers=none, basicstyle=\footnotesize, language=C]
+\begin{lstlisting}[numbers=none, language=C]
 /**
  * Loads a 40-bit, 48-bit or 56-bit performance counter value. Do not use this
  * when the counter size is set to 32-bit!

@@ -1,0 +1,329 @@
+
+\label{sec:rvsyssa}
+
+The \rvex{} standalone processing system has the following features.
+
+\begin{itemize}
+
+\item Single cycle local instruction memory implemented in block RAMs.
+
+\item Local data memory implemented in block RAMs that is single cycle for up to
+two accesses at a time.
+
+\item The initial contents of the local memories can be set.
+
+\item Optionally, the cache can be instantiated. In this case, a unified
+instruction/data memory is instantiated in block RAMs. The access latency of
+this memory is configurable at runtime to mimic a more realistic memory access
+latency for cache tests.
+
+\item An external bus for peripherals or other memories may be connected through 
+a bus master interface. Without the cache, the \rvex{} cannot read instructions 
+from this bus, but it can access it using memory operations.
+
+\item A slave bus interface allows access to the \rvex{} debug port, a trace
+buffer, and the local memories, as well as the cache control register if the
+cache is instantiated.
+
+\item The cache, if instantiated, is coherent only for accesses made by the
+\rvex{} itself. A cache flush is required using the cache control register if
+the debug bus is used to write to the local memories.
+
+\end{itemize}
+
+\subsection{Instantiation template}
+\label{sec:rvsyssa-inst}
+
+The following listing serves as an instantiation template for the system. The 
+code is documented in the following sections.
+
+If you get errors when instantiating the core with this template, the
+documentation might be out of date. Fear not, for the signals are also
+documented in the entity description in \code{rvsys_standalone.vhd}.
+
+\begin{lstlisting}[numbers=none]
+library rvex;
+use rvex.common_pkg.all;
+use rvex.bus_pkg.all;
+use rvex.bus_addrConv_pkg.all;
+use rvex.core_pkg.all;
+use rvex.cache_pkg.all;
+use rvex.rvsys_standalone_pkg.all;
+
+-- ...
+
+rvex_standalone_inst: entity rvex.rvsys_standalone
+  generic map (
+    
+    -- System configuration.
+    CFG => rvex_sa_cfg(
+      core => rvex_cfg(
+        numLanesLog2              => 3,
+        numLaneGroupsLog2         => 2,
+        numContextsLog2           => 2
+        -- ...
+      ),
+      core_valid => true
+      -- ...
+    ),
+    CORE_ID                     => CORE_ID,
+    PLATFORM_TAG                => PLATFORM_TAG,
+    MEM_INIT                    => MEM_INIT
+    
+  )
+  port map (
+    
+    -- System control.
+    reset                       => reset,
+    clk                         => clk,
+    clkEn                       => clkEn,
+    
+    -- Run control interface.
+    rctrl2rv_irq                => rctrl2rv_irq,
+    rctrl2rv_irqID              => rctrl2rv_irqID,
+    rv2rctrl_irqAck             => rv2rctrl_irqAck,
+    rctrl2rv_run                => rctrl2rv_run,
+    rv2rctrl_idle               => rv2rctrl_idle,
+    rctrl2rv_reset              => rctrl2rv_reset,
+    rctrl2rv_resetVect          => rctrl2rv_resetVect,
+    rv2rctrl_done               => rv2rctrl_done,
+    
+    -- Peripheral interface.
+    rvsa2bus                    => rvsa2bus,
+    bus2rvsa                    => bus2rvsa,
+    
+    -- Debug interface.
+    debug2rvsa                  => debug2rvsa,
+    rvsa2debug                  => rvsa2debug
+    
+  );
+
+\end{lstlisting}
+
+\subsection{Interface description}
+\label{sec:rvsyssa-iface}
+
+As you can see in the template, the generics and signals are grouped by their 
+function. The following subsections will document each group.
+
+\subsubsection{System configuration}
+\label{sec:rvsyssa-iface-generics}
+
+These generics parameterize the system.
+
+\begin{itemize}
+
+\item \code{CFG : rvex_sa_generic_config_type}
+
+This generic contains the configuration parameters for the core.
+\code{rvex_sa_generic_config_type} is a \code{record} type with the following
+members.
+
+\begin{itemize}
+
+\item \code{core : rvex_generic_config_type}
+
+This parameter specifies the \rvex{} core configuration as passed to the bare 
+\rvex{} processor core. Refer to 
+Section~\ref{sec:core-ug-cfg-inst-iface-generics} for more information.
+
+\item \code{cache_enable : boolean}
+
+This parameter selects whether or not the cache should be instantiated. This is
+false by default.
+
+\item \code{cache_config : cache_generic_config_type}
+
+This parameter specifies the size of the cache blocks. 
+\code{cache_generic_config_type} is a record type with two \code{natural}-typed 
+members: \code{instrCacheLinesLog2} and \code{dataCacheLinesLog2}. The sizes are
+determined as follows.
+
+\vskip -16 pt \begin{flalign*}
+\mathrm{Instr.\ cache\ size} = 4 \cdot N_{lanes} \cdot 
+2^{instrCacheLinesLog2} \cdot N_{laneGroups} &&
+\end{flalign*}
+
+\vskip -12 pt \noindent\begin{flalign*}
+\mathrm{Data\ cache\ size} = 4 \cdot 
+2^{dataCacheLinesLog2} \cdot N_{laneGroups} &&
+\end{flalign*}
+
+\noindent The number of lane groups is part of the equation because the number 
+of lines are specified per block, and a different block is instantiated for each 
+lane group.
+
+\item \code{cache_bypassRange : addrRange_type}
+
+This parameter specifies the range of addresses for which the cache (if 
+instantiated) is bypassed. This range is \code{0x80000000..0xFFFFFFFF} by 
+default.\code{addrRange_type} is a record containing four 
+\code{rvex_address_type} members: \code{low}, \code{high}, \code{mask}, and 
+\code{match}. An address is considered to be part of the range if the following 
+VHDL expression is true.
+
+\begin{lstlisting}[numbers=none]
+unsigned(addr and mask) >= unsigned(low) and
+unsigned(addr and mask) <= unsigned(high) and
+std_match(addr, match)
+\end{lstlisting}
+
+\noindent This record may be set using the \code{addrRange} function, which
+allows parameters to be omitted. The defaults for each parameter specify the
+complete 32-bit address range, so it is usually sufficient to only set one or
+two of the parameters.
+
+\item \code{imemDepthLog2B : natural}
+\item \code{dmemDepthLog2B : natural}
+
+These parameters specify the sizes of the local instruction and data memories 
+respectively if the cache is not used. Otherwise, \code{dmemDepthLog2B} 
+specifies the size of the unified memory and \code{imemDepthLog2B} is ignored.
+The size is specified as the logarithm of the number of bytes. The default value
+is 16 for both of these, resulting in 64 kiB memories.
+
+\item \code{traceDepthLog2B : natural}
+
+This parameter specifies the size of the trace buffer in the same way that the
+memory sizes are specified. The default value is 13, resulting in a trace buffer
+8 kiB in size. This size is required if the serial debug interface is to be
+used, due to the way in which bulk data transfers are implemented in the serial
+protocol.
+
+\item \code{debugBusMap_imem : addrRangeAndMapping_type}
+\item \code{debugBusMap_dmem : addrRangeAndMapping_type}
+\item \code{debugBusMap_rvex : addrRangeAndMapping_type}
+\item \code{debugBusMap_trace : addrRangeAndMapping_type}
+
+These parameters specify which addresses on the debug bus are mapped to which 
+device. These parameters may be specified with the \code{addrRangeAndMap} 
+function, which takes the same parameters as the \code{addrRange} function 
+discussed for \code{cache_bypassRange}. In addition, it also allows the designer 
+to change how the address bits are mapped from source to peripheral address. 
+Refer to the comments in \code{bus_addrConv_pkg.vhd} for more information.
+
+By default, the instruction memory is mapped to \code{0x10000000..0x1FFFFFFF} 
+and to \code{0x30000000..0x3FFFFFFF}, the data memory is mapped to 
+\code{0x20000000..0x3FFFFFFF}, the \rvex{} debug port is mapped to
+\code{0xF0000000..0xFFFFFFFF} and the trace buffer is mapped to
+\code{0xE0000000..0xEFFFFFFF}. Note that the range \code{0x30000000..0x3FFFFFFF}
+maps to both the instruction and data memories. This range allows the
+instruction and data memory to be written simultaneously, limiting the upload
+time using the debug unit.
+
+\item \code{debugBusMap_mutex : boolean}
+
+This parameter specifies whether logic needed to handle overlaps in the debug 
+bus address map is to be instantiated. If it is set to false, this logic is 
+instantiated, allowing bus write commands to access multiple memories at the 
+same time. This is the default. If it is set to true, overlaps are not
+supported, but a some area may be saved.
+
+\item \code{rvexDataMap_dmem : addrRangeAndMapping_type}
+\item \code{rvexDataMap_bus : addrRangeAndMapping_type}
+
+These parameters specify where data accesses from the \rvex{} are to be routed.
+They work the same way as the \code{debugBusMap} parameters. By default, the
+lower half of the address space, \code{0x00000000..0x7FFFFFFF}, is mapped to the
+data memory, and the remainder is mapped to the bus. Overlaps are not allowed.
+Accesses made to unmapped addresses cause a bus fault.
+
+\end{itemize}
+
+\noindent Typically, one will want to use the \code{rvex_sa_cfg} function to
+specify this value. This function takes as its arguments values for all the
+record members as specified above, but has default values for each of them,
+meaning that not all of them have to be specified. In addition, a \code{base}
+argument of type \code{rvex_generic_config_type} may be specified, which will be
+used as the default value for unspecified parameters. This permits mutation of
+the \code{CFG} record as it passes from entity to subentity, which is otherwise
+impossible to do with record generics.
+
+Important note: in order to allow the function to detect whether the \code{core} 
+and \code{cache_config} fields are specified, the \code{core_valid} and 
+\code{cache_config_valid} parameters must be set to true, or the defaults will 
+be substituted!
+
+\item \code{CORE_ID : natural}
+
+This value is used to uniquely identify this core within a multicore platform. 
+It is made available to the programs running on the core and the debug system 
+through \creg{COID}.
+
+\item \code{PLATFORM_TAG : std_logic_vector(55 downto 0)}
+
+This value is to uniquely identify the platform as a whole. It is intended that
+this value be generated by the toolchain by hashing the source files and
+synthesis options. \todo{Reference version system.} It is made available to the
+programs running on the core and the debug system through \creg{PTAG}.
+
+\item \code{MEM_INIT : rvex_data_array}
+
+This value is used to initialize the instruction and data memories. If left
+unspecified, the memories are initialized to zero.
+
+\end{itemize}
+
+\subsubsection{System and run control interfaces}
+\label{sec:rvsyssa-iface-sysrctrl}
+
+These interfaces are identical to those specified for the bare \rvex{} core in 
+Sections~\ref{sec:core-ug-cfg-inst-iface-syscon} and 
+\ref{sec:core-ug-cfg-inst-iface-rctrl}.
+
+\subsubsection{Peripheral and debug interfaces}
+\label{sec:rvsyssa-iface-periph}
+
+\begin{itemize}
+
+\item \code{rvsa2bus : out bus_mst2slv_type}
+\item \code{bus2rvsa : in bus_slv2mst_type}
+
+These signals form a master \rvex{} bus device, allowing the \rvex{} to access 
+memory or peripherals outside the processing system. A number of bus 
+interconnection primitives are available in \code{rvex_rewrite/lib/rvex/bus}. 
+Instantiation of these primitives is beyond the scope of this manual.
+
+\item \code{debug2rvsa : in bus_mst2slv_type}
+\item \code{rvsa2debug : out bus_slv2mst_type}
+
+These signals form a slave \rvex{} bus device, allowing devices outside the 
+processing system, such as the debug serial port peripheral, to access the local 
+memories, trace buffer and the \rvex{} control registers.
+
+The memory map of the debug interface is specified using generics. If the cache
+is instantiated, The cache control register is mapped to the same address as
+\creg{AFF}. Because \creg{AFF} is read-only and the cache control register is
+write only, this does not cause conflicts. The cache control register has the
+following layout.
+
+\noindent\footnotesize
+\begin{tabular}{@{}p{12mm}@{}*{32}{p{3.4mm}@{}}p{3mm}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{@{}l@{}|}{\scriptsize Offset \ } & \multicolumn{1}{@{}c@{}}{\tiny31} & \multicolumn{1}{@{}c@{}}{\tiny30} & \multicolumn{1}{@{}c@{}}{\tiny29} & \multicolumn{1}{@{}c@{}}{\tiny28} & \multicolumn{1}{@{}c@{}}{\tiny27} & \multicolumn{1}{@{}c@{}}{\tiny26} & \multicolumn{1}{@{}c@{}}{\tiny25} & \multicolumn{1}{@{}c@{}|}{\tiny24} & \multicolumn{1}{@{}c@{}}{\tiny23} & \multicolumn{1}{@{}c@{}}{\tiny22} & \multicolumn{1}{@{}c@{}}{\tiny21} & \multicolumn{1}{@{}c@{}}{\tiny20} & \multicolumn{1}{@{}c@{}}{\tiny19} & \multicolumn{1}{@{}c@{}}{\tiny18} & \multicolumn{1}{@{}c@{}}{\tiny17} & \multicolumn{1}{@{}c@{}|}{\tiny16} & \multicolumn{1}{@{}c@{}}{\tiny15} & \multicolumn{1}{@{}c@{}}{\tiny14} & \multicolumn{1}{@{}c@{}}{\tiny13} & \multicolumn{1}{@{}c@{}}{\tiny12} & \multicolumn{1}{@{}c@{}}{\tiny11} & \multicolumn{1}{@{}c@{}}{\tiny10} & \multicolumn{1}{@{}c@{}}{\tiny9} & \multicolumn{1}{@{}c@{}|}{\tiny8} & \multicolumn{1}{@{}c@{}}{\tiny7} & \multicolumn{1}{@{}c@{}}{\tiny6} & \multicolumn{1}{@{}c@{}}{\tiny5} & \multicolumn{1}{@{}c@{}}{\tiny4} & \multicolumn{1}{@{}c@{}}{\tiny3} & \multicolumn{1}{@{}c@{}}{\tiny2} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}|}{\tiny0} & \\
+\cline{2-33}
+\multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x200}} & \multicolumn{8}{@{}c@{}|}{\tiny LAT} & \multicolumn{8}{@{}c@{}|}{} & \multicolumn{8}{@{}c@{}|}{\tiny DFL} & \multicolumn{8}{@{}c@{}|}{\tiny IFL} & \hspace{0.6 mm} \normalsize\footnotesize \\
+\cline{2-33}
+\end{tabular}
+\normalsize\vskip 6pt
+
+\noindent\textbf{LAT field, bits 31..24}
+
+\noindent Must be written to a value between 1 and 254 inclusive for correct 
+operation. That amount of cycles plus one are added to the bus access delay in 
+case of a cache bypass, write or miss.
+
+\noindent\textbf{DFL field, bits 15..8}
+
+\noindent Each of these bits corresponds to an \rvex{} lane group. Writing a one 
+to a bit causes the data cache block corresponding to the indexed lane group to 
+be flushed. Writing a zero has no effect.
+
+\noindent\textbf{IFL field, bits 7..0}
+
+\noindent Each of these bits corresponds to an \rvex{} lane group. Writing a one 
+to a bit causes the instruction cache block corresponding to the indexed lane 
+group to be flushed. Writing a zero has no effect.
+
+\end{itemize}
+
