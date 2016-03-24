@@ -7,7 +7,7 @@ import tarfile
 import vhdl_package
 import paths
 
-def run(silent=True):
+def run(silent=True, very_silent=False, actually_archive=True):
     
     # Find the :/versions and :/lib/rvex/core/ paths regardless of current
     # directory.
@@ -31,21 +31,23 @@ def run(silent=True):
         if not f.endswith(version_file):
             fs += [f]
     tag = vhdtag.tag(fs, None if silent else sys.stdout)
-    print('################################################################################')
-    print('##     The core version tag is:  \033[1;4m' + tag['tag'] + '\033[0m-' + tag['md5'] + '     ##')
-    print('################################################################################')
+    if not (silent and very_silent):
+        print('################################################################################')
+        print('##     The core version tag is:  \033[1;4m' + tag['tag'] + '\033[0m-' + tag['md5'] + '     ##')
+        print('################################################################################')
 
     # (Re)generate the version file.
     with open(source_dir + os.sep + version_file, 'w') as f:
         f.write(vhdl_package.gen(tag, 'core'))
 
     # Generate the archive and put it in the right place!
-    archive_file = 'core-' + tag['tag'] + '-' + tag['md5'] + '.tar.gz'
-    print('Creating "' + archive_dir + os.sep + archive_file + '"...')
-    with tarfile.open(archive_dir + os.sep + archive_file, 'w:gz') as arch:
-        for fname in source_files:
-            arcname = os.path.relpath(fname, rvex_rewrite_dir)
-            arch.add(fname, arcname)
+    if actually_archive:
+        archive_file = 'core-' + tag['tag'] + '-' + tag['md5'] + '.tar.gz'
+        print('Creating "' + archive_dir + os.sep + archive_file + '"...')
+        with tarfile.open(archive_dir + os.sep + archive_file, 'w:gz') as arch:
+            for fname in source_files:
+                arcname = os.path.relpath(fname, rvex_rewrite_dir)
+                arch.add(fname, arcname)
     
     return tag
 

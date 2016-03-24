@@ -5,7 +5,11 @@ ASSETS=assets/rvex-block-diagram/rvex-block-diagram-linked.tex
 .PHONY: all clean
 
 # Makes the PDF.
-all: $(ASSETS) pdf
+all: tag $(ASSETS) pdf
+
+.PHONY: tag
+tag:
+	python ../../../versions/tools/print_tag.py > coretag.tex
 
 # Clean everything.
 clean: pdf-distclean

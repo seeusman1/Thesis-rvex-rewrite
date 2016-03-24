@@ -113,23 +113,23 @@
 % Title page
 %-------------------------------------------------------------------------------
 
-% \pagenumbering{gobble}
-% \begin{titlepage}
-% \newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
-% \center
-% \vspace*{5cm}
-% \HRule \\[0.4cm]
-% { \huge \bfseries \rvex{} user manual}\\[0.2cm]
-% \HRule \\[0.5cm]
-% \vskip 1em
-% Computer Engineering Laboratory, TU Delft \\[0.4cm]
-% \today
-% \vfill
-% \end{titlepage}
-% \setcounter{page}{0}
-% \cleardoublepage
-% \pagenumbering{arabic}
-% \setcounter{page}{1}
+\input{revision}
+\pagenumbering{gobble}
+\begin{titlepage}
+\newcommand{\HRule}{\rule{\linewidth}{0.5mm}}
+\center
+\vspace*{5cm}
+\HRule \\[0.4cm]
+{ \huge \bfseries \rvex{} user manual}\\[0.2cm]
+\HRule \\[0.5cm]
+\vskip 1em
+Jeroen van Straten, TU Delft \\[0.4cm]
+\today \\[0.4cm]
+Git revision: \codenodetok{\Revision} \\
+Core version tag: \codenodetok{\input{coretag}}
+\vfill
+\end{titlepage}
+\cleardoublepage
 
 % Continue numbering after thesis.
 \pagenumbering{arabic}
@@ -141,7 +141,8 @@
 \fancyhead[LE,RO]{\thepage}
 \fancyhead[RE]{\textit{APPENDIX C. \rvex{} USER MANUAL}}
 \fancyhead[LO]{\textit{\leftmark}}
-\fancyfoot[L,C,R]{}
+\fancyfoot[L,C]{}
+\fancyfoot[R]{{\scriptsize \color{gray} \textit{Rev. }\texttt{\Revision}\textit{, ctag }\texttt{\input{coretag}}}}
 \setlength{\headheight}{14pt}
 
 
