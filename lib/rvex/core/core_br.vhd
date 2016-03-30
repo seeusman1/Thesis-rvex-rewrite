@@ -485,11 +485,13 @@ begin -- architecture
     elsif pl2br_trapToHandleInfo(S_BR).active = '1' then
       
       -- Handle traps.
-      if run(S_BR) = '0' then
+      if (run(S_BR) = '0') and (rvex_isStopTrap(pl2br_trapToHandleInfo(S_BR)) = '0') then
         
         -- The core is halting. Instead of trying to handle the trap now, we
         -- delay this until the core resumes again, by simply resetting the PC
-        -- to the instruction which caused the trap.
+        -- to the instruction which caused the trap. We cannot do this for stop
+        -- traps though, as the trap point is set to the instruction AFTER the
+        -- stop instruction.
         nextPCsrc(S_BR) <= NEXT_PC_TRAP_POINT;
         br2cxplif_trapInfo(S_BR).active <= '0';
         traceTrapInfo(S_IF).active <= '0';

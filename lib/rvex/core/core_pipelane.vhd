@@ -1732,11 +1732,11 @@ begin -- architecture
           := s(S_PCP1).PC(CFG.numLanesLog2+SYLLABLE_SIZE_LOG2B downto SYLLABLE_SIZE_LOG2B);
         
         -- Load the value to add. This is computed by the configuration control
-        -- unit. However, if no valid instruction fetch is going to be
-        -- performed (limmValid is low), there's no point in doing the
-        -- additions because we won'thave a valid stop bit to base the next PC
-        -- on anyway. Instead, we override the add value with 0, so the PC is
-        -- not modified, regardless of where the stop bit ends up being.
+        -- unit. However, if there is no instruction fetch this cycle
+        -- (limmValid is low) we should not add anything, because this may be
+        -- the first half of a double fetch after a branch, in which case we
+        -- need PC_plusSbitFetch to be the next cache line regardless of how
+        -- many syllables we think we see in the undefined fetch result.
         a2 := cfg2pl_pcAddVal;
         if s(S_PCP1).limmValid = '0' then
           a2 := (others => '0');
