@@ -21,6 +21,7 @@ clean: pdf-distclean
 	rm -f *.pyc
 	rm -f $(TARGET).tdo
 	rm -f *.bbl
+	rm -f coretag.tex
 
 # Add hyperlinks to the block diagram.
 assets/rvex-block-diagram/rvex-block-diagram-linked.tex: assets/rvex-block-diagram/rvex-block-diagram.tex
