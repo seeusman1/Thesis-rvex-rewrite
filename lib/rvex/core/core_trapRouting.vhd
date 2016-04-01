@@ -151,6 +151,8 @@ begin -- architecture
             
             -- If the upper is active and the lower is a step trap, override
             -- the default and choose the upper.
+            -- 04/2016: um, this is a bit dubious. Shouldn't debug traps always
+            -- take precedence? I have no idea anymore why I wrote it this way.
             if combinedTraps(laneB)(stage).active = '1' then
               if combinedTraps(laneA)(stage).cause = rvex_trap(RVEX_TRAP_STEP_COMPLETE) then
                 choice := '1';
