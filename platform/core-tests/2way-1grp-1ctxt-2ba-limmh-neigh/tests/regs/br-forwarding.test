@@ -1,0 +1,74 @@
+name    Test branch register file with forwarding
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+config  forwarding            1
+
+-- Initialize memories.
+init
+
+-- 0x000
+load    cmpeq b0.0 = r0.0, 1
+load    cmpeq b0.1 = r0.0, 1
+load    cmpeq b0.2 = r0.0, 1
+load    cmpeq b0.3 = r0.0, 1
+load    cmpeq b0.4 = r0.0, 1
+load    cmpeq b0.5 = r0.0, 1
+load    cmpeq b0.6 = r0.0, 1
+load    cmpeq b0.7 = r0.0, 1 ;;
+
+-- 0x020
+load    stbr 0[r0.0]
+load    cmpeq b0.3 = r0.0, 0 ;;
+
+-- 0x028
+load    stbr 1[r0.0]
+load    cmpeq b0.5 = r0.0, 0 ;;
+
+-- 0x030
+load    stbr 2[r0.0]
+load    cmpeq b0.0 = r0.0, 0 ;;
+
+-- 0x038
+load    stbr 3[r0.0]
+load    cmpeq b0.2 = r0.0, 0 ;;
+
+-- 0x040
+load    stbr 4[r0.0]
+load    cmpeq b0.1 = r0.0, 0 ;;
+
+-- Skip ahead to make sure that things are stored correctly.
+fillnops 0x200
+
+-- 0x200
+load    stbr 5[r0.0]
+load    cmpeq b0.7 = r0.0, 0 ;;
+
+-- 0x208
+load    stbr 6[r0.0]
+load    cmpeq b0.4 = r0.0, 0 ;;
+
+-- 0x210
+load    stbr 7[r0.0]
+load    cmpeq b0.6 = r0.0, 0 ;;
+
+-- 0x218
+load    stbr 8[r0.0]
+load    stop ;;
+
+-- Run the test.
+reset
+wait    1000 idle 0
+
+-- Verify that the memory was written correctly.
+read    dmem byte 0 0b00000000
+read    dmem byte 1 0b00001000
+read    dmem byte 2 0b00101000
+read    dmem byte 3 0b00101001
+read    dmem byte 4 0b00101101
+read    dmem byte 5 0b00101111
+read    dmem byte 6 0b10101111
+read    dmem byte 7 0b10111111
+read    dmem byte 8 0b11111111

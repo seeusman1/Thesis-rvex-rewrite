@@ -1,0 +1,68 @@
+name    Test general purpose register file with forwarding
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+config  forwarding            1
+
+-- Initialize memories.
+init
+
+-- 0x000
+load    add r0.1 = r0.0, 42
+load    movtl l0.0 = r0.0 ;;
+
+-- 0x008
+load    stw 0[r0.0] = l0.0 -- Should be 0, still
+load    movtl l0.0 = r0.1 ;;
+
+-- 0x010
+load    stw 0[r0.0] = l0.0 -- Should be 42 here.
+load    add r0.1 = r0.0, 123 ;;
+
+-- 0x018
+load    stw 0[r0.0] = l0.0 -- Should still be 42 here.
+load    nop ;;
+
+-- 0x020
+load    movtl l0.0 = r0.1
+load    nop ;;
+
+-- 0x028
+load    stw 0[r0.0] = l0.0 -- Should be 123 here.
+load    nop ;;
+
+-- 0x030
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
+load    nop ;;
+
+-- 0x038
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
+load    nop ;;
+
+-- 0x040
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
+load    nop ;;
+
+-- 0x048
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
+load    nop ;;
+
+-- 0x050
+load    stw 0[r0.0] = l0.0 -- Should still be 123 here.
+load    stop ;;
+
+-- Run the test.
+reset
+wait   200 write * 0   0 exclusive
+wait   200 write * 0  42 exclusive
+wait   200 write * 0  42 exclusive
+wait   200 write * 0 123 exclusive
+wait   200 write * 0 123 exclusive
+wait   200 write * 0 123 exclusive
+wait   200 write * 0 123 exclusive
+wait   200 write * 0 123 exclusive
+wait   200 write * 0 123 exclusive
+wait   200 idle 0
+

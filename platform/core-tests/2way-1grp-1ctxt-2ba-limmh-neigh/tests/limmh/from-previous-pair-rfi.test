@@ -1,0 +1,57 @@
+name    Test LIMMH from previous pair after unaligned branch
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  limmhFromPreviousPair 1
+config  forwarding            1
+
+-- Initialize memories.
+init
+
+-- 0x000: delay a little bit here in case (for some reason) the write to the
+-- debug bus does not stall the processor like it should at the time of
+-- writing.
+load    add r0.20 = r0.0, 33
+load    nop ;;
+
+-- 0x008
+load    nop
+load    nop ;;
+
+-- 0x010
+load    nop
+load    rfi r0.1 = r0.1, 0 ;;
+
+-- 0x018
+load    limmh 6, 0x5A6666A5
+load    add r0.20 = r0.0, 3
+-- RFI branches here (0x20).
+load    add r0.16 = r0.0, 0x5A6666A5
+load    nop ;;
+
+-- 0x028
+load    stw 0[r0.0] = r0.20
+load    nop ;;
+
+-- 0x030
+load    stw 24[r0.0] = r0.16
+load    stop ;;
+
+-- Reset the processor.
+reset
+
+-- Write the desired branch address to the trap point register.
+write   dbg word CR_TP 0x00000020
+
+-- Wait until the processor is idle.
+wait    400 idle 0
+
+-- Verify that the RFI instruction branched.
+read    dmem word  0 33
+
+-- Verify that the constants were loaded correctly.
+read    dmem word 24 0x5A6666A5
+

@@ -1,0 +1,148 @@
+name    Stepping with reconfiguration
+
+-- Check configuration.
+config  numLanes              8
+config  numLaneGroups         4
+config  genBundleSize         8
+
+-- Initialize memories.
+init
+
+-- Load some program. Just nops are fine here, we just want to check if we can
+-- step properly. We do need a stop bit every 8 syllables though, or the core
+-- with stop bit support will not realign itself properly in the last test.
+fillnops 0x01C
+load    nop ;;
+fillnops 0x03C
+load    nop ;;
+fillnops 0x05C
+load    nop ;;
+fillnops 0x07C
+load    nop ;;
+fillnops 0x09C
+load    nop ;;
+fillnops 0x0BC
+load    nop ;;
+fillnops 0x0DC
+load    nop ;;
+fillnops 0x0FC
+load    nop ;;
+fillnops 0x11C
+load    nop ;;
+fillnops 0x13C
+load    nop ;;
+fillnops 0x15C
+load    nop ;;
+fillnops 0x17C
+load    nop ;;
+fillnops 0x19C
+load    nop ;;
+fillnops 0x1BC
+load    nop ;;
+fillnops 0x1DC
+load    nop ;;
+fillnops 0x1FC
+load    nop ;;
+
+-- Reset the processor.
+reset
+wait    50
+
+-- Reset/break the processor.
+write   dbg byte CR_DCR CR_DCRC_RESET_BREAK
+wait    50
+
+-- Verify that the PC is set to 0.
+read    dbg word CR_PC 0x00000000
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000020
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000040
+
+-- Reconfigure to 4-way mode.
+write   dbg word CR_BCRR 0x8800
+wait    50
+
+-- Verify that the PC didn't change.
+read    dbg word CR_PC 0x00000040
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000050
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000060
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000070
+
+-- Reconfigure to 2-way mode.
+write   dbg word CR_BCRR 0x8880
+wait    50
+
+-- Verify that the PC didn't change.
+read    dbg word CR_PC 0x00000070
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000078
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000080
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x00000088
+
+-- Reconfigure to 8-way mode.
+write   dbg word CR_BCRR 0x0000
+wait    50
+
+-- Verify that the PC didn't change.
+read    dbg word CR_PC 0x00000088
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC properly realigned itself and incremented.
+read    dbg word CR_PC 0x000000A0
+
+-- Step the processor.
+write   dbg byte CR_DCR CR_DCRC_STEP
+wait    50
+
+-- Verify that the PC has incremented.
+read    dbg word CR_PC 0x000000C0
+

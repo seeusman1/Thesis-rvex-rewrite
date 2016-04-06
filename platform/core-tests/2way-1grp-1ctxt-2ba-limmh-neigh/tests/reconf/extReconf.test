@@ -1,0 +1,43 @@
+name    External reconfiguration
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  numLanes              8
+config  numLaneGroups         4
+config  forwarding            1
+config  limmhFromNeighbor     1
+config  cregStartAddress      0xFFFFFC00
+
+-- Initialize memories.
+init
+
+-- Load srec file into data and instruction memories.
+srec    imem 0 ../../compile/extReconf.srec
+srec    dmem 0 ../../compile/extReconf.srec
+
+-- Initialize the pointer to the context ID byte in the control registers,
+-- which the program will read from 0x12340000.
+write   dmem word 0x12340000 CR_CID
+
+-- Reset the processor.
+reset
+
+-- Run the program on the default configuration (context 0).
+write   dmem word 0x12340004 0xDE000000
+wait    1000    done 0
+read    dmem word 0x12340008 0xDE000000
+
+-- Reconfigure to 0x1123 (two lanes for context 1, one lane for context 2 and
+-- 3).
+write   dbg word CR_BCRR 0x00001123
+
+-- Wait for contexts 1, 2 and 3 to be done.
+write   dmem word 0x12340004 0x00ADBEEF
+wait    1000    done 1
+wait    1000    done 2
+wait    1000    done 3
+read    dmem word 0x12340008 0xDEADBEEF
+

@@ -1,0 +1,50 @@
+name    Test basic general purpose register file consistency
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+
+-- Initialize memories.
+init
+
+-- 0x000
+load    add r0.1 = r0.0, r0.0
+load    nop ;;
+
+-- Give the write to r0.1 time to commit.
+fillnops 0x100
+
+-- 0x100
+load    add r0.0 = r0.0, 123
+load    nop
+load    add r0.2 = r0.0, 33
+load    nop
+load    nop
+load    nop
+load    stw 0[r0.0] = r0.1 -- Should be 0, still
+load    add r0.1 = r0.0, 42 ;;
+
+-- Give the writes to r0.0..r0.2 time to commit.
+fillnops 0x200
+
+-- 0x200
+load    stw 0[r0.0] = r0.1 -- Should be 42
+load    nop ;;
+
+-- 0x208
+load    stw 0[r0.0] = r0.2 -- Should be 33
+load    nop ;;
+
+-- 0x210
+load    stw 0[r0.0] = r0.0 -- Should still be 0; writes to r0.0 should be ignored.
+load    stop ;;
+
+-- Run the test.
+reset
+wait   200 write * 0  0 exclusive -- r0.1 before write.
+wait   200 write * 0 42 exclusive -- r0.1 after write.
+wait   200 write * 0 33 exclusive -- r0.2 after write.
+wait   200 write * 0  0 exclusive -- r0.0 after attempted write.
+wait   200 idle 0
+

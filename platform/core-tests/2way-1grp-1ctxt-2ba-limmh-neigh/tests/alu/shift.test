@@ -1,0 +1,112 @@
+name    Test ALU shift instructions
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+
+-- Initialize memories.
+init
+
+-- Test 0x12345678 and 16.
+load    limmh 1, 0x12345678
+load    add r0.1 = r0.0, 0x12345678
+load    add r0.2 = r0.0, 16
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     shift-kernel.inc
+
+-- Test 0xF000000F and 1.
+load    limmh 1, 0xF000000F
+load    add r0.1 = r0.0, 0xF000000F
+load    add r0.2 = r0.0, 1
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     shift-kernel.inc
+
+-- Test 0x000FF000 and 5.
+load    limmh 1, 0x000FF000
+load    add r0.1 = r0.0, 0x000FF000
+load    add r0.2 = r0.0, 5
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     shift-kernel.inc
+
+-- Test 0x87654321 and 32.
+load    limmh 1, 0x87654321
+load    add r0.1 = r0.0, 0x87654321
+load    add r0.2 = r0.0, 32
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     shift-kernel.inc
+
+-- Test 0x12345678 and 240.
+load    limmh 1, 0x12345678
+load    add r0.1 = r0.0, 0x12345678
+load    add r0.2 = r0.0, 240
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     shift-kernel.inc
+
+-- Stop the processor.
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stop ;;
+
+-- Reset the processor.
+reset
+
+-- Test 0x12345678 and 16.
+wait    400 write *  0   0x56780000  exclusive  -- shl
+wait    40  write *  4   0x00001234  exclusive  -- shr
+wait    40  write *  8   0x00001234  exclusive  -- shru
+
+-- Test 0xF000000F and 1.
+wait    400 write *  0   0xE000001E  exclusive  -- shl
+wait    40  write *  4   0xF8000007  exclusive  -- shr
+wait    40  write *  8   0x78000007  exclusive  -- shru
+
+-- Test 0x000FF000 and 5.
+wait    400 write *  0   0x01FE0000  exclusive  -- shl
+wait    40  write *  4   0x00007F80  exclusive  -- shr
+wait    40  write *  8   0x00007F80  exclusive  -- shru
+
+-- Test 0x87654321 and 32.
+wait    400 write *  0   0x00000000  exclusive  -- shl
+wait    40  write *  4   0xFFFFFFFF  exclusive  -- shr
+wait    40  write *  8   0x00000000  exclusive  -- shru
+
+-- Test 0x12345678 and 240.
+wait    400 write *  0   0x00000000  exclusive  -- shl
+wait    40  write *  4   0x00000000  exclusive  -- shr
+wait    40  write *  8   0x00000000  exclusive  -- shru
+
+
+-- Wait until the processor is idle.
+wait    40 idle 0
+

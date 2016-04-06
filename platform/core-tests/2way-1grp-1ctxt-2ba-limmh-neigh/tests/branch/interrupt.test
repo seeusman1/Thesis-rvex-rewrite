@@ -1,0 +1,128 @@
+name    Test interrupts and int/trap control regs
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  limmhFromNeighbor     1
+config  forwarding            1
+config  bundleAlign           2
+
+-- Initialize memories.
+init
+
+-------------------------------------------------------------------------------
+-- Entry point
+-------------------------------------------------------------------------------
+-- Load the trap and panic handler pointers.
+load    limmh 1, 0x10000000
+load    add r0.1 = r0.0, 0x00000000
+load    limmh 3, 0x20000000
+load    add r0.2 = r0.0, 0x20000000 ;;
+
+load    stw CR_TH[r0.0] = r0.1
+load    limmh 6, CR_TH ;;
+
+load    stw CR_PH[r0.0] = r0.2
+load    limmh 6, CR_PH ;;
+
+-- Wait a while in order to make sure that interrupts are properly masked.
+loadnops  64
+
+-- Figure out how to set the ready-for-trap and interrupt enable flags and
+-- inform the testbench that we're about to enable them.
+load    sbit r0.1 = r0.0, CR_CCR_IEN
+load    nop ;;
+
+load    stw 0[r0.0] = r0.0
+load    sbit r0.1 = r0.1, CR_CCR_RFT ;;
+
+load    stw CR_CCR[r0.0] = r0.1
+load    limmh 6, CR_CCR ;;
+
+-- Because an interrupt is active and we enabled interrupts, this should not
+-- be executed until after we've serviced the interrupt. The goto -0x08 makes
+-- an infinite loop in which memory location 4 is constantly set to 0 to inform
+-- the test bench.
+load    stw 4[r0.0] = r0.0
+load    goto -0x08 ;;
+
+-------------------------------------------------------------------------------
+-- Trap handler
+-------------------------------------------------------------------------------
+at      0x10000000
+
+-- Inform the test case runner that we're in the interrupt handler, and
+-- disable the ready-for-trap flag in the saved context control register, so
+-- we should branch to the panic handler next.
+load    ldw r0.11 = CR_TA[r0.0]
+load    limmh 6, CR_TA ;;
+
+load    nop
+load    nop ;;
+
+load    stw 8[r0.0] = r0.11
+load    sbit r0.10 = r0.0, CR_CCR_RFT_C ;;
+
+load    stw CR_SCCR[r0.0] = r0.10
+load    limmh 6, CR_SCCR ;;
+
+-- Wait a while in order to make sure that interrupts are properly masked.
+loadnops  64
+
+-- Return.
+load    stw 8[r0.0] = r0.0
+load    rfi r0.1 = r0.1, 0 ;;
+
+-------------------------------------------------------------------------------
+-- Panic handler
+-------------------------------------------------------------------------------
+at      0x20000000
+
+-- Inform the test case runner that we're in the panic handler and just
+-- return immediately.
+load    ldw r0.11 = CR_TA[r0.0]
+load    limmh 6, CR_TA ;;
+
+load    nop
+load    nop ;;
+
+load    sbit r0.10 = r0.0, CR_CCR_RFT_C
+load    nop
+load    stw 12[r0.0] = r0.11
+load    rfi r0.1 = r0.1, 0 ;;
+
+-------------------------------------------------------------------------------
+-- Test commands
+-------------------------------------------------------------------------------
+-- Reset the processor to start.
+reset
+
+-- Trigger interrupt 33.
+rctrl   0 irq 33
+
+-- Wait until the processor is asserting the interrupt enable flag.
+wait    80 write * 0 0 exclusive
+rctrl   0 check irq high
+
+-- The processor should now enter the trap handler, in which it writes the
+-- interrupt ID to mem 8.
+wait    80 write * 8 33 exclusive
+
+-- Immediately trigger another interrupt.
+rctrl   0 irq 42
+
+-- The processor should write 0 to mem 8 at the end of the trap handler, after
+-- which it should enter the panic handler because the trap handler disabled
+-- the ready for trap bit in the saved context control register.
+wait    80 write * 8 exclusive
+wait    40 write * 12 42 exclusive
+
+-- After the panic handler, the processor should just loop writing to mem 4.
+wait    40 write * 4 exclusive
+wait    40 write * 4 exclusive
+wait    40 write * 4 exclusive
+
+-- Make sure there is no interrupt pending anymore (if this is the case, the
+-- ack signal or the test runner is faulty.
+rctrl   0 check irq low

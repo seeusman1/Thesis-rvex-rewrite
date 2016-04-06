@@ -1,0 +1,93 @@
+name    Test GOTO and IGOTO.
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+config  forwarding            1
+config  bundleAlign           2
+
+-- Initialize memories.
+init
+
+-- 0x0000
+load    add r0.11 = r0.0, 3
+load    add r0.12 = r0.0, 3
+load    add r0.10 = r0.0, 42
+load    goto 0x20 ;; -- Skip next instruction.
+
+-- 0x0010
+load    add r0.11 = r0.0, 33
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    add r0.12 = r0.0, 33 ;;
+
+-- 0x0030
+load    limmh 1, 0x00001000
+load    add r0.63 = r0.0, 0x00001000
+load    stw 0[r0.0] = r0.10
+load    add r0.11 = r0.11, r0.12 ;;
+
+-- 0x0040
+load    stw 0[r0.0] = r0.11
+load    movtl l0.0 = r0.63 ;;
+
+-- 0x0048
+load    nop
+load    igoto l0.0 ;;
+
+-- 0x0050 - should never get here.
+load    stw 0[r0.0] = r0.0
+load    stop ;;
+
+-- First igoto target:
+at 0x1000
+load    limmh 1, 0x00001001
+load    add r0.63 = r0.0, 0x00001001
+load    stw 4[r0.0] = r0.0
+load    nop ;;
+
+-- 0x1010
+load    movtl l0.0 = r0.63
+load    nop ;;
+
+-- 0x1018
+load    nop
+load    igoto l0.0 ;; -- Very misaligned, should go to panic handler.
+
+-- 0x1020 - should never get here.
+load    stw 8[r0.0] = r0.0
+load    stop ;;
+
+-- Panic handler:
+at 0x2000
+load    stw 12[r0.0] = r0.0
+load    stop ;;
+
+-- Reset the processor to start.
+reset
+
+-- Write the panic handler address.
+write   dbg word CR_PH 0x00002000
+
+-- Make sure GOTO works. The first write is from a register written immediately
+-- before the jump, the second is a combination of registers updated just after
+-- the jump and just before the target (i.e. they shouldn't get updated).
+wait    40 write * 0x00 42 exclusive
+wait    40 write * 0x00 6 exclusive
+
+-- Next write should be at the IGOTO target.
+wait    40 write * 4 exclusive
+
+-- Next write should be at the panic handler, because the second IGOTO has a
+-- misaligned address.
+wait    40 write * 12 exclusive
+
+-- Should be done now.
+wait    40 done 0
+wait    40 idle 0
+

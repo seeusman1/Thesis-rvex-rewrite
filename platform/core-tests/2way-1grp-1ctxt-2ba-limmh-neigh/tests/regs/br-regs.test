@@ -1,0 +1,51 @@
+name    Test basic branch register file consistency
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+
+-- Initialize memories.
+init
+
+-- 0x000 -- 0b11000110
+load    cmpeq b0.0 = r0.0, 1
+load    cmpeq b0.1 = r0.0, 0
+load    cmpeq b0.2 = r0.0, 0
+load    cmpeq b0.3 = r0.0, 1
+load    cmpeq b0.4 = r0.0, 1
+load    cmpeq b0.5 = r0.0, 1
+load    cmpeq b0.6 = r0.0, 0
+load    cmpeq b0.7 = r0.0, 0 ;;
+
+-- Skip ahead to make sure that things are stored correctly.
+fillnops 0x100
+
+-- 0x100
+load    stbr 0[r0.0]
+load    cmpeq b0.7 = r0.0, 1 ;; -- This should not be executed before STBR.
+
+-- 0x108 -- 0b10011100
+load    cmpeq b0.7 = r0.0, 0
+load    cmpeq b0.0 = r0.0, 1
+load    cmpeq b0.1 = r0.0, 1
+load    cmpeq b0.3 = r0.0, 0
+load    cmpeq b0.5 = r0.0, 1
+load    cmpeq b0.4 = r0.0, 0
+load    cmpeq b0.6 = r0.0, 1
+load    cmpeq b0.2 = r0.0, 0 ;;
+
+-- Skip ahead to make sure that things are stored correctly.
+fillnops 0x200
+
+-- 0x200
+load    stbr 1[r0.0]
+load    stop ;;
+
+-- Run the test.
+reset
+wait    1000 idle 0
+
+-- Verify that the memory was written correctly.
+read    dmem byte 0 0b11000110
+read    dmem byte 1 0b10011100

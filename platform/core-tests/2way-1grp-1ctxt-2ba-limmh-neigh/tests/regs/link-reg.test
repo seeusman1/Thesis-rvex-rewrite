@@ -1,0 +1,34 @@
+name    Test basic link register consistency
+
+-- Check configuration.
+config  genBundleSize         8
+config  bundleAlign           2
+config  memLaneRevIndex       1
+
+-- Initialize memories.
+init
+
+-- 0x000
+load    add r0.1 = r0.0, 42
+load    movtl l0.0 = r0.0 ;;
+
+-- Give the write to r0.1 and the link register time to commit.
+fillnops 0x100
+
+-- 0x100
+load    stw 0[r0.0] = l0.0 -- Should be 0, still
+load    movtl l0.0 = r0.1 ;;
+
+-- Give the move to the link register time to commit.
+fillnops 0x200
+
+-- 0x200
+load    stw 0[r0.0] = l0.0
+load    stop ;;
+
+-- Run the test.
+reset
+wait   200 write * 0  0 exclusive -- before write.
+wait   200 write * 0 42 exclusive -- after write.
+wait   200 idle 0
+
