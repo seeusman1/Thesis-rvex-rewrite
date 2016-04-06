@@ -944,23 +944,38 @@ begin -- architecture
         --    (i.e., in 4-way mode, the PC is aligned to 4 syllables), and
         --  - the next PC is NOT aligned to the generic binary bunble size.
         
-        -- Test alignment to number of coupled lanes.
-        if vect2uint(nextPC(S_IF)(
-          numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B-1 downto
-          (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
-        )) = 0 then
-          
-          -- Test misalignment to generic bundle size.
-          if vect2uint(nextPC(S_IF)(
-            CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto
-            (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
-          )) /= 0 then
-            
-            fetchOnly(S_IF) := '1';
-            
+        -- -- Test alignment to number of coupled lanes.
+        -- if vect2uint(nextPC(S_IF)(
+        --   numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B-1 downto
+        --   (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
+        -- )) = 0 then
+        --   
+        --   -- Test misalignment to generic bundle size.
+        --   if vect2uint(nextPC(S_IF)(
+        --     CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto
+        --     (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
+        --   )) /= 0 then
+        --     
+        --     fetchOnly(S_IF) := '1';
+        --     
+        --   end if;
+        --   
+        -- end if;
+        
+        -- This code below should do the same thing as the commented code above,
+        -- except Vivado should understand it and doesn't understand the above.
+        fetchOnly(S_IF) := '0';
+        for i in CFG.genBundleSizeLog2+SYLLABLE_SIZE_LOG2B-1 downto
+                (CFG.numLanesLog2-CFG.numLaneGroupsLog2)+SYLLABLE_SIZE_LOG2B
+        loop
+          if i > numCoupledLanesLog2+SYLLABLE_SIZE_LOG2B-1 then
+            -- PC must not be aligned to generic bundle size.
+            fetchOnly(S_IF) := fetchOnly(S_IF) or nextPC(S_IF)(i);
+          else
+            -- PC must be aligned to current number of lanes.
+            fetchOnly(S_IF) := fetchOnly(S_IF) and not nextPC(S_IF)(i);
           end if;
-          
-        end if;
+        end loop;
       
       end if;
     
