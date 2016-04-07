@@ -9,11 +9,14 @@ double fabs(double x) {
   return x < 0 ? -x : x;
 }
 
-void *memcpy(void *d, const void *s, unsigned long t) {
-  while( t-- ) {
-    *((char*)d++) = *((char*)s++);
-  }
-  return d;
+void * memcpy(void * dest,const void *src,unsigned long count)
+{
+	char *tmp = (char *) dest, *s = (char *) src;
+
+	while (count--)
+		*tmp++ = *s++;
+
+	return dest;
 }
 
 int strncmp(const char *s1, const char *s2, unsigned long n) {
