@@ -26,7 +26,7 @@ grlib-gpl-%: patch-%.patch
 
 # Updates the patchfile.
 patch-%:
-	$(MAKE) $@.tar.gz
+	$(MAKE) grlib-gpl-$*.tar.gz
 	mkdir clean
 	cd clean && tar -xzf ../$(patsubst patch-%,grlib-gpl-%,$@).tar.gz
 	diff -rupN\
