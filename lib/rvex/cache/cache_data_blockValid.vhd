@@ -112,7 +112,7 @@ architecture Behavioral of cache_data_blockValid is
 --=============================================================================
   
   -- Valid bit memory.
-  signal ram_valid            : std_logic_vector(2**CCFG.dataCacheLinesLog2-1 downto 0) := (others => '0');
+  signal ram_valid            : std_logic_vector(2**CCFG.dataCacheLinesLog2-1 downto 0);
   
   -- Load shorthand notations for the address vector metrics.
   constant OFFSET_LSB         : natural := dcacheOffsetLSB(RCFG, CCFG);
@@ -137,100 +137,28 @@ begin -- architecture
   --  - flush
   --  - invalidate
   --  - validate
---  ram_tag_proc: process (clk) is
---    variable offset      : std_logic_vector(OFFSET_SIZE-1 downto 0);
---	 variable set         : std_logic;
---	 variable value    : std_logic;
---  begin
---    if rising_edge(clk) then
---		-- Handle master reset.
---      if reset = '1' then
---        ram_valid <= (others => '0');
---        cpuValid <= '0';
---      else
-        
---		  set    := '0';
-		  
---        -- Handle flushing.
---        if flush = '1' and enableBus = '1' then
---          ram_valid <= (others => '0');
-		  
-        
---        -- Handle line invalidation.
---        elsif invalidate = '1' and enableBus = '1' then
---		    offset := invalOffset;
---		    value  := '0';
---			 set    := '1';
---          --ram_valid(to_integer(unsigned(invalOffset))) <= '0';
-          
---        -- Handle line validation.
---        elsif validate = '1' and enableCPU = '1' then
---		    offset := cpuOffset;
---		    value  := '1';
---			 set    := '1';
---          --ram_valid(to_integer(unsigned(cpuOffset))) <= '1';
---        end if;
-		  
---		  if (set = '1') then
---          ram_valid(to_integer(unsigned(offset))) <= value;
---		  end if;
-        
---        -- Handle reading and write-first synchronization.
---        if enableCPU = '1' then
-          
---          -- Handle read while flush.
---          if flush = '1' and enableBus = '1' then
---            cpuValid <= '0';
-          
---          -- Handle read while invalidate.
---          elsif invalidate = '1' and enableBus = '1' and invalOffset = cpuOffset then
---            cpuValid <= '0';
-            
---          -- Handle read while validate.
---          elsif validate = '1' and enableCPU = '1' then
---            cpuValid <= '1';
-          
---          -- Handle normal reads.
---          else
---            cpuValid <= ram_valid(to_integer(unsigned(cpuOffset)));
---				--cpuValid <= ram_valid(11);
---          end if;
---        end if;
---      end if;
---    end if;
---  end process;
-
-ram_tag_proc: process (clk) is
-    variable offset      : std_logic_vector(OFFSET_SIZE-1 downto 0);
-	 variable set         : std_logic;
-	 variable value    : std_logic;
+  ram_tag_proc: process (clk) is
   begin
     if rising_edge(clk) then
-		-- Handle master reset.
+      
+      -- Handle master reset.
       if reset = '1' then
+        ram_valid <= (others => '0');
         cpuValid <= '0';
       else
         
-		  set    := '0';
-		          
+        -- Handle flushing.
+        if flush = '1' and enableBus = '1' then
+          ram_valid <= (others => '0');
+          
         -- Handle line invalidation.
-        if invalidate = '1' and enableBus = '1' then
-		    offset := invalOffset;
-		    value  := '0';
-			 set    := '1';
-          --ram_valid(to_integer(unsigned(invalOffset))) <= '0';
+        elsif invalidate = '1' and enableBus = '1' then
+          ram_valid(to_integer(unsigned(invalOffset))) <= '0';
           
         -- Handle line validation.
         elsif validate = '1' and enableCPU = '1' then
-		    offset := cpuOffset;
-		    value  := '1';
-			 set    := '1';
-          --ram_valid(to_integer(unsigned(cpuOffset))) <= '1';
+          ram_valid(to_integer(unsigned(cpuOffset))) <= '1';
         end if;
-		  
-		  if (set = '1') then
-          ram_valid(to_integer(unsigned(offset))) <= value;
-		  end if;
         
         -- Handle reading and write-first synchronization.
         if enableCPU = '1' then
@@ -250,7 +178,6 @@ ram_tag_proc: process (clk) is
           -- Handle normal reads.
           else
             cpuValid <= ram_valid(to_integer(unsigned(cpuOffset)));
-				--cpuValid <= ram_valid(11);
           end if;
         end if;
       end if;
