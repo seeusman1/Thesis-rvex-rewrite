@@ -201,8 +201,8 @@ endif
 EXECUTABLES += nothing
 
 # Powerstone benchmarks.
-POWERSTONE = adpcm blit crc des fir pocsag ucbqsort bcnt compress engine
-POWERSTONE += g3fax jpeg qurt v42
+POWERSTONE = qurt crc bcnt blit compress des engine fir g3fax jpeg pocsag ucbqsort v42 
+#POWERSTONE += whetstone auto
 EXECUTABLES += $(POWERSTONE)
 
 # Random other applications.
@@ -239,12 +239,15 @@ GENERIC_SRC = $(GEN_EXAMPLES)/src
 
 # Assembler setup.
 AS = $(BUILD)/rvex-elf32-as
-ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG) --padding $(BUNDLE_ALIGN) --autosplit
+ASFLAGS = --issue $(ISSUE_WIDTH) --borrow $(BORROW) --config $(LANECONFIG) --padding $(BUNDLE_ALIGN)
 ifneq ($(DYNAMIC), false)
 ASFLAGS += -u
 endif
 ifneq ($(DEBUG), false)
 ASFLAGS += -g
+endif
+ifneq ($(AUTOSPLIT), false)
+ASFLAGS += --autosplit
 endif
 
 # Linker setup.

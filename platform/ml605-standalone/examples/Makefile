@@ -39,7 +39,7 @@ include $(GEN_EXAMPLES)/Makefile
 
 # How to upload;
 .PHONY: upload-%
-upload-%: %.srec debug
+upload-%: %.srec %.disas %.elf debug
 	-cd $(DEBUGIFACE) && make server
 	$(RVD) -call -d"all:PRINT_STATE{1}" break
 	$(RVD) -c0 upload srec $< IDMEM
@@ -49,7 +49,12 @@ upload-%: %.srec debug
 
 .PHONY: start-%
 start-%: upload-%
+ifdef RECONF
+	$(RVD) w BCRR $(RECONF)
+	$(RVD) -c0 c
+else
 	$(RVD) -c0 write CREG 0x80000000
+endif
 
 .PHONY: run-%
 run-%: start-%
@@ -69,6 +74,9 @@ gdb-%: %.elf upload-%
 
 .PHONY: run-all
 run-all: $(patsubst %,run-%,$(BENCH_EXECUTABLES))
+
+.PHONY: run-pwr
+run-pwr: $(patsubst %,run-%,$(POWERSTONE))
 
 .PHONY: debug server stop monitor monitor-nobuf
 debug server stop monitor monitor-nobuf:
