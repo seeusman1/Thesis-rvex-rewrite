@@ -190,8 +190,8 @@ int run(const commandLineArgs_t *args) {
       // executed.
       if ((!first) && (!d.hasBranched)) {
         //fprintf(stderr, "pc 0x%08x, d.pc 0x%08x\n", pc, d.pc);
-        if (d.pc < pc || d.pc > pc + 0x40) {// 0x40 is a 16-syllable bundle size, the largest possible configuration
-          fprintf(stderr, "Error: new Program Counter (0x%08x) is unexpected (core has not branched)\n", pc);
+        if (d.pc < pc /*|| d.pc > pc + 0x40*/) {// 0x40 is a 16-syllable bundle size, the largest possible configuration
+          fprintf(stderr, "Error: new Program Counter (0x%08x) is unexpected (core has not branched)\n", d.pc);
           continue;
         }
         while (pc != d.pc) {

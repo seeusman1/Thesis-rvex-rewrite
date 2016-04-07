@@ -11,7 +11,7 @@ double fabs(double x) {
 
 void *memcpy(void *d, const void *s, unsigned long t) {
   while( t-- ) {
-    *((char*)d) = *((char*)s);
+    *((char*)d++) = *((char*)s++);
   }
   return d;
 }

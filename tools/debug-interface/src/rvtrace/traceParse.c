@@ -167,6 +167,8 @@ int getTracePacket(
         packet->hasPC = 0x000000FF;
         break;
     }
+    REPORT2("PC: 0x%08X\n", packet->pc);
+    REPORT2("mask: 0x%08X\n", packet->hasPC);
   }
   
   // Scan memory information.
