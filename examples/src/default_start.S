@@ -194,6 +194,8 @@ mov $r0.60 = 0
   c0  ldw $r0.63 = CR_CNT_ADDR[$r0.0]
 ;;
 #endif
+	.global _stop
+_stop::
   /* Stop this context. */
   c0  stop
 ;;
@@ -701,6 +703,37 @@ _trap_handler::
 ;;
   .endp
 
+/*****************************************************************************/
+/* WAKEUP TRAP HANDLER (optional)                                            */
+/*****************************************************************************/
+  .section .text
+  .proc 
+  .global _wakeup_trap_handler
+_wakeup_trap_handler::
+
+  /* Reset the stack pointer to prevent stack overflow. */
+  c0  add     $r0.1       = $r0.0, __STACK_START
+  ISSUE_2
+  
+  /* Load the trap cause. */
+  c0  ldbu    $r0.56      = CR_TC_ADDR[$r0.0]
+;;
+  /* Load the interrupt ID. */
+  c0  ldw     $r0.3       = CR_TA_ADDR[$r0.0]
+;;
+  /* Figure out if this is an external interrupt trap. If it is, jump to
+  the interrupt handler. */
+  c0  cmpeq   $b0.0       = $r0.56, TRAP_EXT_INTERRUPT
+;;
+  c0  br                    $b0.0, wake_interrupt
+;;
+  /* In wakeup mode, the interrupt handler may never return, and we can't */
+  /* handle anything other than an interrupt. */
+  c0  goto    _panic_handler
+;;
+  c0  stop
+;;
+  .endp
 
 /*****************************************************************************/
 /* EMPTY PUTCHAR AND INTERRUPT HANDLERS                                      */
@@ -708,11 +741,12 @@ _trap_handler::
 /* In case putchar() and interrupt() are never defined anywhere, they will */
 /* point here and be nop. */
 
-  .weak putchar, interrupt, tohex
+  .weak putchar, interrupt, tohex, wake_interrupt
   .section .text
   .proc
 putchar::
 interrupt::
+wake_interrupt::
   
   /* Simply return immediately when called. */
   c0  return  $r0.1       = $r0.1, 0, $l0.0

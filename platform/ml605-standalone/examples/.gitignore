@@ -6,3 +6,4 @@
 *.bin
 *.rawtrace
 *.trace
+cache-runs

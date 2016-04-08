@@ -311,3 +311,30 @@ int mainengine(void)
 	}
 	return 0;
 }
+int run_engine_once(void)
+{
+	debug_val = 0;
+	debug_base = 0;
+	debug_interval = 0;
+	tab1 = 0;
+	tab2 = 0;
+	rpm1 = 0;
+	rpm2 = 0;
+	rpm = 0;
+	ival = 0;
+	inter_val = 0;
+	rpm_delta = 0;
+	inter1 = 0;
+	inter2 = 0;
+	inter_delta = 0;
+	offset = 0;
+	inter_temp = 0;
+	big_temp = 0;
+	
+	engine();
+	if ((debug_val != 191932) || (debug_base != 3250) || (debug_interval != 418230))
+	{
+		return 1; // failure
+	}
+	return 0;
+}

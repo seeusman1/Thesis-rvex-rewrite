@@ -8,7 +8,7 @@ RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 HOSTCC = gcc
 
 # Platform-specific executables.
-EXECUTABLES = timer reconf
+EXECUTABLES = timer reconf cache
 
 # Platform-specific object files to link.
 OBJECTS = rvex-standalone.o
@@ -77,6 +77,64 @@ run-all: $(patsubst %,run-%,$(BENCH_EXECUTABLES))
 
 .PHONY: run-pwr
 run-pwr: $(patsubst %,run-%,$(POWERSTONE))
+
+# From 100us to 100ms, 6 per decade
+CACHE_TIMER_VALUES +=    100    150   220   330   470   680
+CACHE_TIMER_VALUES +=   1000   1500  2200  3300  4700  6800
+CACHE_TIMER_VALUES +=  10000  15000 22000 33000 47000 68000
+CACHE_TIMER_VALUES += 100000
+
+.PHONY: run-cache-test
+run-cache-test:
+	rm -f cache-runs
+	$(MAKE) upload-cache
+	$(MAKE) $(patsubst %,cache-wd-%,$(CACHE_TIMER_VALUES))
+
+.PHONY: cache-nd-%
+cache-nd-%:
+	echo "---------- ND $*us"         >> cache-runs
+	$(RVD) -c0 w IDMEM+0x3FFF0 0x8808
+	$(RVD) -c0 w IDMEM+0x3FFF4 0x0088
+	$(RVD) -c0 w IDMEM+0x3FFF8 0
+	$(RVD) -c0 w 0xF1000004 '(10*$*)-1'
+	$(RVD) -c0 w 0xF1000000 0
+	$(RVD) -c0 exec FLUSH_CACHE
+	$(RVD) -c0 write CREG 0x80000000
+	$(RVD) -c0 exec WAIT_COMPLETE     >> cache-runs
+	echo "Return value:"              >> cache-runs
+	$(RVD) -c0 r RET                  >> cache-runs
+	echo "Number of interrupts:"      >> cache-runs
+	$(RVD) -c0 r SCRP1                >> cache-runs
+	echo "Number of engine runs:"     >> cache-runs
+	$(RVD) -c0 r SCRP2                >> cache-runs
+	echo "Number of jpeg runs:"       >> cache-runs
+	$(RVD) -c0 r SCRP3                >> cache-runs
+	echo "Total cycles:"              >> cache-runs
+	$(RVD) -c0 r SCRP4                >> cache-runs
+
+.PHONY: cache-wd-%
+cache-wd-%:
+	echo "---------- WD $*us"         >> cache-runs
+	$(RVD) -c0 w IDMEM+0x3FFF0 0x8818
+	$(RVD) -c0 w IDMEM+0x3FFF4 0x1188
+	$(RVD) -c0 w IDMEM+0x3FFF8 1
+	$(RVD) -c0 w IDMEM+0x3FFFC 0x8880
+	$(RVD) -c0 w 0xF1000004 '(10*$*)-1'
+	$(RVD) -c0 w 0xF1000000 0
+	$(RVD) -c0 exec FLUSH_CACHE
+	$(RVD) -c0 write CREG 0x80000000
+	$(RVD) -c1 exec WAIT_COMPLETE     >> cache-runs
+	echo "Return value:"              >> cache-runs
+	$(RVD) -c0 r RET                  >> cache-runs
+	echo "Number of interrupts:"      >> cache-runs
+	$(RVD) -c0 r SCRP1                >> cache-runs
+	echo "Number of engine runs:"     >> cache-runs
+	$(RVD) -c1 r SCRP2                >> cache-runs
+	echo "Number of jpeg runs:"       >> cache-runs
+	$(RVD) -c1 r SCRP3                >> cache-runs
+	echo "Total cycles:"              >> cache-runs
+	$(RVD) -c1 r SCRP4                >> cache-runs
+
 
 .PHONY: debug server stop monitor monitor-nobuf
 debug server stop monitor monitor-nobuf:
