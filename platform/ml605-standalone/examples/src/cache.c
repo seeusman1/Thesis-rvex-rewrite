@@ -31,10 +31,21 @@
 //
 // The purpose of the program is to test cache + reconfiguration performance.
 //
-// To wait for completion, wait until CR_RET in context 0 OR context 1 is no
-// longer 0xFF (initial value). 0 marks success, 1 marks failure in engine, 2
-// marks failure in JPEG. The number of interrupts serviced is stored in
-// CR_SCRP1.
+// Wait for completion by sleeping; with fast interrupt rates it may not finish.
+//
+// The following registers are (ab)used for returning information:
+//   c0 CR_RSC1:  number of interrupts serviced
+//   c0 CR_RET:   0x00 -> finished
+//                0x01 -> execution error in engine
+//                0x02 -> execution error in jpeg
+//                0xFF -> did not finish
+//   cx CR_SCRP1: number of engine runs
+//   cx CR_SCRP2: number of cycles spent on engine runs
+//   cx CR_SCRP3: number of jpeg runs
+//   cx CR_SCRP4: number of cycles spent on jpeg runs
+//
+// x = the context that runs the benchmarks; depends on the values in
+//   0x3FFFFFF0..0x3FFFFFFB
 
 volatile long *config = 0x3FFFFFF0;
 #define CONFIG_A    config[0]
@@ -54,10 +65,14 @@ volatile int current_mode;
 
 int main(void) {
 	
+	long start;
+	
 	state = 0;
 	
 	// Skip ahead to running the program if we're in a context other than 0.
 	if (!CR_CID) {
+		
+		CR_RSC1 = 0;
 		
 		// Set the current configuration to A.
 		current_mode = 0;
@@ -84,6 +99,7 @@ int main(void) {
 	
 	// Run engine.
 	puts("\n\nEngine... ");
+	start = CR_CNT;
 	while (CR_CNT < 50000000) {
 		if (run_engine_once()) {
 			puts("\nEngine failed!\n");
@@ -92,11 +108,13 @@ int main(void) {
 			_stop();
 		}
 		puts("e");
-		CR_SCRP2++;
+		CR_SCRP1++;
 	}
+	CR_SCRP2 = CR_CNT - start;
 	
 	// Run jpeg.
 	puts("\nJPEG... ");
+	start = CR_CNT;
 	while (CR_CNT < 100000000) {
 		if (run_jpeg_once()) {
 			puts("\nJPEG failed!\n");
@@ -107,7 +125,7 @@ int main(void) {
 		puts("j");
 		CR_SCRP3++;
 	}
-	CR_SCRP4 = CR_CNT;
+	CR_SCRP4 = CR_CNT - start;
 	
 	// Complete.
 	puts("\nDone!\n");
@@ -121,7 +139,7 @@ int main(void) {
 void interrupt(int id) {
 	
 	// Record the number of interrupts serviced.
-	CR_SCRP1++;
+	CR_RSC1++;
 	
 	// Toggle configuration.
 	current_mode = !current_mode;
@@ -139,7 +157,7 @@ void wake_interrupt(void) {
 	}
 	
 	// Record the number of interrupts serviced.
-	CR_SCRP1++;
+	CR_RSC1++;
 	
 	// Enable the wakeup system.
 	CR_WCFG = WAKE_CFG;
