@@ -114,17 +114,17 @@ architecture Behavioral of ml605 is
 --=============================================================================
   
   -- Core and standalone system configuration WITHOUT cache.
-  constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
-    core => rvex_cfg(
-      numLanesLog2              => 3,
-      numLaneGroupsLog2         => 2,
-      numContextsLog2           => 2,
-      traceEnable               => 1
-    ),
-    core_valid                  => true,
-    imemDepthLog2B              => 18, -- 256 kiB (0x00000..0x3FFFF)
-    dmemDepthLog2B              => 18
-  );
+--  constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
+--    core => rvex_cfg(
+--      numLanesLog2              => 3,
+--      numLaneGroupsLog2         => 2,
+--      numContextsLog2           => 2,
+--      traceEnable               => 1
+--    ),
+--    core_valid                  => true,
+--    imemDepthLog2B              => 18, -- 256 kiB (0x00000..0x3FFFF)
+--    dmemDepthLog2B              => 18
+--  );
   
   -- Core and standalone system configuration WITH cache.
   --constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
@@ -143,6 +143,47 @@ architecture Behavioral of ml605 is
 --    cache_config_valid          => true,
 --    dmemDepthLog2B              => 18 -- 256 kiB (0x00000..0x3FFFF)
 --  );
+  
+  constant CFG                  : rvex_sa_generic_config_type := (
+    core => (
+      numLanesLog2              => 3,
+      numLaneGroupsLog2         => 2,
+      numContextsLog2           => 2,
+      genBundleSizeLog2         => 3,
+      bundleAlignLog2           => 1,
+      multiplierLanes           => 2#11111111#,
+      memLaneRevIndex           => 1,
+      numBreakpoints            => 4,
+      forwarding                => true,
+      limmhFromNeighbor         => true,
+      limmhFromPreviousPair     => false,
+      reg63isLink               => false,
+      cregStartAddress          => X"FFFFFC00",
+      resetVectors              => (others => (others => '0')),
+      unifiedStall              => false,
+      gpRegImpl                 => RVEX_GPREG_IMPL_MEM,
+      traceEnable               => true,
+      perfCountSize             => 4,
+      cachePerfCountEnable      => true
+    ),
+    cache_enable                => true,
+    cache_config => (
+      instrCacheLinesLog2       => 7, -- 128*32 = 4 kiB per block, 16 kiB total
+      dataCacheLinesLog2        => 9  -- 512*4 = 2 kiB per block, 8 kiB total
+    ),
+    cache_bypassRange           => addrRange(match => "1-------------------------------"),
+    imemDepthLog2B              => 18,
+    dmemDepthLog2B              => 18, -- 256 kiB
+    traceDepthLog2B             => 13, -- 8 kiB
+    debugBusMap_imem            => addrRangeAndMap(match => "00-1----------------------------"),
+    debugBusMap_dmem            => addrRangeAndMap(match => "001-----------------------------"),
+    debugBusMap_rvex            => addrRangeAndMap(match => "1111----------------------------"),
+    debugBusMap_trace           => addrRangeAndMap(match => "1110----------------------------"),
+    debugBusMap_mutex           => false,
+    rvexDataMap_dmem            => addrRangeAndMap(match => "0-------------------------------"),
+    rvexDataMap_bus             => addrRangeAndMap(match => "1-------------------------------")
+  );
+  
   
   -- S-rec file specifying the initial contents for the memories.
   constant SREC_FILENAME        : string := "../examples/init.srec";
