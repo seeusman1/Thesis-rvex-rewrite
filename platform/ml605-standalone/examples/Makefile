@@ -39,7 +39,7 @@ include $(GEN_EXAMPLES)/Makefile
 
 # How to upload;
 .PHONY: upload-%
-upload-%: %.srec %.disas %.elf debug
+upload-%: %.srec debug
 	-cd $(DEBUGIFACE) && make server
 	$(RVD) -call -d"all:PRINT_STATE{1}" break
 	$(RVD) -c0 upload srec $< IDMEM
