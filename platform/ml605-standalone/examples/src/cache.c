@@ -108,9 +108,9 @@ int main(void) {
 		
 	}
 	
-	puts("Cons...");
-	consistency_check();
-	puts("FAIL");
+	//puts("Cons...");
+	//consistency_check();
+	//puts("FAIL");
 	
 	// Run qurt.
 	puts("\n\nQurt... ");
