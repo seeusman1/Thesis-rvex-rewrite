@@ -72,6 +72,8 @@ volatile char state;
 
 volatile int current_mode;
 
+void consistency_check(void);
+
 int main(void) {
 	
 	long start;
@@ -105,6 +107,10 @@ int main(void) {
 		CR_CCR = CR_CCR_IEN | CR_CCR_RFT;
 		
 	}
+	
+	puts("Cons...");
+	consistency_check();
+	puts("FAIL");
 	
 	// Run qurt.
 	puts("\n\nQurt... ");
