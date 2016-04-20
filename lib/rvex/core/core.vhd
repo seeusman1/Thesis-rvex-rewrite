@@ -48,6 +48,10 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+-- pragma translate_off
+use IEEE.std_logic_textio.all;
+-- pragma translate_on
+
 library rvex;
 use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
@@ -60,6 +64,7 @@ use rvex.core_ctrlRegs_pkg.all;
 
 -- pragma translate_off
 use rvex.simUtils_pkg.all;
+use std.textio.all;
 -- pragma translate_on
 
 
@@ -236,7 +241,16 @@ entity core is
     CoreID                      : natural := 0;
     
     -- Platform version tag. This is put in the global control registers.
-    PLATFORM_TAG                : std_logic_vector(55 downto 0) := (others => '0')
+    PLATFORM_TAG                : std_logic_vector(55 downto 0) := (others => '0');
+    
+    -- Register consistency check output filename.
+    RCC_RECORD                  : string := "";
+    
+    -- Register consistency check input filename.
+    RCC_CHECK                   : string := "";
+    
+    -- Context to use for the consistency check.
+    RCC_CTXT                    : natural := 0
     
   );
   port (
@@ -1477,6 +1491,235 @@ begin -- architecture
         line := line + 1;
       end loop;
       
+    end process;
+  end generate;
+  -- pragma translate_on
+  
+  -----------------------------------------------------------------------------
+  -- Register consistency check code
+  -----------------------------------------------------------------------------
+  -- pragma translate_off
+  rcc_record_gen: if RCC_RECORD /= "" generate
+    rcc_record_proc: process (clk) is
+      file     f      : text open write_mode is RCC_RECORD;
+      variable l      : line;
+      variable lg     : natural;
+      variable ena    : boolean;
+      variable enas   : std_logic_vector(9 downto 0);
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          
+          -- Rewind the file when resetting.
+          file_close(f);
+          file_open(f, RCC_RECORD, write_mode);
+          
+        elsif clkEn = '1' then
+          for lane in 0 to 2**CFG.numLanesLog2-1 loop
+            lg := lane2group(lane, CFG);
+            
+            -- Determine whether we need to record.
+            ena := (stall(lg) = '0')
+               and (vect2uint(cfg2any_context(lg)) = RCC_CTXT)
+               and (pl2trace_data(lane).valid = '1');
+            if not ena then
+              next;
+            end if;
+            enas(0) := pl2trace_data(lane).reg_gpEnable;
+            enas(1) := pl2trace_data(lane).reg_linkEnable;
+            enas(9 downto 2) := pl2trace_data(lane).reg_brEnable;
+            ena := false;
+            for x in enas'range loop
+              if enas(x) = '1' then
+                ena := true;
+              elsif enas(x) /= '0' then
+                report "Register write enable signal is undefined. " &
+                       "Reg consistency check report will be incomplete!"
+                       severity error;
+              end if;
+            end loop;
+            if ena then
+              
+              -- Record the data.
+              write(l, pl2trace_data(lane).reg_gpEnable);
+              write(l, pl2trace_data(lane).reg_gpAddress);
+              write(l, pl2trace_data(lane).reg_linkEnable);
+              write(l, pl2trace_data(lane).reg_intData);
+              write(l, pl2trace_data(lane).reg_brEnable);
+              write(l, pl2trace_data(lane).reg_brData);
+              writeline(f, l);
+              
+            end if;
+          end loop;
+        end if;
+      end if;
+    end process;
+  end generate;
+  
+  rcc_check_gen: if RCC_CHECK /= "" generate
+    rcc_check_proc: process (clk) is
+      file     f          : text open read_mode is RCC_CHECK;
+      variable done       : boolean := false;
+      variable good       : boolean := true;
+      variable lnr        : natural := 0;
+      variable l          : line;
+      variable lg         : natural;
+      variable ena        : boolean;
+      variable enas       : std_logic_vector(9 downto 0);
+      variable gpEnable   : std_logic;           -- 55
+      variable gpAddress  : rvex_gpRegAddr_type; -- 54..49
+      variable linkEnable : std_logic;           -- 48
+      variable intData    : rvex_data_type;      -- 47..16
+      variable brEnable   : rvex_brRegData_type; -- 15..8
+      variable brData     : rvex_brRegData_type; -- 7..0
+      
+      procedure get_next is
+        variable data     : std_logic_vector(55 downto 0);
+      begin
+        if endfile(f) then
+          report "Register consistency check recording has ended."
+                 severity note;
+          done := true;
+          return;
+        end if;
+        readline(f, l);
+        lnr := lnr + 1;
+        read(l, data, good);
+        if not good then
+          report "Error reading register check file " &
+            RCC_CHECK & " line " & natural'image(lnr) severity error;
+          return;
+        end if;
+        gpEnable   := data(55);
+        gpAddress  := data(54 downto 49);
+        linkEnable := data(48);
+        intData    := data(47 downto 16);
+        brEnable   := data(15 downto 8);
+        brData     := data(7 downto 0);
+      end get_next;
+      
+      procedure report_state(
+        message    : string;
+        gpEnable   : std_logic;
+        gpAddress  : rvex_gpRegAddr_type;
+        linkEnable : std_logic;
+        intData    : rvex_data_type;
+        brEnable   : rvex_brRegData_type;
+        brData     : rvex_brRegData_type
+      ) is
+        variable l : line;
+      begin
+        write(l, message);
+        if gpEnable = '1' then
+          write(l, string'(" $r0.") & natural'image(vect2uint(gpAddress)) & " := 0x");
+          hwrite(l, intData);
+          write(l, string'(";"));
+        end if;
+        if linkEnable = '1' then
+          write(l, string'(" $l0.0 := 0x"));
+          hwrite(l, intData);
+          write(l, string'(";"));
+        end if;
+        for x in brEnable'range loop
+          if brEnable(x) = '1' then
+            write(l, string'(" $l0.0 := "));
+            write(l, brData(x));
+            write(l, string'(";"));
+          end if;
+        end loop;
+        report l.all severity note;
+      end report_state;
+      
+    begin
+      if good and rising_edge(clk) then
+        if reset = '1' then
+          
+          -- Rewind the file when resetting.
+          file_close(f);
+          file_open(f, RCC_CHECK, read_mode);
+          lnr := 0;
+          done := false;
+          get_next;
+          
+        elsif clkEn = '1' and not done then
+          for lane in 0 to 2**CFG.numLanesLog2-1 loop
+            lg := lane2group(lane, CFG);
+            
+            -- Determine whether we need to check.
+            ena := (stall(lg) = '0')
+               and (vect2uint(cfg2any_context(lg)) = RCC_CTXT)
+               and (pl2trace_data(lane).valid = '1');
+            if not ena then
+              next;
+            end if;
+            enas(0) := pl2trace_data(lane).reg_gpEnable;
+            enas(1) := pl2trace_data(lane).reg_linkEnable;
+            enas(9 downto 2) := pl2trace_data(lane).reg_brEnable;
+            ena := false;
+            for x in enas'range loop
+              if enas(x) = '1' then
+                ena := true;
+              elsif enas(x) /= '0' then
+                report "Register write enable signal is undefined. " &
+                       "Reg consistency check report will be incomplete!"
+                       severity error;
+              end if;
+            end loop;
+            if ena then
+              
+              -- Check the control signals.
+              if gpEnable /= pl2trace_data(lane).reg_gpEnable then
+                good := false;
+              end if;
+              if gpEnable = '1' then
+                if gpAddress /= pl2trace_data(lane).reg_gpAddress then
+                  good := false;
+                end if;
+              end if;
+              if linkEnable /= pl2trace_data(lane).reg_linkEnable then
+                good := false;
+              end if;
+              if (gpEnable or linkEnable) = '1' then
+                if intData /= pl2trace_data(lane).reg_intData then
+                  good := false;
+                end if;
+              end if;
+              if brEnable /= pl2trace_data(lane).reg_brEnable then
+                good := false;
+              end if;
+              if (brEnable and brData) /=
+                  (pl2trace_data(lane).reg_brEnable and
+                   pl2trace_data(lane).reg_brData) then
+                good := false;
+              end if;
+              if not good then
+                report "Register inconsistency at line " & natural'image(lnr) & "!"
+                       severity error;
+                report_state(
+                  "The recording says:",
+                  gpEnable,
+                  gpAddress,
+                  linkEnable,
+                  intData,
+                  brEnable,
+                  brData
+                );
+                report_state(
+                  "But I got:",
+                  pl2trace_data(lane).reg_gpEnable,
+                  pl2trace_data(lane).reg_gpAddress,
+                  pl2trace_data(lane).reg_linkEnable,
+                  pl2trace_data(lane).reg_intData,
+                  pl2trace_data(lane).reg_brEnable,
+                  pl2trace_data(lane).reg_brData
+                );
+              else
+                get_next;
+              end if;
+            end if;
+          end loop;
+        end if;
+      end if;
     end process;
   end generate;
   -- pragma translate_on

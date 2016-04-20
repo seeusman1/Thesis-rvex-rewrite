@@ -80,7 +80,12 @@ entity rvsys_standalone is
     PLATFORM_TAG                : std_logic_vector(55 downto 0) := (others => '0');
     
     -- Initial contents for the memory.
-    MEM_INIT                    : rvex_data_array := RVEX_DATA_ARRAY_NULL
+    MEM_INIT                    : rvex_data_array := RVEX_DATA_ARRAY_NULL;
+    
+    -- Register consistency check configuration (see core.vhd).
+    RCC_RECORD                  : string := "";
+    RCC_CHECK                   : string := "";
+    RCC_CTXT                    : natural := 0
     
   );
   port (
@@ -274,7 +279,10 @@ begin -- architecture
       generic map (
         CFG                     => CFG,
         CORE_ID                 => CORE_ID,
-        PLATFORM_TAG            => PLATFORM_TAG
+        PLATFORM_TAG            => PLATFORM_TAG,
+        RCC_RECORD              => RCC_RECORD,
+        RCC_CHECK               => RCC_CHECK,
+        RCC_CTXT                => RCC_CTXT
       )
       port map (
         
@@ -321,7 +329,10 @@ begin -- architecture
       generic map (
         CFG                     => CFG,
         CORE_ID                 => CORE_ID,
-        PLATFORM_TAG            => PLATFORM_TAG
+        PLATFORM_TAG            => PLATFORM_TAG,
+        RCC_RECORD              => RCC_RECORD,
+        RCC_CHECK               => RCC_CHECK,
+        RCC_CTXT                => RCC_CTXT
       )
       port map (
         

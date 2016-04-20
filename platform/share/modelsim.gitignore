@@ -7,3 +7,4 @@ unisim
 compile*.do
 unisim_*.vhd
 *stacktrace.vstf
+*.rcc

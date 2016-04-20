@@ -73,7 +73,12 @@ entity rvsys_standalone_cachedCore is
     
     -- Platform version tag. This is put in the global control registers of the
     -- processor.
-    PLATFORM_TAG                : std_logic_vector(55 downto 0) := (others => '0')
+    PLATFORM_TAG                : std_logic_vector(55 downto 0) := (others => '0');
+    
+    -- Register consistency check configuration (see core.vhd).
+    RCC_RECORD                  : string := "";
+    RCC_CHECK                   : string := "";
+    RCC_CTXT                    : natural := 0
     
   );
   port (
@@ -255,7 +260,10 @@ begin -- architecture
     generic map (
       CFG                       => CFG.core,
       CORE_ID                   => CORE_ID,
-      PLATFORM_TAG              => PLATFORM_TAG
+      PLATFORM_TAG              => PLATFORM_TAG,
+      RCC_RECORD                => RCC_RECORD,
+      RCC_CHECK                 => RCC_CHECK,
+      RCC_CTXT                  => RCC_CTXT
     )
     port map (
       
