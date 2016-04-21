@@ -15,6 +15,7 @@ compile-system-sa.do:
 
 compile-work.do:
 	@echo "vlib work" > $@
+	@echo "vcom -quiet -93 -work work \"../modelsim/ptag.vhd\"" >> $@
 	@echo "vcom -quiet -93 -work work \"../design/mem_init_pkg.vhd\"" >> $@
 	@echo "vcom -quiet -93 -work work \"../design/ml605.vhd\"" >> $@
 	@echo "vcom -quiet -93 -work work \"../design/ml605_tb.vhd\"" >> $@

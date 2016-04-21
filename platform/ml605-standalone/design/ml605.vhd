@@ -87,7 +87,12 @@ entity ml605 is
     -- when full syscon accuracy is not needed. When set, F_SYSCLK is used to
     -- configure the baud rate of the UART; it is ignored otherwise.
     DIRECT_RESET_AND_CLOCK      : boolean := false;
-    F_SYSCLK                    : real := 200000000.0 -- 200 MHz
+    F_SYSCLK                    : real := 200000000.0; -- 200 MHz
+    
+    -- Register consistency check configuration (see core.vhd).
+    RCC_RECORD                  : string := "";
+    RCC_CHECK                   : string := "";
+    RCC_CTXT                    : natural := 0
     
   );
   port (
@@ -184,7 +189,6 @@ architecture Behavioral of ml605 is
     rvexDataMap_bus             => addrRangeAndMap(match => "1-------------------------------")
   );
   
-  
   -- S-rec file specifying the initial contents for the memories.
   constant SREC_FILENAME        : string := "../examples/init.srec";
   
@@ -270,7 +274,12 @@ begin -- architecture
         PLATFORM_TAG              => RVEX_PLATFORM_TAG,
         
         -- S-rec file specifying the initial contents for the memories.
-        MEM_INIT                  => MEM_INIT
+        MEM_INIT                  => MEM_INIT,
+        
+        -- Register consistency check configuration (see core.vhd).
+        RCC_RECORD                => RCC_RECORD,
+        RCC_CHECK                 => RCC_CHECK,
+        RCC_CTXT                  => RCC_CTXT
         
       )
       port map (

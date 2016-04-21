@@ -20,9 +20,9 @@ all:_RESET {
   write(DCRF, 0x09hh); # break
   FLUSH_CACHE;
   set(reg, 0);
- # while (reg < 64, (
- #   writeWord(CREG_GPREG + (reg*4), 0);
- #   set(reg, reg + 1);
- # ));
+  while (reg < 64, (
+    writeWord(CREG_GPREG + (reg*4), 0);
+    set(reg, reg + 1);
+  ));
   write(DCRF, 0x80hh); # reset
 }

@@ -92,7 +92,12 @@ begin -- architecture
       -- when full syscon accuracy is not needed. When set, F_SYSCLK is used to
       -- configure the baud rate of the UART; it is ignored otherwise.
       DIRECT_RESET_AND_CLOCK    => true,
-      F_SYSCLK                  => 1000000.0
+      F_SYSCLK                  => 1000000.0,
+      
+      -- Register consistency check configuration (see core.vhd).
+      RCC_RECORD                => "",
+      RCC_CHECK                 => "",
+      RCC_CTXT                  => 0
     )
     port map (
       
