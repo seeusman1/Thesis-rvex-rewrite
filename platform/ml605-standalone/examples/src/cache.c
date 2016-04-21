@@ -63,6 +63,9 @@ volatile long *config = 0x3FFFFFF0;
 #define WAKE_CFG_B    config[3]
 #define WAKE_CFG_X(i) config[i+2]
 
+#define UART_BASE 0xF0000000
+#define UART_DATA (*((volatile unsigned char *)(UART_BASE)))
+
 int run_qurt_once(void);
 int run_jpeg_once(void);
 void _stop(void);
@@ -118,16 +121,16 @@ int main(void) {
 	//puts("FAIL");
 	
 	// Run qurt.
-	puts("\n\nQurt... \n");
+	UART_DATA = 's';//puts("\n\nQurt... \n");
 	start = CR_CNT;
 	while (CR_CNT < 50000000) {
 		if (run_qurt_once()) {
-			puts("\nQurt failed!\n");
+			UART_DATA = 'f';//puts("\nQurt failed!\n");
 			state = ~1;
 			CR_RET = 1;
 			_stop();
 		}
-		puts("q\n");
+		UART_DATA = 'q';//puts("q\n");
 		CR_SCRP1++;
 	}
 	CR_SCRP2 = CR_CNT - start;

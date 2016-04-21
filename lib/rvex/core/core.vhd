@@ -1718,12 +1718,12 @@ begin -- architecture
                   pl2trace_data(lane).reg_brEnable,
                   pl2trace_data(lane).reg_brData
                 );
-              else
-                get_next;
               end if;
               if not good then
                 report "Control signals differ; ending consistency check."
                        severity error;
+              else
+                get_next;
               end if;
             end if;
           end loop;
