@@ -78,6 +78,11 @@ int main(void) {
 	
 	long start;
 	
+	CONFIG_A   = 0x8818;
+	CONFIG_B   = 0x1188;
+	WAKE_CFG_A = 0x8810;
+	WAKE_CFG_B = 0x1180;
+	
 	state = 0;
 	
 	// Skip ahead to running the program if we're in a context other than 0.
@@ -113,7 +118,7 @@ int main(void) {
 	//puts("FAIL");
 	
 	// Run qurt.
-	puts("\n\nQurt... ");
+	puts("\n\nQurt... \n");
 	start = CR_CNT;
 	while (CR_CNT < 50000000) {
 		if (run_qurt_once()) {
@@ -122,7 +127,7 @@ int main(void) {
 			CR_RET = 1;
 			_stop();
 		}
-		puts("q");
+		puts("q\n");
 		CR_SCRP1++;
 	}
 	CR_SCRP2 = CR_CNT - start;

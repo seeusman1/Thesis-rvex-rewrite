@@ -1572,6 +1572,7 @@ begin -- architecture
       variable intData    : rvex_data_type;      -- 47..16
       variable brEnable   : rvex_brRegData_type; -- 15..8
       variable brData     : rvex_brRegData_type; -- 7..0
+      variable diff       : boolean := false;
       
       procedure get_next is
         variable data     : std_logic_vector(55 downto 0);
@@ -1668,31 +1669,35 @@ begin -- architecture
             if ena then
               
               -- Check the control signals.
+              diff := false;
               if gpEnable /= pl2trace_data(lane).reg_gpEnable then
-                good := false;
+                diff := true;
               end if;
               if gpEnable = '1' then
                 if gpAddress /= pl2trace_data(lane).reg_gpAddress then
-                  good := false;
+                  diff := true;
                 end if;
               end if;
               if linkEnable /= pl2trace_data(lane).reg_linkEnable then
+                diff := true;
+              end if;
+              if brEnable /= pl2trace_data(lane).reg_brEnable then
+                diff := true;
+              end if;
+              if diff then
                 good := false;
               end if;
               if (gpEnable or linkEnable) = '1' then
                 if intData /= pl2trace_data(lane).reg_intData then
-                  good := false;
+                  diff := true;
                 end if;
-              end if;
-              if brEnable /= pl2trace_data(lane).reg_brEnable then
-                good := false;
               end if;
               if (brEnable and brData) /=
                   (pl2trace_data(lane).reg_brEnable and
                    pl2trace_data(lane).reg_brData) then
-                good := false;
+                diff := true;
               end if;
-              if not good then
+              if diff then
                 report "Register inconsistency at line " & natural'image(lnr) & "!"
                        severity error;
                 report_state(
@@ -1715,6 +1720,10 @@ begin -- architecture
                 );
               else
                 get_next;
+              end if;
+              if not good then
+                report "Control signals differ; ending consistency check."
+                       severity error;
               end if;
             end if;
           end loop;

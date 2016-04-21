@@ -484,7 +484,7 @@ begin -- architecture
       if rising_edge(clk) then
         if reset = '1' then
           state     <= X"00";
-          latency   <= X"40";
+          latency   <= X"14";
           readData  <= (others => '0');
           ack       <= '0';
         elsif clkEn = '1' then

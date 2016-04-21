@@ -388,7 +388,7 @@ begin -- architecture
           if reset = '1' then
             rit_pend  <= '0';
             rit_timer <= X"00000000";
-            rit_max   <= X"0000FFFF";
+            rit_max   <= X"00000063";
             rit2dbg   <= BUS_SLV2MST_IDLE;
           elsif clkEn = '1' then
             
