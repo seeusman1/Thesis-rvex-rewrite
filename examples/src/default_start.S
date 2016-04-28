@@ -161,7 +161,8 @@ mov $r0.60 = 0
 #endif
 ;;
   /* Skip BSS init if BSS size is 0 or if we're not context 0. */
-  c0  br                    $b0.0, 2f
+  /*c0  br                    $b0.0, 2f*/
+  c0  goto                  2f
 ;;
 1:
   /* Write 0 to the current BSS pointer. */

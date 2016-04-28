@@ -96,7 +96,7 @@ begin -- architecture
       
       -- Register consistency check configuration (see core.vhd).
       RCC_RECORD                => "",
-      RCC_CHECK                 => "cache-correct-c1.rcc",
+      RCC_CHECK                 => "cache-correct-c1-nobss.rcc",
       RCC_CTXT                  => 1
     )
     port map (
