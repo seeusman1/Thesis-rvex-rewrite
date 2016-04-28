@@ -150,14 +150,18 @@ begin -- architecture
         -- Handle flushing.
         if flush = '1' and enableBus = '1' then
           ram_valid <= (others => '0');
+        else
           
-        -- Handle line invalidation.
-        elsif invalidate = '1' and enableBus = '1' then
-          ram_valid(to_integer(unsigned(invalOffset))) <= '0';
+          -- Handle line invalidation.
+          if invalidate = '1' and enableBus = '1' then
+            ram_valid(to_integer(unsigned(invalOffset))) <= '0';
+          end if;
           
-        -- Handle line validation.
-        elsif validate = '1' and enableCPU = '1' then
-          ram_valid(to_integer(unsigned(cpuOffset))) <= '1';
+          -- Handle line validation.
+          if validate = '1' and enableCPU = '1' then
+            ram_valid(to_integer(unsigned(cpuOffset))) <= '1';
+          end if;
+          
         end if;
         
         -- Handle reading and write-first synchronization.
