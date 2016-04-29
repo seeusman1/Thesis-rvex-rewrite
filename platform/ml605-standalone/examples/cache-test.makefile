@@ -125,6 +125,7 @@ cache-ws-%:
 
 .PHONY: cache-pd-%
 cache-pd-%:
+	echo "---------- PD $*us"         >> cache-runs
 	$(RVD) -c0 w IDMEM+0x3FFF0 0x8818
 	$(RVD) -c0 w IDMEM+0x3FFF4 0x1188
 	$(RVD) -c0 w IDMEM+0x3FFF8 0x8810
