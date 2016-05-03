@@ -152,14 +152,14 @@ begin -- architecture
           ram_valid <= (others => '0');
         else
           
-          -- Handle line invalidation.
-          if invalidate = '1' and enableBus = '1' then
-            ram_valid(to_integer(unsigned(invalOffset))) <= '0';
-          end if;
-          
           -- Handle line validation.
           if validate = '1' and enableCPU = '1' then
             ram_valid(to_integer(unsigned(cpuOffset))) <= '1';
+          end if;
+          
+          -- Handle line invalidation.
+          if invalidate = '1' and enableBus = '1' then
+            ram_valid(to_integer(unsigned(invalOffset))) <= '0';
           end if;
           
         end if;
