@@ -3,6 +3,7 @@ utils
 bus
 core
 cache
+mmu
 gaisler
 periph
 system
