@@ -1,0 +1,28 @@
+
+# Number of contexts in the core.
+all: _NUM_CONTEXTS           { 4 }
+
+# Memory map as seen from the debugging interface.
+all: MEM                     { 0x00000000 }
+all: CREG                    { 0xD0000000 }
+all: PLATFORM                { 0xD0000400 }
+all: CACHE                   { 0xD0000800 }
+all: MMU                     { 0xD0000C00 }
+all: _TRACE_ADDR             { 0xD0002000 }
+
+# Flushes the cache.
+all: FLUSH_CACHE {
+  write(CACHE, 0x0F0F0000);
+}
+
+# This is evaluated when "rvd reset" is called.
+all:_RESET {
+  write(DCRF, 0x09hh); # break
+  FLUSH_CACHE;
+  set(reg, 0);
+  while (reg < 64, (
+    writeWord(CREG_GPREG + (reg*4), 0);
+    set(reg, reg + 1);
+  ));
+  write(DCRF, 0x80hh); # reset
+}
