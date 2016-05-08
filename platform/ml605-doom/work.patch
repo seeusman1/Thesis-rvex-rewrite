@@ -24,7 +24,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
     variable v        : ddr_reg_type;   -- local variables for registers
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/config.vhd	2016-05-06 22:26:03.162456185 +0200
++++ work/config.vhd	2016-05-08 20:17:49.533800353 +0200
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -41,7 +41,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
  package config is
  -- Technology and synthesis options
    constant CFG_FABTECH : integer := virtex6;
-@@ -21,62 +30,36 @@ package config is
+@@ -21,62 +30,38 @@ package config is
    constant CFG_NOASYNC : integer := 0;
    constant CFG_SCAN : integer := 0;
  -- LEON3 processor core
@@ -111,14 +111,16 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +        bundleAlignLog2       => 0,
 +        limmhFromPreviousPair => 0,
 +        traceEnable           => 0,
-+        perfCountSize         => 5,
++        perfCountSize         => 4,
 +        cachePerfCountEnable  => 0
 +      ), core_valid => true,
 +    
 +      -- Cache configuration
 +      cache => cache_cfg(
-+        instrCacheLinesLog2 => 10, -- 256*32 = 8 kiB per block, 32 kiB total
-+        dataCacheLinesLog2  => 11  -- 1024*4 = 4 kiB per block, 16 kiB total
++        --instrCacheLinesLog2 => 10, -- 1024*32 = 32 kiB per block, 128 kiB total
++        --dataCacheLinesLog2  => 11  -- 2048*4 = 8 kiB per block, 32 kiB total
++        instrCacheLinesLog2 => 8,  -- 256*32 = 8 kiB per block, 32 kiB total
++        dataCacheLinesLog2  => 10  -- 1024*4 = 4 kiB per block, 16 kiB total
 +      ), cache_valid => true)
 +    
 +  );
@@ -131,7 +133,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
    constant CFG_FPNPEN : integer := 0;
    constant CFG_AHBIO : integer := 16#FFF#;
    constant CFG_APBADDR : integer := 16#800#;
-@@ -85,83 +68,16 @@ package config is
+@@ -85,83 +70,17 @@ package config is
    constant CFG_AHB_MONWAR : integer := 0;
    constant CFG_AHB_DTRACE : integer := 0;
  -- DSU UART
@@ -218,6 +220,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 -  constant CFG_MIG_CLK4 : integer := 16;
 +  --constant CFG_MIG_CLK4 : integer := 32; -- 37.5 MHz (should work, but cutting it very close)
 +  constant CFG_MIG_CLK4 : integer := 30; -- 40 MHz
++  --constant CFG_MIG_CLK4 : integer := 60; -- rage
 +
  end;
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/grlib_mig/mig39.prj work/grlib_mig/mig39.prj
@@ -250,8 +253,8 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
              <Pin SignalName="ddr3_addr[3]" PINNumber="E16" SignalGroup="Address" Bank="36" />
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp_mig39.ucf work/leon3mp_mig39.ucf
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp_mig39.ucf	2014-04-16 16:50:08.000000000 +0200
-+++ work/leon3mp_mig39.ucf	2016-05-04 17:33:27.311189668 +0200
-@@ -1,160 +1,212 @@
++++ work/leon3mp_mig39.ucf	2016-05-08 19:24:02.994639662 +0200
+@@ -1,160 +1,248 @@
 -
 -NET "clk_ref_p" TNM_NET = TNM_clk_ref;
 -TIMESPEC "TS_clk_ref" = PERIOD "TNM_clk_ref" 5 ns ;
@@ -560,14 +563,50 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +#NET "GPIO_DIP_SW8"                  LOC = "K21";    ## 8   on SW1 DIP switch (active-high)
 +##
 +
-+NET "led(0)"                    LOC = "AC22";   ## 2   on LED DS12, 1 on J62
-+NET "led(1)"                    LOC = "AC24";   ## 2   on LED DS11, 2 on J62
-+NET "led(2)"                    LOC = "AE22";   ## 2   on LED DS9,  3 on J62
-+NET "led(3)"                    LOC = "AE23";   ## 2   on LED DS10, 4 on J62
-+NET "led(4)"                    LOC = "AB23";   ## 2   on LED DS15, 5 on J62
-+NET "led(5)"                    LOC = "AG23";   ## 2   on LED DS14, 6 on J62
-+NET "led(6)"                    LOC = "AE24";   ## 2   on LED DS22, 7 on J62
-+NET "led(7)"                    LOC = "AD24";   ## 2   on LED DS21, 8 on J62
++# LCD display connector abused as GPIO.
++NET "gpio(0)"                    LOC = "T28";   ## RS
++NET "gpio(1)"                    LOC = "AC14";  ## RW
++NET "gpio(2)"                    LOC = "AK12";  ## E
++NET "gpio(3)"                    LOC = "AD14";  ## DB4
++NET "gpio(4)"                    LOC = "AK11";  ## DB5
++NET "gpio(5)"                    LOC = "AJ11";  ## DB6
++NET "gpio(6)"                    LOC = "AE12";  ## DB7
++NET "gpio(*)"                    IOSTANDARD = LVCMOS25;
++
++# LEDs.
++NET "led(0)"                    LOC = "AC22";   ## 1
++NET "led(1)"                    LOC = "AC24";   ## 2
++NET "led(2)"                    LOC = "AE22";   ## 3
++NET "led(3)"                    LOC = "AE23";   ## 4
++NET "led(4)"                    LOC = "AB23";   ## 5
++NET "led(5)"                    LOC = "AG23";   ## 6
++NET "led(6)"                    LOC = "AE24";   ## 7
++NET "led(7)"                    LOC = "AD24";   ## 8
++NET "led(8)"                    LOC = "AP24";   ## C
++NET "led(9)"                    LOC = "AD21";   ## W
++NET "led(10)"                   LOC = "AE21";   ## E
++NET "led(11)"                   LOC = "AH28";   ## S
++NET "led(12)"                   LOC = "AH27";   ## N
++NET "led(*)"                    IOSTANDARD = LVCMOS25;
++
++# GPIO switches.
++NET "dipsw(0)"                   LOC = "D22";   ## 1
++NET "dipsw(1)"                   LOC = "C22";   ## 2
++NET "dipsw(2)"                   LOC = "L21";   ## 3
++NET "dipsw(3)"                   LOC = "L20";   ## 4
++NET "dipsw(4)"                   LOC = "C18";   ## 5
++NET "dipsw(5)"                   LOC = "B18";   ## 6
++NET "dipsw(6)"                   LOC = "K22";   ## 7
++NET "dipsw(7)"                   LOC = "K21";   ## 8
++NET "dipsw(*)"                   IOSTANDARD = LVCMOS15;
++
++# Pushbuttons (except reset).
++NET "pbtn(0)"                    LOC = "G26";   ## C
++NET "pbtn(1)"                    LOC = "H17";   ## W
++NET "pbtn(2)"                    LOC = "G17";   ## E
++NET "pbtn(3)"                    LOC = "A18";   ## S
++NET "pbtn(4)"                    LOC = "A19";   ## N
++NET "pbtn(*)"                    IOSTANDARD = LVCMOS15;
 +
 +NET "dvi_iic_scl"                   LOC = "AN10";   ## 2   on Q5, 15 on U38
 +NET "iic_scl_main"               LOC = "AK9";    ## 2   on Q19
@@ -1862,7 +1901,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/leon3mp.vhd	2016-05-06 22:29:19.995465988 +0200
++++ work/leon3mp.vhd	2016-05-08 20:15:30.990793453 +0200
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License
@@ -1894,7 +1933,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
  
  entity leon3mp is
    generic (
-@@ -61,792 +71,947 @@ entity leon3mp is
+@@ -61,792 +71,983 @@ entity leon3mp is
      SIM_BYPASS_INIT_CAL : string := "OFF"
      );
    port (
@@ -2678,7 +2717,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  
 +  
 +  ------------------------------------------------------------------------------
-+  -- High frequency bus
++  -- Bus control
 +  ------------------------------------------------------------------------------
 +  -- Masters:
 +  --   0: r-VEX lane group 0
@@ -2697,11 +2736,12 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  -- APB slaves:
 +  --   0: irqmp       0x80000000..0x800000FF
 +  --   1: apbps2      0x80000100..0x800001FF                IRQ 6
-+  --   2: gptimer     0x80000200..0x800002FF                IRQ 1, 2, 3
-+  --   3: svgactrl    0x80000300..0x800003FF
-+  --   4: i2cmst      0x80000400..0x800004FF                IRQ 7
-+  --   5: gpio        0x80000500..0x800005FF                IRQ 8
-+  --   6: only used for registering r-VEX bus interrupts
++  --   2: apbps2      0x80000200..0x800002FF                IRQ 7
++  --   3: gptimer     0x80000300..0x800003FF                IRQ 1, 2, 3
++  --   4: svgactrl    0x80000400..0x800004FF
++  --   5: i2cmst      0x80000500..0x800005FF                IRQ 8
++  --   6: gpio        0x80000600..0x800006FF                IRQ 9
++  --   7: only used for registering r-VEX bus interrupts
 +  --
 +  -- r-VEX bus slaves:
 +  --   r-VEX          0xD0000000..0xD00FFFFF
@@ -2730,7 +2770,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      hindex                    => 1,
 +      haddr                     => 16#800#,
 +      hmask                     => 16#F00#,
-+      nslaves                   => 7
++      nslaves                   => 8
 +    )
 +    port map (
 +      rst                       => rstn,
@@ -3039,14 +3079,16 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    -- VGA sync generator etc.
 +    svga0: svgactrl 
 +      generic map (
++        length                  => 768,
++        part                    => 256,
 +        memtech                 => memtech,
-+        pindex                  => 3,
-+        paddr                   => 3,
++        pindex                  => 4,
++        paddr                   => 4,
 +        hindex                  => CFG_NCPU+2,
 +        clk0                    => 40000,
-+        clk1                    => 24000,
-+        clk2                    => 20000,
-+        clk3                    => 16000,
++        clk1                    => 80000,
++        clk2                    => 160000,
++        clk3                    => 25000,
 +        burstlen                => 4,
 +        ahbaccsz                => CFG_AHBDW
 +      )
@@ -3055,7 +3097,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +        clk                     => clkm,
 +        vgaclk                  => clkvga,
 +        apbi                    => apbi,
-+        apbo                    => apbo(3),
++        apbo                    => apbo(4),
 +        vgao                    => vgao,
 +        ahbi                    => ahbmi,
 +        ahbo                    => ahbmo(CFG_NCPU),
@@ -3063,11 +3105,13 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      );
 +    
 +    -- Interface logic for the CH7301C DAC/DVI controller.
-+    -- This was set to interface format 2 for some reason, which limits the
-+    -- color depth to 5:6:5. Reverted it to the default (IDF=0) for true color.
++    -- Interface format = 2 for some reason. This limits the actual color depth
++    -- to 5:6:5. Don't know why, but it doesn't seem to work with 0 (hypothesis
++    -- + limited testing).
 +    dvi0: entity work.svga2ch7301c
 +      generic map (
-+        tech                    => fabtech
++        tech                    => fabtech,
++        idf                     => 2
 +      )
 +      port map (
 +        clk100                  => clk100,
@@ -3253,17 +3297,17 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 -    ahbmo(i) <= ahbm_none;
 -  end generate;
 +      generic map (
-+        pindex                  => 4,
-+        paddr                   => 4,
++        pindex                  => 5,
++        paddr                   => 5,
 +        pmask                   => 16#FFF#,
-+        pirq                    => 7,
++        pirq                    => 8,
 +        filter                  => (CLKM_FREQ*5+50000)/100000+1
 +      )
 +      port map (
 +        rstn                    => rstn,
 +        clk                     => clkm,
 +        apbi                    => apbi,
-+        apbo                    => apbo(4),
++        apbo                    => apbo(5),
 +        i2ci                    => dvi_i2ci,
 +        i2co                    => dvi_i2co
 +      );
@@ -3378,8 +3422,8 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    -- We're only using the APB slot for the interrupt.
 +    rvex_uart_apb: process (irq) is
 +    begin
-+      apbo(6) <= apb_none;
-+      apbo(6).pirq <= (4 => irq, 5 => audio_irq, others => '0');
++      apbo(7) <= apb_none;
++      apbo(7).pirq <= (4 => irq, 5 => audio_irq, others => '0');
 +    end process;
 +
 +    dsurx_pad : inpad generic map (level => cmos, voltage => x25v, tech  => padtech)
@@ -3393,10 +3437,10 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  
 +  
 +  ------------------------------------------------------------------------------
-+  -- PS/2 interface
++  -- PS/2 interfaces
 +  ------------------------------------------------------------------------------
 +  
-+  ps2_block: block is
++  ps2_block_a: block is
 +    signal ps2i                 : ps2_in_type;
 +    signal ps2o                 : ps2_out_type;
 +  begin
@@ -3427,6 +3471,37 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    
 +  end block;
 +  
++  ps2_block_b: block is
++    signal ps2i                 : ps2_in_type;
++    signal ps2o                 : ps2_out_type;
++  begin
++    
++    -- PS/2 controller.
++    ps2_inst: apbps2
++      generic map (
++        pindex                  => 2,
++        paddr                   => 2,
++        pmask                   => 16#FFF#,
++        pirq                    => 7,
++        fKHz                    => CLKM_FREQ
++      )
++      port map (
++        rst                     => rstn,
++        clk                     => clkm,
++        apbi                    => apbi,
++        apbo                    => apbo(2),
++        ps2i                    => ps2i,
++        ps2o                    => ps2o
++      );
++    
++    -- GRLIB pad tech bullshit because this is totally an ASIC.
++    ps2_clk_pad : iopad generic map (level => cmos, voltage => x25v, tech => padtech)
++      port map (gpio(2), ps2o.ps2_clk_o, ps2o.ps2_clk_oe, ps2i.ps2_clk_i);
++    ps2_data_pad : iopad generic map (level => cmos, voltage => x25v, tech => padtech)
++      port map (gpio(3), ps2o.ps2_data_o, ps2o.ps2_data_oe, ps2i.ps2_data_i);
++    
++  end block;
++  
 +  
 +  ------------------------------------------------------------------------------
 +  -- General-purpose timer
@@ -3440,8 +3515,8 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    
 +    gptimer_inst: gptimer
 +      generic map (
-+        pindex                  => 2,
-+        paddr                   => 2,
++        pindex                  => 3,
++        paddr                   => 3,
 +        pmask                   => 16#FFF#,
 +        pirq                    => 1, -- 1, 2, 3
 +        sepirq                  => 1,
@@ -3453,7 +3528,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +        rst                     => rstn,
 +        clk                     => clkm,
 +        apbi                    => apbi,
-+        apbo                    => apbo(2),
++        apbo                    => apbo(3),
 +        gpti                    => gpti,
 +        gpto                    => gpto
 +      );
@@ -3477,19 +3552,19 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    
 +    gpio_inst: grgpio
 +      generic map (
-+        pindex                  => 5,
-+        paddr                   => 5,
++        pindex                  => 6,
++        paddr                   => 6,
 +        pmask                   => 16#fff#,
 +        imask                   => 16#1FFF0000#,
 +        nbits                   => 29,
-+        pirq                    => 8,
++        pirq                    => 9,
 +        irqgen                  => 1
 +      )
 +      port map (
 +        rst                     => rstn,
 +        clk                     => clkm,
 +        apbi                    => apbi,
-+        apbo                    => apbo(5),
++        apbo                    => apbo(6),
 +        gpioi                   => gpioi,
 +        gpioo                   => gpioo
 +      );
@@ -21721,6 +21796,49 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 -PIN "pcie_mt.EP/pcie_v6.v6_pcie_v1_7_i/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
 -
 -#TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS(trn_reset_n_i) 8 ns;
+diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/svga2ch7301c.vhd work/svga2ch7301c.vhd
+--- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/svga2ch7301c.vhd	2014-04-16 16:51:31.000000000 +0200
++++ work/svga2ch7301c.vhd	2016-05-08 16:37:13.222141145 +0200
+@@ -98,9 +98,9 @@ architecture rtl of svga2ch7301c is
+   signal d0, d1 : std_logic_vector(11 downto 0);
+   signal red, green, blue : std_logic_vector(7 downto 0);
+ 
+-  signal lvgaclk, vgaclk, clk40, clk65, clk50, clk25 : std_ulogic;
++  signal lvgaclk, vgaclk, clk40, clk6, clk12, clk25 : std_ulogic;
+   
+-  signal clkval : std_logic_vector(1 downto 0);
++  signal clkval : std_logic_vector(3 downto 0);
+   signal clkval40 : std_logic_vector(1 downto 0);
+   signal clkval65 : std_logic_vector(1 downto 0);
+   
+@@ -191,13 +191,13 @@ begin  -- rtl
+   
+   -- Clock selection
+   bufg00 : BUFG port map (I => lvgaclk, O => vgaclk);
+-  lvgaclk <= clk25 when clksel = "00" else clk40 when clksel = "01"
+- 	else clk50 when clksel = "10" else clk65;
++  lvgaclk <= clk25 when clksel = "00" else clk12 when clksel = "01"
++ 	else clk6 when clksel = "10" else clk40;
+   
+   -- Generate clocks
+   clkdiv : process(clk100, rstn)
+   begin
+-    if rstn = '0' then clkval <= "00";
++    if rstn = '0' then clkval <= "0000";
+     elsif rising_edge(clk100) then
+       clkval <= clkval + 1;
+     end if;
+@@ -214,8 +214,8 @@ begin  -- rtl
+   end process;
+ 
+   clk25 <= clkval(1);
+-  clk50 <= clkval(0);
++  clk12 <= clkval(2);
++  clk6  <= clkval(3);
+   clk40 <= clkval40(1);
+-  clk65 <= clkval65(0);
+   
+ end rtl;
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd work/testbench.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd	2014-04-16 16:51:31.000000000 +0200
 +++ work/testbench.vhd	2016-05-04 17:33:27.326189669 +0200
