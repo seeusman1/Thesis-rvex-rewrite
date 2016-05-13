@@ -56,7 +56,7 @@ use rvex.cache_pkg.all;
 
 --=============================================================================
 -- This is the toplevel entity for the reconfigurable instruction and data
--- cache designed for the rvex core.
+-- cache designed for the rvex core. It also optionally includes the MMU.
 -------------------------------------------------------------------------------
 entity cache is
 --=============================================================================
@@ -117,18 +117,38 @@ entity cache is
     rv2dcache_writeData         : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_writeMask         : in  rvex_mask_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_writeEnable       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    rv2dcache_bypass            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_bypass            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     dcache2rv_readData          : out rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     dcache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     dcache2rv_ifaceFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
+    -- MMU interface.
+    rv2mmu_pageTablePtr         : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => (others => '0'));
+    rv2mmu_addrSpaceID          : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => (others => '0'));
+    rv2mmu_enable               : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    rv2mmu_kernelMode           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '1');
+    rv2mmu_wtcTrapEna           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    mmu2rv_dataPageFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    mmu2rv_dataKernelAccVio     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    mmu2rv_dataWriteAccVio      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    mmu2rv_dataWriteToClean     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    mmu2rv_insnPageFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    mmu2rv_insnKernelAccVio     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    
     ---------------------------------------------------------------------------
-    -- Bus master interface
+    -- Bus master interfaces
     ---------------------------------------------------------------------------
-    -- Bus interface for the caches. The timing of these signals is governed by
-    -- clkEnBus. 
-    cache2bus_bus               : out bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    bus2cache_bus               : in  bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    -- Bus interface for the caches and MMU table walker. The timing of these
+    -- signals is governed by clkEnBus.
+    cache2bus_mst               : out bus_mst2slv_array(2**RCFG.numLaneGroupsLog2 downto 0);
+    bus2cache_mst               : in  bus_slv2mst_array(2**RCFG.numLaneGroupsLog2 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Bus slave interface
+    ---------------------------------------------------------------------------
+    -- Bus slave interface for the status and control registers.
+    bus2cache_slv               : in  bus_mst2slv_type;
+    cache2bus_slv               : out bus_slv2mst_type;
     
     ---------------------------------------------------------------------------
     -- Bus snooping interface
@@ -146,16 +166,7 @@ entity cache is
     bus2cache_invalSource       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     -- Active high enable signal for line invalidation.
-    bus2cache_invalEnable       : in  std_logic := '0';
-    
-    ---------------------------------------------------------------------------
-    -- Status and control signals
-    ---------------------------------------------------------------------------
-    -- The timing of these signals is governed by clkEnBus.
-    
-    -- Cache flush request signals for each instruction and data cache.
-    sc2icache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
-    sc2dcache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0')
+    bus2cache_invalEnable       : in  std_logic := '0'
     
   );
 end cache;

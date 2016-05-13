@@ -56,8 +56,8 @@ package core_version_pkg is
 
 -- The value below is the version tag for the core, which is automatically
 -- generated based on the MD5 hash of the contents of the other source files.
--- ASCII tag = z1KS3dj
-constant RVEX_CORE_TAG : std_logic_vector(55 downto 0) := X"7A314B5333646A";
+-- ASCII tag = 0xf3rF5
+constant RVEX_CORE_TAG : std_logic_vector(55 downto 0) := X"30786633724635";
 
 end core_version_pkg;
 
