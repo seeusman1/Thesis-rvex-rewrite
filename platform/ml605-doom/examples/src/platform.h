@@ -69,14 +69,18 @@ typedef struct {
 
 /**
  * Registers the specified interrupt handler function for the specified IRQ.
- * Only one handler can be registered at a time.
+ * Only one handler can be registered at a time. data is passed to the handler.
  */
-void plat_irq_register(int irq, void (*handler)(void));
+void plat_irq_register(
+  int irq,
+  void (*handler)(unsigned long data),
+  unsigned long data
+);
 
 /**
- * Masks or unmasks an interrupt.
+ * Enables or masks an interrupt.
  */
-void plat_irq_mask(int irq, int enable);
+void plat_irq_enable(int irq, int enable);
 
 /**
  * Returns whether the specified interrupt is pending.
@@ -187,7 +191,11 @@ int plat_frequency(void);
 /**
  * Registers an (OS) tick handler. interval is specified in microseconds.
  */
-int plat_tick(int interval, void (*handler)(void));
+int plat_tick(
+  int interval,
+  void (*handler)(unsigned long data),
+  unsigned long data
+);
 
 
 /******************************************************************************/
@@ -277,9 +285,6 @@ void plat_video_palette(int index, int r, int g, int b);
 /* PS/2                                                                       */
 /******************************************************************************/
 
-// Random Linux kernel source with key codes.
-#include "input-event-codes.h"
-
 // PS/2 interface.
 typedef struct {
   unsigned int data;
@@ -291,23 +296,179 @@ typedef struct {
 #define PLAT_PS2(i)    ((volatile apbps2_t*)(0x80000100+(i<<8)))
 #define PLAT_NUM_PS2   2
 
+// Keyboard event buffer depth. Must be a power of two!
+#define KBD_EVENT_BUFFER_DEPTH 256
+
+// Subset of Windows virtual key codes plus a couple made up ones (because we
+// only need to support EN-US thank god). Windows instead of Linux, because as
+// I've found out, the Linux codes are just as insane as scan codes so you might
+// as well not use them.
+#define VK_A 'A' /* A */
+#define VK_B 'B' /* B */
+#define VK_C 'C' /* C */
+#define VK_D 'D' /* D */
+#define VK_E 'E' /* E */
+#define VK_F 'F' /* F */
+#define VK_G 'G' /* G */
+#define VK_H 'H' /* H */
+#define VK_I 'I' /* I */
+#define VK_J 'J' /* J */
+#define VK_K 'K' /* K */
+#define VK_L 'L' /* L */
+#define VK_M 'M' /* M */
+#define VK_N 'N' /* N */
+#define VK_O 'O' /* O */
+#define VK_P 'P' /* P */
+#define VK_Q 'Q' /* Q */
+#define VK_R 'R' /* R */
+#define VK_S 'S' /* S */
+#define VK_T 'T' /* T */
+#define VK_U 'U' /* U */
+#define VK_V 'V' /* V */
+#define VK_W 'W' /* W */
+#define VK_X 'X' /* X */
+#define VK_Y 'Y' /* Y */
+#define VK_Z 'Z' /* Z */
+#define VK_0 '0' /* 0 */
+#define VK_1 '1' /* 1 */
+#define VK_2 '2' /* 2 */
+#define VK_3 '3' /* 3 */
+#define VK_4 '4' /* 4 */
+#define VK_5 '5' /* 5 */
+#define VK_6 '6' /* 6 */
+#define VK_7 '7' /* 7 */
+#define VK_8 '8' /* 8 */
+#define VK_9 '9' /* 9 */
+#define VK_BACKQUOTE 0xC0 /* ` */
+#define VK_DASH 0xBD /* - */
+#define VK_EQUALS 0xBB /* = */
+#define VK_BACKSLASH 0xDC /* \ */
+#define VK_BACK 0x08 /* BKSP */
+#define VK_SPACE 0x20 /* SPACE */
+#define VK_TAB 0x09 /* TAB */
+#define VK_CAPITAL 0x14 /* CAPS */
+#define VK_LSHIFT 0xA0 /* LSHFT */
+#define VK_LCONTROL 0xA2 /* LCTRL */
+#define VK_LWIN 0x5B /* LGUI */
+#define VK_LMENU 0xA4 /* LALT */
+#define VK_RSHIFT 0xA1 /* RSHFT */
+#define VK_RCONTROL 0xA3 /* RCTRL */
+#define VK_RWIN 0x5C /* RGUI */
+#define VK_RMENU 0xA5 /* RALT */
+#define VK_APPS 0x5D /* APPS */
+#define VK_RETURN 0x0D /* ENTER */
+#define VK_ESCAPE 0x1B /* ESC */
+#define VK_F1 0x70 /* F1 */
+#define VK_F2 0x71 /* F2 */
+#define VK_F3 0x72 /* F3 */
+#define VK_F4 0x73 /* F4 */
+#define VK_F5 0x74 /* F5 */
+#define VK_F6 0x75 /* F6 */
+#define VK_F7 0x76 /* F7 */
+#define VK_F8 0x77 /* F8 */
+#define VK_F9 0x78 /* F9 */
+#define VK_F10 0x79 /* F10 */
+#define VK_F11 0x7A /* F11 */
+#define VK_F12 0x7B /* F12 */
+#define VK_SCROLL 0x91 /* SCROLL */
+#define VK_OPEN 0xDB /* [ */
+#define VK_INSERT 0x2D /* INSERT */
+#define VK_HOME 0x24 /* HOME */
+#define VK_PRIOR 0x21 /* PGUP */
+#define VK_DELETE 0x2E /* DELETE */
+#define VK_END 0x23 /* END */
+#define VK_NEXT 0x22 /* PGDN */
+#define VK_UP 0x26 /* UARROW */
+#define VK_LEFT 0x25 /* LARROW */
+#define VK_DOWN 0x28 /* DARROW */
+#define VK_RIGHT 0x27 /* RARROW */
+#define VK_NUMLOCK 0x90 /* NUM */
+#define VK_DIVIDE 0x6F /* KP/ */
+#define VK_MULTIPLY 0x6A /* KP* */
+#define VK_SUBTRACT 0x6D /* KP- */
+#define VK_ADD 0x6B /* KP+ */
+#define VK_DECIMAL 0x6E /* KP. */
+#define VK_NUMPAD0 0x60 /* KP0 */
+#define VK_NUMPAD1 0x61 /* KP1 */
+#define VK_NUMPAD2 0x62 /* KP2 */
+#define VK_NUMPAD3 0x63 /* KP3 */
+#define VK_NUMPAD4 0x64 /* KP4 */
+#define VK_NUMPAD5 0x65 /* KP5 */
+#define VK_NUMPAD6 0x66 /* KP6 */
+#define VK_NUMPAD7 0x67 /* KP7 */
+#define VK_NUMPAD8 0x68 /* KP8 */
+#define VK_NUMPAD9 0x69 /* KP9 */
+#define VK_NUMPADRET 0x5E /* KPEN */
+#define VK_CLOSE 0xDD /* ] */
+#define VK_SEMICOL 0xBA /* ; */
+#define VK_QUOTE 0xDE /* ' */
+#define VK_COMMA 0xBC /* , */
+#define VK_PERIOD 0xBE /* . */
+#define VK_SLASH 0xBF /* / */
+
+// PS/2 keyboard state record.
+typedef struct ps2kbdstate_t {
+
+  // Pointer to the PS/2 peripheral address space.
+  volatile apbps2_t* ps2;
+
+  // Interrupt number.
+  int irq;
+
+  // Protocol decoder state.
+  unsigned char ext, up;
+
+  // Key states: high bit means button down, low bit means button up.
+  unsigned char keystates[32*PLAT_NUM_PS2];
+
+  // Key event FIFO. Bit 7..0 is the Linux key code, bit 8 is high for down and
+  // low for up.
+  unsigned short events[KBD_EVENT_BUFFER_DEPTH];
+  int widx, ridx, count;
+
+} ps2kbdstate_t;
+
 /**
- * Initializes PS/2 interface iface in keyboard mode. handler is called from
- * the trap handler when a key is pressed, typematic'd or released. key
- * represents one of the KEY_* definitions from input-event-codes.h.
+ * Initializes PS/2 interface iface in keyboard mode. state must point to a
+ * caller-allocated keyboard state record.
  */
-void plat_ps2_kb_init(int iface, void (*handler)(int key, int up));
+void plat_ps2_kb_init(ps2kbdstate_t *state, int iface);
+
+/**
+ * Returns whether a given key (VK_*, input-event-codes.h) is currently down.
+ * This is multi-context safe as it does not write to the state record.
+ */
+int plat_ps2_kb_getkey(const ps2kbdstate_t *state, unsigned char key);
+
+/**
+ * Gets the next keyboard event from the event buffer. Returns -1 if the buffer
+ * is empty. Otherwise, bit 7..0 contain the Linux key code. Bit 8 is set if the
+ * key was pressed (or typematic'd by the keyboard) and is cleared when it is
+ * released. This is not multi-context safe.
+ */
+int plat_ps2_kb_pop(ps2kbdstate_t *state);
+
+/**
+ * Converts a key code to a string representing the name of the key for
+ * debugging.
+ */
+const char *plat_ps2_kb_key2name(unsigned char key);
 
 /**
  * Sets the keyboard LEDs.
  */
-void plat_ps2_kb_setleds(int iface, int leds);
+void plat_ps2_kb_setleds(ps2kbdstate_t *state, int leds);
+
+// Keyboard LED codes.
+#define PLAT_PS2_LED_SCROLL   0x01
+#define PLAT_PS2_LED_NUMLOCK  0x02
+#define PLAT_PS2_LED_CAPSLOCK 0x04
 
 /**
  * Initializes PS/2 interface iface in mouse mode. handler is called from the
  * trap handler when an update is received from the mouse.
  */
-void plat_ps2_mouse_init(int iface, void (*handler)(int dx, int dy, int btns));
+//void plat_ps2_mouse_init(int iface, void (*handler)(int dx, int dy, int btns)); TODO
 
 
 /******************************************************************************/

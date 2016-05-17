@@ -27,6 +27,8 @@ static int prescale = 0;
 static int time = 0;
 static int time2 = 0;
 
+static ps2kbdstate_t kbdstate;
+
 unsigned char sample(void) {
   int val;
   
@@ -46,7 +48,7 @@ unsigned char sample(void) {
   return (unsigned char)val;
 }
 
-void update_audio(void) {
+void update_audio(unsigned long data) {
   int i;
   int remain;
   unsigned char *ptr;
@@ -101,9 +103,24 @@ int main(void) {
     plat_serial_puts(0, "\n");
   }
   
+  if (0) {
+    plat_irq_register(IRQ_AUDIO, update_audio, 0);
+    plat_irq_enable(IRQ_AUDIO, 1);
+  }
+  
   if (1) {
-    plat_irq_register(IRQ_AUDIO, update_audio);
-    plat_irq_mask(IRQ_AUDIO, 1);
+    plat_ps2_kb_init(&kbdstate, 0);
+    while (1) {
+      int i = plat_ps2_kb_pop(&kbdstate);
+      if (i >= 0) {
+        plat_serial_puts(0, plat_ps2_kb_key2name(i & 0xFF));
+        if (i & 0x100) {
+          plat_serial_puts(0, " down\n");
+        } else {
+          plat_serial_puts(0, " up\n");
+        }
+      }
+    }
   }
   
   while (1);
