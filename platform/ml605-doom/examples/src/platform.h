@@ -25,18 +25,6 @@ int puts(const char *str);
 int rvex_succeed(const char *str);
 int rvex_fail(const char *str);
 
-// Common functions and definitions.
-void  memcpy(void *dest, const void *src, unsigned int num);
-void *memmove(void *dest, const void *src, unsigned int num);
-void  _bcopy(const void *src, void *dest, unsigned int num);
-int   memcmp(const void *a, const void *b, unsigned int num);
-int   memset(void *ptr, int value, unsigned int num);
-void  strcpy(char *dest, const char *src);
-int   strcmp(const char *a, const char *b);
-int   strlen(const char *str);
-int   min(int a, int b);
-int   max(int a, int b);
-
 
 /******************************************************************************/
 /* INTERRUPTS                                                                 */
@@ -105,6 +93,7 @@ void plat_irq_force(int irq, int context);
 // r-VEX debug UART peripheral.
 #define PLAT_DEBUGUART_DATA (*((volatile unsigned char *)(0xD1000000)))
 #define PLAT_DEBUGUART_STAT (*((volatile unsigned char *)(0xD1000004)))
+#define PLAT_DEBUGUART_CTRL (*((volatile unsigned char *)(0xD1000008)))
 
 #define PLAT_NUM_SERIAL 1
 
@@ -503,6 +492,6 @@ int plat_i2c_write(volatile i2cmst_t *p, int addr, int reg, const char *data, in
  *  - data and count specify the values to be read.
  * Returns 0 if successful or -1 if the slave did not acknowledge somthing.
  */
-int plat_i2c_read(volatile i2cmst_t *p, int addr, int reg, const char *data, int count);
+int plat_i2c_read(volatile i2cmst_t *p, int addr, int reg, char *data, int count);
 
 #endif

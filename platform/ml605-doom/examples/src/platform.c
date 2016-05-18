@@ -18,99 +18,11 @@ void plat_init(void) {
 }
 
 
+void _stop(void);
 int putchar(int character)        { plat_serial_putc(0, character); return 0; }
 int puts(const char *str)         { plat_serial_puts(0, str);       return 0; }
-int rvex_succeed(const char *str) { plat_serial_puts(0, str);       return 0; }
-int rvex_fail(const char *str)    { plat_serial_puts(0, str);       return 0; }
-
-
-// TODO: write the things below in assembly with proper optimizations.
-
-void memcpy(void *dest, const void *src, unsigned int num) {
-  char *cdest = (char*)dest;
-  const char *csrc = (const char*)src;
-  while (num--) {
-    *cdest++ = *csrc++;
-  }
-}
-
-void *memmove(void *dest, const void *src, unsigned int num) {
-  char *cdest = (char*)dest;
-  const char *csrc = (const char*)src;
-  if (cdest <= csrc) {
-    memcpy(dest, src, num);
-  } else {
-    cdest += num;
-    csrc += num;
-    while (num--) {
-      *--cdest = *--csrc;
-    }
-  }
-  return dest;
-}
-
-void _bcopy(const void *src, void *dest, unsigned int num) {
-  memmove(dest, src, num);
-}
-
-int memcmp(const void *a, const void *b, unsigned int num) {
-  const unsigned char *ca = (const unsigned char*)a;
-  const unsigned char *cb = (const unsigned char*)b;
-  while (num--) {
-    if (*ca == *cb) {
-      ca++;
-      cb++;
-    } else if (*ca > *cb) {
-      return 1;
-    } else {
-      return -1;
-    }
-  }
-  return 0;
-}
-
-int memset(void *ptr, int value, unsigned int num) {
-  unsigned char *cptr = (unsigned char*)ptr;
-  while (num--) {
-    *cptr = value;
-  }
-}
-
-void strcpy(char *dest, const char *src) {
-  while (*src) {
-    *dest++ = *src++;
-  }
-}
-
-int strcmp(const char *a, const char *b) {
-  while (*a || *b) {
-    if (*a == *b) {
-      a++;
-      b++;
-    } else if (*a > *b) {
-      return 1;
-    } else {
-      return -1;
-    }
-  }
-  return 0;
-}
-
-int strlen(const char *str) {
-  int count;
-  while (*str++) {
-    count++;
-  }
-  return count;
-}
-
-int min(int a, int b) {
-  return (a > b) ? b : a;
-}
-
-int max(int a, int b) {
-  return (a > b) ? a : b;
-}
+int rvex_succeed(const char *str) { plat_serial_puts(0, str);       _stop(); }
+int rvex_fail(const char *str)    { plat_serial_puts(0, str);       _stop(); }
 
 
 /******************************************************************************/
@@ -835,6 +747,82 @@ void plat_ps2_kb_setleds(ps2kbdstate_t *state, int leds) {
 /* I2C                                                                        */
 /******************************************************************************/
 
+// Command masks.
+#define STA   0x80
+#define STO   0x40
+#define RD    0x20
+#define WR    0x10
+#define ACK   0x08
+
+// Status masks.
+#define RXACK 0x80
+#define TIP   0x02
+
+// Wait for transfer complete.
+#define WAIT  while (p->cmdstat & TIP)
+
+// Starts an I2C transfer.
+static int i2c_start(volatile i2cmst_t *p, int addr) {
+  
+  // Send slave address.
+  p->data = addr;
+  p->cmdstat = STA | WR;
+  WAIT;
+  
+  // Read acknowledgement.
+  if (p->cmdstat & RXACK) {
+    // This writes a dummy byte to a non-responsive slave. Don't know what else
+    // to do, the manual doesn't specify.
+    p->data = 0;
+    p->cmdstat = STO | WR;
+    WAIT;
+    return -1;
+  }
+  
+  return 0;
+}
+
+// Writes a byte. If last is nonzero, this will be the last transfer.
+static int i2c_write(volatile i2cmst_t *p, int data, int last) {
+  
+  // Send data.
+  p->data = data;
+  if (last) {
+    p->cmdstat = WR | STO;
+  } else {
+    p->cmdstat = WR;
+  }
+  WAIT;
+  
+  // Read acknowledgement.
+  if (p->cmdstat & RXACK) {
+    if (!last) {
+      // This writes a dummy byte to a non-responsive slave. Don't know what else
+      // to do, the manual doesn't specify.
+      p->data = 0;
+      p->cmdstat = STO | WR;
+      WAIT;
+    }
+    return -1;
+  }
+  
+  return 0;
+}
+
+// Reads a byte. If last is nonzero, this will be the last transfer.
+static int i2c_read(volatile i2cmst_t *p, int last) {
+  
+  // Read data.
+  if (last) {
+    p->cmdstat = RD | ACK | STO;
+  } else {
+    p->cmdstat = RD;
+  }
+  WAIT;
+  return p->data;
+  
+}
+
 /**
  * Writes to an I2C device (blocking).
  *  - p must be set to the I2C peripheral address.
@@ -844,7 +832,25 @@ void plat_ps2_kb_setleds(ps2kbdstate_t *state, int leds) {
  * Returns 0 if successful or -1 if the slave did not acknowledge somthing.
  */
 int plat_i2c_write(volatile i2cmst_t *p, int addr, int reg, const char *data, int count) {
-  // TODO
+  
+  // Make sure the peripheral is initialized.
+  p->ctrl = 0x00;
+  p->prescale = 400;
+  p->ctrl = 0x80;
+  
+  // Start the transfer.
+  if (i2c_start(p, addr << 1)) return -1;
+  
+  // Send the register address.
+  if (i2c_write(p, reg, count==0)) return -1;
+  
+  // Send the data.
+  while (count--) {
+    if (i2c_write(p, *data++, count==0)) return -1;
+  }
+  
+  return 0;
+  
 }
 
 /**
@@ -855,6 +861,25 @@ int plat_i2c_write(volatile i2cmst_t *p, int addr, int reg, const char *data, in
  *  - data and count specify the values to be read.
  * Returns 0 if successful or -1 if the slave did not acknowledge somthing.
  */
-int plat_i2c_read(volatile i2cmst_t *p, int addr, int reg, const char *data, int count) {
-  // TODO
+int plat_i2c_read(volatile i2cmst_t *p, int addr, int reg, char *data, int count) {
+  
+  // Make sure the peripheral is initialized.
+  p->ctrl = 0x00;
+  p->prescale = 400;
+  p->ctrl = 0x80;
+  
+  // Start the transfer.
+  if (i2c_start(p, addr << 1)) return -1;
+  
+  // Send the register address.
+  if (i2c_write(p, reg, 0)) return -1;
+  
+  // Repeated start for the read.
+  if (i2c_start(p, (addr << 1) | 1)) return -1;
+  
+  // Read the data.
+  while (count--) {
+    *data++ = (char)i2c_read(p, count==0);
+  }
+  
 }
