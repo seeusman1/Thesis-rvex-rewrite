@@ -1,7 +1,7 @@
 
 #include "nostdlib.h"
-#include "platform.h"
 #include "rvex.h"
+#include "rvex_io.h"
 
 /******************************************************************************/
 /*                             MEMCPY AND FRIENDS                             */
@@ -157,7 +157,7 @@ void *malloc(unsigned long size) {
             //plat_serial_puts(0, "; ");
             //plat_serial_putd(0, dyn_nblocks);
             //plat_serial_puts(0, " blocks\n");
-            return ptr + 1;
+            return (void*)(ptr + 1);
             
           } else if (len > size) {
             
@@ -173,7 +173,7 @@ void *malloc(unsigned long size) {
             //plat_serial_puts(0, "; ");
             //plat_serial_putd(0, dyn_nblocks);
             //plat_serial_puts(0, " blocks\n");
-            return ptr + 1;
+            return (void*)(ptr + 1);
             
           }
           break;
@@ -321,8 +321,9 @@ void *realloc(void *p, unsigned long size) {
 }
 
 void *calloc(unsigned long nmemb, unsigned long size) {
+  void *ptr;
   size *= nmemb;
-  void *ptr = malloc(size);
+  ptr = malloc(size);
   memset(ptr, 0, size);
   return ptr;
 }
