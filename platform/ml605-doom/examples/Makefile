@@ -10,7 +10,7 @@ RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 EXECUTABLES = time Demodispatch_multi mandelbrot_multi raytracer_multi greyscale_multi convolution_multi audio
 
 # Platform-specific object files to link.
-OBJECTS = rvex-grlib.o
+OBJECTS = platform.o
 
 # Platform specific targets for help.
 TARGETS = \
