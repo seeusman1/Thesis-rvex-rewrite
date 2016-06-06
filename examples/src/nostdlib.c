@@ -345,3 +345,12 @@ void abort(void) {
   rvex_fail("abort() called.\n");
   while (1);
 }
+
+void exit(int code) {
+  if (code) {
+    rvex_fail("exit() called, code nonzero.\n");
+  } else {
+    rvex_succeed("exit() called, success.\n");
+  }
+  while (1);
+}

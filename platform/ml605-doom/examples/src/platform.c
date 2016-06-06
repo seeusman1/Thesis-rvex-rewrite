@@ -267,7 +267,7 @@ static void plat_time_init(void) {
   
   // Determine the frequency using the PS/2 clock prescaler register, which is
   // set such that the PS/2 clock is 10 kHz.
-  frequency_khz = (PLAT_PS2(0)->timer + 1) * 10;
+  frequency_khz = PLAT_PS2(0)->timer * 10;
   
   // Set the prescaler such that it rolls over approximately every microsecond.
   PLAT_GPTIMER->scaler_reload = (frequency_khz - 500) / 1000;
@@ -452,13 +452,16 @@ int plat_video_init(int w, int h, int bpp, int dvi, const void *frame) {
   // TODO: configure the Chrontel DAC
   
   // Configure the SVGA controller.
-  PLAT_SVGA->vidlen  = (h << 16) + w;
+  PLAT_SVGA->vidlen  = ((h-1) << 16) + (w-1);
   PLAT_SVGA->fplen   = (10 << 16) + 16;
   PLAT_SVGA->synclen = (2 << 16) + 96;
   PLAT_SVGA->linelen = ((45+h) << 16) + (160+w);
   
+  // Set the framebuffer pointer.
+  PLAT_SVGA->framebuf = frame;
+  
   // Start the SVGA controller.
-  PLAT_SVGA->status = 1 & (0 << 6);
+  PLAT_SVGA->status = 1 | (0 << 6) | ((bpp >> 3) << 4);
   
 }
 

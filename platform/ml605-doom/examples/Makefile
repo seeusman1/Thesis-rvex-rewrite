@@ -7,7 +7,7 @@ RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 
 # Platform-specific executables.
-EXECUTABLES = time Demodispatch_multi mandelbrot_multi raytracer_multi greyscale_multi convolution_multi audio
+EXECUTABLES = time Demodispatch_multi mandelbrot_multi raytracer_multi greyscale_multi convolution_multi audio graph
 
 # Platform-specific object files to link.
 OBJECTS = platform.o

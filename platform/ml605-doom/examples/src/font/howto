@@ -1,0 +1,12 @@
+
+To create a new font:
+ - In the GIMP, make a new image that's wide enough (2000x100 or something).
+ - Use the text tool to draw the following string. Make sure antialiasing is turned OFF.
+    ! " # $ % & ' ( ) * + , - . / 0 1 2 3 4 5 6 7 8 9 : ; < = > ? @ A B C D E F G H I J K L M N O P Q R S T U V W X Y Z [ \ ] ^ _ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~
+   These characters will be mapped to ASCII 33..126
+ - Layer -> discard text information
+ - Image -> flatten image
+ - Image -> autocrop image
+ - At this point, the image must be at most 16 pixels high.
+ - File -> export... as PPM to font.ppm (ASCII format)
+ - Run make. This will generate the font_*.c files in the src directory.
