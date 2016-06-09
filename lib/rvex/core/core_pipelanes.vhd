@@ -842,23 +842,32 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate trap routing network
   -----------------------------------------------------------------------------
-  trap_inst: entity rvex.core_trapRouting
-    generic map (
-      CFG                       => CFG
-    )
-    port map (
-      
-      -- Decoded configuration signals.
-      cfg2any_coupled           => cfg2any_coupled,
-      
-      -- Pipelane interface.
-      pl2trap_trap              => pl2trap_trap,
-      trap2pl_trapToHandle      => trap2pl_trapToHandle,
-      trap2pl_trapPending       => trap2pl_trapPending,
-      trap2pl_disable           => trap2pl_disable,
-      trap2pl_flush             => trap2pl_flush
-      
-    );
+  trap_routing: if CFG.traps > 0 generate
+    trap_inst: entity rvex.core_trapRouting
+      generic map (
+        CFG                       => CFG
+      )
+      port map (
+        
+        -- Decoded configuration signals.
+        cfg2any_coupled           => cfg2any_coupled,
+        
+        -- Pipelane interface.
+        pl2trap_trap              => pl2trap_trap,
+        trap2pl_trapToHandle      => trap2pl_trapToHandle,
+        trap2pl_trapPending       => trap2pl_trapPending,
+        trap2pl_disable           => trap2pl_disable,
+        trap2pl_flush             => trap2pl_flush
+        
+      );
+  end generate;
+  
+  -- We don't need the trap routing entity when traps are disabled.
+  no_trap_routing: if CFG.traps = 0 generate
+    trap2pl_trapToHandle <= (others => TRAP_INFO_NONE);
+    trap2pl_trapPending  <= (others => '0');
+    trap2pl_disable      <= (others => (others => '0'));
+    trap2pl_flush        <= (others => (others => '0'));
+  end generate;
   
 end Behavioral;
-
