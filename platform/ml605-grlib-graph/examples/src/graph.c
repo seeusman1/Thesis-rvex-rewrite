@@ -305,13 +305,20 @@ int main(void) {
   graph_addtick(&g, 76, "3.1W");
   graph_addtick(&g, 102, "3.3W");
   //*/
-  // *3 >>10
+  /* // *3 >>10
   graph_addtick(&g, 0,  "2.5W");
   graph_addtick(&g, 19, "2.6W");
   graph_addtick(&g, 38, "2.7W");
   graph_addtick(&g, 58, "2.8W");
   graph_addtick(&g, 77, "2.9W");
   graph_addtick(&g, 96, "3.0W");
+  //*/
+  // >>9
+  graph_addtick(&g, 0,  "2.7W");
+  graph_addtick(&g, 25, "2.9W");
+  graph_addtick(&g, 51, "3.1W");
+  graph_addtick(&g, 76, "3.3W");
+  graph_addtick(&g, 102, "3.5W");
   //*/
   
   g.inc = 1;
@@ -405,13 +412,17 @@ int main(void) {
     update_current_power(power);
     
     // Update the graph.
-    power -= 0x28000;
-    power *= 3;
-    power >>= 10;
-    if (power < 0) {
-      power = 0;
-    } else if (power > 96) {
-      power = 100;
+    if (power == -1) {
+      power = 255;
+    } else {
+      power -= 0x2B333;
+      //power *= 3;
+      power >>= 9;
+      if (power < 0) {
+        power = 0;
+      } else if (power > 96) {
+        power = 100;
+      }
     }
     graph_data(&g, power, graph_cfg);
     
