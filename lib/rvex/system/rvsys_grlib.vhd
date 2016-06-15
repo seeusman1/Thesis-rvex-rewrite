@@ -197,7 +197,10 @@ entity rvsys_grlib is
     -- LEON3 interrupt controller to the rvex interrupt control signals. Note
     -- that each rvex context requires its own interrupt controller.
     irqi                        : in  irq_in_vector(0 to 2**CFG.core.numContextsLog2-1);
-    irqo                        : out irq_out_vector(0 to 2**CFG.core.numContextsLog2-1)
+    irqo                        : out irq_out_vector(0 to 2**CFG.core.numContextsLog2-1);
+    
+    -- GPIO input that can be read from address 0x404 (word) or 0x407 (byte).
+    gpio_dip                    : in std_logic_vector(7 downto 0) := (others => '0')
     
   );
 end rvsys_grlib;
@@ -688,8 +691,10 @@ begin -- architecture
           sc2dcache_bypass <= demux2cache.writeData(0);
         end if;
         
-        -- Allow readback of bypass flag.
-        cache2demux.readData(0) <= sc2dcache_bypass;
+        -- Readback of bypass flag.
+        if bus_reading(demux2cache, "------------------------000000--") then
+          cache2demux.readData(0) <= sc2dcache_bypass;
+        end if;
         
       end if;
     end if;
@@ -788,6 +793,15 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Global control registers
   -----------------------------------------------------------------------------
+  --
+  --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- RESET |     Any write to this register resets the whole platform      |
+  --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  -- GPIO  |                                               |      DIP      |
+  --       |-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|-+-+-+-+-+-+-+-|
+  --
+  -- DIP    = state of the DIP switches of the development board, if connected.
+  --
   global_control_reg_proc: process (clk) is
     
     -- Assigns signals to their reset/idle/default state.
@@ -810,6 +824,11 @@ begin -- architecture
         -- Address 0x00 write: reset rvex system.
         if bus_writing(demux2glob, "------------------------00000000") then
           dbg_reset <= '1';
+        end if;
+        
+        -- Readback of GPIO DIP switch.
+        if bus_reading(demux2glob, "------------------------000001--") then
+          glob2demux.readData(7 downto 0) <= gpio_dip(7 downto 0);
         end if;
         
       end if;

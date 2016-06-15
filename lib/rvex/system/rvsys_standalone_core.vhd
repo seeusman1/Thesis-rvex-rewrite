@@ -500,11 +500,16 @@ begin -- architecture
     begin
       if rising_edge(clk) then
         if reset = '1' then
-          readData_r  <= (others => '0');
-          fault_r     <= '0';
-        elsif dmem2rv(laneGroup).ack = '1' and clkEn = '1' then
-          readData_r  <= dmem2rv(laneGroup).readData;
-          fault_r     <= dmem2rv(laneGroup).fault;
+          readData_r    <= (others => '0');
+          fault_r       <= '0';
+        elsif clkEn = '1' then
+          if dmem2rv(laneGroup).ack = '1' then
+            readData_r  <= dmem2rv(laneGroup).readData;
+            fault_r     <= dmem2rv(laneGroup).fault;
+          end if;
+          if rv2mem_stallOut(laneGroup) = '0' then
+            fault_r     <= '0';
+          end if;
         end if;
       end if;
     end process;
