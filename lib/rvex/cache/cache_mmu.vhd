@@ -54,14 +54,14 @@ library rvex;
 use rvex.common_pkg.all;
 use rvex.core_pkg.all;
 use rvex.core_trap_pkg.all;
-use rvex.mmu_pkg.all;
+use rvex.cache_pkg.all;
 use rvex.bus_pkg.all;
 
 
-entity mmu is
+entity cache_mmu is
   generic (
     RCFG                        : rvex_generic_config_type := rvex_cfg;
-    MMU_CFG                     : mmu_generic_config_type := mmu_CFG
+    CCFG                        : cache_generic_config_type := cache_cfg
   );
   port (
 
@@ -90,8 +90,8 @@ entity mmu is
     rv2dmem_writeEnable         : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2imem_fetch               : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2mmu_decouple             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    rv2mmu_PCsVtags             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(MMU_CFG)-1 downto 0);
-    rv2mmu_dataVtags            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(MMU_CFG)-1 downto 0);
+    rv2mmu_PCsVtags             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(CCFG)-1 downto 0);
+    rv2mmu_dataVtags            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(CCFG)-1 downto 0);
     
     -- rvex tlb flush interface
     rv2mmu_flush                : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -108,8 +108,8 @@ entity mmu is
     -- signals from the mmu to the cache
     mmu2icache_stall            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     mmu2dcache_stall            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    mmu2cache_PCsPtags          : out std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(MMU_CFG)-1 downto 0);
-    mmu2cache_dataPtags         : out std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(MMU_CFG)-1 downto 0);
+    mmu2cache_PCsPtags          : out std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(CCFG)-1 downto 0);
+    mmu2cache_dataPtags         : out std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(CCFG)-1 downto 0);
     mmu2dcache_bypass           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- signals from the cache to the rvex routed through the mmu
@@ -125,15 +125,15 @@ entity mmu is
     mem2mmu                     : in  bus_slv2mst_type     
     
   );
-end mmu;
+end cache_mmu;
 
 
-architecture structural of mmu is
+architecture structural of cache_mmu is
 
   type asid_array_type    is array (2**RCFG.numLaneGroupsLog2-1 downto 0)
-                          of std_logic_vector(mmuAsidSize(MMU_CFG)-1 downto 0);
+                          of std_logic_vector(mmuAsidSize(CCFG)-1 downto 0);
   type tag_array_type     is array (2**RCFG.numLaneGroupsLog2-1 downto 0)
-                          of std_logic_vector(mmutagSize(MMU_CFG)-1 downto 0);
+                          of std_logic_vector(mmutagSize(CCFG)-1 downto 0);
   type integer_array_type is array (2**RCFG.numLaneGroupsLog2-1 downto 0)
                           of integer;
     
@@ -145,7 +145,7 @@ architecture structural of mmu is
 
     readEnable                  : std_logic;
     writeEnable                 : std_logic;
-    data_Vtag                   : std_logic_vector(mmutagSize(MMU_CFG)-1 downto 0);
+    data_Vtag                   : std_logic_vector(mmutagSize(CCFG)-1 downto 0);
     
   end record;
   
@@ -165,7 +165,7 @@ architecture structural of mmu is
 
     data_miss                   : std_logic;
     cache_bypass                : std_logic;
-    data_Ptag                   : std_logic_vector(mmutagSize(MMU_CFG)-1 downto 0);
+    data_Ptag                   : std_logic_vector(mmutagSize(CCFG)-1 downto 0);
     data_tlb_done               : std_logic;
     data_tlb_update             : std_logic;
     
@@ -188,7 +188,7 @@ architecture structural of mmu is
   signal tw2tlb_dirtyAck                : std_logic_vector(2**RCFG.numLaneGroupsLog2 - 1 downto 0);
   signal tw_inst_miss                   : std_logic_vector(2**RCFG.numLaneGroupsLog2 - 1 downto 0);
   signal tw_data_miss                   : std_logic_vector(2**RCFG.numLaneGroupsLog2 - 1 downto 0);
-  signal tw_data_Vtag                   : std_logic_vector(mmutagSize(MMU_CFG)-1 downto 0);
+  signal tw_data_Vtag                   : std_logic_vector(mmutagSize(CCFG)-1 downto 0);
   
   -- signals from the table walk hardware to the tlb
   signal tw2tlb_inst_ready              : std_logic_vector(2**RCFG.numLaneGroupsLog2 - 1 downto 0);
@@ -224,8 +224,8 @@ architecture structural of mmu is
   signal rv2mmu_laneWriteToCleanTrapEn  : std_logic_vector(2**RCFG.numLaneGroupsLog2 - 1 downto 0);
   
   -- stall stable Vtags for the table walk
-  signal rv2tw_PCsVtags                 : std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(MMU_CFG)-1 downto 0);
-  signal rv2tw_dataVtags                : std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(MMU_CFG)-1 downto 0);
+  signal rv2tw_PCsVtags                 : std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(CCFG)-1 downto 0);
+  signal rv2tw_dataVtags                : std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(CCFG)-1 downto 0);
   
   -- traps
   signal mmu2rv_fetchPageFault          : std_logic_vector(2**RCFG.numLaneGroupsLog2 - 1 downto 0);
@@ -396,9 +396,9 @@ begin
   begin
     tw_data_Vtag <= (others => '0');
     for i in 0 to 2**RCFG.numLaneGroupsLog2-1 loop
-      mmu2cache_PCsPtags  ((i+1)*mmutagSize(MMU_CFG)-1 downto i*mmutagSize(MMU_CFG)) <= inst_read_Ptag(i);
-      inst_Vtag(i) <= rv2mmu_PCsVtags ((i+1)*mmutagSize(MMU_CFG)-1 downto i*mmutagSize(MMU_CFG));
-      data_Vtag(i) <= rv2mmu_dataVtags((i+1)*mmutagSize(MMU_CFG)-1 downto i*mmutagSize(MMU_CFG));
+      mmu2cache_PCsPtags  ((i+1)*mmutagSize(CCFG)-1 downto i*mmutagSize(CCFG)) <= inst_read_Ptag(i);
+      inst_Vtag(i) <= rv2mmu_PCsVtags ((i+1)*mmutagSize(CCFG)-1 downto i*mmutagSize(CCFG));
+      data_Vtag(i) <= rv2mmu_dataVtags((i+1)*mmutagSize(CCFG)-1 downto i*mmutagSize(CCFG));
     end loop;
   end process;
   
@@ -454,8 +454,8 @@ begin
   collapse: process(data_Vtag_stall, inst_Vtag_stall) is
   begin
     for i in 0 to 2**RCFG.numLaneGroupsLog2-1 loop
-      rv2tw_PCsVtags ((i+1)*mmutagSize(MMU_CFG)-1 downto i*mmutagSize(MMU_CFG)) <= inst_Vtag_stall(i);
-      rv2tw_dataVtags((i+1)*mmutagSize(MMU_CFG)-1 downto i*mmutagSize(MMU_CFG)) <= data_Vtag_stall(i);
+      rv2tw_PCsVtags ((i+1)*mmutagSize(CCFG)-1 downto i*mmutagSize(CCFG)) <= inst_Vtag_stall(i);
+      rv2tw_dataVtags((i+1)*mmutagSize(CCFG)-1 downto i*mmutagSize(CCFG)) <= data_Vtag_stall(i);
     end loop;
   end process;
   
@@ -531,7 +531,7 @@ begin
       if lane_context_index < 2**RCFG.numContextsLog2 then
         rv2mmu_laneEnable(i)            <= rv2mmu_enable(lane_context_index);
         rv2mmu_lanePageTablePointers(i) <= rv2mmu_pageTablePointers(lane_context_index);
-        rv2mmu_laneAddressSpaceID(i)    <= rv2mmu_addressSpaceID(lane_context_index)(mmuAsidSize(MMU_CFG)-1 downto 0);
+        rv2mmu_laneAddressSpaceID(i)    <= rv2mmu_addressSpaceID(lane_context_index)(mmuAsidSize(CCFG)-1 downto 0);
         rv2mmu_laneWriteToCleanTrapEn(i)<= rv2mmu_writeToCleanTrapEn(lane_context_index);
       else
         rv2mmu_laneEnable(i)            <= '0';
@@ -821,9 +821,9 @@ begin
       elsif mmu2rv_fetchPageFault(i) = '1' then
           mmu2rv_trapStatus(i)(7 downto 0) <= std_logic_vector(to_unsigned(RVEX_TRAP_IMEM_PAGE_FAULT, 8));
       elsif (mmu2rv_kernelSpaceViolation(2*i) or mmu2rv_kernelSpaceViolation(2*i+1)) = '1' then
-          mmu2rv_trapStatus(i)(7 downto 0) <= std_logic_vector(to_unsigned(RVEX_TRAP_KERNEL_SPACE_VIOLATION, 8));
+          mmu2rv_trapStatus(i)(7 downto 0) <= std_logic_vector(to_unsigned(RVEX_TRAP_KERNEL_SPACE_VIO, 8));
       elsif mmu2rv_writeAccessViolation(i) = '1' then
-          mmu2rv_trapStatus(i)(7 downto 0) <= std_logic_vector(to_unsigned(RVEX_TRAP_WRITE_ACCESS_VIOLATION, 8));
+          mmu2rv_trapStatus(i)(7 downto 0) <= std_logic_vector(to_unsigned(RVEX_TRAP_WRITE_ACCESS_VIO, 8));
       elsif (mmu2rv_writeToCleanPage(i) and rv2mmu_laneWriteToCleanTrapEn(i)) = '1' then
           mmu2rv_trapStatus(i)(7 downto 0) <= std_logic_vector(to_unsigned(RVEX_TRAP_WRITE_TO_CLEAN_PAGE, 8));
       else
@@ -832,7 +832,7 @@ begin
       mmu2rv_trapStatus(i)(rvex_data_type'length-1 downto 8)  <= (others => '0');
       
       -- connect the Ptags 
-      mmu2cache_dataPtags ((i+1)*mmutagSize(MMU_CFG)-1 downto i*mmutagSize(MMU_CFG))
+      mmu2cache_dataPtags ((i+1)*mmutagSize(CCFG)-1 downto i*mmutagSize(CCFG))
         <= outNetwork(RCFG.numLaneGroupsLog2)(i).data_Ptag;
       
       -- connect cache bypass signal
@@ -844,9 +844,9 @@ begin
     
   -- Generate the intruction tlb's (one per langroup).
   g_instruction_tlbs : for i in 0 to 2**RCFG.numLaneGroupsLog2-1 generate
-    itlb_n : entity work.mmu_tlb
+    itlb_n : entity work.cache_mmu_tlb
     generic map(
-      MMU_CFG                   => MMU_CFG
+      CCFG                   => CCFG
     )
     port map(
       clk                       => clk, 
@@ -873,9 +873,9 @@ begin
   
   -- generate the data tlb's (one per langroup).
   g_data_tlbs : for i in 0 to 2**RCFG.numLaneGroupsLog2-1 generate
-    dtlb_n : entity work.mmu_tlb
+    dtlb_n : entity work.cache_mmu_tlb
     generic map(
-      MMU_CFG                   => MMU_CFG
+      CCFG                   => CCFG
     )
     port map(
       clk                       => clk,
@@ -907,10 +907,10 @@ begin
   
   -- generate the table walk hardware. There is only one instance since it needs memory access and
   -- multiple table walks are not possible at the same time. 
-  tw : entity work.mmu_table_walk
+  tw : entity work.cache_mmu_table_walk
   generic map(
     RCFG                        => RCFG,
-    MMU_CFG                     => MMU_CFG
+    CCFG                     => CCFG
   )
   port map(
     clk                         => clk,

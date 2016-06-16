@@ -51,12 +51,12 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 use IEEE.math_real.all;
 library rvex;
-use rvex.mmu_pkg.all;
+use rvex.cache_pkg.all;
 
 
-entity mmu_cam is
+entity cache_mmu_cam is
   generic (
-    MMU_CFG                     : mmu_generic_config_type := mmu_CFG
+    CCFG                        : cache_generic_config_type := cache_cfg
   );
   port (
     
@@ -64,46 +64,46 @@ entity mmu_cam is
     reset                       : in  std_logic;
 
     -- this port returns the address where the output data can be found
-    read_out_addr_normal        : out std_logic_vector(2**MMU_CFG.tlbDepthLog2-1 downto 0);
+    read_out_addr_normal        : out std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
     
     -- this is used to match a tag for large pages. This means with the L2 tag as 'dont care' 
-    read_out_addr_large         : out std_logic_vector(2**MMU_CFG.tlbDepthLog2-1 downto 0);
+    read_out_addr_large         : out std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
     
     -- this is used to match a tag for a global page. This means with the ASID as 'dont care'     
-    read_out_addr_global        : out std_logic_vector(2**MMU_CFG.tlbDepthLog2-1 downto 0);
+    read_out_addr_global        : out std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
     
     -- this is used to match a tag for a large and global page. This means with the ASID as 'dont care'         
-    read_out_addr_large_global  : out std_logic_vector(2**MMU_CFG.tlbDepthLog2-1 downto 0);
+    read_out_addr_large_global  : out std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
 
     -- read write modify ports.
     -- modify_in_address is registered when modify enable are high
     modify_en                   : in  std_logic;
     modify_add_remove           : in  std_logic; -- 1 for adding, 0 for removing
-    modify_in_addr              : in  std_logic_vector(2**MMU_CFG.tlbDepthLog2-1 downto 0);
+    modify_in_addr              : in  std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
 
     -- ports used for both read and read/write modify
-    in_data                     : in  std_logic_vector(MMU_CFG.asidBitWidth + mmuTagSize(MMU_CFG)-1 downto 0)
+    in_data                     : in  std_logic_vector(CCFG.asidBitWidth + mmuTagSize(CCFG)-1 downto 0)
 
   );
-end entity;
+end entity cache_mmu_cam;
 
 
-architecture arch of mmu_cam is
+architecture arch of cache_mmu_cam is
 
-  constant CAM_NUM_ENTRIES      : natural := 2**MMU_CFG.tlbDepthLog2;
+  constant CAM_NUM_ENTRIES      : natural := 2**CCFG.tlbDepthLog2;
 
   constant CAM_BLOCK_DATA_WIDTH : natural := 10;
   constant CAM_BLOCK_ADDR_WIDTH : natural := 32;
-  constant NUM_ASID_CAM_BLOCKS  : natural := integer(ceil(real(MMU_CFG.asidBitWidth) / real(CAM_BLOCK_DATA_WIDTH)));
-  constant NUM_L1_TAG_CAM_BLOCKS: natural := integer(ceil(real(mmuLargePageTagSize(MMU_CFG)) / real(CAM_BLOCK_DATA_WIDTH)));
-  constant NUM_L2_TAG_CAM_BLOCKS: natural := integer(ceil(real(mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG)) / real(CAM_BLOCK_DATA_WIDTH)));
+  constant NUM_ASID_CAM_BLOCKS  : natural := integer(ceil(real(CCFG.asidBitWidth) / real(CAM_BLOCK_DATA_WIDTH)));
+  constant NUM_L1_TAG_CAM_BLOCKS: natural := integer(ceil(real(mmuLargePageTagSize(CCFG)) / real(CAM_BLOCK_DATA_WIDTH)));
+  constant NUM_L2_TAG_CAM_BLOCKS: natural := integer(ceil(real(mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG)) / real(CAM_BLOCK_DATA_WIDTH)));
   constant NUM_CAM_BLOCKS       : natural := NUM_ASID_CAM_BLOCKS + NUM_L1_TAG_CAM_BLOCKS + NUM_L2_TAG_CAM_BLOCKS;
-  constant CAM_ASID_DATA_PAD_LEN: natural := NUM_ASID_CAM_BLOCKS   * CAM_BLOCK_DATA_WIDTH - MMU_CFG.asidBitWidth;
-  constant CAM_L1_DATA_PAD_LEN  : natural := NUM_L1_TAG_CAM_BLOCKS * CAM_BLOCK_DATA_WIDTH - mmuLargePageTagSize(MMU_CFG);
-  constant CAM_L2_DATA_PAD_LEN  : natural := NUM_L2_TAG_CAM_BLOCKS * CAM_BLOCK_DATA_WIDTH - (mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG));
-  constant CAM_BLOCKS_DEPTH     : natural := integer(ceil(real(2**MMU_CFG.tlbDepthLog2) / real(CAM_BLOCK_ADDR_WIDTH)));
+  constant CAM_ASID_DATA_PAD_LEN: natural := NUM_ASID_CAM_BLOCKS   * CAM_BLOCK_DATA_WIDTH - CCFG.asidBitWidth;
+  constant CAM_L1_DATA_PAD_LEN  : natural := NUM_L1_TAG_CAM_BLOCKS * CAM_BLOCK_DATA_WIDTH - mmuLargePageTagSize(CCFG);
+  constant CAM_L2_DATA_PAD_LEN  : natural := NUM_L2_TAG_CAM_BLOCKS * CAM_BLOCK_DATA_WIDTH - (mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG));
+  constant CAM_BLOCKS_DEPTH     : natural := integer(ceil(real(2**CCFG.tlbDepthLog2) / real(CAM_BLOCK_ADDR_WIDTH)));
   constant CAM_ADDR_WIDTH       : natural := CAM_BLOCK_ADDR_WIDTH * CAM_BLOCKS_DEPTH;
-  constant CAM_ADDR_PAD_LEN     : natural := CAM_ADDR_WIDTH - 2**MMU_CFG.tlbDepthLog2;
+  constant CAM_ADDR_PAD_LEN     : natural := CAM_ADDR_WIDTH - 2**CCFG.tlbDepthLog2;
   
   
   type t_state is (read, mod_add, mod_rem);
@@ -111,7 +111,7 @@ architecture arch of mmu_cam is
   type t_cam_reg is record
     state                       : t_state;
     modify_in_addr              : std_logic_vector(CAM_ADDR_WIDTH-1 downto 0);
-    modify_in_data              : std_logic_vector(MMU_CFG.asidBitWidth + mmuTagSize(MMU_CFG)-1 downto 0);
+    modify_in_data              : std_logic_vector(CCFG.asidBitWidth + mmuTagSize(CCFG)-1 downto 0);
   end record;
   
   constant R_INIT               : t_cam_reg := (
@@ -142,7 +142,7 @@ begin
   
   CAM_gen: for i in 0 to CAM_BLOCKS_DEPTH-1 generate
     asid_CAM_gen: for j in 0 to NUM_ASID_CAM_BLOCKS-1 generate
-      asid_CAM_n : entity work.mmu_cam_ram
+      asid_CAM_n : entity work.cache_mmu_cam_ram
       port map (
         clk                     => clk,
         in_data                 => in_data_asid((j+1)*CAM_BLOCK_DATA_WIDTH-1 downto j*CAM_BLOCK_DATA_WIDTH),
@@ -153,7 +153,7 @@ begin
     end generate;
     
     L1_tag_CAM_gen: for j in 0 to NUM_L1_TAG_CAM_BLOCKS-1 generate
-      L1_tag_CAM_n : entity work.mmu_cam_ram
+      L1_tag_CAM_n : entity work.cache_mmu_cam_ram
       port map (
         clk                     => clk,
         in_data                 => in_data_L1((j+1)*CAM_BLOCK_DATA_WIDTH-1 downto j*CAM_BLOCK_DATA_WIDTH),
@@ -164,7 +164,7 @@ begin
     end generate;   
     
     L2_tag_CAM_gen: for j in 0 to NUM_L2_TAG_CAM_BLOCKS-1 generate
-      L2_tag_CAM_n : entity work.mmu_cam_ram
+      L2_tag_CAM_n : entity work.cache_mmu_cam_ram
       port map (
         clk                     => clk,
         in_data                 => in_data_L2((j+1)*CAM_BLOCK_DATA_WIDTH-1 downto j*CAM_BLOCK_DATA_WIDTH),
@@ -201,17 +201,17 @@ begin
       v_read_out_addr_L2 := v_read_out_addr_L2 and read_out_addr_L2(i);
     end loop;
 
-    read_out_addr_large_global <= v_read_out_addr_L1(2**MMU_CFG.tlbDepthLog2-1 downto 0);
+    read_out_addr_large_global <= v_read_out_addr_L1(2**CCFG.tlbDepthLog2-1 downto 0);
     
-    read_out_addr_global       <= v_read_out_addr_L1(2**MMU_CFG.tlbDepthLog2-1 downto 0) 
-                                  and v_read_out_addr_L2(2**MMU_CFG.tlbDepthLog2-1 downto 0);
+    read_out_addr_global       <= v_read_out_addr_L1(2**CCFG.tlbDepthLog2-1 downto 0) 
+                                  and v_read_out_addr_L2(2**CCFG.tlbDepthLog2-1 downto 0);
     
-    read_out_addr_large        <= v_read_out_addr_asid (2**MMU_CFG.tlbDepthLog2-1 downto 0)
-                                  and v_read_out_addr_L1 (2**MMU_CFG.tlbDepthLog2-1 downto 0);
+    read_out_addr_large        <= v_read_out_addr_asid (2**CCFG.tlbDepthLog2-1 downto 0)
+                                  and v_read_out_addr_L1 (2**CCFG.tlbDepthLog2-1 downto 0);
     
-    read_out_addr_normal       <= v_read_out_addr_asid (2**MMU_CFG.tlbDepthLog2-1 downto 0)
-                                  and v_read_out_addr_L1(2**MMU_CFG.tlbDepthLog2-1 downto 0)
-                                  and v_read_out_addr_L2(2**MMU_CFG.tlbDepthLog2-1 downto 0);
+    read_out_addr_normal       <= v_read_out_addr_asid (2**CCFG.tlbDepthLog2-1 downto 0)
+                                  and v_read_out_addr_L1(2**CCFG.tlbDepthLog2-1 downto 0)
+                                  and v_read_out_addr_L2(2**CCFG.tlbDepthLog2-1 downto 0);
     
   end process; -- addr_out_proc
 
@@ -238,21 +238,21 @@ begin
     --           --------------------------  
     if CAM_ASID_DATA_PAD_LEN > 0 then
       in_data_asid <= (CAM_ASID_DATA_PAD_LEN-1 downto 0 => '0')
-                    & r.modify_in_data(in_data'length-1 downto mmuTagSize(MMU_CFG));
+                    & r.modify_in_data(in_data'length-1 downto mmuTagSize(CCFG));
     else 
-      in_data_asid <= r.modify_in_data(in_data'length-1 downto mmuTagSize(MMU_CFG));
+      in_data_asid <= r.modify_in_data(in_data'length-1 downto mmuTagSize(CCFG));
     end if;
     if CAM_L1_DATA_PAD_LEN > 0 then
       in_data_L1   <= (CAM_L1_DATA_PAD_LEN-1   downto 0 => '0')
-                    & r.modify_in_data(mmuTagSize(MMU_CFG)-1 downto mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG));
+                    & r.modify_in_data(mmuTagSize(CCFG)-1 downto mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG));
     else
-      in_data_L1   <= r.modify_in_data(mmuTagSize(MMU_CFG)-1 downto mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG));        
+      in_data_L1   <= r.modify_in_data(mmuTagSize(CCFG)-1 downto mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG));        
     end if;
     if CAM_L2_DATA_PAD_LEN > 0 then
       in_data_L2   <= (CAM_L2_DATA_PAD_LEN-1   downto 0 => '0')
-                    & r.modify_in_data(mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG) - 1 downto 0);
+                    & r.modify_in_data(mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG) - 1 downto 0);
     else 
-      in_data_L2   <= r.modify_in_data(mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG) - 1 downto 0);
+      in_data_L2   <= r.modify_in_data(mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG) - 1 downto 0);
     end if;
     
     
@@ -263,21 +263,21 @@ begin
         -- connect the read input data to the right CAM blocks
         if CAM_ASID_DATA_PAD_LEN > 0 then
           in_data_asid <= (CAM_ASID_DATA_PAD_LEN-1 downto 0 => '0')
-                        & in_data(in_data'length-1 downto mmuTagSize(MMU_CFG));
+                        & in_data(in_data'length-1 downto mmuTagSize(CCFG));
         else 
-          in_data_asid <= in_data(in_data'length-1 downto mmuTagSize(MMU_CFG));
+          in_data_asid <= in_data(in_data'length-1 downto mmuTagSize(CCFG));
         end if;
         if CAM_L1_DATA_PAD_LEN > 0 then
           in_data_L1   <= (CAM_L1_DATA_PAD_LEN-1   downto 0 => '0')
-                        & in_data(mmuTagSize(MMU_CFG)-1 downto mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG));
+                        & in_data(mmuTagSize(CCFG)-1 downto mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG));
         else
-          in_data_L1   <= in_data(mmuTagSize(MMU_CFG)-1 downto mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG));        
+          in_data_L1   <= in_data(mmuTagSize(CCFG)-1 downto mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG));        
         end if;
         if CAM_L2_DATA_PAD_LEN > 0 then
           in_data_L2   <= (CAM_L2_DATA_PAD_LEN-1   downto 0 => '0')
-                        & in_data(mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG) - 1 downto 0);
+                        & in_data(mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG) - 1 downto 0);
         else 
-          in_data_L2   <= in_data(mmuTagSize(MMU_CFG) - mmuLargePageTagSize(MMU_CFG) - 1 downto 0);
+          in_data_L2   <= in_data(mmuTagSize(CCFG) - mmuLargePageTagSize(CCFG) - 1 downto 0);
         end if;
         
         

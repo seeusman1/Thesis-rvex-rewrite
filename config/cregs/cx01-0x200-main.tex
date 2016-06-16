@@ -80,24 +80,62 @@ _r = _v;
 \connect{cxreg2cxplif_brReadData}{_r}
 
 %-------------------------------------------------------------------------------
+\field{11..10}{M}
+%-------------------------------------------------------------------------------
+This register selects whether address translation by means of the MMU is enabled 
+or disabled. Address translation is disabled when the core is reset and when 
+entering the trap or panic handlers. These must thus always point to code in the 
+physical address space. The only way to enable translation is by writing the 
+enable command to the M flag in \creg{SCCR} and subsequently executing 
+\insn{RFI}. Neither the core nor the  debug bus can write to this field 
+directly. This is because the core needs to be idle for address translation to 
+be enabled or disabled.
+
+When address translation is enabled, the register reads as \code{01}. When it is
+disabled, it reads as \code{10}. If the processor is not design-time configured
+to contain an MMU, this field and its counterpart in \creg{SCCR} still behave as
+specified here, although its value has no effect then.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_read = ~_r $ _r;
+
+// Handle restoring and trap entry.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = 0;
+    }
+    if (cxplif2cxreg_rfi) {
+        _v = cr_sccr_m_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
 \field{9..8}{K}
 %-------------------------------------------------------------------------------
 This register selects between kernel mode and user mode. Kernel mode is 
 activated when the core is reset and when entering the trap or panic handlers. 
-These must thus always point to code in hardware memory space. When \insn{RFI} 
-is executed, the state is restored from \creg{SCCR}.
-
-In kernel mode, the register reads as \code{01}, while in user mode, it reads as 
-\code{10}. The only way to enter user mode is by writing the user mode command 
-to \creg{SCCR} and subsequently executing \insn{RFI}. Neither the core nor the 
+The only way to enter user mode is by writing the user mode command to 
+\creg{SCCR} and subsequently executing \insn{RFI}. Neither the core nor the 
 debug bus can write to this field directly.
+
+In kernel mode, the register reads as \code{01}. In user mode, it reads as 
+\code{10}.
 
 Currently, the status of the kernel mode flag has no effect on the \rvex{}.
 However, it is intended that this register will be used in the future for memory
-protection and/or security features. In particular, the reason that this flag
-can only be set by entering a trap and cleared by executing \insn{RFI}, is that
-both of these mechanisms can be configured to do a full pipeline flush, which
-allows this flag to control whether address translation is enabled or disabled.
+protection and/or security features.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \reset{01}
@@ -328,13 +366,51 @@ _read = ctxt;
 \end{lstlisting}
 
 %-------------------------------------------------------------------------------
+\field{11..10}{M}
+%-------------------------------------------------------------------------------
+When the trap service routine is entered, this register stores whether address 
+translation was enabled or disabled. When \insn{RFI} is executed, the state is 
+set to this value.
+
+Unlike the M field in \creg{CCR}, this field can be written. Writing \code{00} 
+has no effect, writing \code{01} enables address translation, writing \code{10} 
+disables it and writing \code{11} toggles the state. This prevents the need for 
+read-modify-write operations. Read behavior is identical to the M field in 
+\creg{CCR}.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
+\implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+// Handle saving.
+if (!cxplif2cxreg_stall) {
+    if (cxplif2cxreg_trapInfo.active) {
+        _v = cr_ccr_m_r;
+    }
+}
+
+_r = _v;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
 \field{9..8}{K}
 %-------------------------------------------------------------------------------
-When the trap service routine is entered, this register stores whether kernel
-the processor was in kernel mode or user mode. When \insn{RFI} is executed,
-the state is set to this value.
+When the trap service routine is entered, this register stores whether the 
+processor was in kernel mode or user mode. When \insn{RFI} is executed, the 
+state is set to this value.
 
-Unlike the kernal mode field in \creg{CCR}, this field can be written. Writing 
+Unlike the kernel mode field in \creg{CCR}, this field can be written. Writing 
 \code{00} has no effect, writing \code{01} selects kernel mode, writing 
 \code{10} selects user mode and writing \code{11} toggles the state. This 
 prevents the need for read-modify-write operations. Read behavior is identical 
@@ -350,8 +426,8 @@ to the K field in \creg{CCR}.
 \begin{lstlisting}
 _v = _r;
 
-// Handle bus interface. The core can only go to application mode.
-_cmd = (_wmask_dbg | (_wmask_core & "10")) & _write;
+// Handle bus interface.
+_cmd = _wmask & _write;
 if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
 _read = ~_r $ _r;
 

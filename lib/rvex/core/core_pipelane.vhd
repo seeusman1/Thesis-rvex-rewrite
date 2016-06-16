@@ -421,7 +421,7 @@ entity core_pipelane is
     -- Cache performance information from the cache. The instruction cache
     -- related signals are part of the S_IF+L_IF stage, the data cache related
     -- signals are part of the S_MEM+L_MEM stage.
-    mem2pl_cacheStatus          : in  rvex_cacheStatus_type;
+    mem2pl_cacheTrace           : in  rvex_cacheTrace_type;
     
     ---------------------------------------------------------------------------
     -- Register file interface
@@ -848,7 +848,7 @@ architecture Behavioral of core_pipelane is
     mem_writeData               : rvex_data_type;
     
     -- Cache status flags from the cache block associated with this lane.
-    cache_status                : rvex_cacheStatus_type;
+    cache                       : rvex_cacheTrace_type;
     
     -- Whether an instruction fetch was performed or not.
     instr_enable                : std_logic;
@@ -868,7 +868,7 @@ architecture Behavioral of core_pipelane is
   constant TRACE_STATE_DEFAULT : traceState_type := (
     stop                        => '0',
     mem_enable                  => RVEX_UNDEF,
-    cache_status                => (data_accessType => (others => RVEX_UNDEF), others => RVEX_UNDEF),
+    cache                       => (data_accessType => (others => RVEX_UNDEF), others => RVEX_UNDEF),
     instr_enable                => '0',
     trap_info                   => TRAP_INFO_NONE,
     mem_address                 => (others => RVEX_UNDEF),
@@ -1518,7 +1518,7 @@ begin -- architecture
     cxplif2pl_invalUntilBR,
     
     -- Memory interface.
-    ibuf2pl_syllable, ibuf2pl_exception, dmsw2pl_exception, mem2pl_cacheStatus,
+    ibuf2pl_syllable, ibuf2pl_exception, dmsw2pl_exception, mem2pl_cacheTrace,
     
     -- Register file interface.
     gpreg2pl_readPortA, gpreg2pl_readPortB, cxplif2pl_brLinkReadPort,
@@ -1669,8 +1669,8 @@ begin -- architecture
     s(S_IF+L_IF).trace.instr_syllable := ibuf2pl_syllable(S_IF+L_IF);
     
     -- Copy instruction cache performance data into the trace records.
-    s(S_IF+L_IF).trace.cache_status.instr_access := mem2pl_cacheStatus.instr_access;
-    s(S_IF+L_IF).trace.cache_status.instr_miss   := mem2pl_cacheStatus.instr_miss;
+    s(S_IF+L_IF).trace.cache.instr_access := mem2pl_cacheTrace.instr_access;
+    s(S_IF+L_IF).trace.cache.instr_miss   := mem2pl_cacheTrace.instr_miss;
     
     ---------------------------------------------------------------------------
     -- Compute PC+1 related signals
@@ -2341,10 +2341,10 @@ begin -- architecture
     end if;
     
     -- Copy data cache performance data into the trace records.
-    s(S_MEM+L_MEM).trace.cache_status.data_accessType   := mem2pl_cacheStatus.data_accessType;
-    s(S_MEM+L_MEM).trace.cache_status.data_bypass       := mem2pl_cacheStatus.data_bypass;
-    s(S_MEM+L_MEM).trace.cache_status.data_miss         := mem2pl_cacheStatus.data_miss;
-    s(S_MEM+L_MEM).trace.cache_status.data_writePending := mem2pl_cacheStatus.data_writePending;
+    s(S_MEM+L_MEM).trace.cache.data_accessType   := mem2pl_cacheTrace.data_accessType;
+    s(S_MEM+L_MEM).trace.cache.data_bypass       := mem2pl_cacheTrace.data_bypass;
+    s(S_MEM+L_MEM).trace.cache.data_miss         := mem2pl_cacheTrace.data_miss;
+    s(S_MEM+L_MEM).trace.cache.data_writePending := mem2pl_cacheTrace.data_writePending;
     
     ---------------------------------------------------------------------------
     -- Handle soft trap instruction
@@ -2670,7 +2670,7 @@ begin -- architecture
       pl2trace_data.reg_brData      <= s(S_LAST).dp.resBr;
       
       -- Forward cache performance information.
-      pl2trace_data.cache_status    <= s(S_LAST).trace.cache_status;
+      pl2trace_data.cache           <= s(S_LAST).trace.cache;
       
       -- Forward instruction information.
       pl2trace_data.instr_enable    <= s(S_LAST).trace.instr_enable;

@@ -52,38 +52,38 @@ use IEEE.NUMERIC_STD.all;
 use IEEE.MATH_REAL.ALL;
 
 library rvex;
-use rvex.MMU_pkg.all;
+use rvex.cache_pkg.all;
 use rvex.common_pkg.all;
 
 
-entity mmu_victim_generator is 
+entity cache_mmu_victim_generator is 
   generic (
-    MMU_CFG                     : mmu_generic_config_type
+    CCFG                        : cache_generic_config_type
   );
   port (
     clk                         : in  std_logic;
     reset                       : in  std_logic;
     
     -- array of valid bits. non-valid entries are preferred for replacement
-    valid                       : in  std_logic_vector(2**MMU_CFG.TLBDepthLog2-1 downto 0);
+    valid                       : in  std_logic_vector(2**CCFG.TLBDepthLog2-1 downto 0);
     
     -- update victim output
     victim_next                 : in  std_logic;
     
     -- victim output (one-hot encoded)
-    victim                      : out std_logic_vector(2**MMU_CFG.TLBDepthLog2-1 downto 0)
+    victim                      : out std_logic_vector(2**CCFG.TLBDepthLog2-1 downto 0)
   );
   
-end entity;
+end entity cache_mmu_victim_generator;
 
 
-architecture behavioural of mmu_victim_generator is
+architecture behavioural of cache_mmu_victim_generator is
   
   type r_victim_gen is record
       lfsr                    : std_logic_vector(15 downto 0);
   end record;
   
-  constant WIDTHLOG2          : integer := MMU_CFG.TLBDepthLog2;
+  constant WIDTHLOG2          : integer := CCFG.TLBDepthLog2;
   constant WIDTH              : integer := 2**WIDTHLOG2;
   constant R_INIT             : r_victim_gen := ( lfsr  => x"BABE" 
                                                   );

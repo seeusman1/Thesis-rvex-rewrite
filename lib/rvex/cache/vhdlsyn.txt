@@ -11,4 +11,11 @@ cache_instr_blockValid.vhd
 cache_instr_missCtrl.vhd
 cache_instr_block.vhd
 cache_instr.vhd
+cache_mmu_cam_ram.vhd
+cache_mmu_cam.vhd
+cache_mmu_victim_generator.vhd
+cache_mmu_oh2bin.vhd
+cache_mmu_tlb.vhd
+cache_mmu_table_walk.vhd
+cache_mmu.vhd
 cache.vhd

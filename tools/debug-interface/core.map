@@ -113,279 +113,304 @@ all:FIELD_SPS0_ALUC { (val & 0x000000F0) >> 4 }
 all:FIELD_SPS0_ALUR { (val & 0x0000000F) >> 0 }                                                      ## GENERATED ##
 all:EXT2 { CREG_GLOB + 0x0E0 }
 all:EXT1 { CREG_GLOB + 0x0E4 }
+all:FIELD_EXT1_ASID { (val & 0x0000F800) >> 11 }
+all:FIELD_EXT1_LP { (val & 0x000007C0) >> 6 }
+all:FIELD_EXT1_NP { (val & 0x0000003E) >> 1 }
+all:FIELD_EXT1_M { (val & 0x00000001) >> 0 }
 all:EXT0 { CREG_GLOB + 0x0E8 }
 all:FIELD_EXT0_T { (val & 0x08000000) >> 27 }
 all:FIELD_EXT0_BRK { (val & 0x07000000) >> 24 }
-all:FIELD_EXT0_C { (val & 0x00080000) >> 19 }
+all:FIELD_EXT0_C { (val & 0x00080000) >> 19 }                                                        ## GENERATED ##
 all:FIELD_EXT0_P { (val & 0x00070000) >> 16 }
 all:FIELD_EXT0_O { (val & 0x00000004) >> 2 }
 all:FIELD_EXT0_L { (val & 0x00000002) >> 1 }
-all:FIELD_EXT0_F { (val & 0x00000001) >> 0 }                                                         ## GENERATED ##
+all:FIELD_EXT0_F { (val & 0x00000001) >> 0 }
 all:DCFG { CREG_GLOB + 0x0EC }
 all:FIELD_DCFG_BA { (val & 0x0000F000) >> 12 }
 all:FIELD_DCFG_NC { (val & 0x00000F00) >> 8 }
 all:FIELD_DCFG_NG { (val & 0x000000F0) >> 4 }
 all:FIELD_DCFG_NL { (val & 0x0000000F) >> 0 }
-all:CVER1 { CREG_GLOB + 0x0F0 }
+all:CVER1 { CREG_GLOB + 0x0F0 }                                                                      ## GENERATED ##
 all:FIELD_CVER1_VER { (val & 0xFF000000) >> 24 }
 all:CVER { CREG_GLOB + 0x0F0 }
 all:FIELD_CVER1_CTAG0 { (val & 0x00FF0000) >> 16 }
-all:CTAG { CREG_GLOB + 0x0F1 }                                                                       ## GENERATED ##
+all:CTAG { CREG_GLOB + 0x0F1 }
 all:FIELD_CVER1_CTAG1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_CVER1_CTAG2 { (val & 0x000000FF) >> 0 }
 all:CVER0 { CREG_GLOB + 0x0F4 }
 all:FIELD_CVER0_CTAG3 { (val & 0xFF000000) >> 24 }
 all:FIELD_CVER0_CTAG4 { (val & 0x00FF0000) >> 16 }
-all:FIELD_CVER0_CTAG5 { (val & 0x0000FF00) >> 8 }
+all:FIELD_CVER0_CTAG5 { (val & 0x0000FF00) >> 8 }                                                    ## GENERATED ##
 all:FIELD_CVER0_CTAG6 { (val & 0x000000FF) >> 0 }
 all:PVER1 { CREG_GLOB + 0x0F8 }
 all:FIELD_PVER1_COID { (val & 0xFF000000) >> 24 }
-all:COID { CREG_GLOB + 0x0F8 }                                                                       ## GENERATED ##
+all:COID { CREG_GLOB + 0x0F8 }
 all:FIELD_PVER1_PTAG0 { (val & 0x00FF0000) >> 16 }
 all:PTAG { CREG_GLOB + 0x0F9 }
 all:FIELD_PVER1_PTAG1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_PVER1_PTAG2 { (val & 0x000000FF) >> 0 }
 all:PVER0 { CREG_GLOB + 0x0FC }
-all:FIELD_PVER0_PTAG3 { (val & 0xFF000000) >> 24 }
+all:FIELD_PVER0_PTAG3 { (val & 0xFF000000) >> 24 }                                                   ## GENERATED ##
 all:FIELD_PVER0_PTAG4 { (val & 0x00FF0000) >> 16 }
 all:FIELD_PVER0_PTAG5 { (val & 0x0000FF00) >> 8 }
 all:FIELD_PVER0_PTAG6 { (val & 0x000000FF) >> 0 }
-all:CCR { CREG_CTXT + 0x000 }                                                                        ## GENERATED ##
+all:CCR { CREG_CTXT + 0x000 }
 all:FIELD_CCR_CAUSE { (val & 0xFF000000) >> 24 }
 all:TC { CREG_CTXT + 0x000 }
 all:FIELD_CCR_BRANCH { (val & 0x00FF0000) >> 16 }
 all:BR { CREG_CTXT + 0x001 }
-all:FIELD_CCR_K { (val & 0x00000300) >> 8 }
+all:FIELD_CCR_M { (val & 0x00000C00) >> 10 }
+all:FIELD_CCR_K { (val & 0x00000300) >> 8 }                                                          ## GENERATED ##
 all:FIELD_CCR_C { (val & 0x000000C0) >> 6 }
 all:FIELD_CCR_B { (val & 0x00000030) >> 4 }
 all:FIELD_CCR_R { (val & 0x0000000C) >> 2 }
 all:FIELD_CCR_I { (val & 0x00000003) >> 0 }
-all:SCCR { CREG_CTXT + 0x004 }                                                                       ## GENERATED ##
+all:SCCR { CREG_CTXT + 0x004 }
 all:FIELD_SCCR_ID { (val & 0xFF000000) >> 24 }
 all:CID { CREG_CTXT + 0x004 }
+all:FIELD_SCCR_M { (val & 0x00000C00) >> 10 }
 all:FIELD_SCCR_K { (val & 0x00000300) >> 8 }
-all:FIELD_SCCR_C { (val & 0x000000C0) >> 6 }
+all:FIELD_SCCR_C { (val & 0x000000C0) >> 6 }                                                         ## GENERATED ##
 all:FIELD_SCCR_B { (val & 0x00000030) >> 4 }
 all:FIELD_SCCR_R { (val & 0x0000000C) >> 2 }
 all:FIELD_SCCR_I { (val & 0x00000003) >> 0 }
 all:LR { CREG_CTXT + 0x008 }
 all:FIELD_LR_LR { (val & 0xFFFFFFFF) >> 0 }
-all:PC { CREG_CTXT + 0x00C }                                                                         ## GENERATED ##
+all:PC { CREG_CTXT + 0x00C }
 all:FIELD_PC_PC { (val & 0xFFFFFFFF) >> 0 }
 all:TH { CREG_CTXT + 0x010 }
 all:FIELD_TH_TH { (val & 0xFFFFFFFF) >> 0 }
-all:PH { CREG_CTXT + 0x014 }
+all:PH { CREG_CTXT + 0x014 }                                                                         ## GENERATED ##
 all:FIELD_PH_PH { (val & 0xFFFFFFFF) >> 0 }
 all:TP { CREG_CTXT + 0x018 }
 all:FIELD_TP_TP { (val & 0xFFFFFFFF) >> 0 }
 all:TA { CREG_CTXT + 0x01C }
 all:FIELD_TA_TA { (val & 0xFFFFFFFF) >> 0 }
-all:BR0 { CREG_CTXT + 0x020 }                                                                        ## GENERATED ##
+all:BR0 { CREG_CTXT + 0x020 }
 all:FIELD_BR0_BR0 { (val & 0xFFFFFFFF) >> 0 }
 all:BR1 { CREG_CTXT + 0x024 }
 all:FIELD_BR1_BR1 { (val & 0xFFFFFFFF) >> 0 }
-all:BR2 { CREG_CTXT + 0x028 }
+all:BR2 { CREG_CTXT + 0x028 }                                                                        ## GENERATED ##
 all:FIELD_BR2_BR2 { (val & 0xFFFFFFFF) >> 0 }
 all:BR3 { CREG_CTXT + 0x02C }
 all:FIELD_BR3_BR3 { (val & 0xFFFFFFFF) >> 0 }
 all:DCR { CREG_CTXT + 0x030 }
 all:FIELD_DCR_D { (val & 0x80000000) >> 31 }
-all:FIELD_DCR_J { (val & 0x40000000) >> 30 }                                                         ## GENERATED ##
+all:FIELD_DCR_J { (val & 0x40000000) >> 30 }
 all:FIELD_DCR_I { (val & 0x10000000) >> 28 }
 all:FIELD_DCR_E { (val & 0x08000000) >> 27 }
 all:FIELD_DCR_R { (val & 0x04000000) >> 26 }
-all:FIELD_DCR_S { (val & 0x02000000) >> 25 }
+all:FIELD_DCR_S { (val & 0x02000000) >> 25 }                                                         ## GENERATED ##
 all:FIELD_DCR_B { (val & 0x01000000) >> 24 }
 all:FIELD_DCR_CAUSE { (val & 0x00FF0000) >> 16 }
 all:DCRC { CREG_CTXT + 0x031 }
 all:FIELD_DCR_BR3 { (val & 0x00003000) >> 12 }
 all:FIELD_DCR_BR2 { (val & 0x00000300) >> 8 }
-all:FIELD_DCR_BR1 { (val & 0x00000030) >> 4 }                                                        ## GENERATED ##
+all:FIELD_DCR_BR1 { (val & 0x00000030) >> 4 }
 all:FIELD_DCR_BR0 { (val & 0x00000003) >> 0 }
 all:DCR2 { CREG_CTXT + 0x034 }
 all:FIELD_DCR2_RESULT { (val & 0xFF000000) >> 24 }
-all:RET { CREG_CTXT + 0x034 }
+all:RET { CREG_CTXT + 0x034 }                                                                        ## GENERATED ##
 all:FIELD_DCR2_TRCAP { (val & 0x0000FF00) >> 8 }
 all:FIELD_DCR2_T { (val & 0x00000080) >> 7 }
 all:FIELD_DCR2_M { (val & 0x00000040) >> 6 }
 all:FIELD_DCR2_R { (val & 0x00000020) >> 5 }
 all:FIELD_DCR2_C { (val & 0x00000010) >> 4 }
-all:FIELD_DCR2_I { (val & 0x00000008) >> 3 }                                                         ## GENERATED ##
+all:FIELD_DCR2_I { (val & 0x00000008) >> 3 }
 all:FIELD_DCR2_E { (val & 0x00000001) >> 0 }
 all:CRR { CREG_CTXT + 0x040 }
 all:FIELD_CRR_CRR { (val & 0xFFFFFFFF) >> 0 }
-all:WCFG { CREG_CTXT + 0x048 }
+all:WCFG { CREG_CTXT + 0x048 }                                                                       ## GENERATED ##
 all:FIELD_WCFG_WCFG { (val & 0xFFFFFFFF) >> 0 }
 all:SAWC { CREG_CTXT + 0x04C }
 all:FIELD_SAWC_RUN { (val & 0x000000FE) >> 1 }
 all:FIELD_SAWC_S { (val & 0x00000001) >> 0 }
 all:SCRP1 { CREG_CTXT + 0x050 }
-all:FIELD_SCRP1_SCRP1 { (val & 0xFFFFFFFF) >> 0 }                                                    ## GENERATED ##
+all:FIELD_SCRP1_SCRP1 { (val & 0xFFFFFFFF) >> 0 }
 all:SCRP2 { CREG_CTXT + 0x054 }
 all:FIELD_SCRP2_SCRP2 { (val & 0xFFFFFFFF) >> 0 }
 all:SCRP3 { CREG_CTXT + 0x058 }
-all:FIELD_SCRP3_SCRP3 { (val & 0xFFFFFFFF) >> 0 }
+all:FIELD_SCRP3_SCRP3 { (val & 0xFFFFFFFF) >> 0 }                                                    ## GENERATED ##
 all:SCRP4 { CREG_CTXT + 0x05C }
 all:FIELD_SCRP4_SCRP4 { (val & 0xFFFFFFFF) >> 0 }
 all:RSC { CREG_CTXT + 0x060 }
 all:FIELD_RSC_RSC { (val & 0xFFFFFFFF) >> 0 }
 all:CSC { CREG_CTXT + 0x064 }
-all:FIELD_CSC_CSC { (val & 0xFFFFFFFF) >> 0 }                                                        ## GENERATED ##
+all:FIELD_CSC_CSC { (val & 0xFFFFFFFF) >> 0 }
 all:RSC1 { CREG_CTXT + 0x068 }
 all:FIELD_RSC1_RSC1 { (val & 0xFFFFFFFF) >> 0 }
 all:RSC2 { CREG_CTXT + 0x070 }
-all:FIELD_RSC2_RSC2 { (val & 0xFFFFFFFF) >> 0 }
+all:FIELD_RSC2_RSC2 { (val & 0xFFFFFFFF) >> 0 }                                                      ## GENERATED ##
 all:RSC3 { CREG_CTXT + 0x078 }
 all:FIELD_RSC3_RSC3 { (val & 0xFFFFFFFF) >> 0 }
 all:RSC4 { CREG_CTXT + 0x080 }
 all:FIELD_RSC4_RSC4 { (val & 0xFFFFFFFF) >> 0 }
 all:RSC5 { CREG_CTXT + 0x088 }
-all:FIELD_RSC5_RSC5 { (val & 0xFFFFFFFF) >> 0 }                                                      ## GENERATED ##
+all:FIELD_RSC5_RSC5 { (val & 0xFFFFFFFF) >> 0 }
 all:RSC6 { CREG_CTXT + 0x090 }
 all:FIELD_RSC6_RSC6 { (val & 0xFFFFFFFF) >> 0 }
 all:RSC7 { CREG_CTXT + 0x098 }
-all:FIELD_RSC7_RSC7 { (val & 0xFFFFFFFF) >> 0 }
+all:FIELD_RSC7_RSC7 { (val & 0xFFFFFFFF) >> 0 }                                                      ## GENERATED ##
 all:CSC1 { CREG_CTXT + 0x06C }
 all:FIELD_CSC1_CSC1 { (val & 0xFFFFFFFF) >> 0 }
 all:CSC2 { CREG_CTXT + 0x074 }
 all:FIELD_CSC2_CSC2 { (val & 0xFFFFFFFF) >> 0 }
 all:CSC3 { CREG_CTXT + 0x07C }
-all:FIELD_CSC3_CSC3 { (val & 0xFFFFFFFF) >> 0 }                                                      ## GENERATED ##
+all:FIELD_CSC3_CSC3 { (val & 0xFFFFFFFF) >> 0 }
 all:CSC4 { CREG_CTXT + 0x084 }
 all:FIELD_CSC4_CSC4 { (val & 0xFFFFFFFF) >> 0 }
 all:CSC5 { CREG_CTXT + 0x08C }
-all:FIELD_CSC5_CSC5 { (val & 0xFFFFFFFF) >> 0 }
+all:FIELD_CSC5_CSC5 { (val & 0xFFFFFFFF) >> 0 }                                                      ## GENERATED ##
 all:CSC6 { CREG_CTXT + 0x094 }
 all:FIELD_CSC6_CSC6 { (val & 0xFFFFFFFF) >> 0 }
 all:CSC7 { CREG_CTXT + 0x09C }
 all:FIELD_CSC7_CSC7 { (val & 0xFFFFFFFF) >> 0 }
+all:CMC1 { CREG_CTXT + 0x0A0 }
+all:FIELD_CMC1_BLP { (val & 0xFF000000) >> 24 }
+all:FIELD_CMC1_WTC { (val & 0x000C0000) >> 18 }
+all:FIELD_CMC1_T { (val & 0x00010000) >> 16 }
+all:FIELD_CMC1_BYP { (val & 0x00000C00) >> 10 }
+all:FIELD_CMC1_D { (val & 0x00000100) >> 8 }                                                         ## GENERATED ##
+all:FIELD_CMC1_I { (val & 0x00000001) >> 0 }
+all:CMC2 { CREG_CTXT + 0x0A4 }
+all:PTP { CREG_CTXT + 0x0A8 }
+all:FIELD_PTP_PTP { (val & 0xFFFFFFFF) >> 0 }
+all:ASID { CREG_CTXT + 0x0AC }
+all:FIELD_ASID_ASID { (val & 0xFFFFFFFF) >> 0 }
+all:TFLO { CREG_CTXT + 0x0B0 }
+all:FIELD_TFLO_TFLO { (val & 0xFFFFFFFF) >> 0 }
+all:TFHI { CREG_CTXT + 0x0B4 }
+all:FIELD_TFHI_TFHI { (val & 0xFFFFFFFF) >> 0 }                                                      ## GENERATED ##
+all:TFID { CREG_CTXT + 0x0B8 }
+all:FIELD_TFID_E { (val & 0x80000000) >> 31 }
+all:FIELD_TFID_ASID { (val & 0x7FFFFFFF) >> 0 }
 all:CYC { CREG_CTXT + 0x100 }
-all:FIELD_CYC_CYC3 { (val & 0xFF000000) >> 24 }                                                      ## GENERATED ##
+all:FIELD_CYC_CYC3 { (val & 0xFF000000) >> 24 }
 all:FIELD_CYC_CYC2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_CYC_CYC1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_CYC_CYC0 { (val & 0x000000FF) >> 0 }
 all:CYCH { CREG_CTXT + 0x104 }
-all:FIELD_CYCH_CYC6 { (val & 0xFF000000) >> 24 }
+all:FIELD_CYCH_CYC6 { (val & 0xFF000000) >> 24 }                                                     ## GENERATED ##
 all:FIELD_CYCH_CYC5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_CYCH_CYC4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_CYCH_CYC3 { (val & 0x000000FF) >> 0 }
 all:STALL { CREG_CTXT + 0x108 }
-all:FIELD_STALL_STALL3 { (val & 0xFF000000) >> 24 }                                                  ## GENERATED ##
+all:FIELD_STALL_STALL3 { (val & 0xFF000000) >> 24 }
 all:FIELD_STALL_STALL2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_STALL_STALL1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_STALL_STALL0 { (val & 0x000000FF) >> 0 }
 all:STALLH { CREG_CTXT + 0x10C }
-all:FIELD_STALLH_STALL6 { (val & 0xFF000000) >> 24 }
+all:FIELD_STALLH_STALL6 { (val & 0xFF000000) >> 24 }                                                 ## GENERATED ##
 all:FIELD_STALLH_STALL5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_STALLH_STALL4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_STALLH_STALL3 { (val & 0x000000FF) >> 0 }
 all:BUN { CREG_CTXT + 0x110 }
-all:FIELD_BUN_BUN3 { (val & 0xFF000000) >> 24 }                                                      ## GENERATED ##
+all:FIELD_BUN_BUN3 { (val & 0xFF000000) >> 24 }
 all:FIELD_BUN_BUN2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_BUN_BUN1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_BUN_BUN0 { (val & 0x000000FF) >> 0 }
 all:BUNH { CREG_CTXT + 0x114 }
-all:FIELD_BUNH_BUN6 { (val & 0xFF000000) >> 24 }
+all:FIELD_BUNH_BUN6 { (val & 0xFF000000) >> 24 }                                                     ## GENERATED ##
 all:FIELD_BUNH_BUN5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_BUNH_BUN4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_BUNH_BUN3 { (val & 0x000000FF) >> 0 }
 all:SYL { CREG_CTXT + 0x118 }
-all:FIELD_SYL_SYL3 { (val & 0xFF000000) >> 24 }                                                      ## GENERATED ##
+all:FIELD_SYL_SYL3 { (val & 0xFF000000) >> 24 }
 all:FIELD_SYL_SYL2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_SYL_SYL1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_SYL_SYL0 { (val & 0x000000FF) >> 0 }
 all:SYLH { CREG_CTXT + 0x11C }
-all:FIELD_SYLH_SYL6 { (val & 0xFF000000) >> 24 }
+all:FIELD_SYLH_SYL6 { (val & 0xFF000000) >> 24 }                                                     ## GENERATED ##
 all:FIELD_SYLH_SYL5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_SYLH_SYL4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_SYLH_SYL3 { (val & 0x000000FF) >> 0 }
 all:NOP { CREG_CTXT + 0x120 }
-all:FIELD_NOP_NOP3 { (val & 0xFF000000) >> 24 }                                                      ## GENERATED ##
+all:FIELD_NOP_NOP3 { (val & 0xFF000000) >> 24 }
 all:FIELD_NOP_NOP2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_NOP_NOP1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_NOP_NOP0 { (val & 0x000000FF) >> 0 }
 all:NOPH { CREG_CTXT + 0x124 }
-all:FIELD_NOPH_NOP6 { (val & 0xFF000000) >> 24 }
+all:FIELD_NOPH_NOP6 { (val & 0xFF000000) >> 24 }                                                     ## GENERATED ##
 all:FIELD_NOPH_NOP5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_NOPH_NOP4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_NOPH_NOP3 { (val & 0x000000FF) >> 0 }
 all:IACC { CREG_CTXT + 0x128 }
-all:FIELD_IACC_IACC3 { (val & 0xFF000000) >> 24 }                                                    ## GENERATED ##
+all:FIELD_IACC_IACC3 { (val & 0xFF000000) >> 24 }
 all:FIELD_IACC_IACC2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_IACC_IACC1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_IACC_IACC0 { (val & 0x000000FF) >> 0 }
 all:IACCH { CREG_CTXT + 0x12C }
-all:FIELD_IACCH_IACC6 { (val & 0xFF000000) >> 24 }
+all:FIELD_IACCH_IACC6 { (val & 0xFF000000) >> 24 }                                                   ## GENERATED ##
 all:FIELD_IACCH_IACC5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_IACCH_IACC4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_IACCH_IACC3 { (val & 0x000000FF) >> 0 }
 all:IMISS { CREG_CTXT + 0x130 }
-all:FIELD_IMISS_IMISS3 { (val & 0xFF000000) >> 24 }                                                  ## GENERATED ##
+all:FIELD_IMISS_IMISS3 { (val & 0xFF000000) >> 24 }
 all:FIELD_IMISS_IMISS2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_IMISS_IMISS1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_IMISS_IMISS0 { (val & 0x000000FF) >> 0 }
 all:IMISSH { CREG_CTXT + 0x134 }
-all:FIELD_IMISSH_IMISS6 { (val & 0xFF000000) >> 24 }
+all:FIELD_IMISSH_IMISS6 { (val & 0xFF000000) >> 24 }                                                 ## GENERATED ##
 all:FIELD_IMISSH_IMISS5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_IMISSH_IMISS4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_IMISSH_IMISS3 { (val & 0x000000FF) >> 0 }
 all:DRACC { CREG_CTXT + 0x138 }
-all:FIELD_DRACC_DRACC3 { (val & 0xFF000000) >> 24 }                                                  ## GENERATED ##
+all:FIELD_DRACC_DRACC3 { (val & 0xFF000000) >> 24 }
 all:FIELD_DRACC_DRACC2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DRACC_DRACC1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DRACC_DRACC0 { (val & 0x000000FF) >> 0 }
 all:DRACCH { CREG_CTXT + 0x13C }
-all:FIELD_DRACCH_DRACC6 { (val & 0xFF000000) >> 24 }
+all:FIELD_DRACCH_DRACC6 { (val & 0xFF000000) >> 24 }                                                 ## GENERATED ##
 all:FIELD_DRACCH_DRACC5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DRACCH_DRACC4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DRACCH_DRACC3 { (val & 0x000000FF) >> 0 }
 all:DRMISS { CREG_CTXT + 0x140 }
-all:FIELD_DRMISS_DRMISS3 { (val & 0xFF000000) >> 24 }                                                ## GENERATED ##
+all:FIELD_DRMISS_DRMISS3 { (val & 0xFF000000) >> 24 }
 all:FIELD_DRMISS_DRMISS2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DRMISS_DRMISS1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DRMISS_DRMISS0 { (val & 0x000000FF) >> 0 }
 all:DRMISSH { CREG_CTXT + 0x144 }
-all:FIELD_DRMISSH_DRMISS6 { (val & 0xFF000000) >> 24 }
+all:FIELD_DRMISSH_DRMISS6 { (val & 0xFF000000) >> 24 }                                               ## GENERATED ##
 all:FIELD_DRMISSH_DRMISS5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DRMISSH_DRMISS4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DRMISSH_DRMISS3 { (val & 0x000000FF) >> 0 }
 all:DWACC { CREG_CTXT + 0x148 }
-all:FIELD_DWACC_DWACC3 { (val & 0xFF000000) >> 24 }                                                  ## GENERATED ##
+all:FIELD_DWACC_DWACC3 { (val & 0xFF000000) >> 24 }
 all:FIELD_DWACC_DWACC2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DWACC_DWACC1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DWACC_DWACC0 { (val & 0x000000FF) >> 0 }
 all:DWACCH { CREG_CTXT + 0x14C }
-all:FIELD_DWACCH_DWACC6 { (val & 0xFF000000) >> 24 }
+all:FIELD_DWACCH_DWACC6 { (val & 0xFF000000) >> 24 }                                                 ## GENERATED ##
 all:FIELD_DWACCH_DWACC5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DWACCH_DWACC4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DWACCH_DWACC3 { (val & 0x000000FF) >> 0 }
 all:DWMISS { CREG_CTXT + 0x150 }
-all:FIELD_DWMISS_DWMISS3 { (val & 0xFF000000) >> 24 }                                                ## GENERATED ##
+all:FIELD_DWMISS_DWMISS3 { (val & 0xFF000000) >> 24 }
 all:FIELD_DWMISS_DWMISS2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DWMISS_DWMISS1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DWMISS_DWMISS0 { (val & 0x000000FF) >> 0 }
 all:DWMISSH { CREG_CTXT + 0x154 }
-all:FIELD_DWMISSH_DWMISS6 { (val & 0xFF000000) >> 24 }
+all:FIELD_DWMISSH_DWMISS6 { (val & 0xFF000000) >> 24 }                                               ## GENERATED ##
 all:FIELD_DWMISSH_DWMISS5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DWMISSH_DWMISS4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DWMISSH_DWMISS3 { (val & 0x000000FF) >> 0 }
 all:DBYPASS { CREG_CTXT + 0x158 }
-all:FIELD_DBYPASS_DBYPASS3 { (val & 0xFF000000) >> 24 }                                              ## GENERATED ##
+all:FIELD_DBYPASS_DBYPASS3 { (val & 0xFF000000) >> 24 }
 all:FIELD_DBYPASS_DBYPASS2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DBYPASS_DBYPASS1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DBYPASS_DBYPASS0 { (val & 0x000000FF) >> 0 }
 all:DBYPASSH { CREG_CTXT + 0x15C }
-all:FIELD_DBYPASSH_DBYPASS6 { (val & 0xFF000000) >> 24 }
+all:FIELD_DBYPASSH_DBYPASS6 { (val & 0xFF000000) >> 24 }                                             ## GENERATED ##
 all:FIELD_DBYPASSH_DBYPASS5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DBYPASSH_DBYPASS4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DBYPASSH_DBYPASS3 { (val & 0x000000FF) >> 0 }
 all:DWBUF { CREG_CTXT + 0x160 }
-all:FIELD_DWBUF_DWBUF3 { (val & 0xFF000000) >> 24 }                                                  ## GENERATED ##
+all:FIELD_DWBUF_DWBUF3 { (val & 0xFF000000) >> 24 }
 all:FIELD_DWBUF_DWBUF2 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DWBUF_DWBUF1 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DWBUF_DWBUF0 { (val & 0x000000FF) >> 0 }
 all:DWBUFH { CREG_CTXT + 0x164 }
-all:FIELD_DWBUFH_DWBUF6 { (val & 0xFF000000) >> 24 }
+all:FIELD_DWBUFH_DWBUF6 { (val & 0xFF000000) >> 24 }                                                 ## GENERATED ##
 all:FIELD_DWBUFH_DWBUF5 { (val & 0x00FF0000) >> 16 }
 all:FIELD_DWBUFH_DWBUF4 { (val & 0x0000FF00) >> 8 }
 all:FIELD_DWBUFH_DWBUF3 { (val & 0x000000FF) >> 0 }

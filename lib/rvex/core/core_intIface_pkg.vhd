@@ -318,8 +318,8 @@ package core_intIface_pkg is
     -- high.
     trap_arg                    : rvex_address_type;
     
-    -- Cache status flags from the cache block associated with this lane.
-    cache_status                : rvex_cacheStatus_type;
+    -- Cache trace flags from the cache block associated with this lane.
+    cache                       : rvex_cacheTrace_type;
     
     -- Whether an instruction fetch was performed or not.
     instr_enable                : std_logic;

@@ -288,7 +288,8 @@ architecture Behavioral of cache_data is
     -- Write servicing select signal, determines which cache block should
     -- service the previously requested write, if there is one. The inputs
     -- for the writeSel network should be set to '1'. At the output of the
-    -- network, it is guaranteed that only one writeSel bit is active.
+    -- network, it is guaranteed that only one writeSel bit is active per
+    -- set of coupled cache blocks.
     writeSel                    : std_logic;
     
     -- Registered version of the address being requested by the lane group.

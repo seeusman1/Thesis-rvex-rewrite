@@ -56,7 +56,7 @@ use ieee.std_logic_textio.all;
 
 
 -- The CAM is build out of blocks of BRAM which are 2^10 deep and 32 wide.
-entity mmu_cam_ram is
+entity cache_mmu_cam_ram is
   port (
 
     clk                         : in  std_logic;
@@ -72,10 +72,10 @@ entity mmu_cam_ram is
     write_in_addr               : in  std_logic_vector(31 downto 0)
     
   );
-end entity; -- CAM
+end entity cache_mmu_cam_ram;
 
 
-architecture behavioural of mmu_cam_ram is
+architecture behavioural of cache_mmu_cam_ram is
   
   constant CAM_RAM_WIDTH        : integer := 32;
   constant CAM_RAM_DEPTH_LOG2   : integer := 10;

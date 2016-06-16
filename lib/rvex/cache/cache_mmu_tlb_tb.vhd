@@ -73,7 +73,7 @@ architecture behavioural of tb_TLB is
 
 begin
 
-	UUT : entity work.TLB
+	UUT : entity work.cache_mmu_tlb
 	generic map(
 	    MMU_CFG                 => MMU_cfg
 	)

@@ -240,7 +240,12 @@ entity core_pipelanes is
     -- Cache performance information from the cache. The instruction cache
     -- related signals are part of the S_IF+L_IF stage, the data cache related
     -- signals are part of the S_MEM+L_MEM stage.
-    mem2pl_cacheStatus          : in  rvex_cacheStatus_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    mem2pl_cacheTrace           : in  rvex_cacheTrace_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Performance information from the MMU. The instruction related signals
+    -- are part of the S_IF+L_IF stage, the data related signals are part of
+    -- the S_MEM+L_MEM stage.
+    mem2pl_mmuTrace             : in  rvex_mmuTrace_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Control register interface
@@ -532,7 +537,7 @@ begin -- architecture
         dmsw2pl_exception(S_MEM+L_MEM)    => dmsw2pl_exception(laneGroup),
         
         -- Common memory interface.
-        mem2pl_cacheStatus                => mem2pl_cacheStatus(laneGroup),
+        mem2pl_cacheTrace                 => mem2pl_cacheTrace(laneGroup),
         
         -- Register file interface.
         pl2gpreg_readPortA                => pl2gpreg_readPorts(lane*2+0),

@@ -523,8 +523,8 @@ class BreakpointInfo(Aggregate):
 TYPE_LIST.append(BreakpointInfo())
 
 
-class CacheStatus(Aggregate):
-    """Cache status structure."""
+class CacheTrace(Aggregate):
+    """Cache trace status structure."""
     
     def __init__(self):
         Aggregate.__init__(self)
@@ -534,6 +534,29 @@ class CacheStatus(Aggregate):
         self.add_entry('data_bypass',       Bit())
         self.add_entry('data_miss',         Bit())
         self.add_entry('data_writePending', Bit())
+
+    def name(self):
+        return 'cacheTrace'
+    
+    def name_vhdl(self):
+        return 'rvex_cacheTrace_type'
+    
+    def name_vhdl_array(self):
+        return 'rvex_cacheTrace_array'
+
+    def name_c(self):
+        return 'cacheTrace_t'
+
+TYPE_LIST.append(CacheTrace())
+
+
+class CacheStatus(Aggregate):
+    """Cache status structure."""
+    
+    def __init__(self):
+        Aggregate.__init__(self)
+        self.add_entry('instr_flushBusy',   Bit())
+        self.add_entry('data_flushBusy',    Bit())
 
     def name(self):
         return 'cacheStatus'
@@ -548,6 +571,110 @@ class CacheStatus(Aggregate):
         return 'cacheStatus_t'
 
 TYPE_LIST.append(CacheStatus())
+
+
+class CacheControl(Aggregate):
+    """Cache control structure."""
+    
+    def __init__(self):
+        Aggregate.__init__(self)
+        self.add_entry('instr_flushStart',  Bit())
+        self.add_entry('data_flushStart',   Bit())
+        self.add_entry('data_bypass',       Bit())
+        self.add_entry('blockPrio',         Byte())
+
+    def name(self):
+        return 'cacheControl'
+    
+    def name_vhdl(self):
+        return 'rvex_cacheControl_type'
+    
+    def name_vhdl_array(self):
+        return 'rvex_cacheControl_array'
+
+    def name_c(self):
+        return 'cacheControl_t'
+
+TYPE_LIST.append(CacheControl())
+
+
+class MMUStatus(Aggregate):
+    """MMU status structure."""
+    
+    def __init__(self):
+        Aggregate.__init__(self)
+        self.add_entry('flush_busy',        Bit())
+
+    def name(self):
+        return 'mmuStatus'
+    
+    def name_vhdl(self):
+        return 'rvex_mmuStatus_type'
+    
+    def name_vhdl_array(self):
+        return 'rvex_mmuStatus_array'
+
+    def name_c(self):
+        return 'mmuStatus_t'
+
+TYPE_LIST.append(MMUStatus())
+
+
+class MMUControl(Aggregate):
+    """MMU control structure."""
+    
+    def __init__(self):
+        Aggregate.__init__(self)
+        self.add_entry('enable',             Bit())
+        self.add_entry('kernelMode',         Bit())
+        self.add_entry('writeToCleanEna',    Bit())
+        self.add_entry('pageTablePtr',       Address())
+        self.add_entry('asid',               Data())
+        self.add_entry('flush_start',        Bit())
+        self.add_entry('flush_asid',         Data())
+        self.add_entry('flush_asidEna',      Bit())
+        self.add_entry('flush_tagLow',       Address())
+        self.add_entry('flush_tagHigh',      Address())
+        self.add_entry('blockPrio',          Byte())
+
+    def name(self):
+        return 'mmuControl'
+    
+    def name_vhdl(self):
+        return 'rvex_mmuControl_type'
+    
+    def name_vhdl_array(self):
+        return 'rvex_mmuControl_array'
+
+    def name_c(self):
+        return 'mmuControl_t'
+
+TYPE_LIST.append(MMUControl())
+
+
+class MMUConfig(Aggregate):
+    """MMU design-time configuration structure."""
+    
+    def __init__(self):
+        Aggregate.__init__(self)
+        self.add_entry('mmuEnable',          Boolean())
+        self.add_entry('pageSizeLog2',       Natural())
+        self.add_entry('largePageSizeLog2',  Natural())
+        self.add_entry('asidBitWidth',       Natural())
+
+    def name(self):
+        return 'mmuConfig'
+    
+    def name_vhdl(self):
+        return 'rvex_mmuConfig_type'
+    
+    def name_vhdl_array(self):
+        return 'rvex_mmuConfig_array'
+
+    def name_c(self):
+        return 'mmuConfig_t'
+
+TYPE_LIST.append(MMUConfig())
 
 
 class CfgVectType(Aggregate):

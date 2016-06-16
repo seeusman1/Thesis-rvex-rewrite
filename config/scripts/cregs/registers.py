@@ -188,7 +188,7 @@ def parse(indir):
         combinatorial_env = env.copy()
         combinatorial_env.with_access_check(lambda x: not isinstance(x.atyp, Input))
         
-        # Add the per-context loop iterationj variable to the context-specific
+        # Add the per-context loop iteration variable to the context-specific
         # environment.
         if mo == 'cx':
             make_env_per_ctxt(env)
@@ -1187,5 +1187,6 @@ def compile_finally_and_outconn(reg, env, combenv):
 def make_env_per_ctxt(env):
     """Adds the context loop iteration stuff to the given environment."""
     env.set_implicit_ctxt('ctxt')
-    env.declare(Object('', 'ctxt', PredefinedConstant(Natural())))
+    if 'ctxt' not in env.objects:
+        env.declare(Object('', 'ctxt', PredefinedConstant(Natural())))
 

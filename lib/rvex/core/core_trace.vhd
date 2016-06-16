@@ -517,9 +517,9 @@ begin -- architecture
               traceCache(lane) := c.enable
                               and c.cacheEn
                               and (
-                                d.cache_status.instr_access
-                                or d.cache_status.data_accessType(1)
-                                or d.cache_status.data_accessType(0)
+                                d.cache.instr_access
+                                or d.cache.data_accessType(1)
+                                or d.cache.data_accessType(0)
                               );
             end if;
                             
@@ -753,13 +753,13 @@ begin -- architecture
               p(I_EXFLAGS)(5) := traceCache(lane);
               
               -- Write the cache performance flags to the packet.
-              p(I_CACHEINFO)(7) := d.cache_status.instr_access;
-              p(I_CACHEINFO)(6) := d.cache_status.instr_miss;
-              p(I_CACHEINFO)(5) := d.cache_status.data_accessType(1);
-              p(I_CACHEINFO)(4) := d.cache_status.data_accessType(0);
-              p(I_CACHEINFO)(3) := d.cache_status.data_bypass;
-              p(I_CACHEINFO)(2) := d.cache_status.data_miss;
-              p(I_CACHEINFO)(1) := d.cache_status.data_writePending;
+              p(I_CACHEINFO)(7) := d.cache.instr_access;
+              p(I_CACHEINFO)(6) := d.cache.instr_miss;
+              p(I_CACHEINFO)(5) := d.cache.data_accessType(1);
+              p(I_CACHEINFO)(4) := d.cache.data_accessType(0);
+              p(I_CACHEINFO)(3) := d.cache.data_bypass;
+              p(I_CACHEINFO)(2) := d.cache.data_miss;
+              p(I_CACHEINFO)(1) := d.cache.data_writePending;
               
             end if;
             

@@ -302,11 +302,12 @@ package core_pkg is
     CFG       : rvex_generic_config_type
   ) return natural;
   
-  -- Cache status output signal record, used when tracing and to drive
-  -- cache performance counters. All these signals are replicated for each lane
-  -- group. They are assumed to only be active in cycles where the CPU is not
-  -- stalled, so they can be tied into the performance counters directly.
-  type rvex_cacheStatus_type is record
+  -----------------------------------------------------------------------------
+  -- Cache trace output signal record, used for tracing. All these signals are
+  -- replicated for each lane group. They are assumed to only be active in
+  -- cycles where the CPU is not stalled, so they can be tied into the
+  -- performance counters directly.
+  type rvex_cacheTrace_type is record
     
     -- This is high when a fetch was performed.
     instr_access                : std_logic;
@@ -334,14 +335,195 @@ package core_pkg is
     data_writePending           : std_logic;
     
   end record;
-  type rvex_cacheStatus_array is array (natural range <>) of rvex_cacheStatus_type;
-  constant RVEX_CACHE_STATUS_IDLE : rvex_cacheStatus_type := (
+  type rvex_cacheTrace_array is array (natural range <>) of rvex_cacheTrace_type;
+  constant RVEX_CACHE_TRACE_IDLE : rvex_cacheTrace_type := (
     instr_access                => '0',
     instr_miss                  => '0',
     data_accessType             => "00",
     data_bypass                 => '0',
     data_miss                   => '0',
     data_writePending           => '0'
+  );
+  
+  -----------------------------------------------------------------------------
+  -- Cache status signals. NOTE: if you end up here with error messages you may
+  -- be looking for rvex_cacheTrace_type instead. The type was renamed.
+  type rvex_cacheStatus_type is record
+    
+    -- This is high when an instruction cache flush is busy. If flushes are
+    -- always single-cycle, this can just always be zero.
+    instr_flushBusy             : std_logic;
+    
+    -- This is high when a data cache flush is busy. If flushes are always
+    -- single-cycle, this can just always be zero.
+    data_flushBusy              : std_logic;
+    
+  end record;
+  type rvex_cacheStatus_array is array (natural range <>) of rvex_cacheStatus_type;
+  constant RVEX_CACHE_STATUS_IDLE : rvex_cacheStatus_type := (
+    instr_flushBusy             => '0',
+    data_flushBusy              => '0'
+  );
+  
+  -----------------------------------------------------------------------------
+  -- Cache control signals.
+  type rvex_cacheControl_type is record
+    
+    -- When this is high, an instruction cache flush should be initiated.
+    instr_flushStart            : std_logic;
+    
+    -- When this is high, a data cache flush should be initiated.
+    data_flushStart             : std_logic; 
+    
+    -- When this is high, all data accesses should bypass the cache.
+    data_bypass                 : std_logic;
+    
+    -- This signal is used to assign a higher update priority to certain
+    -- blocks. Each bit represents a block/lane group. Blocks for which the bit
+    -- is set should take precedence over the other blocks when a cache miss
+    -- occurs. This can be used to potentially decrease the cache penalty due
+    -- to reconfiguration if the new configuration is known in advance, by
+    -- directing cache updates to blocks that are known to be shared between
+    -- the two configurations.
+    blockPrio                   : rvex_byte_type;
+    
+  end record;
+  type rvex_cacheControl_array is array (natural range <>) of rvex_cacheControl_type;
+  constant RVEX_CACHE_CONTROL_IDLE : rvex_cacheControl_type := (
+    instr_flushStart            => '0',
+    data_flushStart             => '0',
+    data_bypass                 => '0',
+    blockPrio                   => (others => '0')
+  );
+  
+  -----------------------------------------------------------------------------
+  -- MMU trace information per lane group.
+  type rvex_mmuTrace_type is record
+    
+    -- This is high when this instruction TLB serviced a translation.
+    itlb_access                 : std_logic;
+    
+    -- This is high when this instruction TLB missed.
+    itlb_miss                   : std_logic;
+    
+    -- This is high when this data TLB serviced a translation.
+    dtlb_access                 : std_logic;
+    
+    -- This is high when this data TLB missed.
+    dtlb_miss                   : std_logic;
+    
+  end record;
+  type rvex_mmuTrace_array is array (natural range <>) of rvex_mmuTrace_type;
+  constant RVEX_MMU_TRACE_IDLE : rvex_mmuTrace_type := (
+    itlb_access                 => '0',
+    itlb_miss                   => '0',
+    dtlb_access                 => '0',
+    dtlb_miss                   => '0'
+  );
+  
+  -----------------------------------------------------------------------------
+  -- MMU status signals.
+  type rvex_mmuStatus_type is record
+    
+    -- This is high when a TLB cache flush is busy. If flushes are always
+    -- single-cycle, this can just always be zero.
+    flush_busy                  : std_logic;
+    
+  end record;
+  type rvex_mmuStatus_array is array (natural range <>) of rvex_mmuStatus_type;
+  constant RVEX_MMU_STATUS_IDLE : rvex_mmuStatus_type := (
+    flush_busy                  => '0'
+  );
+  
+  -----------------------------------------------------------------------------
+  -- MMU control signals.
+  type rvex_mmuControl_type is record
+    
+    -- This signal controls whether address translation is active or not.
+    enable                      : std_logic;
+    
+    -- This signal represents the current privilege level of processor. It is
+    -- high for kernel mode and low for application mode.
+    kernelMode                  : std_logic;
+    
+    -- This signal controls whether a trap is generated when a write to a clean
+    -- page is attempted.
+    writeToCleanEna             : std_logic;
+    
+    -- This signal specifies the page table pointer for the current thread.
+    pageTablePtr                : rvex_address_type;
+    
+    -- This signal specifies the address space ID for the current thread.
+    asid                        : rvex_data_type;
+    
+    -- When this signal is high, a TLB flush should be initiated.
+    flush_start                 : std_logic;
+    
+    -- When flush_asidEna is high, flush_asid specifies a specific ASID that
+    -- must be flushed during a TLB flush. Entries with other ASIDs are then
+    -- unaffected.
+    flush_asid                  : rvex_data_type;
+    flush_asidEna               : std_logic;
+    
+    -- These two signals specify a lower and upper limit for the virtual page
+    -- addresses that are to be flushed. Both are inclusive.
+    flush_tagLow                : rvex_address_type;
+    flush_tagHigh               : rvex_address_type;
+    
+    -- This signal is used to assign a higher update priority to certain
+    -- TLBs. Each bit represents a TLB/lane group. TLBs for which the bit
+    -- is set should take precedence over the other TLBs when a TLB miss
+    -- occurs. This can be used to potentially decrease the TLB miss penalty
+    -- due to reconfiguration if the new configuration is known in advance, by
+    -- directing updates to TLBs that are known to be shared between the two
+    -- configurations.
+    blockPrio                   : rvex_byte_type;
+    
+  end record;
+  type rvex_mmuControl_array is array (natural range <>) of rvex_mmuControl_type;
+  constant RVEX_MMU_CONTROL_IDLE : rvex_mmuControl_type := (
+    enable                      => '0',
+    kernelMode                  => '0',
+    writeToCleanEna             => '0',
+    pageTablePtr                => (others => '0'),
+    asid                        => (others => '0'),
+    flush_start                 => '0',
+    flush_asid                  => (others => '0'),
+    flush_asidEna               => '0',
+    flush_tagLow                => (others => '0'),
+    flush_tagHigh               => (others => '1'),
+    blockPrio                   => (others => '0')
+  );
+  
+  -----------------------------------------------------------------------------
+  -- MMU design-time configuration information.
+  type rvex_mmuConfig_type is record
+    
+    -- Determines whether the MMU is instantiated in the system.
+    mmuEnable                   : boolean;
+    
+    -- The log2 of the page size in bytes. It also denotes the number of bits
+    -- in the page offset. The page size must be larger than or equal to the
+    -- size of a single cache block.
+    pageSizeLog2                : natural;
+    
+    -- The log2 of the size of a large page. If this is more then 1024 times
+    -- larger than the size of a regular page
+    -- (largePageSizeLog2 > pageSizeLog2+10), it wil lead to an extra BRAM for
+    -- each TLB in the system.
+    largePageSizeLog2           : natural;
+    
+    -- The number of bits used for the application space ID. If this is set to
+    -- a number larger than 10, it will result in higher BRAM usage.
+    asidBitWidth                : natural;
+    
+  end record;
+  type rvex_mmuConfig_array is array (natural range <>) of rvex_mmuConfig_type;
+  constant RVEX_MMU_CONFIG_NONE : rvex_mmuConfig_type := (
+    mmuEnable                   => false,
+    pageSizeLog2                => 12,
+    largePageSizeLog2           => 22,
+    asidBitWidth                => 10
   );
   
 end core_pkg;

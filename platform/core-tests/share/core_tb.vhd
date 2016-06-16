@@ -2544,66 +2544,73 @@ begin -- architecture
     registerCtrlReg("CR_CSC5", 16#28C#);
     registerCtrlReg("CR_CSC6", 16#294#);
     registerCtrlReg("CR_CSC7", 16#29C#);
+    registerCtrlReg("CR_CMC1", 16#2A0#);
+    registerCtrlReg("CR_CMC2", 16#2A4#);
+    registerCtrlReg("CR_PTP", 16#2A8#);
+    registerCtrlReg("CR_ASID", 16#2AC#);
+    registerCtrlReg("CR_TFLO", 16#2B0#);
+    registerCtrlReg("CR_TFHI", 16#2B4#);
+    registerCtrlReg("CR_TFID", 16#2B8#);                                                             -- GENERATED --
     registerCtrlReg("CR_CYC", 16#300#);
     registerCtrlReg("CR_CYCH", 16#304#);
     registerCtrlReg("CR_STALL", 16#308#);
     registerCtrlReg("CR_STALLH", 16#30C#);
     registerCtrlReg("CR_BUN", 16#310#);
     registerCtrlReg("CR_BUNH", 16#314#);
-    registerCtrlReg("CR_SYL", 16#318#);                                                              -- GENERATED --
+    registerCtrlReg("CR_SYL", 16#318#);
     registerCtrlReg("CR_SYLH", 16#31C#);
     registerCtrlReg("CR_NOP", 16#320#);
-    registerCtrlReg("CR_NOPH", 16#324#);
+    registerCtrlReg("CR_NOPH", 16#324#);                                                             -- GENERATED --
     registerCtrlReg("CR_IACC", 16#328#);
     registerCtrlReg("CR_IACCH", 16#32C#);
     registerCtrlReg("CR_IMISS", 16#330#);
     registerCtrlReg("CR_IMISSH", 16#334#);
     registerCtrlReg("CR_DRACC", 16#338#);
     registerCtrlReg("CR_DRACCH", 16#33C#);
-    registerCtrlReg("CR_DRMISS", 16#340#);                                                           -- GENERATED --
+    registerCtrlReg("CR_DRMISS", 16#340#);
     registerCtrlReg("CR_DRMISSH", 16#344#);
     registerCtrlReg("CR_DWACC", 16#348#);
-    registerCtrlReg("CR_DWACCH", 16#34C#);
+    registerCtrlReg("CR_DWACCH", 16#34C#);                                                           -- GENERATED --
     registerCtrlReg("CR_DWMISS", 16#350#);
     registerCtrlReg("CR_DWMISSH", 16#354#);
     registerCtrlReg("CR_DBYPASS", 16#358#);
     registerCtrlReg("CR_DBYPASSH", 16#35C#);
     registerCtrlReg("CR_DWBUF", 16#360#);
     registerCtrlReg("CR_DWBUFH", 16#364#);
-                                                                                                     -- GENERATED --
+
     -- Enable/disable interrupts.
     registerCtrlRegVal("CR_CCR_IEN",          CR_CCR_I_L);
-    registerCtrlRegVal("CR_CCR_IEN_C",        CR_CCR_I_H);
+    registerCtrlRegVal("CR_CCR_IEN_C",        CR_CCR_I_H);                                           -- GENERATED --
 
     -- Enable/disable ready-for-trap.
     registerCtrlRegVal("CR_CCR_RFT",          CR_CCR_R_L);
     registerCtrlRegVal("CR_CCR_RFT_C",        CR_CCR_R_H);
 
     -- Debug commands.
-    registerCtrlRegVal("CR_DCRC_DBG_EXT",     16#08#); -- Enter external debug mode.                 -- GENERATED --
+    registerCtrlRegVal("CR_DCRC_DBG_EXT",     16#08#); -- Enter external debug mode.
     registerCtrlRegVal("CR_DCRC_BREAK",       16#09#); -- Break; stop execution.
     registerCtrlRegVal("CR_DCRC_STEP",        16#0A#); -- Step one instruction. Can also be used to stop the core.
-    registerCtrlRegVal("CR_DCRC_RESUME",      16#0C#); -- Resume/continue execution.
+    registerCtrlRegVal("CR_DCRC_RESUME",      16#0C#); -- Resume/continue execution.                 -- GENERATED --
     registerCtrlRegVal("CR_DCRC_DBG_INT",     16#10#); -- Transfer debugging control back to the core.
     registerCtrlRegVal("CR_DCRC_RESET",       16#80#); -- Restart the context.
     registerCtrlRegVal("CR_DCRC_RESET_DBG",   16#88#); -- Restart the context in external debug mode.
     registerCtrlRegVal("CR_DCRC_RESET_BREAK", 16#89#); -- Restart the context in external debug mode and break.
 
     -- Handle the root file.
-    handleFile(ROOT_FILE);                                                                           -- GENERATED --
+    handleFile(ROOT_FILE);
 
     -- Show the results.
-    wait until rising_edge(sync);
+    wait until rising_edge(sync);                                                                    -- GENERATED --
     report "Test suite complete: "
          & integer'image(testCount) & " test(s) run of which "
          & integer'image(failedTests) & " failed; "
          & integer'image(abortedTests) & " test case(s) aborted due to "
          & "simulation errors or incompatible CFG vector."
       severity failure;
-                                                                                                     -- GENERATED --
+
     wait;
 
-  end process;
+  end process;                                                                                       -- GENERATED --
 
 end Behavioral;
 

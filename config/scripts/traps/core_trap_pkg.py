@@ -17,8 +17,9 @@ def generate(trps, dirs):
             continue
         
         # Generate the trap cause constant.
-        const = 'constant RVEX_TRAP_%s%s' % (trap['mnemonic'].upper(), ' '*20)
-        const = '%s: natural := %d;\n' % (const[:38], index)
+        const = 'RVEX_TRAP_' + trap['mnemonic'].upper()
+        const += ' ' * max(29 - len(const), 0)
+        const = 'constant %s: natural := %d;\n' % (const[:38], index)
         causes.append(const)
         
         # Generate the table entry.

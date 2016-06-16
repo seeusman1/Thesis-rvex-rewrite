@@ -147,202 +147,237 @@ package core_trap_pkg is                                                        
   constant RVEX_TRAP_EXT_INTERRUPT      : natural := 7;
   constant RVEX_TRAP_STOP               : natural := 8;
   constant RVEX_TRAP_SOFT_CTXT_SWITCH   : natural := 9;
+  constant RVEX_TRAP_DMEM_PAGE_FAULT    : natural := 10;
+  constant RVEX_TRAP_IMEM_PAGE_FAULT    : natural := 11;
+  constant RVEX_TRAP_KERNEL_SPACE_VIO   : natural := 12;
+  constant RVEX_TRAP_WRITE_ACCESS_VIO   : natural := 13;                                             -- GENERATED --
+  constant RVEX_TRAP_WRITE_TO_CLEAN_PAGE: natural := 14;
   constant RVEX_TRAP_SOFT_DEBUG_0       : natural := 248;
   constant RVEX_TRAP_SOFT_DEBUG_1       : natural := 249;
   constant RVEX_TRAP_SOFT_DEBUG_2       : natural := 250;
-  constant RVEX_TRAP_STEP_COMPLETE      : natural := 251;                                            -- GENERATED --
+  constant RVEX_TRAP_STEP_COMPLETE      : natural := 251;
   constant RVEX_TRAP_HW_BREAKPOINT_0    : natural := 252;
   constant RVEX_TRAP_HW_BREAKPOINT_1    : natural := 253;
   constant RVEX_TRAP_HW_BREAKPOINT_2    : natural := 254;
   constant RVEX_TRAP_HW_BREAKPOINT_3    : natural := 255;
-
+                                                                                                     -- GENERATED --
   -- Shorthand for converting a natural trap ID to an rvex_trap_type.
   function rvex_trap(t: natural) return rvex_trap_type;
 
   --===========================================================================
-  -- Trap cause decoding table                                                                       -- GENERATED --
+  -- Trap cause decoding table
   --===========================================================================
   -- Indexes in this table correspond to the trap identifiers in the previous
   -- section of this file. The name field uses the following replacements.
   --   "%c" --> Trap cause represented as an unsigned integer.
-  --   "@"  --> Converts to " at " + trap point represented in hex when known.
+  --   "@"  --> Converts to " at " + trap point represented in hex when known.                       -- GENERATED --
   --            When trap point is not specified, the character is removed.
   --   "%x" --> Trap argument represented in hex.
   --   "%d" --> Trap argument represented in signed decimal.
   --   "%u" --> Trap argument represented in unsigned decimal.
-  constant TRAP_TABLE : trapTable_type := (                                                          -- GENERATED --
+  constant TRAP_TABLE : trapTable_type := (
 
     RVEX_TRAP_NONE => (
       name => "trap %c: none                                     ",
       isDebugTrap => '0',
-      isInterrupt => '0'
+      isInterrupt => '0'                                                                             -- GENERATED --
     ),
 
     RVEX_TRAP_INVALID_OP => (
       name => "trap %c: invalid opcode in lane %u@               ",
-      isDebugTrap => '0',                                                                            -- GENERATED --
+      isDebugTrap => '0',
       isInterrupt => '0'
     ),
 
     RVEX_TRAP_MISALIGNED_BRANCH => (
-      name => "trap %c: misaligned branch@; target was %x        ",
+      name => "trap %c: misaligned branch@; target was %x        ",                                  -- GENERATED --
       isDebugTrap => '0',
       isInterrupt => '0'
     ),
 
-    RVEX_TRAP_FETCH_FAULT => (                                                                       -- GENERATED --
-      name => "trap %c: instr. fetch fault@                      ",
+    RVEX_TRAP_FETCH_FAULT => (
+      name => "trap %c: instr. bus fault@                        ",
       isDebugTrap => '0',
       isInterrupt => '0'
     ),
-
+                                                                                                     -- GENERATED --
     RVEX_TRAP_MISALIGNED_ACCESS => (
       name => "trap %c: misaligned access@; address was %x       ",
       isDebugTrap => '0',
       isInterrupt => '0'
-    ),                                                                                               -- GENERATED --
+    ),
 
     RVEX_TRAP_DMEM_FAULT => (
-      name => "trap %c: dmem fault@; address was %x              ",
+      name => "trap %c: data bus fault@; address was %x          ",
       isDebugTrap => '0',
-      isInterrupt => '0'
+      isInterrupt => '0'                                                                             -- GENERATED --
     ),
 
     RVEX_TRAP_LIMMH_FAULT => (
       name => "trap %c: LIMMH fwd. fault in lane %u@             ",
-      isDebugTrap => '0',                                                                            -- GENERATED --
+      isDebugTrap => '0',
       isInterrupt => '0'
     ),
 
     RVEX_TRAP_EXT_INTERRUPT => (
-      name => "trap %c: external interrupt %d                    ",
+      name => "trap %c: external interrupt %d                    ",                                  -- GENERATED --
       isDebugTrap => '0',
       isInterrupt => '1'
     ),
 
-    RVEX_TRAP_STOP => (                                                                              -- GENERATED --
+    RVEX_TRAP_STOP => (
       name => "trap %c: stop request@                            ",
       isDebugTrap => '1',
       isInterrupt => '0'
     ),
-
+                                                                                                     -- GENERATED --
     RVEX_TRAP_SOFT_CTXT_SWITCH => (
       name => "trap %c: soft ctxt sw. request@                   ",
       isDebugTrap => '0',
       isInterrupt => '0'
-    ),                                                                                               -- GENERATED --
+    ),
+
+    RVEX_TRAP_DMEM_PAGE_FAULT => (
+      name => "trap %c: data page fault@; address was %x         ",
+      isDebugTrap => '0',
+      isInterrupt => '0'                                                                             -- GENERATED --
+    ),
+
+    RVEX_TRAP_IMEM_PAGE_FAULT => (
+      name => "trap %c: instr. page fault@; address was %x       ",
+      isDebugTrap => '0',
+      isInterrupt => '0'
+    ),
+
+    RVEX_TRAP_KERNEL_SPACE_VIO => (
+      name => "trap %c: kern. acc. vio.@; address was %x         ",                                  -- GENERATED --
+      isDebugTrap => '0',
+      isInterrupt => '0'
+    ),
+
+    RVEX_TRAP_WRITE_ACCESS_VIO => (
+      name => "trap %c: write acc. vio.@; address was %x         ",
+      isDebugTrap => '0',
+      isInterrupt => '0'
+    ),
+                                                                                                     -- GENERATED --
+    RVEX_TRAP_WRITE_TO_CLEAN_PAGE => (
+      name => "trap %c: write to clean@; address was %x          ",
+      isDebugTrap => '0',
+      isInterrupt => '0'
+    ),
 
     RVEX_TRAP_SOFT_DEBUG_0 => (
       name => "trap %c: soft debug trap 0@                       ",
       isDebugTrap => '1',
-      isInterrupt => '0'
+      isInterrupt => '0'                                                                             -- GENERATED --
     ),
 
     RVEX_TRAP_SOFT_DEBUG_1 => (
       name => "trap %c: soft debug trap 1@                       ",
-      isDebugTrap => '1',                                                                            -- GENERATED --
+      isDebugTrap => '1',
       isInterrupt => '0'
     ),
 
     RVEX_TRAP_SOFT_DEBUG_2 => (
-      name => "trap %c: soft debug trap 2@                       ",
+      name => "trap %c: soft debug trap 2@                       ",                                  -- GENERATED --
       isDebugTrap => '1',
       isInterrupt => '0'
     ),
 
-    RVEX_TRAP_STEP_COMPLETE => (                                                                     -- GENERATED --
+    RVEX_TRAP_STEP_COMPLETE => (
       name => "trap %c: step complete trap@                      ",
       isDebugTrap => '1',
       isInterrupt => '0'
     ),
-
+                                                                                                     -- GENERATED --
     RVEX_TRAP_HW_BREAKPOINT_0 => (
       name => "trap %c: breakpoint 0@, address/PC %x             ",
       isDebugTrap => '1',
       isInterrupt => '0'
-    ),                                                                                               -- GENERATED --
+    ),
 
     RVEX_TRAP_HW_BREAKPOINT_1 => (
       name => "trap %c: breakpoint 1@, address/PC %x             ",
       isDebugTrap => '1',
-      isInterrupt => '0'
+      isInterrupt => '0'                                                                             -- GENERATED --
     ),
 
     RVEX_TRAP_HW_BREAKPOINT_2 => (
       name => "trap %c: breakpoint 2@, address/PC %x             ",
-      isDebugTrap => '1',                                                                            -- GENERATED --
-      isInterrupt => '0'
-    ),
-
-    RVEX_TRAP_HW_BREAKPOINT_3 => (
-      name => "trap %c: breakpoint 3@, address/PC %x             ",
       isDebugTrap => '1',
       isInterrupt => '0'
     ),
 
-    others => (                                                                                      -- GENERATED --
+    RVEX_TRAP_HW_BREAKPOINT_3 => (
+      name => "trap %c: breakpoint 3@, address/PC %x             ",                                  -- GENERATED --
+      isDebugTrap => '1',
+      isInterrupt => '0'
+    ),
+
+    others => (
       name => "trap %c@ (unknown)                                ",
       isDebugTrap => '0',
       isInterrupt => '0'
     )
-  );
+  );                                                                                                 -- GENERATED --
 
   -- Shorthand for extracting the isDebugTrap signal from an (encoded)
   -- trap_info_type record.
   function rvex_isDebugTrap(t: trap_info_type) return std_logic;
-                                                                                                     -- GENERATED --
+
   -- Shorthand for extracting the isInterrupt signal from an (encoded)
   -- trap_info_type record.
   function rvex_isInterruptTrap(t: trap_info_type) return std_logic;
 
-  -- Returns '1' only when the trap cause is set to RVEX_TRAP_STOP.
+  -- Returns '1' only when the trap cause is set to RVEX_TRAP_STOP.                                  -- GENERATED --
   function rvex_isStopTrap(t: trap_info_type) return std_logic;
 
 end core_trap_pkg;
 
---=============================================================================                      -- GENERATED --
+--=============================================================================
 package body core_trap_pkg is
 --=============================================================================
 
   -- Merges two trap info records together, giving priority to the first
-  -- operand.
+  -- operand.                                                                                        -- GENERATED --
   function "&"(l: trap_info_type; r: trap_info_type) return trap_info_type is
   begin
     if l.active = '1' then
       return l;
-    else                                                                                             -- GENERATED --
+    else
       return r;
     end if;
   end "&";
 
-  -- Shorthand for converting a natural trap ID to an rvex_trap_type.
+  -- Shorthand for converting a natural trap ID to an rvex_trap_type.                                -- GENERATED --
   function rvex_trap(t: natural) return rvex_trap_type is
   begin
     return uint2vect(t, RVEX_TRAP_CAUSE_SIZE);
   end rvex_trap;
-                                                                                                     -- GENERATED --
+
   -- Shorthand for extracting the isDebugTrap signal from an (encoded)
   -- trap_info_type record.
   function rvex_isDebugTrap(t: trap_info_type) return std_logic is
   begin
-    return TRAP_TABLE(vect2uint(t.cause)).isDebugTrap;
+    return TRAP_TABLE(vect2uint(t.cause)).isDebugTrap;                                               -- GENERATED --
   end rvex_isDebugTrap;
 
   -- Shorthand for extracting the isInterrupt signal from an (encoded)
   -- trap_info_type record.
-  function rvex_isInterruptTrap(t: trap_info_type) return std_logic is                               -- GENERATED --
+  function rvex_isInterruptTrap(t: trap_info_type) return std_logic is
   begin
     return TRAP_TABLE(vect2uint(t.cause)).isInterrupt;
   end rvex_isInterruptTrap;
 
-  -- Returns '1' only when the trap cause is set to RVEX_TRAP_STOP.
+  -- Returns '1' only when the trap cause is set to RVEX_TRAP_STOP.                                  -- GENERATED --
   function rvex_isStopTrap(t: trap_info_type) return std_logic is
   begin
     if vect2uint(t.cause) = RVEX_TRAP_STOP then
       return '1';
-    else                                                                                             -- GENERATED --
+    else
       return '0';
     end if;
   end rvex_isStopTrap;
 
-end core_trap_pkg;
+end core_trap_pkg;                                                                                   -- GENERATED --

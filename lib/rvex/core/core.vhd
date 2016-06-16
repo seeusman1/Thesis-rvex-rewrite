@@ -232,6 +232,9 @@ entity core is
     -- Configuration.
     CFG                         : rvex_generic_config_type := rvex_cfg;
     
+    -- MMU configuration information, if an MMU is present.
+    CFG_MMU                     : rvex_mmuConfig_type := RVEX_MMU_CONFIG_NONE;
+    
     -- This is used as the core index register in the global control registers.
     CORE_ID                     : natural := 0;
     
@@ -372,8 +375,24 @@ entity core is
     rv2mem_stallOut             : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Cache performance information signals. Optional. Refer to core_pkg.vhd
-    -- for more information about this signal (look for rvex_cacheStatus_type).
-    mem2rv_cacheStatus          : in  rvex_cacheStatus_array(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => RVEX_CACHE_STATUS_IDLE);
+    -- for more information about this signal (look for rvex_cacheTrace_type).
+    mem2rv_cacheTrace           : in  rvex_cacheTrace_array(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => RVEX_CACHE_TRACE_IDLE);
+    
+    -- Cache status and control signals. Optional. Refer to core_pkg.vhd
+    -- for more information about these signals (look for the type
+    -- declarations).
+    mem2rv_cacheStatus          : in  rvex_cacheStatus_array(2**CFG.numContextsLog2-1 downto 0) := (others => RVEX_CACHE_STATUS_IDLE);
+    rv2mem_cacheControl         : out rvex_cacheControl_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- MMU performance information signals. Optional. Refer to core_pkg.vhd
+    -- for more information about this signal (look for rvex_cacheTrace_type).
+    mem2rv_mmuTrace             : in  rvex_mmuTrace_array(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => RVEX_MMU_TRACE_IDLE);
+    
+    -- MMU status and control signals. Optional. Refer to core_pkg.vhd
+    -- for more information about these signals (look for the type
+    -- declarations).
+    mem2rv_mmuStatus            : in  rvex_mmuStatus_array(2**CFG.numContextsLog2-1 downto 0) := (others => RVEX_MMU_STATUS_IDLE);
+    rv2mem_mmuControl           : out rvex_mmuControl_array(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Instruction memory interface
@@ -647,7 +666,7 @@ architecture Behavioral of core is
   signal coreID_byte                  : rvex_byte_type;
   signal ctxtReset                    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2rv_reset               : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal mem2cxreg_cacheStatus        : rvex_cacheStatus_array(2**CFG.numContextsLog2-1 downto 0);
+  signal mem2cxreg_cacheTrace         : rvex_cacheTrace_array(2**CFG.numContextsLog2-1 downto 0);
   
   -- Context register <-> context-pipelane interface signals.
   signal cxplif2cxreg_brWriteData     : rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
@@ -847,7 +866,8 @@ begin -- architecture
       creg2dmsw_readData            => creg2dmsw_readData,
       
       -- Common memory interface.
-      mem2pl_cacheStatus            => mem2rv_cacheStatus,
+      mem2pl_cacheTrace             => mem2rv_cacheTrace,
+      mem2pl_mmuTrace               => mem2rv_mmuTrace,
       
       -- Register file interface.
       pl2gpreg_readPorts            => pl2gpreg_readPorts,
@@ -1059,10 +1079,10 @@ begin -- architecture
            "lane groups must equal the number of contexts."
     severity failure;
   gen_cache_perf_count_connection: if CFG.cachePerfCountEnable generate
-    mem2cxreg_cacheStatus <= mem2rv_cacheStatus;
+    mem2cxreg_cacheTrace <= mem2rv_cacheTrace;
   end generate;
   dont_gen_cache_perf_count_connection: if not CFG.cachePerfCountEnable generate
-    mem2cxreg_cacheStatus <= (others => RVEX_CACHE_STATUS_IDLE);
+    mem2cxreg_cacheTrace <= (others => RVEX_CACHE_TRACE_IDLE);
   end generate;
   
   -- Instantiate.
@@ -1084,7 +1104,11 @@ begin -- architecture
       cxreg2rctrl_done              => rv2rctrl_done,
 
       -- Memory interface.
-      mem2cxreg_cacheStatus         => mem2cxreg_cacheStatus,
+      mem2cxreg_cacheTrace          => mem2cxreg_cacheTrace,
+      mem2cxreg_cacheStatus         => mem2rv_cacheStatus,
+      cxreg2mem_cacheControl        => rv2mem_cacheControl,
+      mem2cxreg_mmuStatus           => mem2rv_mmuStatus,
+      cxreg2mem_mmuControl          => rv2mem_mmuControl,
       
       -- Pipelane interface: misc.
       cxplif2cxreg_stall            => cxplif2cxreg_stall,
@@ -1194,6 +1218,7 @@ begin -- architecture
 
       -- Interface with memory.
       imem2gbreg_affinity           => imem2gbreg_affinity,
+      mem2gbreg_mmuConfig           => CFG_MMU,
 
       -- Misc.
       rv2gbreg_coreID               => coreID_byte,

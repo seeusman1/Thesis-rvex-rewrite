@@ -52,16 +52,16 @@ use IEEE.NUMERIC_STD.all;
 use IEEE.MATH_REAL.ALL;
 
 library rvex;
-use rvex.MMU_pkg.all;
+use rvex.cache_pkg.all;
 use rvex.common_pkg.all;
 
 
-entity mmu_tlb is
+entity cache_mmu_tlb is
 
   generic (
-
-    MMU_CFG                     : mmu_generic_config_type
-      
+    
+    CCFG                        : cache_generic_config_type
+    
   );
   port (
 
@@ -77,7 +77,7 @@ entity mmu_tlb is
     -- The Vtag is the same for reading and writing. This is because when a read
     -- on a certain Vtag misses the same Vtag is then used to write a new
     -- translation into the TLB.
-    Vtag                        : in  std_logic_vector(MMUtagSize(MMU_CFG)-1 downto 0);
+    Vtag                        : in  std_logic_vector(MMUtagSize(CCFG)-1 downto 0);
     
     -- Bit indicating if the request is for a read (0) or a write (1). This is
     -- used to check access rights.
@@ -89,10 +89,10 @@ entity mmu_tlb is
     
     -- The ASID is used to check if a translation in the TLB is relevant for the
     -- currently running process.
-    read_asid                   : in  std_logic_vector(mmuAsidSize(MMU_CFG) -1 downto 0);
+    read_asid                   : in  std_logic_vector(mmuAsidSize(CCFG) -1 downto 0);
 
     -- result output for associatively reading the TLB
-    read_Ptag                   : out std_logic_vector(MMUtagSize(MMU_CFG)-1 downto 0);
+    read_Ptag                   : out std_logic_vector(MMUtagSize(CCFG)-1 downto 0);
     read_miss                   : out std_logic;
     
     -- TLB to TW mark dirty request.
@@ -120,15 +120,15 @@ entity mmu_tlb is
     cache_bypass                : out std_logic
     
   );
-end mmu_tlb;
+end cache_mmu_tlb;
 
 
-architecture behavioural of mmu_tlb is
+architecture behavioural of cache_mmu_tlb is
 
   -- Shorthand notations for stuff from the MMU configuration
-  constant TLB_NUM_ENTRIES      : natural := 2**MMU_CFG.TLBDepthLog2;
-  constant PAGE_NUM_WIDTH       : natural := MMUtagSize(MMU_CFG);
-  constant ASID_WIDTH           : natural := mmuAsidSize(MMU_CFG);
+  constant TLB_NUM_ENTRIES      : natural := 2**CCFG.TLBDepthLog2;
+  constant PAGE_NUM_WIDTH       : natural := MMUtagSize(CCFG);
+  constant ASID_WIDTH           : natural := mmuAsidSize(CCFG);
   constant CAM_WIDTH            : natural := PAGE_NUM_WIDTH + ASID_WIDTH;
   
   -- These constants refer to the indices of items in the RAM
@@ -233,43 +233,43 @@ architecture behavioural of mmu_tlb is
 begin
 
   -- instantiate the content accessable memory (CAM)
-  CAM: entity work.mmu_cam
+  CAM: entity work.cache_mmu_cam
   generic map(
-    MMU_CFG                                 => MMU_CFG
+    CCFG                        => CCFG
   )
   port map(
-    clk                                     => clk,
-    reset                                   => reset,
-    in_data                                 => CAM_in_data,
-    read_out_addr_normal                    => CAM_read_out_addr_normal,
-    read_out_addr_large                     => CAM_read_out_addr_large,
-    read_out_addr_global                    => CAM_read_out_addr_global,
-    read_out_addr_large_global              => CAM_read_out_addr_large_global,
-    modify_en                               => CAM_modify_en,
-    modify_add_remove                       => CAM_modify_add_remove,
-    modify_in_addr                          => CAM_modify_in_addr
+    clk                         => clk,
+    reset                       => reset,
+    in_data                     => CAM_in_data,
+    read_out_addr_normal        => CAM_read_out_addr_normal,
+    read_out_addr_large         => CAM_read_out_addr_large,
+    read_out_addr_global        => CAM_read_out_addr_global,
+    read_out_addr_large_global  => CAM_read_out_addr_large_global,
+    modify_en                   => CAM_modify_en,
+    modify_add_remove           => CAM_modify_add_remove,
+    modify_in_addr              => CAM_modify_in_addr
   );
   
-  victim_gen: entity work.mmu_victim_generator
+  victim_gen: entity work.cache_mmu_victim_generator
   generic map(
-    MMU_CFG                                 => MMU_CFG
+    CCFG                        => CCFG
   )
   port map(
-    clk                                     => clk,
-    reset                                   => reset,
-    valid                                   => r.valid,
-    victim_next                             => victim_next,
-    victim                                  => victim
+    clk                         => clk,
+    reset                       => reset,
+    valid                       => r.valid,
+    victim_next                 => victim_next,
+    victim                      => victim
   );
 
-  oh2bin : entity work.mmu_oh2bin
+  oh2bin : entity work.cache_mmu_oh2bin
   generic map(
-    WIDTH_LOG2  => MMU_CFG.TLBDepthLog2
+    WIDTH_LOG2                  => CCFG.TLBDepthLog2
   )
   port map(
-    oh_in       => CONV_oneHot_in,
-    bin_out     => CONV_bin_out,
-    hit         => CONV_hit
+    oh_in                       => CONV_oneHot_in,
+    bin_out                     => CONV_bin_out,
+    hit                         => CONV_hit
   );
   
   
@@ -301,7 +301,7 @@ begin
     -- one exception to this is when the tlb updates the dirty flag itself
     -- The tag flags of the PTE retreived by the table walk are stored in the RAM
     RAM_data_in(PTAG_LSB+PAGE_NUM_WIDTH-1 downto PTAG_LSB)
-                                  <= r.write_pte(31 downto mmuOffsetSize(MMU_CFG));
+                                  <= r.write_pte(31 downto mmuOffsetSize(CCFG));
     RAM_data_in(FLAGS_RW)         <= r.write_pte(PTE_RW_BIT);
     RAM_data_in(FLAGS_PROT_LEVEL) <= r.write_pte(PTE_PROT_LEVEL_BIT);
     RAM_data_in(FLAGS_CACHEABLE)  <= r.write_pte(PTE_CACHEABLE_BIT);
@@ -309,11 +309,11 @@ begin
     
     -- Other stuff that is stored in the RAM comes from the pipelane
     RAM_data_in(ASID_LSB+ASID_WIDTH-1 downto ASID_LSB) <= read_asid;
-    RAM_data_in(VTAG_LSB + PAGE_NUM_WIDTH - 1 downto VTAG_LSB + mmuL2TagSize(MMU_CFG)) <= Vtag(tagL1Msb(MMU_CFG) downto tagL1Lsb(MMU_CFG));
+    RAM_data_in(VTAG_LSB + PAGE_NUM_WIDTH - 1 downto VTAG_LSB + mmuL2TagSize(CCFG)) <= Vtag(tagL1Msb(CCFG) downto tagL1Lsb(CCFG));
     if(r.write_pte(PTE_LARGE_PAGE_BIT) = '0') then -- when a large page is stored in the tlb, only store the L1 part of the Vtag
-      RAM_data_in(VTAG_LSB + mmuL2TagSize(MMU_CFG) - 1 downto VTAG_LSB) <= Vtag(tagL2Msb(MMU_CFG) downto tagL2Lsb(MMU_CFG));
+      RAM_data_in(VTAG_LSB + mmuL2TagSize(CCFG) - 1 downto VTAG_LSB) <= Vtag(tagL2Msb(CCFG) downto tagL2Lsb(CCFG));
     else
-      RAM_data_in(VTAG_LSB + mmuL2TagSize(MMU_CFG) - 1 downto VTAG_LSB) <= (tagL2Msb(MMU_CFG) downto tagL2Lsb(MMU_CFG) => '0');
+      RAM_data_in(VTAG_LSB + mmuL2TagSize(CCFG) - 1 downto VTAG_LSB) <= (tagL2Msb(CCFG) downto tagL2Lsb(CCFG) => '0');
     end if;
 
     -- component signals default values
@@ -344,7 +344,7 @@ begin
     write_access_violation  <= '0';
     kernel_space_violation  <= '0';
     cache_bypass            <= '0';
-    read_Ptag               <= (MMUtagSize(MMU_CFG)-1 downto 0 => '0');
+    read_Ptag               <= (MMUtagSize(CCFG)-1 downto 0 => '0');
 
     -- RAM default values
     RAM_we <= '0';
@@ -393,8 +393,8 @@ begin
       -- the P tag is output to the cache based on the type of page. When a large page is translated only the L1
       -- part is translated and concatenated with the L2 part of the V tag
       if page_type = large or page_type = large_global then
-        read_Ptag <= RAM_data_out(PTAG_LSB + PAGE_NUM_WIDTH - 1 downto PTAG_LSB + mmuL2TagSize(MMU_CFG))
-                   & r.Vtag_d(tagL2Msb(MMU_CFG) downto tagL2Lsb(MMU_CFG));
+        read_Ptag <= RAM_data_out(PTAG_LSB + PAGE_NUM_WIDTH - 1 downto PTAG_LSB + mmuL2TagSize(CCFG))
+                   & r.Vtag_d(tagL2Msb(CCFG) downto tagL2Lsb(CCFG));
       else -- normal page
         read_Ptag <= RAM_data_out(PTAG_LSB + PAGE_NUM_WIDTH - 1 downto PTAG_LSB);
       end if;
@@ -449,9 +449,9 @@ begin
                 
             -- if the CAM returns an address where the translation should be but the Vtags or ASID
             -- don't match or it is invalidated, signal a miss and clean up the CAM
-            elsif (r.Vtag_d(tagL1Msb(MMU_CFG) downto tagL1Lsb(MMU_CFG)) /= RAM_data_out(VTAG_LSB + mmuTagSize(MMU_CFG) - 1 downto VTAG_LSB + mmuL2TagSize(MMU_CFG))
+            elsif (r.Vtag_d(tagL1Msb(CCFG) downto tagL1Lsb(CCFG)) /= RAM_data_out(VTAG_LSB + mmuTagSize(CCFG) - 1 downto VTAG_LSB + mmuL2TagSize(CCFG))
                   or (r.large(CONV_bin_out) = '0'
-                      and r.Vtag_d(tagL2Msb(MMU_CFG) downto tagL2Lsb(MMU_CFG)) /= RAM_data_out(VTAG_LSB + mmuL2TagSize(MMU_CFG) - 1 downto VTAG_LSB))
+                      and r.Vtag_d(tagL2Msb(CCFG) downto tagL2Lsb(CCFG)) /= RAM_data_out(VTAG_LSB + mmuL2TagSize(CCFG) - 1 downto VTAG_LSB))
                   or (r.global(CONV_bin_out) = '0'
                       and r.asid_d /= RAM_data_out(ASID_LSB+ASID_WIDTH-1 downto ASID_LSB))
                   or r.valid(CONV_bin_out) = '0')

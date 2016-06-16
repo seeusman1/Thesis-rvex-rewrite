@@ -59,7 +59,29 @@ use rvex.core_pkg.all;
 package cache_pkg is
 --=============================================================================
   
-  -- Cache configuration record.
+  -- Constants for the bit position of items in the page table entries.
+  constant PTE_PRESENT_BIT      : natural := 0;
+  constant PTE_RW_BIT           : natural := 1;
+  constant PTE_PROT_LEVEL_BIT   : natural := 2;
+  constant PTE_GLOBAL_BIT       : natural := 3;
+  constant PTE_CACHEABLE_BIT    : natural := 4;
+  constant PTE_DIRTY_BIT        : natural := 5;
+  constant PTE_ACCESSED_BIT     : natural := 6;
+  constant PTE_LARGE_PAGE_BIT   : natural := 7;
+  
+  -- Data type for flush modes.
+  subtype rvex_flushMode_type   is std_logic_vector(2 downto  0);
+  type    rvex_flushMode_array  is array (natural range <>) of rvex_flushMode_type;
+  
+  -- Constants for flush modes.
+  constant FLUSH_ALL            : rvex_flushMode_type := "000";
+  constant FLUSH_TAG            : rvex_flushMode_type := "001";
+  constant FLUSH_RANGE          : rvex_flushMode_type := "010";
+  constant FLUSH_ALL_ASID       : rvex_flushMode_type := "100";
+  constant FLUSH_TAG_ASID       : rvex_flushMode_type := "101";
+  constant FLUSH_RANGE_ASID     : rvex_flushMode_type := "110";
+  
+  -- Cache/MMU configuration record.
   type cache_generic_config_type is record
     
     -- log2 of the number of cache lines in the instruction cache. An
@@ -71,12 +93,39 @@ package cache_pkg is
     -- is fixed to 32 bits.
     dataCacheLinesLog2          : natural;
     
+    -- Determines whether the MMU is instantiated in the system.
+    mmuEnable                   : boolean;
+    
+    -- The number of entries in a TLB. If this is set to more than 5
+    -- (32 entries) it will result in higher BRAM utilization.
+    tlbDepthLog2                : natural;  
+    
+    -- The log2 of the page size in bytes. It also denotes the number of bits
+    -- in the page offset. The page size must be larger than or equal to the
+    -- size of a single cache block.
+    pageSizeLog2                : natural;
+    
+    -- The log2 of the size of a large page. If this is more then 1024 times
+    -- larger than the size of a regular page
+    -- (largePageSizeLog2 > pageSizeLog2+10), it wil lead to an extra BRAM for
+    -- each TLB in the system.
+    largePageSizeLog2           : natural;
+    
+    -- The number of bits used for the application space ID. If this is set to
+    -- a number larger than 10, it will result in higher BRAM usage.
+    asidBitWidth                : natural;
+    
   end record;
   
-  -- Default cache configuration.
+  -- Default cache/MMU configuration.
   constant CACHE_DEFAULT_CONFIG  : cache_generic_config_type := (
     instrCacheLinesLog2         => 6,
-    dataCacheLinesLog2          => 6
+    dataCacheLinesLog2          => 6,
+    mmuEnable                   => false,
+    tlbDepthLog2                => 5,
+    pageSizeLog2                => 12,
+    largePageSizeLog2           => 22,
+    asidBitWidth                => 10
   );
   
   -- Generates a configuration for the rvex cache. None of the parameters are
@@ -88,7 +137,12 @@ package cache_pkg is
   function cache_cfg(
     base                        : cache_generic_config_type := CACHE_DEFAULT_CONFIG;
     instrCacheLinesLog2         : integer := -1;
-    dataCacheLinesLog2          : integer := -1
+    dataCacheLinesLog2          : integer := -1;
+    mmuEnable                   : integer := -1;
+    tlbDepthLog2                : integer := -1;
+    pageSizeLog2                : integer := -1;  
+    largePageSizeLog2           : integer := -1;
+    asidBitWidth                : integer := -1
   ) return cache_generic_config_type;
   
   -- Returns the log2 of the number of bytes needed to represent the
@@ -156,6 +210,65 @@ package cache_pkg is
     CCFG                        : cache_generic_config_type
   ) return natural;
   
+  -- Returns the number of bits of the address which are used to specify the
+  -- virtual or physical tag.
+  function mmuTagSize(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;   
+  
+  -- Returns the number of bits of the address which are used to specify the
+  -- virtual or physical tag for a large page.
+  function mmuLargePageTagSize(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;  
+  
+  -- Returns the number of bits of the address which are used to specify the
+  -- virtual or physical tag of a large page. This is the same as the size of
+  -- the L1 tag.
+  function mmuL1TagSize(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;
+  
+  -- Returns the number of bits of the L2 tag.
+  function mmuL2TagSize(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;  
+  
+  -- Returns the number of bits used for the page offset (same as
+  -- log2(pagesize) ).
+  function mmuOffsetSize(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;   
+  
+  -- Returns the number of bits used for the address space ID.
+  function mmuAsidSize(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;         
+  
+  -- Returns the MSB of the tag used for the first level of a page table
+  -- lookup.
+  function tagL1Msb(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;     
+  
+  -- Returns the LSB of the tag used for the first level of a page table
+  -- lookup.
+  function tagL1Lsb(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;          
+  
+  -- Returns the MSB of the tag used for the second level of a page table
+  -- lookup.
+  function tagL2Msb(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;     
+  
+  -- Returns the LSB of the tag used for the second level of a page table
+  -- lookup.
+  function tagL2Lsb(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;     
+  
   -- Data cache block status record for performance counters/tracing.
   type dcache_status_type is record
     
@@ -188,13 +301,23 @@ package body cache_pkg is
   function cache_cfg(
     base                        : cache_generic_config_type := CACHE_DEFAULT_CONFIG;
     instrCacheLinesLog2         : integer := -1;
-    dataCacheLinesLog2          : integer := -1
+    dataCacheLinesLog2          : integer := -1;
+    mmuEnable                   : integer := -1;
+    tlbDepthLog2                : integer := -1;
+    pageSizeLog2                : integer := -1;  
+    largePageSizeLog2           : integer := -1;
+    asidBitWidth                : integer := -1    
   ) return cache_generic_config_type is
     variable cfg  : cache_generic_config_type;
   begin
     cfg := base;
-    if instrCacheLinesLog2  >= 0 then cfg.instrCacheLinesLog2 := instrCacheLinesLog2; end if;
-    if dataCacheLinesLog2   >= 0 then cfg.dataCacheLinesLog2  := dataCacheLinesLog2;  end if;
+    if instrCacheLinesLog2  >= 0 then cfg.instrCacheLinesLog2 := instrCacheLinesLog2;  end if;
+    if dataCacheLinesLog2   >= 0 then cfg.dataCacheLinesLog2  := dataCacheLinesLog2;   end if;
+    if mmuEnable            >= 0 then cfg.mmuEnable            := int2bool(mmuEnable); end if;
+    if tlbDepthLog2         >= 0 then cfg.tlbDepthLog2         := tlbDepthLog2;        end if;
+    if pageSizeLog2         >= 0 then cfg.pageSizeLog2         := pageSizeLog2;        end if;    
+    if largePageSizeLog2    >= 0 then cfg.largePageSizeLog2    := largePageSizeLog2;   end if;
+    if asidBitWidth         >= 0 then cfg.asidBitWidth         := asidBitWidth;        end if;
     return cfg;
   end cache_cfg;
   
@@ -293,4 +416,93 @@ package body cache_pkg is
     return rvex_address_type'length - dcacheTagLSB(RCFG, CCFG);
   end dcacheTagSize;
   
+  -- Returns the number of bits of the address which are used to specify the
+  -- virtual or physical tag.
+  function mmuTagSize(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return 32 - CCFG.pageSizeLog2;
+  end mmuTagSize;
+  
+  -- Returns the number of bits of the address which are used to specify the
+  -- virtual or physical tag for a large page.
+  function mmuLargePageTagSize(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return 32 - CCFG.largePageSizeLog2;
+  end mmuLargePageTagSize;
+  
+  -- Returns the number of bits of the address which are used to specify the
+  -- virtual or physical tag of a large page. This is the same as the size of
+  -- the L1 tag.
+  function mmuL1TagSize(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return 32 - CCFG.largePageSizeLog2;
+  end mmuL1TagSize;
+  
+  -- Returns the number of bits of the L2 tag.
+  function mmuL2TagSize(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return 32 - mmuOffsetSize(CCFG) - mmuL1TagSize(CCFG);
+  end mmuL2TagSize;
+
+  -- Returns the number of bits used for the page offset (same as
+  -- log2(pagesize) ).
+  function mmuOffsetSize(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return CCFG.pageSizeLog2;
+  end mmuOffsetSize;
+      
+  -- Returns the number of bits used for the address space ID.
+  function mmuAsidSize(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return CCFG. asidBitWidth;
+  end mmuAsidSize;
+  
+  -- Returns the MSB of the tag used for the first level of a page table
+  -- lookup.
+  function tagL1Msb(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return mmuTagSize(CCFG) - 1;
+  end tagL1Msb;
+  
+  -- Returns the LSB of the tag used for the first level of a page table
+  -- lookup.
+  function tagL1Lsb(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return mmuL2TagSize(CCFG);
+  end tagL1Lsb;
+  
+  -- Returns the MSB of the tag used for the second level of a page table
+  -- lookup.
+  function tagL2Msb(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return mmuL2TagSize(CCFG) - 1;
+  end tagL2Msb;
+  
+  -- Returns the LSB of the tag used for the second level of a page table
+  -- lookup.
+  function tagL2Lsb(
+    CCFG                        : cache_generic_config_type
+  ) return natural is
+  begin
+    return 0;
+  end tagL2Lsb;
+
 end cache_pkg;

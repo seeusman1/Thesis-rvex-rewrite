@@ -50,6 +50,7 @@ use IEEE.numeric_std.all;
 
 library rvex;
 use rvex.common_pkg.all;
+use rvex.utils_pkg.all;
 use rvex.bus_pkg.all;
 use rvex.core_pkg.all;
 use rvex.cache_pkg.all;
@@ -81,11 +82,13 @@ entity cache is
     -- Clock input, registers are rising edge triggered.
     clk                         : in  std_logic;
     
-    -- Active high CPU interface clock enable input.
-    clkEnCPU                    : in  std_logic;
+    -- Active high clock enable input.
+    clkEn                       : in  std_logic := '1';
     
-    -- Active high bus interface clock enable input.
-    clkEnBus                    : in  std_logic;
+    -- Backwards compatibility clkEn signals. These were only ever used in
+    -- testbenches. The MMU does not support these.
+    clkEnCPU                    : in  std_logic := '1';
+    clkEnBus                    : in  std_logic := '1';
     
     ---------------------------------------------------------------------------
     -- Core interface
@@ -93,69 +96,82 @@ entity cache is
     -- The data cache bypass signal may be used to access volatile memory
     -- regions (i.e. peripherals): when high, the cache is bypassed and the bus
     -- is accessed transparently. Refer to the entity description in core.vhd
-    -- for documentation on the rest of the signals. The timing of these
-    -- signals is governed by clkEnCPU.
+    -- for documentation on the rest of the signals.
     
     -- Common memory interface.
     rv2cache_decouple           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     cache2rv_blockReconfig      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     cache2rv_stallIn            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2cache_stallOut           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    cache2rv_status             : out rvex_cacheStatus_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    cache2rv_trace              : out rvex_cacheTrace_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- MMU control interface.
+    rv2mmu_pageTablePtr         : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => (others => '0'));
+    rv2mmu_addrSpaceID          : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => (others => '0'));
+    rv2mmu_enable               : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    rv2mmu_kernelMode           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '1');
+    rv2mmu_wtcTrapEna           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     -- Instruction memory interface.
     rv2icache_PCs               : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2icache_fetch             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2icache_cancel            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
-    icache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    icache2rv_affinity          : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Data memory interface.
+    -- Instruction memory response: valid one clkEn'd unstalled cycle after the
+    -- request.
+    icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+    icache2rv_affinity          : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_pageFault         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_kernelAccVio      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- Data memory request. Bypass signals that the request will bypass the
+    -- cache (not the MMU) regardless of the state of the cacheable page flag.
+    -- It's primarily intended for MMUless instantiations.
     rv2dcache_addr              : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_readEnable        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_writeData         : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_writeMask         : in  rvex_mask_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_writeEnable       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_bypass            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Data memory response: valid one clkEn'd unstalled cycle after the
+    -- request.
     dcache2rv_readData          : out rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     dcache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     dcache2rv_ifaceFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    
-    -- MMU interface.
-    rv2mmu_pageTablePtr         : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => (others => '0'));
-    rv2mmu_addrSpaceID          : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => (others => '0'));
-    rv2mmu_enable               : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
-    rv2mmu_kernelMode           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '1');
-    rv2mmu_wtcTrapEna           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
-    mmu2rv_dataPageFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    mmu2rv_dataKernelAccVio     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    mmu2rv_dataWriteAccVio      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    mmu2rv_dataWriteToClean     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    mmu2rv_insnPageFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    mmu2rv_insnKernelAccVio     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_pageFault         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_kernelAccVio      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_writeAccVio       : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_writeToClean      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Bus master interfaces
     ---------------------------------------------------------------------------
     -- Bus interface for the caches and MMU table walker. The timing of these
-    -- signals is governed by clkEnBus.
-    cache2bus_mst               : out bus_mst2slv_array(2**RCFG.numLaneGroupsLog2 downto 0);
-    bus2cache_mst               : in  bus_slv2mst_array(2**RCFG.numLaneGroupsLog2 downto 0);
+    -- signals is governed by clkEnBus. The table walker shares the first bus
+    -- master.
+    cache2bus_bus               : out bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    bus2cache_bus               : in  bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
-    -- Bus slave interface
+    -- Status/control interface
     ---------------------------------------------------------------------------
     -- Bus slave interface for the status and control registers.
-    bus2cache_slv               : in  bus_mst2slv_type;
-    cache2bus_slv               : out bus_slv2mst_type;
+    bus2cache_ctrl              : in  bus_mst2slv_type;
+    cache2bus_ctrl              : out bus_slv2mst_type;
+    
+    -- Cache flush request signals for each instruction and data cache. These
+    -- are mostly here for backwards compatibility. New designs should use the
+    -- built-in control registers.
+    sc2icache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    sc2dcache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     ---------------------------------------------------------------------------
     -- Bus snooping interface
     ---------------------------------------------------------------------------
     -- These signals are optional. They are needed for cache coherency on
-    -- multi-processor systems and/or for dynamic cores. The timing of these
-    -- signals is governed by clkEnBus.
+    -- multi-processor systems and/or for dynamic cores.
     
     -- Bus address which is to be invalidated when invalEnable is high.
     bus2cache_invalAddr         : in  rvex_address_type := (others => '0');
@@ -175,24 +191,93 @@ end cache;
 architecture Behavioral of cache is
 --=============================================================================
   
+  -- Clock enable compatibility stuff.
+  signal clkEn_int              : std_logic;
+  signal clkEnCPU_int           : std_logic;
+  signal clkEnBus_int           : std_logic;
+  
   -- Instruction cache signals.
-  signal icache2bus_bus         : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal bus2icache_bus         : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2bus             : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal bus2icache             : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_status_access: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_status_miss  : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
   -- Data cache signals.
-  signal dcache2bus_bus         : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal bus2dcache_bus         : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2bus             : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal bus2dcache             : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_status       : dcache_status_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
+  -- MMU table walker bus.
+  signal mmu2bus                : bus_mst2slv_type;
+  signal bus2mmu                : bus_slv2mst_type;
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- MMU sanity checking
+  -----------------------------------------------------------------------------
+  -- Check if the cache is not too big for the pagesize. Because the MMU turns
+  -- the cache into a VIPT cache, cache size divided by the degree of
+  -- associativity cannot be larger than the page size.
+  assert not CCFG.mmuEnable or (CCFG.dataCacheLinesLog2+2 <= CCFG.pageSizeLog2)
+    report "The data cache size per block must be smaller than or equal to " &
+           "the page size."
+    severity failure;
+  
+  assert not CCFG.mmuEnable or (CCFG.instrCacheLinesLog2+2+RCFG.numLanesLog2 <= CCFG.pageSizeLog2)
+    report "The instruction cache size per block must be smaller than or " &
+           "equal to the page size."
+    severity failure;
+  
+  -- Check that the large page size is at least smaller than the regular page
+  -- size.
+  assert not CCFG.mmuEnable or (CCFG.largePageSizeLog2 >= CCFG.pageSizeLog2)
+    report "The size of a large page must be larger or equal to the size of " &
+           "a regular page."
+    severity failure;
+  
+  -- Some mmu inefficient configuration warnings.
+  assert not CCFG.mmuEnable or (CCFG.tlbDepthLog2 <= 32)
+    report "Sizing the tlb larger than 32 leads to increased BRAM " &
+           "utilization of the TLB."
+    severity note;
+  
+  assert not CCFG.mmuEnable or (CCFG.asidBitWidth <= 10)
+    report "Sizing the asid larger than 10 leads to increased BRAM " &
+           "utilization of the TLB."
+    severity note;
+  
+  assert not CCFG.mmuEnable or (CCFG.largePageSizeLog2 - CCFG.pageSizeLog2 <= 10)
+    report "The size of a large page is more than 1024 times the size of a " &
+           "regular page. This leads to increased BRAM utilization of the TLB."
+    severity note;
+  
+  -- Handle deprecated clkEn interface signals. The separate signals only work
+  -- when the MMU is disabled; all new designs should use clkEn.
+  clkEnCPU_int <= clkEn and clkEnCPU;
+  clkEnBus_int <= clkEn and clkEnBus;
+  clkEn_int <= clkEn and clkEnCPU and clkEnBus;
+  
+  -- Assert false when there is a difference between the merged signals while
+  -- the MMU is enabled.
+  -- pragma translate_off
+  process (clk) is
+  begin
+    if rising_edge(clk) and CCFG.mmuEnable and (clkEnCPU_int /= clkEnBus_int) then
+      assert false
+        report "You seem to be using the old clkEnCPU and clkEnBus signals " &
+               "with the MMU enabled. This is not supported. Please use " &
+               "the combined clkEn signal or disable the MMU."
+        severity failure;
+    end if;
+  end process;
+  -- pragma translate_on
   
   -----------------------------------------------------------------------------
   -- Instantiate the instruction cache
@@ -207,8 +292,8 @@ begin -- architecture
       -- System control.
       reset                     => reset,
       clk                       => clk,
-      clkEnCPU                  => clkEnCPU,
-      clkEnBus                  => clkEnBus,
+      clkEnCPU                  => clkEnCPU_int,
+      clkEnBus                  => clkEnBus_int,
       
       -- Core interface.
       rv2icache_decouple        => rv2cache_decouple,
@@ -225,8 +310,8 @@ begin -- architecture
       icache2rv_status_miss     => icache2rv_status_miss,
       
       -- Bus master interface.
-      icache2bus_bus            => icache2bus_bus,
-      bus2icache_bus            => bus2icache_bus,
+      icache2bus_bus            => icache2bus,
+      bus2icache_bus            => bus2icache,
       
       -- Bus snooping interface.
       bus2icache_invalAddr      => bus2cache_invalAddr,
@@ -250,8 +335,8 @@ begin -- architecture
       -- System control.
       reset                     => reset,
       clk                       => clk,
-      clkEnCPU                  => clkEnCPU,
-      clkEnBus                  => clkEnBus,
+      clkEnCPU                  => clkEnCPU_int,
+      clkEnBus                  => clkEnBus_int,
       
       -- Core interface.
       rv2dcache_decouple        => rv2cache_decouple,
@@ -270,8 +355,8 @@ begin -- architecture
       dcache2rv_status          => dcache2rv_status,
       
       -- Bus master interface.
-      dcache2bus_bus            => dcache2bus_bus,
-      bus2dcache_bus            => bus2dcache_bus,
+      dcache2bus_bus            => dcache2bus,
+      bus2dcache_bus            => bus2dcache,
       
       -- Bus snooping interface.
       bus2dcache_invalAddr      => bus2cache_invalAddr,
@@ -293,8 +378,8 @@ begin -- architecture
   -- Generate the status output signal
   -----------------------------------------------------------------------------
   status_output_gen: for laneGroup in 2**RCFG.numLaneGroupsLog2-1 downto 0 generate
-    cache2rv_status(laneGroup)
-      <= RVEX_CACHE_STATUS_IDLE when rv2cache_stallOut(laneGroup) = '1' else (
+    cache2rv_trace(laneGroup)
+      <= RVEX_CACHE_TRACE_IDLE when rv2cache_stallOut(laneGroup) = '1' else (
         instr_access                => icache2rv_status_access(laneGroup),
         instr_miss                  => icache2rv_status_miss(laneGroup),
         data_accessType             => dcache2rv_status(laneGroup).accessType,
@@ -305,9 +390,12 @@ begin -- architecture
   end generate;
   
   -----------------------------------------------------------------------------
-  -- Instantiate the data/instruction update bus arbiters
+  -- Instantiate the bus arbiters
   -----------------------------------------------------------------------------
-  bus_arbiter_gen: for laneGroup in 2**RCFG.numLaneGroupsLog2-1 downto 0 generate
+  -- Arbitrate between the instruction and data cache accesses. If the MMU is
+  -- enabled, the arbiter for lane group 0 is handled separately, as it also
+  -- needs to include the table walker bus.
+  bus_arbiter_gen: for laneGroup in 2**RCFG.numLaneGroupsLog2-1 downto bool2int(CCFG.mmuEnable) generate
     
     bus_arbiter_inst: entity rvex.bus_arbiter
       generic map (
@@ -318,17 +406,49 @@ begin -- architecture
         -- System control.
         reset                   => reset,
         clk                     => clk,
-        clkEn                   => clkEnBus,
+        clkEn                   => clkEnBus_int,
         
         -- Master busses.
-        mst2arb(1)              => icache2bus_bus(laneGroup),
-        mst2arb(0)              => dcache2bus_bus(laneGroup),
-        arb2mst(1)              => bus2icache_bus(laneGroup),
-        arb2mst(0)              => bus2dcache_bus(laneGroup),
+        mst2arb(1)              => icache2bus(laneGroup),
+        mst2arb(0)              => dcache2bus(laneGroup),
+        arb2mst(1)              => bus2icache(laneGroup),
+        arb2mst(0)              => bus2dcache(laneGroup),
         
         -- Slave bus.
         arb2slv                 => cache2bus_bus(laneGroup),
         slv2arb                 => bus2cache_bus(laneGroup)
+        
+      );
+    
+  end generate;
+  
+  -- Generate the special arbiter for block 0 that includes the table walker
+  -- bus if the MMU is enabled.
+  bus_arbiter_gen_mmu: if CCFG.mmuEnable generate
+  begin
+    
+    bus_arbiter_inst: entity rvex.bus_arbiter
+      generic map (
+        NUM_MASTERS             => 3
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEnBus_int,
+        
+        -- Master busses.
+        mst2arb(2)              => mmu2bus,
+        mst2arb(1)              => icache2bus(0),
+        mst2arb(0)              => dcache2bus(0),
+        arb2mst(2)              => bus2mmu,
+        arb2mst(1)              => bus2icache(0),
+        arb2mst(0)              => bus2dcache(0),
+        
+        -- Slave bus.
+        arb2slv                 => cache2bus_bus(0),
+        slv2arb                 => bus2cache_bus(0)
         
       );
     

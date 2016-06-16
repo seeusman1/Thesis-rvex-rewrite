@@ -501,7 +501,68 @@ This register is reserved for future expansion.
 \register{EXT1}{Extension register 1}{0x0E4}
 %===============================================================================
 
-This register is reserved for future expansion.
+This register contains information about the design-time configuration of the
+MMU.
+
+%-------------------------------------------------------------------------------
+\field{15..11}{ASID}
+%-------------------------------------------------------------------------------
+Defines the number of bits reserved for the ASID.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{*****}
+\implementation{}
+\begin{lstlisting}
+if (mem2gbreg_mmuConfig.mmuEnable) {
+  _read = (bitvec5)mem2gbreg_mmuConfig.asidBitWidth;
+} else {
+  _read = 0;
+}
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\field{10..6}{LP}
+%-------------------------------------------------------------------------------
+Defines the log2 of the number of 32-bit words in a large page.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{*****}
+\implementation{}
+\begin{lstlisting}
+if (mem2gbreg_mmuConfig.mmuEnable) {
+  _read = (bitvec5)(mem2gbreg_mmuConfig.largePageSizeLog2 - 2);
+} else {
+  _read = 0;
+}
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\field{5..1}{NP}
+%-------------------------------------------------------------------------------
+Defines the log2 of the number of 32-bit words in a normal page.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{*****}
+\implementation{}
+\begin{lstlisting}
+if (mem2gbreg_mmuConfig.mmuEnable) {
+  _read = (bitvec5)(mem2gbreg_mmuConfig.pageSizeLog2 - 2);
+} else {
+  _read = 0;
+}
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\field{0}{M}
+%-------------------------------------------------------------------------------
+Defines whether this system supports virtual addressing.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{*}
+\implementation{}
+\begin{lstlisting}
+_read = (bit)mem2gbreg_mmuConfig.mmuEnable;
+\end{lstlisting}
 
 %===============================================================================
 \register{EXT0}{Extension register 0}{0x0E8}

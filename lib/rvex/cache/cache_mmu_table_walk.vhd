@@ -53,14 +53,14 @@ use IEEE.MATH_REAL.all;
 library rvex;
 use rvex.common_pkg.all;
 use rvex.core_pkg.all;
-use rvex.mmu_pkg.all;
+use rvex.cache_pkg.all;
 use rvex.bus_pkg.all;
 
 
-entity mmu_table_walk is
+entity cache_mmu_table_walk is
   generic (
     RCFG                        : rvex_generic_config_type := rvex_cfg;
-    MMU_CFG                     : mmu_generic_config_type := mmu_CFG
+    CCFG                        : cache_generic_config_type := cache_cfg
   );
   port (
 
@@ -79,8 +79,8 @@ entity mmu_table_walk is
     rv2mmu_lanePageTablePointers: in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
 
     -- connection to the lanes
-    rv2mmu_PCsVtags             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(MMU_CFG)-1 downto 0);
-    rv2mmu_dataVtags            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(MMU_CFG)-1 downto 0);
+    rv2mmu_PCsVtags             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(CCFG)-1 downto 0);
+    rv2mmu_dataVtags            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2 * mmutagSize(CCFG)-1 downto 0);
     rv2mmu_readEnable           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2mmu_writeEnable          : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
         
@@ -101,13 +101,13 @@ entity mmu_table_walk is
     mem2tw                      : in  bus_slv2mst_type
     
   );
-end entity; -- table_walk
+end entity cache_mmu_table_walk;
 
 
-architecture behavioural of mmu_table_walk is
+architecture behavioural of cache_mmu_table_walk is
 
   type t_state is (idle, address_calc, mem_read_req, mem_read_ack, mem_write);
-  type tag_array is array (0 to 2**RCFG.numLaneGroupsLog2-1) of std_logic_vector(mmutagSize(MMU_CFG)-1 downto 0);
+  type tag_array is array (0 to 2**RCFG.numLaneGroupsLog2-1) of std_logic_vector(mmutagSize(CCFG)-1 downto 0);
   type table_walk_reg is record
     state                       : t_state;
     lane_serviced               : integer range 0 to 2**RCFG.numLaneGroupsLog2-1; -- latch which lane's tlb's miss is serviced
@@ -135,7 +135,7 @@ architecture behavioural of mmu_table_walk is
   );
   
   signal r, r_in         : table_walk_reg := R_INIT;
-  signal Vtag            : std_logic_vector(mmutagSize(MMU_CFG)-1 downto 0);
+  signal Vtag            : std_logic_vector(mmutagSize(CCFG)-1 downto 0);
   signal inst_Vtags      : tag_array;
   signal data_Vtags      : tag_array;
   
@@ -149,8 +149,8 @@ begin
 
       
   split_tag_vector: for i in 0 to 2**RCFG.numLaneGroupsLog2-1 generate
-    inst_Vtags(i) <= rv2mmu_PCsVtags((i + 1)  * mmutagSize(MMU_CFG) - 1 downto i * mmutagSize(MMU_CFG));
-    data_Vtags(i) <= rv2mmu_dataVtags((i + 1) * mmutagSize(MMU_CFG) - 1 downto i * mmutagSize(MMU_CFG));
+    inst_Vtags(i) <= rv2mmu_PCsVtags((i + 1)  * mmutagSize(CCFG) - 1 downto i * mmutagSize(CCFG));
+    data_Vtags(i) <= rv2mmu_dataVtags((i + 1) * mmutagSize(CCFG) - 1 downto i * mmutagSize(CCFG));
   end generate;
   
   -- mux the right tlb's Vtag based on which tlb's request is currently handled
@@ -244,8 +244,8 @@ begin
           when 0 =>
         
             -- zero extend the top half of the Vtag to 32 bits (including the middle bit for uneven tag lengths)
-            page_table_index := ((31 - (tagL1Msb(MMU_CFG) - tagL1Lsb(MMU_CFG)) - 3) downto 0 => '0')
-                                & VTag(tagL1Msb(MMU_CFG) downto tagL1Lsb(MMU_CFG))
+            page_table_index := ((31 - (tagL1Msb(CCFG) - tagL1Lsb(CCFG)) - 3) downto 0 => '0')
+                                & VTag(tagL1Msb(CCFG) downto tagL1Lsb(CCFG))
                                 & "00";
             r_in.lookup_address <= std_logic_vector(unsigned(rv2mmu_lanePageTablePointers(r.lane_serviced)) +
                                                     unsigned(page_table_index));
@@ -255,8 +255,8 @@ begin
           when 1 =>
             -- zero extend the bottom half of the Vtag to 32 bits
 
-            page_table_index := ((31 - (tagL2Msb(MMU_CFG) - tagL2Lsb(MMU_CFG)) - 3) downto 0 => '0')
-                                & VTag(tagL2Msb(MMU_CFG) downto tagL2Lsb(MMU_CFG))
+            page_table_index := ((31 - (tagL2Msb(CCFG) - tagL2Lsb(CCFG)) - 3) downto 0 => '0')
+                                & VTag(tagL2Msb(CCFG) downto tagL2Lsb(CCFG))
                                 & "00";
             r_in.lookup_address <= std_logic_vector(unsigned(r.lookup_data) +
                                                       unsigned(page_table_index));

@@ -25,8 +25,19 @@ debug interface.
 \ifaceGroup{Memory interface}
 %===============================================================================
 \ifaceSubGroup{}
+\ifaceInCtxt{mem}{cacheTrace}{cacheTrace}
+Cache performance signals. These don't really belong here because they're per
+lane group, but the cache does not have a register interface yet.
+
+\ifaceSubGroup{}
 \ifaceInCtxt{mem}{cacheStatus}{cacheStatus}
-Cache performance counter signals.
+\ifaceOutCtxt{mem}{cacheControl}{cacheControl}{{others => 0}}
+Cache status and control signals.
+
+\ifaceSubGroup{}
+\ifaceInCtxt{mem}{mmuStatus}{mmuStatus}
+\ifaceOutCtxt{mem}{mmuControl}{mmuControl}{{others => 0}}
+MMU status and control signals.
 
 %===============================================================================
 \ifaceGroup{Pipelane interface: misc}

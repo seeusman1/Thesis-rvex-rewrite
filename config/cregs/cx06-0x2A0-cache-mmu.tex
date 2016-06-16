@@ -1,0 +1,334 @@
+
+%===============================================================================
+\register{CMC1}{Cache/MMU control 1}{0x2A0}
+%===============================================================================
+
+This register contains various cache and MMU control flags. Note that not all
+platforms include the cache and MMU, in which case the respective registers are
+no-operation.
+
+%-------------------------------------------------------------------------------
+\field{31..24}{BLP}
+%-------------------------------------------------------------------------------
+This field allows the application to prioritize updating certain cache blocks or 
+TLBs when a miss occurs. This potentially decreases the cache penalty of 
+reconfiguration if the next configuration is known in advance, as it allows 
+directing new data to the blocks that are known to be shared in the next 
+configuration.
+
+Each bit in this field maps to a lane group/cache block/TLB. Cache blocks/TLBs
+for which this bit is set have a higher priority for servicing misses than
+those for which the bit is cleared.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{byte}{0}
+\implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
+
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\field{19..18}{WTC}
+%-------------------------------------------------------------------------------
+This field selects whether the write-to-clean trap is enabled or disabled. This
+trap may be used to implement copy-on-write behavior.
+
+When \trap{WRITE_TO_CLEAN_PAGE} is enabled, this register reads as \code{01}. 
+When it is disabled, it reads as \code{10}. Writing \code{00} has no effect, 
+writing \code{01} enables the trap, writing \code{10} disables it and writing 
+\code{11} toggles the state. This prevents the need for read-modify-write 
+operations.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
+\implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+_r = _v;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\field{16}{T}
+%-------------------------------------------------------------------------------
+This flag controls TLB flushing. Writing a \code{1} to this register initiates a
+flush, writing \code{0} has no effect. This register reads as \code{1} while the
+flush is pending or in progress. \creg{TFHI}, \creg{TFLO}, and \creg{TFID} may
+be used to restrict the TLB flush to only entries that meet certain criteria.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
+\declRegister{_s}{bit}{0}
+\declRegister{_br}{bit}{0}
+\implementation{}
+\begin{lstlisting}
+
+if (_write & _wmask) {
+  _r = 1;
+  _s = 1;
+} else {
+  _r = mem2cxreg_mmuStatus.flush_busy;
+  _s = 0;
+}
+_br = mem2cxreg_mmuStatus.flush_busy;
+_read = _r;
+
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\field{11..10}{BYP}
+%-------------------------------------------------------------------------------
+This field may be used to force all data accesses to bypass the cache. When this 
+is the case, this register reads as \code{01}. Otherwise, it reads as \code{10}. 
+Writing \code{00} has no effect, writing \code{01} enables the bypass, writing 
+\code{10} disables it and writing \code{11} toggles the state. This prevents the 
+need for read-modify-write operations.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
+\implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+_r = _v;
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\field{8}{D}
+%-------------------------------------------------------------------------------
+This flag controls data cache flushing. Writing a \code{1} to this register 
+initiates a flush, writing \code{0} has no effect. This register reads as 
+\code{1} while the flush is pending or in progress.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
+\declRegister{_s}{bit}{0}
+\implementation{}
+\begin{lstlisting}
+
+if (_write & _wmask) {
+  _r = 1;
+  _s = 1;
+} else {
+  _r = mem2cxreg_cacheStatus.data_flushBusy;
+  _s = 0;
+}
+_read = _r;
+
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\field{0}{I}
+%-------------------------------------------------------------------------------
+This flag controls instruction cache flushing. Writing a \code{1} to this 
+register initiates a flush, writing \code{0} has no effect. This register reads 
+as \code{1} while the flush is pending or in progress.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{bit}{0}
+\declRegister{_s}{bit}{0}
+\implementation{}
+\begin{lstlisting}
+
+if (_write & _wmask) {
+  _r = 1;
+  _s = 1;
+} else {
+  _r = mem2cxreg_cacheStatus.instr_flushBusy;
+  _s = 0;
+}
+_read = _r;
+
+\end{lstlisting}
+
+%===============================================================================
+\register{CMC2}{Cache/MMU control 2}{0x2A4}
+%===============================================================================
+
+This register is reserved for future expansions.
+
+%===============================================================================
+\register{PTP}{Page table pointer}{0x2A8}
+%===============================================================================
+
+This register holds the base address to the page table as used by the MMU.
+Writing to this register while the MMU is enabled leads to undefined behavior.
+In any case, a full TLB flush is needed after writing to this register.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{PTP}
+\declaration{}
+\declRegister{_r}{address}{0}
+\implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
+
+\end{lstlisting}
+
+%===============================================================================
+\register{ASID}{Address space ID}{0x2AC}
+%===============================================================================
+
+This register holds the address space ID for the currently running task as used
+by the MMU. The address space ID is used by the TLB to distinguish between
+entries from different tasks, preventing the need to flush the TLB after every
+context switch. Only the $n$ LSBs of this register are actually used. The value
+of $n$ is design-time configurable and may be read from the TODO field of TODO
+\todo{ASID width version register}. It is 10 by default.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{ASID}
+\declaration{}
+\declRegister{_r}{data}{0}
+\implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
+
+\end{lstlisting}
+
+%===============================================================================
+\register{TFLO}{TLB flush tag low}{0x2B0}
+%===============================================================================
+
+This register specifies the inclusive lower limit for the range of virtual tags 
+to match when flushing the TLB. When the processor is reset or a flush 
+completes, this register is reset to zero.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{TFLO}
+\reset{00000000000000000000000000000000}
+\declaration{}
+\declRegister{_r}{address}{0}
+\implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
+
+// Reset the register when a flush completes.
+if (CR_CMC1_T_br && !mem2cxreg_mmuStatus.flush_busy) {
+  _r = 0;
+}
+
+\end{lstlisting}
+
+%===============================================================================
+\register{TFHI}{TLB flush tag high}{0x2B4}
+%===============================================================================
+
+This register specifies the inclusive upper limit for the range of virtual tags 
+to match when flushing the TLB. When the processor is reset or a flush
+completes, this register is reset to \code{0xFFFFFFFF}.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\field{31..0}{TFHI}
+\reset{11111111111111111111111111111111}
+\declaration{}
+\declRegister{_r}{address}{X"FFFFFFFF"}
+\implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
+
+// Reset the register when a flush completes.
+if (CR_CMC1_T_br && !mem2cxreg_mmuStatus.flush_busy) {
+  _r = X"FFFFFFFF";
+}
+
+\end{lstlisting}
+
+%===============================================================================
+\register{TFID}{TLB flush address space ID}{0x2B8}
+%===============================================================================
+
+This register allows TLB flushes to be restricted to a single address space ID.
+
+%-------------------------------------------------------------------------------
+\field{31}{E}
+%-------------------------------------------------------------------------------
+This flag selects whether address space ID matching is performed during a TLB 
+flush or not. When this bit is set to 1, the address space ID of a TLB entry is 
+ignored. When it is set to 0, only TLB entries with an address space ID matching 
+the value stored in the ID field are flushed. When the processor is reset or a
+flush completes, this flag is reset to 1.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{1}
+\declaration{}
+\declRegister{_r}{bit}{1}
+\implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
+
+// Reset the register when a flush completes.
+if (CR_CMC1_T_br && !mem2cxreg_mmuStatus.flush_busy) {
+  _r = 1;
+}
+
+\end{lstlisting}
+
+%-------------------------------------------------------------------------------
+\field{30..0}{ASID}
+%-------------------------------------------------------------------------------
+This field stores the address space ID that TLB entries should be matched
+against during a TLB flush.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\declaration{}
+\declRegister{_r}{data}{0}
+\implementation{}
+\begin{lstlisting}
+
+// Handle bus interface.
+_r = '0' $ ((_r[0, 31] & ~_wmask) | (_write & _wmask));
+_read = _r[0, 31];
+
+\end{lstlisting}
+
+%===============================================================================
+% Connect the cache and MMU control records
+%===============================================================================
+
+% These must unfortunately be one-liners. LAC cannot deal with writing to these
+% entries separately.
+
+\connect{cxreg2mem_cacheControl}{{ instr_flushStart=>CR_CMC1_I_s, data_flushStart=>CR_CMC1_D_s, data_bypass=>CR_CMC1_BYP_r, blockPrio=>CR_CMC1_BLP_r }}
+\connect{cxreg2mem_mmuControl}{{ enable=>CR_CCR_M_r, kernelMode=>CR_CCR_K_r, writeToCleanEna=>CR_CMC1_WTC_r, pageTablePtr=>CR_PTP_PTP_r, asid=>CR_ASID_ASID_r, flush_start=>CR_CMC1_T_s, flush_asid=>CR_TFID_ASID_r, flush_asidEna=>CR_TFID_E_r, flush_tagLow=>CR_TFLO_TFLO_r, flush_tagHigh=>CR_TFHI_TFHI_r, blockPrio=>CR_CMC1_BLP_r }}

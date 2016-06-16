@@ -51,32 +51,56 @@ use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
 
-entity tb_mmu_oh2bin is
-end entity;
+entity cache_mmu_oh2bin is
+  generic(
+    WIDTH_LOG2                  : integer
+  );
+  port(
+    oh_in                       : in  std_logic_vector(2**WIDTH_LOG2-1 downto 0);
+    bin_out                     : out integer range 0 to 2**WIDTH_LOG2-1;
+    hit                         : out std_logic
+  );
+end entity cache_mmu_oh2bin;
 
-architecture test of tb_mmu_oh2bin is 
+architecture log of cache_mmu_oh2bin is 
+  type t_valid_tree    is array (0 to WIDTH_LOG2-1)        of std_logic_vector(2**(WIDTH_LOG2 - 1) - 1 downto 0);
+  type t_encode_vector is array (0 to 2**(WIDTH_LOG2-1)-1) of std_logic_vector(WIDTH_LOG2-1 downto 0);
+  type t_encode_tree   is array (0 to WIDTH_LOG2-1)        of t_encode_vector;
 
-	signal oh_in 	: std_logic_vector(2**4-1 downto 0);
-	signal bin_out 	: integer range 0 to 2**4-1;
-	signal hit 		: std_logic;
+  signal valid_tree  : t_valid_tree;
+  signal encode_tree : t_encode_tree;
 
 begin
 
-    uut : entity work.mmu_oh2bin
-    generic map(
-    	WIDTH_LOG2  => 4
-    )
-    port map(
-        oh_in       => oh_in,
-        bin_out     => bin_out,
-        hit         => hit
-    );
+  decoder_tree: process(oh_in, valid_tree, encode_tree) 
+  begin 
 
-    oh_in <= "0000000000000000" after 0 ns,
-    	     "0000100000000000" after 10 ns,
-    	     "0000000000011000" after 20 ns,
-    	     "1000000000000010" after 30 ns,
-    	     "0000000000000000" after 40 ns;
+    for lvl in 0 to WIDTH_LOG2-1 loop
+      for i in 0 to 2**(WIDTH_LOG2-1-lvl) - 1 loop
 
+        if lvl = 0 then
+          valid_tree(0)(i)  <= oh_in(2 * i) or oh_in(2 * i + 1);
+          encode_tree(0)(i)(0) <= oh_in(2 * i + 1);
+        end if;
+
+        if lvl > 0 then
+          valid_tree(lvl)(i)  <= valid_tree(lvl - 1)(2 * i) or valid_tree(lvl - 1)(2 * i + 1);
+        
+          encode_tree(lvl)(i)(lvl) <= valid_tree(lvl - 1)(2 * i + 1);
+
+          if valid_tree(lvl - 1)(2 * i + 1) = '1' then
+            encode_tree(lvl)(i)(lvl-1 downto 0) <= encode_tree(lvl-1)(2 * i + 1)(lvl-1 downto 0);
+          else
+            encode_tree(lvl)(i)(lvl-1 downto 0) <= encode_tree(lvl-1)(2 * i)(lvl-1 downto 0);
+          end if;
+        end if;
+
+      end loop;
+    end loop;
+
+  end process;
+
+  hit   <= valid_tree(WIDTH_LOG2-1)(0);
+  bin_out <= to_integer(unsigned(encode_tree(WIDTH_LOG2-1)(0)));
 
 end architecture;

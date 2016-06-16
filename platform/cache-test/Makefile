@@ -1,5 +1,5 @@
 
-.PHONY: help compile-% vsim-% ise-% clean
+.PHONY: help compile-% vsim-% ise-% ise clean
 
 help:
 	@echo ""
@@ -31,6 +31,8 @@ vsim-%: compile-%
 
 ise-%: compile-%
 	cd ise && ise cache-test.xise
+
+ise: ise-nothing
 
 clean:
 	cd examples && $(MAKE) clean
