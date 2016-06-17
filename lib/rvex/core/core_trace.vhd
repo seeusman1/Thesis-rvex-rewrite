@@ -257,7 +257,8 @@ architecture Behavioral of core_trace is
   --  - Bit 6: reconfiguration fields valid
   --  - Bit 5: cache information field valid
   --  - Bit 4: instruction field valid
-  --  - Bit 3..1: reserved for new fields, should be 0
+  --  - Bit 3: MMU information field valid
+  --  - Bit 2..1: reserved for new fields, should be 0
   --  - Bit 0: reserved for EXFLAGS2
   --
   -- *** Trap fields ***
@@ -306,10 +307,9 @@ architecture Behavioral of core_trace is
   --  - Bit 1: 1 if the write buffer associated with this lane was full
   --      (which would have caused an additional cycle count penalty), 0
   --      otherwise.
-  --  - Bit 0: reserved. If 1, additional fields which have not yet been
-  --      defined are to be expected.
+  --  - Bit 0: reserved; when set, additional fields are to be expected.
   --
-  -- *** Instruction field ***
+  -- *** Instruction fields ***
   --
   constant I_INSTR0             : natural := I_CACHEINFO + 1;
   constant I_INSTR1             : natural := I_INSTR0 + 1;
@@ -318,10 +318,25 @@ architecture Behavioral of core_trace is
   -- Only if FLAGS(0) = 1 and EXFLAGS(4) = 1.
   --  - Bit 7..0: instruction which was executed.
   --
+  -- *** MMU information fields ***
+  --
+  constant I_MMUINFO            : natural := I_INSTR3 + 1;
+  -- Only if FLAGS(0) = 1 and EXFLAGS(5) = 1.
+  --  - Bit 7: 1 if an instruction translation was serviced by the TLB block
+  --      associated with this lane, 0 if not.
+  --  - Bit 6: 1 if the instruction translation resulted in a miss.
+  --  - Bit 5: 1 if a data translation was serviced by the TLB block associated
+  --      with this lane, 0 if not.
+  --  - Bit 4: 1 if the data translation resulted in a miss.
+  --  - Bit 3: reserved.
+  --  - Bit 2: reserved.
+  --  - Bit 1: reserved.
+  --  - Bit 0: reserved; when set, additional fields are to be expected.
+  --
   -- *** (end) ***
   
   -- Total number of bytes in a completely filled packet.
-  constant PACKET_SIZE          : natural := I_INSTR3 + 1;
+  constant PACKET_SIZE          : natural := I_MMUINFO + 1;
   
   -- Packet type declarations.
   subtype packet_type is rvex_byte_array(0 to PACKET_SIZE-1);
@@ -435,6 +450,7 @@ begin -- architecture
       variable traceCfg         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
       variable traceCache       : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
       variable traceInstr       : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+      variable traceMMU         : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
       
       -- Whether there is any nonempty trace packet within the coupled lane
       -- group, excluding PC information. This is used to determine whether PC
@@ -474,11 +490,12 @@ begin -- architecture
           
           -- Determine whether there's memory, register or trap information to
           -- trace.
-          traceMem := (others => '0');
-          traceReg := (others => '0');
-          traceTrap := (others => '0');
+          traceMem   := (others => '0');
+          traceReg   := (others => '0');
+          traceTrap  := (others => '0');
           traceCache := (others => '0');
           traceInstr := (others => '0');
+          traceMMU   := (others => '0');
           for lane in 0 to 2**CFG.numLanesLog2-1 loop
             c := traceConfig(lane2group(lane, CFG));
             d := pl2trace_data(lane);
@@ -517,17 +534,27 @@ begin -- architecture
               traceCache(lane) := c.enable
                               and c.cacheEn
                               and (
-                                d.cache.instr_access
-                                or d.cache.data_accessType(1)
-                                or d.cache.data_accessType(0)
+                                d.icache_access
+                                or d.dcache_accessType(1)
+                                or d.dcache_accessType(0)
                               );
             end if;
-                            
+            
             -- Determine whether we need to trace the syllable fetched in this
             -- lane.
             traceInstr(lane) := c.enable
                             and c.instrEn
                             and d.instr_enable;
+            
+            -- Determine whether we need to trace MMU information in this lane.
+            if lane2indexInGroup(lane, CFG) = 0 then
+              traceMMU(lane) := c.enable
+                              and c.cacheEn
+                              and (
+                                d.itlb_access
+                                or d.dtlb_access
+                              );
+            end if;
             
           end loop;
           
@@ -565,7 +592,8 @@ begin -- architecture
                   or traceTrap(lane)
                   or traceCfg(lane)
                   or traceCache(lane)
-                  or traceInstr(lane);
+                  or traceInstr(lane)
+                  or traceMMU(lane);
                 
                 anyValid(laneGroup)
                   := anyValid(laneGroup)
@@ -753,13 +781,14 @@ begin -- architecture
               p(I_EXFLAGS)(5) := traceCache(lane);
               
               -- Write the cache performance flags to the packet.
-              p(I_CACHEINFO)(7) := d.cache.instr_access;
-              p(I_CACHEINFO)(6) := d.cache.instr_miss;
-              p(I_CACHEINFO)(5) := d.cache.data_accessType(1);
-              p(I_CACHEINFO)(4) := d.cache.data_accessType(0);
-              p(I_CACHEINFO)(3) := d.cache.data_bypass;
-              p(I_CACHEINFO)(2) := d.cache.data_miss;
-              p(I_CACHEINFO)(1) := d.cache.data_writePending;
+              p(I_CACHEINFO)(7) := d.icache_access;
+              p(I_CACHEINFO)(6) := d.icache_miss;
+              p(I_CACHEINFO)(5) := d.dcache_accessType(1);
+              p(I_CACHEINFO)(4) := d.dcache_accessType(0);
+              p(I_CACHEINFO)(3) := d.dcache_bypass;
+              p(I_CACHEINFO)(2) := d.dcache_miss;
+              p(I_CACHEINFO)(1) := d.dcache_writePending;
+              p(I_CACHEINFO)(0) := '0';
               
             end if;
             
@@ -775,6 +804,24 @@ begin -- architecture
             p(I_INSTR1)(7 downto 0) := d.instr_syllable(15 downto  8);
             p(I_INSTR2)(7 downto 0) := d.instr_syllable(23 downto 16);
             p(I_INSTR3)(7 downto 0) := d.instr_syllable(31 downto 24);
+            
+            ---------------------------------
+            -- Trace MMU performance flags --
+            ---------------------------------
+            
+            -- Only trace reconfiguration in the first lane of a group.
+            if lane2indexInGroup(lane, CFG) = 0 then
+              
+              -- Set the field valid flag.
+              p(I_EXFLAGS)(3) := traceMMU(lane);
+              
+              -- Write the MMU performance flags to the packet.
+              p(I_MMUINFO)(7) := d.itlb_access;
+              p(I_MMUINFO)(6) := d.itlb_miss;
+              p(I_MMUINFO)(5) := d.itlb_access;
+              p(I_MMUINFO)(4) := d.itlb_miss;
+              
+            end if;
             
             -----------------------------------
             -- Update packet buffer register --

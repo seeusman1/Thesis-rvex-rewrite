@@ -22,22 +22,91 @@ stops the core. This bit can be reset by issuing a core reset or by means of the
 debug interface.
 
 %===============================================================================
-\ifaceGroup{Memory interface}
+\ifaceGroup{Memory interface: trace information}
 %===============================================================================
 \ifaceSubGroup{}
-\ifaceInCtxt{mem}{cacheTrace}{cacheTrace}
-Cache performance signals. These don't really belong here because they're per
-lane group, but the cache does not have a register interface yet.
+\ifaceInCtxt{imem}{access}{bit}
+\ifaceInCtxt{imem}{miss}{bit}
+\ifaceInCtxt{imem}{tlbAccess}{bit}
+\ifaceInCtxt{imem}{tlbMiss}{bit}
+\ifaceInCtxt{dmem}{accessType}{twobit}
+\ifaceInCtxt{dmem}{bypass}{bit}
+\ifaceInCtxt{dmem}{miss}{bit}
+\ifaceInCtxt{dmem}{writePending}{bit}
+\ifaceInCtxt{dmem}{tlbAccess}{bit}
+\ifaceInCtxt{dmem}{tlbMiss}{bit}
+Cache/MMU performance signals. These don't really belong here because they're
+per lane group, but the cache does not have a register interface yet.
+
+%===============================================================================
+\ifaceGroup{Memory interface: status/control}
+%===============================================================================
 
 \ifaceSubGroup{}
-\ifaceInCtxt{mem}{cacheStatus}{cacheStatus}
-\ifaceOutCtxt{mem}{cacheControl}{cacheControl}{{others => 0}}
-Cache status and control signals.
+\ifaceOutCtxt{imem}{flushStart}{bit}{0}
+\ifaceInCtxt{imem}{flushBusy}{bit}
+Instruction cache flush control. When flushStart is asserted high, a flush
+should be performed. flushBusy should be high while a flush is in progress. If
+a flush is single-cycle, it may stay low.
 
 \ifaceSubGroup{}
-\ifaceInCtxt{mem}{mmuStatus}{mmuStatus}
-\ifaceOutCtxt{mem}{mmuControl}{mmuControl}{{others => 0}}
-MMU status and control signals.
+\ifaceOutCtxt{dmem}{flushStart}{bit}{0}
+\ifaceInCtxt{dmem}{flushBusy}{bit}
+Data cache flush control. When flushStart is asserted high, a flush should be 
+performed. flushBusy should be high while a flush is in progress. If a flush is 
+single-cycle, it may stay low.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{dmem}{bypass}{bit}{0}
+Data cache bypass override. When high, all accesses should bypass the cache.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{mmuEnable}{bit}{0}
+This signal controls whether address translation is active or not.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{kernelMode}{bit}{0}
+This signal represents the current privilege level of processor. It is
+high for kernel mode and low for application mode.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{writeToCleanEna}{bit}{0}
+This signal controls whether a trap is generated when a write to a clean
+page is attempted.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{pageTablePtr}{address}{0}
+This signal specifies the page table pointer for the current thread.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{asid}{data}{0}
+This signal specifies the address space ID for the current thread.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{tlbFlushStart}{bit}{0}
+\ifaceInCtxt{mem}{tlbFlushBusy}{bit}
+TLB flush control. When flushStart is asserted high, a flush should be 
+performed. flushBusy should be high while a flush is in progress. If a flush is 
+single-cycle, it may stay low.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{tlbFlushAsidEna}{bit}{0}
+\ifaceOutCtxt{mem}{tlbFlushAsid}{data}{0}
+When tlbFlushAsidEna is high, tlbFlushAsid specifies a specific ASID that must 
+be flushed during a TLB flush. Entries with other ASIDs are then unaffected.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{tlbFlushTagLow}{address}{0}
+\ifaceOutCtxt{mem}{tlbFlushTagHigh}{address}{0}
+These two signals specify a lower and upper limit for the virtual page
+addresses that are to be flushed. Both are inclusive.
+
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{blockPrio}{byte}{0}
+This signal is used to assign a priority to certain blocks in the cache/TLB
+replacement policy. The vector is indexed by lane group; when a bit is high, the
+associated cache/TLB blocks should get a higher update priority than those for
+which the bit is low.
 
 %===============================================================================
 \ifaceGroup{Pipelane interface: misc}

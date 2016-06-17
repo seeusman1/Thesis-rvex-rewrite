@@ -354,6 +354,24 @@ entity core is
     --    group is asserting the blockReconfig signal.
     rv2mem_decouple             : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
+    -- For each lane group, this signal represents which context it is
+    -- connected to. This is only valid when the associated bit in
+    -- rv2mem_laneGroupActive is high.
+    rv2mem_laneGroupContext     : out rvex_3bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- For each lane group, this signal represents whether it is assigned to a
+    -- context. When low, the logic associated with the lane group may be
+    -- powered down.
+    rv2mem_laneGroupActive      : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- For each cache/TLB block associated with the indexed lane group, this
+    -- signal determines whether cache/TLB updates are allowed. The r-VEX will
+    -- ensure that at least one block in a set of coupled blocks will be
+    -- enabled at all times. Blocks may be disabled when it is known that a
+    -- task will no longer have access to the block in a later configuration,
+    -- such that more recent data is directed to other blocks.
+    rv2mem_blockUpdateEnable    : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
     -- Active high reconfiguration block input from the instruction and data
     -- memories. When this is low, associated lanes may not be reconfigured.
     -- The processor assumes that this signal will go low eventually when no
@@ -374,29 +392,57 @@ entity core is
     -- reasons other than memory stalls as well.
     rv2mem_stallOut             : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Cache performance information signals. Optional. Refer to core_pkg.vhd
-    -- for more information about this signal (look for rvex_cacheTrace_type).
-    mem2rv_cacheTrace           : in  rvex_cacheTrace_array(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => RVEX_CACHE_TRACE_IDLE);
+    -- This signal controls whether address translation is active or not.
+    rv2mem_mmuEnable            : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- Cache status and control signals. Optional. Refer to core_pkg.vhd
-    -- for more information about these signals (look for the type
-    -- declarations).
-    mem2rv_cacheStatus          : in  rvex_cacheStatus_array(2**CFG.numContextsLog2-1 downto 0) := (others => RVEX_CACHE_STATUS_IDLE);
-    rv2mem_cacheControl         : out rvex_cacheControl_array(2**CFG.numContextsLog2-1 downto 0);
+    -- This signal represents the current privilege level of processor. It is
+    -- high for kernel mode and low for application mode.
+    rv2mem_kernelMode           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- MMU performance information signals. Optional. Refer to core_pkg.vhd
-    -- for more information about this signal (look for rvex_cacheTrace_type).
-    mem2rv_mmuTrace             : in  rvex_mmuTrace_array(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => RVEX_MMU_TRACE_IDLE);
+    -- This signal controls whether a trap is generated when a write to a clean
+    -- page is attempted.
+    rv2mem_writeToCleanEna      : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
-    -- MMU status and control signals. Optional. Refer to core_pkg.vhd
-    -- for more information about these signals (look for the type
-    -- declarations).
-    mem2rv_mmuStatus            : in  rvex_mmuStatus_array(2**CFG.numContextsLog2-1 downto 0) := (others => RVEX_MMU_STATUS_IDLE);
-    rv2mem_mmuControl           : out rvex_mmuControl_array(2**CFG.numContextsLog2-1 downto 0);
+    -- This signal specifies the page table pointer for the current thread.
+    rv2mem_pageTablePtr         : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- This signal specifies the address space ID for the current thread.
+    rv2mem_asid                 : out rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- When this signal is high, a TLB flush should be initiated.
+    rv2mem_tlbFlushStart        : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- This is high when a TLB cache flush is busy. If flushes are always
+    -- single-cycle, this can just always be zero.
+    mem2rv_tlbFlushBusy         : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
+    
+    -- When rv2mem_tlbFlushAsidEna is high, rv2mem_tlbFlushAsid specifies a
+    -- specific ASID that must be flushed during a TLB flush. Entries with
+    -- other ASIDs are then unaffected.
+    rv2mem_tlbFlushAsidEna      : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_tlbFlushAsid         : out rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- These two signals specify a lower and upper limit for the virtual page
+    -- addresses that are to be flushed. Both are inclusive.
+    rv2mem_tlbFlushTagLow       : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_tlbFlushTagHigh      : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Instruction memory interface
     ---------------------------------------------------------------------------
+    
+    -- When this is high, an instruction cache flush should be initiated for
+    -- the indexed block.
+    rv2imem_flushStart          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- This is high when an instruction cache flush is busy. If flushes are
+    -- always single-cycle, this can just always be zero.
+    imem2rv_flushBusy           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    -- Request phase
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    
     -- Program counters from each pipelane group.
     rv2imem_PCs                 : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
@@ -417,11 +463,17 @@ entity core is
     -- be used to speed things up.
     rv2imem_cancel              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- (L_IF_MEM clock cycles delay with clkEn high and stallOut low; L_IF_MEM
-    -- is set in core_pipeline_pkg.vhd)
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    -- Response phase: valid L_IF_MEM unstalled, clkEn'd clock cycles after the
+    -- request
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     
     -- Fetched instruction, from instruction memory to the rvex.
     imem2rv_instr               : in  rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Active high fault signals from the instruction memory. When high,
+    -- imem2rv_instr is assumed to be invalid and an exception will be thrown.
+    imem2rv_busFault            : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     -- Cache block affinity data from cache. This should be set to cache block
     -- index which serviced the request. This is just a hint for the processor
@@ -430,13 +482,40 @@ entity core is
     -- locality).
     imem2rv_affinity            : in  std_logic_vector(2**CFG.numLaneGroupsLog2*CFG.numLaneGroupsLog2-1 downto 0) := (others => '1');
     
-    -- Active high fault signals from the instruction memory. When high,
-    -- imem2rv_instr is assumed to be invalid and an exception will be thrown.
-    imem2rv_busFault            : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    -- Trace information. This should be high when a fetch was serviced by the
+    -- block associated with the indexed lane group.
+    imem2rv_access              : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Trace information. This should be high when the fetch resulted in a miss.
+    imem2rv_miss                : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Trace information. This should be high when an address translation was
+    -- serviced by the TLB block associated with the indexed lane group.
+    imem2rv_tlbAccess           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Trace information. This should be high when the TLB access resulted in a
+    -- miss.
+    imem2rv_tlbMiss             : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     ---------------------------------------------------------------------------
     -- Data memory interface
     ---------------------------------------------------------------------------
+    
+    -- When this is high, a data cache flush should be initiated for the
+    -- indexed block.
+    rv2dmem_flushStart          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- This is high when a data cache flush is busy. If flushes are always
+    -- single-cycle, this can just always be zero.
+    dmem2rv_flushBusy           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- When this is high, all data accesses should bypass the cache.
+    rv2dmem_bypass              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    -- Request phase
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    
     -- Data memory addresses from each pipelane group. Note that a section
     -- of the address space 1kiB in size must be mapped to the core control
     -- registers, making that section of the data memory inaccessible.
@@ -462,8 +541,10 @@ entity core is
     -- byte mask specified by dmem_writeMask.
     rv2dmem_writeEnable         : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- (L_MEM clock cycles delay with clkEn high and stallOut low; L_MEM is set
-    -- in core_pipeline_pkg.vhd)
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    -- Response phase: valid L_MEM unstalled, clkEn'd clock cycles after the
+    -- request
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     
     -- Data output from data memory to rvex.
     dmem2rv_readData            : in  rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -474,6 +555,34 @@ entity core is
     dmem2rv_ifaceFault          : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     dmem2rv_busFault            : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
+    -- Trace information. This represents the type of cache access performed by
+    -- the block associated with the indexed lane group:
+    --   00 - No access.
+    --   01 - Read access.
+    --   10 - Write access, complete cache line.
+    --   11 - Write access, only part of a cache line (update first).
+    dmem2rv_accessType          : in  rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => "00");
+    
+    -- Trace information. This should be high when the performed data access
+    -- bypassed the cache.
+    dmem2rv_bypass              : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Trace information. This should be high when the access resulted in a miss.
+    dmem2rv_miss                : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Trace information. This should be high when the data cache write buffer
+    -- was filled when the request was made. If the request would result in
+    -- some kind of bus access, this means an extra penalty would be paid.
+    dmem2rv_writePending        : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Trace information. This should be high when an address translation was
+    -- serviced by the TLB block associated with the indexed lane group.
+    dmem2rv_tlbAccess           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Trace information. This should be high when the TLB access resulted in a
+    -- miss.
+    dmem2rv_tlbMiss             : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
     ---------------------------------------------------------------------------
     -- Control/debug bus interface
     ---------------------------------------------------------------------------
@@ -481,6 +590,10 @@ entity core is
     -- registers for debugging. All cores are forcibly stalled when a read or
     -- write is requested here, such that addressing logic may be reused. More
     -- information about the memory map is available in core_ctrlRegs_pkg.vhd.
+    
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    -- Request phase
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     
     -- Address for the request. Only the 13 LSB are currently used in the
     -- largest configuration.
@@ -498,7 +611,10 @@ entity core is
     -- Write data.
     dbg2rv_writeData            : in  rvex_data_type := (others => '0');
     
-    -- (one clock cycle delay with clkEn high)
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
+    -- Response phase: valid one unstalled, clkEn'd clock cycle after the
+    -- request
+    --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     
     -- Read data.
     rv2dbg_readData             : out rvex_data_type;
@@ -666,7 +782,22 @@ architecture Behavioral of core is
   signal coreID_byte                  : rvex_byte_type;
   signal ctxtReset                    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2rv_reset               : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-  signal mem2cxreg_cacheTrace         : rvex_cacheTrace_array(2**CFG.numContextsLog2-1 downto 0);
+  signal imem2cxreg_access            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal imem2cxreg_miss              : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal imem2cxreg_tlbAccess         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal imem2cxreg_tlbMiss           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal dmem2cxreg_accessType        : rvex_2bit_array(2**CFG.numContextsLog2-1 downto 0);
+  signal dmem2cxreg_bypass            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal dmem2cxreg_miss              : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal dmem2cxreg_writePending      : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal dmem2cxreg_tlbAccess         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal dmem2cxreg_tlbMiss           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2imem_flushStart        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal imem2cxreg_flushBusy         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2dmem_flushStart        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal dmem2cxreg_flushBusy         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2dmem_bypass            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_blockPrio          : rvex_byte_array(2**CFG.numContextsLog2-1 downto 0);
   
   -- Context register <-> context-pipelane interface signals.
   signal cxplif2cxreg_brWriteData     : rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
@@ -847,6 +978,10 @@ begin -- architecture
       cxplif2ibuf_cancel            => cxplif2ibuf_cancel,
       ibuf2pl_instr                 => ibuf2pl_instr,
       ibuf2pl_exception             => ibuf2pl_exception,
+      imem2pl_access                => imem2rv_access,
+      imem2pl_miss                  => imem2rv_miss,
+      imem2pl_tlbAccess             => imem2rv_tlbAccess,
+      imem2pl_tlbMiss               => imem2rv_tlbMiss,
       
       -- Data memory interface.
       dmsw2dmem_addr                => rv2dmem_addr,
@@ -856,6 +991,12 @@ begin -- architecture
       dmsw2dmem_readEnable          => rv2dmem_readEnable,
       dmem2dmsw_readData            => dmem2rv_readData,
       dmem2dmsw_exception           => dmem2dmsw_exception,
+      dmem2pl_accessType            => dmem2rv_accessType,
+      dmem2pl_bypass                => dmem2rv_bypass,
+      dmem2pl_miss                  => dmem2rv_miss,
+      dmem2pl_writePending          => dmem2rv_writePending,
+      dmem2pl_tlbAccess             => dmem2rv_tlbAccess,
+      dmem2pl_tlbMiss               => dmem2rv_tlbMiss,
       
       -- Control register interface.
       dmsw2creg_addr                => dmsw2creg_addr,
@@ -864,10 +1005,6 @@ begin -- architecture
       dmsw2creg_writeEnable         => dmsw2creg_writeEnable,
       dmsw2creg_readEnable          => dmsw2creg_readEnable,
       creg2dmsw_readData            => creg2dmsw_readData,
-      
-      -- Common memory interface.
-      mem2pl_cacheTrace             => mem2rv_cacheTrace,
-      mem2pl_mmuTrace               => mem2rv_mmuTrace,
       
       -- Register file interface.
       pl2gpreg_readPorts            => pl2gpreg_readPorts,
@@ -1079,11 +1216,95 @@ begin -- architecture
            "lane groups must equal the number of contexts."
     severity failure;
   gen_cache_perf_count_connection: if CFG.cachePerfCountEnable generate
-    mem2cxreg_cacheTrace <= mem2rv_cacheTrace;
+    imem2cxreg_access       <= imem2cxreg_access;
+    imem2cxreg_miss         <= imem2cxreg_miss;
+    imem2cxreg_tlbAccess    <= imem2cxreg_tlbAccess;
+    imem2cxreg_tlbMiss      <= imem2cxreg_tlbMiss;
+    dmem2cxreg_accessType   <= dmem2cxreg_accessType;
+    dmem2cxreg_bypass       <= dmem2cxreg_bypass;
+    dmem2cxreg_miss         <= dmem2cxreg_miss;
+    dmem2cxreg_writePending <= dmem2cxreg_writePending;
+    dmem2cxreg_tlbAccess    <= dmem2cxreg_tlbAccess;
+    dmem2cxreg_tlbMiss      <= dmem2cxreg_tlbMiss;
   end generate;
-  dont_gen_cache_perf_count_connection: if not CFG.cachePerfCountEnable generate
-    mem2cxreg_cacheTrace <= (others => RVEX_CACHE_TRACE_IDLE);
+  do_not_gen_cache_perf_count_connection: if not CFG.cachePerfCountEnable generate
+    imem2cxreg_access       <= (others => '0');
+    imem2cxreg_miss         <= (others => '0');
+    imem2cxreg_tlbAccess    <= (others => '0');
+    imem2cxreg_tlbMiss      <= (others => '0');
+    dmem2cxreg_accessType   <= (others => "00");
+    dmem2cxreg_bypass       <= (others => '0');
+    dmem2cxreg_miss         <= (others => '0');
+    dmem2cxreg_writePending <= (others => '0');
+    dmem2cxreg_tlbAccess    <= (others => '0');
+    dmem2cxreg_tlbMiss      <= (others => '0');
   end generate;
+  
+  -- Generate block update enable based on the current priority registers.
+  bue_proc: process (cxreg2mem_blockPrio, cfg2any_context, cfg2any_active) is
+    variable blockMask          : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable blockUpdateEnable  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  begin
+    blockUpdateEnable := (others => '0');
+    for ctxt in 0 to 2**CFG.numContextsLog2-1 loop
+      
+      -- Get a mask for the blocks that are accessible for each context.
+      blockMask := (others => '0');
+      for lg in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+        if cfg2any_context(lg) = uint2vect(ctxt, 3) then
+          blockMask(lg) := cfg2any_active(lg);
+        end if;
+      end loop;
+      
+      -- If the masked priority vector is not all zeros, mask out the blocks
+      -- that do not have increased priority.
+      if vect2unsigned(cxreg2mem_blockPrio(ctxt) and blockMask) /= 0 then
+        blockMask := cxreg2mem_blockPrio(ctxt) and blockMask;
+      end if;
+      
+      -- Append the data for this context to the vector.
+      blockUpdateEnable := blockUpdateEnable or blockMask;
+      
+    end loop;
+    rv2mem_blockUpdateEnable <= blockUpdateEnable;
+  end process;
+  
+  -- Generate context-block interface for the cache status and control signals.
+  -- These are all wired-or.
+  context_cache_block_iface_proc: process (
+    cfg2any_context, cfg2any_active,
+    cxreg2imem_flushStart, imem2rv_flushBusy,
+    cxreg2dmem_flushStart, dmem2rv_flushBusy,
+    cxreg2dmem_bypass
+  ) is
+    variable ifs  : std_logic_vector(2**CFG.numLaneGroupsLog2-1);
+    variable ifb  : std_logic_vector(2**CFG.numContextsLog2-1);
+    variable dfs  : std_logic_vector(2**CFG.numLaneGroupsLog2-1);
+    variable dfb  : std_logic_vector(2**CFG.numContextsLog2-1);
+    variable dbyp : std_logic_vector(2**CFG.numLaneGroupsLog2-1);
+  begin
+    ifs  := (others => '0');
+    ifb  := (others => '0');
+    dfs  := (others => '0');
+    dfb  := (others => '0');
+    dbyp := (others => '0');
+    for lg in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+      ifs(lg)   := cxreg2imem_flushStart(vect2uint(cfg2any_context(lg))) and cfg2any_active(lg);
+      dfs(lg)   := cxreg2imem_flushStart(vect2uint(cfg2any_context(lg))) and cfg2any_active(lg);
+      dbyp(lg)  := cxreg2imem_flushStart(vect2uint(cfg2any_context(lg)));
+      for ctxt in 0 to 2**CFG.numContextsLog2-1 loop
+        if (cfg2any_context(lg) = uint2vect(ctxt, 3)) and cfg2any_active(lg) = '1' then
+          ifb(ctxt) := ifb(ctxt)  or imem2rv_flushBusy(lg);
+          dfb(ctxt) := dfb(ctxt)  or dmem2rv_flushBusy(lg);
+        end if;
+      end loop;
+    end loop;
+    rv2imem_flushStart    <= ifs;
+    imem2cxreg_flushBusy  <= ifb;
+    rv2imem_flushStart    <= dfs;
+    dmem2cxreg_flushBusy  <= dfb;
+    rv2dmem_bypass        <= dbyp;
+  end process;
   
   -- Instantiate.
   cxreg_inst: entity rvex.core_contextRegLogic
@@ -1103,12 +1324,36 @@ begin -- architecture
       rctrl2cxreg_resetVect         => rctrl2rv_resetVect,
       cxreg2rctrl_done              => rv2rctrl_done,
 
-      -- Memory interface.
-      mem2cxreg_cacheTrace          => mem2cxreg_cacheTrace,
-      mem2cxreg_cacheStatus         => mem2rv_cacheStatus,
-      cxreg2mem_cacheControl        => rv2mem_cacheControl,
-      mem2cxreg_mmuStatus           => mem2rv_mmuStatus,
-      cxreg2mem_mmuControl          => rv2mem_mmuControl,
+      -- Memory interface: trace information.
+      imem2cxreg_access             => imem2cxreg_access,
+      imem2cxreg_miss               => imem2cxreg_miss,
+      imem2cxreg_tlbAccess          => imem2cxreg_tlbAccess,
+      imem2cxreg_tlbMiss            => imem2cxreg_tlbMiss,
+      dmem2cxreg_accessType         => dmem2cxreg_accessType,
+      dmem2cxreg_bypass             => dmem2cxreg_bypass,
+      dmem2cxreg_miss               => dmem2cxreg_miss,
+      dmem2cxreg_writePending       => dmem2cxreg_writePending,
+      dmem2cxreg_tlbAccess          => dmem2cxreg_tlbAccess,
+      dmem2cxreg_tlbMiss            => dmem2cxreg_tlbMiss,
+      
+      -- Memory interface: status/control.
+      cxreg2imem_flushStart         => cxreg2imem_flushStart,
+      imem2cxreg_flushBusy          => imem2cxreg_flushBusy,
+      cxreg2dmem_flushStart         => cxreg2dmem_flushStart,
+      dmem2cxreg_flushBusy          => dmem2cxreg_flushBusy,
+      cxreg2dmem_bypass             => cxreg2dmem_bypass,
+      cxreg2mem_mmuEnable           => rv2mem_mmuEnable,
+      cxreg2mem_kernelMode          => rv2mem_kernelMode,
+      cxreg2mem_writeToCleanEna     => rv2mem_writeToCleanEna,
+      cxreg2mem_pageTablePtr        => rv2mem_pageTablePtr,
+      cxreg2mem_asid                => rv2mem_asid,
+      cxreg2mem_tlbFlushStart       => rv2mem_tlbFlushStart,
+      mem2cxreg_tlbFlushBusy        => mem2rv_tlbFlushBusy,
+      cxreg2mem_tlbFlushAsidEna     => rv2mem_tlbFlushAsidEna,
+      cxreg2mem_tlbFlushAsid        => rv2mem_tlbFlushAsid,
+      cxreg2mem_tlbFlushTagLow      => rv2mem_tlbFlushTagLow,
+      cxreg2mem_tlbFlushTagHigh     => rv2mem_tlbFlushTagHigh,
+      cxreg2mem_blockPrio           => cxreg2mem_blockPrio,
       
       -- Pipelane interface: misc.
       cxplif2cxreg_stall            => cxplif2cxreg_stall,
@@ -1289,9 +1534,10 @@ begin -- architecture
       
     );
   
-  -- Connect the external decouple signal to the decouple signal from the
-  -- configuration logic.
-  rv2mem_decouple <= cfg2any_decouple;
+  -- Connect the external configuration signals to the configuration logic.
+  rv2mem_decouple         <= cfg2any_decouple;
+  rv2mem_laneGroupContext <= cfg2any_context;
+  rv2mem_laneGroupActive  <= cfg2any_active;
   
   -----------------------------------------------------------------------------
   -- Instantiate trace control unit

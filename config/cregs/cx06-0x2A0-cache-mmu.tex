@@ -31,6 +31,7 @@ _r = (_r & ~_wmask) | (_write & _wmask);
 _read = _r;
 
 \end{lstlisting}
+\connect{cxreg2mem_blockPrio}{_r}
 
 %-------------------------------------------------------------------------------
 \field{19..18}{WTC}
@@ -61,6 +62,7 @@ _read = ~_r $ _r;
 
 _r = _v;
 \end{lstlisting}
+\connect{cxreg2mem_writeToCleanEna}{_r}
 
 %-------------------------------------------------------------------------------
 \field{16}{T}
@@ -82,13 +84,14 @@ if (_write & _wmask) {
   _r = 1;
   _s = 1;
 } else {
-  _r = mem2cxreg_mmuStatus.flush_busy;
+  _r = mem2cxreg_tlbFlushBusy;
   _s = 0;
 }
-_br = mem2cxreg_mmuStatus.flush_busy;
+_br = mem2cxreg_tlbFlushBusy;
 _read = _r;
 
 \end{lstlisting}
+\connect{cxreg2mem_tlbFlushStart}{_s}
 
 %-------------------------------------------------------------------------------
 \field{11..10}{BYP}
@@ -116,6 +119,7 @@ _read = ~_r $ _r;
 
 _r = _v;
 \end{lstlisting}
+\connect{cxreg2dmem_bypass}{_r}
 
 %-------------------------------------------------------------------------------
 \field{8}{D}
@@ -135,12 +139,13 @@ if (_write & _wmask) {
   _r = 1;
   _s = 1;
 } else {
-  _r = mem2cxreg_cacheStatus.data_flushBusy;
+  _r = dmem2cxreg_flushBusy;
   _s = 0;
 }
 _read = _r;
 
 \end{lstlisting}
+\connect{cxreg2dmem_flushStart}{_s}
 
 %-------------------------------------------------------------------------------
 \field{0}{I}
@@ -160,12 +165,13 @@ if (_write & _wmask) {
   _r = 1;
   _s = 1;
 } else {
-  _r = mem2cxreg_cacheStatus.instr_flushBusy;
+  _r = imem2cxreg_flushBusy;
   _s = 0;
 }
 _read = _r;
 
 \end{lstlisting}
+\connect{cxreg2imem_flushStart}{_s}
 
 %===============================================================================
 \register{CMC2}{Cache/MMU control 2}{0x2A4}
@@ -193,6 +199,7 @@ _r = (_r & ~_wmask) | (_write & _wmask);
 _read = _r;
 
 \end{lstlisting}
+\connect{cxreg2mem_pageTablePtr}{_r}
 
 %===============================================================================
 \register{ASID}{Address space ID}{0x2AC}
@@ -217,6 +224,7 @@ _r = (_r & ~_wmask) | (_write & _wmask);
 _read = _r;
 
 \end{lstlisting}
+\connect{cxreg2mem_asid}{_r}
 
 %===============================================================================
 \register{TFLO}{TLB flush tag low}{0x2B0}
@@ -239,11 +247,12 @@ _r = (_r & ~_wmask) | (_write & _wmask);
 _read = _r;
 
 // Reset the register when a flush completes.
-if (CR_CMC1_T_br && !mem2cxreg_mmuStatus.flush_busy) {
+if (CR_CMC1_T_br && !mem2cxreg_tlbFlushBusy) {
   _r = 0;
 }
 
 \end{lstlisting}
+\connect{cxreg2mem_tlbFlushTagLow}{_r}
 
 %===============================================================================
 \register{TFHI}{TLB flush tag high}{0x2B4}
@@ -266,11 +275,12 @@ _r = (_r & ~_wmask) | (_write & _wmask);
 _read = _r;
 
 // Reset the register when a flush completes.
-if (CR_CMC1_T_br && !mem2cxreg_mmuStatus.flush_busy) {
+if (CR_CMC1_T_br && !mem2cxreg_tlbFlushBusy) {
   _r = X"FFFFFFFF";
 }
 
 \end{lstlisting}
+\connect{cxreg2mem_tlbFlushTagHigh}{_r}
 
 %===============================================================================
 \register{TFID}{TLB flush address space ID}{0x2B8}
@@ -299,11 +309,12 @@ _r = (_r & ~_wmask) | (_write & _wmask);
 _read = _r;
 
 // Reset the register when a flush completes.
-if (CR_CMC1_T_br && !mem2cxreg_mmuStatus.flush_busy) {
+if (CR_CMC1_T_br && !mem2cxreg_tlbFlushBusy) {
   _r = 1;
 }
 
 \end{lstlisting}
+\connect{cxreg2mem_tlbFlushAsidEna}{_r}
 
 %-------------------------------------------------------------------------------
 \field{30..0}{ASID}
@@ -322,13 +333,5 @@ _r = '0' $ ((_r[0, 31] & ~_wmask) | (_write & _wmask));
 _read = _r[0, 31];
 
 \end{lstlisting}
+\connect{cxreg2mem_tlbFlushAsid}{_r}
 
-%===============================================================================
-% Connect the cache and MMU control records
-%===============================================================================
-
-% These must unfortunately be one-liners. LAC cannot deal with writing to these
-% entries separately.
-
-\connect{cxreg2mem_cacheControl}{{ instr_flushStart=>CR_CMC1_I_s, data_flushStart=>CR_CMC1_D_s, data_bypass=>CR_CMC1_BYP_r, blockPrio=>CR_CMC1_BLP_r }}
-\connect{cxreg2mem_mmuControl}{{ enable=>CR_CCR_M_r, kernelMode=>CR_CCR_K_r, writeToCleanEna=>CR_CMC1_WTC_r, pageTablePtr=>CR_PTP_PTP_r, asid=>CR_ASID_ASID_r, flush_start=>CR_CMC1_T_s, flush_asid=>CR_TFID_ASID_r, flush_asidEna=>CR_TFID_E_r, flush_tagLow=>CR_TFLO_TFLO_r, flush_tagHigh=>CR_TFHI_TFHI_r, blockPrio=>CR_CMC1_BLP_r }}

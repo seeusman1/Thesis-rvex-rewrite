@@ -73,9 +73,6 @@ package core_intIface_pkg is
   subtype rvex_gpRegAddr_type   is std_logic_vector( 5 downto  0); -- General purpose register file address (excluding context).
   subtype rvex_brRegAddr_type   is std_logic_vector( 2 downto  0); -- Branch register file address (excluding context).
   subtype rvex_brRegData_type   is std_logic_vector( 7 downto  0); -- Branch register mask (excluding context), i.e., one bit per flag.
-  subtype rvex_2bit_type        is std_logic_vector( 1 downto  0); -- Any 2-bit word, used for configuration control.
-  subtype rvex_3bit_type        is std_logic_vector( 2 downto  0); -- Any 3-bit word, used for configuration control.
-  subtype rvex_4bit_type        is std_logic_vector( 3 downto  0); -- Any 4-bit word, used for configuration control.
   subtype rvex_sylStatus_type   is std_logic_vector(15 downto  0); -- One status bit per syllable for the maximum supported lane count.
   subtype rvex_limmh_type       is std_logic_vector(31 downto  9); -- The part of a long immediate which is borrowed from another syllable.
   subtype rvex_trap_type        is std_logic_vector(RVEX_TRAP_CAUSE_SIZE-1 downto 0); -- Trap cause.
@@ -85,9 +82,6 @@ package core_intIface_pkg is
   type rvex_gpRegAddr_array     is array (natural range <>) of rvex_gpRegAddr_type;
   type rvex_brRegAddr_array     is array (natural range <>) of rvex_brRegAddr_type;
   type rvex_brRegData_array     is array (natural range <>) of rvex_brRegData_type;
-  type rvex_2bit_array          is array (natural range <>) of rvex_2bit_type;
-  type rvex_3bit_array          is array (natural range <>) of rvex_3bit_type;
-  type rvex_4bit_array          is array (natural range <>) of rvex_4bit_type;
   type rvex_sylStatus_array     is array (natural range <>) of rvex_sylStatus_type;
   type rvex_limmh_array         is array (natural range <>) of rvex_limmh_type;
   type rvex_trap_array          is array (natural range <>) of rvex_trap_type;
@@ -319,7 +313,16 @@ package core_intIface_pkg is
     trap_arg                    : rvex_address_type;
     
     -- Cache trace flags from the cache block associated with this lane.
-    cache                       : rvex_cacheTrace_type;
+    icache_access               : std_logic;
+    icache_miss                 : std_logic;
+    itlb_access                 : std_logic;
+    itlb_miss                   : std_logic;
+    dcache_accessType           : rvex_2bit_type;
+    dcache_bypass               : std_logic;
+    dcache_miss                 : std_logic;
+    dcache_writePending         : std_logic;
+    dtlb_access                 : std_logic;
+    dtlb_miss                   : std_logic;
     
     -- Whether an instruction fetch was performed or not.
     instr_enable                : std_logic;

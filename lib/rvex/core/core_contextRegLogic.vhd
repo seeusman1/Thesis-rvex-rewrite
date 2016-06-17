@@ -110,20 +110,80 @@ entity core_contextRegLogic is
     cxreg2rctrl_done            : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
 
     ---------------------------------------------------------------------------
-    -- Memory interface                                                                              -- GENERATED --
+    -- Memory interface: trace information                                                           -- GENERATED --
     ---------------------------------------------------------------------------
-    -- Cache performance signals. These don't really belong here because
+    -- Cache/MMU performance signals. These don't really belong here because
     -- they're per lane group, but the cache does not have a register interface
     -- yet.
-    mem2cxreg_cacheTrace        : in  rvex_cacheTrace_array(2**CFG.numContextsLog2-1 downto 0);
+    imem2cxreg_access           : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    imem2cxreg_miss             : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    imem2cxreg_tlbAccess        : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    imem2cxreg_tlbMiss          : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    dmem2cxreg_accessType       : in  rvex_2bit_array(2**CFG.numContextsLog2-1 downto 0);
+    dmem2cxreg_bypass           : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);           -- GENERATED --
+    dmem2cxreg_miss             : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    dmem2cxreg_writePending     : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    dmem2cxreg_tlbAccess        : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    dmem2cxreg_tlbMiss          : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
 
-    -- Cache status and control signals.
-    mem2cxreg_cacheStatus       : in  rvex_cacheStatus_array(2**CFG.numContextsLog2-1 downto 0);
-    cxreg2mem_cacheControl      : out rvex_cacheControl_array(2**CFG.numContextsLog2-1 downto 0);
+    ---------------------------------------------------------------------------
+    -- Memory interface: status/control
+    ---------------------------------------------------------------------------
+    -- Instruction cache flush control. When flushStart is asserted high, a
+    -- flush should be performed. flushBusy should be high while a flush is in                       -- GENERATED --
+    -- progress. If a flush is single-cycle, it may stay low.
+    cxreg2imem_flushStart       : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    imem2cxreg_flushBusy        : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- Data cache flush control. When flushStart is asserted high, a flush
+    -- should be performed. flushBusy should be high while a flush is in
+    -- progress. If a flush is single-cycle, it may stay low.
+    cxreg2dmem_flushStart       : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    dmem2cxreg_flushBusy        : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
                                                                                                      -- GENERATED --
-    -- MMU status and control signals.
-    mem2cxreg_mmuStatus         : in  rvex_mmuStatus_array(2**CFG.numContextsLog2-1 downto 0);
-    cxreg2mem_mmuControl        : out rvex_mmuControl_array(2**CFG.numContextsLog2-1 downto 0);
+    -- Data cache bypass override. When high, all accesses should bypass the
+    -- cache.
+    cxreg2dmem_bypass           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- This signal controls whether address translation is active or not.
+    cxreg2mem_mmuEnable         : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- This signal represents the current privilege level of processor. It is
+    -- high for kernel mode and low for application mode.
+    cxreg2mem_kernelMode        : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);           -- GENERATED --
+
+    -- This signal controls whether a trap is generated when a write to a clean
+    -- page is attempted.
+    cxreg2mem_writeToCleanEna   : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- This signal specifies the page table pointer for the current thread.
+    cxreg2mem_pageTablePtr      : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+
+    -- This signal specifies the address space ID for the current thread.
+    cxreg2mem_asid              : out rvex_data_array(2**CFG.numContextsLog2-1 downto 0);            -- GENERATED --
+
+    -- TLB flush control. When flushStart is asserted high, a flush should be
+    -- performed. flushBusy should be high while a flush is in progress. If a
+    -- flush is single-cycle, it may stay low.
+    cxreg2mem_tlbFlushStart     : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    mem2cxreg_tlbFlushBusy      : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+
+    -- When tlbFlushAsidEna is high, tlbFlushAsid specifies a specific ASID
+    -- that must be flushed during a TLB flush. Entries with other ASIDs are
+    -- then unaffected.                                                                              -- GENERATED --
+    cxreg2mem_tlbFlushAsidEna   : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2mem_tlbFlushAsid      : out rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+
+    -- These two signals specify a lower and upper limit for the virtual page
+    -- addresses that are to be flushed. Both are inclusive.
+    cxreg2mem_tlbFlushTagLow    : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    cxreg2mem_tlbFlushTagHigh   : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+
+    -- This signal is used to assign a priority to certain blocks in the
+    -- cache/TLB replacement policy. The vector is indexed by lane group; when                       -- GENERATED --
+    -- a bit is high, the associated cache/TLB blocks should get a higher
+    -- update priority than those for which the bit is low.
+    cxreg2mem_blockPrio         : out rvex_byte_array(2**CFG.numContextsLog2-1 downto 0);
 
     ---------------------------------------------------------------------------
     -- Pipelane interface: misc
@@ -1956,10 +2016,10 @@ begin -- architecture
               cr_cmc1_t_r(ctxt) <= bool2bit(int2bool(1));
               cr_cmc1_t_s(ctxt) <= bool2bit(int2bool(1));
             else
-              cr_cmc1_t_r(ctxt) <= mem2cxreg_mmuStatus(ctxt).flush_busy;
+              cr_cmc1_t_r(ctxt) <= mem2cxreg_tlbFlushBusy(ctxt);
               cr_cmc1_t_s(ctxt) <= bool2bit(int2bool(0));
             end if;
-            cr_cmc1_t_br(ctxt) <= mem2cxreg_mmuStatus(ctxt).flush_busy;
+            cr_cmc1_t_br(ctxt) <= mem2cxreg_tlbFlushBusy(ctxt);
             cr_cmc1_t_read := bit2vec(cr_cmc1_t_r(ctxt), 1);                                         -- GENERATED --
             cr_cmc1_byp_write := bus_writeData((10)+1 downto 10);
             cr_cmc1_byp_wmask := ((bus_writeMaskDbg((10)+1 downto 10)) or (bus_writeMaskCore((10)+1 downto 10))) and ((1 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(40, 31)))));
@@ -1980,7 +2040,7 @@ begin -- architecture
               cr_cmc1_d_r(ctxt) <= bool2bit(int2bool(1));
               cr_cmc1_d_s(ctxt) <= bool2bit(int2bool(1));
             else
-              cr_cmc1_d_r(ctxt) <= mem2cxreg_cacheStatus(ctxt).data_flushBusy;                       -- GENERATED --
+              cr_cmc1_d_r(ctxt) <= dmem2cxreg_flushBusy(ctxt);                                       -- GENERATED --
               cr_cmc1_d_s(ctxt) <= bool2bit(int2bool(0));
             end if;
             cr_cmc1_d_read := bit2vec(cr_cmc1_d_r(ctxt), 1);
@@ -1990,7 +2050,7 @@ begin -- architecture
               cr_cmc1_i_r(ctxt) <= bool2bit(int2bool(1));
               cr_cmc1_i_s(ctxt) <= bool2bit(int2bool(1));
             else
-              cr_cmc1_i_r(ctxt) <= mem2cxreg_cacheStatus(ctxt).instr_flushBusy;                      -- GENERATED --
+              cr_cmc1_i_r(ctxt) <= imem2cxreg_flushBusy(ctxt);                                       -- GENERATED --
               cr_cmc1_i_s(ctxt) <= bool2bit(int2bool(0));
             end if;
             cr_cmc1_i_read := bit2vec(cr_cmc1_i_r(ctxt), 1);
@@ -2006,21 +2066,21 @@ begin -- architecture
             cr_tflo_tflo_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(44, 31)))));
             cr_tflo_tflo_r(ctxt) <= ((cr_tflo_tflo_r(ctxt)) and (not (cr_tflo_tflo_wmask))) or ((cr_tflo_tflo_write) and (cr_tflo_tflo_wmask));
             cr_tflo_tflo_read := cr_tflo_tflo_r(ctxt);
-            if ((bit2bool(cr_cmc1_t_br(ctxt))) and (not (bit2bool(mem2cxreg_mmuStatus(ctxt).flush_busy)))) then
+            if ((bit2bool(cr_cmc1_t_br(ctxt))) and (not (bit2bool(mem2cxreg_tlbFlushBusy(ctxt))))) then
               cr_tflo_tflo_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             end if;
             cr_tfhi_tfhi_write := bus_writeData((0)+31 downto 0);
             cr_tfhi_tfhi_wmask := ((bus_writeMaskDbg((0)+31 downto 0)) or (bus_writeMaskCore((0)+31 downto 0))) and ((31 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(45, 31))))); -- GENERATED --
             cr_tfhi_tfhi_r(ctxt) <= ((cr_tfhi_tfhi_r(ctxt)) and (not (cr_tfhi_tfhi_wmask))) or ((cr_tfhi_tfhi_write) and (cr_tfhi_tfhi_wmask));
             cr_tfhi_tfhi_read := cr_tfhi_tfhi_r(ctxt);
-            if ((bit2bool(cr_cmc1_t_br(ctxt))) and (not (bit2bool(mem2cxreg_mmuStatus(ctxt).flush_busy)))) then
+            if ((bit2bool(cr_cmc1_t_br(ctxt))) and (not (bit2bool(mem2cxreg_tlbFlushBusy(ctxt))))) then
               cr_tfhi_tfhi_r(ctxt) <= bitvec_lit("11111111111111111111111111111111");
             end if;
             cr_tfid_e_write := bus_writeData((31)+0 downto 31);
             cr_tfid_e_wmask := ((bus_writeMaskDbg((31)+0 downto 31)) or (bus_writeMaskCore((31)+0 downto 31))) and ((0 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(46, 31)))));
             cr_tfid_e_r(ctxt) <= vec2bit(((not (cr_tfid_e_wmask)) and ((0 downto 0 => cr_tfid_e_r(ctxt)))) or ((cr_tfid_e_write) and (cr_tfid_e_wmask)));
             cr_tfid_e_read := bit2vec(cr_tfid_e_r(ctxt), 1);
-            if ((bit2bool(cr_cmc1_t_br(ctxt))) and (not (bit2bool(mem2cxreg_mmuStatus(ctxt).flush_busy)))) then -- GENERATED --
+            if ((bit2bool(cr_cmc1_t_br(ctxt))) and (not (bit2bool(mem2cxreg_tlbFlushBusy(ctxt))))) then -- GENERATED --
               cr_tfid_e_r(ctxt) <= bool2bit(int2bool(1));
             end if;
             cr_tfid_asid_write := bus_writeData((0)+30 downto 0);
@@ -2263,7 +2323,7 @@ begin -- architecture
             cr_iacc_iacc0_write := bus_writeData((0)+7 downto 0);                                    -- GENERATED --
             cr_iacc_iacc0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(74, 31)))));
             cr_iacc_iacc0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_iacc_iacc0_add := bit2vec(mem2cxreg_cacheTrace(ctxt).instr_access, 8);
+            cr_iacc_iacc0_add := bit2vec(imem2cxreg_access(ctxt), 8);
             cr_iacc_iacc0_add_r(ctxt) <= cr_iacc_iacc0_add;
             cr_iacc_iacc0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_iacc_iacc0_r(ctxt)), 57)) + (resize(unsigned(cr_iacc_iacc0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
@@ -2307,7 +2367,7 @@ begin -- architecture
             cr_imiss_imiss0_write := bus_writeData((0)+7 downto 0);
             cr_imiss_imiss0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(76, 31)))));
             cr_imiss_imiss0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_imiss_imiss0_add := bit2vec((mem2cxreg_cacheTrace(ctxt).instr_access) and (mem2cxreg_cacheTrace(ctxt).instr_miss), 8);
+            cr_imiss_imiss0_add := bit2vec((imem2cxreg_access(ctxt)) and (imem2cxreg_miss(ctxt)), 8);
             cr_imiss_imiss0_add_r(ctxt) <= cr_imiss_imiss0_add;
             cr_imiss_imiss0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_imiss_imiss0_r(ctxt)), 57)) + (resize(unsigned(cr_imiss_imiss0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then                                                     -- GENERATED --
@@ -2351,7 +2411,7 @@ begin -- architecture
             cr_dracc_dracc0_write := bus_writeData((0)+7 downto 0);
             cr_dracc_dracc0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(78, 31)))));
             cr_dracc_dracc0_add := std_logic_vector(to_unsigned(0, 8));                              -- GENERATED --
-            cr_dracc_dracc0_add := bit2vec(bool2bit((unsigned(mem2cxreg_cacheTrace(ctxt).data_accessType)) = (unsigned(bitvec_lit("01")))), 8);
+            cr_dracc_dracc0_add := bit2vec(bool2bit((unsigned(dmem2cxreg_accessType(ctxt))) = (unsigned(bitvec_lit("01")))), 8);
             cr_dracc_dracc0_add_r(ctxt) <= cr_dracc_dracc0_add;
             cr_dracc_dracc0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dracc_dracc0_r(ctxt)), 57)) + (resize(unsigned(cr_dracc_dracc0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
@@ -2395,7 +2455,7 @@ begin -- architecture
             cr_drmiss_drmiss0_write := bus_writeData((0)+7 downto 0);
             cr_drmiss_drmiss0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(80, 31)))));
             cr_drmiss_drmiss0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_drmiss_drmiss0_add := bit2vec((bool2bit((unsigned(mem2cxreg_cacheTrace(ctxt).data_accessType)) = (unsigned(bitvec_lit("01"))))) and (mem2cxreg_cacheTrace(ctxt).data_miss), 8);
+            cr_drmiss_drmiss0_add := bit2vec((bool2bit((unsigned(dmem2cxreg_accessType(ctxt))) = (unsigned(bitvec_lit("01"))))) and (imem2cxreg_miss(ctxt)), 8);
             cr_drmiss_drmiss0_add_r(ctxt) <= cr_drmiss_drmiss0_add;
             cr_drmiss_drmiss0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_drmiss_drmiss0_r(ctxt)), 57)) + (resize(unsigned(cr_drmiss_drmiss0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
@@ -2439,7 +2499,7 @@ begin -- architecture
             cr_dwacc_dwacc0_write := bus_writeData((0)+7 downto 0);
             cr_dwacc_dwacc0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(82, 31)))));
             cr_dwacc_dwacc0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_dwacc_dwacc0_add := bit2vec(mem2cxreg_cacheTrace(ctxt).data_accessType(1), 8);
+            cr_dwacc_dwacc0_add := bit2vec(dmem2cxreg_accessType(ctxt)(1), 8);
             cr_dwacc_dwacc0_add_r(ctxt) <= cr_dwacc_dwacc0_add;                                      -- GENERATED --
             cr_dwacc_dwacc0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dwacc_dwacc0_r(ctxt)), 57)) + (resize(unsigned(cr_dwacc_dwacc0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
@@ -2483,7 +2543,7 @@ begin -- architecture
             cr_dwmiss_dwmiss0_write := bus_writeData((0)+7 downto 0);                                -- GENERATED --
             cr_dwmiss_dwmiss0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(84, 31)))));
             cr_dwmiss_dwmiss0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_dwmiss_dwmiss0_add := bit2vec((mem2cxreg_cacheTrace(ctxt).data_accessType(1)) and (mem2cxreg_cacheTrace(ctxt).data_miss), 8);
+            cr_dwmiss_dwmiss0_add := bit2vec((dmem2cxreg_accessType(ctxt)(1)) and (dmem2cxreg_miss(ctxt)), 8);
             cr_dwmiss_dwmiss0_add_r(ctxt) <= cr_dwmiss_dwmiss0_add;
             cr_dwmiss_dwmiss0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dwmiss_dwmiss0_r(ctxt)), 57)) + (resize(unsigned(cr_dwmiss_dwmiss0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
@@ -2527,7 +2587,7 @@ begin -- architecture
             cr_dbypass_dbypass0_write := bus_writeData((0)+7 downto 0);
             cr_dbypass_dbypass0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(86, 31)))));
             cr_dbypass_dbypass0_add := std_logic_vector(to_unsigned(0, 8));
-            cr_dbypass_dbypass0_add := bit2vec((bool2bit((unsigned(mem2cxreg_cacheTrace(ctxt).data_accessType)) /= (unsigned(bitvec_lit("00"))))) and (mem2cxreg_cacheTrace(ctxt).data_bypass), 8);
+            cr_dbypass_dbypass0_add := bit2vec((bool2bit((unsigned(dmem2cxreg_accessType(ctxt))) /= (unsigned(bitvec_lit("00"))))) and (dmem2cxreg_bypass(ctxt)), 8);
             cr_dbypass_dbypass0_add_r(ctxt) <= cr_dbypass_dbypass0_add;
             cr_dbypass_dbypass0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dbypass_dbypass0_r(ctxt)), 57)) + (resize(unsigned(cr_dbypass_dbypass0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then                                                     -- GENERATED --
@@ -2571,7 +2631,7 @@ begin -- architecture
             cr_dwbuf_dwbuf0_write := bus_writeData((0)+7 downto 0);
             cr_dwbuf_dwbuf0_wmask := ((bus_writeMaskDbg((0)+7 downto 0)) or (bus_writeMaskCore((0)+7 downto 0))) and ((7 downto 0 => bool2bit((resize(bus_wordAddr, 31)) = (to_unsigned(88, 31)))));
             cr_dwbuf_dwbuf0_add := std_logic_vector(to_unsigned(0, 8));                              -- GENERATED --
-            cr_dwbuf_dwbuf0_add := bit2vec(((bool2bit((unsigned(mem2cxreg_cacheTrace(ctxt).data_accessType)) /= (unsigned(bitvec_lit("00"))))) and (mem2cxreg_cacheTrace(ctxt).data_writePending)) and (((mem2cxreg_cacheTrace(ctxt).data_accessType(1)) or (mem2cxreg_cacheTrace(ctxt).data_miss)) or (mem2cxreg_cacheTrace(ctxt).data_bypass)), 8);
+            cr_dwbuf_dwbuf0_add := bit2vec(((bool2bit((unsigned(dmem2cxreg_accessType(ctxt))) /= (unsigned(bitvec_lit("00"))))) and (dmem2cxreg_writePending(ctxt))) and (((dmem2cxreg_accessType(ctxt)(1)) or (dmem2cxreg_miss(ctxt))) or (dmem2cxreg_bypass(ctxt))), 8);
             cr_dwbuf_dwbuf0_add_r(ctxt) <= cr_dwbuf_dwbuf0_add;
             cr_dwbuf_dwbuf0_r(ctxt) <= std_logic_vector(resize((resize(unsigned(cr_dwbuf_dwbuf0_r(ctxt)), 57)) + (resize(unsigned(cr_dwbuf_dwbuf0_add_r(ctxt)), 57)), 56));
             if ((CFG.perfCountSize) >= (1)) then
@@ -2727,47 +2787,42 @@ begin -- architecture
   connect_gen: for ctxt in 0 to 2**CFG.numContextsLog2-1 generate
     cxreg2cxplif_extDebug(ctxt) <= cr_dcr_e_r(ctxt);
     cxreg2rctrl_done(ctxt) <= cr_dcr_d_r(ctxt);
-    cxreg2mem_cacheControl(ctxt) <= (
-      instr_flushstart => cr_cmc1_i_s(ctxt),
-      data_flushstart => cr_cmc1_d_s(ctxt),
-      data_bypass => cr_cmc1_byp_r(ctxt),                                                            -- GENERATED --
-      blockprio => cr_cmc1_blp_r(ctxt)
-    );
-    cxreg2cxplif_resuming(ctxt) <= cr_dcr_r_r(ctxt);
+    cxreg2mem_tlbFlushTagHigh(ctxt) <= cr_tfhi_tfhi_r(ctxt);
+    cxreg2mem_kernelMode(ctxt) <= cr_ccr_k_r(ctxt);
     cxreg2cxplif_linkReadData(ctxt) <= cr_lr_lr_r(ctxt);
-    cxreg2trace_cacheEn(ctxt) <= cr_dcr2_c_r(ctxt);
+    cxreg2trace_cacheEn(ctxt) <= cr_dcr2_c_r(ctxt);                                                  -- GENERATED --
+    cxreg2dmem_flushStart(ctxt) <= cr_cmc1_d_s(ctxt);
+    cxreg2mem_tlbFlushAsidEna(ctxt) <= cr_tfid_e_r(ctxt);
     cxreg2trace_memEn(ctxt) <= cr_dcr2_m_r(ctxt);
     cxreg2cxplif_brk(ctxt) <= cr_dcr_b_r(ctxt);
     cxreg2cxplif_currentPC(ctxt) <= cr_pc_pc_r(ctxt);
     cxreg2cxplif_stepping(ctxt) <= cr_dcr_s_r(ctxt);
-    cxreg2cxplif_trapReturn(ctxt) <= cr_tp_tp_r(ctxt);                                               -- GENERATED --
+    cxreg2cxplif_trapReturn(ctxt) <= cr_tp_tp_r(ctxt);
+    cxreg2imem_flushStart(ctxt) <= cr_cmc1_i_s(ctxt);
+    cxreg2mem_mmuEnable(ctxt) <= cr_ccr_m_r(ctxt);
+    cxreg2cxplif_resuming(ctxt) <= cr_dcr_r_r(ctxt);                                                 -- GENERATED --
+    cxreg2mem_asid(ctxt) <= cr_asid_asid_r(ctxt);
     cxreg2cxplif_trapHandler(ctxt) <= ((cr_th_th_r(ctxt)) and ((31 downto 0 => cr_ccr_r_r(ctxt)))) or ((cr_ph_ph_r(ctxt)) and ((31 downto 0 => not (cr_ccr_r_r(ctxt)))));
+    cxreg2mem_pageTablePtr(ctxt) <= cr_ptp_ptp_r(ctxt);
     cxreg2cfg_requestData(ctxt) <= cr_crr_crr_r(ctxt);
-    cxreg2cxplif_interruptEnable(ctxt) <= cr_ccr_i_r(ctxt);
+    cxreg2dmem_bypass(ctxt) <= cr_cmc1_byp_r(ctxt);
+    cxreg2mem_tlbFlushTagLow(ctxt) <= cr_tflo_tflo_r(ctxt);
     cxreg2trace_regEn(ctxt) <= cr_dcr2_r_r(ctxt);
     cxreg2trace_instrEn(ctxt) <= cr_dcr2_i_r(ctxt);
-    cxreg2mem_mmuControl(ctxt) <= (
-      enable => cr_ccr_m_r(ctxt),
-      kernelmode => cr_ccr_k_r(ctxt),
-      writetocleanena => cr_cmc1_wtc_r(ctxt),
-      pagetableptr => cr_ptp_ptp_r(ctxt),                                                            -- GENERATED --
-      asid => cr_asid_asid_r(ctxt),
-      flush_start => cr_cmc1_t_s(ctxt),
-      flush_asid => cr_tfid_asid_r(ctxt),
-      flush_asidena => cr_tfid_e_r(ctxt),
-      flush_taglow => cr_tflo_tflo_r(ctxt),
-      flush_taghigh => cr_tfhi_tfhi_r(ctxt),
-      blockprio => cr_cmc1_blp_r(ctxt)
-    );
-    cxreg2trace_trapEn(ctxt) <= cr_dcr2_t_r(ctxt);
-    cxreg2cxplif_brReadData(ctxt) <= cr_ccr_branch_r(ctxt);                                          -- GENERATED --
+    cxreg2mem_tlbFlushStart(ctxt) <= cr_cmc1_t_s(ctxt);
+    cxreg2trace_trapEn(ctxt) <= cr_dcr2_t_r(ctxt);                                                   -- GENERATED --
+    cxreg2mem_tlbFlushAsid(ctxt) <= cr_tfid_asid_r(ctxt);
+    cxreg2cxplif_brReadData(ctxt) <= cr_ccr_branch_r(ctxt);
+    cxreg2mem_writeToCleanEna(ctxt) <= cr_cmc1_wtc_r(ctxt);
     cxreg2cxplif_overridePC(ctxt) <= cr_dcr_j_r(ctxt);
+    cxreg2mem_blockPrio(ctxt) <= cr_cmc1_blp_r(ctxt);
+    cxreg2cxplif_interruptEnable(ctxt) <= cr_ccr_i_r(ctxt);
     cxreg2cxplif_debugTrapEnable(ctxt) <= cr_ccr_b_r(ctxt);
     cxreg2cxplif_softCtxtSwitch(ctxt) <= (cr_csc_csc_neq(ctxt)) and (cr_ccr_c_r(ctxt));
     cxreg2trace_enable(ctxt) <= cr_dcr2_e_r(ctxt);
-  end generate;
-  cxreg2cfg_wakeupConfig <= cr_wcfg_wcfg_r(0 mod 2**CFG.numContextsLog2);
+  end generate;                                                                                      -- GENERATED --
   cxreg2cfg_wakeupEnable <= cr_sawc_s_r(0 mod 2**CFG.numContextsLog2);
+  cxreg2cfg_wakeupConfig <= cr_wcfg_wcfg_r(0 mod 2**CFG.numContextsLog2);
 
 end Behavioral;
-                                                                                                     -- GENERATED --
+

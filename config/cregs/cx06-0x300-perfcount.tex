@@ -99,7 +99,7 @@ This performance counter increments for every instruction cache access.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
 \begin{lstlisting}
-_add = mem2cxreg_cacheTrace.instr_access;
+_add = imem2cxreg_access;
 \end{lstlisting}
 
 %===============================================================================
@@ -112,8 +112,8 @@ instruction cache.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
 \begin{lstlisting}
-_add = mem2cxreg_cacheTrace.instr_access
-     & mem2cxreg_cacheTrace.instr_miss;
+_add = imem2cxreg_access
+     & imem2cxreg_miss;
 \end{lstlisting}
 
 %===============================================================================
@@ -126,7 +126,7 @@ data cache.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
 \begin{lstlisting}
-_add = (bit)(mem2cxreg_cacheTrace.data_accessType == "01");
+_add = (bit)(dmem2cxreg_accessType == "01");
 \end{lstlisting}
 
 %===============================================================================
@@ -139,8 +139,8 @@ cache.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
 \begin{lstlisting}
-_add = (bit)(mem2cxreg_cacheTrace.data_accessType == "01")
-     & mem2cxreg_cacheTrace.data_miss;
+_add = (bit)(dmem2cxreg_accessType == "01")
+     & imem2cxreg_miss;
 \end{lstlisting}
 
 %===============================================================================
@@ -153,7 +153,7 @@ data cache.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
 \begin{lstlisting}
-_add = mem2cxreg_cacheTrace.data_accessType[1];
+_add = dmem2cxreg_accessType[1];
 \end{lstlisting}
 
 %===============================================================================
@@ -166,8 +166,8 @@ cache.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
 \begin{lstlisting}
-_add = mem2cxreg_cacheTrace.data_accessType[1]
-     & mem2cxreg_cacheTrace.data_miss;
+_add = dmem2cxreg_accessType[1]
+     & dmem2cxreg_miss;
 \end{lstlisting}
 
 %===============================================================================
@@ -180,8 +180,8 @@ data cache.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
 \begin{lstlisting}
-_add = (bit)(mem2cxreg_cacheTrace.data_accessType != "00")
-     & mem2cxreg_cacheTrace.data_bypass;
+_add = (bit)(dmem2cxreg_accessType != "00")
+     & dmem2cxreg_bypass;
 \end{lstlisting}
 
 %===============================================================================
@@ -194,11 +194,11 @@ write buffer to flush in order to process the current request.
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \implementation{}
 \begin{lstlisting}
-_add = (bit)(mem2cxreg_cacheTrace.data_accessType != "00") /* Any access... */
-     & mem2cxreg_cacheTrace.data_writepending              /* ... while a write was pending... */
-     & (                                                    /* ... that needs a bus access, being: */
-        mem2cxreg_cacheTrace.data_accessType[1] |          /* any kind of write, */
-        mem2cxreg_cacheTrace.data_miss |                   /* any kind of miss, */
-        mem2cxreg_cacheTrace.data_bypass                   /* or any kind of bypass. */
+_add = (bit)(dmem2cxreg_accessType != "00") /* Any access... */
+     & dmem2cxreg_writePending              /* ... while a write was pending... */
+     & (                                    /* ... that needs a bus access, being: */
+        dmem2cxreg_accessType[1] |          /* any kind of write, */
+        dmem2cxreg_miss |                   /* any kind of miss, */
+        dmem2cxreg_bypass                   /* or any kind of bypass. */
      );
 \end{lstlisting}

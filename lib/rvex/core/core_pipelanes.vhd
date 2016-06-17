@@ -216,6 +216,12 @@ entity core_pipelanes is
     -- Exception input from instruction memory.
     ibuf2pl_exception           : in  trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
+    -- Performance information from the cache and MMU.
+    imem2pl_access              : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    imem2pl_miss                : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    imem2pl_tlbAccess           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    imem2pl_tlbMiss             : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
     ---------------------------------------------------------------------------
     -- Data memory interface
     ---------------------------------------------------------------------------
@@ -234,18 +240,13 @@ entity core_pipelanes is
     -- Exception input from data memory.
     dmem2dmsw_exception         : in  trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    ---------------------------------------------------------------------------
-    -- Common memory interface
-    ---------------------------------------------------------------------------
-    -- Cache performance information from the cache. The instruction cache
-    -- related signals are part of the S_IF+L_IF stage, the data cache related
-    -- signals are part of the S_MEM+L_MEM stage.
-    mem2pl_cacheTrace           : in  rvex_cacheTrace_array(2**CFG.numLaneGroupsLog2-1 downto 0);
-    
-    -- Performance information from the MMU. The instruction related signals
-    -- are part of the S_IF+L_IF stage, the data related signals are part of
-    -- the S_MEM+L_MEM stage.
-    mem2pl_mmuTrace             : in  rvex_mmuTrace_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    -- Performance information from the cache and MMU.
+    dmem2pl_accessType          : in  rvex_2bit_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    dmem2pl_bypass              : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    dmem2pl_miss                : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    dmem2pl_writePending        : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    dmem2pl_tlbAccess           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    dmem2pl_tlbMiss             : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Control register interface
@@ -526,6 +527,10 @@ begin -- architecture
         br2cxplif_imemCancel(S_IF+L_IF)   => br2cxplif_imemCancel(lane),
         ibuf2pl_syllable(S_IF+L_IF)       => ibuf2pl_instr(lane),
         ibuf2pl_exception(S_IF+L_IF)      => ibuf2pl_exception(laneGroup),
+        imem2pl_access(S_IF+L_IF)         => imem2pl_access(laneGroup),
+        imem2pl_miss(S_IF+L_IF)           => imem2pl_miss(laneGroup),
+        imem2pl_tlbAccess(S_IF+L_IF)      => imem2pl_tlbAccess(laneGroup),
+        imem2pl_tlbMiss(S_IF+L_IF)        => imem2pl_tlbMiss(laneGroup),
         
         -- Data memory interface.
         memu2dmsw_addr(S_MEM)             => memu2dmsw_addr(laneGroup),
@@ -535,9 +540,12 @@ begin -- architecture
         memu2dmsw_readEnable(S_MEM)       => memu2dmsw_readEnable(laneGroup),
         dmsw2memu_readData(S_MEM+L_MEM)   => dmsw2memu_readData(laneGroup),
         dmsw2pl_exception(S_MEM+L_MEM)    => dmsw2pl_exception(laneGroup),
-        
-        -- Common memory interface.
-        mem2pl_cacheTrace                 => mem2pl_cacheTrace(laneGroup),
+        dmem2pl_accessType(S_MEM+L_MEM)   => dmem2pl_accessType(laneGroup),
+        dmem2pl_bypass(S_MEM+L_MEM)       => dmem2pl_bypass(laneGroup),
+        dmem2pl_miss(S_MEM+L_MEM)         => dmem2pl_miss(laneGroup),
+        dmem2pl_writePending(S_MEM+L_MEM) => dmem2pl_writePending(laneGroup),
+        dmem2pl_tlbAccess(S_MEM+L_MEM)    => dmem2pl_tlbAccess(laneGroup),
+        dmem2pl_tlbMiss(S_MEM+L_MEM)      => dmem2pl_tlbMiss(laneGroup),
         
         -- Register file interface.
         pl2gpreg_readPortA                => pl2gpreg_readPorts(lane*2+0),

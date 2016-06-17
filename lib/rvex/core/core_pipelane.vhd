@@ -397,6 +397,12 @@ entity core_pipelane is
     -- Exception input from instruction memory.
     ibuf2pl_exception           : in  trap_info_array(S_IF+L_IF to S_IF+L_IF);
     
+    -- Performance information from the cache and MMU.
+    imem2pl_access              : in  std_logic_vector(S_IF+L_IF to S_IF+L_IF);
+    imem2pl_miss                : in  std_logic_vector(S_IF+L_IF to S_IF+L_IF);
+    imem2pl_tlbAccess           : in  std_logic_vector(S_IF+L_IF to S_IF+L_IF);
+    imem2pl_tlbMiss             : in  std_logic_vector(S_IF+L_IF to S_IF+L_IF);
+    
     ---------------------------------------------------------------------------
     -- Data memory interface
     ---------------------------------------------------------------------------
@@ -415,13 +421,13 @@ entity core_pipelane is
     -- Exception input from data memory.
     dmsw2pl_exception           : in  trap_info_array(S_MEM+L_MEM to S_MEM+L_MEM);
     
-    ---------------------------------------------------------------------------
-    -- Common memory interface
-    ---------------------------------------------------------------------------
-    -- Cache performance information from the cache. The instruction cache
-    -- related signals are part of the S_IF+L_IF stage, the data cache related
-    -- signals are part of the S_MEM+L_MEM stage.
-    mem2pl_cacheTrace           : in  rvex_cacheTrace_type;
+    -- Performance information from the cache and MMU.
+    dmem2pl_accessType          : in  rvex_2bit_array(S_MEM+L_MEM to S_MEM+L_MEM);
+    dmem2pl_bypass              : in  std_logic_vector(S_MEM+L_MEM to S_MEM+L_MEM);
+    dmem2pl_miss                : in  std_logic_vector(S_MEM+L_MEM to S_MEM+L_MEM);
+    dmem2pl_writePending        : in  std_logic_vector(S_MEM+L_MEM to S_MEM+L_MEM);
+    dmem2pl_tlbAccess           : in  std_logic_vector(S_MEM+L_MEM to S_MEM+L_MEM);
+    dmem2pl_tlbMiss             : in  std_logic_vector(S_MEM+L_MEM to S_MEM+L_MEM);
     
     ---------------------------------------------------------------------------
     -- Register file interface
@@ -847,8 +853,17 @@ architecture Behavioral of core_pipelane is
     -- nonzero.
     mem_writeData               : rvex_data_type;
     
-    -- Cache status flags from the cache block associated with this lane.
-    cache                       : rvex_cacheTrace_type;
+    -- Cache/MMU status flags from the cache block associated with this lane.
+    icache_access               : std_logic;
+    icache_miss                 : std_logic;
+    itlb_access                 : std_logic;
+    itlb_miss                   : std_logic;
+    dcache_accessType           : rvex_2bit_type;
+    dcache_bypass               : std_logic;
+    dcache_miss                 : std_logic;
+    dcache_writePending         : std_logic;
+    dtlb_access                 : std_logic;
+    dtlb_miss                   : std_logic;
     
     -- Whether an instruction fetch was performed or not.
     instr_enable                : std_logic;
@@ -868,7 +883,16 @@ architecture Behavioral of core_pipelane is
   constant TRACE_STATE_DEFAULT : traceState_type := (
     stop                        => '0',
     mem_enable                  => RVEX_UNDEF,
-    cache                       => (data_accessType => (others => RVEX_UNDEF), others => RVEX_UNDEF),
+    icache_access               => '0',
+    icache_miss                 => '0',
+    itlb_access                 => '0',
+    itlb_miss                   => '0',
+    dcache_accessType           => "00",
+    dcache_bypass               => '0',
+    dcache_miss                 => '0',
+    dcache_writePending         => '0',
+    dtlb_access                 => '0',
+    dtlb_miss                   => '0',
     instr_enable                => '0',
     trap_info                   => TRAP_INFO_NONE,
     mem_address                 => (others => RVEX_UNDEF),
@@ -1518,7 +1542,10 @@ begin -- architecture
     cxplif2pl_invalUntilBR,
     
     -- Memory interface.
-    ibuf2pl_syllable, ibuf2pl_exception, dmsw2pl_exception, mem2pl_cacheTrace,
+    ibuf2pl_syllable, ibuf2pl_exception, dmsw2pl_exception, imem2pl_access,
+    imem2pl_miss, imem2pl_tlbAccess, imem2pl_tlbMiss, dmem2pl_accessType,
+    dmem2pl_bypass, dmem2pl_miss, dmem2pl_writePending, dmem2pl_tlbAccess,
+    dmem2pl_tlbMiss,
     
     -- Register file interface.
     gpreg2pl_readPortA, gpreg2pl_readPortB, cxplif2pl_brLinkReadPort,
@@ -1665,12 +1692,14 @@ begin -- architecture
     
     -- Copy the instruction fetch data into the trace record as well, before it
     -- is maybe modified further on in the pipeline.
-    s(S_IF).trace.instr_enable := cxplif2pl_limmValid(S_IF);
+    s(S_IF).trace.instr_enable        := cxplif2pl_limmValid(S_IF);
     s(S_IF+L_IF).trace.instr_syllable := ibuf2pl_syllable(S_IF+L_IF);
     
     -- Copy instruction cache performance data into the trace records.
-    s(S_IF+L_IF).trace.cache.instr_access := mem2pl_cacheTrace.instr_access;
-    s(S_IF+L_IF).trace.cache.instr_miss   := mem2pl_cacheTrace.instr_miss;
+    s(S_IF+L_IF).trace.icache_access  := imem2pl_access(S_IF+L_IF);
+    s(S_IF+L_IF).trace.icache_miss    := imem2pl_miss(S_IF+L_IF);
+    s(S_IF+L_IF).trace.itlb_access    := imem2pl_tlbAccess(S_IF+L_IF);
+    s(S_IF+L_IF).trace.itlb_miss      := imem2pl_tlbMiss(S_IF+L_IF);
     
     ---------------------------------------------------------------------------
     -- Compute PC+1 related signals
@@ -2341,10 +2370,12 @@ begin -- architecture
     end if;
     
     -- Copy data cache performance data into the trace records.
-    s(S_MEM+L_MEM).trace.cache.data_accessType   := mem2pl_cacheTrace.data_accessType;
-    s(S_MEM+L_MEM).trace.cache.data_bypass       := mem2pl_cacheTrace.data_bypass;
-    s(S_MEM+L_MEM).trace.cache.data_miss         := mem2pl_cacheTrace.data_miss;
-    s(S_MEM+L_MEM).trace.cache.data_writePending := mem2pl_cacheTrace.data_writePending;
+    s(S_MEM+L_MEM).trace.dcache_accessType    := dmem2pl_accessType(S_MEM+L_MEM);
+    s(S_MEM+L_MEM).trace.dcache_bypass        := dmem2pl_bypass(S_MEM+L_MEM);
+    s(S_MEM+L_MEM).trace.dcache_miss          := dmem2pl_miss(S_MEM+L_MEM);
+    s(S_MEM+L_MEM).trace.dcache_writePending  := dmem2pl_writePending(S_MEM+L_MEM);
+    s(S_MEM+L_MEM).trace.dtlb_access          := dmem2pl_tlbAccess(S_MEM+L_MEM);
+    s(S_MEM+L_MEM).trace.dtlb_miss            := dmem2pl_tlbMiss(S_MEM+L_MEM);
     
     ---------------------------------------------------------------------------
     -- Handle soft trap instruction
@@ -2620,61 +2651,70 @@ begin -- architecture
       
       -- Forward bundle program counter.
       if HAS_BR and cfg2pl_decouple = '1' then
-        pl2trace_data.pc_enable     <= '1';
-        pl2trace_data.pc_PC         <= s(S_LAST).PC;
-        pl2trace_data.pc_isBranch   <= s(S_LAST).br.isBranch;
-        pl2trace_data.pc_isBranching<= s(S_LAST).br.isBranching;
+        pl2trace_data.pc_enable         <= '1';
+        pl2trace_data.pc_PC             <= s(S_LAST).PC;
+        pl2trace_data.pc_isBranch       <= s(S_LAST).br.isBranch;
+        pl2trace_data.pc_isBranching    <= s(S_LAST).br.isBranching;
       else
-        pl2trace_data.pc_enable     <= '0';
-        pl2trace_data.pc_PC         <= (others => '0');
-        pl2trace_data.pc_isBranch   <= '0';
-        pl2trace_data.pc_isBranching<= '0';
+        pl2trace_data.pc_enable         <= '0';
+        pl2trace_data.pc_PC             <= (others => '0');
+        pl2trace_data.pc_isBranch       <= '0';
+        pl2trace_data.pc_isBranching    <= '0';
       end if;
       
       -- Forward handled trap information.
       if HAS_BR then
-        s(S_IF).trace.trap_info     := br2pl_traceTrapInfo(S_IF);
-        s(S_IF).trace.trap_point    := br2pl_traceTrapPoint(S_IF);
+        s(S_IF).trace.trap_info         := br2pl_traceTrapInfo(S_IF);
+        s(S_IF).trace.trap_point        := br2pl_traceTrapPoint(S_IF);
       end if;
       if HAS_BR and cfg2pl_decouple = '1' then
-        pl2trace_data.trap_enable   <= s(S_LAST).trace.trap_info.active;
-        pl2trace_data.trap_cause    <= s(S_LAST).trace.trap_info.cause;
-        pl2trace_data.trap_point    <= s(S_LAST).trace.trap_point;
-        pl2trace_data.trap_arg      <= s(S_LAST).trace.trap_info.arg;
+        pl2trace_data.trap_enable       <= s(S_LAST).trace.trap_info.active;
+        pl2trace_data.trap_cause        <= s(S_LAST).trace.trap_info.cause;
+        pl2trace_data.trap_point        <= s(S_LAST).trace.trap_point;
+        pl2trace_data.trap_arg          <= s(S_LAST).trace.trap_info.arg;
       else
-        pl2trace_data.trap_enable   <= '0';
-        pl2trace_data.trap_cause    <= (others => '0');
-        pl2trace_data.trap_point    <= (others => '0');
-        pl2trace_data.trap_arg      <= (others => '0');
+        pl2trace_data.trap_enable       <= '0';
+        pl2trace_data.trap_cause        <= (others => '0');
+        pl2trace_data.trap_point        <= (others => '0');
+        pl2trace_data.trap_arg          <= (others => '0');
       end if;
       
       -- Forward memory access information.
       if HAS_MEM then
-        pl2trace_data.mem_enable    <= s(S_LAST).trace.mem_enable;
-        pl2trace_data.mem_address   <= s(S_LAST).trace.mem_address;
-        pl2trace_data.mem_writeMask <= s(S_LAST).trace.mem_writeMask;
-        pl2trace_data.mem_writeData <= s(S_LAST).trace.mem_writeData;
+        pl2trace_data.mem_enable        <= s(S_LAST).trace.mem_enable;
+        pl2trace_data.mem_address       <= s(S_LAST).trace.mem_address;
+        pl2trace_data.mem_writeMask     <= s(S_LAST).trace.mem_writeMask;
+        pl2trace_data.mem_writeData     <= s(S_LAST).trace.mem_writeData;
       else
-        pl2trace_data.mem_enable    <= '0';
-        pl2trace_data.mem_address   <= (others => '0');
-        pl2trace_data.mem_writeMask <= (others => '0');
-        pl2trace_data.mem_writeData <= (others => '0');
+        pl2trace_data.mem_enable        <= '0';
+        pl2trace_data.mem_address       <= (others => '0');
+        pl2trace_data.mem_writeMask     <= (others => '0');
+        pl2trace_data.mem_writeData     <= (others => '0');
       end if;
       
       -- Forward register write information.
-      pl2trace_data.reg_gpEnable    <= s(S_LAST).dp.resValid;
-      pl2trace_data.reg_gpAddress   <= s(S_LAST).dp.dest;
-      pl2trace_data.reg_linkEnable  <= s(S_LAST).dp.resLinkValid;
-      pl2trace_data.reg_intData     <= s(S_LAST).dp.res;
-      pl2trace_data.reg_brEnable    <= s(S_LAST).dp.resBrValid;
-      pl2trace_data.reg_brData      <= s(S_LAST).dp.resBr;
+      pl2trace_data.reg_gpEnable        <= s(S_LAST).dp.resValid;
+      pl2trace_data.reg_gpAddress       <= s(S_LAST).dp.dest;
+      pl2trace_data.reg_linkEnable      <= s(S_LAST).dp.resLinkValid;
+      pl2trace_data.reg_intData         <= s(S_LAST).dp.res;
+      pl2trace_data.reg_brEnable        <= s(S_LAST).dp.resBrValid;
+      pl2trace_data.reg_brData          <= s(S_LAST).dp.resBr;
       
-      -- Forward cache performance information.
-      pl2trace_data.cache           <= s(S_LAST).trace.cache;
+      -- Forward cache/MMU performance information.
+      pl2trace_data.icache_access       <= s(S_LAST).trace.icache_access;
+      pl2trace_data.icache_miss         <= s(S_LAST).trace.icache_miss;
+      pl2trace_data.itlb_access         <= s(S_LAST).trace.itlb_access;
+      pl2trace_data.itlb_miss           <= s(S_LAST).trace.itlb_miss;
+      pl2trace_data.dcache_accessType   <= s(S_LAST).trace.dcache_accessType;
+      pl2trace_data.dcache_bypass       <= s(S_LAST).trace.dcache_bypass;
+      pl2trace_data.dcache_miss         <= s(S_LAST).trace.dcache_miss;
+      pl2trace_data.dcache_writePending <= s(S_LAST).trace.dcache_writePending;
+      pl2trace_data.dtlb_access         <= s(S_LAST).trace.dtlb_access;
+      pl2trace_data.dtlb_miss           <= s(S_LAST).trace.dtlb_miss;
       
       -- Forward instruction information.
-      pl2trace_data.instr_enable    <= s(S_LAST).trace.instr_enable;
-      pl2trace_data.instr_syllable  <= s(S_LAST).trace.instr_syllable;
+      pl2trace_data.instr_enable        <= s(S_LAST).trace.instr_enable;
+      pl2trace_data.instr_syllable      <= s(S_LAST).trace.instr_syllable;
       
     end if;
     

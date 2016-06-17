@@ -145,6 +145,12 @@ package cache_pkg is
     asidBitWidth                : integer := -1
   ) return cache_generic_config_type;
   
+  -- Converts a cache/MMU configuration vector to the r-VEX MMU configuration
+  -- generic (used for the version registers).
+  function ccfg2mmuConfig(
+    cfg                         : cache_generic_config_type
+  ) return rvex_mmuConfig_type;
+  
   -- Returns the log2 of the number of bytes needed to represent the
   -- instruction for a single lane group.
   function laneGroupInstrSizeBLog2(
@@ -320,6 +326,20 @@ package body cache_pkg is
     if asidBitWidth         >= 0 then cfg.asidBitWidth         := asidBitWidth;        end if;
     return cfg;
   end cache_cfg;
+  
+  -- Converts a cache/MMU configuration vector to the r-VEX MMU configuration
+  -- generic (used for the version registers).
+  function ccfg2mmuConfig(
+    cfg                         : cache_generic_config_type
+  ) return rvex_mmuConfig_type is
+  begin
+    return (
+      mmuEnable             => cfg.mmuEnable,
+      pageSizeLog2          => cfg.pageSizeLog2,
+      largePageSizeLog2     => cfg.largePageSizeLog2,
+      asidBitWidth          => cfg.asidBitWidth
+    );
+  end ccfg2mmuConfig;
   
   -- Returns the log2 of the number of bytes needed to represent the
   -- instruction for a single lane group.
