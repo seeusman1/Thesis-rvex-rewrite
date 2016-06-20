@@ -20,65 +20,100 @@ end testbench;
 architecture Behavioral of testbench is
   
   -- Core and cache configuration.
-  constant RCFG                 : rvex_generic_config_type := rvex_cfg(
-    numLanesLog2                => 3,
-    numLaneGroupsLog2           => 2,
-    numContextsLog2             => 2,
-    traceEnable                 => 1
+  constant RCFG                     : rvex_generic_config_type := rvex_cfg(
+    numLanesLog2                    => 3,
+    numLaneGroupsLog2               => 2,
+    numContextsLog2                 => 2,
+    traceEnable                     => 1
   );
-  constant CCFG                 : cache_generic_config_type := cache_cfg(
-    instrCacheLinesLog2         => 8,
-    dataCacheLinesLog2          => 8
+  constant CCFG                     : cache_generic_config_type := cache_cfg(
+    instrCacheLinesLog2             => 8,
+    dataCacheLinesLog2              => 8
   );
-  constant SREC_FILENAME        : string := "../examples/sim.srec";
+  constant SREC_FILENAME            : string := "../examples/sim.srec";
   
   -- System control signals in the rvex library format.
-  signal reset                  : std_logic;
-  signal clk                    : std_logic;
-  signal clkEnCPU               : std_logic;
-  signal clkEnBus               : std_logic;
+  signal reset                      : std_logic;
+  signal clk                        : std_logic;
+  signal clkEnCPU                   : std_logic;
+  signal clkEnBus                   : std_logic;
   
   -- Debug interface signals.
-  signal dbg2rv_addr            : rvex_address_type;
-  signal dbg2rv_readEnable      : std_logic;
-  signal dbg2rv_writeEnable     : std_logic;
-  signal dbg2rv_writeMask       : rvex_mask_type;
-  signal dbg2rv_writeData       : rvex_data_type;
-  signal rv2dbg_readData        : rvex_data_type;
+  signal dbg2rv_addr                : rvex_address_type;
+  signal dbg2rv_readEnable          : std_logic;
+  signal dbg2rv_writeEnable         : std_logic;
+  signal dbg2rv_writeMask           : rvex_mask_type;
+  signal dbg2rv_writeData           : rvex_data_type;
+  signal rv2dbg_readData            : rvex_data_type;
   
   -- Common cache interface signals.
-  signal rv2cache_decouple      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal cache2rv_blockReconfig : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal cache2rv_stallIn       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2cache_stallOut      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal cache2rv_trace         : rvex_cacheTrace_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_decouple          : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_laneGroupContext  : rvex_3bit_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_laneGroupActive   : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_blockUpdateEnable : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal cache2rv_blockReconfig     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal cache2rv_stallIn           : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_stallOut          : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_mmuEnable         : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_kernelMode        : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_writeToCleanEna   : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_pageTablePtr      : rvex_address_array(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_asid              : rvex_data_array(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_tlbFlushStart     : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+  signal cache2rv_tlbFlushBusy      : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_tlbFlushAsidEna   : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_tlbFlushAsid      : rvex_data_array(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_tlbFlushTagLow    : rvex_address_array(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_tlbFlushTagHigh   : rvex_address_array(2**RCFG.numContextsLog2-1 downto 0);
   
   -- Instruction cache interface signals.
-  signal rv2icache_PCs          : rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2icache_fetch        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2icache_cancel       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal icache2rv_instr        : rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
-  signal icache2rv_busFault     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal icache2rv_affinity     : std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2icache_flushStart       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_flushBusy        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2icache_PCs              : rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2icache_fetch            : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2icache_cancel           : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_instr            : rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+  signal icache2rv_busFault         : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_pageFault        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_kernelAccVio     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_affinity         : std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_access           : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_miss             : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_tlbAccess        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_tlbMiss          : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_tlbMispredict    : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
   -- Data cache interface signals.
-  signal rv2dcache_addr         : rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dcache_readEnable   : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dcache_writeData    : rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dcache_writeMask    : rvex_mask_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dcache_writeEnable  : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2dcache_bypass       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal dcache2rv_readData     : rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal dcache2rv_busFault     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal dcache2rv_ifaceFault   : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dcache_flushStart       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_flushBusy        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dcache_addr             : rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dcache_readEnable       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dcache_writeData        : rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dcache_writeMask        : rvex_mask_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dcache_writeEnable      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dcache_bypass           : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_readData         : rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_ifaceFault       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_pageFault        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_kernelAccVio     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_writeAccVio      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_writeToClean     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_busFault         : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_accessType       : rvex_2bit_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_bypass           : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_miss             : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_writePending     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_tlbAccess        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_tlbMiss          : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_tlbMispredict    : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
   -- Cache to arbiter interface signals.
-  signal cache2arb_bus          : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal arb2cache_bus          : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal cache2arb_bus              : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal arb2cache_bus              : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
   -- Arbited bus connected to the memory model.
-  signal arb2mem_bus            : bus_mst2slv_type;
-  signal mem2arb_bus            : bus_slv2mst_type;
+  signal arb2mem_bus                : bus_mst2slv_type;
+  signal mem2arb_bus                : bus_slv2mst_type;
   
 --=============================================================================
 begin -- architecture
@@ -115,7 +150,8 @@ begin -- architecture
   -----------------------------------------------------------------------------
   rvex_inst: entity rvex.core
     generic map (
-      CFG                       => RCFG
+      CFG                       => RCFG,
+      CFG_MMU                   => ccfg2mmuConfig(CCFG)
     )
     port map (
       
@@ -126,28 +162,64 @@ begin -- architecture
       
       -- Common memory interface.
       rv2mem_decouple           => rv2cache_decouple,
+      rv2mem_laneGroupContext   => rv2cache_laneGroupContext,
+      rv2mem_laneGroupActive    => rv2cache_laneGroupActive,
+      rv2mem_blockUpdateEnable  => rv2cache_blockUpdateEnable,
       mem2rv_blockReconfig      => cache2rv_blockReconfig,
       mem2rv_stallIn            => cache2rv_stallIn,
       rv2mem_stallOut           => rv2cache_stallOut,
-      mem2rv_cacheTrace         => cache2rv_trace,
+      rv2mem_mmuEnable          => rv2cache_mmuEnable,
+      rv2mem_kernelMode         => rv2cache_kernelMode,
+      rv2mem_writeToCleanEna    => rv2cache_writeToCleanEna,
+      rv2mem_pageTablePtr       => rv2cache_pageTablePtr,
+      rv2mem_asid               => rv2cache_asid,
+      rv2mem_tlbFlushStart      => rv2cache_tlbFlushStart,
+      mem2rv_tlbFlushBusy       => cache2rv_tlbFlushBusy,
+      rv2mem_tlbFlushAsidEna    => rv2cache_tlbFlushAsidEna,
+      rv2mem_tlbFlushAsid       => rv2cache_tlbFlushAsid,
+      rv2mem_tlbFlushTagLow     => rv2cache_tlbFlushTagLow,
+      rv2mem_tlbFlushTagHigh    => rv2cache_tlbFlushTagHigh,
       
       -- Instruction memory interface.
+      rv2imem_flushStart        => rv2icache_flushStart,
+      imem2rv_flushBusy         => icache2rv_flushBusy,
       rv2imem_PCs               => rv2icache_PCs,
       rv2imem_fetch             => rv2icache_fetch,
       rv2imem_cancel            => rv2icache_cancel,
       imem2rv_instr             => icache2rv_instr,
-      imem2rv_affinity          => icache2rv_affinity,
       imem2rv_busFault          => icache2rv_busFault,
+      imem2rv_pageFault         => icache2rv_pageFault,
+      imem2rv_kernelAccVio      => icache2rv_kernelAccVio,
+      imem2rv_affinity          => icache2rv_affinity,
+      imem2rv_access            => icache2rv_access,
+      imem2rv_miss              => icache2rv_miss,
+      imem2rv_tlbAccess         => icache2rv_tlbAccess,
+      imem2rv_tlbMiss           => icache2rv_tlbMiss,
+      imem2rv_tlbMispredict     => icache2rv_tlbMispredict,
       
       -- Data memory interface.
+      rv2dmem_flushStart        => rv2dcache_flushStart,
+      dmem2rv_flushBusy         => dcache2rv_flushBusy,
       rv2dmem_addr              => rv2dcache_addr,
       rv2dmem_readEnable        => rv2dcache_readEnable,
       rv2dmem_writeData         => rv2dcache_writeData,
       rv2dmem_writeMask         => rv2dcache_writeMask,
       rv2dmem_writeEnable       => rv2dcache_writeEnable,
+      rv2dmem_bypass            => rv2dcache_bypass,
       dmem2rv_readData          => dcache2rv_readData,
       dmem2rv_ifaceFault        => dcache2rv_busFault,
       dmem2rv_busFault          => dcache2rv_ifaceFault,
+      dmem2rv_pageFault         => dcache2rv_pageFault,
+      dmem2rv_kernelAccVio      => dcache2rv_kernelAccVio,
+      dmem2rv_writeAccVio       => dcache2rv_writeAccVio,
+      dmem2rv_writeToClean      => dcache2rv_writeToClean,
+      dmem2rv_accessType        => dcache2rv_accessType,
+      dmem2rv_bypass            => dcache2rv_bypass,
+      dmem2rv_miss              => dcache2rv_miss,
+      dmem2rv_writePending      => dcache2rv_writePending,
+      dmem2rv_tlbAccess         => dcache2rv_tlbAccess,
+      dmem2rv_tlbMiss           => dcache2rv_tlbMiss,
+      dmem2rv_tlbMispredict     => dcache2rv_tlbMispredict,
       
       -- Control/debug bus interface.
       dbg2rv_addr               => dbg2rv_addr,
@@ -310,22 +382,46 @@ begin -- architecture
       clkEnCPU                  => clkEnCPU,
       clkEnBus                  => clkEnBus,
       
-      -- Core common memory interface.
+      -- Common cache interface signals.
       rv2cache_decouple         => rv2cache_decouple,
+      rv2cache_laneGroupContext => rv2cache_laneGroupContext,
+      rv2cache_laneGroupActive  => rv2cache_laneGroupActive,
+      rv2cache_blockUpdateEnable=> rv2cache_blockUpdateEnable,
       cache2rv_blockReconfig    => cache2rv_blockReconfig,
       cache2rv_stallIn          => cache2rv_stallIn,
       rv2cache_stallOut         => rv2cache_stallOut,
-      cache2rv_trace            => cache2rv_trace,
+      rv2cache_mmuEnable        => rv2cache_mmuEnable,
+      rv2cache_kernelMode       => rv2cache_kernelMode,
+      rv2cache_writeToCleanEna  => rv2cache_writeToCleanEna,
+      rv2cache_pageTablePtr     => rv2cache_pageTablePtr,
+      rv2cache_asid             => rv2cache_asid,
+      rv2cache_tlbFlushStart    => rv2cache_tlbFlushStart,
+      cache2rv_tlbFlushBusy     => cache2rv_tlbFlushBusy,
+      rv2cache_tlbFlushAsidEna  => rv2cache_tlbFlushAsidEna,
+      rv2cache_tlbFlushAsid     => rv2cache_tlbFlushAsid,
+      rv2cache_tlbFlushTagLow   => rv2cache_tlbFlushTagLow,
+      rv2cache_tlbFlushTagHigh  => rv2cache_tlbFlushTagHigh,
       
-      -- Core instruction memory interface.
+      -- Instruction cache interface signals.
+      rv2icache_flushStart      => rv2icache_flushStart,
+      icache2rv_flushBusy       => icache2rv_flushBusy,
       rv2icache_PCs             => rv2icache_PCs,
       rv2icache_fetch           => rv2icache_fetch,
       rv2icache_cancel          => rv2icache_cancel,
       icache2rv_instr           => icache2rv_instr,
       icache2rv_busFault        => icache2rv_busFault,
+      icache2rv_pageFault       => icache2rv_pageFault,
+      icache2rv_kernelAccVio    => icache2rv_kernelAccVio,
       icache2rv_affinity        => icache2rv_affinity,
+      icache2rv_access          => icache2rv_access,
+      icache2rv_miss            => icache2rv_miss,
+      icache2rv_tlbAccess       => icache2rv_tlbAccess,
+      icache2rv_tlbMiss         => icache2rv_tlbMiss,
+      icache2rv_tlbMispredict   => icache2rv_tlbMispredict,
       
-      -- Core data memory interface.
+      -- Data cache interface signals.
+      rv2dcache_flushStart      => rv2dcache_flushStart,
+      dcache2rv_flushBusy       => dcache2rv_flushBusy,
       rv2dcache_addr            => rv2dcache_addr,
       rv2dcache_readEnable      => rv2dcache_readEnable,
       rv2dcache_writeData       => rv2dcache_writeData,
@@ -333,8 +429,19 @@ begin -- architecture
       rv2dcache_writeEnable     => rv2dcache_writeEnable,
       rv2dcache_bypass          => rv2dcache_bypass,
       dcache2rv_readData        => dcache2rv_readData,
-      dcache2rv_busFault        => dcache2rv_busFault,
       dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
+      dcache2rv_busFault        => dcache2rv_busFault,
+      dcache2rv_pageFault       => dcache2rv_pageFault,
+      dcache2rv_kernelAccVio    => dcache2rv_kernelAccVio,
+      dcache2rv_writeAccVio     => dcache2rv_writeAccVio,
+      dcache2rv_writeToClean    => dcache2rv_writeToClean,
+      dcache2rv_accessType      => dcache2rv_accessType,
+      dcache2rv_bypass          => dcache2rv_bypass,
+      dcache2rv_miss            => dcache2rv_miss,
+      dcache2rv_writePending    => dcache2rv_writePending,
+      dcache2rv_tlbAccess       => dcache2rv_tlbAccess,
+      dcache2rv_tlbMiss         => dcache2rv_tlbMiss,
+      dcache2rv_tlbMispredict   => dcache2rv_tlbMispredict,
       
       -- Bus master interface.
       cache2bus_bus             => cache2arb_bus,

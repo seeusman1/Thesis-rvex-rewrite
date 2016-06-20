@@ -244,6 +244,9 @@ entity core_pipelane is
     -- Global configuration.
     CFG                         : rvex_generic_config_type;
     
+    -- MMU configuration information.
+    CFG_MMU                     : rvex_mmuConfig_type;
+    
     -- Pipelane index.
     LANE_INDEX                  : natural;
     
@@ -402,6 +405,7 @@ entity core_pipelane is
     imem2pl_miss                : in  std_logic_vector(S_IF+L_IF to S_IF+L_IF);
     imem2pl_tlbAccess           : in  std_logic_vector(S_IF+L_IF to S_IF+L_IF);
     imem2pl_tlbMiss             : in  std_logic_vector(S_IF+L_IF to S_IF+L_IF);
+    imem2pl_tlbMispredict       : in  std_logic_vector(S_IF+L_IF to S_IF+L_IF);
     
     ---------------------------------------------------------------------------
     -- Data memory interface
@@ -428,6 +432,7 @@ entity core_pipelane is
     dmem2pl_writePending        : in  std_logic_vector(S_MEM+L_MEM to S_MEM+L_MEM);
     dmem2pl_tlbAccess           : in  std_logic_vector(S_MEM+L_MEM to S_MEM+L_MEM);
     dmem2pl_tlbMiss             : in  std_logic_vector(S_MEM+L_MEM to S_MEM+L_MEM);
+    dmem2pl_tlbMispredict       : in  std_logic_vector(S_MEM+L_MEM to S_MEM+L_MEM);
     
     ---------------------------------------------------------------------------
     -- Register file interface
@@ -858,12 +863,14 @@ architecture Behavioral of core_pipelane is
     icache_miss                 : std_logic;
     itlb_access                 : std_logic;
     itlb_miss                   : std_logic;
+    itlb_mispredict             : std_logic;
     dcache_accessType           : rvex_2bit_type;
     dcache_bypass               : std_logic;
     dcache_miss                 : std_logic;
     dcache_writePending         : std_logic;
     dtlb_access                 : std_logic;
     dtlb_miss                   : std_logic;
+    dtlb_mispredict             : std_logic;
     
     -- Whether an instruction fetch was performed or not.
     instr_enable                : std_logic;
@@ -887,12 +894,14 @@ architecture Behavioral of core_pipelane is
     icache_miss                 => '0',
     itlb_access                 => '0',
     itlb_miss                   => '0',
+    itlb_mispredict             => '0',
     dcache_accessType           => "00",
     dcache_bypass               => '0',
     dcache_miss                 => '0',
     dcache_writePending         => '0',
     dtlb_access                 => '0',
     dtlb_miss                   => '0',
+    dtlb_mispredict             => '0',
     instr_enable                => '0',
     trap_info                   => TRAP_INFO_NONE,
     mem_address                 => (others => RVEX_UNDEF),
@@ -1249,7 +1258,8 @@ begin -- architecture
   br_gen: if HAS_BR generate
     br_inst: entity rvex.core_br
       generic map (
-        CFG                             => CFG
+        CFG                             => CFG,
+        CFG_MMU                         => CFG_MMU
       )
       port map (
         
@@ -1543,9 +1553,9 @@ begin -- architecture
     
     -- Memory interface.
     ibuf2pl_syllable, ibuf2pl_exception, dmsw2pl_exception, imem2pl_access,
-    imem2pl_miss, imem2pl_tlbAccess, imem2pl_tlbMiss, dmem2pl_accessType,
-    dmem2pl_bypass, dmem2pl_miss, dmem2pl_writePending, dmem2pl_tlbAccess,
-    dmem2pl_tlbMiss,
+    imem2pl_miss, imem2pl_tlbAccess, imem2pl_tlbMiss, imem2pl_tlbMispredict,
+    dmem2pl_accessType, dmem2pl_bypass, dmem2pl_miss, dmem2pl_writePending,
+    dmem2pl_tlbAccess, dmem2pl_tlbMiss, dmem2pl_tlbMispredict,
     
     -- Register file interface.
     gpreg2pl_readPortA, gpreg2pl_readPortB, cxplif2pl_brLinkReadPort,
@@ -1692,14 +1702,15 @@ begin -- architecture
     
     -- Copy the instruction fetch data into the trace record as well, before it
     -- is maybe modified further on in the pipeline.
-    s(S_IF).trace.instr_enable        := cxplif2pl_limmValid(S_IF);
-    s(S_IF+L_IF).trace.instr_syllable := ibuf2pl_syllable(S_IF+L_IF);
+    s(S_IF).trace.instr_enable          := cxplif2pl_limmValid(S_IF);
+    s(S_IF+L_IF).trace.instr_syllable   := ibuf2pl_syllable(S_IF+L_IF);
     
     -- Copy instruction cache performance data into the trace records.
-    s(S_IF+L_IF).trace.icache_access  := imem2pl_access(S_IF+L_IF);
-    s(S_IF+L_IF).trace.icache_miss    := imem2pl_miss(S_IF+L_IF);
-    s(S_IF+L_IF).trace.itlb_access    := imem2pl_tlbAccess(S_IF+L_IF);
-    s(S_IF+L_IF).trace.itlb_miss      := imem2pl_tlbMiss(S_IF+L_IF);
+    s(S_IF+L_IF).trace.icache_access    := imem2pl_access(S_IF+L_IF);
+    s(S_IF+L_IF).trace.icache_miss      := imem2pl_miss(S_IF+L_IF);
+    s(S_IF+L_IF).trace.itlb_access      := imem2pl_tlbAccess(S_IF+L_IF);
+    s(S_IF+L_IF).trace.itlb_miss        := imem2pl_tlbMiss(S_IF+L_IF);
+    s(S_IF+L_IF).trace.itlb_mispredict  := imem2pl_tlbMispredict(S_IF+L_IF);
     
     ---------------------------------------------------------------------------
     -- Compute PC+1 related signals
@@ -2376,6 +2387,7 @@ begin -- architecture
     s(S_MEM+L_MEM).trace.dcache_writePending  := dmem2pl_writePending(S_MEM+L_MEM);
     s(S_MEM+L_MEM).trace.dtlb_access          := dmem2pl_tlbAccess(S_MEM+L_MEM);
     s(S_MEM+L_MEM).trace.dtlb_miss            := dmem2pl_tlbMiss(S_MEM+L_MEM);
+    s(S_MEM+L_MEM).trace.dtlb_mispredict      := dmem2pl_tlbMispredict(S_MEM+L_MEM);
     
     ---------------------------------------------------------------------------
     -- Handle soft trap instruction
@@ -2705,12 +2717,14 @@ begin -- architecture
       pl2trace_data.icache_miss         <= s(S_LAST).trace.icache_miss;
       pl2trace_data.itlb_access         <= s(S_LAST).trace.itlb_access;
       pl2trace_data.itlb_miss           <= s(S_LAST).trace.itlb_miss;
+      pl2trace_data.itlb_mispredict     <= s(S_LAST).trace.itlb_mispredict;
       pl2trace_data.dcache_accessType   <= s(S_LAST).trace.dcache_accessType;
       pl2trace_data.dcache_bypass       <= s(S_LAST).trace.dcache_bypass;
       pl2trace_data.dcache_miss         <= s(S_LAST).trace.dcache_miss;
       pl2trace_data.dcache_writePending <= s(S_LAST).trace.dcache_writePending;
       pl2trace_data.dtlb_access         <= s(S_LAST).trace.dtlb_access;
       pl2trace_data.dtlb_miss           <= s(S_LAST).trace.dtlb_miss;
+      pl2trace_data.dtlb_mispredict     <= s(S_LAST).trace.dtlb_mispredict;
       
       -- Forward instruction information.
       pl2trace_data.instr_enable        <= s(S_LAST).trace.instr_enable;

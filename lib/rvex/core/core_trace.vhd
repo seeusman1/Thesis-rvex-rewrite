@@ -325,11 +325,11 @@ architecture Behavioral of core_trace is
   --  - Bit 7: 1 if an instruction translation was serviced by the TLB block
   --      associated with this lane, 0 if not.
   --  - Bit 6: 1 if the instruction translation resulted in a miss.
-  --  - Bit 5: 1 if a data translation was serviced by the TLB block associated
+  --  - Bit 5: 1 if the instruction cache tag was mispredicted.
+  --  - Bit 4: 1 if a data translation was serviced by the TLB block associated
   --      with this lane, 0 if not.
-  --  - Bit 4: 1 if the data translation resulted in a miss.
-  --  - Bit 3: reserved.
-  --  - Bit 2: reserved.
+  --  - Bit 3: 1 if the data translation resulted in a miss.
+  --  - Bit 2: 1 if the data cache tag was mispredicted.
   --  - Bit 1: reserved.
   --  - Bit 0: reserved; when set, additional fields are to be expected.
   --
@@ -818,8 +818,10 @@ begin -- architecture
               -- Write the MMU performance flags to the packet.
               p(I_MMUINFO)(7) := d.itlb_access;
               p(I_MMUINFO)(6) := d.itlb_miss;
-              p(I_MMUINFO)(5) := d.itlb_access;
-              p(I_MMUINFO)(4) := d.itlb_miss;
+              p(I_MMUINFO)(5) := d.itlb_mispredict;
+              p(I_MMUINFO)(4) := d.dtlb_access;
+              p(I_MMUINFO)(3) := d.dtlb_miss;
+              p(I_MMUINFO)(2) := d.dtlb_mispredict;
               
             end if;
             
@@ -943,9 +945,9 @@ begin -- architecture
             dismissPackets <= '1';
           end if;
         end if;
-        currentByte           <= nextByte;
+        currentByte <= nextByte;
         if trsink2trace_busy = '0' then
-          trace2trsink_push   <= '0';
+          trace2trsink_push <= '0';
         end if;
       end procedure;
       
@@ -1127,6 +1129,16 @@ begin -- architecture
                 
                 -- Syllable does not need to be traced, continue to the next
                 -- lane.
+                skip(nextByte => I_MMUINFO);
+                
+              end if;
+              
+            when I_MMUINFO =>
+              
+              if currentPacket(I_EXFLAGS)(3) = '0' then
+                
+                -- MMU information does not need to be traced, continue to the
+                -- next lane.
                 skip(incLane => true);
                 
               end if;

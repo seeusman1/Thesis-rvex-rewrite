@@ -317,12 +317,14 @@ package core_intIface_pkg is
     icache_miss                 : std_logic;
     itlb_access                 : std_logic;
     itlb_miss                   : std_logic;
+    itlb_mispredict             : std_logic;
     dcache_accessType           : rvex_2bit_type;
     dcache_bypass               : std_logic;
     dcache_miss                 : std_logic;
     dcache_writePending         : std_logic;
     dtlb_access                 : std_logic;
     dtlb_miss                   : std_logic;
+    dtlb_mispredict             : std_logic;
     
     -- Whether an instruction fetch was performed or not.
     instr_enable                : std_logic;

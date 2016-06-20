@@ -373,7 +373,7 @@ entity core is
     rv2mem_blockUpdateEnable    : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high reconfiguration block input from the instruction and data
-    -- memories. When this is low, associated lanes may not be reconfigured.
+    -- memories. When this is high, associated lanes may not be reconfigured.
     -- The processor assumes that this signal will go low eventually when no
     -- fetch/read/write requests are made by associated lanes.
     mem2rv_blockReconfig        : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
@@ -449,7 +449,7 @@ entity core is
     -- Active high instruction fetch enable signal. When a bit in this vector
     -- is high, the bit in mem_stallOut is low and the bit in mem_decouple is
     -- high, the instruction memory must fetch the instruction pointed to by
-    -- the associated vector in imem_pcs.
+    -- the associated vector in rv2imem_PCs.
     rv2imem_fetch               : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Combinatorial cancel signal, valid one cycle after rv2imem_PCs and
@@ -474,6 +474,8 @@ entity core is
     -- Active high fault signals from the instruction memory. When high,
     -- imem2rv_instr is assumed to be invalid and an exception will be thrown.
     imem2rv_busFault            : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    imem2rv_pageFault           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    imem2rv_kernelAccVio        : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     -- Cache block affinity data from cache. This should be set to cache block
     -- index which serviced the request. This is just a hint for the processor
@@ -497,6 +499,10 @@ entity core is
     -- miss.
     imem2rv_tlbMiss             : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
+    -- Trace information. This should be high when the MSBs of the physical
+    -- cache tag were mispredicted.
+    imem2rv_tlbMispredict       : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
     ---------------------------------------------------------------------------
     -- Data memory interface
     ---------------------------------------------------------------------------
@@ -508,9 +514,6 @@ entity core is
     -- This is high when a data cache flush is busy. If flushes are always
     -- single-cycle, this can just always be zero.
     dmem2rv_flushBusy           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
-    
-    -- When this is high, all data accesses should bypass the cache.
-    rv2dmem_bypass              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     -- Request phase
@@ -525,7 +528,7 @@ entity core is
     -- Active high read enable from each pipelane group. When a bit in this
     -- vector is high, the bit in mem_stallOut is low and the bit in
     -- mem_decouple is high, the data memory must fetch the data at the address
-    -- specified by the associated vector in dmem_addr.
+    -- specified by the associated vector in rv2dmem_addr.
     rv2dmem_readEnable          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- Write data from the rvex to the data memory.
@@ -534,12 +537,15 @@ entity core is
     -- Write byte mask from the rvex to the data memory, active high.
     rv2dmem_writeMask           : out rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
-    -- Active write enable from each pipelane group. When a bit in this
+    -- Active high write enable from each pipelane group. When a bit in this
     -- vector is high, the bit in mem_stallOut is low and the bit in
     -- mem_decouple is high, the data memory must write the data in
-    -- dmem_writeData to the address specified by dmem_addr, respecting the
-    -- byte mask specified by dmem_writeMask.
+    -- dmem_writeData to the address specified by rv2dmem_addr, respecting
+    -- the byte mask specified by dmem_writeMask.
     rv2dmem_writeEnable         : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- When this is high, the data access should bypass the cache.
+    rv2dmem_bypass              : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     -- Response phase: valid L_MEM unstalled, clkEn'd clock cycles after the
@@ -554,6 +560,10 @@ entity core is
     -- thrown.
     dmem2rv_ifaceFault          : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     dmem2rv_busFault            : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    dmem2rv_pageFault           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    dmem2rv_kernelAccVio        : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    dmem2rv_writeAccVio         : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    dmem2rv_writeToClean        : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     -- Trace information. This represents the type of cache access performed by
     -- the block associated with the indexed lane group:
@@ -582,6 +592,10 @@ entity core is
     -- Trace information. This should be high when the TLB access resulted in a
     -- miss.
     dmem2rv_tlbMiss             : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    
+    -- Trace information. This should be high when the MSBs of the physical
+    -- cache tag were mispredicted.
+    dmem2rv_tlbMispredict       : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     ---------------------------------------------------------------------------
     -- Control/debug bus interface
@@ -786,12 +800,14 @@ architecture Behavioral of core is
   signal imem2cxreg_miss              : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal imem2cxreg_tlbAccess         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal imem2cxreg_tlbMiss           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal imem2cxreg_tlbMispredict     : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal dmem2cxreg_accessType        : rvex_2bit_array(2**CFG.numContextsLog2-1 downto 0);
   signal dmem2cxreg_bypass            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal dmem2cxreg_miss              : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal dmem2cxreg_writePending      : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal dmem2cxreg_tlbAccess         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal dmem2cxreg_tlbMiss           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal dmem2cxreg_tlbMispredict     : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2imem_flushStart        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal imem2cxreg_flushBusy         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2dmem_flushStart        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
@@ -909,16 +925,41 @@ begin -- architecture
   -- flags from the memories.
   mem_trap_info_gen: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
     
-    -- There is only one instruction memory fault.
+    -- Generate the priority encoder for the instruction fault signals.
     imem2ibuf_exception(laneGroup) <= (
+      active => '1',
+      cause  => rvex_trap(RVEX_TRAP_IMEM_PAGE_FAULT),
+      arg    => (others => '0')
+    ) when imem2rv_pageFault(laneGroup) = '1' else (
+      active => '1',
+      cause  => rvex_trap(RVEX_TRAP_KERNEL_SPACE_VIO),
+      arg    => (others => '0')
+    ) when imem2rv_kernelAccVio(laneGroup) = '1' else (
       active => imem2rv_busFault(laneGroup),
       cause  => rvex_trap(RVEX_TRAP_FETCH_FAULT),
       arg    => (others => '0')
     );
     
-    -- There is only one data memory fault. Note that the arg parameter will be
-    -- overwritten by the address which was being accessed in the pipelane.
+    -- Generate the priority encoder for the data fault signals. Note that the
+    -- arg parameter will be overwritten by the address which was being
+    -- accessed in the pipelane.
     dmem2dmsw_exception(laneGroup) <= (
+      active => '1',
+      cause  => rvex_trap(RVEX_TRAP_DMEM_PAGE_FAULT),
+      arg    => (others => '0')
+    ) when dmem2rv_pageFault(laneGroup) = '1' else (
+      active => '1',
+      cause  => rvex_trap(RVEX_TRAP_KERNEL_SPACE_VIO),
+      arg    => (others => '0')
+    ) when dmem2rv_kernelAccVio(laneGroup) = '1' else (
+      active => '1',
+      cause  => rvex_trap(RVEX_TRAP_WRITE_ACCESS_VIO),
+      arg    => (others => '0')
+    ) when dmem2rv_writeAccVio(laneGroup) = '1' else (
+      active => '1',
+      cause  => rvex_trap(RVEX_TRAP_WRITE_TO_CLEAN_PAGE),
+      arg    => (others => '0')
+    ) when dmem2rv_writeToClean(laneGroup) = '1' else (
       active => dmem2rv_ifaceFault(laneGroup) or dmem2rv_busFault(laneGroup),
       cause  => rvex_trap(RVEX_TRAP_DMEM_FAULT),
       arg    => (others => '0')
@@ -931,7 +972,8 @@ begin -- architecture
   -----------------------------------------------------------------------------
   pls_inst: entity rvex.core_pipelanes
     generic map (
-      CFG                           => CFG
+      CFG                           => CFG,
+      CFG_MMU                       => CFG_MMU
     )
     port map (
       
@@ -982,6 +1024,7 @@ begin -- architecture
       imem2pl_miss                  => imem2rv_miss,
       imem2pl_tlbAccess             => imem2rv_tlbAccess,
       imem2pl_tlbMiss               => imem2rv_tlbMiss,
+      imem2pl_tlbMispredict         => imem2rv_tlbMispredict,
       
       -- Data memory interface.
       dmsw2dmem_addr                => rv2dmem_addr,
@@ -997,6 +1040,7 @@ begin -- architecture
       dmem2pl_writePending          => dmem2rv_writePending,
       dmem2pl_tlbAccess             => dmem2rv_tlbAccess,
       dmem2pl_tlbMiss               => dmem2rv_tlbMiss,
+      dmem2pl_tlbMispredict         => dmem2rv_tlbMispredict,
       
       -- Control register interface.
       dmsw2creg_addr                => dmsw2creg_addr,
@@ -1216,28 +1260,32 @@ begin -- architecture
            "lane groups must equal the number of contexts."
     severity failure;
   gen_cache_perf_count_connection: if CFG.cachePerfCountEnable generate
-    imem2cxreg_access       <= imem2cxreg_access;
-    imem2cxreg_miss         <= imem2cxreg_miss;
-    imem2cxreg_tlbAccess    <= imem2cxreg_tlbAccess;
-    imem2cxreg_tlbMiss      <= imem2cxreg_tlbMiss;
-    dmem2cxreg_accessType   <= dmem2cxreg_accessType;
-    dmem2cxreg_bypass       <= dmem2cxreg_bypass;
-    dmem2cxreg_miss         <= dmem2cxreg_miss;
-    dmem2cxreg_writePending <= dmem2cxreg_writePending;
-    dmem2cxreg_tlbAccess    <= dmem2cxreg_tlbAccess;
-    dmem2cxreg_tlbMiss      <= dmem2cxreg_tlbMiss;
+    imem2cxreg_access         <= imem2cxreg_access;
+    imem2cxreg_miss           <= imem2cxreg_miss;
+    imem2cxreg_tlbAccess      <= imem2cxreg_tlbAccess;
+    imem2cxreg_tlbMiss        <= imem2cxreg_tlbMiss;
+    imem2cxreg_tlbMispredict  <= imem2cxreg_tlbMispredict;
+    dmem2cxreg_accessType     <= dmem2cxreg_accessType;
+    dmem2cxreg_bypass         <= dmem2cxreg_bypass;
+    dmem2cxreg_miss           <= dmem2cxreg_miss;
+    dmem2cxreg_writePending   <= dmem2cxreg_writePending;
+    dmem2cxreg_tlbAccess      <= dmem2cxreg_tlbAccess;
+    dmem2cxreg_tlbMiss        <= dmem2cxreg_tlbMiss;
+    dmem2cxreg_tlbMispredict  <= dmem2cxreg_tlbMispredict;
   end generate;
   do_not_gen_cache_perf_count_connection: if not CFG.cachePerfCountEnable generate
-    imem2cxreg_access       <= (others => '0');
-    imem2cxreg_miss         <= (others => '0');
-    imem2cxreg_tlbAccess    <= (others => '0');
-    imem2cxreg_tlbMiss      <= (others => '0');
-    dmem2cxreg_accessType   <= (others => "00");
-    dmem2cxreg_bypass       <= (others => '0');
-    dmem2cxreg_miss         <= (others => '0');
-    dmem2cxreg_writePending <= (others => '0');
-    dmem2cxreg_tlbAccess    <= (others => '0');
-    dmem2cxreg_tlbMiss      <= (others => '0');
+    imem2cxreg_access         <= (others => '0');
+    imem2cxreg_miss           <= (others => '0');
+    imem2cxreg_tlbAccess      <= (others => '0');
+    imem2cxreg_tlbMiss        <= (others => '0');
+    imem2cxreg_tlbMispredict  <= (others => '0');
+    dmem2cxreg_accessType     <= (others => "00");
+    dmem2cxreg_bypass         <= (others => '0');
+    dmem2cxreg_miss           <= (others => '0');
+    dmem2cxreg_writePending   <= (others => '0');
+    dmem2cxreg_tlbAccess      <= (others => '0');
+    dmem2cxreg_tlbMiss        <= (others => '0');
+    dmem2cxreg_tlbMispredict  <= (others => '0');
   end generate;
   
   -- Generate block update enable based on the current priority registers.
@@ -1329,12 +1377,14 @@ begin -- architecture
       imem2cxreg_miss               => imem2cxreg_miss,
       imem2cxreg_tlbAccess          => imem2cxreg_tlbAccess,
       imem2cxreg_tlbMiss            => imem2cxreg_tlbMiss,
+      imem2cxreg_tlbMispredict      => imem2cxreg_tlbMispredict,
       dmem2cxreg_accessType         => dmem2cxreg_accessType,
       dmem2cxreg_bypass             => dmem2cxreg_bypass,
       dmem2cxreg_miss               => dmem2cxreg_miss,
       dmem2cxreg_writePending       => dmem2cxreg_writePending,
       dmem2cxreg_tlbAccess          => dmem2cxreg_tlbAccess,
       dmem2cxreg_tlbMiss            => dmem2cxreg_tlbMiss,
+      dmem2cxreg_tlbMispredict      => dmem2cxreg_tlbMispredict,
       
       -- Memory interface: status/control.
       cxreg2imem_flushStart         => cxreg2imem_flushStart,

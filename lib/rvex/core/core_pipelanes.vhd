@@ -70,7 +70,10 @@ entity core_pipelanes is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type
+    CFG                         : rvex_generic_config_type;
+    
+    -- MMU configuration information, if an MMU is present.
+    CFG_MMU                     : rvex_mmuConfig_type
     
   );
   port (
@@ -221,6 +224,7 @@ entity core_pipelanes is
     imem2pl_miss                : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     imem2pl_tlbAccess           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     imem2pl_tlbMiss             : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    imem2pl_tlbMispredict       : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Data memory interface
@@ -247,6 +251,7 @@ entity core_pipelanes is
     dmem2pl_writePending        : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     dmem2pl_tlbAccess           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     dmem2pl_tlbMiss             : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    dmem2pl_tlbMispredict       : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Control register interface
@@ -471,6 +476,9 @@ begin -- architecture
         -- Global configuration.
         CFG                               => CFG,
         
+        -- MMU configuration.
+        CFG_MMU                           => CFG_MMU,
+        
         -- Lane configuration.
         LANE_INDEX                        => lane,
         HAS_MUL                           => mul,
@@ -531,6 +539,7 @@ begin -- architecture
         imem2pl_miss(S_IF+L_IF)           => imem2pl_miss(laneGroup),
         imem2pl_tlbAccess(S_IF+L_IF)      => imem2pl_tlbAccess(laneGroup),
         imem2pl_tlbMiss(S_IF+L_IF)        => imem2pl_tlbMiss(laneGroup),
+        imem2pl_tlbMispredict(S_IF+L_IF)  => imem2pl_tlbMispredict(laneGroup),
         
         -- Data memory interface.
         memu2dmsw_addr(S_MEM)             => memu2dmsw_addr(laneGroup),
@@ -546,6 +555,7 @@ begin -- architecture
         dmem2pl_writePending(S_MEM+L_MEM) => dmem2pl_writePending(laneGroup),
         dmem2pl_tlbAccess(S_MEM+L_MEM)    => dmem2pl_tlbAccess(laneGroup),
         dmem2pl_tlbMiss(S_MEM+L_MEM)      => dmem2pl_tlbMiss(laneGroup),
+        dmem2pl_tlbMispredict(S_MEM+L_MEM)=> dmem2pl_tlbMispredict(laneGroup),
         
         -- Register file interface.
         pl2gpreg_readPortA                => pl2gpreg_readPorts(lane*2+0),

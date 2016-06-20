@@ -70,7 +70,10 @@ entity core_br is
   generic (
     
     -- Configuration.
-    CFG                         : rvex_generic_config_type
+    CFG                         : rvex_generic_config_type;
+    
+    -- MMU configuration information.
+    CFG_MMU                     : rvex_mmuConfig_type
     
   );
   port (
@@ -580,10 +583,10 @@ begin -- architecture
       simReason <= to_rvs("RFI instr.");
       -- pragma translate_on
       
-      -- Determine if we need to flush due to the SCCR->CCR transfer casuing
-      -- changes in fetch behavior. This doesn't occur yet, but it will when
-      -- the MMU is added.
-      if false then
+      -- Determine if we need to flush due to the SCCR->CCR transfer causing
+      -- changes in fetch behavior. This is the case when address translation
+      -- is performed.
+      if CFG_MMU.mmuEnable then
         
         -- We need to flush.
         rfiFlush(S_BR) <= '1';

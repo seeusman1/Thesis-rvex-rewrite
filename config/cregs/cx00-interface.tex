@@ -29,12 +29,14 @@ debug interface.
 \ifaceInCtxt{imem}{miss}{bit}
 \ifaceInCtxt{imem}{tlbAccess}{bit}
 \ifaceInCtxt{imem}{tlbMiss}{bit}
+\ifaceInCtxt{imem}{tlbMispredict}{bit}
 \ifaceInCtxt{dmem}{accessType}{twobit}
 \ifaceInCtxt{dmem}{bypass}{bit}
 \ifaceInCtxt{dmem}{miss}{bit}
 \ifaceInCtxt{dmem}{writePending}{bit}
 \ifaceInCtxt{dmem}{tlbAccess}{bit}
 \ifaceInCtxt{dmem}{tlbMiss}{bit}
+\ifaceInCtxt{dmem}{tlbMispredict}{bit}
 Cache/MMU performance signals. These don't really belong here because they're
 per lane group, but the cache does not have a register interface yet.
 
