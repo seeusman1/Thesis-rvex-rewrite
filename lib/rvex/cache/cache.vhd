@@ -439,7 +439,7 @@ begin -- architecture
            "a regular page."
     severity failure;
   
-  -- Some mmu inefficient configuration warnings.
+  -- Check for MMU configuration inefficiencies.
   assert not CCFG.mmuEnable or (CCFG.tlbDepthLog2 <= 32)
     report "Sizing the tlb larger than 32 leads to increased BRAM " &
            "utilization of the TLB."

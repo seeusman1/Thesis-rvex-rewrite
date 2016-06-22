@@ -58,7 +58,7 @@ use rvex.cache_pkg.all;
 use rvex.bus_pkg.all;
 
 
-entity cache_mmu is
+entity old_mmu is
   generic (
     RCFG                        : rvex_generic_config_type := rvex_cfg;
     CCFG                        : cache_generic_config_type := cache_cfg
@@ -125,10 +125,10 @@ entity cache_mmu is
     mem2mmu                     : in  bus_slv2mst_type     
     
   );
-end cache_mmu;
+end old_mmu;
 
 
-architecture structural of cache_mmu is
+architecture structural of old_mmu is
 
   type asid_array_type    is array (2**RCFG.numLaneGroupsLog2-1 downto 0)
                           of std_logic_vector(mmuAsidSize(CCFG)-1 downto 0);
@@ -844,7 +844,7 @@ begin
     
   -- Generate the intruction tlb's (one per langroup).
   g_instruction_tlbs : for i in 0 to 2**RCFG.numLaneGroupsLog2-1 generate
-    itlb_n : entity work.cache_mmu_tlb
+    itlb_n : entity work.old_mmu_tlb
     generic map(
       CCFG                   => CCFG
     )
@@ -873,7 +873,7 @@ begin
   
   -- generate the data tlb's (one per langroup).
   g_data_tlbs : for i in 0 to 2**RCFG.numLaneGroupsLog2-1 generate
-    dtlb_n : entity work.cache_mmu_tlb
+    dtlb_n : entity work.old_mmu_tlb
     generic map(
       CCFG                   => CCFG
     )
@@ -907,7 +907,7 @@ begin
   
   -- generate the table walk hardware. There is only one instance since it needs memory access and
   -- multiple table walks are not possible at the same time. 
-  tw : entity work.cache_mmu_table_walk
+  tw : entity work.old_mmu_table_walk
   generic map(
     RCFG                        => RCFG,
     CCFG                     => CCFG

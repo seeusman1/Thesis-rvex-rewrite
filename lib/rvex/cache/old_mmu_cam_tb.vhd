@@ -49,34 +49,63 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
+use IEEE.MATH_REAL.ALL;
+library work;
+use work.MMU_pkg.all;
 
 
-entity tb_mmu_oh2bin is
-end entity;
 
-architecture test of tb_mmu_oh2bin is 
+entity tb_CAM is
+end entity ; -- tb_CAM
 
-	signal oh_in 	: std_logic_vector(2**4-1 downto 0);
-	signal bin_out 	: integer range 0 to 2**4-1;
-	signal hit 		: std_logic;
+architecture arch of tb_CAM is
+
+
+
+	constant CAM_NUM_ENTRIES 						: natural := 64;	
+	constant PAGE_NUM_WIDTH 					    : natural := 18;
+
+
+	signal clk 										: std_logic := '1';
+	signal reset 									: std_logic := '1';
+	signal in_data 									: std_logic_vector(PAGE_NUM_WIDTH-1 downto 0);
+	signal read_out_addr 							: std_logic_vector(CAM_NUM_ENTRIES-1 downto 0);
+	signal modify_en 								: std_logic := '0';
+	signal modify_add_remove						: std_logic := '0';
+	signal modify_in_addr 							: std_logic_vector(CAM_NUM_ENTRIES-1 downto 0);
+
 
 begin
 
-    uut : entity work.cache_mmu_oh2bin
-    generic map(
-    	WIDTH_LOG2  => 4
-    )
-    port map(
-        oh_in       => oh_in,
-        bin_out     => bin_out,
-        hit         => hit
-    );
+	UUT : entity work.old_mmu_cam
+	generic map(
+		CAM_NUM_ENTRIES 							=> CAM_NUM_ENTRIES,
+		CAM_WIDTH                                   => PAGE_NUM_WIDTH
+	)
+	port map(
+		clk 										=> clk,
+		reset 										=> reset,
+		in_data 									=> in_data,
+		read_out_addr 								=> read_out_addr,
+		modify_en 									=> modify_en,
+		modify_add_remove							=> modify_add_remove,
+		modify_in_addr 								=> modify_in_addr
+	);
 
-    oh_in <= "0000000000000000" after 0 ns,
-    	     "0000100000000000" after 10 ns,
-    	     "0000000000011000" after 20 ns,
-    	     "1000000000000010" after 30 ns,
-    	     "0000000000000000" after 40 ns;
+
+	clk <= not clk after 10 ns;
+	reset <= '1', '0' after 30 ns;
+	
+	modify_en <= '1', '0' after 100 ns, '1' after 200 ns, '0' after 220 ns, '1' after 300 ns, '0' after 320 ns, '1' after 400 ns, '0' after 420 ns;
+	modify_add_remove <= '1', '0' after 300 ns, '1' after 400 ns;
+
+	modify_in_addr <= 	(CAM_NUM_ENTRIES-1 downto 2 => '0') & "01",
+			 			(CAM_NUM_ENTRIES-1 downto 2 => '0') & "10" after 200 ns,
+			 			(CAM_NUM_ENTRIES-1 downto 3 => '0') & "100" after 400 ns;
+
+	in_data <= 	(others => '0'),
+				(PAGE_NUM_WIDTH-1 downto 2 => '0') & "01" after 200 ns;
 
 
-end architecture;
+
+end architecture ; -- arch

@@ -56,7 +56,7 @@ use rvex.cache_pkg.all;
 use rvex.common_pkg.all;
 
 
-entity cache_mmu_tlb is
+entity old_mmu_tlb is
 
   generic (
     
@@ -120,10 +120,10 @@ entity cache_mmu_tlb is
     cache_bypass                : out std_logic
     
   );
-end cache_mmu_tlb;
+end old_mmu_tlb;
 
 
-architecture behavioural of cache_mmu_tlb is
+architecture behavioural of old_mmu_tlb is
 
   -- Shorthand notations for stuff from the MMU configuration
   constant TLB_NUM_ENTRIES      : natural := 2**CCFG.TLBDepthLog2;
@@ -233,7 +233,7 @@ architecture behavioural of cache_mmu_tlb is
 begin
 
   -- instantiate the content accessable memory (CAM)
-  CAM: entity work.cache_mmu_cam
+  CAM: entity work.old_mmu_cam
   generic map(
     CCFG                        => CCFG
   )
@@ -250,7 +250,7 @@ begin
     modify_in_addr              => CAM_modify_in_addr
   );
   
-  victim_gen: entity work.cache_mmu_victim_generator
+  victim_gen: entity work.old_mmu_victim_generator
   generic map(
     CCFG                        => CCFG
   )
@@ -262,7 +262,7 @@ begin
     victim                      => victim
   );
 
-  oh2bin : entity work.cache_mmu_oh2bin
+  oh2bin : entity work.old_mmu_oh2bin
   generic map(
     WIDTH_LOG2                  => CCFG.TLBDepthLog2
   )

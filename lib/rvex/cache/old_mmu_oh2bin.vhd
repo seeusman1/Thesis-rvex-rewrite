@@ -49,63 +49,58 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
-use IEEE.MATH_REAL.ALL;
-library work;
-use work.MMU_pkg.all;
 
 
+entity old_mmu_oh2bin is
+  generic(
+    WIDTH_LOG2                  : integer
+  );
+  port(
+    oh_in                       : in  std_logic_vector(2**WIDTH_LOG2-1 downto 0);
+    bin_out                     : out integer range 0 to 2**WIDTH_LOG2-1;
+    hit                         : out std_logic
+  );
+end entity old_mmu_oh2bin;
 
-entity tb_CAM is
-end entity ; -- tb_CAM
+architecture log of old_mmu_oh2bin is 
+  type t_valid_tree    is array (0 to WIDTH_LOG2-1)        of std_logic_vector(2**(WIDTH_LOG2 - 1) - 1 downto 0);
+  type t_encode_vector is array (0 to 2**(WIDTH_LOG2-1)-1) of std_logic_vector(WIDTH_LOG2-1 downto 0);
+  type t_encode_tree   is array (0 to WIDTH_LOG2-1)        of t_encode_vector;
 
-architecture arch of tb_CAM is
-
-
-
-	constant CAM_NUM_ENTRIES 						: natural := 64;	
-	constant PAGE_NUM_WIDTH 					    : natural := 18;
-
-
-	signal clk 										: std_logic := '1';
-	signal reset 									: std_logic := '1';
-	signal in_data 									: std_logic_vector(PAGE_NUM_WIDTH-1 downto 0);
-	signal read_out_addr 							: std_logic_vector(CAM_NUM_ENTRIES-1 downto 0);
-	signal modify_en 								: std_logic := '0';
-	signal modify_add_remove						: std_logic := '0';
-	signal modify_in_addr 							: std_logic_vector(CAM_NUM_ENTRIES-1 downto 0);
-
+  signal valid_tree  : t_valid_tree;
+  signal encode_tree : t_encode_tree;
 
 begin
 
-	UUT : entity work.cache_mmu_cam
-	generic map(
-		CAM_NUM_ENTRIES 							=> CAM_NUM_ENTRIES,
-		CAM_WIDTH                                   => PAGE_NUM_WIDTH
-	)
-	port map(
-		clk 										=> clk,
-		reset 										=> reset,
-		in_data 									=> in_data,
-		read_out_addr 								=> read_out_addr,
-		modify_en 									=> modify_en,
-		modify_add_remove							=> modify_add_remove,
-		modify_in_addr 								=> modify_in_addr
-	);
+  decoder_tree: process(oh_in, valid_tree, encode_tree) 
+  begin 
 
+    for lvl in 0 to WIDTH_LOG2-1 loop
+      for i in 0 to 2**(WIDTH_LOG2-1-lvl) - 1 loop
 
-	clk <= not clk after 10 ns;
-	reset <= '1', '0' after 30 ns;
-	
-	modify_en <= '1', '0' after 100 ns, '1' after 200 ns, '0' after 220 ns, '1' after 300 ns, '0' after 320 ns, '1' after 400 ns, '0' after 420 ns;
-	modify_add_remove <= '1', '0' after 300 ns, '1' after 400 ns;
+        if lvl = 0 then
+          valid_tree(0)(i)  <= oh_in(2 * i) or oh_in(2 * i + 1);
+          encode_tree(0)(i)(0) <= oh_in(2 * i + 1);
+        end if;
 
-	modify_in_addr <= 	(CAM_NUM_ENTRIES-1 downto 2 => '0') & "01",
-			 			(CAM_NUM_ENTRIES-1 downto 2 => '0') & "10" after 200 ns,
-			 			(CAM_NUM_ENTRIES-1 downto 3 => '0') & "100" after 400 ns;
+        if lvl > 0 then
+          valid_tree(lvl)(i)  <= valid_tree(lvl - 1)(2 * i) or valid_tree(lvl - 1)(2 * i + 1);
+        
+          encode_tree(lvl)(i)(lvl) <= valid_tree(lvl - 1)(2 * i + 1);
 
-	in_data <= 	(others => '0'),
-				(PAGE_NUM_WIDTH-1 downto 2 => '0') & "01" after 200 ns;
+          if valid_tree(lvl - 1)(2 * i + 1) = '1' then
+            encode_tree(lvl)(i)(lvl-1 downto 0) <= encode_tree(lvl-1)(2 * i + 1)(lvl-1 downto 0);
+          else
+            encode_tree(lvl)(i)(lvl-1 downto 0) <= encode_tree(lvl-1)(2 * i)(lvl-1 downto 0);
+          end if;
+        end if;
 
+      end loop;
+    end loop;
 
+  end process;
 
-end architecture ; -- arch
+  hit   <= valid_tree(WIDTH_LOG2-1)(0);
+  bin_out <= to_integer(unsigned(encode_tree(WIDTH_LOG2-1)(0)));
+
+end architecture;

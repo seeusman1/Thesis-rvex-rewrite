@@ -54,7 +54,7 @@ library rvex;
 use rvex.cache_pkg.all;
 
 
-entity cache_mmu_cam is
+entity old_mmu_cam is
   generic (
     CCFG                        : cache_generic_config_type := cache_cfg
   );
@@ -85,10 +85,10 @@ entity cache_mmu_cam is
     in_data                     : in  std_logic_vector(CCFG.asidBitWidth + mmuTagSize(CCFG)-1 downto 0)
 
   );
-end entity cache_mmu_cam;
+end entity old_mmu_cam;
 
 
-architecture arch of cache_mmu_cam is
+architecture arch of old_mmu_cam is
 
   constant CAM_NUM_ENTRIES      : natural := 2**CCFG.tlbDepthLog2;
 
@@ -142,7 +142,7 @@ begin
   
   CAM_gen: for i in 0 to CAM_BLOCKS_DEPTH-1 generate
     asid_CAM_gen: for j in 0 to NUM_ASID_CAM_BLOCKS-1 generate
-      asid_CAM_n : entity work.cache_mmu_cam_ram
+      asid_CAM_n : entity work.old_mmu_cam_ram
       port map (
         clk                     => clk,
         in_data                 => in_data_asid((j+1)*CAM_BLOCK_DATA_WIDTH-1 downto j*CAM_BLOCK_DATA_WIDTH),
@@ -153,7 +153,7 @@ begin
     end generate;
     
     L1_tag_CAM_gen: for j in 0 to NUM_L1_TAG_CAM_BLOCKS-1 generate
-      L1_tag_CAM_n : entity work.cache_mmu_cam_ram
+      L1_tag_CAM_n : entity work.old_mmu_cam_ram
       port map (
         clk                     => clk,
         in_data                 => in_data_L1((j+1)*CAM_BLOCK_DATA_WIDTH-1 downto j*CAM_BLOCK_DATA_WIDTH),
@@ -164,7 +164,7 @@ begin
     end generate;   
     
     L2_tag_CAM_gen: for j in 0 to NUM_L2_TAG_CAM_BLOCKS-1 generate
-      L2_tag_CAM_n : entity work.cache_mmu_cam_ram
+      L2_tag_CAM_n : entity work.old_mmu_cam_ram
       port map (
         clk                     => clk,
         in_data                 => in_data_L2((j+1)*CAM_BLOCK_DATA_WIDTH-1 downto j*CAM_BLOCK_DATA_WIDTH),

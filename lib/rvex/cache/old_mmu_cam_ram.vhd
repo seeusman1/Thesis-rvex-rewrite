@@ -46,61 +46,65 @@
 
 -- Copyright (C) 2008-2016 by TU Delft.
 
+library std;
+use std.textio.all;
+
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
+use ieee.std_logic_textio.all;
 
 
-entity cache_mmu_oh2bin is
-  generic(
-    WIDTH_LOG2                  : integer
+-- The CAM is build out of blocks of BRAM which are 2^10 deep and 32 wide.
+entity old_mmu_cam_ram is
+  port (
+
+    clk                         : in  std_logic;
+
+    -- signals used for both reads and writes
+    in_data                     : in  std_logic_vector(9 downto 0);
+        
+    -- read signals
+    read_out_addr               : out std_logic_vector(31 downto 0);
+
+    -- write signals 
+    write_en                    : in  std_logic;
+    write_in_addr               : in  std_logic_vector(31 downto 0)
+    
   );
-  port(
-    oh_in                       : in  std_logic_vector(2**WIDTH_LOG2-1 downto 0);
-    bin_out                     : out integer range 0 to 2**WIDTH_LOG2-1;
-    hit                         : out std_logic
-  );
-end entity cache_mmu_oh2bin;
+end entity old_mmu_cam_ram;
 
-architecture log of cache_mmu_oh2bin is 
-  type t_valid_tree    is array (0 to WIDTH_LOG2-1)        of std_logic_vector(2**(WIDTH_LOG2 - 1) - 1 downto 0);
-  type t_encode_vector is array (0 to 2**(WIDTH_LOG2-1)-1) of std_logic_vector(WIDTH_LOG2-1 downto 0);
-  type t_encode_tree   is array (0 to WIDTH_LOG2-1)        of t_encode_vector;
 
-  signal valid_tree  : t_valid_tree;
-  signal encode_tree : t_encode_tree;
+architecture behavioural of old_mmu_cam_ram is
+  
+  constant CAM_RAM_WIDTH        : integer := 32;
+  constant CAM_RAM_DEPTH_LOG2   : integer := 10;
+  constant CAM_RAM_DEPTH        : integer := 2**CAM_RAM_DEPTH_LOG2;
+  
+  type RAM_block_t is array (CAM_RAM_DEPTH-1 downto 0) of std_logic_vector(CAM_RAM_WIDTH-1 downto 0);
+
+  constant RAM_BLOCK_INIT       : RAM_block_t := (others => (others => '0'));
+
+  signal CAM_mem                : RAM_block_t := RAM_BLOCK_INIT;
 
 begin
 
-  decoder_tree: process(oh_in, valid_tree, encode_tree) 
-  begin 
 
-    for lvl in 0 to WIDTH_LOG2-1 loop
-      for i in 0 to 2**(WIDTH_LOG2-1-lvl) - 1 loop
+  mem_proc : process( clk, in_data, write_en, write_in_addr )
+  begin
 
-        if lvl = 0 then
-          valid_tree(0)(i)  <= oh_in(2 * i) or oh_in(2 * i + 1);
-          encode_tree(0)(i)(0) <= oh_in(2 * i + 1);
-        end if;
+    if rising_edge(clk) then
 
-        if lvl > 0 then
-          valid_tree(lvl)(i)  <= valid_tree(lvl - 1)(2 * i) or valid_tree(lvl - 1)(2 * i + 1);
+      if write_en = '1' then
+
+        CAM_mem(to_integer(unsigned(in_data))) <= write_in_addr;
         
-          encode_tree(lvl)(i)(lvl) <= valid_tree(lvl - 1)(2 * i + 1);
+      end if;
 
-          if valid_tree(lvl - 1)(2 * i + 1) = '1' then
-            encode_tree(lvl)(i)(lvl-1 downto 0) <= encode_tree(lvl-1)(2 * i + 1)(lvl-1 downto 0);
-          else
-            encode_tree(lvl)(i)(lvl-1 downto 0) <= encode_tree(lvl-1)(2 * i)(lvl-1 downto 0);
-          end if;
-        end if;
-
-      end loop;
-    end loop;
-
-  end process;
-
-  hit   <= valid_tree(WIDTH_LOG2-1)(0);
-  bin_out <= to_integer(unsigned(encode_tree(WIDTH_LOG2-1)(0)));
+      read_out_addr <= CAM_mem(to_integer(unsigned(in_data)));
+      
+    end if;
+    
+  end process; -- mem_proc
 
 end architecture;

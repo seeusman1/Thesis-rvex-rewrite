@@ -56,7 +56,7 @@ use rvex.cache_pkg.all;
 use rvex.common_pkg.all;
 
 
-entity cache_mmu_victim_generator is 
+entity old_mmu_victim_generator is 
   generic (
     CCFG                        : cache_generic_config_type
   );
@@ -74,10 +74,10 @@ entity cache_mmu_victim_generator is
     victim                      : out std_logic_vector(2**CCFG.TLBDepthLog2-1 downto 0)
   );
   
-end entity cache_mmu_victim_generator;
+end entity old_mmu_victim_generator;
 
 
-architecture behavioural of cache_mmu_victim_generator is
+architecture behavioural of old_mmu_victim_generator is
   
   type r_victim_gen is record
       lfsr                    : std_logic_vector(15 downto 0);

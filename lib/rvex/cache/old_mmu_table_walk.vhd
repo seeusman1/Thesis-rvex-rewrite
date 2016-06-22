@@ -57,7 +57,7 @@ use rvex.cache_pkg.all;
 use rvex.bus_pkg.all;
 
 
-entity cache_mmu_table_walk is
+entity old_mmu_table_walk is
   generic (
     RCFG                        : rvex_generic_config_type := rvex_cfg;
     CCFG                        : cache_generic_config_type := cache_cfg
@@ -101,10 +101,10 @@ entity cache_mmu_table_walk is
     mem2tw                      : in  bus_slv2mst_type
     
   );
-end entity cache_mmu_table_walk;
+end entity old_mmu_table_walk;
 
 
-architecture behavioural of cache_mmu_table_walk is
+architecture behavioural of old_mmu_table_walk is
 
   type t_state is (idle, address_calc, mem_read_req, mem_read_ack, mem_write);
   type tag_array is array (0 to 2**RCFG.numLaneGroupsLog2-1) of std_logic_vector(mmutagSize(CCFG)-1 downto 0);

@@ -46,65 +46,37 @@
 
 -- Copyright (C) 2008-2016 by TU Delft.
 
-library std;
-use std.textio.all;
-
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
-use ieee.std_logic_textio.all;
 
 
--- The CAM is build out of blocks of BRAM which are 2^10 deep and 32 wide.
-entity cache_mmu_cam_ram is
-  port (
+entity tb_mmu_oh2bin is
+end entity;
 
-    clk                         : in  std_logic;
+architecture test of tb_mmu_oh2bin is 
 
-    -- signals used for both reads and writes
-    in_data                     : in  std_logic_vector(9 downto 0);
-        
-    -- read signals
-    read_out_addr               : out std_logic_vector(31 downto 0);
-
-    -- write signals 
-    write_en                    : in  std_logic;
-    write_in_addr               : in  std_logic_vector(31 downto 0)
-    
-  );
-end entity cache_mmu_cam_ram;
-
-
-architecture behavioural of cache_mmu_cam_ram is
-  
-  constant CAM_RAM_WIDTH        : integer := 32;
-  constant CAM_RAM_DEPTH_LOG2   : integer := 10;
-  constant CAM_RAM_DEPTH        : integer := 2**CAM_RAM_DEPTH_LOG2;
-  
-  type RAM_block_t is array (CAM_RAM_DEPTH-1 downto 0) of std_logic_vector(CAM_RAM_WIDTH-1 downto 0);
-
-  constant RAM_BLOCK_INIT       : RAM_block_t := (others => (others => '0'));
-
-  signal CAM_mem                : RAM_block_t := RAM_BLOCK_INIT;
+	signal oh_in 	: std_logic_vector(2**4-1 downto 0);
+	signal bin_out 	: integer range 0 to 2**4-1;
+	signal hit 		: std_logic;
 
 begin
 
+    uut : entity work.old_mmu_oh2bin
+    generic map(
+    	WIDTH_LOG2  => 4
+    )
+    port map(
+        oh_in       => oh_in,
+        bin_out     => bin_out,
+        hit         => hit
+    );
 
-  mem_proc : process( clk, in_data, write_en, write_in_addr )
-  begin
+    oh_in <= "0000000000000000" after 0 ns,
+    	     "0000100000000000" after 10 ns,
+    	     "0000000000011000" after 20 ns,
+    	     "1000000000000010" after 30 ns,
+    	     "0000000000000000" after 40 ns;
 
-    if rising_edge(clk) then
-
-      if write_en = '1' then
-
-        CAM_mem(to_integer(unsigned(in_data))) <= write_in_addr;
-        
-      end if;
-
-      read_out_addr <= CAM_mem(to_integer(unsigned(in_data)));
-      
-    end if;
-    
-  end process; -- mem_proc
 
 end architecture;
