@@ -255,7 +255,7 @@ package cache_pkg is
   -- lookup.
   function tagL1Msb(
     CCFG                        : cache_generic_config_type   
-  ) return natural;     
+  ) return natural;
   
   -- Returns the LSB of the tag used for the first level of a page table
   -- lookup.
@@ -274,6 +274,28 @@ package cache_pkg is
   function tagL2Lsb(
     CCFG                        : cache_generic_config_type   
   ) return natural;     
+  
+  -- Returns the log2 of the number of bytes in the page directory.
+  function pageDirSizeLog2B(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;   
+  
+  -- Returns the log2 of the number of bytes in a page table.
+  function pageTableSizeLog2B(
+    CCFG                        : cache_generic_config_type   
+  ) return natural;
+  
+  -- Flag bit indices for the page directory/table entries.
+  constant PFLAG_X : natural := 9; -- eXecutable
+  constant PFLAG_G : natural := 8; -- Global
+  constant PFLAG_S : natural := 7; -- page Size
+  constant PFLAG_D : natural := 6; -- Dirty
+  constant PFLAG_A : natural := 5; -- Accessed
+  constant PFLAG_C : natural := 4; -- Cache disable
+  constant PFLAG_W : natural := 3; -- cache Write-through
+  constant PFLAG_U : natural := 2; -- User accessible
+  constant PFLAG_R : natural := 1; -- wRitable
+  constant PFLAG_P : natural := 0; -- Present
   
   -- Data cache block status record for performance counters/tracing.
   type dcache_status_type is record
@@ -524,5 +546,21 @@ package body cache_pkg is
   begin
     return 0;
   end tagL2Lsb;
-
+  
+  -- Returns the log2 of the number of bytes in the page directory.
+  function pageDirSizeLog2B(
+    CCFG                        : cache_generic_config_type   
+  ) return natural is
+  begin
+    return mmuL1TagSize(CCFG) + 2;
+  end pageDirSizeLog2B;
+  
+  -- Returns the log2 of the number of bytes in a page table.
+  function pageTableSizeLog2B(
+    CCFG                        : cache_generic_config_type   
+  ) return natural is
+  begin
+    return mmuL2TagSize(CCFG) + 2;
+  end pageTableSizeLog2B;
+  
 end cache_pkg;

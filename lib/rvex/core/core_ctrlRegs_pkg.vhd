@@ -897,21 +897,30 @@ package core_ctrlRegs_pkg is
   constant CR_CMC1_BLP_H        : natural := 31;
   constant CR_CMC1_BLP_L        : natural := 24;
 
-  constant CR_CMC1_WTC_H        : natural := 19;
-  constant CR_CMC1_WTC_L        : natural := 18;
+  constant CR_CMC1_PXE_H        : natural := 23;
+  constant CR_CMC1_PXE_L        : natural := 22;
 
-  constant CR_CMC1_T_H          : natural := 16;                                                     -- GENERATED --
-  constant CR_CMC1_T_L          : natural := 16;
+  constant CR_CMC1_PGE_H        : natural := 21;                                                     -- GENERATED --
+  constant CR_CMC1_PGE_L        : natural := 20;
 
-  constant CR_CMC1_BYP_H        : natural := 11;
-  constant CR_CMC1_BYP_L        : natural := 10;
+  constant CR_CMC1_WP_H         : natural := 19;
+  constant CR_CMC1_WP_L         : natural := 18;
 
-  constant CR_CMC1_D_H          : natural := 8;
-  constant CR_CMC1_D_L          : natural := 8;
+  constant CR_CMC1_WTC_H        : natural := 17;
+  constant CR_CMC1_WTC_L        : natural := 16;
+
+  constant CR_CMC1_BYP_H        : natural := 9;
+  constant CR_CMC1_BYP_L        : natural := 8;                                                      -- GENERATED --
+
+  constant CR_CMC1_T_H          : natural := 2;
+  constant CR_CMC1_T_L          : natural := 2;
+
+  constant CR_CMC1_D_H          : natural := 1;
+  constant CR_CMC1_D_L          : natural := 1;
 
   constant CR_CMC1_I_H          : natural := 0;
-  constant CR_CMC1_I_L          : natural := 0;                                                      -- GENERATED --
-
+  constant CR_CMC1_I_L          : natural := 0;
+                                                                                                     -- GENERATED --
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Cache/MMU control 2
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -920,8 +929,8 @@ package core_ctrlRegs_pkg is
 
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Page table pointer
-  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       -- GENERATED --
-  constant CR_PTP               : natural := 170;
+  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  constant CR_PTP               : natural := 170;                                                    -- GENERATED --
   constant CR_PTP_V             : std_logic_vector(8 downto 2) := "0101010";
 
   constant CR_PTP_PTP_H         : natural := 31;
@@ -930,8 +939,8 @@ package core_ctrlRegs_pkg is
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Address space ID
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  constant CR_ASID              : natural := 171;                                                    -- GENERATED --
-  constant CR_ASID_V            : std_logic_vector(8 downto 2) := "0101011";
+  constant CR_ASID              : natural := 171;
+  constant CR_ASID_V            : std_logic_vector(8 downto 2) := "0101011";                         -- GENERATED --
 
   constant CR_ASID_ASID_H       : natural := 31;
   constant CR_ASID_ASID_L       : natural := 0;
@@ -940,8 +949,8 @@ package core_ctrlRegs_pkg is
   -- TLB flush tag low
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   constant CR_TFLO              : natural := 172;
-  constant CR_TFLO_V            : std_logic_vector(8 downto 2) := "0101100";                         -- GENERATED --
-
+  constant CR_TFLO_V            : std_logic_vector(8 downto 2) := "0101100";
+                                                                                                     -- GENERATED --
   constant CR_TFLO_TFLO_H       : natural := 31;
   constant CR_TFLO_TFLO_L       : natural := 0;
 
@@ -950,8 +959,8 @@ package core_ctrlRegs_pkg is
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   constant CR_TFHI              : natural := 173;
   constant CR_TFHI_V            : std_logic_vector(8 downto 2) := "0101101";
-                                                                                                     -- GENERATED --
-  constant CR_TFHI_TFHI_H       : natural := 31;
+
+  constant CR_TFHI_TFHI_H       : natural := 31;                                                     -- GENERATED --
   constant CR_TFHI_TFHI_L       : natural := 0;
 
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -960,8 +969,8 @@ package core_ctrlRegs_pkg is
   constant CR_TFID              : natural := 174;
   constant CR_TFID_V            : std_logic_vector(8 downto 2) := "0101110";
 
-  constant CR_TFID_E_H          : natural := 31;                                                     -- GENERATED --
-  constant CR_TFID_E_L          : natural := 31;
+  constant CR_TFID_E_H          : natural := 31;
+  constant CR_TFID_E_L          : natural := 31;                                                     -- GENERATED --
 
   constant CR_TFID_ASID_H       : natural := 30;
   constant CR_TFID_ASID_L       : natural := 0;
@@ -970,8 +979,8 @@ package core_ctrlRegs_pkg is
   -- Cycle counter
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   constant CR_CYC               : natural := 192;
-  constant CR_CYC_V             : std_logic_vector(8 downto 2) := "1000000";                         -- GENERATED --
-
+  constant CR_CYC_V             : std_logic_vector(8 downto 2) := "1000000";
+                                                                                                     -- GENERATED --
   constant CR_CYC_CYC3_H        : natural := 31;
   constant CR_CYC_CYC3_L        : natural := 24;
 
@@ -980,8 +989,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_CYC_CYC1_H        : natural := 15;
   constant CR_CYC_CYC1_L        : natural := 8;
-                                                                                                     -- GENERATED --
-  constant CR_CYC_CYC0_H        : natural := 7;
+
+  constant CR_CYC_CYC0_H        : natural := 7;                                                      -- GENERATED --
   constant CR_CYC_CYC0_L        : natural := 0;
 
   constant CR_CYCH              : natural := 193;
@@ -990,8 +999,8 @@ package core_ctrlRegs_pkg is
   constant CR_CYCH_CYC6_H       : natural := 31;
   constant CR_CYCH_CYC6_L       : natural := 24;
 
-  constant CR_CYCH_CYC5_H       : natural := 23;                                                     -- GENERATED --
-  constant CR_CYCH_CYC5_L       : natural := 16;
+  constant CR_CYCH_CYC5_H       : natural := 23;
+  constant CR_CYCH_CYC5_L       : natural := 16;                                                     -- GENERATED --
 
   constant CR_CYCH_CYC4_H       : natural := 15;
   constant CR_CYCH_CYC4_L       : natural := 8;
@@ -1000,8 +1009,8 @@ package core_ctrlRegs_pkg is
   constant CR_CYCH_CYC3_L       : natural := 0;
 
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  -- Stall cycle counter                                                                             -- GENERATED --
-  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  -- Stall cycle counter
+  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       -- GENERATED --
   constant CR_STALL             : natural := 194;
   constant CR_STALL_V           : std_logic_vector(8 downto 2) := "1000010";
 
@@ -1010,8 +1019,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_STALL_STALL2_H    : natural := 23;
   constant CR_STALL_STALL2_L    : natural := 16;
-                                                                                                     -- GENERATED --
-  constant CR_STALL_STALL1_H    : natural := 15;
+
+  constant CR_STALL_STALL1_H    : natural := 15;                                                     -- GENERATED --
   constant CR_STALL_STALL1_L    : natural := 8;
 
   constant CR_STALL_STALL0_H    : natural := 7;
@@ -1020,8 +1029,8 @@ package core_ctrlRegs_pkg is
   constant CR_STALLH            : natural := 195;
   constant CR_STALLH_V          : std_logic_vector(8 downto 2) := "1000011";
 
-  constant CR_STALLH_STALL6_H   : natural := 31;                                                     -- GENERATED --
-  constant CR_STALLH_STALL6_L   : natural := 24;
+  constant CR_STALLH_STALL6_H   : natural := 31;
+  constant CR_STALLH_STALL6_L   : natural := 24;                                                     -- GENERATED --
 
   constant CR_STALLH_STALL5_H   : natural := 23;
   constant CR_STALLH_STALL5_L   : natural := 16;
@@ -1030,8 +1039,8 @@ package core_ctrlRegs_pkg is
   constant CR_STALLH_STALL4_L   : natural := 8;
 
   constant CR_STALLH_STALL3_H   : natural := 7;
-  constant CR_STALLH_STALL3_L   : natural := 0;                                                      -- GENERATED --
-
+  constant CR_STALLH_STALL3_L   : natural := 0;
+                                                                                                     -- GENERATED --
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Committed bundle counter
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1040,8 +1049,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_BUN_BUN3_H        : natural := 31;
   constant CR_BUN_BUN3_L        : natural := 24;
-                                                                                                     -- GENERATED --
-  constant CR_BUN_BUN2_H        : natural := 23;
+
+  constant CR_BUN_BUN2_H        : natural := 23;                                                     -- GENERATED --
   constant CR_BUN_BUN2_L        : natural := 16;
 
   constant CR_BUN_BUN1_H        : natural := 15;
@@ -1050,8 +1059,8 @@ package core_ctrlRegs_pkg is
   constant CR_BUN_BUN0_H        : natural := 7;
   constant CR_BUN_BUN0_L        : natural := 0;
 
-  constant CR_BUNH              : natural := 197;                                                    -- GENERATED --
-  constant CR_BUNH_V            : std_logic_vector(8 downto 2) := "1000101";
+  constant CR_BUNH              : natural := 197;
+  constant CR_BUNH_V            : std_logic_vector(8 downto 2) := "1000101";                         -- GENERATED --
 
   constant CR_BUNH_BUN6_H       : natural := 31;
   constant CR_BUNH_BUN6_L       : natural := 24;
@@ -1060,8 +1069,8 @@ package core_ctrlRegs_pkg is
   constant CR_BUNH_BUN5_L       : natural := 16;
 
   constant CR_BUNH_BUN4_H       : natural := 15;
-  constant CR_BUNH_BUN4_L       : natural := 8;                                                      -- GENERATED --
-
+  constant CR_BUNH_BUN4_L       : natural := 8;
+                                                                                                     -- GENERATED --
   constant CR_BUNH_BUN3_H       : natural := 7;
   constant CR_BUNH_BUN3_L       : natural := 0;
 
@@ -1070,8 +1079,8 @@ package core_ctrlRegs_pkg is
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   constant CR_SYL               : natural := 198;
   constant CR_SYL_V             : std_logic_vector(8 downto 2) := "1000110";
-                                                                                                     -- GENERATED --
-  constant CR_SYL_SYL3_H        : natural := 31;
+
+  constant CR_SYL_SYL3_H        : natural := 31;                                                     -- GENERATED --
   constant CR_SYL_SYL3_L        : natural := 24;
 
   constant CR_SYL_SYL2_H        : natural := 23;
@@ -1080,8 +1089,8 @@ package core_ctrlRegs_pkg is
   constant CR_SYL_SYL1_H        : natural := 15;
   constant CR_SYL_SYL1_L        : natural := 8;
 
-  constant CR_SYL_SYL0_H        : natural := 7;                                                      -- GENERATED --
-  constant CR_SYL_SYL0_L        : natural := 0;
+  constant CR_SYL_SYL0_H        : natural := 7;
+  constant CR_SYL_SYL0_L        : natural := 0;                                                      -- GENERATED --
 
   constant CR_SYLH              : natural := 199;
   constant CR_SYLH_V            : std_logic_vector(8 downto 2) := "1000111";
@@ -1090,8 +1099,8 @@ package core_ctrlRegs_pkg is
   constant CR_SYLH_SYL6_L       : natural := 24;
 
   constant CR_SYLH_SYL5_H       : natural := 23;
-  constant CR_SYLH_SYL5_L       : natural := 16;                                                     -- GENERATED --
-
+  constant CR_SYLH_SYL5_L       : natural := 16;
+                                                                                                     -- GENERATED --
   constant CR_SYLH_SYL4_H       : natural := 15;
   constant CR_SYLH_SYL4_L       : natural := 8;
 
@@ -1100,8 +1109,8 @@ package core_ctrlRegs_pkg is
 
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Committed NOP counter
-  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       -- GENERATED --
-  constant CR_NOP               : natural := 200;
+  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  constant CR_NOP               : natural := 200;                                                    -- GENERATED --
   constant CR_NOP_V             : std_logic_vector(8 downto 2) := "1001000";
 
   constant CR_NOP_NOP3_H        : natural := 31;
@@ -1110,8 +1119,8 @@ package core_ctrlRegs_pkg is
   constant CR_NOP_NOP2_H        : natural := 23;
   constant CR_NOP_NOP2_L        : natural := 16;
 
-  constant CR_NOP_NOP1_H        : natural := 15;                                                     -- GENERATED --
-  constant CR_NOP_NOP1_L        : natural := 8;
+  constant CR_NOP_NOP1_H        : natural := 15;
+  constant CR_NOP_NOP1_L        : natural := 8;                                                      -- GENERATED --
 
   constant CR_NOP_NOP0_H        : natural := 7;
   constant CR_NOP_NOP0_L        : natural := 0;
@@ -1120,8 +1129,8 @@ package core_ctrlRegs_pkg is
   constant CR_NOPH_V            : std_logic_vector(8 downto 2) := "1001001";
 
   constant CR_NOPH_NOP6_H       : natural := 31;
-  constant CR_NOPH_NOP6_L       : natural := 24;                                                     -- GENERATED --
-
+  constant CR_NOPH_NOP6_L       : natural := 24;
+                                                                                                     -- GENERATED --
   constant CR_NOPH_NOP5_H       : natural := 23;
   constant CR_NOPH_NOP5_L       : natural := 16;
 
@@ -1130,8 +1139,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_NOPH_NOP3_H       : natural := 7;
   constant CR_NOPH_NOP3_L       : natural := 0;
-                                                                                                     -- GENERATED --
-  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       -- GENERATED --
   -- Instruction cache access counter
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   constant CR_IACC              : natural := 202;
@@ -1140,8 +1149,8 @@ package core_ctrlRegs_pkg is
   constant CR_IACC_IACC3_H      : natural := 31;
   constant CR_IACC_IACC3_L      : natural := 24;
 
-  constant CR_IACC_IACC2_H      : natural := 23;                                                     -- GENERATED --
-  constant CR_IACC_IACC2_L      : natural := 16;
+  constant CR_IACC_IACC2_H      : natural := 23;
+  constant CR_IACC_IACC2_L      : natural := 16;                                                     -- GENERATED --
 
   constant CR_IACC_IACC1_H      : natural := 15;
   constant CR_IACC_IACC1_L      : natural := 8;
@@ -1150,8 +1159,8 @@ package core_ctrlRegs_pkg is
   constant CR_IACC_IACC0_L      : natural := 0;
 
   constant CR_IACCH             : natural := 203;
-  constant CR_IACCH_V           : std_logic_vector(8 downto 2) := "1001011";                         -- GENERATED --
-
+  constant CR_IACCH_V           : std_logic_vector(8 downto 2) := "1001011";
+                                                                                                     -- GENERATED --
   constant CR_IACCH_IACC6_H     : natural := 31;
   constant CR_IACCH_IACC6_L     : natural := 24;
 
@@ -1160,8 +1169,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_IACCH_IACC4_H     : natural := 15;
   constant CR_IACCH_IACC4_L     : natural := 8;
-                                                                                                     -- GENERATED --
-  constant CR_IACCH_IACC3_H     : natural := 7;
+
+  constant CR_IACCH_IACC3_H     : natural := 7;                                                      -- GENERATED --
   constant CR_IACCH_IACC3_L     : natural := 0;
 
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1170,8 +1179,8 @@ package core_ctrlRegs_pkg is
   constant CR_IMISS             : natural := 204;
   constant CR_IMISS_V           : std_logic_vector(8 downto 2) := "1001100";
 
-  constant CR_IMISS_IMISS3_H    : natural := 31;                                                     -- GENERATED --
-  constant CR_IMISS_IMISS3_L    : natural := 24;
+  constant CR_IMISS_IMISS3_H    : natural := 31;
+  constant CR_IMISS_IMISS3_L    : natural := 24;                                                     -- GENERATED --
 
   constant CR_IMISS_IMISS2_H    : natural := 23;
   constant CR_IMISS_IMISS2_L    : natural := 16;
@@ -1180,8 +1189,8 @@ package core_ctrlRegs_pkg is
   constant CR_IMISS_IMISS1_L    : natural := 8;
 
   constant CR_IMISS_IMISS0_H    : natural := 7;
-  constant CR_IMISS_IMISS0_L    : natural := 0;                                                      -- GENERATED --
-
+  constant CR_IMISS_IMISS0_L    : natural := 0;
+                                                                                                     -- GENERATED --
   constant CR_IMISSH            : natural := 205;
   constant CR_IMISSH_V          : std_logic_vector(8 downto 2) := "1001101";
 
@@ -1190,8 +1199,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_IMISSH_IMISS5_H   : natural := 23;
   constant CR_IMISSH_IMISS5_L   : natural := 16;
-                                                                                                     -- GENERATED --
-  constant CR_IMISSH_IMISS4_H   : natural := 15;
+
+  constant CR_IMISSH_IMISS4_H   : natural := 15;                                                     -- GENERATED --
   constant CR_IMISSH_IMISS4_L   : natural := 8;
 
   constant CR_IMISSH_IMISS3_H   : natural := 7;
@@ -1200,8 +1209,8 @@ package core_ctrlRegs_pkg is
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Data cache read access counter
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  constant CR_DRACC             : natural := 206;                                                    -- GENERATED --
-  constant CR_DRACC_V           : std_logic_vector(8 downto 2) := "1001110";
+  constant CR_DRACC             : natural := 206;
+  constant CR_DRACC_V           : std_logic_vector(8 downto 2) := "1001110";                         -- GENERATED --
 
   constant CR_DRACC_DRACC3_H    : natural := 31;
   constant CR_DRACC_DRACC3_L    : natural := 24;
@@ -1210,8 +1219,8 @@ package core_ctrlRegs_pkg is
   constant CR_DRACC_DRACC2_L    : natural := 16;
 
   constant CR_DRACC_DRACC1_H    : natural := 15;
-  constant CR_DRACC_DRACC1_L    : natural := 8;                                                      -- GENERATED --
-
+  constant CR_DRACC_DRACC1_L    : natural := 8;
+                                                                                                     -- GENERATED --
   constant CR_DRACC_DRACC0_H    : natural := 7;
   constant CR_DRACC_DRACC0_L    : natural := 0;
 
@@ -1220,8 +1229,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_DRACCH_DRACC6_H   : natural := 31;
   constant CR_DRACCH_DRACC6_L   : natural := 24;
-                                                                                                     -- GENERATED --
-  constant CR_DRACCH_DRACC5_H   : natural := 23;
+
+  constant CR_DRACCH_DRACC5_H   : natural := 23;                                                     -- GENERATED --
   constant CR_DRACCH_DRACC5_L   : natural := 16;
 
   constant CR_DRACCH_DRACC4_H   : natural := 15;
@@ -1230,8 +1239,8 @@ package core_ctrlRegs_pkg is
   constant CR_DRACCH_DRACC3_H   : natural := 7;
   constant CR_DRACCH_DRACC3_L   : natural := 0;
 
-  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       -- GENERATED --
-  -- Data cache read miss counter
+  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  -- Data cache read miss counter                                                                    -- GENERATED --
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   constant CR_DRMISS            : natural := 208;
   constant CR_DRMISS_V          : std_logic_vector(8 downto 2) := "1010000";
@@ -1240,8 +1249,8 @@ package core_ctrlRegs_pkg is
   constant CR_DRMISS_DRMISS3_L  : natural := 24;
 
   constant CR_DRMISS_DRMISS2_H  : natural := 23;
-  constant CR_DRMISS_DRMISS2_L  : natural := 16;                                                     -- GENERATED --
-
+  constant CR_DRMISS_DRMISS2_L  : natural := 16;
+                                                                                                     -- GENERATED --
   constant CR_DRMISS_DRMISS1_H  : natural := 15;
   constant CR_DRMISS_DRMISS1_L  : natural := 8;
 
@@ -1250,8 +1259,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_DRMISSH           : natural := 209;
   constant CR_DRMISSH_V         : std_logic_vector(8 downto 2) := "1010001";
-                                                                                                     -- GENERATED --
-  constant CR_DRMISSH_DRMISS6_H : natural := 31;
+
+  constant CR_DRMISSH_DRMISS6_H : natural := 31;                                                     -- GENERATED --
   constant CR_DRMISSH_DRMISS6_L : natural := 24;
 
   constant CR_DRMISSH_DRMISS5_H : natural := 23;
@@ -1260,8 +1269,8 @@ package core_ctrlRegs_pkg is
   constant CR_DRMISSH_DRMISS4_H : natural := 15;
   constant CR_DRMISSH_DRMISS4_L : natural := 8;
 
-  constant CR_DRMISSH_DRMISS3_H : natural := 7;                                                      -- GENERATED --
-  constant CR_DRMISSH_DRMISS3_L : natural := 0;
+  constant CR_DRMISSH_DRMISS3_H : natural := 7;
+  constant CR_DRMISSH_DRMISS3_L : natural := 0;                                                      -- GENERATED --
 
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Data cache write access counter
@@ -1270,8 +1279,8 @@ package core_ctrlRegs_pkg is
   constant CR_DWACC_V           : std_logic_vector(8 downto 2) := "1010010";
 
   constant CR_DWACC_DWACC3_H    : natural := 31;
-  constant CR_DWACC_DWACC3_L    : natural := 24;                                                     -- GENERATED --
-
+  constant CR_DWACC_DWACC3_L    : natural := 24;
+                                                                                                     -- GENERATED --
   constant CR_DWACC_DWACC2_H    : natural := 23;
   constant CR_DWACC_DWACC2_L    : natural := 16;
 
@@ -1280,8 +1289,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_DWACC_DWACC0_H    : natural := 7;
   constant CR_DWACC_DWACC0_L    : natural := 0;
-                                                                                                     -- GENERATED --
-  constant CR_DWACCH            : natural := 211;
+
+  constant CR_DWACCH            : natural := 211;                                                    -- GENERATED --
   constant CR_DWACCH_V          : std_logic_vector(8 downto 2) := "1010011";
 
   constant CR_DWACCH_DWACC6_H   : natural := 31;
@@ -1290,8 +1299,8 @@ package core_ctrlRegs_pkg is
   constant CR_DWACCH_DWACC5_H   : natural := 23;
   constant CR_DWACCH_DWACC5_L   : natural := 16;
 
-  constant CR_DWACCH_DWACC4_H   : natural := 15;                                                     -- GENERATED --
-  constant CR_DWACCH_DWACC4_L   : natural := 8;
+  constant CR_DWACCH_DWACC4_H   : natural := 15;
+  constant CR_DWACCH_DWACC4_L   : natural := 8;                                                      -- GENERATED --
 
   constant CR_DWACCH_DWACC3_H   : natural := 7;
   constant CR_DWACCH_DWACC3_L   : natural := 0;
@@ -1300,8 +1309,8 @@ package core_ctrlRegs_pkg is
   -- Data cache write miss counter
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   constant CR_DWMISS            : natural := 212;
-  constant CR_DWMISS_V          : std_logic_vector(8 downto 2) := "1010100";                         -- GENERATED --
-
+  constant CR_DWMISS_V          : std_logic_vector(8 downto 2) := "1010100";
+                                                                                                     -- GENERATED --
   constant CR_DWMISS_DWMISS3_H  : natural := 31;
   constant CR_DWMISS_DWMISS3_L  : natural := 24;
 
@@ -1310,8 +1319,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_DWMISS_DWMISS1_H  : natural := 15;
   constant CR_DWMISS_DWMISS1_L  : natural := 8;
-                                                                                                     -- GENERATED --
-  constant CR_DWMISS_DWMISS0_H  : natural := 7;
+
+  constant CR_DWMISS_DWMISS0_H  : natural := 7;                                                      -- GENERATED --
   constant CR_DWMISS_DWMISS0_L  : natural := 0;
 
   constant CR_DWMISSH           : natural := 213;
@@ -1320,8 +1329,8 @@ package core_ctrlRegs_pkg is
   constant CR_DWMISSH_DWMISS6_H : natural := 31;
   constant CR_DWMISSH_DWMISS6_L : natural := 24;
 
-  constant CR_DWMISSH_DWMISS5_H : natural := 23;                                                     -- GENERATED --
-  constant CR_DWMISSH_DWMISS5_L : natural := 16;
+  constant CR_DWMISSH_DWMISS5_H : natural := 23;
+  constant CR_DWMISSH_DWMISS5_L : natural := 16;                                                     -- GENERATED --
 
   constant CR_DWMISSH_DWMISS4_H : natural := 15;
   constant CR_DWMISSH_DWMISS4_L : natural := 8;
@@ -1330,8 +1339,8 @@ package core_ctrlRegs_pkg is
   constant CR_DWMISSH_DWMISS3_L : natural := 0;
 
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-  -- Data cache bypass counter                                                                       -- GENERATED --
-  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+  -- Data cache bypass counter
+  -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -                       -- GENERATED --
   constant CR_DBYPASS           : natural := 214;
   constant CR_DBYPASS_V         : std_logic_vector(8 downto 2) := "1010110";
 
@@ -1340,8 +1349,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_DBYPASS_DBYPASS2_H: natural := 23;
   constant CR_DBYPASS_DBYPASS2_L: natural := 16;
-                                                                                                     -- GENERATED --
-  constant CR_DBYPASS_DBYPASS1_H: natural := 15;
+
+  constant CR_DBYPASS_DBYPASS1_H: natural := 15;                                                     -- GENERATED --
   constant CR_DBYPASS_DBYPASS1_L: natural := 8;
 
   constant CR_DBYPASS_DBYPASS0_H: natural := 7;
@@ -1350,8 +1359,8 @@ package core_ctrlRegs_pkg is
   constant CR_DBYPASSH          : natural := 215;
   constant CR_DBYPASSH_V        : std_logic_vector(8 downto 2) := "1010111";
 
-  constant CR_DBYPASSH_DBYPASS6_H: natural := 31;                                                    -- GENERATED --
-  constant CR_DBYPASSH_DBYPASS6_L: natural := 24;
+  constant CR_DBYPASSH_DBYPASS6_H: natural := 31;
+  constant CR_DBYPASSH_DBYPASS6_L: natural := 24;                                                    -- GENERATED --
 
   constant CR_DBYPASSH_DBYPASS5_H: natural := 23;
   constant CR_DBYPASSH_DBYPASS5_L: natural := 16;
@@ -1360,8 +1369,8 @@ package core_ctrlRegs_pkg is
   constant CR_DBYPASSH_DBYPASS4_L: natural := 8;
 
   constant CR_DBYPASSH_DBYPASS3_H: natural := 7;
-  constant CR_DBYPASSH_DBYPASS3_L: natural := 0;                                                     -- GENERATED --
-
+  constant CR_DBYPASSH_DBYPASS3_L: natural := 0;
+                                                                                                     -- GENERATED --
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
   -- Data cache write buffer counter
   -- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1370,8 +1379,8 @@ package core_ctrlRegs_pkg is
 
   constant CR_DWBUF_DWBUF3_H    : natural := 31;
   constant CR_DWBUF_DWBUF3_L    : natural := 24;
-                                                                                                     -- GENERATED --
-  constant CR_DWBUF_DWBUF2_H    : natural := 23;
+
+  constant CR_DWBUF_DWBUF2_H    : natural := 23;                                                     -- GENERATED --
   constant CR_DWBUF_DWBUF2_L    : natural := 16;
 
   constant CR_DWBUF_DWBUF1_H    : natural := 15;
@@ -1380,8 +1389,8 @@ package core_ctrlRegs_pkg is
   constant CR_DWBUF_DWBUF0_H    : natural := 7;
   constant CR_DWBUF_DWBUF0_L    : natural := 0;
 
-  constant CR_DWBUFH            : natural := 217;                                                    -- GENERATED --
-  constant CR_DWBUFH_V          : std_logic_vector(8 downto 2) := "1011001";
+  constant CR_DWBUFH            : natural := 217;
+  constant CR_DWBUFH_V          : std_logic_vector(8 downto 2) := "1011001";                         -- GENERATED --
 
   constant CR_DWBUFH_DWBUF6_H   : natural := 31;
   constant CR_DWBUFH_DWBUF6_L   : natural := 24;
@@ -1390,8 +1399,8 @@ package core_ctrlRegs_pkg is
   constant CR_DWBUFH_DWBUF5_L   : natural := 16;
 
   constant CR_DWBUFH_DWBUF4_H   : natural := 15;
-  constant CR_DWBUFH_DWBUF4_L   : natural := 8;                                                      -- GENERATED --
-
+  constant CR_DWBUFH_DWBUF4_L   : natural := 8;
+                                                                                                     -- GENERATED --
   constant CR_DWBUFH_DWBUF3_H   : natural := 7;
   constant CR_DWBUFH_DWBUF3_L   : natural := 0;
 

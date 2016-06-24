@@ -34,7 +34,98 @@ _read = _r;
 \connect{cxreg2mem_blockPrio}{_r}
 
 %-------------------------------------------------------------------------------
-\field{19..18}{WTC}
+\field{23..22}{PXE}
+%-------------------------------------------------------------------------------
+This field selects whether the executable bit in the page table is used or
+ignored by the table walker.
+
+When the executable bit is enabled, this register reads as \code{01}. When it is
+disabled, it reads as \code{10}. Writing \code{00} has no effect, writing
+\code{01} enables the bit, writing \code{10} disables it and writing \code{11}
+toggles the state. This prevents the need for read-modify-write operations.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
+\implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+_r = _v;
+\end{lstlisting}
+\connect{cxreg2mem_execPageEna}{_r}
+
+%-------------------------------------------------------------------------------
+\field{21..20}{PGE}
+%-------------------------------------------------------------------------------
+This field selects whether the global bit in the page table is used or ignored
+by the table walker.
+
+When the global bit is enabled, this register reads as \code{01}. When it is
+disabled, it reads as \code{10}. Writing \code{00} has no effect, writing
+\code{01} enables the bit, writing \code{10} disables it and writing \code{11}
+toggles the state. This prevents the need for read-modify-write operations.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
+\implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+_r = _v;
+\end{lstlisting}
+\connect{cxreg2mem_globalPageEna}{_r}
+
+%-------------------------------------------------------------------------------
+\field{19..18}{WP}
+%-------------------------------------------------------------------------------
+This field selects whether write protection is enabled for read-only pages when
+running in kernel mode. This behavior is off by default.
+
+When write protection is enabled, this register reads as \code{01}. When it is
+disabled, it reads as \code{10}. Writing \code{00} has no effect, writing
+\code{01} enables write protection in kernel mode, writing \code{10} disables it
+and writing \code{11} toggles the state. This prevents the need for
+read-modify-write operations.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
+\implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+_r = _v;
+\end{lstlisting}
+\connect{cxreg2mem_writeProtect}{_r}
+
+%-------------------------------------------------------------------------------
+\field{17..16}{WTC}
 %-------------------------------------------------------------------------------
 This field selects whether the write-to-clean trap is enabled or disabled. This
 trap may be used to implement copy-on-write behavior.
@@ -65,7 +156,35 @@ _r = _v;
 \connect{cxreg2mem_writeToCleanEna}{_r}
 
 %-------------------------------------------------------------------------------
-\field{16}{T}
+\field{9..8}{BYP}
+%-------------------------------------------------------------------------------
+This field may be used to force all data accesses to bypass the cache. When this 
+is the case, this register reads as \code{01}. Otherwise, it reads as \code{10}. 
+Writing \code{00} has no effect, writing \code{01} enables the bypass, writing 
+\code{10} disables it and writing \code{11} toggles the state. This prevents the 
+need for read-modify-write operations.
+
+% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+\reset{10}
+\declaration{}
+\declVariable{_v}{bit}{0}
+\declRegister{_r}{bit}{0}
+\declVariable{_cmd}{bitvec2}{0}
+\implementation{}
+\begin{lstlisting}
+_v = _r;
+
+// Handle bus interface.
+_cmd = _wmask & _write;
+if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
+_read = ~_r $ _r;
+
+_r = _v;
+\end{lstlisting}
+\connect{cxreg2dmem_bypass}{_r}
+
+%-------------------------------------------------------------------------------
+\field{2}{T}
 %-------------------------------------------------------------------------------
 This flag controls TLB flushing. Writing a \code{1} to this register initiates a
 flush, writing \code{0} has no effect. This register reads as \code{1} while the
@@ -94,35 +213,7 @@ _read = _r;
 \connect{cxreg2mem_tlbFlushStart}{_s}
 
 %-------------------------------------------------------------------------------
-\field{11..10}{BYP}
-%-------------------------------------------------------------------------------
-This field may be used to force all data accesses to bypass the cache. When this 
-is the case, this register reads as \code{01}. Otherwise, it reads as \code{10}. 
-Writing \code{00} has no effect, writing \code{01} enables the bypass, writing 
-\code{10} disables it and writing \code{11} toggles the state. This prevents the 
-need for read-modify-write operations.
-
-% - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-\reset{10}
-\declaration{}
-\declVariable{_v}{bit}{0}
-\declRegister{_r}{bit}{0}
-\declVariable{_cmd}{bitvec2}{0}
-\implementation{}
-\begin{lstlisting}
-_v = _r;
-
-// Handle bus interface.
-_cmd = _wmask & _write;
-if (_cmd == "11") _v = ~_v; else _v = (_v | _cmd[0]) & ~_cmd[1];
-_read = ~_r $ _r;
-
-_r = _v;
-\end{lstlisting}
-\connect{cxreg2dmem_bypass}{_r}
-
-%-------------------------------------------------------------------------------
-\field{8}{D}
+\field{1}{D}
 %-------------------------------------------------------------------------------
 This flag controls data cache flushing. Writing a \code{1} to this register 
 initiates a flush, writing \code{0} has no effect. This register reads as 
@@ -183,9 +274,10 @@ This register is reserved for future expansions.
 \register{PTP}{Page table pointer}{0x2A8}
 %===============================================================================
 
-This register holds the base address to the page table as used by the MMU.
+This register holds the base address to the page directory as used by the MMU.
 Writing to this register while the MMU is enabled leads to undefined behavior.
-In any case, a full TLB flush is needed after writing to this register.
+In any case, a full TLB flush is needed after writing to this register. This
+address must be aligned by the size of the page directory, which is 
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{PTP}
@@ -209,8 +301,8 @@ This register holds the address space ID for the currently running task as used
 by the MMU. The address space ID is used by the TLB to distinguish between
 entries from different tasks, preventing the need to flush the TLB after every
 context switch. Only the $n$ LSBs of this register are actually used. The value
-of $n$ is design-time configurable and may be read from the TODO field of TODO
-\todo{ASID width version register}. It is 10 by default.
+of $n$ is design-time configurable and may be read from the ASID field in
+\creg{EXT1}. It is 10 by default.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{ASID}

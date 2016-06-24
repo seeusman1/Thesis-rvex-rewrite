@@ -393,39 +393,51 @@ entity core is
     rv2mem_stallOut             : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal controls whether address translation is active or not.
-    rv2mem_mmuEnable            : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_mmuEnable            : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal represents the current privilege level of processor. It is
     -- high for kernel mode and low for application mode.
-    rv2mem_kernelMode           : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_kernelMode           : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal controls whether a trap is generated when a write to a clean
     -- page is attempted.
-    rv2mem_writeToCleanEna      : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_writeToCleanEna      : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- This signal controls whether kernel threads can write to read-only
+    -- pages. This is the case when this signal is low.
+    rv2mem_writeProtect         : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- This signal specifies whether the global page bit in the page table is
+    -- enabled or ignored.
+    rv2mem_globalPageEna        : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- This signal specifies whether the executable page bit in the page table
+    -- is enabled or ignored.
+    rv2mem_execPageEna          : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal specifies the page table pointer for the current thread.
-    rv2mem_pageTablePtr         : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_pageTablePtr         : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal specifies the address space ID for the current thread.
-    rv2mem_asid                 : out rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_asid                 : out rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- When this signal is high, a TLB flush should be initiated.
-    rv2mem_tlbFlushStart        : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_tlbFlushStart        : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- This is high when a TLB cache flush is busy. If flushes are always
     -- single-cycle, this can just always be zero.
-    mem2rv_tlbFlushBusy         : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
+    mem2rv_tlbFlushBusy         : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     -- When rv2mem_tlbFlushAsidEna is high, rv2mem_tlbFlushAsid specifies a
     -- specific ASID that must be flushed during a TLB flush. Entries with
     -- other ASIDs are then unaffected.
-    rv2mem_tlbFlushAsidEna      : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    rv2mem_tlbFlushAsid         : out rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_tlbFlushAsidEna      : out std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    rv2mem_tlbFlushAsid         : out rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     -- These two signals specify a lower and upper limit for the virtual page
     -- addresses that are to be flushed. Both are inclusive.
-    rv2mem_tlbFlushTagLow       : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-    rv2mem_tlbFlushTagHigh      : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+    rv2mem_tlbFlushTagLow       : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+    rv2mem_tlbFlushTagHigh      : out rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Instruction memory interface
@@ -476,6 +488,7 @@ entity core is
     imem2rv_busFault            : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     imem2rv_pageFault           : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     imem2rv_kernelAccVio        : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    imem2rv_execAccVio          : in  std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     -- Cache block affinity data from cache. This should be set to cache block
     -- index which serviced the request. This is just a hint for the processor
@@ -814,6 +827,20 @@ architecture Behavioral of core is
   signal dmem2cxreg_flushBusy         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2dmem_bypass            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2mem_blockPrio          : rvex_byte_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_mmuEnable          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_kernelMode         : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_writeToCleanEna    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_writeProtect       : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_globalPageEna      : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_execPageEna        : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_pageTablePtr       : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_asid               : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_tlbFlushStart      : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal mem2cxreg_tlbFlushBusy       : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_tlbFlushAsidEna    : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_tlbFlushAsid       : rvex_data_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_tlbFlushTagLow     : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+  signal cxreg2mem_tlbFlushTagHigh    : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
   
   -- Context register <-> context-pipelane interface signals.
   signal cxplif2cxreg_brWriteData     : rvex_brRegData_array(2**CFG.numContextsLog2-1 downto 0);
@@ -932,9 +959,13 @@ begin -- architecture
       arg    => (others => '0')
     ) when imem2rv_pageFault(laneGroup) = '1' else (
       active => '1',
-      cause  => rvex_trap(RVEX_TRAP_KERNEL_SPACE_VIO),
+      cause  => rvex_trap(RVEX_TRAP_IMEM_KSPACE_VIO),
       arg    => (others => '0')
     ) when imem2rv_kernelAccVio(laneGroup) = '1' else (
+      active => imem2rv_busFault(laneGroup),
+      cause  => rvex_trap(RVEX_TRAP_IMEM_ACCESS_VIO),
+      arg    => (others => '0')
+    ) when imem2rv_execAccVio(laneGroup) = '1' else (
       active => imem2rv_busFault(laneGroup),
       cause  => rvex_trap(RVEX_TRAP_FETCH_FAULT),
       arg    => (others => '0')
@@ -949,15 +980,15 @@ begin -- architecture
       arg    => (others => '0')
     ) when dmem2rv_pageFault(laneGroup) = '1' else (
       active => '1',
-      cause  => rvex_trap(RVEX_TRAP_KERNEL_SPACE_VIO),
+      cause  => rvex_trap(RVEX_TRAP_DMEM_KSPACE_VIO),
       arg    => (others => '0')
     ) when dmem2rv_kernelAccVio(laneGroup) = '1' else (
       active => '1',
-      cause  => rvex_trap(RVEX_TRAP_WRITE_ACCESS_VIO),
+      cause  => rvex_trap(RVEX_TRAP_DMEM_WRITE_VIO),
       arg    => (others => '0')
     ) when dmem2rv_writeAccVio(laneGroup) = '1' else (
       active => '1',
-      cause  => rvex_trap(RVEX_TRAP_WRITE_TO_CLEAN_PAGE),
+      cause  => rvex_trap(RVEX_TRAP_DMEM_WRITE_TO_CLEAN),
       arg    => (others => '0')
     ) when dmem2rv_writeToClean(laneGroup) = '1' else (
       active => dmem2rv_ifaceFault(laneGroup) or dmem2rv_busFault(laneGroup),
@@ -1292,6 +1323,7 @@ begin -- architecture
   bue_proc: process (cxreg2mem_blockPrio, cfg2any_context, cfg2any_active) is
     variable blockMask          : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
     variable blockUpdateEnable  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable prioMask           : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   begin
     blockUpdateEnable := (others => '0');
     for ctxt in 0 to 2**CFG.numContextsLog2-1 loop
@@ -1306,8 +1338,10 @@ begin -- architecture
       
       -- If the masked priority vector is not all zeros, mask out the blocks
       -- that do not have increased priority.
-      if vect2unsigned(cxreg2mem_blockPrio(ctxt) and blockMask) /= 0 then
-        blockMask := cxreg2mem_blockPrio(ctxt) and blockMask;
+      prioMask := cxreg2mem_blockPrio(ctxt)(2**CFG.numLaneGroupsLog2-1 downto 0)
+               and blockMask;
+      if vect2unsigned(prioMask) /= 0 then
+        blockMask := prioMask;
       end if;
       
       -- Append the data for this context to the vector.
@@ -1317,42 +1351,66 @@ begin -- architecture
     rv2mem_blockUpdateEnable <= blockUpdateEnable;
   end process;
   
-  -- Generate context-block interface for the cache status and control signals.
-  -- These are all wired-or.
-  context_cache_block_iface_proc: process (
+  -- Generate context-block interface for various wired-or cache/MMU status and
+  -- control signals.
+  context_block_iface_proc: process (
     cfg2any_context, cfg2any_active,
     cxreg2imem_flushStart, imem2rv_flushBusy,
     cxreg2dmem_flushStart, dmem2rv_flushBusy,
     cxreg2dmem_bypass
   ) is
-    variable ifs  : std_logic_vector(2**CFG.numLaneGroupsLog2-1);
-    variable ifb  : std_logic_vector(2**CFG.numContextsLog2-1);
-    variable dfs  : std_logic_vector(2**CFG.numLaneGroupsLog2-1);
-    variable dfb  : std_logic_vector(2**CFG.numContextsLog2-1);
-    variable dbyp : std_logic_vector(2**CFG.numLaneGroupsLog2-1);
+    variable ifs  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable ifb  : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    variable dfs  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable dfb  : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    variable dbyp : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable tfs  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+    variable tfb  : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   begin
     ifs  := (others => '0');
     ifb  := (others => '0');
     dfs  := (others => '0');
     dfb  := (others => '0');
     dbyp := (others => '0');
+    tfs  := (others => '0');
+    tfb  := (others => '0');
     for lg in 0 to 2**CFG.numLaneGroupsLog2-1 loop
       ifs(lg)   := cxreg2imem_flushStart(vect2uint(cfg2any_context(lg))) and cfg2any_active(lg);
-      dfs(lg)   := cxreg2imem_flushStart(vect2uint(cfg2any_context(lg))) and cfg2any_active(lg);
-      dbyp(lg)  := cxreg2imem_flushStart(vect2uint(cfg2any_context(lg)));
+      dfs(lg)   := cxreg2dmem_flushStart(vect2uint(cfg2any_context(lg))) and cfg2any_active(lg);
+      dbyp(lg)  := cxreg2dmem_bypass(vect2uint(cfg2any_context(lg)));
+      tfs(lg)   := cxreg2mem_tlbFlushStart(vect2uint(cfg2any_context(lg))) and cfg2any_active(lg);
       for ctxt in 0 to 2**CFG.numContextsLog2-1 loop
         if (cfg2any_context(lg) = uint2vect(ctxt, 3)) and cfg2any_active(lg) = '1' then
-          ifb(ctxt) := ifb(ctxt)  or imem2rv_flushBusy(lg);
-          dfb(ctxt) := dfb(ctxt)  or dmem2rv_flushBusy(lg);
+          ifb(ctxt) := ifb(ctxt) or imem2rv_flushBusy(lg);
+          dfb(ctxt) := dfb(ctxt) or dmem2rv_flushBusy(lg);
+          tfb(ctxt) := tfb(ctxt) or mem2rv_tlbFlushBusy(lg);
         end if;
       end loop;
     end loop;
-    rv2imem_flushStart    <= ifs;
-    imem2cxreg_flushBusy  <= ifb;
-    rv2imem_flushStart    <= dfs;
-    dmem2cxreg_flushBusy  <= dfb;
-    rv2dmem_bypass        <= dbyp;
+    rv2imem_flushStart      <= ifs;
+    imem2cxreg_flushBusy    <= ifb;
+    rv2dmem_flushStart      <= dfs;
+    dmem2cxreg_flushBusy    <= dfb;
+    rv2dmem_bypass          <= dbyp;
+    rv2mem_tlbFlushStart    <= tfs;
+    mem2cxreg_tlbFlushBusy  <= tfb;
   end process;
+  
+  -- Generate context-block interface for signals which just need a mux.
+  context_block_muxes: for lg in 0 to 2**CFG.numLaneGroupsLog2-1 generate
+    rv2mem_mmuEnable(lg)        <= cxreg2mem_mmuEnable        (vect2uint(cfg2any_context(lg)));
+    rv2mem_kernelMode(lg)       <= cxreg2mem_kernelMode       (vect2uint(cfg2any_context(lg)));
+    rv2mem_writeToCleanEna(lg)  <= cxreg2mem_writeToCleanEna  (vect2uint(cfg2any_context(lg)));
+    rv2mem_writeProtect(lg)     <= cxreg2mem_writeProtect     (vect2uint(cfg2any_context(lg)));
+    rv2mem_globalPageEna(lg)    <= cxreg2mem_globalPageEna    (vect2uint(cfg2any_context(lg)));
+    rv2mem_execPageEna(lg)      <= cxreg2mem_execPageEna      (vect2uint(cfg2any_context(lg)));
+    rv2mem_pageTablePtr(lg)     <= cxreg2mem_pageTablePtr     (vect2uint(cfg2any_context(lg)));
+    rv2mem_asid(lg)             <= cxreg2mem_asid             (vect2uint(cfg2any_context(lg)));
+    rv2mem_tlbFlushAsidEna(lg)  <= cxreg2mem_tlbFlushAsidEna  (vect2uint(cfg2any_context(lg)));
+    rv2mem_tlbFlushAsid(lg)     <= cxreg2mem_tlbFlushAsid     (vect2uint(cfg2any_context(lg)));
+    rv2mem_tlbFlushTagLow(lg)   <= cxreg2mem_tlbFlushTagLow   (vect2uint(cfg2any_context(lg)));
+    rv2mem_tlbFlushTagHigh(lg)  <= cxreg2mem_tlbFlushTagHigh  (vect2uint(cfg2any_context(lg)));
+  end generate;
   
   -- Instantiate.
   cxreg_inst: entity rvex.core_contextRegLogic
@@ -1392,17 +1450,20 @@ begin -- architecture
       cxreg2dmem_flushStart         => cxreg2dmem_flushStart,
       dmem2cxreg_flushBusy          => dmem2cxreg_flushBusy,
       cxreg2dmem_bypass             => cxreg2dmem_bypass,
-      cxreg2mem_mmuEnable           => rv2mem_mmuEnable,
-      cxreg2mem_kernelMode          => rv2mem_kernelMode,
-      cxreg2mem_writeToCleanEna     => rv2mem_writeToCleanEna,
-      cxreg2mem_pageTablePtr        => rv2mem_pageTablePtr,
-      cxreg2mem_asid                => rv2mem_asid,
-      cxreg2mem_tlbFlushStart       => rv2mem_tlbFlushStart,
-      mem2cxreg_tlbFlushBusy        => mem2rv_tlbFlushBusy,
-      cxreg2mem_tlbFlushAsidEna     => rv2mem_tlbFlushAsidEna,
-      cxreg2mem_tlbFlushAsid        => rv2mem_tlbFlushAsid,
-      cxreg2mem_tlbFlushTagLow      => rv2mem_tlbFlushTagLow,
-      cxreg2mem_tlbFlushTagHigh     => rv2mem_tlbFlushTagHigh,
+      cxreg2mem_mmuEnable           => cxreg2mem_mmuEnable,
+      cxreg2mem_kernelMode          => cxreg2mem_kernelMode,
+      cxreg2mem_writeToCleanEna     => cxreg2mem_writeToCleanEna,
+      cxreg2mem_writeProtect        => cxreg2mem_writeProtect,
+      cxreg2mem_globalPageEna       => cxreg2mem_globalPageEna,
+      cxreg2mem_execPageEna         => cxreg2mem_execPageEna,
+      cxreg2mem_pageTablePtr        => cxreg2mem_pageTablePtr,
+      cxreg2mem_asid                => cxreg2mem_asid,
+      cxreg2mem_tlbFlushStart       => cxreg2mem_tlbFlushStart,
+      mem2cxreg_tlbFlushBusy        => mem2cxreg_tlbFlushBusy,
+      cxreg2mem_tlbFlushAsidEna     => cxreg2mem_tlbFlushAsidEna,
+      cxreg2mem_tlbFlushAsid        => cxreg2mem_tlbFlushAsid,
+      cxreg2mem_tlbFlushTagLow      => cxreg2mem_tlbFlushTagLow,
+      cxreg2mem_tlbFlushTagHigh     => cxreg2mem_tlbFlushTagHigh,
       cxreg2mem_blockPrio           => cxreg2mem_blockPrio,
       
       -- Pipelane interface: misc.

@@ -54,17 +54,20 @@ architecture Behavioral of testbench is
   signal cache2rv_blockReconfig     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal cache2rv_stallIn           : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal rv2cache_stallOut          : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal rv2cache_mmuEnable         : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
-  signal rv2cache_kernelMode        : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
-  signal rv2cache_writeToCleanEna   : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
-  signal rv2cache_pageTablePtr      : rvex_address_array(2**RCFG.numContextsLog2-1 downto 0);
-  signal rv2cache_asid              : rvex_data_array(2**RCFG.numContextsLog2-1 downto 0);
-  signal rv2cache_tlbFlushStart     : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
-  signal cache2rv_tlbFlushBusy      : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
-  signal rv2cache_tlbFlushAsidEna   : std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
-  signal rv2cache_tlbFlushAsid      : rvex_data_array(2**RCFG.numContextsLog2-1 downto 0);
-  signal rv2cache_tlbFlushTagLow    : rvex_address_array(2**RCFG.numContextsLog2-1 downto 0);
-  signal rv2cache_tlbFlushTagHigh   : rvex_address_array(2**RCFG.numContextsLog2-1 downto 0);
+  signal rv2cache_mmuEnable         : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_kernelMode        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_writeToCleanEna   : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_writeProtect      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_globalPageEna     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_execPageEna       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_pageTablePtr      : rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_asid              : rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_tlbFlushStart     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal cache2rv_tlbFlushBusy      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_tlbFlushAsidEna   : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_tlbFlushAsid      : rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_tlbFlushTagLow    : rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2cache_tlbFlushTagHigh   : rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
   -- Instruction cache interface signals.
   signal rv2icache_flushStart       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -76,6 +79,7 @@ architecture Behavioral of testbench is
   signal icache2rv_busFault         : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_pageFault        : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_kernelAccVio     : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_execAccVio       : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_affinity         : std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_access           : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal icache2rv_miss             : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -171,6 +175,9 @@ begin -- architecture
       rv2mem_mmuEnable          => rv2cache_mmuEnable,
       rv2mem_kernelMode         => rv2cache_kernelMode,
       rv2mem_writeToCleanEna    => rv2cache_writeToCleanEna,
+      rv2mem_writeProtect       => rv2cache_writeProtect,
+      rv2mem_globalPageEna      => rv2cache_globalPageEna,
+      rv2mem_execPageEna        => rv2cache_execPageEna,
       rv2mem_pageTablePtr       => rv2cache_pageTablePtr,
       rv2mem_asid               => rv2cache_asid,
       rv2mem_tlbFlushStart      => rv2cache_tlbFlushStart,
@@ -190,6 +197,7 @@ begin -- architecture
       imem2rv_busFault          => icache2rv_busFault,
       imem2rv_pageFault         => icache2rv_pageFault,
       imem2rv_kernelAccVio      => icache2rv_kernelAccVio,
+      imem2rv_execAccVio        => icache2rv_execAccVio,
       imem2rv_affinity          => icache2rv_affinity,
       imem2rv_access            => icache2rv_access,
       imem2rv_miss              => icache2rv_miss,
@@ -393,6 +401,9 @@ begin -- architecture
       rv2cache_mmuEnable        => rv2cache_mmuEnable,
       rv2cache_kernelMode       => rv2cache_kernelMode,
       rv2cache_writeToCleanEna  => rv2cache_writeToCleanEna,
+      rv2cache_writeProtect     => rv2cache_writeProtect,
+      rv2cache_globalPageEna    => rv2cache_globalPageEna,
+      rv2cache_execPageEna      => rv2cache_execPageEna,
       rv2cache_pageTablePtr     => rv2cache_pageTablePtr,
       rv2cache_asid             => rv2cache_asid,
       rv2cache_tlbFlushStart    => rv2cache_tlbFlushStart,
@@ -412,6 +423,7 @@ begin -- architecture
       icache2rv_busFault        => icache2rv_busFault,
       icache2rv_pageFault       => icache2rv_pageFault,
       icache2rv_kernelAccVio    => icache2rv_kernelAccVio,
+      icache2rv_execAccVio      => icache2rv_execAccVio,
       icache2rv_affinity        => icache2rv_affinity,
       icache2rv_access          => icache2rv_access,
       icache2rv_miss            => icache2rv_miss,

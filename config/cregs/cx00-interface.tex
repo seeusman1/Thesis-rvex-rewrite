@@ -77,6 +77,21 @@ This signal controls whether a trap is generated when a write to a clean
 page is attempted.
 
 \ifaceSubGroup{}
+\ifaceOutCtxt{mem}{writeProtect}{bit}{0}
+This signal controls whether kernel threads can write to read-only pages. This 
+is the case when this signal is low.
+    
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{globalPageEna}{bit}{0}
+This signal specifies whether the global page bit in the page table is enabled 
+or ignored.
+    
+\ifaceSubGroup{}
+\ifaceOutCtxt{mem}{execPageEna}{bit}{0}
+This signal specifies whether the executable page bit in the page table is 
+enabled or ignored.
+
+\ifaceSubGroup{}
 \ifaceOutCtxt{mem}{pageTablePtr}{address}{0}
 This signal specifies the page table pointer for the current thread.
 

@@ -153,38 +153,50 @@ entity cache is
     rv2cache_stallOut             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal controls whether address translation is active or not.
-    rv2cache_mmuEnable            : in  std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+    rv2cache_mmuEnable            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal represents the current privilege level of processor. It is
     -- high for kernel mode and low for application mode.
-    rv2cache_kernelMode           : in  std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+    rv2cache_kernelMode           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal controls whether a trap is generated when a write to a clean
     -- page is attempted.
-    rv2cache_writeToCleanEna      : in  std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+    rv2cache_writeToCleanEna      : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- This signal controls whether kernel threads can write to read-only
+    -- pages. This is the case when this signal is low.
+    rv2cache_writeProtect         : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- This signal specifies whether the global page bit in the page table is
+    -- enabled or ignored.
+    rv2cache_globalPageEna        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    
+    -- This signal specifies whether the executable page bit in the page table
+    -- is enabled or ignored.
+    rv2cache_execPageEna          : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal specifies the page table pointer for the current thread.
-    rv2cache_pageTablePtr         : in  rvex_address_array(2**RCFG.numContextsLog2-1 downto 0);
+    rv2cache_pageTablePtr         : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal specifies the address space ID for the current thread.
-    rv2cache_asid                 : in  rvex_data_array(2**RCFG.numContextsLog2-1 downto 0);
+    rv2cache_asid                 : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- When this signal is high, a TLB flush should be initiated.
-    rv2cache_tlbFlushStart        : in  std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+    rv2cache_tlbFlushStart        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This is high when a TLB cache flush is in progress.
-    cache2rv_tlbFlushBusy         : out std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
+    cache2rv_tlbFlushBusy         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- When rv2cache_tlbFlushAsidEna is high, rv2cache_tlbFlushAsid specifies a
     -- specific ASID that must be flushed during a TLB flush. Entries with
     -- other ASIDs are then unaffected.
-    rv2cache_tlbFlushAsidEna      : in  std_logic_vector(2**RCFG.numContextsLog2-1 downto 0);
-    rv2cache_tlbFlushAsid         : in  rvex_data_array(2**RCFG.numContextsLog2-1 downto 0);
+    rv2cache_tlbFlushAsidEna      : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_tlbFlushAsid         : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- These two signals specify a lower and upper limit for the virtual page
     -- addresses that are to be flushed. Both are inclusive.
-    rv2cache_tlbFlushTagLow       : in  rvex_address_array(2**RCFG.numContextsLog2-1 downto 0);
-    rv2cache_tlbFlushTagHigh      : in  rvex_address_array(2**RCFG.numContextsLog2-1 downto 0);
+    rv2cache_tlbFlushTagLow       : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_tlbFlushTagHigh      : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- r-VEX instruction interface
@@ -229,6 +241,7 @@ entity cache is
     icache2rv_busFault            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_pageFault           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_kernelAccVio        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_execAccVio          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Cache block affinity data from cache. This is set to the index of the
     -- block that served the request.

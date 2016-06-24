@@ -472,25 +472,37 @@ class Context:
         lambda self: (self.CMC1 & 0xFF000000) >> 24,
         lambda s, val: setattr(s, 'CMC1', ((val << 24) & 0xFF000000) |                               ## GENERATED ##
             (self.CMC1 & ~0xFF000000)))
-    FIELD_CMC1_WTC = property(
+    FIELD_CMC1_PXE = property(
+        lambda self: (self.CMC1 & 0x00C00000) >> 22,
+        lambda s, val: setattr(s, 'CMC1', ((val << 22) & 0x00C00000) |
+            (self.CMC1 & ~0x00C00000)))
+    FIELD_CMC1_PGE = property(
+        lambda self: (self.CMC1 & 0x00300000) >> 20,
+        lambda s, val: setattr(s, 'CMC1', ((val << 20) & 0x00300000) |
+            (self.CMC1 & ~0x00300000)))
+    FIELD_CMC1_WP = property(                                                                        ## GENERATED ##
         lambda self: (self.CMC1 & 0x000C0000) >> 18,
         lambda s, val: setattr(s, 'CMC1', ((val << 18) & 0x000C0000) |
             (self.CMC1 & ~0x000C0000)))
+    FIELD_CMC1_WTC = property(
+        lambda self: (self.CMC1 & 0x00030000) >> 16,
+        lambda s, val: setattr(s, 'CMC1', ((val << 16) & 0x00030000) |
+            (self.CMC1 & ~0x00030000)))
+    FIELD_CMC1_BYP = property(
+        lambda self: (self.CMC1 & 0x00000300) >> 8,
+        lambda s, val: setattr(s, 'CMC1', ((val << 8) & 0x00000300) |                                ## GENERATED ##
+            (self.CMC1 & ~0x00000300)))
     FIELD_CMC1_T = property(
-        lambda self: (self.CMC1 & 0x00010000) >> 16,
-        lambda s, val: setattr(s, 'CMC1', ((val << 16) & 0x00010000) |
-            (self.CMC1 & ~0x00010000)))
-    FIELD_CMC1_BYP = property(                                                                       ## GENERATED ##
-        lambda self: (self.CMC1 & 0x00000C00) >> 10,
-        lambda s, val: setattr(s, 'CMC1', ((val << 10) & 0x00000C00) |
-            (self.CMC1 & ~0x00000C00)))
+        lambda self: (self.CMC1 & 0x00000004) >> 2,
+        lambda s, val: setattr(s, 'CMC1', ((val << 2) & 0x00000004) |
+            (self.CMC1 & ~0x00000004)))
     FIELD_CMC1_D = property(
-        lambda self: (self.CMC1 & 0x00000100) >> 8,
-        lambda s, val: setattr(s, 'CMC1', ((val << 8) & 0x00000100) |
-            (self.CMC1 & ~0x00000100)))
-    FIELD_CMC1_I = property(
+        lambda self: (self.CMC1 & 0x00000002) >> 1,
+        lambda s, val: setattr(s, 'CMC1', ((val << 1) & 0x00000002) |
+            (self.CMC1 & ~0x00000002)))
+    FIELD_CMC1_I = property(                                                                         ## GENERATED ##
         lambda self: (self.CMC1 & 0x00000001) >> 0,
-        lambda s, val: setattr(s, 'CMC1', ((val << 0) & 0x00000001) |                                ## GENERATED ##
+        lambda s, val: setattr(s, 'CMC1', ((val << 0) & 0x00000001) |
             (self.CMC1 & ~0x00000001)))
     CMC2 = property(lambda s: s._rvd.readInt(s._CMC2, 4),
         lambda s, v: raise_(RuntimeError("CMC2 is not writable")))
@@ -498,9 +510,9 @@ class Context:
         lambda s, v: s._rvd.writeInt(s._PTP, 4, v))
     FIELD_PTP_PTP = property(
         lambda self: (self.PTP & 0xFFFFFFFF) >> 0,
-        lambda s, val: setattr(s, 'PTP', ((val << 0) & 0xFFFFFFFF) |
+        lambda s, val: setattr(s, 'PTP', ((val << 0) & 0xFFFFFFFF) |                                 ## GENERATED ##
             (self.PTP & ~0xFFFFFFFF)))
-    ASID = property(lambda s: s._rvd.readInt(s._ASID, 4),                                            ## GENERATED ##
+    ASID = property(lambda s: s._rvd.readInt(s._ASID, 4),
         lambda s, v: s._rvd.writeInt(s._ASID, 4, v))
     FIELD_ASID_ASID = property(
         lambda self: (self.ASID & 0xFFFFFFFF) >> 0,
@@ -508,9 +520,9 @@ class Context:
             (self.ASID & ~0xFFFFFFFF)))
     TFLO = property(lambda s: s._rvd.readInt(s._TFLO, 4),
         lambda s, v: s._rvd.writeInt(s._TFLO, 4, v))
-    FIELD_TFLO_TFLO = property(
+    FIELD_TFLO_TFLO = property(                                                                      ## GENERATED ##
         lambda self: (self.TFLO & 0xFFFFFFFF) >> 0,
-        lambda s, val: setattr(s, 'TFLO', ((val << 0) & 0xFFFFFFFF) |                                ## GENERATED ##
+        lambda s, val: setattr(s, 'TFLO', ((val << 0) & 0xFFFFFFFF) |
             (self.TFLO & ~0xFFFFFFFF)))
     TFHI = property(lambda s: s._rvd.readInt(s._TFHI, 4),
         lambda s, v: s._rvd.writeInt(s._TFHI, 4, v))
@@ -518,9 +530,9 @@ class Context:
         lambda self: (self.TFHI & 0xFFFFFFFF) >> 0,
         lambda s, val: setattr(s, 'TFHI', ((val << 0) & 0xFFFFFFFF) |
             (self.TFHI & ~0xFFFFFFFF)))
-    TFID = property(lambda s: s._rvd.readInt(s._TFID, 4),
+    TFID = property(lambda s: s._rvd.readInt(s._TFID, 4),                                            ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._TFID, 4, v))
-    FIELD_TFID_E = property(                                                                         ## GENERATED ##
+    FIELD_TFID_E = property(
         lambda self: (self.TFID & 0x80000000) >> 31,
         lambda s, val: setattr(s, 'TFID', ((val << 31) & 0x80000000) |
             (self.TFID & ~0x80000000)))
@@ -528,9 +540,9 @@ class Context:
         lambda self: (self.TFID & 0x7FFFFFFF) >> 0,
         lambda s, val: setattr(s, 'TFID', ((val << 0) & 0x7FFFFFFF) |
             (self.TFID & ~0x7FFFFFFF)))
-    CYC = property(lambda s: s._rvd.readInt(s._CYC, 4),
+    CYC = property(lambda s: s._rvd.readInt(s._CYC, 4),                                              ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._CYC, 4, v))
-    FIELD_CYC_CYC3 = property(                                                                       ## GENERATED ##
+    FIELD_CYC_CYC3 = property(
         lambda self: (self.CYC & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_CYC_CYC2 = property(
@@ -538,9 +550,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_CYC_CYC1 = property(
         lambda self: (self.CYC & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_CYC_CYC0 = property(
-        lambda self: (self.CYC & 0x000000FF) >> 0,                                                   ## GENERATED ##
+        lambda self: (self.CYC & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'CYC', ((val << 0) & 0x000000FF) |
             (self.CYC & ~0x000000FF)))
     CYCH = property(lambda s: s._rvd.readInt(s._CYCH, 4),
@@ -548,9 +560,9 @@ class Context:
     FIELD_CYCH_CYC6 = property(
         lambda self: (self.CYCH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_CYCH_CYC5 = property(
+    FIELD_CYCH_CYC5 = property(                                                                      ## GENERATED ##
         lambda self: (self.CYCH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_CYCH_CYC4 = property(
         lambda self: (self.CYCH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -558,9 +570,9 @@ class Context:
         lambda self: (self.CYCH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'CYCH', ((val << 0) & 0x000000FF) |
             (self.CYCH & ~0x000000FF)))
-    STALL = property(lambda s: s._rvd.readInt(s._STALL, 4),
+    STALL = property(lambda s: s._rvd.readInt(s._STALL, 4),                                          ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._STALL, 4, v))
-    FIELD_STALL_STALL3 = property(                                                                   ## GENERATED ##
+    FIELD_STALL_STALL3 = property(
         lambda self: (self.STALL & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_STALL_STALL2 = property(
@@ -568,9 +580,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_STALL_STALL1 = property(
         lambda self: (self.STALL & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_STALL_STALL0 = property(
-        lambda self: (self.STALL & 0x000000FF) >> 0,                                                 ## GENERATED ##
+        lambda self: (self.STALL & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'STALL', ((val << 0) & 0x000000FF) |
             (self.STALL & ~0x000000FF)))
     STALLH = property(lambda s: s._rvd.readInt(s._STALLH, 4),
@@ -578,9 +590,9 @@ class Context:
     FIELD_STALLH_STALL6 = property(
         lambda self: (self.STALLH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_STALLH_STALL5 = property(
+    FIELD_STALLH_STALL5 = property(                                                                  ## GENERATED ##
         lambda self: (self.STALLH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_STALLH_STALL4 = property(
         lambda self: (self.STALLH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -588,9 +600,9 @@ class Context:
         lambda self: (self.STALLH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'STALLH', ((val << 0) & 0x000000FF) |
             (self.STALLH & ~0x000000FF)))
-    BUN = property(lambda s: s._rvd.readInt(s._BUN, 4),
+    BUN = property(lambda s: s._rvd.readInt(s._BUN, 4),                                              ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._BUN, 4, v))
-    FIELD_BUN_BUN3 = property(                                                                       ## GENERATED ##
+    FIELD_BUN_BUN3 = property(
         lambda self: (self.BUN & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_BUN_BUN2 = property(
@@ -598,9 +610,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_BUN_BUN1 = property(
         lambda self: (self.BUN & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_BUN_BUN0 = property(
-        lambda self: (self.BUN & 0x000000FF) >> 0,                                                   ## GENERATED ##
+        lambda self: (self.BUN & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'BUN', ((val << 0) & 0x000000FF) |
             (self.BUN & ~0x000000FF)))
     BUNH = property(lambda s: s._rvd.readInt(s._BUNH, 4),
@@ -608,9 +620,9 @@ class Context:
     FIELD_BUNH_BUN6 = property(
         lambda self: (self.BUNH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_BUNH_BUN5 = property(
+    FIELD_BUNH_BUN5 = property(                                                                      ## GENERATED ##
         lambda self: (self.BUNH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_BUNH_BUN4 = property(
         lambda self: (self.BUNH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -618,9 +630,9 @@ class Context:
         lambda self: (self.BUNH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'BUNH', ((val << 0) & 0x000000FF) |
             (self.BUNH & ~0x000000FF)))
-    SYL = property(lambda s: s._rvd.readInt(s._SYL, 4),
+    SYL = property(lambda s: s._rvd.readInt(s._SYL, 4),                                              ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._SYL, 4, v))
-    FIELD_SYL_SYL3 = property(                                                                       ## GENERATED ##
+    FIELD_SYL_SYL3 = property(
         lambda self: (self.SYL & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_SYL_SYL2 = property(
@@ -628,9 +640,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_SYL_SYL1 = property(
         lambda self: (self.SYL & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_SYL_SYL0 = property(
-        lambda self: (self.SYL & 0x000000FF) >> 0,                                                   ## GENERATED ##
+        lambda self: (self.SYL & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'SYL', ((val << 0) & 0x000000FF) |
             (self.SYL & ~0x000000FF)))
     SYLH = property(lambda s: s._rvd.readInt(s._SYLH, 4),
@@ -638,9 +650,9 @@ class Context:
     FIELD_SYLH_SYL6 = property(
         lambda self: (self.SYLH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_SYLH_SYL5 = property(
+    FIELD_SYLH_SYL5 = property(                                                                      ## GENERATED ##
         lambda self: (self.SYLH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_SYLH_SYL4 = property(
         lambda self: (self.SYLH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -648,9 +660,9 @@ class Context:
         lambda self: (self.SYLH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'SYLH', ((val << 0) & 0x000000FF) |
             (self.SYLH & ~0x000000FF)))
-    NOP = property(lambda s: s._rvd.readInt(s._NOP, 4),
+    NOP = property(lambda s: s._rvd.readInt(s._NOP, 4),                                              ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._NOP, 4, v))
-    FIELD_NOP_NOP3 = property(                                                                       ## GENERATED ##
+    FIELD_NOP_NOP3 = property(
         lambda self: (self.NOP & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_NOP_NOP2 = property(
@@ -658,9 +670,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_NOP_NOP1 = property(
         lambda self: (self.NOP & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_NOP_NOP0 = property(
-        lambda self: (self.NOP & 0x000000FF) >> 0,                                                   ## GENERATED ##
+        lambda self: (self.NOP & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'NOP', ((val << 0) & 0x000000FF) |
             (self.NOP & ~0x000000FF)))
     NOPH = property(lambda s: s._rvd.readInt(s._NOPH, 4),
@@ -668,9 +680,9 @@ class Context:
     FIELD_NOPH_NOP6 = property(
         lambda self: (self.NOPH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_NOPH_NOP5 = property(
+    FIELD_NOPH_NOP5 = property(                                                                      ## GENERATED ##
         lambda self: (self.NOPH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_NOPH_NOP4 = property(
         lambda self: (self.NOPH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -678,9 +690,9 @@ class Context:
         lambda self: (self.NOPH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'NOPH', ((val << 0) & 0x000000FF) |
             (self.NOPH & ~0x000000FF)))
-    IACC = property(lambda s: s._rvd.readInt(s._IACC, 4),
+    IACC = property(lambda s: s._rvd.readInt(s._IACC, 4),                                            ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._IACC, 4, v))
-    FIELD_IACC_IACC3 = property(                                                                     ## GENERATED ##
+    FIELD_IACC_IACC3 = property(
         lambda self: (self.IACC & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_IACC_IACC2 = property(
@@ -688,9 +700,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_IACC_IACC1 = property(
         lambda self: (self.IACC & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_IACC_IACC0 = property(
-        lambda self: (self.IACC & 0x000000FF) >> 0,                                                  ## GENERATED ##
+        lambda self: (self.IACC & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'IACC', ((val << 0) & 0x000000FF) |
             (self.IACC & ~0x000000FF)))
     IACCH = property(lambda s: s._rvd.readInt(s._IACCH, 4),
@@ -698,9 +710,9 @@ class Context:
     FIELD_IACCH_IACC6 = property(
         lambda self: (self.IACCH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_IACCH_IACC5 = property(
+    FIELD_IACCH_IACC5 = property(                                                                    ## GENERATED ##
         lambda self: (self.IACCH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_IACCH_IACC4 = property(
         lambda self: (self.IACCH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -708,9 +720,9 @@ class Context:
         lambda self: (self.IACCH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'IACCH', ((val << 0) & 0x000000FF) |
             (self.IACCH & ~0x000000FF)))
-    IMISS = property(lambda s: s._rvd.readInt(s._IMISS, 4),
+    IMISS = property(lambda s: s._rvd.readInt(s._IMISS, 4),                                          ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._IMISS, 4, v))
-    FIELD_IMISS_IMISS3 = property(                                                                   ## GENERATED ##
+    FIELD_IMISS_IMISS3 = property(
         lambda self: (self.IMISS & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_IMISS_IMISS2 = property(
@@ -718,9 +730,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_IMISS_IMISS1 = property(
         lambda self: (self.IMISS & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_IMISS_IMISS0 = property(
-        lambda self: (self.IMISS & 0x000000FF) >> 0,                                                 ## GENERATED ##
+        lambda self: (self.IMISS & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'IMISS', ((val << 0) & 0x000000FF) |
             (self.IMISS & ~0x000000FF)))
     IMISSH = property(lambda s: s._rvd.readInt(s._IMISSH, 4),
@@ -728,9 +740,9 @@ class Context:
     FIELD_IMISSH_IMISS6 = property(
         lambda self: (self.IMISSH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_IMISSH_IMISS5 = property(
+    FIELD_IMISSH_IMISS5 = property(                                                                  ## GENERATED ##
         lambda self: (self.IMISSH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_IMISSH_IMISS4 = property(
         lambda self: (self.IMISSH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -738,9 +750,9 @@ class Context:
         lambda self: (self.IMISSH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'IMISSH', ((val << 0) & 0x000000FF) |
             (self.IMISSH & ~0x000000FF)))
-    DRACC = property(lambda s: s._rvd.readInt(s._DRACC, 4),
+    DRACC = property(lambda s: s._rvd.readInt(s._DRACC, 4),                                          ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._DRACC, 4, v))
-    FIELD_DRACC_DRACC3 = property(                                                                   ## GENERATED ##
+    FIELD_DRACC_DRACC3 = property(
         lambda self: (self.DRACC & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DRACC_DRACC2 = property(
@@ -748,9 +760,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DRACC_DRACC1 = property(
         lambda self: (self.DRACC & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_DRACC_DRACC0 = property(
-        lambda self: (self.DRACC & 0x000000FF) >> 0,                                                 ## GENERATED ##
+        lambda self: (self.DRACC & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DRACC', ((val << 0) & 0x000000FF) |
             (self.DRACC & ~0x000000FF)))
     DRACCH = property(lambda s: s._rvd.readInt(s._DRACCH, 4),
@@ -758,9 +770,9 @@ class Context:
     FIELD_DRACCH_DRACC6 = property(
         lambda self: (self.DRACCH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_DRACCH_DRACC5 = property(
+    FIELD_DRACCH_DRACC5 = property(                                                                  ## GENERATED ##
         lambda self: (self.DRACCH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DRACCH_DRACC4 = property(
         lambda self: (self.DRACCH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -768,9 +780,9 @@ class Context:
         lambda self: (self.DRACCH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DRACCH', ((val << 0) & 0x000000FF) |
             (self.DRACCH & ~0x000000FF)))
-    DRMISS = property(lambda s: s._rvd.readInt(s._DRMISS, 4),
+    DRMISS = property(lambda s: s._rvd.readInt(s._DRMISS, 4),                                        ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._DRMISS, 4, v))
-    FIELD_DRMISS_DRMISS3 = property(                                                                 ## GENERATED ##
+    FIELD_DRMISS_DRMISS3 = property(
         lambda self: (self.DRMISS & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DRMISS_DRMISS2 = property(
@@ -778,9 +790,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DRMISS_DRMISS1 = property(
         lambda self: (self.DRMISS & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_DRMISS_DRMISS0 = property(
-        lambda self: (self.DRMISS & 0x000000FF) >> 0,                                                ## GENERATED ##
+        lambda self: (self.DRMISS & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DRMISS', ((val << 0) & 0x000000FF) |
             (self.DRMISS & ~0x000000FF)))
     DRMISSH = property(lambda s: s._rvd.readInt(s._DRMISSH, 4),
@@ -788,9 +800,9 @@ class Context:
     FIELD_DRMISSH_DRMISS6 = property(
         lambda self: (self.DRMISSH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_DRMISSH_DRMISS5 = property(
+    FIELD_DRMISSH_DRMISS5 = property(                                                                ## GENERATED ##
         lambda self: (self.DRMISSH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DRMISSH_DRMISS4 = property(
         lambda self: (self.DRMISSH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -798,9 +810,9 @@ class Context:
         lambda self: (self.DRMISSH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DRMISSH', ((val << 0) & 0x000000FF) |
             (self.DRMISSH & ~0x000000FF)))
-    DWACC = property(lambda s: s._rvd.readInt(s._DWACC, 4),
+    DWACC = property(lambda s: s._rvd.readInt(s._DWACC, 4),                                          ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._DWACC, 4, v))
-    FIELD_DWACC_DWACC3 = property(                                                                   ## GENERATED ##
+    FIELD_DWACC_DWACC3 = property(
         lambda self: (self.DWACC & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DWACC_DWACC2 = property(
@@ -808,9 +820,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DWACC_DWACC1 = property(
         lambda self: (self.DWACC & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_DWACC_DWACC0 = property(
-        lambda self: (self.DWACC & 0x000000FF) >> 0,                                                 ## GENERATED ##
+        lambda self: (self.DWACC & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DWACC', ((val << 0) & 0x000000FF) |
             (self.DWACC & ~0x000000FF)))
     DWACCH = property(lambda s: s._rvd.readInt(s._DWACCH, 4),
@@ -818,9 +830,9 @@ class Context:
     FIELD_DWACCH_DWACC6 = property(
         lambda self: (self.DWACCH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_DWACCH_DWACC5 = property(
+    FIELD_DWACCH_DWACC5 = property(                                                                  ## GENERATED ##
         lambda self: (self.DWACCH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DWACCH_DWACC4 = property(
         lambda self: (self.DWACCH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -828,9 +840,9 @@ class Context:
         lambda self: (self.DWACCH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DWACCH', ((val << 0) & 0x000000FF) |
             (self.DWACCH & ~0x000000FF)))
-    DWMISS = property(lambda s: s._rvd.readInt(s._DWMISS, 4),
+    DWMISS = property(lambda s: s._rvd.readInt(s._DWMISS, 4),                                        ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._DWMISS, 4, v))
-    FIELD_DWMISS_DWMISS3 = property(                                                                 ## GENERATED ##
+    FIELD_DWMISS_DWMISS3 = property(
         lambda self: (self.DWMISS & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DWMISS_DWMISS2 = property(
@@ -838,9 +850,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DWMISS_DWMISS1 = property(
         lambda self: (self.DWMISS & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_DWMISS_DWMISS0 = property(
-        lambda self: (self.DWMISS & 0x000000FF) >> 0,                                                ## GENERATED ##
+        lambda self: (self.DWMISS & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DWMISS', ((val << 0) & 0x000000FF) |
             (self.DWMISS & ~0x000000FF)))
     DWMISSH = property(lambda s: s._rvd.readInt(s._DWMISSH, 4),
@@ -848,9 +860,9 @@ class Context:
     FIELD_DWMISSH_DWMISS6 = property(
         lambda self: (self.DWMISSH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_DWMISSH_DWMISS5 = property(
+    FIELD_DWMISSH_DWMISS5 = property(                                                                ## GENERATED ##
         lambda self: (self.DWMISSH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DWMISSH_DWMISS4 = property(
         lambda self: (self.DWMISSH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -858,9 +870,9 @@ class Context:
         lambda self: (self.DWMISSH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DWMISSH', ((val << 0) & 0x000000FF) |
             (self.DWMISSH & ~0x000000FF)))
-    DBYPASS = property(lambda s: s._rvd.readInt(s._DBYPASS, 4),
+    DBYPASS = property(lambda s: s._rvd.readInt(s._DBYPASS, 4),                                      ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._DBYPASS, 4, v))
-    FIELD_DBYPASS_DBYPASS3 = property(                                                               ## GENERATED ##
+    FIELD_DBYPASS_DBYPASS3 = property(
         lambda self: (self.DBYPASS & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DBYPASS_DBYPASS2 = property(
@@ -868,9 +880,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DBYPASS_DBYPASS1 = property(
         lambda self: (self.DBYPASS & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_DBYPASS_DBYPASS0 = property(
-        lambda self: (self.DBYPASS & 0x000000FF) >> 0,                                               ## GENERATED ##
+        lambda self: (self.DBYPASS & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DBYPASS', ((val << 0) & 0x000000FF) |
             (self.DBYPASS & ~0x000000FF)))
     DBYPASSH = property(lambda s: s._rvd.readInt(s._DBYPASSH, 4),
@@ -878,9 +890,9 @@ class Context:
     FIELD_DBYPASSH_DBYPASS6 = property(
         lambda self: (self.DBYPASSH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_DBYPASSH_DBYPASS5 = property(
+    FIELD_DBYPASSH_DBYPASS5 = property(                                                              ## GENERATED ##
         lambda self: (self.DBYPASSH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DBYPASSH_DBYPASS4 = property(
         lambda self: (self.DBYPASSH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -888,9 +900,9 @@ class Context:
         lambda self: (self.DBYPASSH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DBYPASSH', ((val << 0) & 0x000000FF) |
             (self.DBYPASSH & ~0x000000FF)))
-    DWBUF = property(lambda s: s._rvd.readInt(s._DWBUF, 4),
+    DWBUF = property(lambda s: s._rvd.readInt(s._DWBUF, 4),                                          ## GENERATED ##
         lambda s, v: s._rvd.writeInt(s._DWBUF, 4, v))
-    FIELD_DWBUF_DWBUF3 = property(                                                                   ## GENERATED ##
+    FIELD_DWBUF_DWBUF3 = property(
         lambda self: (self.DWBUF & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DWBUF_DWBUF2 = property(
@@ -898,9 +910,9 @@ class Context:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DWBUF_DWBUF1 = property(
         lambda self: (self.DWBUF & 0x0000FF00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_DWBUF_DWBUF0 = property(
-        lambda self: (self.DWBUF & 0x000000FF) >> 0,                                                 ## GENERATED ##
+        lambda self: (self.DWBUF & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DWBUF', ((val << 0) & 0x000000FF) |
             (self.DWBUF & ~0x000000FF)))
     DWBUFH = property(lambda s: s._rvd.readInt(s._DWBUFH, 4),
@@ -908,9 +920,9 @@ class Context:
     FIELD_DWBUFH_DWBUF6 = property(
         lambda self: (self.DWBUFH & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_DWBUFH_DWBUF5 = property(
+    FIELD_DWBUFH_DWBUF5 = property(                                                                  ## GENERATED ##
         lambda self: (self.DWBUFH & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DWBUFH_DWBUF4 = property(
         lambda self: (self.DWBUFH & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -918,9 +930,9 @@ class Context:
         lambda self: (self.DWBUFH & 0x000000FF) >> 0,
         lambda s, val: setattr(s, 'DWBUFH', ((val << 0) & 0x000000FF) |
             (self.DWBUFH & ~0x000000FF)))
-
-class Core:
                                                                                                      ## GENERATED ##
+class Core:
+
     def __iter__(self):
         for c in self.context:
             yield c
@@ -928,9 +940,9 @@ class Core:
     def __getitem__(self, index):
         return self.context[index]
 
-    def __init__(self, rvd, base_address):
+    def __init__(self, rvd, base_address):                                                           ## GENERATED ##
         self._rvd = rvd
-        self._CREG_GLOB = base_address                                                               ## GENERATED ##
+        self._CREG_GLOB = base_address
         self._GSR = self._CREG_GLOB + 0x000
         self._BCRR = self._CREG_GLOB + 0x004
         self._CC = self._CREG_GLOB + 0x008
@@ -938,9 +950,9 @@ class Core:
         self._CNT = self._CREG_GLOB + 0x010
         self._CNTH = self._CREG_GLOB + 0x014
         self._LIMC7 = self._CREG_GLOB + 0x0A0
-        self._BORROW15 = self._CREG_GLOB + 0x0A1
+        self._BORROW15 = self._CREG_GLOB + 0x0A1                                                     ## GENERATED ##
         self._BORROW14 = self._CREG_GLOB + 0x0A3
-        self._LIMC6 = self._CREG_GLOB + 0x0A4                                                        ## GENERATED ##
+        self._LIMC6 = self._CREG_GLOB + 0x0A4
         self._BORROW13 = self._CREG_GLOB + 0x0A5
         self._BORROW12 = self._CREG_GLOB + 0x0A7
         self._LIMC5 = self._CREG_GLOB + 0x0A8
@@ -948,9 +960,9 @@ class Core:
         self._BORROW10 = self._CREG_GLOB + 0x0AB
         self._LIMC4 = self._CREG_GLOB + 0x0AC
         self._BORROW9 = self._CREG_GLOB + 0x0AD
-        self._BORROW8 = self._CREG_GLOB + 0x0AF
+        self._BORROW8 = self._CREG_GLOB + 0x0AF                                                      ## GENERATED ##
         self._LIMC3 = self._CREG_GLOB + 0x0B0
-        self._BORROW7 = self._CREG_GLOB + 0x0B1                                                      ## GENERATED ##
+        self._BORROW7 = self._CREG_GLOB + 0x0B1
         self._BORROW6 = self._CREG_GLOB + 0x0B3
         self._LIMC2 = self._CREG_GLOB + 0x0B4
         self._BORROW5 = self._CREG_GLOB + 0x0B5
@@ -958,9 +970,9 @@ class Core:
         self._LIMC1 = self._CREG_GLOB + 0x0B8
         self._BORROW3 = self._CREG_GLOB + 0x0B9
         self._BORROW2 = self._CREG_GLOB + 0x0BB
-        self._LIMC0 = self._CREG_GLOB + 0x0BC
+        self._LIMC0 = self._CREG_GLOB + 0x0BC                                                        ## GENERATED ##
         self._BORROW1 = self._CREG_GLOB + 0x0BD
-        self._BORROW0 = self._CREG_GLOB + 0x0BF                                                      ## GENERATED ##
+        self._BORROW0 = self._CREG_GLOB + 0x0BF
         self._SIC3 = self._CREG_GLOB + 0x0C0
         self._SYL15CAP = self._CREG_GLOB + 0x0C0
         self._SYL14CAP = self._CREG_GLOB + 0x0C1
@@ -968,9 +980,9 @@ class Core:
         self._SYL12CAP = self._CREG_GLOB + 0x0C3
         self._SIC2 = self._CREG_GLOB + 0x0C4
         self._SYL11CAP = self._CREG_GLOB + 0x0C4
-        self._SYL10CAP = self._CREG_GLOB + 0x0C5
+        self._SYL10CAP = self._CREG_GLOB + 0x0C5                                                     ## GENERATED ##
         self._SYL9CAP = self._CREG_GLOB + 0x0C6
-        self._SYL8CAP = self._CREG_GLOB + 0x0C7                                                      ## GENERATED ##
+        self._SYL8CAP = self._CREG_GLOB + 0x0C7
         self._SIC1 = self._CREG_GLOB + 0x0C8
         self._SYL7CAP = self._CREG_GLOB + 0x0C8
         self._SYL6CAP = self._CREG_GLOB + 0x0C9
@@ -978,9 +990,9 @@ class Core:
         self._SYL4CAP = self._CREG_GLOB + 0x0CB
         self._SIC0 = self._CREG_GLOB + 0x0CC
         self._SYL3CAP = self._CREG_GLOB + 0x0CC
-        self._SYL2CAP = self._CREG_GLOB + 0x0CD
+        self._SYL2CAP = self._CREG_GLOB + 0x0CD                                                      ## GENERATED ##
         self._SYL1CAP = self._CREG_GLOB + 0x0CE
-        self._SYL0CAP = self._CREG_GLOB + 0x0CF                                                      ## GENERATED ##
+        self._SYL0CAP = self._CREG_GLOB + 0x0CF
         self._GPS1 = self._CREG_GLOB + 0x0D0
         self._GPS0 = self._CREG_GLOB + 0x0D4
         self._SPS1 = self._CREG_GLOB + 0x0D8
@@ -988,9 +1000,9 @@ class Core:
         self._EXT2 = self._CREG_GLOB + 0x0E0
         self._EXT1 = self._CREG_GLOB + 0x0E4
         self._EXT0 = self._CREG_GLOB + 0x0E8
-        self._DCFG = self._CREG_GLOB + 0x0EC
+        self._DCFG = self._CREG_GLOB + 0x0EC                                                         ## GENERATED ##
         self._CVER1 = self._CREG_GLOB + 0x0F0
-        self._CVER = self._CREG_GLOB + 0x0F0                                                         ## GENERATED ##
+        self._CVER = self._CREG_GLOB + 0x0F0
         self._CTAG = self._CREG_GLOB + 0x0F1
         self._CVER0 = self._CREG_GLOB + 0x0F4
         self._PVER1 = self._CREG_GLOB + 0x0F8
@@ -998,9 +1010,9 @@ class Core:
         self._PTAG = self._CREG_GLOB + 0x0F9
         self._PVER0 = self._CREG_GLOB + 0x0FC
         self.context = [Context(rvd, base_address, x) for x in
-                range(self.FIELD_DCFG_NC+1)]
+                range(self.FIELD_DCFG_NC+1)]                                                         ## GENERATED ##
         return
-                                                                                                     ## GENERATED ##
+
     GSR = property(lambda s: s._rvd.readInt(s._GSR, 4),
         lambda s, v: s._rvd.writeInt(s._GSR, 4, v))
     FIELD_GSR_R = property(
@@ -1008,9 +1020,9 @@ class Core:
         lambda s, val: setattr(s, 'GSR', ((val << 31) & 0x80000000) |
             (self.GSR & ~0x80000000)))
     FIELD_GSR_E = property(
-        lambda self: (self.GSR & 0x00002000) >> 13,
+        lambda self: (self.GSR & 0x00002000) >> 13,                                                  ## GENERATED ##
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_GSR_B = property(                                                                          ## GENERATED ##
+    FIELD_GSR_B = property(
         lambda self: (self.GSR & 0x00001000) >> 12,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_GSR_RID = property(
@@ -1018,9 +1030,9 @@ class Core:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     BCRR = property(lambda s: s._rvd.readInt(s._BCRR, 4),
         lambda s, v: s._rvd.writeInt(s._BCRR, 4, v))
-    FIELD_BCRR_BCRR = property(
+    FIELD_BCRR_BCRR = property(                                                                      ## GENERATED ##
         lambda self: (self.BCRR & 0xFFFFFFFF) >> 0,
-        lambda s, val: setattr(s, 'BCRR', ((val << 0) & 0xFFFFFFFF) |                                ## GENERATED ##
+        lambda s, val: setattr(s, 'BCRR', ((val << 0) & 0xFFFFFFFF) |
             (self.BCRR & ~0xFFFFFFFF)))
     CC = property(lambda s: s._rvd.readInt(s._CC, 4),
         lambda s, v: raise_(RuntimeError("CC is not writable")))
@@ -1028,9 +1040,9 @@ class Core:
         lambda self: (self.CC & 0xFFFFFFFF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     AFF = property(lambda s: s._rvd.readInt(s._AFF, 4),
-        lambda s, v: raise_(RuntimeError("AFF is not writable")))
+        lambda s, v: raise_(RuntimeError("AFF is not writable")))                                    ## GENERATED ##
     FIELD_AFF_AF = property(
-        lambda self: (self.AFF & 0xFFFFFFFF) >> 0,                                                   ## GENERATED ##
+        lambda self: (self.AFF & 0xFFFFFFFF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     CNT = property(lambda s: s._rvd.readInt(s._CNT, 4),
         lambda s, v: raise_(RuntimeError("CNT is not writable")))
@@ -1038,9 +1050,9 @@ class Core:
         lambda self: (self.CNT & 0xFFFFFFFF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     CNTH = property(lambda s: s._rvd.readInt(s._CNTH, 4),
-        lambda s, v: raise_(RuntimeError("CNTH is not writable")))
+        lambda s, v: raise_(RuntimeError("CNTH is not writable")))                                   ## GENERATED ##
     FIELD_CNTH_CNTH = property(
-        lambda self: (self.CNTH & 0xFFFFFF00) >> 8,                                                  ## GENERATED ##
+        lambda self: (self.CNTH & 0xFFFFFF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_CNTH_CNT = property(
         lambda self: (self.CNTH & 0x000000FF) >> 0,
@@ -1048,9 +1060,9 @@ class Core:
     LIMC7 = property(lambda s: s._rvd.readInt(s._LIMC7, 4),
         lambda s, v: raise_(RuntimeError("LIMC7 is not writable")))
     FIELD_LIMC7_BORROW15 = property(
-        lambda self: (self.LIMC7 & 0xFFFF0000) >> 16,
+        lambda self: (self.LIMC7 & 0xFFFF0000) >> 16,                                                ## GENERATED ##
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    BORROW15 = property(lambda s: s._rvd.readInt(s._BORROW15, 2),                                    ## GENERATED ##
+    BORROW15 = property(lambda s: s._rvd.readInt(s._BORROW15, 2),
         lambda s, v: raise_(RuntimeError("BORROW15 is not writable")))
     FIELD_LIMC7_BORROW14 = property(
         lambda self: (self.LIMC7 & 0x0000FFFF) >> 0,
@@ -1058,9 +1070,9 @@ class Core:
     BORROW14 = property(lambda s: s._rvd.readInt(s._BORROW14, 2),
         lambda s, v: raise_(RuntimeError("BORROW14 is not writable")))
     LIMC6 = property(lambda s: s._rvd.readInt(s._LIMC6, 4),
-        lambda s, v: raise_(RuntimeError("LIMC6 is not writable")))
+        lambda s, v: raise_(RuntimeError("LIMC6 is not writable")))                                  ## GENERATED ##
     FIELD_LIMC6_BORROW13 = property(
-        lambda self: (self.LIMC6 & 0xFFFF0000) >> 16,                                                ## GENERATED ##
+        lambda self: (self.LIMC6 & 0xFFFF0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     BORROW13 = property(lambda s: s._rvd.readInt(s._BORROW13, 2),
         lambda s, v: raise_(RuntimeError("BORROW13 is not writable")))
@@ -1068,9 +1080,9 @@ class Core:
         lambda self: (self.LIMC6 & 0x0000FFFF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     BORROW12 = property(lambda s: s._rvd.readInt(s._BORROW12, 2),
-        lambda s, v: raise_(RuntimeError("BORROW12 is not writable")))
+        lambda s, v: raise_(RuntimeError("BORROW12 is not writable")))                               ## GENERATED ##
     LIMC5 = property(lambda s: s._rvd.readInt(s._LIMC5, 4),
-        lambda s, v: raise_(RuntimeError("LIMC5 is not writable")))                                  ## GENERATED ##
+        lambda s, v: raise_(RuntimeError("LIMC5 is not writable")))
     FIELD_LIMC5_BORROW11 = property(
         lambda self: (self.LIMC5 & 0xFFFF0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -1078,9 +1090,9 @@ class Core:
         lambda s, v: raise_(RuntimeError("BORROW11 is not writable")))
     FIELD_LIMC5_BORROW10 = property(
         lambda self: (self.LIMC5 & 0x0000FFFF) >> 0,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     BORROW10 = property(lambda s: s._rvd.readInt(s._BORROW10, 2),
-        lambda s, v: raise_(RuntimeError("BORROW10 is not writable")))                               ## GENERATED ##
+        lambda s, v: raise_(RuntimeError("BORROW10 is not writable")))
     LIMC4 = property(lambda s: s._rvd.readInt(s._LIMC4, 4),
         lambda s, v: raise_(RuntimeError("LIMC4 is not writable")))
     FIELD_LIMC4_BORROW9 = property(
@@ -1088,9 +1100,9 @@ class Core:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     BORROW9 = property(lambda s: s._rvd.readInt(s._BORROW9, 2),
         lambda s, v: raise_(RuntimeError("BORROW9 is not writable")))
-    FIELD_LIMC4_BORROW8 = property(
+    FIELD_LIMC4_BORROW8 = property(                                                                  ## GENERATED ##
         lambda self: (self.LIMC4 & 0x0000FFFF) >> 0,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     BORROW8 = property(lambda s: s._rvd.readInt(s._BORROW8, 2),
         lambda s, v: raise_(RuntimeError("BORROW8 is not writable")))
     LIMC3 = property(lambda s: s._rvd.readInt(s._LIMC3, 4),
@@ -1098,9 +1110,9 @@ class Core:
     FIELD_LIMC3_BORROW7 = property(
         lambda self: (self.LIMC3 & 0xFFFF0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    BORROW7 = property(lambda s: s._rvd.readInt(s._BORROW7, 2),
+    BORROW7 = property(lambda s: s._rvd.readInt(s._BORROW7, 2),                                      ## GENERATED ##
         lambda s, v: raise_(RuntimeError("BORROW7 is not writable")))
-    FIELD_LIMC3_BORROW6 = property(                                                                  ## GENERATED ##
+    FIELD_LIMC3_BORROW6 = property(
         lambda self: (self.LIMC3 & 0x0000FFFF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     BORROW6 = property(lambda s: s._rvd.readInt(s._BORROW6, 2),
@@ -1108,9 +1120,9 @@ class Core:
     LIMC2 = property(lambda s: s._rvd.readInt(s._LIMC2, 4),
         lambda s, v: raise_(RuntimeError("LIMC2 is not writable")))
     FIELD_LIMC2_BORROW5 = property(
-        lambda self: (self.LIMC2 & 0xFFFF0000) >> 16,
+        lambda self: (self.LIMC2 & 0xFFFF0000) >> 16,                                                ## GENERATED ##
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    BORROW5 = property(lambda s: s._rvd.readInt(s._BORROW5, 2),                                      ## GENERATED ##
+    BORROW5 = property(lambda s: s._rvd.readInt(s._BORROW5, 2),
         lambda s, v: raise_(RuntimeError("BORROW5 is not writable")))
     FIELD_LIMC2_BORROW4 = property(
         lambda self: (self.LIMC2 & 0x0000FFFF) >> 0,
@@ -1118,9 +1130,9 @@ class Core:
     BORROW4 = property(lambda s: s._rvd.readInt(s._BORROW4, 2),
         lambda s, v: raise_(RuntimeError("BORROW4 is not writable")))
     LIMC1 = property(lambda s: s._rvd.readInt(s._LIMC1, 4),
-        lambda s, v: raise_(RuntimeError("LIMC1 is not writable")))
+        lambda s, v: raise_(RuntimeError("LIMC1 is not writable")))                                  ## GENERATED ##
     FIELD_LIMC1_BORROW3 = property(
-        lambda self: (self.LIMC1 & 0xFFFF0000) >> 16,                                                ## GENERATED ##
+        lambda self: (self.LIMC1 & 0xFFFF0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     BORROW3 = property(lambda s: s._rvd.readInt(s._BORROW3, 2),
         lambda s, v: raise_(RuntimeError("BORROW3 is not writable")))
@@ -1128,9 +1140,9 @@ class Core:
         lambda self: (self.LIMC1 & 0x0000FFFF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     BORROW2 = property(lambda s: s._rvd.readInt(s._BORROW2, 2),
-        lambda s, v: raise_(RuntimeError("BORROW2 is not writable")))
+        lambda s, v: raise_(RuntimeError("BORROW2 is not writable")))                                ## GENERATED ##
     LIMC0 = property(lambda s: s._rvd.readInt(s._LIMC0, 4),
-        lambda s, v: raise_(RuntimeError("LIMC0 is not writable")))                                  ## GENERATED ##
+        lambda s, v: raise_(RuntimeError("LIMC0 is not writable")))
     FIELD_LIMC0_BORROW1 = property(
         lambda self: (self.LIMC0 & 0xFFFF0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -1138,9 +1150,9 @@ class Core:
         lambda s, v: raise_(RuntimeError("BORROW1 is not writable")))
     FIELD_LIMC0_BORROW0 = property(
         lambda self: (self.LIMC0 & 0x0000FFFF) >> 0,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     BORROW0 = property(lambda s: s._rvd.readInt(s._BORROW0, 2),
-        lambda s, v: raise_(RuntimeError("BORROW0 is not writable")))                                ## GENERATED ##
+        lambda s, v: raise_(RuntimeError("BORROW0 is not writable")))
     SIC3 = property(lambda s: s._rvd.readInt(s._SIC3, 4),
         lambda s, v: raise_(RuntimeError("SIC3 is not writable")))
     FIELD_SIC3_SYL15CAP = property(
@@ -1148,9 +1160,9 @@ class Core:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL15CAP = property(lambda s: s._rvd.readInt(s._SYL15CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL15CAP is not writable")))
-    FIELD_SIC3_SYL14CAP = property(
+    FIELD_SIC3_SYL14CAP = property(                                                                  ## GENERATED ##
         lambda self: (self.SIC3 & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL14CAP = property(lambda s: s._rvd.readInt(s._SYL14CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL14CAP is not writable")))
     FIELD_SIC3_SYL13CAP = property(
@@ -1158,9 +1170,9 @@ class Core:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL13CAP = property(lambda s: s._rvd.readInt(s._SYL13CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL13CAP is not writable")))
-    FIELD_SIC3_SYL12CAP = property(
+    FIELD_SIC3_SYL12CAP = property(                                                                  ## GENERATED ##
         lambda self: (self.SIC3 & 0x000000FF) >> 0,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL12CAP = property(lambda s: s._rvd.readInt(s._SYL12CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL12CAP is not writable")))
     SIC2 = property(lambda s: s._rvd.readInt(s._SIC2, 4),
@@ -1168,9 +1180,9 @@ class Core:
     FIELD_SIC2_SYL11CAP = property(
         lambda self: (self.SIC2 & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    SYL11CAP = property(lambda s: s._rvd.readInt(s._SYL11CAP, 1),
+    SYL11CAP = property(lambda s: s._rvd.readInt(s._SYL11CAP, 1),                                    ## GENERATED ##
         lambda s, v: raise_(RuntimeError("SYL11CAP is not writable")))
-    FIELD_SIC2_SYL10CAP = property(                                                                  ## GENERATED ##
+    FIELD_SIC2_SYL10CAP = property(
         lambda self: (self.SIC2 & 0x00FF0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL10CAP = property(lambda s: s._rvd.readInt(s._SYL10CAP, 1),
@@ -1178,9 +1190,9 @@ class Core:
     FIELD_SIC2_SYL9CAP = property(
         lambda self: (self.SIC2 & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    SYL9CAP = property(lambda s: s._rvd.readInt(s._SYL9CAP, 1),
+    SYL9CAP = property(lambda s: s._rvd.readInt(s._SYL9CAP, 1),                                      ## GENERATED ##
         lambda s, v: raise_(RuntimeError("SYL9CAP is not writable")))
-    FIELD_SIC2_SYL8CAP = property(                                                                   ## GENERATED ##
+    FIELD_SIC2_SYL8CAP = property(
         lambda self: (self.SIC2 & 0x000000FF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL8CAP = property(lambda s: s._rvd.readInt(s._SYL8CAP, 1),
@@ -1188,9 +1200,9 @@ class Core:
     SIC1 = property(lambda s: s._rvd.readInt(s._SIC1, 4),
         lambda s, v: raise_(RuntimeError("SIC1 is not writable")))
     FIELD_SIC1_SYL7CAP = property(
-        lambda self: (self.SIC1 & 0xFF000000) >> 24,
+        lambda self: (self.SIC1 & 0xFF000000) >> 24,                                                 ## GENERATED ##
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    SYL7CAP = property(lambda s: s._rvd.readInt(s._SYL7CAP, 1),                                      ## GENERATED ##
+    SYL7CAP = property(lambda s: s._rvd.readInt(s._SYL7CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL7CAP is not writable")))
     FIELD_SIC1_SYL6CAP = property(
         lambda self: (self.SIC1 & 0x00FF0000) >> 16,
@@ -1198,9 +1210,9 @@ class Core:
     SYL6CAP = property(lambda s: s._rvd.readInt(s._SYL6CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL6CAP is not writable")))
     FIELD_SIC1_SYL5CAP = property(
-        lambda self: (self.SIC1 & 0x0000FF00) >> 8,
+        lambda self: (self.SIC1 & 0x0000FF00) >> 8,                                                  ## GENERATED ##
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    SYL5CAP = property(lambda s: s._rvd.readInt(s._SYL5CAP, 1),                                      ## GENERATED ##
+    SYL5CAP = property(lambda s: s._rvd.readInt(s._SYL5CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL5CAP is not writable")))
     FIELD_SIC1_SYL4CAP = property(
         lambda self: (self.SIC1 & 0x000000FF) >> 0,
@@ -1208,9 +1220,9 @@ class Core:
     SYL4CAP = property(lambda s: s._rvd.readInt(s._SYL4CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL4CAP is not writable")))
     SIC0 = property(lambda s: s._rvd.readInt(s._SIC0, 4),
-        lambda s, v: raise_(RuntimeError("SIC0 is not writable")))
+        lambda s, v: raise_(RuntimeError("SIC0 is not writable")))                                   ## GENERATED ##
     FIELD_SIC0_SYL3CAP = property(
-        lambda self: (self.SIC0 & 0xFF000000) >> 24,                                                 ## GENERATED ##
+        lambda self: (self.SIC0 & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL3CAP = property(lambda s: s._rvd.readInt(s._SYL3CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL3CAP is not writable")))
@@ -1218,9 +1230,9 @@ class Core:
         lambda self: (self.SIC0 & 0x00FF0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL2CAP = property(lambda s: s._rvd.readInt(s._SYL2CAP, 1),
-        lambda s, v: raise_(RuntimeError("SYL2CAP is not writable")))
+        lambda s, v: raise_(RuntimeError("SYL2CAP is not writable")))                                ## GENERATED ##
     FIELD_SIC0_SYL1CAP = property(
-        lambda self: (self.SIC0 & 0x0000FF00) >> 8,                                                  ## GENERATED ##
+        lambda self: (self.SIC0 & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL1CAP = property(lambda s: s._rvd.readInt(s._SYL1CAP, 1),
         lambda s, v: raise_(RuntimeError("SYL1CAP is not writable")))
@@ -1228,9 +1240,9 @@ class Core:
         lambda self: (self.SIC0 & 0x000000FF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     SYL0CAP = property(lambda s: s._rvd.readInt(s._SYL0CAP, 1),
-        lambda s, v: raise_(RuntimeError("SYL0CAP is not writable")))
+        lambda s, v: raise_(RuntimeError("SYL0CAP is not writable")))                                ## GENERATED ##
     GPS1 = property(lambda s: s._rvd.readInt(s._GPS1, 4),
-        lambda s, v: raise_(RuntimeError("GPS1 is not writable")))                                   ## GENERATED ##
+        lambda s, v: raise_(RuntimeError("GPS1 is not writable")))
     GPS0 = property(lambda s: s._rvd.readInt(s._GPS0, 4),
         lambda s, v: raise_(RuntimeError("GPS0 is not writable")))
     FIELD_GPS0_MEMAR = property(
@@ -1238,9 +1250,9 @@ class Core:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_GPS0_MEMDC = property(
         lambda self: (self.GPS0 & 0x00F00000) >> 20,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_GPS0_MEMDR = property(
-        lambda self: (self.GPS0 & 0x000F0000) >> 16,                                                 ## GENERATED ##
+        lambda self: (self.GPS0 & 0x000F0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_GPS0_MULC = property(
         lambda self: (self.GPS0 & 0x0000F000) >> 12,
@@ -1248,9 +1260,9 @@ class Core:
     FIELD_GPS0_MULR = property(
         lambda self: (self.GPS0 & 0x00000F00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_GPS0_ALUC = property(
+    FIELD_GPS0_ALUC = property(                                                                      ## GENERATED ##
         lambda self: (self.GPS0 & 0x000000F0) >> 4,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_GPS0_ALUR = property(
         lambda self: (self.GPS0 & 0x0000000F) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -1258,9 +1270,9 @@ class Core:
         lambda s, v: raise_(RuntimeError("SPS1 is not writable")))
     SPS0 = property(lambda s: s._rvd.readInt(s._SPS0, 4),
         lambda s, v: raise_(RuntimeError("SPS0 is not writable")))
-    FIELD_SPS0_MEMMC = property(
+    FIELD_SPS0_MEMMC = property(                                                                     ## GENERATED ##
         lambda self: (self.SPS0 & 0xF0000000) >> 28,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_SPS0_MEMMR = property(
         lambda self: (self.SPS0 & 0x0F000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -1268,9 +1280,9 @@ class Core:
         lambda self: (self.SPS0 & 0x00F00000) >> 20,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_SPS0_MEMDR = property(
-        lambda self: (self.SPS0 & 0x000F0000) >> 16,
+        lambda self: (self.SPS0 & 0x000F0000) >> 16,                                                 ## GENERATED ##
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_SPS0_BRC = property(                                                                       ## GENERATED ##
+    FIELD_SPS0_BRC = property(
         lambda self: (self.SPS0 & 0x0000F000) >> 12,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_SPS0_BRR = property(
@@ -1278,9 +1290,9 @@ class Core:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_SPS0_ALUC = property(
         lambda self: (self.SPS0 & 0x000000F0) >> 4,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_SPS0_ALUR = property(
-        lambda self: (self.SPS0 & 0x0000000F) >> 0,                                                  ## GENERATED ##
+        lambda self: (self.SPS0 & 0x0000000F) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     EXT2 = property(lambda s: s._rvd.readInt(s._EXT2, 4),
         lambda s, v: raise_(RuntimeError("EXT2 is not writable")))
@@ -1288,9 +1300,9 @@ class Core:
         lambda s, v: raise_(RuntimeError("EXT1 is not writable")))
     FIELD_EXT1_ASID = property(
         lambda self: (self.EXT1 & 0x0000F800) >> 11,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_EXT1_LP = property(
-        lambda self: (self.EXT1 & 0x000007C0) >> 6,                                                  ## GENERATED ##
+        lambda self: (self.EXT1 & 0x000007C0) >> 6,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_EXT1_NP = property(
         lambda self: (self.EXT1 & 0x0000003E) >> 1,
@@ -1298,9 +1310,9 @@ class Core:
     FIELD_EXT1_M = property(
         lambda self: (self.EXT1 & 0x00000001) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    EXT0 = property(lambda s: s._rvd.readInt(s._EXT0, 4),
+    EXT0 = property(lambda s: s._rvd.readInt(s._EXT0, 4),                                            ## GENERATED ##
         lambda s, v: raise_(RuntimeError("EXT0 is not writable")))
-    FIELD_EXT0_T = property(                                                                         ## GENERATED ##
+    FIELD_EXT0_T = property(
         lambda self: (self.EXT0 & 0x08000000) >> 27,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_EXT0_BRK = property(
@@ -1308,9 +1320,9 @@ class Core:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_EXT0_C = property(
         lambda self: (self.EXT0 & 0x00080000) >> 19,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_EXT0_P = property(
-        lambda self: (self.EXT0 & 0x00070000) >> 16,                                                 ## GENERATED ##
+        lambda self: (self.EXT0 & 0x00070000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_EXT0_O = property(
         lambda self: (self.EXT0 & 0x00000004) >> 2,
@@ -1318,9 +1330,9 @@ class Core:
     FIELD_EXT0_L = property(
         lambda self: (self.EXT0 & 0x00000002) >> 1,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_EXT0_F = property(
+    FIELD_EXT0_F = property(                                                                         ## GENERATED ##
         lambda self: (self.EXT0 & 0x00000001) >> 0,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     DCFG = property(lambda s: s._rvd.readInt(s._DCFG, 4),
         lambda s, v: raise_(RuntimeError("DCFG is not writable")))
     FIELD_DCFG_BA = property(
@@ -1328,9 +1340,9 @@ class Core:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DCFG_NC = property(
         lambda self: (self.DCFG & 0x00000F00) >> 8,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
     FIELD_DCFG_NG = property(
-        lambda self: (self.DCFG & 0x000000F0) >> 4,                                                  ## GENERATED ##
+        lambda self: (self.DCFG & 0x000000F0) >> 4,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_DCFG_NL = property(
         lambda self: (self.DCFG & 0x0000000F) >> 0,
@@ -1338,9 +1350,9 @@ class Core:
     CVER1 = property(lambda s: s._rvd.readInt(s._CVER1, 4),
         lambda s, v: raise_(RuntimeError("CVER1 is not writable")))
     FIELD_CVER1_VER = property(
-        lambda self: (self.CVER1 & 0xFF000000) >> 24,
+        lambda self: (self.CVER1 & 0xFF000000) >> 24,                                                ## GENERATED ##
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    CVER = property(lambda s: s._rvd.readInt(s._CVER, 1),                                            ## GENERATED ##
+    CVER = property(lambda s: s._rvd.readInt(s._CVER, 1),
         lambda s, v: raise_(RuntimeError("CVER is not writable")))
     FIELD_CVER1_CTAG0 = property(
         lambda self: (self.CVER1 & 0x00FF0000) >> 16,
@@ -1348,9 +1360,9 @@ class Core:
     CTAG = property(lambda s: s._rvd.readInt(s._CTAG, 1),
         lambda s, v: raise_(RuntimeError("CTAG is not writable")))
     FIELD_CVER1_CTAG1 = property(
-        lambda self: (self.CVER1 & 0x0000FF00) >> 8,
+        lambda self: (self.CVER1 & 0x0000FF00) >> 8,                                                 ## GENERATED ##
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_CVER1_CTAG2 = property(                                                                    ## GENERATED ##
+    FIELD_CVER1_CTAG2 = property(
         lambda self: (self.CVER1 & 0x000000FF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     CVER0 = property(lambda s: s._rvd.readInt(s._CVER0, 4),
@@ -1358,9 +1370,9 @@ class Core:
     FIELD_CVER0_CTAG3 = property(
         lambda self: (self.CVER0 & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_CVER0_CTAG4 = property(
+    FIELD_CVER0_CTAG4 = property(                                                                    ## GENERATED ##
         lambda self: (self.CVER0 & 0x00FF0000) >> 16,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_CVER0_CTAG5 = property(
         lambda self: (self.CVER0 & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
@@ -1368,9 +1380,9 @@ class Core:
         lambda self: (self.CVER0 & 0x000000FF) >> 0,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     PVER1 = property(lambda s: s._rvd.readInt(s._PVER1, 4),
-        lambda s, v: raise_(RuntimeError("PVER1 is not writable")))
+        lambda s, v: raise_(RuntimeError("PVER1 is not writable")))                                  ## GENERATED ##
     FIELD_PVER1_COID = property(
-        lambda self: (self.PVER1 & 0xFF000000) >> 24,                                                ## GENERATED ##
+        lambda self: (self.PVER1 & 0xFF000000) >> 24,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     COID = property(lambda s: s._rvd.readInt(s._COID, 1),
         lambda s, v: raise_(RuntimeError("COID is not writable")))
@@ -1378,9 +1390,9 @@ class Core:
         lambda self: (self.PVER1 & 0x00FF0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     PTAG = property(lambda s: s._rvd.readInt(s._PTAG, 1),
-        lambda s, v: raise_(RuntimeError("PTAG is not writable")))
+        lambda s, v: raise_(RuntimeError("PTAG is not writable")))                                   ## GENERATED ##
     FIELD_PVER1_PTAG1 = property(
-        lambda self: (self.PVER1 & 0x0000FF00) >> 8,                                                 ## GENERATED ##
+        lambda self: (self.PVER1 & 0x0000FF00) >> 8,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_PVER1_PTAG2 = property(
         lambda self: (self.PVER1 & 0x000000FF) >> 0,
@@ -1388,9 +1400,9 @@ class Core:
     PVER0 = property(lambda s: s._rvd.readInt(s._PVER0, 4),
         lambda s, v: raise_(RuntimeError("PVER0 is not writable")))
     FIELD_PVER0_PTAG3 = property(
-        lambda self: (self.PVER0 & 0xFF000000) >> 24,
+        lambda self: (self.PVER0 & 0xFF000000) >> 24,                                                ## GENERATED ##
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
-    FIELD_PVER0_PTAG4 = property(                                                                    ## GENERATED ##
+    FIELD_PVER0_PTAG4 = property(
         lambda self: (self.PVER0 & 0x00FF0000) >> 16,
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_PVER0_PTAG5 = property(
@@ -1398,5 +1410,5 @@ class Core:
         lambda self, val:raise_(RuntimeError('Cannot write to field')))
     FIELD_PVER0_PTAG6 = property(
         lambda self: (self.PVER0 & 0x000000FF) >> 0,
-        lambda self, val:raise_(RuntimeError('Cannot write to field')))
+        lambda self, val:raise_(RuntimeError('Cannot write to field')))                              ## GENERATED ##
 
