@@ -419,11 +419,13 @@ begin -- architecture
       blockRequests <= tlb2tw_request(2**RCFG.numLaneGroupsLog2-1 downto 0) or
         tlb2tw_request(2*2**RCFG.numLaneGroupsLog2-1 downto 2**RCFG.numLaneGroupsLog2);
       
-      -- Use the lookup table generated above to select the next block whenever
-      -- the table walker is not busy.
+      -- Use the lookup table generated above to select the next block when the
+      -- table walker is not busy and there is no instruction translation
+      -- pending. The latter is there to get the table walker to finish handling
+      -- lane groups which it started handling.
       arb_comb: process (tw_busy, blockRequests, blockSelect) is
       begin
-        if tw_busy = '0' then
+        if tw_busy = '0' and idsel = '0' then
           blockSelect_next <= SCHED_LOOKUP(vect2uint(blockRequests & blockSelect));
         else
           blockSelect_next <= blockSelect;

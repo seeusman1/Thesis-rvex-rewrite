@@ -81,6 +81,14 @@ package cache_pkg is
   constant FLUSH_TAG_ASID       : rvex_flushMode_type := "101";
   constant FLUSH_RANGE_ASID     : rvex_flushMode_type := "110";
   
+  -- Implementation styles for the TLB content-adressable memory.
+  type cache_cam_ram_style_type is (
+    CRS_DEFAULT, -- Use default (CRS_BRAM36).
+    CRS_BRAM36,  -- Use 36kib block RAMs: BRAMs = (dbits+9)/10 + 2**abits/32
+    CRS_BRAM18,  -- Use 18kib block RAMs: BRAMs = (dbits+8)/9  + 2**abits/32
+    CRS_DISTRIB  -- Use distrubuted RAM:  LUTs  = (dbits+4)/5  + 2**abits/2
+  );
+  
   -- Cache/MMU configuration record.
   type cache_generic_config_type is record
     

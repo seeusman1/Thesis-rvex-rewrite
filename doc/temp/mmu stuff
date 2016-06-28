@@ -564,14 +564,45 @@ Line valid bits:
  - 1 read for streaming port
  - 1 clear for snooping
  - master reset for flush
+.
 
 
 
 
-Bus model:
 
- - wide multi-issue bus for instruction fetch and cache updates
- - stream for writes, which may
+
+CACHE BLOCK RESIZING STUFF
+
+paper: http://ieeexplore.ieee.org/xpl/articleDetails.jsp?arnumber=6404160
+
+goal: try to keep data from the previous configuration to prevent excessive transient misses
+
+method:
+ - maintain a current state bit, which toggles every cache size reconfiguration
+ - store an extra bit per line as well
+ - whenever a cache access occurs, set the extra bit to the current state bit
+ - when a resize reconfiguration occurs, invalidate all cache entries which have
+   their bit set to !current_state. This must be done because these entries have
+   not been kept up-to-date by the snooper.
+ - try to have a transition period after the resize request where reads still
+   come from the old config and updates go to both the previous and new
+   configuration
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

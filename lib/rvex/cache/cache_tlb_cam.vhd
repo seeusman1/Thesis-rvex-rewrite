@@ -52,29 +52,33 @@ use IEEE.numeric_std.all;
 
 library rvex;
 use rvex.cache_pkg.all;
+use rvex.utils_pkg.all;
 
 --=============================================================================
 -- This entity represents a content-addressable memory, used by the CAM. It is
--- implemented using block RAMs. A 10-bit input (data) and a 5-bit output
--- (address) results in one block RAM. Essentially, the data is used as the
--- address of the block RAM, and the associated address is one-hot encoded in
--- the block RAM data. When the data needs to be larger than 10 bits, the
--- data is split into multiple parts, each fed to a different block RAM.
--- Because the indices are one-hot encoded, the block RAM outputs can just be
--- ANDed together. This results in linear resource utilization versus data
--- width instead of exponential. The address is returned still in one-hot
--- format, to allow multiple CAMs to work together. This allows some of those
--- individual CAMs to be conditionally ignored.
+-- implemented using block RAMs or distributed RAM. A 10-bit input (data) and
+-- a 5-bit output (address) results in one 36kib block RAM. Essentially, the
+-- data is used as the address of the RAM, and the associated address is
+-- one-hot encoded in the RAM data. When the data needs to be larger than the
+-- maximum number of RAM address bits bits, the data is split into multiple
+-- parts, each fed to a different RAM. Because the indices are one-hot encoded,
+-- the RAM outputs can just be ANDed together. This results in linear resource
+-- utilization versus data width instead of exponential. The address is
+-- returned still in one-hot format, to allow multiple CAMs to work together.
+-- This allows some of those individual CAMs to be conditionally ignored.
 -------------------------------------------------------------------------------
 entity cache_tlb_cam is
 --=============================================================================
   generic (
     
     -- Width of the data that is to be looked up.
-    DATA_WIDTH                  : natural := 10;
+    DATA_W                      : natural := 10;
     
     -- Width of the address in bits = the log2 of the number of entries.
-    ADDRESS_WIDTH               : natural := 5
+    ADDR_W                      : natural := 5;
+    
+    -- Implementation style.
+    STYLE                       : cache_cam_ram_style_type := CRS_DEFAULT
     
   );
   port (
@@ -82,9 +86,6 @@ entity cache_tlb_cam is
     ---------------------------------------------------------------------------
     -- System control
     ---------------------------------------------------------------------------
-    -- Active high synchronous reset input.
-    reset                       : in  std_logic;
-    
     -- Clock input, registers are rising edge triggered.
     clk                         : in  std_logic;
     
@@ -95,24 +96,119 @@ entity cache_tlb_cam is
     -- CAM ports
     ---------------------------------------------------------------------------
     -- Data input for lookup and modification.
-    data                        : in  std_logic_vector(DATA_WIDTH-1 downto 0);
+    data                        : in  std_logic_vector(DATA_W-1 downto 0);
     
     -- One-hot encoded address output, valid one clkEn'd cycle after data.
-    addr                        : out std_logic_vector(2**ADDRESS_WIDTH-1 downto 0)
+    addr_oneHot                 : out std_logic_vector(2**ADDR_W-1 downto 0);
     
-    -- TODO
-
+    -- Write port. update_enable should be asserted when data has already been
+    -- valid for one cycle, while keeping data stable (so data is stable for at
+    -- least two cycles. addr specifies the address to modify; addRem specifies
+    -- whether it should be added (high) or removed (low) from the selected
+    -- data entry.
+    update_enable               : in  std_logic;
+    update_addRem               : in  std_logic;
+    update_addr                 : in  std_logic_vector(ADDR_W-1 downto 0)
+    
   );
 end cache_tlb_cam;
 
 --=============================================================================
 architecture arch of cache_tlb_cam is
 --=============================================================================
-
-
+  
+  -- Number of data bits per RAM.
+  type bpl_table_type is array (cache_cam_ram_style_type) of natural;  
+  constant BPL_TABLE            : bpl_table_type := (
+    10, -- CRS_DEFAULT
+    10, -- CRS_BRAM36
+    9,  -- CRS_BRAM18
+    5   -- CRS_DISTRIB
+  );
+  constant BITS_PER_LVL         : natural := BPL_TABLE(STYLE);
+  
+  -- Compute the number of RAMs needed.
+  constant NUM_LVLS             : natural := (DATA_W + BITS_PER_LVL - 1) / BITS_PER_LVL;
+  
+  -- RAM implementation style.
+  pure function resolve_ram_style (
+    style : cache_cam_ram_style_type
+  ) is
+  begin
+    if style = CRS_DISTRIB then
+      return "distributed";
+    end if;
+    return "block";
+  end resolve_ram_style;
+  constant RAM_STYLE_STR        : string := resolve_ram_style(STYLE);
+  
+  -- RAM types.
+  subtype ram_entry_type is std_logic_vector(2**ADDR_W-1 downto 0);
+  type ram_entry_array is array (natural range <>) of ram_entry_type;
+  subtype ram_array is ram_entry_array(0 to 2**BITS_PER_LVL-1);
+  
+  -- Read CAM address for each level.
+  signal camReadAddrOH          : ram_entry_array(NUM_LVLS-1 downto 0);
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
   
-
+  -- Generate the memories.
+  ram_gen: for lvl in 0 to NUM_LVLS-1 generate
+    
+    -- Memory contents.
+    signal mem                  : ram_array;
+    attribute ram_style         : string;
+    attribute ram_style of mem  : signal is RAM_STYLE_STR;
+    
+    -- Address for this level (CAM data);
+    signal camData              : std_logic_vector(BITS_PER_LVL-1 downto 0);
+    
+    -- Modified write data (CAM one-hot address).
+    signal camWriteAddrOH       : ram_entry_type;
+    
+  begin
+    
+    -- Select the data bits for this level.
+    camData <= std_logic_vector(
+      resize(shift_right(unsigned(data), lvl*BITS_PER_LVL), BITS_PER_LVL));
+    
+    -- Infer the memory.
+    ram_proc: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if clkEn = '1' then
+          if update_enable = '1' then
+            mem(to_integer(unsigned(camData))) <= camWriteAddrOH;
+          end if;
+          camReadAddrOH(lvl) <= mem(to_integer(unsigned(camData)));
+        end if;
+      end if;
+    end process;
+    
+    -- Generate read-modify-write data.
+    rmw_proc: process (camReadAddrOH(lvl), update_addRem, update_addr) is
+    begin
+      camWriteAddrOH <= camReadAddrOH(lvl);
+      for i in 2**ADDR_W-1 downto 0 loop
+        if to_integer(unsigned(update_addr)) = i then
+          camWriteAddrOH(i) <= update_addRem;
+        end if;
+      end loop;
+    end process;
+    
+  end generate;
+  
+  -- Combine the RAM outputs for each level.
+  cam_data_proc: process (data) is
+    variable d : ram_entry_type;
+  begin
+    d := camReadAddrOH(0);
+    for lvl in 1 to NUM_LVLS-1 loop
+      d := d and camReadAddrOH(lvl);
+    end loop;
+    addr_oneHot <= d;
+  end process;
+  
 end architecture;

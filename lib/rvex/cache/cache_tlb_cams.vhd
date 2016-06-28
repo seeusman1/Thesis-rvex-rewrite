@@ -42,65 +42,64 @@
 -- Roel Seedorf, Anthony Brandon, Jeroen van Straten. r-VEX is currently
 -- maintained by TU Delft (J.S.S.M.Wong@tudelft.nl).
 
--- 7. The MMU was developed by Jens Johansen.
+-- 7. The MMU was created by Jens Johansen.
 
 -- Copyright (C) 2008-2016 by TU Delft.
 
 library IEEE;
-use IEEE.STD_LOGIC_1164.all;
-use IEEE.NUMERIC_STD.all;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
 
+library rvex;
+use rvex.cache_pkg.all;
+use rvex.utils_pkg.all;
 
-entity old_mmu_oh2bin is
-  generic(
-    WIDTH_LOG2                  : integer := 5
+--=============================================================================
+-- This entity represents the CAM portion of a TLB block. It supports global
+-- and large pages (i.e. CAM entries with don't cares for part of the tag
+-- and/or the ASID).
+-------------------------------------------------------------------------------
+entity cache_tlb_cams is
+--=============================================================================
+  generic (
+    
+    -- Configuration.
+    CCFG                        : cache_generic_config_type := cache_cfg
+    
   );
-  port(
-    oh_in                       : in  std_logic_vector(2**WIDTH_LOG2-1 downto 0);
-    bin_out                     : out integer range 0 to 2**WIDTH_LOG2-1;
-    hit                         : out std_logic
+  port (
+    
+    ---------------------------------------------------------------------------
+    -- System control
+    ---------------------------------------------------------------------------
+    -- Active high synchronous reset input.
+    reset                       : in  std_logic;
+    
+    -- Clock input, registers are rising edge triggered.
+    clk                         : in  std_logic;
+    
+    -- Active high global clock enable input.
+    clkEn                       : in  std_logic;
+    
+    ---------------------------------------------------------------------------
+    -- 
+    ---------------------------------------------------------------------------
+    -- Virtual address and ASID to look up, add to the CAM, or remove from the
+    -- CAM.
+    vAddr                       : in  rvex_address_type;
+    asid                        : in  rvex_data_type;
+    
+    
   );
-end entity old_mmu_oh2bin;
+end cache_tlb_cams;
 
-architecture log of old_mmu_oh2bin is 
-  type t_valid_tree    is array (0 to WIDTH_LOG2-1)        of std_logic_vector(2**(WIDTH_LOG2 - 1) - 1 downto 0);
-  type t_encode_vector is array (0 to 2**(WIDTH_LOG2-1)-1) of std_logic_vector(WIDTH_LOG2-1 downto 0);
-  type t_encode_tree   is array (0 to WIDTH_LOG2-1)        of t_encode_vector;
+--=============================================================================
+architecture arch of cache_tlb_cams is
+--=============================================================================
 
-  signal valid_tree  : t_valid_tree;
-  signal encode_tree : t_encode_tree;
-
-begin
-
-  decoder_tree: process(oh_in, valid_tree, encode_tree) 
-  begin 
-
-    for lvl in 0 to WIDTH_LOG2-1 loop
-      for i in 0 to 2**(WIDTH_LOG2-1-lvl) - 1 loop
-
-        if lvl = 0 then
-          valid_tree(0)(i)  <= oh_in(2 * i) or oh_in(2 * i + 1);
-          encode_tree(0)(i)(0) <= oh_in(2 * i + 1);
-        end if;
-
-        if lvl > 0 then
-          valid_tree(lvl)(i)  <= valid_tree(lvl - 1)(2 * i) or valid_tree(lvl - 1)(2 * i + 1);
-        
-          encode_tree(lvl)(i)(lvl) <= valid_tree(lvl - 1)(2 * i + 1);
-
-          if valid_tree(lvl - 1)(2 * i + 1) = '1' then
-            encode_tree(lvl)(i)(lvl-1 downto 0) <= encode_tree(lvl-1)(2 * i + 1)(lvl-1 downto 0);
-          else
-            encode_tree(lvl)(i)(lvl-1 downto 0) <= encode_tree(lvl-1)(2 * i)(lvl-1 downto 0);
-          end if;
-        end if;
-
-      end loop;
-    end loop;
-
-  end process;
-
-  hit   <= valid_tree(WIDTH_LOG2-1)(0);
-  bin_out <= to_integer(unsigned(encode_tree(WIDTH_LOG2-1)(0)));
-
+--=============================================================================
+begin -- architecture
+--=============================================================================
+  
+  
 end architecture;
