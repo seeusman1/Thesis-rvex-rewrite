@@ -132,8 +132,8 @@ mov $r0.60 = 0
   c0  ldb     $r0.11      = CR_CID_ADDR[$r0.0]
 #endif
 ;;
-  /* Set r0.23 if the BSS size is 0. */
-  c0  cmpleu  $r0.23      = $r0.22, $r0.21
+  /* Set r0.25 if the BSS size is 0. */
+  c0  cmpleu  $r0.25      = $r0.22, $r0.21
   ISSUE_2
   
 #ifndef XSTSIM
@@ -147,7 +147,7 @@ mov $r0.60 = 0
   c0  add     $r0.24      = $r0.0, _trap_handler
 ;;
   /* Set b0.0 if the BSS size is 0 or if we're not running in context 0. */
-  c0  orl     $b0.0       = $r0.23, $r0.11
+  c0  orl     $b0.0       = $r0.25, $r0.11
   ISSUE_2
   
   /* Multiply the context ID by the per-context stack size (chosen manually), */
