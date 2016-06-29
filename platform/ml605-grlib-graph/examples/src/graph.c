@@ -169,7 +169,7 @@ void update_current_cfg(int *lane) {
           CURCFG_X+CUR_CFG_LW*(i+1), CURCFG_Y+CUR_CFG_H,
           g.taskcol[t]);
     }
-    if (i < 8) {
+    if (i < 7) {
       unsigned char tp1 = lane[i+1];
       unsigned char ptp1 = prev_lane[i+1];
       if ((t != pt) || (tp1 != ptp1)) {
@@ -313,12 +313,19 @@ int main(void) {
   graph_addtick(&g, 77, "2.9W");
   graph_addtick(&g, 96, "3.0W");
   //*/
-  // >>9
+  /* // >>9
   graph_addtick(&g, 0,  "2.7W");
   graph_addtick(&g, 25, "2.9W");
   graph_addtick(&g, 51, "3.1W");
   graph_addtick(&g, 76, "3.3W");
   graph_addtick(&g, 102, "3.5W");
+  //*/
+  // >>9   WTF FPGA
+  graph_addtick(&g, 0,  "4.4W");
+  graph_addtick(&g, 25, "4.6W");
+  graph_addtick(&g, 51, "4.8W");
+  graph_addtick(&g, 76, "5.0W");
+  graph_addtick(&g, 102, "5.2W");
   //*/
   
   g.inc = 1;
@@ -415,13 +422,13 @@ int main(void) {
     if (power == -1) {
       power = 255;
     } else {
-      power -= 0x2B333;
+      power -= 0x46666;
       //power *= 3;
       power >>= 9;
       if (power < 0) {
         power = 0;
-      } else if (power > 96) {
-        power = 100;
+      } else if (power > 107) {
+        power = 107;
       }
     }
     graph_data(&g, power, graph_cfg);

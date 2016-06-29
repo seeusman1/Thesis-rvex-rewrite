@@ -207,7 +207,8 @@ EXECUTABLES += $(POWERSTONE)
 
 # Random other applications.
 EXECUTABLES += ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite\
-	soma x264 uart xstsimframebuffer all-at-once convolution greyscale dijkstra chanvese gauss_parallel
+	soma x264 uart xstsimframebuffer all-at-once convolution greyscale dijkstra chanvese gauss_parallel\
+	helloworld
 
 # List of platform-agnostic (generic) programs which run and complete without
 # interaction, and test for success/failure. On success, main() should return

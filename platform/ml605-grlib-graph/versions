@@ -1,0 +1,9 @@
+Changed:
+ - bus width 64 -> 128
+ - svgactrl burstlen 4 -> 8
+ - ahbctrl mprio [default] -> 2**(CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG)
+
+JW1ApAl: 30 MHz, timing met (table 2)
+B9hG793: 37.5 MHz, 1098 setup (table 2)
+sh2QL55: 37.5 MHz. timing met (table 1)
+
