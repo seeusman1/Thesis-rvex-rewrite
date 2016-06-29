@@ -110,6 +110,13 @@ package core_pkg is
     -- instructions.
     forwarding                  : boolean;
     
+    -- EXPERIMENTAL: degree of trap support. traps = 0 means that all trap
+    -- support is disabled (that includes interrupts), traps = 1 is reserved for
+    -- imprecise traps although it is not yet supported, and traps = 2 (default)
+    -- means that traps are completely enabled. Note that the traps = 2
+    -- configuration is the properly tested one.
+    traps                       : natural;
+    
     -- When true, syllables can borrow long immediates from the other syllable
     -- in a syllable pair.
     limmhFromNeighbor           : boolean;
@@ -175,6 +182,7 @@ package core_pkg is
     memLaneRevIndex             => 1,
     numBreakpoints              => 4,
     forwarding                  => true,
+    traps                       => 2,
     limmhFromNeighbor           => true,
     limmhFromPreviousPair       => true,
     reg63isLink                 => false,
@@ -193,11 +201,12 @@ package core_pkg is
     numLaneGroupsLog2           => 0,
     numContextsLog2             => 0,
     genBundleSizeLog2           => 3,
-    bundleAlignLog2             => 3,
+    bundleAlignLog2             => 1,
     multiplierLanes             => 2#00#,
     memLaneRevIndex             => 1,
     numBreakpoints              => 0,
     forwarding                  => false,
+    traps                       => 0,
     limmhFromNeighbor           => true,
     limmhFromPreviousPair       => false,
     reg63isLink                 => false,
@@ -230,6 +239,7 @@ package core_pkg is
     branchLaneRevIndex          : integer := 0; -- No longer supported, must be zero.
     numBreakpoints              : integer := -1;
     forwarding                  : integer := -1;
+    traps                       : integer := -1;
     limmhFromNeighbor           : integer := -1;
     limmhFromPreviousPair       : integer := -1;
     reg63isLink                 : integer := -1;
@@ -351,6 +361,7 @@ package body core_pkg is
     branchLaneRevIndex          : integer := 0; -- No longer supported, must be zero.
     numBreakpoints              : integer := -1;
     forwarding                  : integer := -1;
+    traps                       : integer := -1;
     limmhFromNeighbor           : integer := -1;
     limmhFromPreviousPair       : integer := -1;
     reg63isLink                 : integer := -1;
@@ -384,6 +395,7 @@ package body core_pkg is
     if memLaneRevIndex        >= 0 then cfg.memLaneRevIndex       := memLaneRevIndex; end if;
     if numBreakpoints         >= 0 then cfg.numBreakpoints        := numBreakpoints; end if;
     if forwarding             >= 0 then cfg.forwarding            := int2bool(forwarding); end if;
+    if traps                  >= 0 then cfg.traps                 := traps; end if;
     if limmhFromNeighbor      >= 0 then cfg.limmhFromNeighbor     := int2bool(limmhFromNeighbor); end if;
     if limmhFromPreviousPair  >= 0 then cfg.limmhFromPreviousPair := int2bool(limmhFromPreviousPair); end if;
     if reg63isLink            >= 0 then cfg.reg63isLink           := int2bool(reg63isLink); end if;

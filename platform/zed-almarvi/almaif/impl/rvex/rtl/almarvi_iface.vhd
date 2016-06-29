@@ -87,7 +87,7 @@ use work.core_trap_pkg.all;
 --   0x304 Device ID
 --     -> CR_DCFG
 --   0x308 Interface type
---     -> 0x00000000
+--     -> 0x00000002
 --   0x30C Core count
 --     -> 2**NUM_CONTEXTS_LOG2
 --   0x310 CTRL size
@@ -483,8 +483,8 @@ begin -- architecture
             out_addr(9 downto 2) := std_logic_vector(to_unsigned(CR_DCFG, 8));
             resultMode_v := PASS_LE;
           
-          when "11000010" => -- 0x308 Interface type -> 0x00000000
-            resultOverride_v := X"00000000";
+          when "11000010" => -- 0x308 Interface type -> 0x00000002
+            resultOverride_v := X"00000002";
             
           when "11000011" => -- 0x30C Core count -> 2**NUM_CONTEXTS_LOG2
             resultOverride_v := std_logic_vector(to_unsigned(2**NUM_CONTEXTS_LOG2, 32));
