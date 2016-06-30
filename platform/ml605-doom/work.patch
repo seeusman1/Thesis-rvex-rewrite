@@ -24,7 +24,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
     variable v        : ddr_reg_type;   -- local variables for registers
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/config.vhd	2016-06-29 17:23:10.826922485 +0200
++++ work/config.vhd	2016-06-30 14:10:13.879718362 +0200
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -133,7 +133,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
    constant CFG_FPNPEN : integer := 0;
    constant CFG_AHBIO : integer := 16#FFF#;
    constant CFG_APBADDR : integer := 16#800#;
-@@ -85,83 +70,18 @@ package config is
+@@ -85,83 +70,19 @@ package config is
    constant CFG_AHB_MONWAR : integer := 0;
    constant CFG_AHB_DTRACE : integer := 0;
  -- DSU UART
@@ -219,9 +219,10 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
    constant CFG_MIG_DDR2 : integer := 1;
 -  constant CFG_MIG_CLK4 : integer := 16;
 +  --constant CFG_MIG_CLK4 : integer := 32; -- 37.5 MHz (should work, but cutting it very close)
++  constant CFG_MIG_CLK4 : integer := 33; -- 36.36 MHz
 +  --constant CFG_MIG_CLK4 : integer := 30; -- 40 MHz
-+  constant CFG_MIG_CLK4 : integer := 40; -- 30 MHz
-+  --constant CFG_MIG_CLK4 : integer := 60; -- rage
++  --constant CFG_MIG_CLK4 : integer := 40; -- 30 MHz
++  --constant CFG_MIG_CLK4 : integer := 60; -- 20 MHz (rage)
 +
  end;
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/grlib_config.vhd work/grlib_config.vhd
@@ -1922,7 +1923,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/leon3mp.vhd	2016-06-29 18:06:31.691052015 +0200
++++ work/leon3mp.vhd	2016-06-30 12:08:46.648848863 +0200
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License
@@ -1954,7 +1955,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
  
  entity leon3mp is
    generic (
-@@ -61,792 +71,1281 @@ entity leon3mp is
+@@ -61,792 +71,1288 @@ entity leon3mp is
      SIM_BYPASS_INIT_CAL : string := "OFF"
      );
    port (
@@ -2259,6 +2260,9 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  -- Audio output.
 +  signal audio_next               : std_logic; -- Samplerate, controlled by gptim 3
 +  signal audio_irq                : std_logic;
++  
++  -- Internal DIP switch state (i.e. after the IBUF).
++  signal dipsw_int                : std_logic_vector(7 downto 0)  := (others => '0');
  
  begin
 -
@@ -2787,8 +2791,8 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      rrobin                    => 1,
 +      nahbm                     => CFG_NCPU+4,
 +      nahbs                     => 4,
-+      split                     => 1,         -- The System ACE interface can use split transfers.
-+      mprio                     => CFG_NCPU+1 -- Prioritize the SVGA controller so the screen doesn't flicker.
++      split                     => 1,              -- The System ACE interface can use split transfers.
++      mprio                     => 2**(CFG_NCPU+1) -- Prioritize the SVGA controller so the screen doesn't flicker.
 +    )
 +    port map (
 +      rst                       => rstn,
@@ -2840,26 +2844,26 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      -- Processors.
 +      for c in 0 to CFG_NRVEX - 1 loop
 +        retval(i) := addrRangeAndMap(
-+          match => X"D0" & std_logic_vector(to_unsigned(c, 4)) & "----" & "--------" & "--------"
++          match => "------00" & std_logic_vector(to_unsigned(c, 4)) & "----" & "--------" & "--------"
 +        );
 +        i := i + 1;
 +      end loop;
 +      
 +      -- Debug UART.
 +      retval(i) := addrRangeAndMap(
-+        match => X"D1" & "--------" & "--------" & "--------"
++        match => "------01" & "--------" & "--------" & "--------"
 +      );
 +      i := i + 1;
 +      
 +      -- Audio port.
 +      retval(i) := addrRangeAndMap(
-+        match => X"D2" & "--------" & "--------" & "--------"
++        match => "------10" & "--------" & "--------" & "--------"
 +      );
 +      i := i + 1;
 +      
 +      -- Monitor r-VEX.
 +      retval(i) := addrRangeAndMap(
-+        match => X"D3" & "--------" & "--------" & "--------"
++        match => "------11" & "--------" & "--------" & "--------"
 +      );
 +      i := i + 1;
 +      
@@ -3031,7 +3035,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +        dbg2bus                 => rvbso(i),
 +        irqi                    => irqi(PIND to PIND+PNUM-1),
 +        irqo                    => irqo(PIND to PIND+PNUM-1),
-+        gpio_dip                => dipsw
++        gpio_dip                => dipsw_int
 +      );
  
 -  svga : if CFG_SVGA_ENABLE /= 0 generate
@@ -3111,10 +3115,10 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +          imemDepthLog2B           => 17,
 +          dmemDepthLog2B           => 17,
 +          traceDepthLog2B          => 13,
-+          debugBusMap_imem         => addrRangeAndMap(match => "--------00-1--------------------"),
-+          debugBusMap_dmem         => addrRangeAndMap(match => "--------001---------------------"),
-+          debugBusMap_rvex         => addrRangeAndMap(match => "--------1111--------------------"),
-+          debugBusMap_trace        => addrRangeAndMap(match => "--------1110--------------------"),
++          debugBusMap_imem         => addrRangeAndMap(match => "---------0-1--------------------"),
++          debugBusMap_dmem         => addrRangeAndMap(match => "---------01---------------------"),
++          debugBusMap_rvex         => addrRangeAndMap(match => "---------1-1--------------------"),
++          debugBusMap_trace        => addrRangeAndMap(match => "---------1-0--------------------"),
 +          debugBusMap_mutex        => false,
 +          rvexDataMap_dmem         => addrRangeAndMap(match => "000000000000--------------------"),
 +          rvexDataMap_bus          => addrRangeAndMap(match => "--------------------------------")
@@ -3142,6 +3146,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    generic map (
 +      pindex                    => 2,
 +      paddr                     => 16#002#,
++      pmask                     => 16#00F#,
 +      ncpu                      => CFG_NCPU
 +    )
 +    port map (
@@ -3507,7 +3512,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      generic map (
 +        pindex                  => 7,
 +        paddr                   => 16#007#,
-+        pmask                   => 16#FFF#,
++        pmask                   => 16#00F#,
 +        pirq                    => 11,
 +        filter                  => (CLKM_FREQ*5+50000)/100000+1
 +      )
@@ -3543,7 +3548,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      generic map (
 +        pindex                  => 8,
 +        paddr                   => 16#008#,
-+        pmask                   => 16#FFF#,
++        pmask                   => 16#00F#,
 +        pirq                    => 12,
 +        filter                  => (CLKM_FREQ*5+50000)/100000+1
 +      )
@@ -3579,7 +3584,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      generic map (
 +        pindex                  => 9,
 +        paddr                   => 16#009#,
-+        pmask                   => 16#FFF#,
++        pmask                   => 16#00F#,
 +        pirq                    => 13,
 +        filter                  => (CLKM_FREQ*5+50000)/100000+1
 +      )
@@ -3662,7 +3667,9 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      generic map (
 +        AHB_MASTER_INDEX  => CFG_NCPU + 3,
 +        AHB_VENDOR_ID     => VENDOR_TUDELFT,
-+        AHB_DEVICE_ID     => TUDELFT_UART
++        AHB_DEVICE_ID     => TUDELFT_UART,
++        BUS_ERROR_CODE    => X"00000010",
++        REQ_ERROR_CODE    => X"00000011"
 +      )
 +      port map (
 +        reset             => reset,
@@ -3730,7 +3737,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      generic map (
 +        pindex                  => 0,
 +        paddr                   => 16#000#,
-+        pmask                   => 16#FFF#,
++        pmask                   => 16#00F#,
 +        pirq                    => 6,
 +        fKHz                    => CLKM_FREQ
 +      )
@@ -3761,7 +3768,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      generic map (
 +        pindex                  => 1,
 +        paddr                   => 16#001#,
-+        pmask                   => 16#FFF#,
++        pmask                   => 16#00F#,
 +        pirq                    => 7,
 +        fKHz                    => CLKM_FREQ
 +      )
@@ -3800,7 +3807,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      generic map (
 +        pindex                  => 3,
 +        paddr                   => 16#003#,
-+        pmask                   => 16#FFF#,
++        pmask                   => 16#00F#,
 +        pirq                    => 8,
 +        sepirq                  => 1,
 +        sbits                   => 16,
@@ -3837,7 +3844,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      generic map (
 +        pindex                  => 4,
 +        paddr                   => 16#004#,
-+        pmask                   => 16#FFF#,
++        pmask                   => 16#00F#,
 +        pirq                    => 1,
 +        sepirq                  => 0,
 +        sbits                   => 8, -- Prescaler will probably divide by 1.
@@ -3874,7 +3881,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      generic map (
 +        pindex                  => 5,
 +        paddr                   => 16#005#,
-+        pmask                   => 16#FFF#,
++        pmask                   => 16#00F#,
 +        imask                   => 16#1FFF0000#,
 +        nbits                   => 29,
 +        pirq                    => 10,
@@ -3893,7 +3900,8 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      port map (led(12 downto 3), gpioo.dout(12 downto 3));
 +    
 +    dipsw_pad : inpadv generic map (width => 8, level => cmos, voltage => x15v, tech => padtech)
-+      port map (dipsw, gpioi.din(23 downto 16));
++      port map (dipsw, dipsw_int);
++    gpioi.din(23 downto 16) <= dipsw_int;
 +    
 +    pbtn_pad : inpadv generic map (width => 5, level => cmos, voltage => x15v, tech => padtech)
 +      port map (pbtn, gpioi.din(28 downto 24));

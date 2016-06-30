@@ -62,6 +62,9 @@ typedef struct graph_t {
   // Amount of horizontal pixels per datapoint.
   int inc;
   
+  // Amount of horizontal pixels per grid point.
+  int ginc;
+  
   // Number of data points that fit in the graph area.
   int ndp;
   
@@ -79,6 +82,7 @@ typedef struct graph_t {
   // Colors to use.
   gfx_pixel_t bgcol;        // General background (clear color).
   gfx_pixel_t axcol;        // Axis color.
+  gfx_pixel_t grcol;        // Grid color.
   gfx_pixel_t txtcol;       // Label color.
   gfx_pixel_t datcol;       // Power graph color.
   gfx_pixel_t taskcol[256]; // Task colors. Color 255 is used for no task/idle
@@ -153,21 +157,15 @@ void graph_reset(
  *  - g:     the graph context to update and refresh.
  *  - power: the power data point. The bottom of the graph is zero, and the
  *           units are pixels.
- *  - task0: representation of what lane group 0 is doing. -1 represents idle,
- *           0-15 can (with the default colors) be used for task IDs, context
- *           IDs, etc.. More colors can be added if needed, to a maximum of 255
- *           different colors/tasks.
- *  - task1: same as task0, second row.
- *  - task2: same as task0, third row.
- *  - task3: same as task0, fourth row.
+ *  - cfg:   representation of what each lane group is doing. -1 represents
+ *           idle, 0-15 can (with the default colors) be used for task IDs,
+ *           context IDs, etc.. More colors can be added if needed, to a maximum
+ *           of 255 different colors/tasks.
  */
 void graph_data(
   graph_t *g,
   int power,
-  int task0,
-  int task1,
-  int task2,
-  int task3
+  int *cfg
 );
 
 #endif

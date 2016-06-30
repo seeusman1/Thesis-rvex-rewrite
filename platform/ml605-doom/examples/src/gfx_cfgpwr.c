@@ -16,12 +16,14 @@ void graph_init(graph_t *g, gfx_pixel_t *framebuf, int stride, int x, int y, int
   g->h = h;
   g->lgh = 6;
   g->inc = 5;
+  g->ginc = 20;
   g->tw = 20;
   g->vtcount = 0;
   g->f = font;
   
   g->bgcol = gfx_rgb(255, 255, 255);
   g->axcol = gfx_rgb(0, 0, 0);
+  g->grcol = gfx_rgb(128, 128, 128);
   g->txtcol = gfx_rgb(0, 0, 0);
   g->datcol = gfx_rgb(0, 0, 255);
   
@@ -70,7 +72,7 @@ void graph_reset(graph_t *g) {
   
   // Reset the data.
   for (i = 0; i < GRAPH_DATA_BUF_SIZE; i++) {
-    g->power[i] = 0;
+    g->power[i] = 255;
   }
   for (i = 0; i < GRAPH_DATA_BUF_SIZE; i++) {
     g->config[i] = 0xFFFFFFFF;
@@ -111,19 +113,17 @@ void graph_reset(graph_t *g) {
 void graph_data(
   graph_t *g,
   int power,
-  int task0,
-  int task1,
-  int task2,
-  int task3
+  int *cfg
 ) {
   int i, idx, x;
+  int gx = g->tw + g->ginc;
   unsigned int config;
   
   // Add the data.
-  config = (unsigned int)(task0 & 0xFF);
-  config |= ((unsigned int)(task1 & 0xFF)) << 8;
-  config |= ((unsigned int)(task2 & 0xFF)) << 16;
-  config |= ((unsigned int)(task3 & 0xFF)) << 24;
+  config = (unsigned int)(cfg[0] & 0xFF);
+  config |= ((unsigned int)(cfg[1] & 0xFF)) << 8;
+  config |= ((unsigned int)(cfg[2] & 0xFF)) << 16;
+  config |= ((unsigned int)(cfg[3] & 0xFF)) << 24;
   g->power[g->idx] = (unsigned char)power;
   g->config[g->idx] = config;
   g->idx++;
@@ -136,6 +136,7 @@ void graph_data(
     int cidx, cp, cy;
     int pidx, pp, py;
     unsigned int cc, pc;
+    int nodata;
     
     // Compute indices.
     pidx = idx & (GRAPH_DATA_BUF_SIZE-1);
@@ -149,9 +150,10 @@ void graph_data(
     cy = g->h - 1 - cp;
     pc = g->config[pidx];
     cc = g->config[cidx];
+    nodata = (pp == 255) || (cp == 255);
     
     // Redraw power information.
-    if (i < 0) {
+    if ((i < 0) && !nodata) {
       gfx_drawline(g->framebuf, g->stride, x+g->inc, py, x+g->inc*2, cy, g->bgcol);
       if (!pp || !cc) {
         gfx_drawline(g->framebuf, g->stride, x+g->inc, g->h-1, x+g->inc*2, g->h-1, g->axcol);
@@ -160,7 +162,9 @@ void graph_data(
     if (i > -g->ndp) {
       int y, j;
       
-      gfx_drawline(g->framebuf, g->stride, x, py, x+g->inc, cy, g->datcol);
+      if (!nodata) {
+        gfx_drawline(g->framebuf, g->stride, x, py, x+g->inc, cy, g->datcol);
+      }
       
       // Redraw configuration information.
       if (pc != cc) {
@@ -205,6 +209,22 @@ void graph_data(
     }
     
     x += g->inc;
+    
+    // Redraw grid.
+    while (x > gx) {
+      gfx_pixel_t *gptrx = g->framebuf + gx;
+      int j;
+      gx += g->ginc;
+      for (j = 0; j < g->vtcount; j++) {
+        gfx_pixel_t *gptr;
+        int y = g->vty[j];
+        if (y < g->h-1) {
+          gptr = gptrx + y * g->stride;
+          *gptr = g->grcol;
+        }
+      }
+    }
+    
   }
   
 }

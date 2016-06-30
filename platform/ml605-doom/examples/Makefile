@@ -7,7 +7,7 @@ RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 
 # Platform-specific executables.
-EXECUTABLES = time Demodispatch_multi mandelbrot_multi raytracer_multi greyscale_multi convolution_multi audio graph
+EXECUTABLES = graph
 
 # Platform-specific object files to link.
 OBJECTS = platform.o
@@ -35,9 +35,9 @@ include $(GEN_EXAMPLES)/Makefile
 .PHONY: upload-%
 upload-%: %.srec debug
 	-cd $(DEBUGIFACE) && make server
-	$(RVD) -call -d"all:PRINT_STATE{1}" break
-	$(RVD) -c0 upload srec $< 0
-	$(RVD) -call -d"all:PRINT_STATE{1}" reset
+	$(RVD) -c0..3 -d"all:PRINT_STATE{1}" break
+	$(RVD) -c0 upload srec $< MEM
+	$(RVD) -c0..3 -d"all:PRINT_STATE{1}" reset
 
 .PHONY: start-%
 start-%: upload-%
@@ -50,7 +50,7 @@ endif
 
 .PHONY: trace-%
 trace-%: upload-% %.disas
-	$(RVD) -call -d"all:PRINT_STATE{1}" trace $(patsubst trace-%,%,$@).rawtrace
+	$(RVD) -c0..3 -d"all:PRINT_STATE{1}" trace $(patsubst trace-%,%,$@).rawtrace
 	$(RVTRACE) -c0 $(patsubst trace-%,%,$@).rawtrace $(patsubst trace-%,%,$@).disas | cat > $(patsubst trace-%,%,$@).0.trace
 	$(RVTRACE) -c1 $(patsubst trace-%,%,$@).rawtrace $(patsubst trace-%,%,$@).disas | cat > $(patsubst trace-%,%,$@).1.trace
 	$(RVTRACE) -c2 $(patsubst trace-%,%,$@).rawtrace $(patsubst trace-%,%,$@).disas | cat > $(patsubst trace-%,%,$@).2.trace
@@ -63,6 +63,13 @@ gdb-%: %.elf upload-%
 .PHONY: run-%
 run-%: start-%
 	$(RVD) -c0 exec WAIT_COMPLETE
+
+.PHONY: graph
+graph: graph.srec
+	$(RVD) -c4 -d"all:PRINT_STATE{1}" break
+	$(RVD) -c4 upload srec $< MEM
+	$(RVD) -c4 -d"all:PRINT_STATE{1}" reset
+	$(RVD) -c4 write CREG 0x80000000
 
 .PHONY: run-all
 run-all: $(patsubst %,run-%,$(BENCH_EXECUTABLES))

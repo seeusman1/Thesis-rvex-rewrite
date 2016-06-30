@@ -236,6 +236,10 @@ start-%:
 run-%:
 	cd examples && $(MAKE) $@
 
+.PHONY: graph
+graph:
+	cd examples && $(MAKE) $@
+
 .PHONY: trace-%
 trace-%:
 	cd examples && $(MAKE) $@
