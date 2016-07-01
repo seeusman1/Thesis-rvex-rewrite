@@ -73,9 +73,14 @@ entity vc707 is
 --=============================================================================
   generic (
     
-    -- Clock division value. The internal clock will be 750 MHz divided by this
-    -- number. Ignored when DIRECT_RESET_AND_CLOCK is set.
-    DIV_VAL                     : natural := 20; -- 106 MHz
+    -- Clock division value. Final clock is:
+    --   200MHz / VCO_DIV * VCO_MULT / DIV_VAL
+    -- VCO is:
+    --   200MHz / VCO_DIV * VCO_MULT
+    -- VCO must be between 600 MHz and 1200 MHz.
+    VCO_DIV                     : natural := 4;
+    VCO_MULT                    : real    := 20.0; -- VCO = 1000 MHz
+    DIV_VAL                     : natural := 15;   -- 66.67 MHz
     
     -- Baud rate to use for the UART.
     F_BAUD                      : real := 115200.0;
@@ -111,37 +116,53 @@ end vc707;
 architecture Behavioral of vc707 is
 --=============================================================================
   
-  --Core and standalone system configuration WITHOUT cache.
---  constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
---    core => rvex_cfg(
---      numLanesLog2              => 3,
---      numLaneGroupsLog2         => 0,
---      numContextsLog2           => 0,
---      traceEnable               => 0,
---      limmhFromPreviousPair     => 0,
---      --bundleAlignLog2           => 1
---    ),
---    core_valid                  => true,
---    imemDepthLog2B              => 13, -- 8 kiB (0x00000..0x3FFF)
---    dmemDepthLog2B              => 13
---  );
+  -- Vivado appearently doesn't handle the generics as well as ISE, so we're
+  -- using a constant for the configuration instead of the function that
+  -- generates a configuration.  
   
-  -- Core and standalone system configuration WITH cache.
-  constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
-    core => rvex_cfg(
-      numLanesLog2              => 3,
-      numLaneGroupsLog2         => 2,
-      numContextsLog2           => 2,
-      traceEnable               => 0
-    ),
-    core_valid                  => true,
-    cache_enable                => 1,
-    cache_config => cache_cfg(
-      instrCacheLinesLog2       => 8, -- 256*32 = 8 kiB per block, 32 kiB total
-      dataCacheLinesLog2        => 8  -- 256*4 = 1 kiB per block, 4 kiB total
-    ),
-    cache_config_valid          => true,
-    dmemDepthLog2B              => 18 -- 256 kiB (0x00000..0x3FFFF)
+  constant CORE_CFG  : rvex_generic_config_type := (
+    numLanesLog2                => 1,
+    numLaneGroupsLog2           => 0,
+    numContextsLog2             => 0,
+    genBundleSizeLog2           => 1,
+    bundleAlignLog2             => 1,
+    multiplierLanes             => 2#11#,
+    memLaneRevIndex             => 1,
+    numBreakpoints              => 0,
+    forwarding                  => true,
+    traps                       => 1,
+    limmhFromNeighbor           => true,
+    limmhFromPreviousPair       => false,
+    reg63isLink                 => false,
+    cregStartAddress            => X"FFFFFC00",
+    resetVectors                => (others => (others => '0')),
+    unifiedStall                => true,
+    gpRegImpl                   => RVEX_GPREG_IMPL_MEM,
+    traceEnable                 => false,
+    perfCountSize               => 0,
+    cachePerfCountEnable        => false
+  );
+  
+  constant CACHE_CFG : cache_generic_config_type := (
+    instrCacheLinesLog2         => 8, -- 256*32 = 8 kiB per block, 32 kiB total
+    dataCacheLinesLog2          => 8  -- 256*4 = 1 kiB per block, 4 kiB total
+  );
+  
+  constant CFG                  : rvex_sa_generic_config_type := (
+    core                        => CORE_CFG,
+    cache_enable                => false,
+    cache_config                => CACHE_CFG,
+    cache_bypassRange           => addrRange(match => "1-------------------------------"),
+    ImemDepthLog2B              => 18,
+    dmemDepthLog2B              => 18,
+    traceDepthLog2B             => 13,
+    debugBusMap_imem            => addrRangeAndMap(match => "00-1----------------------------"),
+    debugBusMap_dmem            => addrRangeAndMap(match => "001-----------------------------"),
+    debugBusMap_rvex            => addrRangeAndMap(match => "1111----------------------------"),
+    debugBusMap_trace           => addrRangeAndMap(match => "1110----------------------------"),
+    debugBusMap_mutex           => false,
+    rvexDataMap_dmem            => addrRangeAndMap(match => "0-------------------------------"),
+    rvexDataMap_bus             => addrRangeAndMap(match => "1-------------------------------")
   );
   
   -- S-rec file specifying the initial contents for the memories.
@@ -153,7 +174,7 @@ architecture Behavioral of vc707 is
     if DIRECT_RESET_AND_CLOCK then
       return F_SYSCLK;
     else
-      return 750000000.0 / real(DIV_VAL);
+      return F_SYSCLK / real(VCO_DIV) * VCO_MULT / real(DIV_VAL);
     end if;
   end f_clk_fn;
   
@@ -434,11 +455,11 @@ begin -- architecture
         -- Input clock is at 200 MHz.
         CLKIN1_PERIOD     => 5.0,--ns
         
-        -- Divide input clock by 4 and multiply it by 15. This should get us
-        -- a VCO frequency of 750 MHz, nicely within the 600-1200 MHz worst
-        -- case operating limits.
-        DIVCLK_DIVIDE     => 4,
-        CLKFBOUT_MULT_F   => 15.0,
+        -- These parameters generate the VCO clock. It is
+        -- 200 MHz / VCO_DIV * VCO_MULT and needs to be between 600 and
+        -- 1200 MHz.
+        DIVCLK_DIVIDE     => VCO_DIV,
+        CLKFBOUT_MULT_F   => VCO_MULT,
         
         -- Divide the VCO clock by the specified amount to get the internal
         -- clock.

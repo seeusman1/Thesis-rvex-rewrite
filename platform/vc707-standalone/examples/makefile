@@ -17,7 +17,7 @@ OBJECTS = rvex-standalone.o
 # uploading. This can be overwritten to any value between 1 and 254 for an
 # additional latency of 2 to 255 cycles.
 ifndef BUSLAT
-BUSLAT = 0x40
+BUSLAT = 0x8
 endif
 
 # Platform specific targets for help.

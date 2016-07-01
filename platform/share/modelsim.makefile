@@ -4,7 +4,13 @@
 # makefile should contain the (sub-)library names which should be compiled as
 # a variable named VHDL_LIBS and a relative path to lib/rvex in RVLIB.
 
+ifndef UNISIM
+ifdef XILINX_VIVADO
+UNISIM = $(XILINX_VIVADO)/ids_lite/ISE/vhdl/src/unisims
+else
 UNISIM = $(XILINX)/vhdl/src/unisims
+endif
+endif
 
 ifndef VSIM
 VSIM = vsim

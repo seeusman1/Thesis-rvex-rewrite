@@ -1,5 +1,5 @@
 
-UNISIM = $(XILINX)/vhdl/src/unisims
+UNISIM = $(XILINX_VIVADO)/ids_lite/ISE/vhdl/src/unisims
 SYNTH_MAKEFILE= ../share/synthesis.makefile
 SYNTH_INIT = ../share/synthesis-init.py
 IMPACT_MAKEFILE = ../share/impact.makefile
@@ -8,7 +8,7 @@ IMPACT_MAKEFILE = ../share/impact.makefile
 help:
 	@echo ""
 	@echo " This platform consists of an rvex processor, on-chip memories and basic clock"
-	@echo " and reset signal generation, intended to be run on the Xilinx ML605 Virtex 6"
+	@echo " and reset signal generation, intended to be run on the Xilinx VC707 Virtex 7"
 	@echo " development board. It can also be simulated using modelsim for very basic"
 	@echo " program verification. The testbench includes a UART simulating the computer"
 	@echo " connected to the FPGA and allows manually written debug commands to be sent."
@@ -16,8 +16,7 @@ help:
 	@echo " be aware that escape sequences are not unescaped."
 	@echo ""
 	@echo " Synthesis and simulation have been verified to work with modelsim 10.2a and"
-	@echo " Xilinx ISE 14.7. Xilinx ISE 13.4 is known NOT to synthesize correctly. Use"
-	@echo " other versions at your own risk."
+	@echo " Vivado 2015.4. Use other versions at your own risk."
 	@echo ""
 	@echo " Make targets:"
 	@echo ""
@@ -31,20 +30,8 @@ help:
 	@echo "                         generate the VHDL files needed to simulate FPGA"
 	@echo "                         primitives (Xilinx unisim library)."
 	@echo ""
-	@echo "  make ise-<prog>      : compiles the specified program and runs ISE for"
+	@echo "  make vivado-<prog>   : compiles the specified program and runs Vivado for"
 	@echo "                         simulation using ISIM or synthesis."
-	@echo ""
-	@echo "  make synth-<prog>    : synthesizes the project using ISE in command line mode."
-	@echo "                         Will make a new fresh directory with copies of all"
-	@echo "                         sources, so multiple synthesis attempts can be run at"
-	@echo "                         once. This directory can be specified manually with"
-	@echo "                         NAME=<name>, in which case the directory used will be"
-	@echo "                         synth-<name>, or it will be generated based on the"
-	@echo "                         current timestamp."
-	@echo ""
-	@echo "  make prog-<name>     : programs the ML605 board using synth-<name>/routed.bit"
-	@echo "                         (as generated with 'make synth-<prog> NAME=<name>')"
-	@echo "                         with impact."
 	@echo ""
 	@echo "  make upload-<prog>   : compiles the specified program, starts rvsrv if it is"
 	@echo "                         not already running and uploads the program to the"
@@ -102,29 +89,9 @@ compile-%:
 vsim-%: compile-%
 	cd modelsim && $(MAKE) vsim
 
-.PHONY: ise-%
-ise-%: compile-%
-	cd ise && ise standalone.xise
-
-.PHONY: synth-%
-ifndef NAME
-NAME := $(shell date +%Y-%m-%d-%H-%M-%S-%N)
-endif
-synth-%: compile-%
-	if [ -d synth-$(NAME) ]; then rm -rI synth-$(NAME); fi
-	if [ -d synth-$(NAME) ]; then exit 1; fi
-	mkdir -p synth-$(NAME)/vhdl
-	cp opts-xst.cfg synth-$(NAME)
-	cp opts-map.cfg synth-$(NAME)
-	cp opts-par.cfg synth-$(NAME)
-	cp $(SYNTH_MAKEFILE) synth-$(NAME)
-	cd synth-$(NAME) && mv synthesis.makefile Makefile
-	cd synth-$(NAME) && python3 ../$(SYNTH_INIT) ../ise/standalone.xise
-	cd synth-$(NAME) && $(MAKE)
-
-.PHONY: prog-%
-prog-%: synth-%/routed.bit
-	cd $(dir $<) && $(MAKE) -f ../$(IMPACT_MAKEFILE) prog-vc707-routed.bit
+.PHONY: vivado-%
+vivado-%: compile-%
+	cd vivado && vivado standalone.xpr
 
 .PHONY: upload-%
 upload-%:
@@ -163,6 +130,11 @@ debug:
 clean:
 	cd examples && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
+
+# Cleans rvex compilation intermediate files.
+.PHONY: clean-ex
+clean-ex:
+	cd examples && $(MAKE) clean
 
 .PHONY: clean-synth
 clean-synth:
