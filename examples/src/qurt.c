@@ -52,7 +52,7 @@ int main()
   a[2] = 8.31;
   qurt(a, x1, x2);
   result -= *(int *) &x1[1];
-  if(result != 0x3FD24B88)
+  if(x1[1] < 1.790672 || x1[1] > 1.790674)
     {
       rvex_fail("qurt: fail\n");
     } 
