@@ -1,5 +1,5 @@
-# This Makefile can be used with parameters ISSUE WIDTH, DYNAMIC, COMPILER and
-# LIMMH_PREV, documented below.
+# This Makefile can be used with parameters ISSUE WIDTH, DYNAMIC, DYNAMIC_CORE,
+# COMPILER and LIMMH_PREV, documented below.
 
 # It can also be included from different directories for different platforms.
 # In this case, the following things should be defined by the calling makefile;
@@ -86,7 +86,7 @@ ifndef DYNAMIC
 DYNAMIC = true-O1
 endif
 ifeq ($(DYNAMIC), true)
-DYNAMIC = true-O1
+override DYNAMIC = true-O1
 endif
 VEXPARSE_ENABLE = false
 VEXPARSE_FLAGS = 
@@ -102,8 +102,16 @@ VEXPARSE_FLAGS = --resched --O2
 else ifeq ($(DYNAMIC), true-noresched)
 VEXPARSE_ENABLE = true
 endif
+
 ifneq ($(DYNAMIC), false)
-DYNAMIC = true
+override DYNAMIC = true
+ifndef DYNAMIC_CORE
+DYNAMIC_CORE=true
+endif
+else
+ifndef DYNAMIC_CORE
+DYNAMIC_CORE=false
+endif
 endif
 
 # Anything other than false enables debugging symbols and disables
@@ -177,19 +185,19 @@ endif
 #   Bit 3 = BR
 ifndef LANECONFIG
 ifeq ($(ISSUE_WIDTH), 2)
-ifeq ($(DYNAMIC), false)
+ifeq ($(DYNAMIC_CORE), false)
  LANECONFIG = 7B
 else
  LANECONFIG = FB
 endif
 else ifeq ($(ISSUE_WIDTH), 4)
-ifeq ($(DYNAMIC), false)
+ifeq ($(DYNAMIC_CORE), false)
  LANECONFIG = 337B
 else
  LANECONFIG = FBFB
 endif
 else
-ifeq ($(DYNAMIC), false)
+ifeq ($(DYNAMIC_CORE), false)
  LANECONFIG = 3333337B
 else
  LANECONFIG = FBFBFBFB
@@ -325,6 +333,7 @@ help:
 	@echo ""
 	@echo "  make <target> ISSUE_WIDTH=<2|4|8>                (default = 8)"
 	@echo "  make <target> DYNAMIC=<(see Makefile)>           (default = true-O1)"
+	@echo "  make <target> DYNAMIC_CORE=<true|false>          (default = same as DYNAMIC)"
 	@echo "  make <target> COMPILER=<HP|GCC|ST200>            (default = HP)"
 	@echo "  make <target> LIMMH_PREV=<true|false>            (default = true)"
 	@echo "  make <target> DEFS=<list of preprocessor defs>   (default = <none>)"

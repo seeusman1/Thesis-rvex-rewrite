@@ -285,8 +285,9 @@ stop
   c0  add     $r0.3       = $r0.0, ' '
   c0  call    $l0.0       = putchar
 ;;
-  c0  add     $r0.4       = $r0.0, $r0.58
   c0  add     $r0.3       = $r0.0, strbuf
+  ISSUE_2
+  c0  add     $r0.4       = $r0.0, $r0.58
   c0  call    $l0.0       = tohex
 ;;
   c0 call     $l0.0       = puts
@@ -316,8 +317,9 @@ stop
   c0  add     $r0.3       = $r0.0, ' '
   c0  call    $l0.0       = putchar
 ;;
-  c0  add     $r0.4       = $r0.0, $r0.59
   c0  add     $r0.3       = $r0.0, strbuf
+  ISSUE_2
+  c0  add     $r0.4       = $r0.0, $r0.59
   c0  call    $l0.0       = tohex
 ;;
   c0 call     $l0.0       = puts
@@ -347,8 +349,9 @@ stop
   c0  add     $r0.3       = $r0.0, ' '
   c0  call    $l0.0       = putchar
 ;;
-  c0  add     $r0.4       = $r0.0, $r0.60
   c0  add     $r0.3       = $r0.0, strbuf
+  ISSUE_2
+  c0  add     $r0.4       = $r0.0, $r0.60
   c0  call    $l0.0       = tohex
 ;;
   c0 call     $l0.0       = puts
