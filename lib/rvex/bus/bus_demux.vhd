@@ -251,6 +251,10 @@ begin
     -- Mux signal for the readData and fault signals.
     signal resultMux              : std_logic_vector(SEL_LOG2-1 downto 0);
     
+    -- This signal is asserted when the master was requesting something in the
+    -- previous cycle.
+    signal requesting_r           : std_logic;
+    
     -- This signal is set when any of the addressed slave busses are busy.
     signal busy                   : std_logic;
     
@@ -283,8 +287,10 @@ begin
       if rising_edge(clk) then
         if reset = '1' then
           selectResult <= (others => '0');
+          requesting_r <= '0';
         elsif busy = '0' and clkEn = '1' then
           selectResult <= selectRequest;
+          requesting_r <= bus_requesting(mst2demux);
         end if;
       end if;
     end process;
@@ -357,7 +363,7 @@ begin
     end process;
     
     -- Instantiate the mux.
-    result_mux_proc: process (slv2demux, resultMux, busy) is
+    result_mux_proc: process (slv2demux, resultMux, busy, requesting_r) is
       variable muxed  : bus_slv2mst_type;
     begin
       
@@ -378,7 +384,7 @@ begin
         muxed.readData  := OOR_FAULT_CODE;
         muxed.fault     := '1';
         muxed.busy      := '0';
-        muxed.ack       := '1';
+        muxed.ack       := requesting_r;
         
       end if;
       
