@@ -153,9 +153,6 @@ int i2c_read(volatile i2cmst_t *p, int addr, int reg, char *data, int count) {
 
 #else
 
-#define I2C_CORE0_ADDR 0x80000900
-#define I2C_CORE1_ADDR 0x80000c00
-
 /*
  * Test for I2CMST
  *

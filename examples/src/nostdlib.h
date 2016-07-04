@@ -10,12 +10,6 @@ void  strcpy(char *dest, const char *src);
 int   strcmp(const char *a, const char *b);
 int   strlen(const char *str);
 
-// Very simplistic dynamic memory allocation.
-void *malloc(unsigned long size);
-void  free(void *ptr);
-void *calloc(unsigned long nmemb, unsigned long size);
-void *realloc(void *ptr, unsigned long size);
-
 // Misc.
 int   min(int a, int b);
 int   max(int a, int b);

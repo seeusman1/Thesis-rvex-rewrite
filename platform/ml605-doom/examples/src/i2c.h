@@ -9,8 +9,9 @@ typedef struct {
   unsigned int cmdstat;
 } i2cmst_t;
 
-#define I2C_DVI   ((volatile i2cmst_t*)0x80000900)
-#define I2C_PMBUS ((volatile i2cmst_t*)0x80000C00)
+#define I2C_DVI   ((volatile i2cmst_t*)0x80000700)
+#define I2C_PMBUS ((volatile i2cmst_t*)0x80000800)
+#define I2C_ZEBRO ((volatile i2cmst_t*)0x80000900)
 
 /**
  * Initializes an I2C peripheral.

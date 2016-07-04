@@ -269,24 +269,28 @@ static void plat_time_init(void) {
   // set such that the PS/2 clock is 10 kHz.
   frequency_khz = PLAT_PS2(0)->timer * 10;
   
-  // Set the prescaler such that it rolls over approximately every microsecond.
-  PLAT_GPTIMER->scaler_reload = (frequency_khz - 500) / 1000;
-  PLAT_GPTIMER->scaler_val = 0;
+  // Set the timer1 prescaler such that it rolls over approximately every
+  // microsecond.
+  PLAT_GPTIMER1->scaler_reload = (frequency_khz - 500) / 1000;
+  PLAT_GPTIMER1->scaler_val = 0;
   
   // Configure the second counter.
-  PLAT_GPTIMER->tim2_val    = 0xFFFFFFFF;
-  PLAT_GPTIMER->tim2_reload = 0xFFFFFFFF;
-  PLAT_GPTIMER->tim2_config = 0x23;
+  PLAT_GPTIMER1->tim2_val    = 0xFFFFFFFF;
+  PLAT_GPTIMER1->tim2_reload = 0xFFFFFFFF;
+  PLAT_GPTIMER1->tim2_config = 0x23;
   
   // Configure the microsecond counter.
-  PLAT_GPTIMER->tim1_val    = 999999;
-  PLAT_GPTIMER->tim1_reload = 999999;
-  PLAT_GPTIMER->tim1_config = 0x03;
+  PLAT_GPTIMER1->tim1_val    = 999999;
+  PLAT_GPTIMER1->tim1_reload = 999999;
+  PLAT_GPTIMER1->tim1_config = 0x03;
   
-  // Configure the audio samplerate timer.
-  PLAT_GPTIMER->tim3_val    = 22;
-  PLAT_GPTIMER->tim3_reload = 22;
-  PLAT_GPTIMER->tim3_config = 0x03;
+  // Have timer2 divide by 2, which is the minimum because there are two timers
+  // in the peripheral (this is a thing apparently).
+  PLAT_GPTIMER2->scaler_reload = 1;
+  PLAT_GPTIMER2->scaler_val = 0;
+  
+  // Configure the audio samplerate timer to approximately 44.1 kHz.
+  plat_audio_setsamplerate(44100);
   
 }
 
@@ -300,9 +304,9 @@ void plat_gettimeofday(int *sec, int *usec) {
   
   // Query the timer. The seconds are queried twice to check for microsecond
   // overflow.
-  s1 = PLAT_GPTIMER->tim2_val;
-  us = PLAT_GPTIMER->tim1_val;
-  s2 = PLAT_GPTIMER->tim2_val;
+  s1 = PLAT_GPTIMER1->tim2_val;
+  us = PLAT_GPTIMER1->tim1_val;
+  s2 = PLAT_GPTIMER1->tim2_val;
   
   // If the microsecond timer overflowed while checking, assume 0 and use the
   // second query of the seconds. This will necessarily represent a time between
@@ -322,16 +326,16 @@ void plat_gettimeofday(int *sec, int *usec) {
 void plat_settimeofday(int sec, int usec) {
   
   // Stop the timers while we do this.
-  PLAT_GPTIMER->tim1_config = 0x02;
-  PLAT_GPTIMER->tim2_config = 0x22;
+  PLAT_GPTIMER1->tim1_config = 0x02;
+  PLAT_GPTIMER1->tim2_config = 0x22;
   
   // Set the timer values.
-  PLAT_GPTIMER->tim1_val = 999999 - usec;
-  PLAT_GPTIMER->tim2_val = ~sec;
+  PLAT_GPTIMER1->tim1_val = 999999 - usec;
+  PLAT_GPTIMER1->tim2_val = ~sec;
   
   // Restart the timers.
-  PLAT_GPTIMER->tim2_config = 0x23;
-  PLAT_GPTIMER->tim1_config = 0x03;
+  PLAT_GPTIMER1->tim2_config = 0x23;
+  PLAT_GPTIMER1->tim1_config = 0x03;
   
 }
 
@@ -343,13 +347,16 @@ int plat_frequency(void) {
 }
 
 /**
- * Registers an (OS) tick handler. interval is specified in microseconds.
+ * Registers an (OS) tick handler. interval is specified in microseconds. This
+ * is only APPROXIMATE when the clock frequency in MHz is not an integer.
  */
 int plat_tick(
   int interval,
   void (*handler)(unsigned long data),
   unsigned long data
 ) {
+  
+  interval *= (plat_frequency() + 500) / 1000;
   
   if (handler) {
     
@@ -359,14 +366,14 @@ int plat_tick(
     plat_irq_enable(IRQ_TICK, 1);
     
     // Configure the timer.
-    PLAT_GPTIMER->tim4_val    = 9999;
-    PLAT_GPTIMER->tim4_reload = 9999;
-    PLAT_GPTIMER->tim4_config = 0x0B;
+    PLAT_GPTIMER2->tim2_val    = interval - 1;
+    PLAT_GPTIMER2->tim2_reload = interval - 1;
+    PLAT_GPTIMER2->tim2_config = 0x0B;
     
   } else {
     
     // Disable the timer.
-    PLAT_GPTIMER->tim4_config = 0x00;
+    PLAT_GPTIMER2->tim2_config = 0x00;
     
     // Unregister the interrupt.
     plat_irq_enable(IRQ_TICK, 0);
@@ -387,12 +394,12 @@ int plat_tick(
  */
 int plat_audio_setsamplerate(int rate) {
   
-  // 1 MHz / rate -> reload + 1
-  int reload = (1000000 + (rate >> 1)) / rate - 1;
+  // (platform frequency / 2) / rate -> reload + 1
+  int reload = (plat_frequency() * 500 + (rate >> 1)) / rate - 1;
   
   // Configure the audio samplerate timer.
-  PLAT_GPTIMER->tim3_reload = reload;
-  PLAT_GPTIMER->tim3_val = reload;
+  PLAT_GPTIMER2->tim1_reload = reload;
+  PLAT_GPTIMER2->tim1_val = reload;
   
 }
 
@@ -431,6 +438,39 @@ int plat_audio_remain(void) {
 /* VIDEO                                                                      */
 /******************************************************************************/
 
+static const unsigned char plat_video_chrontel_init[] = {
+  0x1c,  0x04,
+  0x1d,  0x45,
+  0x1e,  0xf0,
+  0x1f,  0x88,
+  0x20,  0x22,
+  0x21,  0x09,
+  0x23,  0x00,
+  0x31,  0x80,
+  0x33,  0x08,
+  0x34,  0x16,
+  0x35,  0x30,
+  0x36,  0x60,
+  0x37,  0x00,
+  0x48,  0x18,
+  0x49,  0xc0,
+  0x4a,  0x95,
+  0x4b,  0x17,
+  0x56,  0x00,
+  0
+};
+
+/**
+ * Initializes the Chrontel DAC for VGA or DVI output (both work).
+ */
+void plat_video_chrontel(void) {
+  const unsigned char *ptr = plat_video_chrontel_init;
+  while (*ptr) {
+    plat_i2c_write(PLAT_I2C_DVI, 0x76, *ptr, (const char*)(ptr+1), 1);
+    ptr += 2;
+  }
+}
+
 /**
  * Initializes the VGA/DVI output.
  *  - w specifies the width in pixels.
@@ -449,7 +489,8 @@ int plat_video_init(int w, int h, int bpp, int dvi, const void *frame) {
   // Reset the SVGA controller.
   PLAT_SVGA->status = 2;
   
-  // TODO: configure the Chrontel DAC
+  // Configure the Chrontel DAC
+  plat_video_chrontel();
   
   // Configure the SVGA controller.
   PLAT_SVGA->vidlen  = ((h-1) << 16) + (w-1);
@@ -838,7 +879,7 @@ int plat_i2c_write(volatile i2cmst_t *p, int addr, int reg, const char *data, in
   
   // Make sure the peripheral is initialized.
   p->ctrl = 0x00;
-  p->prescale = 400;
+  p->prescale = PLAT_PS2(0)->timer / 50;
   p->ctrl = 0x80;
   
   // Start the transfer.
@@ -868,7 +909,7 @@ int plat_i2c_read(volatile i2cmst_t *p, int addr, int reg, char *data, int count
   
   // Make sure the peripheral is initialized.
   p->ctrl = 0x00;
-  p->prescale = 400;
+  p->prescale = PLAT_PS2(0)->timer / 50;
   p->ctrl = 0x80;
   
   // Start the transfer.

@@ -1,27 +1,13 @@
 
 #include "gfx.h"
 #include "gfx_cfgpwr.h"
-#include "i2c.h"
 #include "rvex.h"
+#include "platform.h"
 
 #include "logo.inc"
 
 extern const font_t sans12;
 extern const font_t sans9;
-
-// SVGA control interface.
-typedef struct {
-  unsigned int status;
-  unsigned int vidlen;
-  unsigned int fplen;
-  unsigned int synclen;
-  unsigned int linelen;
-  void *framebuf;
-  const unsigned int clocks[4];
-  unsigned int clut;
-} svgactrl_t;
-
-#define PLAT_SVGA ((volatile svgactrl_t*)(0x80000600))
 
 void putx(unsigned int i) {
   int j;
@@ -102,7 +88,7 @@ int get_power(void) {
   int value;
   
   // Read the power data for the VCCINT rail.
-  if (i2c_read(I2C_PMBUS, 0x34, 0x96, (char*)data, 2)) return -1;
+  if (plat_i2c_read(PLAT_I2C_PMBUS, 0x34, 0x96, (char*)data, 2)) return -1;
   
   linear = (data[1] << 8) | data[0];
   if (linear == 0x0000) return -1;
@@ -271,12 +257,11 @@ int main(void) {
     i = 1;
   }
   
+  // Initialize the Chrontel DAC.
+  plat_video_chrontel();
+  
   // Get the framebuffer pointer from the peripheral.
   framebuf = (gfx_pixel_t*)PLAT_SVGA->framebuf;
-  
-  // I2C initialization.
-  i2c_init(I2C_DVI);
-  i2c_init(I2C_PMBUS);
   
   // Clear the screen.
   if (i) {
@@ -305,7 +290,7 @@ int main(void) {
   graph_addtick(&g, 76, "3.1W");
   graph_addtick(&g, 102, "3.3W");
   //*/
-  /* // *3 >>10
+  // *3 >>10
   graph_addtick(&g, 0,  "2.5W");
   graph_addtick(&g, 19, "2.6W");
   graph_addtick(&g, 38, "2.7W");
@@ -320,7 +305,7 @@ int main(void) {
   graph_addtick(&g, 76, "3.3W");
   graph_addtick(&g, 102, "3.5W");
   //*/
-  // >>9   WTF FPGA
+  /* // >>9   Voltvreter...
   graph_addtick(&g, 0,  "4.4W");
   graph_addtick(&g, 25, "4.6W");
   graph_addtick(&g, 51, "4.8W");
@@ -422,9 +407,12 @@ int main(void) {
     if (power == -1) {
       power = 255;
     } else {
-      power -= 0x46666;
+      power -= 0x28000;
+      power *= 3;
+      power >>= 10;
+      //power -= 0x46666; // Voltvreter
       //power *= 3;
-      power >>= 9;
+      //power >>= 10;
       if (power < 0) {
         power = 0;
       } else if (power > 107) {

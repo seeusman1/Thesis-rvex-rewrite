@@ -44,16 +44,20 @@ typedef struct {
   unsigned int ext_ack[16];
 } irqmp_t;
 
-#define PLAT_IRQMP ((volatile irqmp_t*)0x80000000)
+#define PLAT_IRQMP ((volatile irqmp_t*)0x80000200)
 
 // Interrupt sources.
 #define IRQ_TICK      1
-#define IRQ_DBG_UART  4
+#define IRQ_DBG_UART  2
 #define IRQ_AUDIO     5
 #define IRQ_PS20      6
 #define IRQ_PS21      7
-#define IRQ_I2C       8
-#define IRQ_GPIO      9
+#define IRQ_TIM1A     8
+#define IRQ_TIM1B     9
+#define IRQ_GPIO      10
+#define IRQ_I2C_DVI   11
+#define IRQ_I2C_PMBUS 12
+#define IRQ_I2C_ZEBRO 13
 
 /**
  * Registers the specified interrupt handler function for the specified IRQ.
@@ -158,7 +162,8 @@ typedef struct {
   unsigned int tim4_latch;
 } gptimer_t;
 
-#define PLAT_GPTIMER ((volatile gptimer_t*)0x80000300)
+#define PLAT_GPTIMER1 ((volatile gptimer_t*)0x80000300)
+#define PLAT_GPTIMER2 ((volatile gptimer_t*)0x80000400)
 
 /**
  * Like CSL gettimeofday(). Starts at 0, guaranteed monotone between calls to
@@ -236,7 +241,12 @@ typedef struct {
   unsigned int clut;
 } svgactrl_t;
 
-#define PLAT_SVGA ((volatile svgactrl_t*)(0x80000400))
+#define PLAT_SVGA ((volatile svgactrl_t*)(0x80000600))
+
+/**
+ * Initializes the Chrontel DAC for VGA or DVI output (both work).
+ */
+void plat_video_chrontel(void);
 
 /**
  * Initializes the VGA/DVI output.
@@ -282,7 +292,7 @@ typedef struct {
   unsigned int timer;
 } apbps2_t;
 
-#define PLAT_PS2(i)    ((volatile apbps2_t*)(0x80000100+(i<<8)))
+#define PLAT_PS2(i)    ((volatile apbps2_t*)(0x80000000+(i<<8)))
 #define PLAT_NUM_PS2   2
 
 // Keyboard event buffer depth. Must be a power of two!
@@ -472,7 +482,9 @@ typedef struct {
   unsigned int cmdstat;
 } i2cmst_t;
 
-#define PLAT_I2C_DVI ((volatile i2cmst_t*)0x80000500)
+#define PLAT_I2C_DVI   ((volatile i2cmst_t*)0x80000700)
+#define PLAT_I2C_PMBUS ((volatile i2cmst_t*)0x80000800)
+#define PLAT_I2C_ZEBRO ((volatile i2cmst_t*)0x80000900)
 
 /**
  * Writes to an I2C device (blocking).
