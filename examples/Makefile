@@ -131,28 +131,12 @@ ifndef LIMMH_PREV
 LIMMH_PREV = false
 endif
 
-# Trace settings for the simulator (see cfgdefault.sim for more info)
-ifndef SIM_TRACE
-SIM_TRACE = 3
-endif
-
-ifndef SIM_TRACEREGS
-SIM_TRACEREGS = 3
-endif
-
-# When simulating generic binaries, this sets the configuration to use (number
-# of coupled lanes). Must be 2, 4 or 8. Default = 8
-ifndef SIM_GEN_CONFIG
-SIM_GEN_CONFIG = 8
-endif
-
-
 # Define stuff for this makefile when called on its own (not included).
 ifndef EXECUTABLES
 EXECUTABLES = 
 endif
 ifndef OBJECTS
-OBJECTS = rvex-xstsim.o
+OBJECTS = rvex-simrvex.o simrvex_stubs.o
 endif
 ifndef GEN_EXAMPLES
 GEN_EXAMPLES = .
@@ -238,9 +222,7 @@ RM = rm -f
 MKDIR = mkdir
 PYTHON = python3
 VEXPARSE = $(PYTHON) $(TOOLS)/vexparse/main.py
-SIM = $(TOOLS)/sim/xstsim-r-VEX-1.1.2
-SIMFLAGS = --ips='"[r-VEX c]"' --c.core.issue_width=$(ISSUE_WIDTH) \
-  -w --config-file=cfg.sim --c.trace=$(SIM_TRACE) --c.trace_regs=$(SIM_TRACEREGS)
+SIM = ADAPTOR_CONFIG=${GEN_EXAMPLES}/plugin.conf $(TOOLS)/sim/bin/simrvex
 GDB = $(BUILD)/rvex-elf32-gdb
 PLATFORM_SRC = src
 GENERIC_SRC = $(GEN_EXAMPLES)/src
@@ -323,7 +305,7 @@ help:
 	@echo "  make all                 builds all programs"
 	@echo "  make clean               cleans output files"
 	@echo "  make <program>           buils the given program"
-	@echo "  make xstsim-<program>    runs the given program using xstsim"
+	@echo "  make sim-<program>       runs the given program using simrvex"
 	@for target in $(TARGETS) ; do \
 		echo "  $$target" ; \
 	done
@@ -337,9 +319,6 @@ help:
 	@echo "  make <target> COMPILER=<HP|GCC|ST200>            (default = HP)"
 	@echo "  make <target> LIMMH_PREV=<true|false>            (default = true)"
 	@echo "  make <target> DEFS=<list of preprocessor defs>   (default = <none>)"
-	@echo "  make <target> SIM_TRACE=<verbosity>              (default = 3)"
-	@echo "  make <target> SIM_TRACEREGS=<verbosity>          (default = 3)"
-	@echo "  make <target> SIM_GEN_CONFIG=<2|4|8>             (default = 8)"
 	@echo ""
 	@echo " NOTE: in general, you should clean before building a program using a different"
 	@echo " target or with different modifiers; dependency checking is not 100%."
@@ -479,53 +458,35 @@ all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES
 $(EXECUTABLES):
 	$(MAKE) $@.srec $@.disas
 
-# How to run xSTsim;
-xstsim%: export XSTSIM = XSTSIM
-xstsim-%: %.xst.elf
-ifneq ($(DYNAMIC), false)
-ifeq ($(LIMMH_PREV), true)
-ifneq ($(SIM_GEN_CONFIG), 8)
-	@echo "xSTsim does not support LIMMH from previous syllable pair when running in less"
-	@echo "than 8-way mode. Please set SIM_GEN_CONFIG to 8 or LIMMH_PREV to false."
-	@false
-endif
-endif
-endif
-	$(SIM) $(SIMFLAGS) --c.target_exec='"$<"'
+# How to run simrvex
+sim-%: %.elf
+	${SIM} $<
 
-#Rules for xSTsim:
-.PHONY: xstsimtestall
-xstsimtestall: $(POWERSTONE:%=xstsimtest-%)
+.PHONY: simtestall
+simtestall: simtestall-clean $(POWERSTONE:%=simtest-%)
+
+.PHONY: simtestall-clean
+simtestall-clean:
+	echo -n "" > simtestall
 
 #The Powerstone programs all return 0xdeadbeef. 
 #We take the last register contents using tail and grep for that value in r3 (return value register).
-xstsimtest-% : %.xst.elf cfg.sim
-	$(SIM) $(SIMFLAGS) |tail -n 12 | grep "r0.3  = deadbeef"; if [ $$? != 0 ] ; then \
-	echo "Program returned unexpected exit code" ; false; \
+simtest-% : %.elf
+	@${SIM} -t1,0 $^|tail -n 40 | grep "r03 = 0xdeadbeef";\
+	if [ $$? != 0 ] ; then \
+	echo "Program returned unexpected exit code" ; echo $* >> simtestall; echo -e "\t\tError!" >> simtestall; \
 	else \
-	echo "Program Finished Successfully" ; true;  \
+	echo "Program Finished Successfully" ; echo $* >> simtestall; echo -e "\t\tOK" >> simtestall;  \
 	fi
 
-.PHONY: xstsimlogall
-xstsimlogall: $(POWERSTONE:%=xstsimlog-%)
+.PHONY:simlogall
+simlogall: $(POWERSTONE:%=simlog-%)
 
-xstsimlog-% : %.xst.elf cfg.sim
-	$(SIM) $(SIMFLAGS) --c.target_exec='"$<"' --c.core.issue_width=$(ISSUE_WIDTH) --config-file=cfg.sim > $@
+simlog-% : %.elf
+	${SIM} $< > $@
 
-
-
-# How to convert from a (generic binary) r-VEX elf to an elf file which xSTsim
-# understands (this modifies the stop bits when assembly was done with the -u
-# flag);
-%.xst.elf: %.elf tools/sbitmod
-	$(CP) $< $@
-ifneq ($(DYNAMIC), false)
-	tools/sbitmod $@ $(SIM_GEN_CONFIG)
-endif
-
-# How to build the sbitmod tool;
-tools/sbitmod: tools/sbitmod.c
-	cd tools & $(HOSTCC) -o tools/sbitmod tools/sbitmod.c
+simtrace-% : %.elf
+	${SIM} -t1,0 $< > $@
 
 .PHONY: clean
 clean:

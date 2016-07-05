@@ -1,5 +1,9 @@
 #include "rvex.h"
 
+
+/* We prefer to use stderr to avoid mixing with trace output */
+#define SIM_WRITE_FD 2
+
 #define FRAME_BUFFER
 #ifdef FRAME_BUFFER
 
@@ -71,7 +75,7 @@ void Display_Frame(unsigned char *src[], int frame_number, heap_t *heap_all, fra
 #endif
 
 
-
+#if 0
 static void alpha_print(const char *str)
 {
   const char *p = str;
@@ -91,8 +95,33 @@ static void alpha_print(const char *str)
       p++;
   }
 }
+#endif
 
 #endif    /* #ifdef FRAME_BUFFER */
+
+
+//needs a 12 bytes sized char array, returns a string repres. of the supplied val.
+void tohex(char* s, int val)
+{
+	int i;
+	char tmp;
+	int nibble;
+	s[0] = '0';
+	s[1] = 'x';
+//	s[10] = '\n';
+	s[10] = '\0';
+	s[11] = '\0';
+	for(i = 0; i < 8; i++)
+	{
+		nibble = val&0xF;
+		if (nibble > 9) tmp = 'A'-10+nibble;
+		else tmp = '0'+nibble;
+		s[9-i] = tmp;
+		val = val>>4;
+	}
+}
+
+
 
 /**
  * Prints a character to whatever platform the program is compiled for, if the
@@ -100,18 +129,8 @@ static void alpha_print(const char *str)
  * method.
  */
 int putchar(int character){
-  static int pos = 0;
-  if (character == '\0')
-    *(unsigned long *)(ALPHA_REG(pos)) = (unsigned long)(' ');
-  else if (character == '\n')
-    pos = 0;
-  else
-  {
-    *(unsigned long *)(ALPHA_REG(pos)) = (unsigned long)(character);
-    pos += 1;
-    if (pos >= NUM_OF_ALPHA_REGS) pos = 0;
-  }
-  return 0;
+	sim_write(SIM_WRITE_FD, &character, 1); //TODO: doesnt work
+	return 0;
 }
 
 /**
@@ -119,9 +138,17 @@ int putchar(int character){
  * the <stdio.h> method.
  */
 int puts(const char *str) {
-  while (*str) putchar(*str++);
-//  alpha_print(str); //This function is nicer but it does a \n for every string
-  return 0;
+	int len = 0;
+	const char* orig = str;
+	while(*str++) len++;
+	sim_write(SIM_WRITE_FD, orig, len);
+}
+
+int puthex(int val)
+{
+	char str[12];
+	tohex(str, val);
+	return puts(str);
 }
 
 /**
@@ -129,27 +156,18 @@ int puts(const char *str) {
  * and in addition reports success or failure, if supported by the platform.
  */
 int rvex_succeed(const char *str) {
-#if 0
+//#if 0
   puts("success: ");
   puts(str);
-  while (1)
-  {
-  /*
-   * Crashing the core so you can read the output on the Framebuffer's alphanumeric display. just press ctrl-c to stop simulation.
-   * It would be nicer to pause the simulator but I don't know if thats possible from within the simulated code.
-   */
-   }
-  return 0;
-#endif
+//#endif
   return stop(0xdeadbeef);
 }
+
 int rvex_fail(const char *str) {
-#if 0
+//#if 0
   puts("failure: ");
   puts(str);
-  while (1) ;
-  return 0;
-#endif
+//#endif
   return stop(-1);
 }
 
@@ -164,7 +182,5 @@ int getchar(void) {
 
 int stop(int exit_code)
 {
-  // The HP compiler does not approve of inline assembly!
-  //asm volatile("stop");
-  while (1);
+	_stop();
 }
