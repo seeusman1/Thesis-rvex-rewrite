@@ -291,12 +291,12 @@ int main(void) {
   graph_addtick(&g, 102, "3.3W");
   //*/
   // *3 >>10
-  graph_addtick(&g, 0,  "2.5W");
-  graph_addtick(&g, 19, "2.6W");
-  graph_addtick(&g, 38, "2.7W");
-  graph_addtick(&g, 58, "2.8W");
-  graph_addtick(&g, 77, "2.9W");
-  graph_addtick(&g, 96, "3.0W");
+  graph_addtick(&g, 0,  "2.3W");
+  graph_addtick(&g, 19, "2.4W");
+  graph_addtick(&g, 38, "2.5W");
+  graph_addtick(&g, 58, "2.6W");
+  graph_addtick(&g, 77, "2.7W");
+  graph_addtick(&g, 96, "2.8W");
   //*/
   /* // >>9
   graph_addtick(&g, 0,  "2.7W");
@@ -407,7 +407,7 @@ int main(void) {
     if (power == -1) {
       power = 255;
     } else {
-      power -= 0x28000;
+      power -= 0x24CCC;
       power *= 3;
       power >>= 10;
       //power -= 0x46666; // Voltvreter
