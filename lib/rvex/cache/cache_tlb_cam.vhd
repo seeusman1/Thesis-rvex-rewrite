@@ -93,7 +93,7 @@ entity cache_tlb_cam is
     clkEn                       : in  std_logic;
     
     ---------------------------------------------------------------------------
-    -- CAM ports
+    -- Read port
     ---------------------------------------------------------------------------
     -- Data input for lookup and modification.
     data                        : in  std_logic_vector(DATA_W-1 downto 0);
@@ -101,13 +101,18 @@ entity cache_tlb_cam is
     -- One-hot encoded address output, valid one clkEn'd cycle after data.
     addr_oneHot                 : out std_logic_vector(2**ADDR_W-1 downto 0);
     
-    -- Write port. update_enable should be asserted when data has already been
-    -- valid for one cycle, while keeping data stable (so data is stable for at
-    -- least two cycles. addr specifies the address to modify; addRem specifies
-    -- whether it should be added (high) or removed (low) from the selected
-    -- data entry.
-    update_enable               : in  std_logic;
-    update_addRem               : in  std_logic;
+    ---------------------------------------------------------------------------
+    -- Write port
+    ---------------------------------------------------------------------------
+    -- Update operation. The following values are valid:
+    --  - "00": no-operation.
+    --  - "01": add the mapping from data* to update_addr.
+    --  - "10": remove the mapping from data* to update_addr.
+    --  - "11": remove the mappings from data to any address.
+    -- *data must have been valid and equal in the preceding cycle.
+    update_op                   : in  std_logic_vector(1 downto 0);
+    
+    -- The address to modify.
     update_addr                 : in  std_logic_vector(ADDR_W-1 downto 0)
     
   );
@@ -133,7 +138,7 @@ architecture arch of cache_tlb_cam is
   -- RAM implementation style.
   pure function resolve_ram_style (
     style : cache_cam_ram_style_type
-  ) is
+  ) return string is
   begin
     if style = CRS_DISTRIB then
       return "distributed";
@@ -150,9 +155,15 @@ architecture arch of cache_tlb_cam is
   -- Read CAM address for each level.
   signal camReadAddrOH          : ram_entry_array(NUM_LVLS-1 downto 0);
   
+  -- Write enable signal.
+  signal writeEnable            : std_logic;
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -- Generate a single write enable signal for the RAMs.
+  writeEnable <= update_op(0) or update_op(1);
   
   -- Generate the memories.
   ram_gen: for lvl in 0 to NUM_LVLS-1 generate
@@ -179,7 +190,7 @@ begin -- architecture
     begin
       if rising_edge(clk) then
         if clkEn = '1' then
-          if update_enable = '1' then
+          if writeEnable = '1' then
             mem(to_integer(unsigned(camData))) <= camWriteAddrOH;
           end if;
           camReadAddrOH(lvl) <= mem(to_integer(unsigned(camData)));
@@ -188,12 +199,21 @@ begin -- architecture
     end process;
     
     -- Generate read-modify-write data.
-    rmw_proc: process (camReadAddrOH(lvl), update_addRem, update_addr) is
+    rmw_proc: process (camReadAddrOH(lvl), update_op, update_addr) is
     begin
-      camWriteAddrOH <= camReadAddrOH(lvl);
       for i in 2**ADDR_W-1 downto 0 loop
         if to_integer(unsigned(update_addr)) = i then
-          camWriteAddrOH(i) <= update_addRem;
+          case update_op is
+            when "01"   => camWriteAddrOH(i) <= '1'; -- add
+            when "10"   => camWriteAddrOH(i) <= '0'; -- remove
+            when others => camWriteAddrOH(i) <= '0'; -- flush
+          end case;
+        else
+          case update_op is
+            when "01"   => camWriteAddrOH(i) <= camReadAddrOH(lvl)(i);
+            when "10"   => camWriteAddrOH(i) <= camReadAddrOH(lvl)(i);
+            when others => camWriteAddrOH(i) <= '0'; -- flush
+          end case;
         end if;
       end loop;
     end process;

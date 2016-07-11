@@ -51,6 +51,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 library rvex;
+use rvex.common_pkg.all;
 use rvex.cache_pkg.all;
 use rvex.utils_pkg.all;
 
@@ -82,13 +83,63 @@ entity cache_tlb_cams is
     clkEn                       : in  std_logic;
     
     ---------------------------------------------------------------------------
-    -- 
+    -- CAM read port
     ---------------------------------------------------------------------------
     -- Virtual address and ASID to look up, add to the CAM, or remove from the
     -- CAM.
     vAddr                       : in  rvex_address_type;
     asid                        : in  rvex_data_type;
     
+    -- TLB entry associated with the virtual address and ASID given in the
+    -- previous cycle. entry_index, entry_global, and entry_large are undefined
+    -- when entry_valid is low.
+    entry_valid                 : out std_logic;
+    entry_index                 : out std_logic_vector(CCFG.tlbDepthLog2-1 downto 0);
+    entry_global                : out std_logic;
+    entry_large                 : out std_logic;
+    
+    ---------------------------------------------------------------------------
+    -- CAM write port
+    ---------------------------------------------------------------------------
+    -- Update operation request, doubling as request enable. This requires
+    -- precise timing as follows.
+    --
+    --  - Write to invalid entry:
+    --     cyc0) vAddr/asid from new entry
+    --           update_op "00" (nop)
+    --     cyc1) vAddr/asid from new entry
+    --           update_op "01" (set bit)
+    -- 
+    --  - Modify entry:
+    --     cyc1) vAddr/asid from previous entry
+    --           update_op "00" (nop)
+    --     cyc2) vAddr/asid from previous entry
+    --           update_op "10" (clear bit)
+    --     cyc3) vAddr/asid from new entry
+    --           update_op "00" (nop)
+    --     cyc4) vAddr/asid from new entry
+    --           update_op "01" (set bit)
+    -- 
+    --  - Flush entry:
+    --     cyc1) vAddr/asid from previous entry
+    --           update_op "00" (nop)
+    --     cyc2) vAddr/asid from previous entry
+    --           update_op "10" (clear bit)
+    -- 
+    --  - Flush all:
+    --     cyc1..numEntries) vAddr/asid from previous entry
+    --           update_op "11" (clear all)
+    update_op                   : in  std_logic_vector(1 downto 0);
+    
+    -- Entry to modify. Must be valid while update_op is "01" or "10", in which
+    -- case the one-hot bit belonging to the entry will be set or cleared
+    -- respectively.
+    update_index                : in  std_logic_vector(CCFG.tlbDepthLog2-1 downto 0);
+    
+    -- These bits specify what the large/global bits should be set to when
+    -- update_op is "01".
+    update_global               : in  std_logic;
+    update_large                : in  std_logic
     
   );
 end cache_tlb_cams;
@@ -96,10 +147,143 @@ end cache_tlb_cams;
 --=============================================================================
 architecture arch of cache_tlb_cams is
 --=============================================================================
-
+  
+  -- One-hot outputs from the L1, L2, and ASID CAMs.
+  signal oh_L1                  : std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
+  signal oh_L2                  : std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
+  signal oh_ASID                : std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
+  
+  -- One-hot outputs from the large/global flags.
+  signal oh_flag_L              : std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
+  signal oh_flag_G              : std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
+  
+  -- One-hot hit bits for each of the four page types.
+  signal oh_N                   : std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
+  signal oh_L                   : std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
+  signal oh_G                   : std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
+  signal oh_LG                  : std_logic_vector(2**CCFG.tlbDepthLog2-1 downto 0);
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the CAMs
+  -----------------------------------------------------------------------------
+  -- Level-1 CAM for all pages.
+  cam_l1_inst: entity rvex.cache_tlb_cam
+    generic map (
+      DATA_W                    => mmuL1TagSize(CCFG),
+      ADDR_W                    => CCFG.tlbDepthLog2,
+      STYLE                     => CRS_DEFAULT
+    )
+    port map (
+      
+      -- System control.
+      clk                       => clk,
+      clkEn                     => clkEn,
+      
+      -- Read port.
+      data                      => vAddr(tagL1Msb(CCFG) downto tagL1Lsb(CCFG)),
+      addr_oneHot               => oh_L1,
+    
+      -- Write port.
+      update_op                 => update_op,
+      update_addr               => update_index
+      
+    );
+  
+  -- Level-2 CAM for normal-sized pages.
+  cam_l2_inst: entity rvex.cache_tlb_cam
+    generic map (
+      DATA_W                    => mmuL2TagSize(CCFG),
+      ADDR_W                    => CCFG.tlbDepthLog2,
+      STYLE                     => CRS_DEFAULT
+    )
+    port map (
+      
+      -- System control.
+      clk                       => clk,
+      clkEn                     => clkEn,
+      
+      -- Read port.
+      data                      => vAddr(tagL2Msb(CCFG) downto tagL2Lsb(CCFG)),
+      addr_oneHot               => oh_L2,
+      
+      -- Write port.
+      update_op                 => update_op,
+      update_addr               => update_index
+      
+    );
+  
+  -- ASID CAM for non-global pages.
+  cam_asid_inst: entity rvex.cache_tlb_cam
+    generic map (
+      DATA_W                    => mmuAsidSize(CCFG),
+      ADDR_W                    => CCFG.tlbDepthLog2,
+      STYLE                     => CRS_DEFAULT
+    )
+    port map (
+      
+      -- System control.
+      clk                       => clk,
+      clkEn                     => clkEn,
+      
+      -- Read port.
+      data                      => asid(mmuAsidSize(CCFG)-1 downto 0),
+      addr_oneHot               => oh_ASID,
+      
+      -- Write port.
+      update_op                 => update_op,
+      update_addr               => update_index
+      
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Instantiate the large and global page flag registers
+  -----------------------------------------------------------------------------
+  flag_reg_proc: process (clk) is
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        oh_flag_G <= (others => '0');
+        oh_flag_L <= (others => '0');
+      elsif clkEn = '1' then
+        if update_index = "01" then
+          for i in oh_flag_L'range loop
+            if to_integer(unsigned(update_addr)) = i then
+              oh_flag_G(i) <= update_global;
+              oh_flag_L(i) <= update_large;
+            end if;
+          end loop;
+        end if;
+      end if;
+    end if;
+  end process;
+  
+  -----------------------------------------------------------------------------
+  -- One-hot decoding logic
+  -----------------------------------------------------------------------------
+  -- We need a one-hot decoder for each page type. This is all critical path
+  -- stuff, so we want to do this as efficiently as possible.
+  --
+  -- We first need to get the one-hot vector for each page type. This is done
+  -- as follows:
+  --        ...............                ...............
+  --        :   5:2 LUT   :                :   5:2 LUT   :
+  --        :      ____   :                :      ____   :
+  --  f_G --------|    \  :          f_G --------|    \  :
+  --        :   .-|     )---- G            :   .-|     )---- LG
+  --   L1 ----o-+-|____/  :           L1 ----o-+-|____/  :
+  --        : | |  ____   :                : | |  ____   :
+  --   L2 ----+-o-|    \  :          f_L ----+-o-|    \  :
+  --        : '---|     )---- N            : '---|     )---- L
+  -- ASID --------|____/  :         ASID --------|____/  :
+  --        :.............:                :.............:
+  -- 
+  -- The one-hot to binary convertor that follows for each page type is done
+  -- making use of the carry networks to make wide or gates.
+  
   
   
 end architecture;

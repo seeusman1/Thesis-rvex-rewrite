@@ -44,13 +44,6 @@
 
 -- Copyright (C) 2008-2016 by TU Delft.
 
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-
-library unisim;
-use unisim.vcomponents.all;
-
 --=============================================================================
 -- Optimized primitives
 --=============================================================================
@@ -63,6 +56,14 @@ use unisim.vcomponents.all;
 -- has the highest priority. The decoder will output 0 when none of the inputs
 -- are active.
 -------------------------------------------------------------------------------
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+library unisim;
+use unisim.vcomponents.all;
+
 entity utils_priodec is
   generic (
     NUM_LOG2  : natural := 5
@@ -305,3 +306,230 @@ begin
   end process;
   
 end architecture;
+
+-------------------------------------------------------------------------------
+-- Wide or gate using carry logic. This unit works best for multiples of 24
+-- bits, occupying one slice (4 LUTs) per such a set.
+-------------------------------------------------------------------------------
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+library unisim;
+use unisim.vcomponents.all;
+
+entity utils_wideor is
+  generic (
+    WIDTH     : natural := 32
+  );
+  port (
+    inp       : in  std_logic_vector(WIDTH-1 downto 0);
+    outp      : out std_logic;
+    
+    -- Bit i is high when inp(0..i*6+5) is nonzero.
+    outp_int  : out std_logic_vector((WIDTH+5)/6-1 downto 0)
+  );
+end utils_wideor;
+
+architecture behavioural of utils_wideor is
+  constant LWIDTH : natural := ((WIDTH+23)/24)*24;
+  signal inl  : std_logic_vector(LWIDTH-1 downto 0);
+  signal cy   : std_logic_vector(LWIDTH/6 downto 0);
+begin
+  
+  -- Connect the internal signals that are guaranteed to be wide enough.
+  inl(WIDTH-1 downto 0) <= inp;
+  more_gen: if LWIDTH > WIDTH generate
+  begin
+    inl(LWIDTH-1 downto WIDTH) <= (others => '0');
+  end generate;
+  
+  -- Initialize the carry chain.
+  cy(0) <= '0';
+  
+  -- Infer the carry chain 4 bits at a time, because the carry4 block is
+  -- 4 bits long.
+  chain_gen: for c in LWIDTH/24-1 downto 0 generate
+    signal o : std_logic_vector(3 downto 0);
+  begin
+    
+    -- Infer a LUT for each carry chain bit.
+    lut_gen: for d in 3 downto 0 generate
+    begin
+      
+      -- Generate a LUT which NOR's 6 bits at once for the carry propagate
+      -- signal.
+      lut_inst: lut6
+        generic map (
+          INIT => X"0000000000000001"
+        )
+        port map (
+          i0 => inl(c*24 + d*6 + 0),
+          i1 => inl(c*24 + d*6 + 1),
+          i2 => inl(c*24 + d*6 + 2),
+          i3 => inl(c*24 + d*6 + 3),
+          i4 => inl(c*24 + d*6 + 4),
+          i5 => inl(c*24 + d*6 + 5),
+          o  => o(d)
+        );
+      
+    end generate;
+    
+    -- Instantiate the carry4 primitive.
+    carry4_inst: carry4
+      port map (
+        ci => cy(c*4),
+        di => "1111",
+        s  => o,
+        co => cy(c*4+4 downto c*4+1)
+      );
+    
+  end generate;
+  
+  -- Select the outputs.
+  outp <= cy((WIDTH+5)/6);
+  outp_int <= cy((WIDTH+5)/6 downto 1);
+  
+end architecture;
+
+-- pragma translate_off
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+entity utils_wideor_tb is
+end utils_wideor_tb;
+
+architecture testbench of utils_wideor_tb is
+  constant WIDTH    : natural := 32;
+  signal inp        : std_logic_vector(WIDTH-1 downto 0);
+  signal outp       : std_logic;
+  signal outp_int   : std_logic_vector((WIDTH+5)/6-1 downto 0);
+begin
+  
+  uut: entity work.utils_wideor
+    generic map (
+      WIDTH     => WIDTH
+    )
+    port map (
+      inp       => inp,
+      outp      => outp,
+      outp_int  => outp_int
+    );
+  
+  stim_proc: process is
+  begin
+    inp <= (others => '0');
+    wait for 1 ns;
+    for i1 in -1 to WIDTH-1 loop
+      for i2 in -1 to WIDTH-1 loop
+        for i3 in 0 to WIDTH-1 loop
+          inp <= (i3 => '1', others => '0');
+          if i2 >= 0 then
+            inp(i2) <= '1';
+          end if;
+          if i1 >= 0 then
+            inp(i1) <= '1';
+          end if;
+          wait for 1 ns;
+        end loop;
+      end loop;
+    end loop;
+  end process;
+  
+end architecture;
+
+-- pragma translate_on
+
+-------------------------------------------------------------------------------
+-- One-hot to binary decoder. The output is undefined if multiple input signals
+-- are high. If this is a problem, use utils_priodec.
+-------------------------------------------------------------------------------
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+library unisim;
+use unisim.vcomponents.all;
+
+entity utils_ohdec is
+  generic (
+    NUM_LOG2  : natural := 5
+  );
+  port (
+    inp       : in  std_logic_vector(2**NUM_LOG2-1 downto 0);
+    outp      : out std_logic_vector(NUM_LOG2-1 downto 0)
+  );
+end utils_ohdec;
+
+architecture behavioural of utils_ohdec is
+begin
+  
+  -- Generate a wideor-based instantiation for one-hot decoders which have
+  -- at least 16 inputs. Otherwise just use whatever the behavioral description
+  -- produces, because there's no point in using wideor instances.
+  large_gen: if NUM_LOG2 >= 4 generate
+    
+    -- The output bits are computed independently in parallel.
+    bit_gen: for b in NUM_LOG2-1 downto 0 generate
+    begin
+      
+      -- TODO
+      
+    end generate;
+  end generate;
+  
+  -- Use a standard behavioral specification for small decoders.
+  small_gen: if NUM_LOG2 < 4 generate
+    
+    behav_proc: process (inp) is
+    begin
+      -- TODO
+    end process;
+    
+  end generate;
+
+end architecture;
+
+-- pragma translate_off
+
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+entity utils_ohdec_tb is
+end utils_ohdec_tb;
+
+architecture testbench of utils_ohdec_tb is
+  constant NUM_LOG2 : natural := 7;
+  signal inp        : std_logic_vector(2**NUM_LOG2-1 downto 0);
+  signal outp       : std_logic_vector(NUM_LOG2-1 downto 0);
+begin
+  
+  uut: entity work.utils_ohdec
+    generic map (
+      NUM_LOG2  => NUM_LOG2
+    )
+    port map (
+      inp       => inp,
+      outp      => outp
+    );
+  
+  stim_proc: process is
+  begin
+    for i in -1 to 2**NUM_LOG2-1 loop
+      if i >= 0 then
+        inp <= (i => '1', others => '0');
+      else
+        inp <= (others => '0');
+      end if;
+      wait for 1 ns;
+    end loop;
+  end process;
+  
+end architecture;
+
+-- pragma translate_on
