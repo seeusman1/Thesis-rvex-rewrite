@@ -78,7 +78,7 @@ entity cache_tlb_cam is
     ADDR_W                      : natural := 5;
     
     -- Implementation style.
-    STYLE                       : cache_cam_ram_style_type := CRS_DEFAULT
+    STYLE                       : cache_cam_ram_style_type := CRS_DONTCARE
     
   );
   port (
@@ -86,11 +86,19 @@ entity cache_tlb_cam is
     ---------------------------------------------------------------------------
     -- System control
     ---------------------------------------------------------------------------
+    -- Active high synchronous reset input.
+    reset                       : in  std_logic;
+    
+    -- After reset is deasserted, a state machine ensures that the RAMs are
+    -- reset as well. This takes some time. While this reset is in progress,
+    -- this signal is asserted high, and accesses are illegal.
+    resetting                   : out std_logic;
+    
     -- Clock input, registers are rising edge triggered.
     clk                         : in  std_logic;
     
     -- Active high global clock enable input.
-    clkEn                       : in  std_logic;
+    clkEn                       : in  std_logic := '1';
     
     ---------------------------------------------------------------------------
     -- Read port
@@ -105,11 +113,11 @@ entity cache_tlb_cam is
     -- Write port
     ---------------------------------------------------------------------------
     -- Update operation. The following values are valid:
-    --  - "00": no-operation.
-    --  - "01": add the mapping from data* to update_addr.
-    --  - "10": remove the mapping from data* to update_addr.
-    --  - "11": remove the mappings from data to any address.
-    -- *data must have been valid and equal in the preceding cycle.
+    --  - "0-": no-operation.
+    --  - "10": remove the mapping from data to update_addr.
+    --  - "11": add the mapping from data to update_addr.
+    -- data is taken from the previous cycle, update_addr must be valid in the
+    -- same cycle as update_op.
     update_op                   : in  std_logic_vector(1 downto 0);
     
     -- The address to modify.
@@ -125,7 +133,7 @@ architecture arch of cache_tlb_cam is
   -- Number of data bits per RAM.
   type bpl_table_type is array (cache_cam_ram_style_type) of natural;  
   constant BPL_TABLE            : bpl_table_type := (
-    10, -- CRS_DEFAULT
+    5,  -- CRS_DONTCARE
     10, -- CRS_BRAM36
     9,  -- CRS_BRAM18
     5   -- CRS_DISTRIB
@@ -140,7 +148,7 @@ architecture arch of cache_tlb_cam is
     style : cache_cam_ram_style_type
   ) return string is
   begin
-    if style = CRS_DISTRIB then
+    if style = CRS_DISTRIB or style = CRS_DONTCARE then
       return "distributed";
     end if;
     return "block";
@@ -152,6 +160,10 @@ architecture arch of cache_tlb_cam is
   type ram_entry_array is array (natural range <>) of ram_entry_type;
   subtype ram_array is ram_entry_array(0 to 2**BITS_PER_LVL-1);
   
+  -- Reset state machine signals.
+  signal resetting_l            : std_logic;
+  signal resetData              : std_logic_vector(BITS_PER_LVL-1 downto 0);
+  
   -- Read CAM address for each level.
   signal camReadAddrOH          : ram_entry_array(NUM_LVLS-1 downto 0);
   
@@ -162,8 +174,32 @@ architecture arch of cache_tlb_cam is
 begin -- architecture
 --=============================================================================
   
+  -- Generate the reset state machine. This clears the memory after a reset, to
+  -- make sure there won't be any false positives due to data from before the
+  -- reset.
+  reset_proc: process (clk) is
+    constant ONES : std_logic_vector(BITS_PER_LVL-1 downto 0) := (others => '1');
+  begin
+    if rising_edge(clk) then
+      if reset = '1' then
+        resetting_l <= '1';
+        resetData <= (others => '0');
+      elsif clkEn = '1' then
+        if resetting_l = '1' then
+          resetData <= std_logic_vector(unsigned(resetData) + 1);
+        end if;
+        if resetData = ONES then
+          resetting_l <= '0';
+        end if;
+      end if;
+    end if;
+  end process;
+  
+  -- Forward the resetting signal.
+  resetting <= resetting_l;
+  
   -- Generate a single write enable signal for the RAMs.
-  writeEnable <= update_op(0) or update_op(1);
+  writeEnable <= update_op(1) or resetting_l;
   
   -- Generate the memories.
   ram_gen: for lvl in 0 to NUM_LVLS-1 generate
@@ -173,8 +209,12 @@ begin -- architecture
     attribute ram_style         : string;
     attribute ram_style of mem  : signal is RAM_STYLE_STR;
     
-    -- Address for this level (CAM data);
+    -- Read address for this level (CAM data);
     signal camData              : std_logic_vector(BITS_PER_LVL-1 downto 0);
+    signal camData_r            : std_logic_vector(BITS_PER_LVL-1 downto 0);
+    
+    -- Write address for this level (CAM data);
+    signal camWData             : std_logic_vector(BITS_PER_LVL-1 downto 0);
     
     -- Modified write data (CAM one-hot address).
     signal camWriteAddrOH       : ram_entry_type;
@@ -185,13 +225,28 @@ begin -- architecture
     camData <= std_logic_vector(
       resize(shift_right(unsigned(data), lvl*BITS_PER_LVL), BITS_PER_LVL));
     
+    -- Generate the write data register.
+    data_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          camData_r <= (others => '0');
+        elsif clkEn = '1' then
+          camData_r <= camData;
+        end if;
+      end if;
+    end process;
+    
+    -- Use the registered write data or the one from the reset state machine.
+    camWData <= resetData when resetting_l = '1' else camData_r;
+    
     -- Infer the memory.
     ram_proc: process (clk) is
     begin
       if rising_edge(clk) then
         if clkEn = '1' then
           if writeEnable = '1' then
-            mem(to_integer(unsigned(camData))) <= camWriteAddrOH;
+            mem(to_integer(unsigned(camWData))) <= camWriteAddrOH;
           end if;
           camReadAddrOH(lvl) <= mem(to_integer(unsigned(camData)));
         end if;
@@ -199,29 +254,24 @@ begin -- architecture
     end process;
     
     -- Generate read-modify-write data.
-    rmw_proc: process (camReadAddrOH(lvl), update_op, update_addr) is
+    rmw_proc: process (resetting_l, camReadAddrOH(lvl), update_op, update_addr) is
     begin
-      for i in 2**ADDR_W-1 downto 0 loop
-        if to_integer(unsigned(update_addr)) = i then
-          case update_op is
-            when "01"   => camWriteAddrOH(i) <= '1'; -- add
-            when "10"   => camWriteAddrOH(i) <= '0'; -- remove
-            when others => camWriteAddrOH(i) <= '0'; -- flush
-          end case;
-        else
-          case update_op is
-            when "01"   => camWriteAddrOH(i) <= camReadAddrOH(lvl)(i);
-            when "10"   => camWriteAddrOH(i) <= camReadAddrOH(lvl)(i);
-            when others => camWriteAddrOH(i) <= '0'; -- flush
-          end case;
-        end if;
-      end loop;
+      if resetting_l = '1' then
+        camWriteAddrOH <= (others => '0');
+      else
+        for i in 2**ADDR_W-1 downto 0 loop
+          if to_integer(unsigned(update_addr)) = i then
+            camWriteAddrOH(i) <= update_op(0);
+          else
+            camWriteAddrOH(i) <= camReadAddrOH(lvl)(i);
+          end if;
+        end loop;
+      end if;
     end process;
-    
   end generate;
   
   -- Combine the RAM outputs for each level.
-  cam_data_proc: process (data) is
+  cam_data_proc: process (data, camReadAddrOH) is
     variable d : ram_entry_type;
   begin
     d := camReadAddrOH(0);

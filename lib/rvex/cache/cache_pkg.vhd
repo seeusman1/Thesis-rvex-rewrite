@@ -83,10 +83,11 @@ package cache_pkg is
   
   -- Implementation styles for the TLB content-adressable memory.
   type cache_cam_ram_style_type is (
-    CRS_DEFAULT, -- Use default (CRS_BRAM36).
-    CRS_BRAM36,  -- Use 36kib block RAMs: BRAMs = (dbits+9)/10 + 2**abits/32
-    CRS_BRAM18,  -- Use 18kib block RAMs: BRAMs = (dbits+8)/9  + 2**abits/32
-    CRS_DISTRIB  -- Use distrubuted RAM:  LUTs  = (dbits+4)/5  + 2**abits/2
+    CRS_DONTCARE, -- Don't care. Uses whatever default is specified in
+                  -- cache_tlb_cam.vhd unless otherwise specified.
+    CRS_BRAM36,   -- Use 36kib block RAMs: BRAMs = (dbits+9)/10 + 2**abits/32
+    CRS_BRAM18,   -- Use 18kib block RAMs: BRAMs = (dbits+8)/9  + 2**abits/32
+    CRS_DISTRIB   -- Use distrubuted RAM:  LUTs  = (dbits+4)/5  + 2**abits/2
   );
   
   -- Cache/MMU configuration record.
@@ -123,6 +124,9 @@ package cache_pkg is
     -- a number larger than 10, it will result in higher BRAM usage.
     asidBitWidth                : natural;
     
+    -- CAM implementation style.
+    camStyle                    : cache_cam_ram_style_type;
+    
   end record;
   
   -- Default cache/MMU configuration.
@@ -133,7 +137,8 @@ package cache_pkg is
     tlbDepthLog2                => 5,
     pageSizeLog2                => 12,
     largePageSizeLog2           => 22,
-    asidBitWidth                => 10
+    asidBitWidth                => 10,
+    camStyle                    => CRS_DONTCARE
   );
   
   -- Generates a configuration for the rvex cache. None of the parameters are
@@ -150,7 +155,8 @@ package cache_pkg is
     tlbDepthLog2                : integer := -1;
     pageSizeLog2                : integer := -1;  
     largePageSizeLog2           : integer := -1;
-    asidBitWidth                : integer := -1
+    asidBitWidth                : integer := -1;
+    camStyle                    : cache_cam_ram_style_type := CRS_DONTCARE
   ) return cache_generic_config_type;
   
   -- Converts a cache/MMU configuration vector to the r-VEX MMU configuration
@@ -342,18 +348,20 @@ package body cache_pkg is
     tlbDepthLog2                : integer := -1;
     pageSizeLog2                : integer := -1;  
     largePageSizeLog2           : integer := -1;
-    asidBitWidth                : integer := -1    
+    asidBitWidth                : integer := -1;
+    camStyle                    : cache_cam_ram_style_type := CRS_DONTCARE
   ) return cache_generic_config_type is
     variable cfg  : cache_generic_config_type;
   begin
     cfg := base;
     if instrCacheLinesLog2  >= 0 then cfg.instrCacheLinesLog2 := instrCacheLinesLog2;  end if;
     if dataCacheLinesLog2   >= 0 then cfg.dataCacheLinesLog2  := dataCacheLinesLog2;   end if;
-    if mmuEnable            >= 0 then cfg.mmuEnable            := int2bool(mmuEnable); end if;
-    if tlbDepthLog2         >= 0 then cfg.tlbDepthLog2         := tlbDepthLog2;        end if;
-    if pageSizeLog2         >= 0 then cfg.pageSizeLog2         := pageSizeLog2;        end if;    
-    if largePageSizeLog2    >= 0 then cfg.largePageSizeLog2    := largePageSizeLog2;   end if;
-    if asidBitWidth         >= 0 then cfg.asidBitWidth         := asidBitWidth;        end if;
+    if mmuEnable            >= 0 then cfg.mmuEnable           := int2bool(mmuEnable);  end if;
+    if tlbDepthLog2         >= 0 then cfg.tlbDepthLog2        := tlbDepthLog2;         end if;
+    if pageSizeLog2         >= 0 then cfg.pageSizeLog2        := pageSizeLog2;         end if;    
+    if largePageSizeLog2    >= 0 then cfg.largePageSizeLog2   := largePageSizeLog2;    end if;
+    if asidBitWidth         >= 0 then cfg.asidBitWidth        := asidBitWidth;         end if;
+    if camStyle /= CRS_DONTCARE  then cfg.camStyle            := camStyle;             end if;
     return cfg;
   end cache_cfg;
   
@@ -516,7 +524,7 @@ package body cache_pkg is
     CCFG                        : cache_generic_config_type
   ) return natural is
   begin
-    return CCFG. asidBitWidth;
+    return CCFG.asidBitWidth;
   end mmuAsidSize;
   
   -- Returns the MSB of the tag used for the first level of a page table
@@ -525,7 +533,7 @@ package body cache_pkg is
     CCFG                        : cache_generic_config_type
   ) return natural is
   begin
-    return mmuTagSize(CCFG) - 1;
+    return 31;
   end tagL1Msb;
   
   -- Returns the LSB of the tag used for the first level of a page table
@@ -534,7 +542,7 @@ package body cache_pkg is
     CCFG                        : cache_generic_config_type
   ) return natural is
   begin
-    return mmuL2TagSize(CCFG);
+    return 32 - mmuL1TagSize(CCFG);
   end tagL1Lsb;
   
   -- Returns the MSB of the tag used for the second level of a page table
@@ -543,7 +551,7 @@ package body cache_pkg is
     CCFG                        : cache_generic_config_type
   ) return natural is
   begin
-    return mmuL2TagSize(CCFG) - 1;
+    return 31 - mmuL1TagSize(CCFG);
   end tagL2Msb;
   
   -- Returns the LSB of the tag used for the second level of a page table
@@ -552,7 +560,7 @@ package body cache_pkg is
     CCFG                        : cache_generic_config_type
   ) return natural is
   begin
-    return 0;
+    return 32 - mmuL1TagSize(CCFG) - mmuL2TagSize(CCFG);
   end tagL2Lsb;
   
   -- Returns the log2 of the number of bytes in the page directory.
