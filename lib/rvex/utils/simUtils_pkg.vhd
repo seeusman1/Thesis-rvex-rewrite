@@ -730,7 +730,7 @@ package body simUtils_pkg is
     if (value'length mod 8) /= 0 then
       uniform(seed1, seed2, rv);
       iv := integer(trunc(rv * 256.0));
-      value(value'high downto value'high - 7) := std_logic_vector(to_unsigned(iv, 8));
+      value(value'high downto value'high - (value'length mod 8) + 1) := std_logic_vector(to_unsigned(iv, value'length mod 8));
     end if;
   end rvs_randomVect;
   

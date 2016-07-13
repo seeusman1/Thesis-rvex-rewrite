@@ -115,17 +115,17 @@ entity cache is
     --    conditions are "1111", "1110", "1011", "1010" and "1000".
     --  - The decouple outputs will not split or merge two groups when either
     --    group is asserting the blockReconfig signal.
-    rv2cache_decouple             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_decouple           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- For each lane group, this signal represents which context it is
     -- connected to. This is only valid when the associated bit in
     -- rv2cache_laneGroupActive is high.
-    rv2cache_laneGroupContext     : in  rvex_3bit_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_laneGroupContext   : in  rvex_3bit_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- For each lane group, this signal represents whether it is assigned to a
     -- context. When low, the logic associated with the lane group may be
     -- powered down.
-    rv2cache_laneGroupActive      : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_laneGroupActive    : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- For each cache/TLB block associated with the indexed lane group, this
     -- signal determines whether cache/TLB updates are allowed. The r-VEX will
@@ -133,100 +133,100 @@ entity cache is
     -- enabled at all times. Blocks may be disabled when it is known that a
     -- task will no longer have access to the block in a later configuration,
     -- such that more recent data is directed to other blocks.
-    rv2cache_blockUpdateEnable    : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_blockUpdateEnable  : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high reconfiguration block output. When this is high, associated
     -- lanes may not be reconfigured. This is high when the write buffers of
     -- the associated lanes are filled, as reconfiguring in this case could
     -- lead to cache inconsistency.
-    cache2rv_blockReconfig        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    cache2rv_blockReconfig      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Stall output (input from the r-VEX's perspective). When a bit in this
     -- vector is high, the associated pipelane group will stall. Equal stall
     -- signals must be provided to coupled pipelane groups (see also the
     -- mem_decouple signal documentation).
-    cache2rv_stallIn              : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    cache2rv_stallIn            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Combined stall signal from the r-VEX. This represents the actual stall
     -- signal. If a bit in stallIn is high, the respective stallOut signal must
     -- be high, but the reverse is not required.
-    rv2cache_stallOut             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_stallOut           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal controls whether address translation is active or not.
-    rv2cache_mmuEnable            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_mmuEnable          : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal represents the current privilege level of processor. It is
     -- high for kernel mode and low for application mode.
-    rv2cache_kernelMode           : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_kernelMode         : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal controls whether a trap is generated when a write to a clean
     -- page is attempted.
-    rv2cache_writeToCleanEna      : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_writeToCleanEna    : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal controls whether kernel threads can write to read-only
     -- pages. This is the case when this signal is low.
-    rv2cache_writeProtect         : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_writeProtect       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal specifies whether the global page bit in the page table is
     -- enabled or ignored.
-    rv2cache_globalPageEna        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_globalPageEna      : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal specifies whether the executable page bit in the page table
     -- is enabled or ignored.
-    rv2cache_execPageEna          : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_execPageEna        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal specifies the page table pointer for the current thread.
-    rv2cache_pageTablePtr         : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_pageTablePtr       : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal specifies the address space ID for the current thread.
-    rv2cache_asid                 : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_asid               : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- When this signal is high, a TLB flush should be initiated.
-    rv2cache_tlbFlushStart        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_tlbFlushStart      : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This is high when a TLB cache flush is in progress.
-    cache2rv_tlbFlushBusy         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    cache2rv_tlbFlushBusy       : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- When rv2cache_tlbFlushAsidEna is high, rv2cache_tlbFlushAsid specifies a
     -- specific ASID that must be flushed during a TLB flush. Entries with
     -- other ASIDs are then unaffected.
-    rv2cache_tlbFlushAsidEna      : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    rv2cache_tlbFlushAsid         : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_tlbFlushAsidEna    : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_tlbFlushAsid       : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- These two signals specify a lower and upper limit for the virtual page
     -- addresses that are to be flushed. Both are inclusive.
-    rv2cache_tlbFlushTagLow       : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    rv2cache_tlbFlushTagHigh      : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_tlbFlushTagLow     : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2cache_tlbFlushTagHigh    : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- r-VEX instruction interface
     ---------------------------------------------------------------------------
     
     -- When this is high, the instruction cache is flushed.
-    rv2icache_flushStart          : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2icache_flushStart        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal is reserved for multicycle instruction cache flushes in the
     -- future. It is currently always low, as a cache flush is single cycle.
-    icache2rv_flushBusy           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    icache2rv_flushBusy         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     -- Request phase
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     
     -- Program counters from each pipelane group.
-    rv2icache_PCs                 : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2icache_PCs               : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high instruction fetch enable signal. When a bit in this vector
     -- is high, the bit in mem_stallOut is low and the bit in mem_decouple is
     -- high, the cache will fetch the instruction pointed to by the associated
     -- vector in rv2icache_PCs.
-    rv2icache_fetch               : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2icache_fetch             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Combinatorial cancel signal, valid one cycle after rv2icache_PCs and
     -- rv2icache_fetch, regardless of memory stalls. If this is high, a
     -- potential cache miss does not have to be resolved, as the result is not
     -- used.
-    rv2icache_cancel              : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2icache_cancel            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     -- Response phase: valid one unstalled, clkEn'd clock cycle after the
@@ -234,77 +234,77 @@ entity cache is
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     
     -- The fetched instruction.
-    icache2rv_instr               : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+    icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
     
     -- Active high bus fault signals. icache2rv_instr is invalid if the
     -- respective signal is high.
-    icache2rv_busFault            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    icache2rv_pageFault           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    icache2rv_kernelAccVio        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    icache2rv_execAccVio          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_pageFault         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_kernelAccVio      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_execAccVio        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Cache block affinity data from cache. This is set to the index of the
     -- block that served the request.
-    icache2rv_affinity            : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_affinity          : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when a fetch was serviced by the block
     -- associated with the indexed lane group.
-    icache2rv_access              : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_access            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when the fetch resulted in a miss.
-    icache2rv_miss                : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_miss              : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when an address translation was serviced
     -- by the TLB block associated with the indexed lane group.
-    icache2rv_tlbAccess           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_tlbAccess         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when the TLB access resulted in a miss.
-    icache2rv_tlbMiss             : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_tlbMiss           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when the MSBs of the physical cache tag
     -- were mispredicted.
-    icache2rv_tlbMispredict       : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    icache2rv_tlbMispredict     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- r-VEX data interface
     ---------------------------------------------------------------------------
     
     -- When this is high, the data cache is flushed.
-    rv2dcache_flushStart          : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_flushStart        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- This signal is reserved for multicycle instruction cache flushes in the
     -- future. It is currently always low, as a cache flush is single cycle.
-    dcache2rv_flushBusy           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
+    dcache2rv_flushBusy         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
     
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     -- Request phase
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     
     -- Data memory addresses from each pipelane group.
-    rv2dcache_addr                : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_addr              : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high read enable from each pipelane group. When a bit in this
     -- vector is high, the bit in mem_stallOut is low and the bit in
     -- mem_decouple is high, the data cache will fetch the data at the address
     -- specified by the associated vector in rv2dcache_addr.
-    rv2dcache_readEnable          : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_readEnable        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Write data from the rvex to the cache.
-    rv2dcache_writeData           : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_writeData         : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Write byte mask from the rvex to the cache, active high.
-    rv2dcache_writeMask           : in  rvex_mask_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_writeMask         : in  rvex_mask_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high write enable from each pipelane group. When a bit in this
     -- vector is high, the bit in mem_stallOut is low and the bit in
     -- mem_decouple is high, the data memory must write the data in
     -- dmem_writeData to the address specified by rv2dcache_addr, respecting
     -- the byte mask specified by dmem_writeMask.
-    rv2dcache_writeEnable         : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_writeEnable       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- When this is high, the memory access goes straigh to the bus, bypassing
     -- the cache.
-    rv2dcache_bypass              : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_bypass            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     -- Response phase: valid one unstalled, clkEn'd clock cycle after the
@@ -312,16 +312,16 @@ entity cache is
     --  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -
     
     -- Data output.
-    dcache2rv_readData            : out rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_readData          : out rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Active high fault signals from the data memory. When high,
     -- dcache2rv_readData is invalid.
-    dcache2rv_ifaceFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    dcache2rv_busFault            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    dcache2rv_pageFault           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    dcache2rv_kernelAccVio        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    dcache2rv_writeAccVio         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    dcache2rv_writeToClean        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_ifaceFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_pageFault         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_kernelAccVio      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_writeAccVio       : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_writeToClean      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This represents the type of cache access performed by
     -- the block associated with the indexed lane group:
@@ -329,31 +329,31 @@ entity cache is
     --   01 - Read access.
     --   10 - Write access, complete cache line.
     --   11 - Write access, only part of a cache line (update first).
-    dcache2rv_accessType          : out rvex_2bit_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_accessType        : out rvex_2bit_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when the performed data access bypassed
     -- the cache.
-    dcache2rv_bypass              : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_bypass            : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when the access resulted in a miss.
-    dcache2rv_miss                : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_miss              : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when the data cache write buffer
     -- was filled when the request was made. If the request would result in
     -- some kind of bus access, this means an extra penalty would be paid.
-    dcache2rv_writePending        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_writePending      : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when an address translation was
     -- serviced by the TLB block associated with the indexed lane group.
-    dcache2rv_tlbAccess           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_tlbAccess         : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when the TLB access resulted in a
     -- miss.
-    dcache2rv_tlbMiss             : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_tlbMiss           : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     -- Trace information. This is high when the MSBs of the physical cache tag
     -- were mispredicted.
-    dcache2rv_tlbMispredict       : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_tlbMispredict     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Bus master interfaces

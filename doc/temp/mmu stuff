@@ -419,7 +419,7 @@ Cache block size > page size:
 --                                              '-> eXecutable
 
 
-TLB entry: PTag VTag D C W U R   +   G S Valid
+TLB entry: PTag D C W U R (normal memory)  +  G S (parallel-access registers)
 
 
 
