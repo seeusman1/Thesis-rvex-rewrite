@@ -1,0 +1,147 @@
+
+
+
+
+                         A  C  D                           E                             F  H  I
+                         :  :  :                           :                             :  :  :
+.---------------------------------------------------------------------------------------------------------------------------------.
+|                                                          r-VEX pipeline                                                         |
+|                                                                                                                                 |
+| S_IF                                        S_IF + L_IF     S_MEM                                                 S_MEM + L_MEM |
+'---------------------------------------------------------------------------------------------------------------------------------'
+   |                     :  :  :                      ^    :    |                        :  :  :                               ^
+   |                                                  |    :    |                        :  :                                  |
+   |                                     B         .--+---------+-----------insn-page-table-commits-------------.              |
+   |                 B                   :         |  |    :    |                        :  :                   |              |
+   |                 :            .-------------.  |  |         |                                     G         |              |
+   |             .--------.       | Table walk  |  |  |         |                 G                   :         |              |
+   |             |  ITLB  |       |-------------|  |  |         |                 :            .-------------.  |              |
+   |             | lookup |       | ITLB update |  |  |         |             .--------.       | Table walk  |  |              |
+   |             |--------|       |-------------|  |  |         |             |  DTLB  |       |-------------|  |              |
+   |             ^   :    |       ^      :      |  |  |         |             | lookup |       | DTLB update |  |              |
+   |             |   :    |       |             |  |  |         |             |--------|       |-------------|  |              |
+   |             |   :    |,------+-------------'  |  |         |             ^   :    |       ^      :      |  |              |
+   |             |   :    v       |                |  |         |             |   :    |       |             |  |              |
+   |  A  .-------|   :    |-------|             D  |  |         |             |   :    |,------+-------------'  |           1  |
+   |  :  | ITLB  |   :    | ITLB  |             :  |  |         |             |   :    v       |                |           :  |  .-------.
+   |---->| sched |------->| sched |----------------'  |         |  F  .-------|   :    |-------|                '--------------+--|  TLB  |
+   |  :  |   A   |   :    |   B   | , C-B       :     |         |  :  | DTLB  |   :    | DTLB  |                            :  |  | sched |
+   |  :  '-------'        '-------|:            :     |         |---->| sched |------->| sched |----data-page-table-commits----+--|   C   |
+   |  :                           '-.           :     |         |  :  |   A   |   :    |   B   | , H-G                      :  |  '-------|
+   |  :                            ;v           :     |         |  :  '-------'        '-------|:                              |          |      1
+   |  :  .-------.       C        ' |-------.   :     |         |  :                           '-.                             |          v      :
+   |  :  | insn$ |       :          | insn$ |   :     |         |  :                            ;v                             |          |-------------.
+   '---->| sched |----------------->| sched |---------'         |  :  .-------.       H        ' |-------.                  I  |          | Page table  |
+      :  |   A   |       :       .->|   B   |   :               |  :  | edat$ |       :          | edat$ |                  :  |          |   commit    |
+         '-------|       :       |  '-------|                   |---->| sched |----------------->| sched |--------------------'|          |-------------'
+                 |       :       |          |                   |  :  |   A   |       :       .->|   B   |                  :  |          |      :
+                 |       :       |`---------+---------------.   |  :  '-------|       :       |  |-------|                  :  |          |
+                 v       :       |          |       C       |   |  :          |       :       |  |       |                  :  |          |      B
+                 |       :       |          v       :       |   |  :          |       :       |`-+-------+---------------.  :  |          v      :
+                 |---------------|          |---------------|   |  :          |       :       |  |       |       H       |  :  |          |-------------.
+                 | insn $ lookup |          | insn $ lookup |   |  :          v       :       |  |       v       :       |  :  |          | ITLB remove |
+                 |  (predicted)  |          |---------------|   |  :          |---------------|  |       |---------------|  :  |          |-------------'
+                 '---------------'          | insn $ update |   |  :          | edat $ lookup |  |       | edat $ lookup |  :  |          |      :
+                         :                  '---------------'   |  :          |  (predicted)  |  |       |---------------|  :  |          |
+                                                    :           |  :          '---------------'  |       | edat $ update |  :  |          |      G
+                                                                |  :                  :          |       |---------------'  :  |          v      :
+                                                                |  :                  :          |       v       :          :  |          |-------------.
+                                                                |  :                  :          |       |---------------.  :  |          | ITLB remove |
+ Dotted vertical lines indicate pipeline stages. Note that      |  :                  :          |       | edat $ write  |  :  |          '-------------'
+ pretty much every unit here can also stall in any cycle.       |  :                  :          |       '---------------'  :  |                 :
+                                                                |  :                  :          v               :          :  |
+ A = instruction input routing latency = 0 or 1                 |  :  .-------.       :          |-------.                  :  |
+ B = instruction TLB command latency = 1, 2, or 3               |  :  | odat$ |       :          | odat$ |                  :  |
+ C = instruction cache command latency = 1, 2, or 3             |---->| sched |----------------->| sched |--------------------'|
+ D = instruction output routing latency = 0 or 1                |  :  |   A   |       :       .->|   B   |                  :  |
+ E = S_MEM - (S_IF + L_IF) >= 0                                 |  :  '-------|       :       |  |-------|                  :  |
+ F = data input routing latency = 0 or 1                        |  :          |       :       |  |       |                  :  |
+ G = data TLB command latency = 1, 2, or 3                      |  :          |       :       |`-+-------+---------------.  :  |
+ H = data cache command latency = 1, 2, or 3                    |  :          |       :       |  |       |       H       |  :  |
+ I = data output routing latency = 0 or 1                       |  :          v       :       |  |       v       :       |  :  |
+                                                                |  :          |---------------|  |       |---------------|  :  |
+                                                                |  :          | odat $ lookup |  |       | odat $ lookup |  :  |
+                                                                |  :          |  (predicted)  |  |       |---------------|  :  |
+                                                                |  :          '---------------'  |       | odat $ update |  :  |
+                                                                |  :                  :          |       |---------------'  :  |
+                                                                |  :                  :          |       v       :          :  |
+                                                                |  :                  :          |       |---------------.  :  |
+                                                                |  :                  :          |       | odat $ write  |  :  |
+                                                                |  :                  :          |       '---------------'  :  |
+                                                                |  :                  :          v               :          :  |
+                                                                |  :                  :          |-------.                  :  |
+                                                                '------------------------------->|  byp  |---------------------'
+                                                                   :                  :       .->| sched |                  :
+                                                                                              |  '-------|
+                                                                                              |          |
+                                                                                              '----------+---------------.
+                                                                                                         |       1       |
+                                                                                                         v       :       |
+                                                                                                         |---------------|
+                                                                                                         | bypass/ll/sc  |
+                                                                                                         '---------------'
+                                                                                                                 :
+
+
+ - A unit will stall when ostl belonging to the unit that gave the command that is currently in the last pipeline stage is asserted.
+ - ordy is set for the unit that gave the command that is currently in the last pipeline stage.
+ - When a unit is not stalled, it will load the highest priority command for which all the dependencies have irdy set. When it does so,
+   istl will be low for those dependencies.
+
+
+
+
+
+
+Commands are listed from highest priority to lowest priority.
+
+
+TLB block commands (same for instruction and data):
+ - flush                                cregs --> -
+ - remove                               index --> -
+ - update          cregs, vAddr, pAddr, flags --> index
+ - lookup            cregs, vAddr, read/write --> pAddr, flags, FAULTS
+
+Table walker commands:
+ - lookup            cregs, vAddr, read/write --> pAddr, flags, FAULTS
+
+Instruction cache block commands:
+ - snoop                                pAddr --> -
+ - update                        vAddr, pAddr --> data
+ - lookup                        vAddr, pAddr --> hit/miss, data if hit
+ - predicted lookup                     vAddr --> predicted pAddr, hit/miss, data if hit
+
+Data cache block commands:
+ - snoop                                pAddr --> -
+ - flush                                cregs --> -
+ - write             vAddr, pAddr, data, mask --> -
+ - update                        vAddr, pAddr --> data
+ - lookup                        vAddr, pAddr --> hit/miss, data if hit
+ - predicted lookup                     vAddr --> predicted pAddr, hit/miss, data if hit
+
+Commit unit commands:
+ - page table commit              pAddr, data --> -
+ - bypass/ll/sc                   pAddr, data --> data
+
+
+snoop commands can be handled in parallel to the other commands. For all other
+commands, only one can be issued per unit per cycle. The unit schedules this
+itself based on a priority encoder. Bypass writes can be buffered or unbuffered
+depending on cregs/page flags. Store conditional is always unbuffered.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
