@@ -1,0 +1,7 @@
+platform
+nostdlib
+nostdlib-asm
+gfx
+gfx_cfgpwr
+font_sans12
+font_sans9
