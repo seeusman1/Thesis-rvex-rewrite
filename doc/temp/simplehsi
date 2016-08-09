@@ -1,0 +1,269 @@
+
+data: 33 bits bidirectional
+   - /oen low:
+       - Idle:           00000--- -------- -------- -------S    S=sync (toggles every 16 bus cycles or something)
+       - Trace data A:   00001--- -------- -------- TTTTTTTT    T=trace data
+       - Trace data B:   00010--- -------- TTTTTTTT TTTTTTTT    T=trace data
+       - Trace data C:   00011--- TTTTTTTT TTTTTTTT TTTTTTTT    T=trace data
+       - Read insn:      001--AAA AAAAAAAA AAAAAAAA AAAAAAAA    A=word address
+       - Read word:      01AAAAAA AAAAAAAA AAAAAAAA AAAAAAAA    A=word address
+       - Write word 1:   10AAAAAA AAAAAAAA AAAAAAAA AAAAAAAA    A=word address
+       - Write half 1:   11AAAAAA AAAAAAAA AAAAAAAA AAAAAAAA    A=word address
+       - Write word 2:   DDDDDDDD DDDDDDDD DDDDDDDD DDDDDDDD    D=write data
+       - Write half 2:   00000000 0000MMMM DDDDDDDD DDDDDDDD    M=mask, D=write data
+   - /oen high, ack high:
+       - Read response:  RRRRRRRR RRRRRRRR RRRRRRRR RRRRRRRR    R=read data
+       - Write response: kkkkkkkk kkkkkkkk kkkkkkkk kkkkkkkk    k=bus keeper
+   - /oen high, ack low:
+       - Idle:           kkkkkkkk kkkkkkkk kkkkkkkk kkkkkkkk    k=bus keeper
+   - /reset low, ack rising:
+       - Config:         -------- -------- -------- --------    See VHDL code
+
+/oen: 1 bit from FPGA to ASIC
+   - always:
+       - directly enables/disables ASIC drivers and also serves as busy signal
+
+ack: 1 bit from FPGA to ASIC
+   - /oen low:
+       - goes high along with each response word when FPGA driving
+   - /oen high:
+       - trace data buffer ready when ASIC driving
+   - /reset low:
+       - clock selection latch (single ended or differential)
+
+dbgc: 1 bit from FPGA to ASIC
+   - normal operation:
+       - serial debug command line
+   - /reset low:
+       - bus speed select: low for 1/2x core clock, high for 1x core clock
+
+dbgr: 1 bit from ASIC to FPGA
+   - normal operation:
+       - serial debug response line
+
+
+
+
+READ WITHOUT LATENCY CYCLES (1X BUS SPEED):
+
+            ____      ____      ____      ____      ____      ____      _
+fpga clk   /    \____/    \____/    \____/    \____/    \____/    \____/ 
+              ____      ____      ____      ____      ____      ____     
+asic clk   __/    \____/    \____/    \____/    \____/    \____/    \____
+
+    setup  ______________   _______      <  _______>                _____
+fpga data  _____Idle_____XXX__C1___XX>---<XX__RES__XX>-----------<XX_____
+   sample  ^         ^         ^         -         -         -         ^
+
+    setup  __v_________v  _______>   >        _______   .      v  _______
+asic data  ____Idle____XXX__C1___XX>-------<XX__RES__XX>-------<XX_______
+   sample  . -    - .. -    - .. -    - .. -    ^ -> ^    - .. -    - ..
+                                    __________________
+fpga /oen  ____________________/XXX/                  \XXX\______________
+                                      __________________       
+asic /oen  ______________________/XXX/                  \XXX\____________
+           ______________________________________________________________
+ fpga ack  _______Trace_buf_state________///       \\\__Trace_buf_state__
+           ______________________________________________________________
+ asic ack  ________Trace_buf_state_________///       \\\_Trace_buf_state_
+   sample  . -    - .. -    - .. -    - .. -    ^ -> ^    - .. -    - ..
+
+
+READ WITH ONE LATENCY CYCLE (1X BUS SPEED):
+
+            ____      ____      ____      ____      ____      ____      ____      _
+fpga clk   /    \____/    \____/    \____/    \____/    \____/    \____/    \____/ 
+              ____      ____      ____      ____      ____      ____      ____     
+asic clk   __/    \____/    \____/    \____/    \____/    \____/    \____/    \____
+
+    setup  ______________   _______                <  _______>                _____
+fpga data  _____Idle_____XXX__C1___XX>-------------<XX__RES__XX>-----------<XX_____
+   sample  ^         ^         ^         -         -         -         -         ^
+
+    setup  __v_________v  _______>   >                  _______   .      <  _______
+asic data  ____Idle____XXX__C1___XX>-----------------<XX__RES__XX>-------<XX_______
+   sample  . -    - .. -    - .. -    - .. -    - .. -    ^ -> ^    - .. -    - ..
+                                    ____________________________
+fpga /oen  ____________________/XXX/                            \XXX\______________
+                                      ____________________________       
+asic /oen  ______________________/XXX/                            \XXX\____________
+   sample  . -    - .. -    - .. -    - .. -    ^ -> ^    ^ -> ^    - .. -    - ..
+           ______________________________             _____________________________
+ fpga ack  _______Trace_buf_state________\\\_______///       \\\__Trace_buf_state__
+           ________________________________             ___________________________
+ asic ack  ________Trace_buf_state_________\\\_______///       \\\_Trace_buf_state_
+   sample  . -    - .. -    - .. -    - .. -    ^ -> ^    ^ -> ^    - .. -    - ..
+
+
+INSTRUCTION READ WITH ONE LATENCY CYCLE IN THE MIDDLE (1X BUS SPEED):
+
+            ____      ____      ____      ____      ____      ____      ____      ____      ____      ____      ____      ____      ____      ____      _
+fpga clk   /    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/ 
+              ____      ____      ____      ____      ____      ____      ____      ____      ____      ____      ____      ____      ____      ____     
+asic clk   __/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____/    \____
+           
+
+    setup  ______________   _______      <  _______v  _______v  _______v  _______>         <  _______v  _______v  _______v  _______>                _____
+fpga data  _____Idle_____XXX__C1___XX>---<XX__R0___XXX__R1___XXX__R2___XXX__R3___XX>-------<XX__R4___XXX__R5___XXX__R6___XXX__R7___XX>-----------<XX_____
+   sample  ^         ^         ^         -         -         -         -         -         -         -         -         -         -         -         ^
+
+    setup  __v_________v  _______>   >        _______   _______   _______   _______             _______   _______   _______   _______   .      <  _______
+asic data  ____Idle____XXX__C1___XX>-------<XX__R0___XXX__R1___XXX__R2___XXX__R3___XX>-------<XX__R4___XXX__R5___XXX__R6___XXX__R7___XX>-------<XX_______
+   sample  . -    - .. -    - .. -    - .. -    ^ -> ^    ^ -> ^    ^ -> ^    ^ -> ^    - .. -    ^ -> ^    ^ -> ^    ^ -> ^    ^ -> ^    - .. -    - ..
+                                    __________________________________________________________________________________________________
+fpga /oen  ____________________/XXX/                                                                                                  \XXX\______________
+                                      __________________________________________________________________________________________________       
+asic /oen  ______________________/XXX/                                                                                                  \XXX\____________
+           ______________________________________________________________________             ___________________________________________________________
+ fpga ack  _______Trace_buf_state________///                                     \\\_______///                                     \\\__Trace_buf_state__
+           ________________________________________________________________________             _________________________________________________________
+ asic ack  ________Trace_buf_state_________///                                     \\\_______///                                     \\\_Trace_buf_state_
+   sample  . -    - .. -    - .. -    - .. -    ^ -> ^    ^ -> ^    ^ -> ^    ^ -> ^    ^ -> ^    ^ -> ^    ^ -> ^    ^ -> ^    ^ -> ^    - .. -    - ..
+
+
+WRITE WITHOUT LATENCY CYCLES (1X BUS SPEED):
+            ____      ____      ____      ____      ____      ____      _
+fpga clk   /    \____/    \____/    \____/    \____/    \____/    \____/ 
+              ____      ____      ____      ____      ____      ____     
+asic clk   __/    \____/    \____/    \____/    \____/    \____/    \____
+
+    setup  ______________   _______   _______                       _____
+fpga data  _____Idle_____XXX__C1___XXX__C2___XX>-----------------<XX_____
+   sample  ^         ^         ^         ^         -         -         ^ 
+
+    setup  __v_________v  _______v  _______>                      _______
+asic data  ____Idle____XXX__C1___XXX__C2___XX>-----------------<XX_______
+   sample  . -    - .. -    - .. -    - .. -    - .. -    - .. -    - .. 
+                                                                         
+fpga /oen  ______________________________________________________________
+                                                                         
+asic /oen  ______________________________________________________________
+   sample  . -    - .. -    - .. -    - .. -    - .. -    - .. -    - .. 
+           ______________________________________________________________
+ fpga ack  _______Trace_buf_state________///       \\\__Trace_buf_state__
+           ______________________________________________________________
+ asic ack  ________Trace_buf_state_________///       \\\_Trace_buf_state_
+   sample  . -    - .. -    - .. -    - .. -    ^ -> ^    - .. -    - ..
+
+
+WRITE WITH ONE LATENCY CYCLE (1X BUS SPEED):
+            ____      ____      ____      ____      ____      ____      ____      _
+fpga clk   /    \____/    \____/    \____/    \____/    \____/    \____/    \____/ 
+              ____      ____      ____      ____      ____      ____      ____     
+asic clk   __/    \____/    \____/    \____/    \____/    \____/    \____/    \____
+
+    setup  ______________   _______   _______                                 _____
+fpga data  _____Idle_____XXX__C1___XXX__C2___XX>---------------------------<XX_____
+   sample  ^         ^         ^         ^         -         -         -         ^ 
+
+    setup  __v_________v  _______v  _______>                                _______
+asic data  ____Idle____XXX__C1___XXX__C2___XX>---------------------------<XX_______
+   sample  . -    - .. -    - .. -    - .. -    - .. -    - .. -    - .. -    - .. 
+                                                                                             
+fpga /oen  ________________________________________________________________________
+                                                                                   
+asic /oen  ________________________________________________________________________
+   sample  . -    - .. -    - .. -    - .. -    - .. -    - .. -    - .. -    - .. 
+           ______________________________             _____________________________
+ fpga ack  _______Trace_buf_state________\\\_______///       \\\__Trace_buf_state__
+           ________________________________             ___________________________
+ asic ack  ________Trace_buf_state_________\\\_______///       \\\_Trace_buf_state_
+   sample  . -    - .. -    - .. -    - .. -    ^ -> ^    ^ -> ^    - .. -    - ..
+
+
+READ WITHOUT LATENCY CYCLES (1/2X AND 1/4X BUS SPEED):
+
+            _    _    _    _    _    _    _    _    _    _    _    _    _
+fpga clk   / \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ 
+ (1/2X)       _    _    _    _    _    _    _    _    _    _    _    _   
+asic clk   __/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__/ \__
+                
+fpga clk   /\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\
+ (1/4X)    
+asic clk   \_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_/\/\_
+           ____   _______   _______   _______   _______   _______   _____
+fpga sync  ____XXX_______XXX_______XXX_______XXX_______XXX_______XXX_____
+           __   _______   _______   _______   _______   _______   _______
+asic sync  __XXX_______XXX_______XXX_______XXX_______XXX_______XXX_______
+
+    setup  ______________   _______      <  _______>                _____
+fpga data  _____Idle_____XXX__C1___XX>---<XX__RES__XX>-----------<XX_____
+   sample  ^         ^         ^         -         -         -         ^
+
+    setup  __v_________v  _______>   >        _______   .      v  _______
+asic data  ____Idle____XXX__C1___XX>-------<XX__RES__XX>-------<XX_______
+   sample           -         -         -         ^         -         - 
+                                    __________________
+fpga /oen  ____________________/XXX/                  \XXX\______________
+                                      __________________       
+asic /oen  ______________________/XXX/                  \XXX\____________
+           ______________________________________________________________
+ fpga ack  _______Trace_buf_state________///       \\\__Trace_buf_state__
+           ______________________________________________________________
+ asic ack  ________Trace_buf_state_________///       \\\_Trace_buf_state_
+   sample           -         -         -         ^         -         - 
+
+
+FPGA:
+ - Sample on rising edge, setup on rising edge.
+ - After command with 'more' bit unset, set /oen high combinatorially. Start driving
+   ack from the next cycle onwards, and drive data while ack is high. After sending
+   the last response, immediately clear /oen again, but wait another cycle again
+   before sampling the next command, again due to round trip time.
+
+ASIC:
+ - Sample on CONFIGURABLE edge, setup on rising edge. If sample on falling edge,
+   simply insert the falling edge register before the rising edge register. The
+   only reason for using the falling edge mode is if the hold requirement is
+   violated otherwise.
+ - After sending the last word in a command (more unset), forcibly disable the data
+   outputs on the cycle after. This avoids shorts.
+
+.
+
+
+Read command: at least 3+B cycles per transfer, where B is burst size in 32-bit words
+Write command: at least 4 cycles per transfer
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+WRITE WITHOUT LATENCY CYCLES:
+            ____      ____      ____      ____      ____      ____      ____      _
+fpga clk   /    \____/    \____/    \____/    \____/    \____/    \____/    \____/ 
+              ____      ____      ____      ____      ____      ____      ____     
+asic clk   __/    \____/    \____/    \____/    \____/    \____/    \____/    \____
+           
+
+    setup  ______________   _______   _______      <         >                _____
+fpga data  _____Idle_____XXX__C1___XXX__C2___XX>---<XXUUUUUUUXX>----<XXUUUUXXX_____
+   sample  ^         ^         ^         -         -         -         -         ^
+
+    setup  __v_________v  _______v  _______>   >     .            <      v  _______
+asic data  ____Idle____XXX__C1___XXX__C2___XX>-------<XXUUUUUUUXX><XXUUUUXXX_______
+   sample  . -    - .. -    - .. -    - .. -    - .. -    ^ -> ^    - .. -    - ..
+                                              __________________
+fpga /oen  ______________________________/XXX/                  \XXX\______________
+                                                __________________       
+asic /oen  ________________________________/XXX/                  \XXX\____________
+   sample  . -    - .. -    - .. -    - .. -    - .. -    ^ -> ^    - .. -    - ..
+                                                      _________                    
+ fpga ack  UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUX         XUUUUUUUUUUUUUUUUUUU
+                                                        _________                  
+ asic ack  UUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUUX         XUUUUUUUUUUUUUUUUU
+   sample  . -    - .. -    - .. -    - .. -    - .. -    ^ -> ^    - .. -    - ..
+
+

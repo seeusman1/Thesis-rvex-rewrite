@@ -1,0 +1,9 @@
+*.s
+*.o
+*.elf
+*.disas
+*.srec
+*.bin
+*.rawtrace
+*.trace
+cache-runs
