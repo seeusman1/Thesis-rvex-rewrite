@@ -94,6 +94,7 @@ use rvex.bus_pkg.all;
 -- fpga /oen  ____________________/XXX/                  \XXX\______________
 --                                       __________________       
 -- asic /oen  ______________________/XXX/                  \XXX\____________
+--
 --            ______________________________________________________________
 --  fpga ack  _______Trace_buf_state________///       \\\__Trace_buf_state__
 --            ______________________________________________________________
@@ -115,11 +116,11 @@ use rvex.bus_pkg.all;
 --     setup  __v_________v  _______>   >                  _______   .      <  _______
 -- asic data  ____Idle____XXX__C1___XX>-----------------<XX__RES__XX>-------<XX_______
 --    sample  . -    - .. -    - .. -    - .. -    - .. -    ^ -> ^    - .. -    - ..
---                                     ____________________________
--- fpga /oen  ____________________/XXX/                            \XXX\______________
---                                       ____________________________       
--- asic /oen  ______________________/XXX/                            \XXX\____________
---    sample  . -    - .. -    - .. -    - .. -    ^ -> ^    ^ -> ^    - .. -    - ..
+--                                               __________________
+-- fpga /oen  ____________________/XXXXXXXXXXXXX/                  \XXX\______________
+--                                                 __________________       
+-- asic /oen  ______________________/XXXXXXXXXXXXX/                  \XXX\____________
+-- 
 --            ______________________________             _____________________________
 --  fpga ack  _______Trace_buf_state________\\\_______///       \\\__Trace_buf_state__
 --            ________________________________             ___________________________
@@ -146,6 +147,7 @@ use rvex.bus_pkg.all;
 -- fpga /oen  ____________________/XXX/                                                                                                  \XXX\______________
 --                                       __________________________________________________________________________________________________       
 -- asic /oen  ______________________/XXX/                                                                                                  \XXX\____________
+--
 --            ______________________________________________________________________             ___________________________________________________________
 --  fpga ack  _______Trace_buf_state________///                                     \\\_______///                                     \\\__Trace_buf_state__
 --            ________________________________________________________________________             _________________________________________________________
@@ -170,7 +172,7 @@ use rvex.bus_pkg.all;
 -- fpga /oen  ______________________________________________________________
 --                                                                          
 -- asic /oen  ______________________________________________________________
---    sample  . -    - .. -    - .. -    - .. -    - .. -    - .. -    - .. 
+--
 --            ______________________________________________________________
 --  fpga ack  _______Trace_buf_state________///       \\\__Trace_buf_state__
 --            ______________________________________________________________
@@ -195,7 +197,7 @@ use rvex.bus_pkg.all;
 -- fpga /oen  ________________________________________________________________________
 --                                                                                    
 -- asic /oen  ________________________________________________________________________
---    sample  . -    - .. -    - .. -    - .. -    - .. -    - .. -    - .. -    - .. 
+-- 
 --            ______________________________             _____________________________
 --  fpga ack  _______Trace_buf_state________\\\_______///       \\\__Trace_buf_state__
 --            ________________________________             ___________________________
@@ -229,6 +231,7 @@ use rvex.bus_pkg.all;
 -- fpga /oen  ____________________/XXX/                  \XXX\______________
 --                                       __________________       
 -- asic /oen  ______________________/XXX/                  \XXX\____________
+--
 --            ______________________________________________________________
 --  fpga ack  _______Trace_buf_state________///       \\\__Trace_buf_state__
 --            ______________________________________________________________
@@ -266,6 +269,11 @@ entity hsi_asic_mem is
     data_oen                    : out std_logic;
     oen_n                       : in  std_logic;
     ack                         : in  std_logic;
+    
+    -- Delay calibration pattern signals.
+    cal_data_in                 : out std_logic_vector(31 downto 0);
+    cal_data_out                : in  std_logic_vector(31 downto 0);
+    cal_ack_in                  : out std_logic;
     
     -- Internal side.
     bus2mem                     : in  bus_mst2slv_type;
@@ -369,11 +377,11 @@ begin -- architecture
   --         .--/___/             |     |
   --         |                    |     |
   -- cfg0 ---o--------------------'     |
-  -- strobe ----------------------------'
+  --             ___                    |
+  -- strobe ----\    \                  |
+  --             )    )-----------------'
+  -- reset -----/____/
   --
-  -- The above circuit is shown for the ack signal. The data signals are
-  -- handled similarly, except strobe is replaced with strobe and ack and
-  -- oen_n.
   data_in_block: block is
     
     -- Whether the falling or rising edge input register should be used (if
@@ -381,55 +389,17 @@ begin -- architecture
     signal input_mode           : std_logic;
     
     -- Falling-edge registered data input.
-    signal data_in_r_if         : std_logic_vector(32 downto 0);
+    signal data_in_r_if         : std_logic_vector(31 downto 0);
     signal ack_in_r_if          : std_logic;
-    signal oen_n_in_r_if        : std_logic;
     
     -- Rising-edge registered data input.
-    signal data_in_r_ir         : std_logic_vector(32 downto 0);
+    signal data_in_r_ir         : std_logic_vector(31 downto 0);
     signal ack_in_r_ir          : std_logic;
-    signal oen_n_in_r_ir        : std_logic;
-    
-    -- Multiplexed ack/oen input signal based on mem_cfg.
-    signal ack_in_mux           : std_logic;
-    signal oen_n_in_mux         : std_logic;
     
   begin
     
     -- Determine whether we should sample on falling instead of rising edges.
     input_mode <= cfg_mem(0) nor cfg_mem(1);
-    
-    -- ack input mux.
-    ack_in_mux_proc: process (
-      cfg_mem, input_mode, ack_in_r_if, ack_in_r_ir, ack
-    ) is
-    begin
-      if cfg_mem(0) = '0' then
-        if input_mode = '0' then
-          ack_in_r <= ack_in_r_if;
-        else
-          ack_in_r <= ack_in_r_ir;
-        end if;
-      else
-        ack_in_r <= ack;
-      end if;
-    end process;
-    
-    -- oen_n input mux.
-    oen_n_in_mux_proc: process (
-      cfg_mem, input_mode, oen_n_in_r_if, oen_n_in_r_ir, oen_n
-    ) is
-    begin
-      if cfg_mem(0) = '0' then
-        if input_mode = '0' then
-          oen_n_in_r <= oen_n_in_r_if;
-        else
-          oen_n_in_r <= oen_n_in_r_ir;
-        end if;
-      else
-        oen_n_in_r <= oen_n;
-      end if;
-    end process;
     
     -- Instantiate the input registers, which look like this:
     data_in_reg_proc: process (clk) is
@@ -439,7 +409,6 @@ begin -- architecture
         -- Falling edge data input.
         data_in_r_if <= data_in;
         ack_in_r_if <= ack;
-        oen_n_in_r_if <= oen_n;
         
       end if;
       if rising_edge(clk) then
@@ -447,17 +416,22 @@ begin -- architecture
         -- Rising edge data input.
         data_in_r_ir <= data_in;
         ack_in_r_ir <= ack;
-        oen_n_in_r_ir <= oen_n;
         
         -- ack holding register.
-        if strobe = '1' then
-          ack_in_r <= ack_in_mux;
+        if reset = '1' or strobe = '1' then
+          if cfg_mem(0) = '0' then
+            if input_mode = '0' then
+              ack_in_r <= ack_in_r_if;
+            else
+              ack_in_r <= ack_in_r_ir;
+            end if;
+          else
+            ack_in_r <= ack;
+          end if;
         end if;
         
-        -- Data holding register. To conserve some power, we only update this
-        -- register when we're receiving data (it directly drives potentially
-        -- the entire memory bus).
-        if strobe = '1' and ack_in_mux = '1' and oen_n_in_mux = '1' then
+        -- Data holding register.
+        if reset = '1' or strobe = '1' then
           if cfg_mem(0) = '0' then
             if input_mode = '0' then
               data_in_r <= data_in_r_if;
@@ -471,6 +445,11 @@ begin -- architecture
         
       end if;
     end process;
+    
+    -- Forward signals to the delay calibration pattern logic (active while the
+    -- ASIC is being reset).
+    cal_ack_in <= ack_in_r;
+    cal_data_in <= data_in_r;
     
   end block;
   
@@ -495,7 +474,7 @@ begin -- architecture
   --  |||||`-- mux bit 1 = (wmask != "1111") when writeEnable = '1' else (readEnable and not burst)
   --  ||||`--- mux bit 2 = burst
   --  |||`---- mux bit 3 = readEnable nor writeEnable
-  --  ||`----- mux bit 4 = state bit 0
+  --  ||`----- mux bit 4 = state bit 0 xor state bit 1
   --  |`------ mux bit 5 = mux bit 0 when mux bit 4 = '1' else mux bit 3
   --  `------- mux bit 6 = mux bit 1 when mux bit 4 = '1' else mux bit 3
   data_out_block: block is
@@ -503,15 +482,28 @@ begin -- architecture
     -- Various hand-optimized mux signals, see above.
     signal mux                  : std_logic_vector(6 downto 0);
     
-    -- External bus FSM state.
-    signal state_r              : std_logic_vector(3 downto 0);
-    signal state_next           : std_logic_vector(3 downto 0);
+    -- External bus FSM state. Encoding:
+    -- .----------------------------------------------------------.
+    -- | state | bus setup      | bus current    | bus sample     |
+    -- |-------+----------------+----------------+----------------+
+    -- | 0-00  | command 1      | idle/trace     | -              |
+    -- | 0-01  | command 2/hi-Z | command 1      | -              |
+    -- | 0-10  | hi-Z           | command 2/hi-Z | -              |
+    -- | 0-11  | hi-Z           | first response | -              |
+    -- | 1000  | hi-Z           | burst resp. 2  | burst resp. 1  |
+    -- | 1001  | hi-Z           | burst resp. 3  | burst resp. 2  |
+    -- | 1010  | hi-Z           | burst resp. 4  | burst resp. 3  |
+    -- | 1011  | hi-Z           | burst resp. 5  | burst resp. 4  |
+    -- | 1100  | hi-Z           | burst resp. 6  | burst resp. 5  |
+    -- | 1101  | hi-Z           | burst resp. 7  | burst resp. 6  |
+    -- | 1110  | hi-Z           | burst resp. 8  | burst resp. 7  |
+    -- | 1111  | idle/trace/cmd1| hi-Z           | last response  |
+    -- '----------------------------------------------------------'
+    signal state_next, state_r  : std_logic_vector(3 downto 0);
     
     -- Command modes, one-hot encoded. Set for any state except 0. x_r is set
     -- when x is high and cleared when state_rst is high.
     signal state_rst            : std_logic;
-    signal state_read           : std_logic;
-    signal state_read_r         : std_logic;
     signal state_insn           : std_logic;
     signal state_insn_r         : std_logic;
     signal state_write          : std_logic;
@@ -531,25 +523,31 @@ begin -- architecture
     
     -- Generate the mux signals.
     mux(0) <= bus2mem.writeMask(0) nor bus2mem.writeMask(1);
-    mux(1) <= (bus2mem.writeMask /= "1111") when bus2mem.writeEnable = '1'
+    mux(1) <= not (
+                bus2mem.writeMask(0) and bus2mem.writeMask(1) and
+                bus2mem.writeMask(2) and bus2mem.writeMask(3)
+              ) when bus2mem.writeEnable = '1'
               else (bus2mem.readEnable and not bus2mem.flags.burstStart);
     mux(2) <= bus2mem.flags.burstStart;
     mux(3) <= bus2mem.readEnable nor bus2mem.writeEnable;
-    mux(4) <= state_r(0);
+    mux(4) <= state_r(0) xor state_r(1);
     mux(5) <= mux(0) when mux(4) = '1' else mux(3);
     mux(6) <= mux(1) when mux(4) = '1' else mux(3);
     
     -- Determine whether we should send trace data in the next bus transfer.
-    trace_pull <= (trace_count(0) or trace_count(1))
-              and (bus2mem.writeEnable nor bus2mem.readEnable)
-              and strobe
-              and not busy;
+    trace_pull <= strobe and (trace_count(0) or trace_count(1))
+              and not (state_next(3) or state_next(1) or state_next(0));
     
     -- Generate the output multiplexers and registers.
     data_out_reg_proc: process (clk) is
     begin
       if rising_edge(clk) then
-        if strobe = '1' then
+        if reset = '1' then
+          
+          -- Forward the delay calibration test sequence data.
+          data_out <= cal_data_out;
+          
+        elsif strobe = '1' then
           
           -- Bit 31 and 30.
           if mux(4) = '0' then
@@ -600,41 +598,39 @@ begin -- architecture
     -- Drive data output enable.
     data_oen <= output_disable_r nor oen_n;
     
-    -- FSM registers.
-    fsm_reg: process (clk) is
+    -- FSM registers. output_disable_r is asynchronously reset to '0', as it
+    -- must be zero during a reset, not just after the reset. Otherwise, oen_n
+    -- does not properly control the data direction while under reset,
+    -- necessary to do be able to do delay calibration on the FPGA end (if
+    -- necessary).
+    fsm_reg: process (clk, reset) is
     begin
       if rising_edge(clk) then
         if reset = '1' then
           state_r          <= "0000";
-          output_disable_r <= '0';
-          state_read_r     <= '0';
           state_insn_r     <= '0';
           state_write_r    <= '0';
           response_valid_r <= '0';
-        elsif strobe = '1' and (ack_in_r or not response_valid_r) then
+        elsif strobe = '1' and (ack_in_r = '1' or response_valid_r = '0') then
           
           -- State register.
           state_r <= state_next;
           
           -- State flags.
-          if state_rst = '1' then
+          if output_disable = '1' then
+            output_disable_r <= '1';
+          elsif state_rst = '1' then
             output_disable_r <= '0';
-            state_read_r     <= '0';
-            state_insn_r     <= '0';
-            state_write_r    <= '0';
-          else
-            if output_disable = '1' then
-              output_disable_r <= '1';
-            end if;
-            if state_read = '1' then
-              state_read_r <= '1';
-            end if;
-            if state_insn = '1' then
-              state_insn_r <= '1';
-            end if;
-            if state_write = '1' then
-              state_write_r <= '1';
-            end if;
+          end if;
+          if state_insn = '1' then
+            state_insn_r <= '1';
+          elsif state_rst = '1' then
+            state_insn_r <= '0';
+          end if;
+          if state_write = '1' then
+            state_write_r <= '1';
+          elsif state_rst = '1' then
+            state_write_r <= '0';
           end if;
           
           -- Input valid register.
@@ -646,12 +642,14 @@ begin -- architecture
           
         end if;
       end if;
+      if reset = '1' then
+        output_disable_r <= '0';
+      end if;
     end process;
     
     -- FSM logic.
     fsm_comb: process (
-      state_r, state_read_r, state_insn_r, state_write_r,
-      ack_in_r, bus2mem
+      state_r, state_insn_r, state_write_r, ack_in_r, bus2mem
     ) is
     begin
       
@@ -659,7 +657,6 @@ begin -- architecture
       state_next <= std_logic_vector(unsigned(state_r) + 1);
       state_rst <= '0';
       output_disable <= '0';
-      state_read <= '0';
       state_insn <= '0';
       state_write <= '0';
       response_validate <= '0';
@@ -668,7 +665,6 @@ begin -- architecture
       if state_r(3) = '0' then
         case state_r(1 downto 0) is
           when "00" => -- bus: previous
-            state_read <= bus2mem.readEnable and not bus2mem.flags.burstStart;
             state_insn <= bus2mem.readEnable and bus2mem.flags.burstStart;
             state_write <= bus2mem.writeEnable;
             state_next(0) <= bus2mem.writeEnable or bus2mem.readEnable;
@@ -679,8 +675,8 @@ begin -- architecture
           when "10" => -- bus: command 2 for write, hi-Z for read
             output_disable <= '1';
           
-          when "11" => -- bus: first response (which will have been sampled by
-                        -- the time we end up in the next state)
+          when others => -- bus: first response (which will have been sampled by
+                         -- the time we end up in the next state)
             response_validate <= '1';
             -- Next state:
             --   read:  1111
@@ -698,10 +694,17 @@ begin -- architecture
         if state_r(2 downto 0) = "111" then -- bus: hi-Z (last response sampled)
           state_rst <= '1';
           response_invalidate <= '1';
+          
+          -- If there is another request immediately pending again, set it up
+          -- here already to save a bus cycle.
+          state_insn <= bus2mem.readEnable and bus2mem.flags.burstStart;
+          state_write <= bus2mem.writeEnable;
+          state_next(0) <= bus2mem.writeEnable or bus2mem.readEnable;
+          
         end if;
         
         -- bus: read response or hi-Z (always a response sampled)
-        state_next <= std_logic_vector(unsigned(state_next) + 1);
+        state_next <= std_logic_vector(unsigned(state_r) + 1);
         
       end if;
       

@@ -218,6 +218,14 @@ architecture Behavioral of hsi_asic is
   signal cfg_spf                : std_logic_vector(7 downto 0);
   signal cfg_spf_irq            : std_logic;
   
+  -- Delay calibration pattern signals.
+  signal cal_func               : std_logic_vector(7 downto 0);
+  signal cal_data_in            : std_logic_vector(31 downto 0);
+  signal cal_data_out           : std_logic_vector(31 downto 0);
+  signal cal_ack_in             : std_logic;
+  signal cal_dbgc_in            : std_logic;
+  signal cal_dbgr_out           : std_logic;
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -230,14 +238,14 @@ begin -- architecture
   begin
     if p_reset_n_di = '0' then
       reset_filter <= (others => '0');
-    elsif rising_edge(clk_hsi) then
+    elsif rising_edge(clk) then
       reset_filter <= "1" & reset_filter(RESET_FILTER_LENGTH downto 1);
     end if;
   end process;
   
   -- Drive the reset signals.
+  reset <= not reset_filter(0);
   reset_int <= not reset_filter(0);
-  reset <= reset_int;
   
   -- Connect pullup/down enable signals.
   p_oen_n_pu <= p_reset_n_di;
@@ -250,9 +258,9 @@ begin -- architecture
   -- Instantiate the configuration registers. We can't assume that we have a
   -- usable clock during reset, as the configuration affects the clock input
   -- mode, so instead, we use the reset pad itself as a clock signal.
-  cfg_reg_proc: process (reset_n) is
+  cfg_reg_proc: process (p_reset_n_di) is
   begin
-    if rising_edge(reset_n) then
+    if rising_edge(p_reset_n_di) then
       
       -- Clock configuration registers.
       p_clk_sel   <= p_data_di(0);
@@ -298,6 +306,9 @@ begin -- architecture
       data_oen                  => p_data_oe,
       oen_n                     => p_oen_n_di,
       ack                       => p_ack_di,
+      cal_data_in               => cal_data_in,
+      cal_data_out              => cal_data_out,
+      cal_ack_in                => cal_ack_in,
       bus2mem                   => bus2mem,
       mem2bus                   => mem2bus,
       trace_push                => trace_push,
@@ -306,20 +317,189 @@ begin -- architecture
     );
   
   -----------------------------------------------------------------------------
+  -- Serial data bus (FPGA master)
+  -----------------------------------------------------------------------------
+  asic_dbg_inst: entity work.hsi_asic_dbg
+    port map (
+      clk                       => clk,
+      reset                     => reset_int,
+      cfg_dbg                   => cfg_dbg,
+      dbgc                      => p_dbgc_di,
+      dbgr                      => p_dbgr_do,
+      cal_dbgc_in               => cal_dbgc_in,
+      cal_dbgr_out              => cal_dbgr_out,
+      dbg2bus                   => dbg2bus,
+      bus2dbg                   => bus2dbg
+    );
+  
+  -----------------------------------------------------------------------------
   -- Special-function pins
   -----------------------------------------------------------------------------
-  -- Select interrupt input mode when SPF mode is zero.
-  cfg_spf_irq <= '1' when cfg_spf = "00000000" else '0';
+  spf_block: block is
+    signal spf_di_r             : std_logic_vector(7 downto 0);
+    signal spf_oe_r             : std_logic_vector(7 downto 0);
+  begin
+    
+    -- Infer the input and output registers for the spf pins.
+    process (clk) is
+    begin
+      if rising_edge(clk) then
+        spf_di_r <= p_spf_di;
+        p_spf_do <= spf_do;
+        spf_oe_r <= spf_oe;
+      end if;
+    end process;
+    
+    -- Select interrupt input mode when SPF mode is zero.
+    cfg_spf_irq <= '1' when cfg_spf = "00000000" else '0';
+    
+    -- Force external interrupt signals to zero (not asserted) when the special
+    -- function pins are not in interrupt mode.
+    ext_irq <= spf_di_r when cfg_spf_irq = '1' else "00000000";
+    
+    -- Connect the special function ports.
+    spf_func <= cfg_spf;
+    spf_di <= spf_di_r;
+    p_spf_oe <= "00000000" when cfg_spf_irq = '1' or reset_int = '1' else spf_oe_r;
+    
+    -- Connect the delay calibration function selection to the spf pins.
+    cal_func <= spf_di_r;
+    
+  end block;
   
-  -- Force external interrupt signals to zero (not asserted) when the special
-  -- function pins are not in interrupt mode.
-  ext_irq <= p_spf_di when cfg_spf_irq = '1' else "00000000";
-  
-  -- Connect the special function ports.
-  spf_func <= cfg_spf;
-  spf_di <= p_spf_di;
-  p_spf_do <= p_spf_do;
-  p_spf_oe <= p_spf_oe when cfg_spf_irq = '0' else "00000000";
+  -----------------------------------------------------------------------------
+  -- Delay calibration pattern interconnect
+  -----------------------------------------------------------------------------
+  -- The interconnect below is active while reset is asserted. It just
+  -- interconnects various inputs to various outputs through their in/out
+  -- registers. Using this feature, the FPGA design should in theory be able
+  -- to determine the best-case and worst-case timing of all high-performance
+  -- ASIC signals in both directions. The FPGA design can then potentially
+  -- compensate for differences in delay between the signals. It can also be
+  -- used to manually inspect signal integrity/pad performance using a signal
+  -- generator and oscilloscope.
+  --
+  -- Various interconnects are possible for various tests. These are selected
+  -- using the spf pins, which are configured as inputs while reset is
+  -- asserted. spf5:0 selects the pad under test (Table 1), while spf6:7
+  -- determines what the other pads are doing in the meantime (Table 2). oen_n
+  -- determines the direction of the data pins, as it always does.
+  --
+  -- Table 1: internal connections based on spf5:0.
+  --  .----------------------------------------.
+  --  | spf5:0 | Connections                   |
+  --  |--------+-------------------------------|
+  --  | 0XXXXX | dataX -> dbgr, dbgc -> dataX  |
+  --  | 10---- | ack -> dbgr                   |
+  --  | 11---- | dbgc -> dbgr                  |
+  --  '----------------------------------------'
+  --
+  -- Table 2: the function of any output not driven by a connection as
+  -- specified in Table 1.
+  --  .-------------------------.
+  --  | spf7:6 | Logic function |
+  --  |--------+----------------|
+  --  | 00     | high           |
+  --  | 01     | low            |
+  --  | 10     | not dbgc       |
+  --  | 11     | dbgc           |
+  --  '-------------------------'
+  --
+  -- Note that a clock signal is needed to do these tests. Also, the cfg_mem
+  -- configuration parameter is used to select the data input register under
+  -- test. The clock configuration and other parameters are loaded on the
+  -- rising edge of reset_n, so the following steps need to be followed to use
+  -- this feature:
+  --
+  --  1. Disable any running clocks.
+  --  2. Drive oen_n high and reset_n low.
+  --  3. Drive the data pins with the desired configuration.
+  --  4. Wait sufficiently long for the signals to settle, then send a positive
+  --     pulse to reset_n to have the ASIC commit the new configuration. Drive
+  --     reset_n low again before continuing.
+  --  5. Release the data pins to high-impedance mode.
+  --  6. Start the clock signal that matches the new configuration.
+  --  7. Perform the desired tests.
+  --  8. Drive oen_n high.
+  --  9. Drive the data pins with the desired configuration.
+  -- 10. Wait sufficiently long for the signals to settle, then assert reset_n
+  --     high.
+  -- 11. Within 16 clock cycles, release the data and spf pins to
+  --     high-impedance and drive oen_n and dbgc low. After these 16 clock
+  --     cycles, the internal reset will be released.
+  --
+  cal_block: block is
+    
+    -- The logic level for the pins NOT currently selected according to
+    -- Table 1 (this performs the function shown in Table 2).
+    signal alt_func             : std_logic;
+    
+  begin
+    
+    -- Infer the logic function shown in Table 2.
+    alt_func <= (cal_func(7) nand cal_dbgc_in) xor cal_func(6);
+    
+    -- Drive the data pins (if oen_n is low).
+    cal_data_out_gen: for i in 0 to 31 generate
+    begin
+      cal_data_out(i) <= cal_dbgc_in
+        when cal_func(5 downto 0) = std_logic_vector(to_unsigned(i, 6))
+        else alt_func;
+    end generate;
+    
+    -- Select the data for dbgr.
+    dbgr_out_proc: process (
+      cal_func, cal_data_in, cal_ack_in, cal_dbgc_in
+    ) is
+    begin
+      if cal_func(5) = '0' then
+        case cal_func(4 downto 0) is
+          when "00000" => cal_dbgr_out <= cal_data_in(0);
+          when "00001" => cal_dbgr_out <= cal_data_in(1);
+          when "00010" => cal_dbgr_out <= cal_data_in(2);
+          when "00011" => cal_dbgr_out <= cal_data_in(3);
+          when "00100" => cal_dbgr_out <= cal_data_in(4);
+          when "00101" => cal_dbgr_out <= cal_data_in(5);
+          when "00110" => cal_dbgr_out <= cal_data_in(6);
+          when "00111" => cal_dbgr_out <= cal_data_in(7);
+          
+          when "01000" => cal_dbgr_out <= cal_data_in(8);
+          when "01001" => cal_dbgr_out <= cal_data_in(9);
+          when "01010" => cal_dbgr_out <= cal_data_in(10);
+          when "01011" => cal_dbgr_out <= cal_data_in(11);
+          when "01100" => cal_dbgr_out <= cal_data_in(12);
+          when "01101" => cal_dbgr_out <= cal_data_in(13);
+          when "01110" => cal_dbgr_out <= cal_data_in(14);
+          when "01111" => cal_dbgr_out <= cal_data_in(15);
+          
+          when "10000" => cal_dbgr_out <= cal_data_in(16);
+          when "10001" => cal_dbgr_out <= cal_data_in(17);
+          when "10010" => cal_dbgr_out <= cal_data_in(18);
+          when "10011" => cal_dbgr_out <= cal_data_in(19);
+          when "10100" => cal_dbgr_out <= cal_data_in(20);
+          when "10101" => cal_dbgr_out <= cal_data_in(21);
+          when "10110" => cal_dbgr_out <= cal_data_in(22);
+          when "10111" => cal_dbgr_out <= cal_data_in(23);
+          
+          when "11000" => cal_dbgr_out <= cal_data_in(24);
+          when "11001" => cal_dbgr_out <= cal_data_in(25);
+          when "11010" => cal_dbgr_out <= cal_data_in(26);
+          when "11011" => cal_dbgr_out <= cal_data_in(27);
+          when "11100" => cal_dbgr_out <= cal_data_in(28);
+          when "11101" => cal_dbgr_out <= cal_data_in(29);
+          when "11110" => cal_dbgr_out <= cal_data_in(30);
+          when others  => cal_dbgr_out <= cal_data_in(31);
+        end case;
+      else
+        if cal_func(4) = '0' then
+          cal_dbgr_out <= cal_ack_in;
+        else
+          cal_dbgr_out <= cal_dbgc_in;
+        end if;
+      end if;
+    end process;
+    
+  end block;
   
 end Behavioral;
 

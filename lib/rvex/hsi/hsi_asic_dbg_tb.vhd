@@ -81,15 +81,50 @@ begin
   cfg_dbg <= "00";
   
   process is
+  begin
+    bus2dbg <= BUS_SLV2MST_IDLE;
+    bus2dbg.readData <= (others => 'U');
+    wait until dbg2bus.readEnable = '1' or dbg2bus.writeEnable = '1';
+    if dbg2bus.readEnable = '1' then
+      wait until rising_edge(clk);
+      bus2dbg.busy <= '1';
+      wait until rising_edge(clk);
+      wait until rising_edge(clk);
+      bus2dbg.busy <= '0';
+      bus2dbg.ack <= '1';
+      bus2dbg.readData <= dbg2bus.address;
+      bus2dbg.readData(0) <= '1';
+      bus2dbg.readData(31) <= '1';
+      bus2dbg.readData(30) <= '1';
+      bus2dbg.readData(28) <= '1';
+      wait until rising_edge(clk);
+      bus2dbg.ack <= '0';
+      bus2dbg.readData <= (others => 'U');
+    else
+      wait until rising_edge(clk);
+      bus2dbg.busy <= '1';
+      wait until rising_edge(clk);
+      wait until rising_edge(clk);
+      bus2dbg.busy <= '0';
+      bus2dbg.ack <= '1';
+      wait until rising_edge(clk);
+      bus2dbg.ack <= '0';
+    end if;
+  end process;
+  
+  process is
     constant test_cmd : std_logic_vector(63 downto 0)
     --  := "0001001111000010010101010101010110000000000000000000000000000000";
     --  --     [    alow    ][   ahigh    ][rd]
-    --  := "0001110011111111110000000011110000110010100000000000000000000000";
-    --  --     [             write word               ]
-      := "0001111001111111110000000001111011111100001100101000000000000000";
-      --     [    write half high   ][    write half low    ]
+    --  := "0000000000000000000000000000000110000000000000000000000000000000";
+    --  --                                 [rd]
+      := "0001110011111111110000000011110000110010100000000000000000000000";
+      --     [             write word               ]
+    --  := "0001111001111111110000000001111011111100001100101000000000000000";
+    --  --     [    write half high   ][    write half low    ]
     --  := "1111100111111110111110100000000011111101111000001111111110010100";
     --  --  [ write byte 3 ][ write byte 2 ][ write byte 1 ][ write byte 0 ]
+    variable period : time;
   begin
     reset <= '1';
     dbgc <= '0';
@@ -98,11 +133,37 @@ begin
     wait until rising_edge(clk);
     wait until rising_edge(clk);
     wait until rising_edge(clk);
+    
+    case cfg_dbg is
+      when "00"   => period := 40 ns;
+      when "01"   => period := 20 ns;
+      when others => period := 10 ns;
+    end case;
+    
     reset <= '0';
-    wait for 56 ns; -- random
-    for i in test_cmd'range loop
-      dbgc <= test_cmd(i);
-      wait for 40 ns; -- period
+    wait for 50 ns; -- random
+    for i in 1 to 10 loop
+      for i in test_cmd'range loop
+        if dbgc = '0' and test_cmd(i) = '1' then
+          dbgc <= 'L';
+          wait for period * 0.25;
+          dbgc <= 'H';
+          wait for period * 0.25;
+          dbgc <= '1';
+          wait for period * 0.5;
+        elsif dbgc = '1' and test_cmd(i) = '0' then
+          dbgc <= 'H';
+          wait for period * 0.25;
+          dbgc <= 'L';
+          wait for period * 0.25;
+          dbgc <= '0';
+          wait for period * 0.5;
+        else
+          dbgc <= test_cmd(i);
+          wait for period;
+        end if;
+      end loop;
+      wait for 1 ns;
     end loop;
     wait;
   end process;

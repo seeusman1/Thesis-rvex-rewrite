@@ -129,6 +129,10 @@ entity hsi_asic_dbg is
     dbgc                        : in  std_logic;
     dbgr                        : out std_logic;
     
+    -- Delay calibration pattern signals.
+    cal_dbgc_in                 : out std_logic;
+    cal_dbgr_out                : in  std_logic;
+    
     -- Internal side.
     dbg2bus                     : out bus_mst2slv_type;
     bus2dbg                     : in  bus_slv2mst_type
@@ -149,15 +153,20 @@ architecture behavioral of hsi_asic_dbg is
   -- next (and while dbgc_s_valid is high for the last bit).
   signal dbgc_last              : std_logic;
   
-  -- Request strobe signals from the command receiving logic.
-  signal request_read           : std_logic;
+  -- Request signals from the command receiving logic. The argument signals
+  -- remain stable after until the next request is made, so they can be tied
+  -- directly to the bus, and can also be used in the response phase.
+  signal request_enable         : std_logic;
   signal request_write          : std_logic;
-  
-  -- Bus request parameters from the command receiving logic. These remain
-  -- stable while the request is in progress.
+  signal request_autoinc        : std_logic;
   signal request_address        : std_logic_vector(31 downto 0);
   signal request_writeData      : std_logic_vector(31 downto 0);
   signal request_writeMask      : std_logic_vector(3 downto 0);
+  
+  -- Bus response signals. response_readData is only valid while
+  -- response_enable is high.
+  signal response_enable        : std_logic;
+  signal response_readData      : std_logic_vector(31 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -167,191 +176,17 @@ begin -- architecture
   -- Input synchronization logic
   -----------------------------------------------------------------------------
   -- This block handles the bit timing of the dbgc input.
-  input_sync_block: block is
-    
-    -- Rising-edge and falling-edge samples of dbgc.
-    signal dbgc_rise            : std_logic;
-    signal dbgc_fall            : std_logic;
-    signal dbgc_fall_i          : std_logic;
-    
-    -- Register which determines whether to use the rising or falling edge
-    -- register for the payload bit samples.
-    signal edge_next, edge_r    : std_logic;
-    
-    -- State. Zero when not receiving, nonzero when receiving. When state is
-    -- "001", a bit is to be sampled. In states above one, state simply counts
-    -- down.
-    signal state_next, state_r  : std_logic_vector(2 downto 0);
-    
-  begin
-    
-    -- Infer the DDR input registers for dbgc and the state registers for the
-    -- synchronization logic.
-    input_reg_proc: process (clk) is
-    begin
-      if falling_edge(clk) then
-        dbgc_fall_i <= dbgc;
-      end if;
-      if rising_edge(clk) then
-        dbgc_rise <= dbgc;
-        dbgc_fall <= dbgc_fall_i;
-        edge_r <= edge_next;
-        if reset = '1' then
-          state_r <= "000";
-        else
-          state_r <= state_next;
-        end if;
-      end if;
-    end process;
-    
-    -- Detect the start bit, and determine when and how to sample the remainder
-    -- of the bits based on the configuration and the detected timing of the
-    -- start bit.
-    input_sync_logic_comb: process (
-      state_r, dbgc_fall, dbgc_rise, cfg_dbg, dbgc_last, edge_r
-    ) is
-    begin
-      dbgc_s_valid <= '0';
-      edge_next <= edge_r;
-      
-      case state_r is
-        when "000" => -- Not currently receiving; detect incoming start bits.
-          
-          if dbgc_fall = '1' then
-            
-            -- Determine when to sample the first data bit.
-            case cfg_dbg is
-              
-              when "00" => -- 1/4x bus speed.
-                --             now
-                --         __   v__    __    __    __    __    __    __    __   
-                -- clk  __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-                --           _____________________   _____________________   ___
-                -- dbgc __///                     XXX_____________________XXX___
-                --                                            |      
-                edge_next <= '1';
-                state_next <= "110";
-              
-              when "01" => -- 1/2x bus speed.
-                --             now
-                --         __   v__    __    __    __    __    __    __    __   
-                -- clk  __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-                --           _________   _________   _________   _________   ___
-                -- dbgc __///         XXX_________XXX_________XXX_________XXX___
-                --                          |           |           |
-                edge_next <= '1';
-                state_next <= "011";
-              
-              when "10" => -- 1x bus speed, mode A.
-                --             now
-                --         __   v__    __    __    __    __    __    __    __   
-                -- clk  __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-                --           ___   ___   ___   ___   ___   ___   ___   ___   ___
-                -- dbgc __///   XXX___XXX___XXX___XXX___XXX___XXX___XXX___XXX___
-                --                    |     |     |     |     |     |     |     
-                edge_next <= '1';
-                state_next <= "010";
-              
-              when others => -- 1x bus speed, mode B.
-                --             now
-                --         __   v__    __    __    __    __    __    __    __   
-                -- clk  __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-                --           ___   ___   ___   ___   ___   ___   ___   ___   ___
-                -- dbgc __///   XXX___XXX___XXX___XXX___XXX___XXX___XXX___XXX___
-                --                 ^->|  ^->|  ^->|  ^->|  ^->|  ^->|  ^->|  ^->
-                edge_next <= '0';
-                state_next <= "010";
-              
-            end case;
-          elsif dbgc_rise = '1' then
-            
-            -- Determine when to sample the first data bit.
-            case cfg_dbg is
-
-              when "00" => -- 1/4x bus speed.
-                --             now
-                --         __   v__    __    __    __    __    __    __    __   
-                -- clk  __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-                --              _____________________   _____________________   
-                -- dbgc _____///                     XXX_____________________XXX
-                --                                               ^->|   
-                edge_next <= '0';
-                state_next <= "111";
-              
-              when "01" => -- 1/2x bus speed.
-                --             now
-                --         __   v__    __    __    __    __    __    __    __   
-                -- clk  __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-                --              _________   _________   _________   _________   
-                -- dbgc _____///         XXX_________XXX_________XXX_________XXX
-                --                             ^->|        ^->|        ^->|
-                edge_next <= '0';
-                state_next <= "100";
-
-              when "10" => -- 1x bus speed, mode A.
-                --             now
-                --         __   v__    __    __    __    __    __    __    __   
-                -- clk  __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-                --              ___   ___   ___   ___   ___   ___   ___   ___   
-                -- dbgc _____///   XXX___XXX___XXX___XXX___XXX___XXX___XXX___XXX
-                --                       ^->|  ^->|  ^->|  ^->|  ^->|  ^->|  ^->   
-                edge_next <= '0';
-                state_next <= "011";
-
-              when others => -- 1x bus speed, mode B.
-                --             now
-                --         __   v__    __    __    __    __    __    __    __   
-                -- clk  __/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__
-                --              ___   ___   ___   ___   ___   ___   ___   ___   
-                -- dbgc _____///   XXX___XXX___XXX___XXX___XXX___XXX___XXX___XXX
-                --                    |     |     |     |     |     |     |     
-                edge_next <= '1';
-                state_next <= "010";
-                
-            end case;
-          else
-            
-            -- No start bit detected, bus is idle.
-            edge_next <= '0';
-            state_next <= "000";
-            
-          end if;
-        
-        when "001" => -- A data bit is present on the input.
-          
-          -- Send the bit to the parallelization logic.
-          dbgc_s_valid <= '1';
-          
-          -- Update the state depending on whether more bits are expected and
-          -- the bitrate.
-          if dbgc_last = '1' then
-            state_next <= "000";
-          else
-            case cfg_dbg is
-              when "00" => -- 1/4x bus speed.
-                state_next <= "100";
-              when "01" => -- 1/2x bus speed.
-                state_next <= "010";
-              when others => -- 1x bus speed.
-                state_next <= "001";
-            end case;
-          end if;
-          
-        when others => -- Count down until we need to sample the next data bit.
-          state_next <= std_logic_vector(unsigned(state_r) - 1);
-          
-      end case;
-      
-      -- Multiplex between the sample registers based on timing.
-      if edge_r = '1' then
-        dbgc_s <= dbgc_rise;
-      else
-        dbgc_s <= dbgc_fall;
-      end if;
-      
-    end process;
-    
-  end block;
+  input_sync_inst: entity work.hsi_dbg_sync
+    port map (
+      clk                       => clk,
+      reset                     => reset,
+      cfg_dbg                   => cfg_dbg,
+      dbgx                      => dbgc,
+      cal_dbgx_in               => cal_dbgc_in,
+      dbgx_s                    => dbgc_s,
+      dbgx_s_valid              => dbgc_s_valid,
+      dbgx_last                 => dbgc_last
+    );
   
   -----------------------------------------------------------------------------
   -- Input command logic
@@ -393,6 +228,12 @@ begin -- architecture
     signal mask_odd             : std_logic;
     signal mask_even            : std_logic;
     
+    -- Power-saving latch/register inputs.
+    signal request_enable_d     : std_logic;
+    signal request_write_d      : std_logic;
+    signal request_autoinc_d    : std_logic;
+    signal request_writeMask_d  : std_logic_vector(3 downto 0);
+    
   begin
     
     -- Infer the state registers.
@@ -405,6 +246,9 @@ begin -- architecture
           ahigh_r <= ahigh_next;
           wmode_r <= wmode_next;
           wdata_r <= wdata_next;
+        end if;
+        if response_enable = '1' and request_autoinc = '1' then
+          alow_r  <= std_logic_vector(unsigned(alow_r) + 1);
         end if;
         if reset = '1' then
           state_r <= (others => '0');
@@ -433,8 +277,8 @@ begin -- architecture
       wmode_next <= wmode_r;
       wdata_next <= wdata_r;
       dbgc_last <= '0';
-      request_read <= '0';
-      request_write <= '0';
+      request_enable_d <= '0';
+      request_write_d <= '0';
       
       if state_r(5) = '0' then -- state "--0-----"
         if state_r(4) = '0' then -- state "--00----"
@@ -476,8 +320,8 @@ begin -- architecture
             if state_r(7) = '1' then
               
               -- Handle the received command.
-              request_read <= dbgc_s_valid and not state_r(6);
-              request_write <= dbgc_s_valid and state_r(6);
+              request_enable_d <= dbgc_s_valid;
+              request_write_d <= state_r(6);
               
             end if;
             
@@ -550,19 +394,187 @@ begin -- architecture
       end if;
     end process;
     
-    -- Connect the address and write data.
-    request_address <= "0000000000" & ahigh_r & alow_r & "00";
-    request_writeData <= wdata_r;
-    
     -- Decode the write mask.
     mask_high <= (not wmode_r(3)) or wmode_r(1);
     mask_low  <= (not wmode_r(3)) or not wmode_r(1);
     mask_odd  <= (not wmode_r(2)) or wmode_r(0);
     mask_even <= (not wmode_r(2)) or not wmode_r(0);
-    request_writeMask(3) <= mask_low and mask_even;
-    request_writeMask(2) <= mask_low and mask_odd;
-    request_writeMask(1) <= mask_high and mask_even;
-    request_writeMask(0) <= mask_high and mask_odd;
+    request_writeMask_d(3) <= mask_low and mask_even;
+    request_writeMask_d(2) <= mask_low and mask_odd;
+    request_writeMask_d(1) <= mask_high and mask_even;
+    request_writeMask_d(0) <= mask_high and mask_odd;
+    
+    -- Determine whether we should auto-increment the low word address after
+    -- this request.
+    request_autoinc_d <= request_writeMask_d(0) or not request_write_d;
+    
+    -- The write data and address from the shift registers could functionally
+    -- be connected directly to the bus. However, these signals have a high
+    -- level of activity, and the bus signals will probably be decently long.
+    -- So to cut back on activity and thus power, we insert latches into the
+    -- path, latching when the request is made. To make sure the signals are
+    -- stable while the latch is transparent and to prevent hazards in the
+    -- request enable signal doing funny stuff, we insert a register for that
+    -- signal.
+    request_enable_regs: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          request_enable <= '0';
+        else
+          request_enable <= request_enable_d;
+        end if;
+        if request_enable_d = '1' then
+          request_write <= request_write_d;
+          request_autoinc <= request_autoinc_d;
+        end if;
+      end if;
+    end process;
+    request_data_latches: process (
+      request_enable, ahigh_r, alow_r, request_writeMask_d, wdata_r
+    ) is
+    begin
+      if request_enable = '1' then
+        request_address <= "0000000000" & ahigh_r & alow_r & "00";
+        request_writeMask <= request_writeMask_d;
+        request_writeData <= wdata_r;
+      end if;
+    end process;
+    
+  end block;
+  
+  -----------------------------------------------------------------------------
+  -- r-VEX bus logic
+  -----------------------------------------------------------------------------
+  rvex_bus_block: block is
+    
+    -- This signal is low while we're doing a request.
+    signal requesting_n         : std_logic;
+    
+  begin
+    
+    -- Keep requesting while the bus is reporting busy.
+    requesting_n <= request_enable nor bus2dbg.busy;
+    
+    -- Drive the bus master interface. Note by the way that this is done in a
+    -- process like this for forward compatibility, in case signals are added
+    -- to the bus interface records later.
+    bus_drive_proc: process (
+      requesting_n, request_write, request_address, request_writeMask,
+      request_writeData
+    ) is
+      variable s : bus_mst2slv_type;
+    begin
+      s := BUS_MST2SLV_IDLE;
+      s.readEnable  := requesting_n nor request_write;
+      s.writeEnable := requesting_n nor not request_write;
+      s.address     := request_address;
+      s.writeMask   := request_writeMask;
+      s.writeData   := request_writeData;
+      dbg2bus <= s;
+    end process;
+    
+    -- Read the response data.
+    response_enable   <= bus2dbg.ack;
+    response_readData <= bus2dbg.readData;
+    
+  end block;
+  
+  -----------------------------------------------------------------------------
+  -- Response logic
+  -----------------------------------------------------------------------------
+  response_block: block is
+    
+    -- Read data shift register.
+    signal rdata_r              : std_logic_vector(31 downto 0);
+    signal rdata_shift          : std_logic;
+    
+    -- Transmitter state. Encoding:
+    --   000000--  Stop bit/idle
+    --   011110--  Start bit
+    --   011111--  Write enable
+    --   100000--  Read data 31
+    --   100001--  Read data 30
+    --   ::::::::  ::::: ::
+    --   111110--  Read data 1
+    --   111111--  Read data 0
+    -- The LSBs are used to divide the clock down to the bus speed.
+    signal state_next, state_r  : std_logic_vector(7 downto 0);
+    
+  begin
+    
+    -- Infer the registers.
+    reg_proc: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          state_r <= (others => '0');
+        else
+          state_r <= state_next;
+        end if;
+        if response_enable = '1' then
+          rdata_r <= response_readData;
+        elsif state_r(7) = '1' and state_next(1) = '0' and state_next(0) = '0' then
+          rdata_r <= rdata_r(30 downto 0) & rdata_r(0 downto 0);
+        end if;
+      end if;
+    end process;
+    
+    -- Determine the next transmitter state.
+    state_logic_proc: process (
+      state_r, cfg_dbg, response_enable, request_write
+    ) is
+      variable state_add        : std_logic_vector(7 downto 0);
+    begin
+      
+      -- Determine how much to add to the state.
+      state_add := (
+        0 => cfg_dbg(0) nor cfg_dbg(1),
+        1 => cfg_dbg(0) and not cfg_dbg(1),
+        2 => cfg_dbg(1),
+        others => '0'
+      );
+      
+      -- Infer the state adder.
+      state_next <= std_logic_vector(unsigned(state_r) + unsigned(state_add));
+      
+      -- If we're idle, keep the state at zero. We only have to override the
+      -- LSBs to do this because the other bits that come from the adder will
+      -- always be zero in this case anyway.
+      if state_r(7) = '0' and state_r(6) = '0' then
+        state_next(2 downto 0) <= "000";
+      end if;
+      
+      -- If a new transfer should be started, the state should be set to
+      -- 01111000.
+      if response_enable = '1' then
+        state_next(6 downto 3) <= "1111";
+      end if;
+      
+      -- If the request we're responding to was a write, we shouldn't sent the
+      -- read data. We can do this simply by clamping the MSB of the state down
+      -- to zero.
+      if request_write = '1' then
+        state_next(7) <= '0';
+      end if;
+      
+    end process;
+    
+    -- Determine the output bit and register it to prevent glitches on the pin.
+    output_pin_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          dbgr <= cal_dbgr_out;
+        else
+          case state_r(7 downto 6) is
+            when "00"   => dbgr <= '0';
+            when "01"   => dbgr <= request_write or not state_r(2);
+            when others => dbgr <= rdata_r(31);
+          end case;
+        end if;
+      end if;
+    end process;
     
   end block;
   
