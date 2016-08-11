@@ -70,6 +70,9 @@ entity bus_crossClock is
     ---------------------------------------------------------------------------
     -- Master bus
     ---------------------------------------------------------------------------
+    -- Master reset.
+    mst_reset                   : in  std_logic := '0';
+    
     -- Clock input, registers are rising edge triggered.
     mst_clk                     : in  std_logic;
     
@@ -83,6 +86,9 @@ entity bus_crossClock is
     ---------------------------------------------------------------------------
     -- Slave bus
     ---------------------------------------------------------------------------
+    -- Slave reset.
+    slv_reset                   : in  std_logic := '0';
+    
     -- Clock input, registers are rising edge triggered.
     slv_clk                     : in  std_logic;
     
@@ -92,7 +98,7 @@ entity bus_crossClock is
     -- Bus signals.
     crclk2slv                   : out bus_mst2slv_type;
     slv2crclk                   : in  bus_slv2mst_type
-        
+    
   );
 end bus_crossClock;
 
@@ -127,9 +133,9 @@ begin
   mst_release <= bus_requesting(mst2crclk) and not mst_busy;
   
   -- Generate the busy register.
-  mst_ctrl_regs: process (reset, mst_clk) is
+  mst_ctrl_regs: process (reset, mst_reset, mst_clk) is
   begin
-    if reset = '1' then
+    if reset = '1' or mst_reset = '1' then
       mst_busy <= '0';
     elsif rising_edge(mst_clk) then
       if mst_clkEn = '1' then
@@ -168,9 +174,9 @@ begin
     );
   
   -- Data signal synchronization, master clock domain.
-  mst_sync_proc: process (reset, mst_clk) is
+  mst_sync_proc: process (reset, mst_reset, mst_clk) is
   begin
-    if reset = '1' then
+    if reset = '1' or mst_reset = '1' then
       req_reg  <= BUS_MST2SLV_IDLE;
       res_sync <= BUS_SLV2MST_IDLE;
     elsif rising_edge(mst_clk) then
@@ -182,9 +188,9 @@ begin
   end process;
   
   -- Data signal synchronization, slave clock domain.
-  slv_sync_proc: process (reset, slv_clk) is
+  slv_sync_proc: process (reset, slv_reset, slv_clk) is
   begin
-    if reset = '1' then
+    if reset = '1' or slv_reset = '1' then
       req_sync <= BUS_MST2SLV_IDLE;
       res_reg  <= BUS_SLV2MST_IDLE;
     elsif rising_edge(slv_clk) then
@@ -203,8 +209,9 @@ begin
   -- Forward the bus request if it is valid and ack is low.
   crclk2slv <= bus_gate(req_sync, slv_inControl and not slv2crclk.ack);
   
-  -- Release control when the slave acknowledges the request.
-  slv_release <= slv2crclk.ack;
+  -- Release control when the slave acknowledges the request or when the slave
+  -- is reset.
+  slv_release <= slv2crclk.ack or slv_reset;
   
 end Behavioral;
 

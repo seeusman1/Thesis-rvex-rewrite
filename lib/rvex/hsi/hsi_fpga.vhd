@@ -66,9 +66,6 @@ entity hsi_fpga is
     ---------------------------------------------------------------------------
     -- Pad interface
     ---------------------------------------------------------------------------
-    -- The setup/sample logic for these pins must be instantiated outside this
-    -- entity.
-    
     -- Active low reset output to the reset_n pad of the ASIC.
     p_reset_n_do                : out std_logic;
     
@@ -96,12 +93,6 @@ entity hsi_fpga is
     p_spf_di                    : in  std_logic_vector(7 downto 0);
     p_spf_do                    : out std_logic_vector(7 downto 0);
     p_spf_tri                   : out std_logic_vector(7 downto 0);
-    
-    -- ASIC clock signals to be used for the setup/sample timing of the pins.
-    -- The sequential logic inside this entity is aligned to the rising edge of
-    -- clk_asic.
-    clk_asic_x2                 : out std_logic;
-    clk_asic                    : out std_logic;
     
     ---------------------------------------------------------------------------
     -- Internal signals
