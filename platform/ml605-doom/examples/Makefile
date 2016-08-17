@@ -7,7 +7,7 @@ RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 
 # Platform-specific executables.
-EXECUTABLES = graph sysace
+EXECUTABLES = graph
 
 # Platform-specific object files to link.
 OBJECTS = platform.o
