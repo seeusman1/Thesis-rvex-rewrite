@@ -1,14 +1,8 @@
 The following directory structure needs to be present here for o64 to work.
 
 >- bin
-v- open64_8issue_16UNROLL       = open64 compiler from CE share
+v- open64_8issue                = open64 compiler from CE share
 |   >- bin
 |   >- lib
 |   '- sbin
 >- rvex-elf32-32bit -> ../rvex-elf32-32bit/
-v- ST200R7.3.0                  = ST200 toolchain from ftp://ftp.stlinux.com/pub/tools/products/st200tools/R7.3.0/
-    :  ...
-    >- include
-    :  ...
-    >- target
-    :  ...

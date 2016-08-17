@@ -41,38 +41,6 @@ else
 FILENAMEDEF = -DFILENAME=$(FILENAME)
 endif
 
-# Which libraries to link against. We have the uClibc library for use on 
-# Linux (2.0 nommu).
-# Or newlib for use on the bare-metal core. For newlib you might need 
-# to include an application-specific version of io.c that includes your input 
-# file(s). io.c contains a printf implementation that writes to the UART and 
-# stores all output in a circular buffer in memory. 
-# This can be used by xSTsim to read the output after the program exits.
-ifdef RVEXLIB_UCLIBC
-INCLUDES = -I/data/uCLinux/generic_binary/uCLinux/uClibc/include \
- -I/data/uCLinux/generic_binary/uCLinux/linux-2.0.x/include/ \
- -I/data/tools/st200/ST200R7.3.0/include/ \
- -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = --no-demangle /data/uCLinux/generic_binary/uCLinux/uClibc/lib/crt0.o \
- -L/data/uCLinux/generic_binary/uCLinux/uClibc/lib -lm -lc floatlib.o
-endif
-
-ifdef RVEXLIB_NEWLIB_FILE
-DEFS+= IO_LINK_FILE
-INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
- -I/data/tools/st200/ST200R7.3.0/include/ \
- -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = matrix.txt.elf -Telf32rvex.x --no-demangle  --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
-endif
-
-ifdef RVEXLIB_NEWLIB_NOFILE
-INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
- -I/data/tools/st200/ST200R7.3.0/include/ \
- -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = -Telf32rvex.x --no-demangle --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
-endif
-
-
 # Generic binary behavior. Must be one of the following;
 #   false     - compile for the specified issue width only.
 #   true      - alias for true-O1.
@@ -82,6 +50,7 @@ endif
 #   true-noresched - run vexparse prior to assembly without --resched
 #   true-nofix - do not run vexparse prior to assembly.
 # Default = true-O1.
+# VEXparse is not included in this release, so it is disabled.
 ifndef DYNAMIC
 DYNAMIC = true-O1
 endif
@@ -91,16 +60,16 @@ endif
 VEXPARSE_ENABLE = false
 VEXPARSE_FLAGS = 
 ifeq ($(DYNAMIC), true-O0)
-VEXPARSE_ENABLE = true
+VEXPARSE_ENABLE = false
 VEXPARSE_FLAGS = --resched --O0
 else ifeq ($(DYNAMIC), true-O1)
-VEXPARSE_ENABLE = true
+VEXPARSE_ENABLE = false
 VEXPARSE_FLAGS = --resched --O1
 else ifeq ($(DYNAMIC), true-O2)
-VEXPARSE_ENABLE = true
+VEXPARSE_ENABLE = false
 VEXPARSE_FLAGS = --resched --O2
 else ifeq ($(DYNAMIC), true-noresched)
-VEXPARSE_ENABLE = true
+VEXPARSE_ENABLE = false
 endif
 
 ifneq ($(DYNAMIC), false)
@@ -193,7 +162,7 @@ endif
 EXECUTABLES += nothing
 
 # Powerstone benchmarks.
-POWERSTONE = qurt crc bcnt blit compress des engine fir g3fax jpeg pocsag ucbqsort v42 
+POWERSTONE = adpcm qurt crc bcnt blit compress des engine fir g3fax jpeg pocsag ucbqsort v42 
 #POWERSTONE += whetstone auto
 EXECUTABLES += $(POWERSTONE)
 
@@ -222,7 +191,7 @@ RM = rm -f
 MKDIR = mkdir
 PYTHON = python3
 VEXPARSE = $(PYTHON) $(TOOLS)/vexparse/main.py
-SIM = ADAPTOR_CONFIG=${GEN_EXAMPLES}/plugin.conf $(TOOLS)/sim/bin/simrvex
+SIM = ADAPTOR_CONFIG=${GEN_EXAMPLES}/plugin.conf LD_LIBRARY_PATH=$(TOOLS)/sim/simrvex/lib64/sim200 $(TOOLS)/sim/simrvex/bin/simrvex
 GDB = $(BUILD)/rvex-elf32-gdb
 PLATFORM_SRC = src
 GENERIC_SRC = $(GEN_EXAMPLES)/src
@@ -257,7 +226,7 @@ CFLAGS += -g
 endif
 
 else ifeq ($(COMPILER), GCC)
-CC = $(TOOLS)/build/bin/vex-gcc
+CC = $(BUILD)/vex-gcc
 CFLAGS = -I$(GEN_EXAMPLES)/src
 ifeq ($(DEBUG), false)
 CFLAGS += -O3
@@ -266,25 +235,30 @@ CFLAGS += -g
 endif
 
 else
-FPLIB=libcfpi-st220.cc.a
-CFLAGS = -I$(GEN_EXAMPLES)/src -mcore=st220 -EB -fshort-double -fno-dismissible-load \
--fno-exceptions -mno-auto-prefetch -std=c99 -fno-builtin $(INCLUDES)
+# For the open64 compiler, there are 3 options to compile;
+# -bare metal (used in this makefile). 
+#  You need to add libraries and startup code manually (-nostdlib)
+# -newlib (-mruntime=newlib)
+# -uCLibc for use with Linux (-mruntime=uclibc)
+# Linux is not included in this release, uclibc is
+CFLAGS = -I$(GEN_EXAMPLES)/src -fshort-double -fno-dismissible-load \
+-fno-exceptions -mno-auto-prefetch -std=c99 -fno-builtin -nostdlib $(INCLUDES) 
 ifeq ($(ISSUE_WIDTH), 8)
-CC=/shares/group/ce-rvex/tools/builds/open64_8issue_16UNROLL/bin/st200-gcc
+CC=$(TOOLS)/open64_8issue/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3 -CG:LAO_activation=0
 else
 CFLAGS += -g
 endif
 else ifeq ($(ISSUE_WIDTH), 4)
-CC=/shares/group/ce-rvex/tools/builds/open64_4issue/bin/st200-gcc
+CC=$(TOOLS)/open64_4issue/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3
 else
 CFLAGS += -g
 endif
 else
-CC=/shares/group/ce-rvex/tools/builds/open64_2issue/bin/st200-gcc
+CC=$(TOOLS)/open64_2issue/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3 -CG:LAO_activation=0
 else
@@ -392,13 +366,8 @@ VEXdiv.s: $(GENERIC_SRC)/VEXdiv.c
 FORCE:
 
 ifeq ($(COMPILER), O64)
-ifeq ($(ISSUE_WIDTH), 4)
-floatlib.o: IFR4_stat/LIBFP/libcfpi-st220.cc.a FORCE
+floatlib.o: $(GEN_EXAMPLES)/libcfpi_$(BUNDLE_ALIGN).a FORCE
 	cp $< $@
-else ifeq ($(ISSUE_WIDTH), 8)
-floatlib.o: IFR8_stat/LIBFP/libcfpi-st220.cc.a FORCE
-	cp $< $@
-endif
 endif
 
 # How to assemble;

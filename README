@@ -13,7 +13,7 @@ complete):
  - A linux environment. Cygwin may work kind of, but you'll probably need to
    handle the symlinks in the repo properly somehow.
  - Xilinx ISE. Version 14.7 is STRONGLY RECOMMENDED; older versions are known
-   to synthesize the rvex incorrectly. Vivado is used in the grlib and Virtex-7
+   to synthesize the rvex incorrectly. Vivado (2015.4) is used in the Virtex-7
    based platforms.
  - Modelsim. The system is tested using version SE 10.2a; older versions are
    known to crash when simulating the core.
@@ -21,9 +21,9 @@ complete):
  - gcc
  - python 3.x
 
-The release comes with binutils-gdb and gcc pre-built. If you wish to compile
-them yourself, you will need their build dependencies. gcc is forcibly compiled
-in 32-bit mode, so you will need the 32-bit versions of its build dependencies.
+The release comes with pre-built tools binutils-gdb and gcc 
+(in rvex-elf32-32bit), Open64, HP VEX, and a simulator. 
+Sources of the are available from TUDelft
 
 In general, as long as you have the dependencies installed, you shouldn't need
 to do anything else to get the system to work. If things are missing or are not
@@ -222,10 +222,11 @@ standalone platform.
 
 The rvex core files are located in :/lib/rvex/core. The code should be self-
 documenting; there's a lot of comments in there. Start with core.vhd.
+In the config directory are sources that are used to generate VHDL code and 
+documentation. These can be used to do a large amount of design-time
+configuration (that can not be done using generics). 
 
-There's also work in progress on a manual, located in :/doc/core.pdf. If the
-file doesn't exist or you want to rebuild it for some other reason, run make
-from that directory.
+The manual is located in :/doc/reference-manual.pdf
 
 If you change things, please try to keep at least the documentation in the
 VHDL comments up-to-date. If you make permanent changes to the debugging

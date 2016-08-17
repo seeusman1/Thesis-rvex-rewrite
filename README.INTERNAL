@@ -1,9 +1,0 @@
-
---=============================================================================
--- Installation from git repositories
---=============================================================================
-
-On top of meeting requirements specified in README, you'll need to do the
-following things.
-
-TODO. At this point, look at what release.makefile does or ask Jeroen.
