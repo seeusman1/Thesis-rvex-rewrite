@@ -506,41 +506,4 @@ int plat_i2c_write(volatile i2cmst_t *p, int addr, int reg, const char *data, in
  */
 int plat_i2c_read(volatile i2cmst_t *p, int addr, int reg, char *data, int count);
 
-
-/******************************************************************************/
-/* System ACE compact flash access                                            */
-/******************************************************************************/
-#if 0 /* THIS DOESN'T WORK YET. */
-
-// System ACE interface, modified for the r-VEX platform (registers are spaced
-// further apart).
-typedef struct {
-  unsigned short r[256];
-} rvgracectrl_t;
-
-#define PLAT_GRACE ((volatile rvgracectrl_t*)0xFFF90000)
-#define PLAT_GRACE_W(x) (PLAT_GRACE->r[(x)<<2])
-
-/**
- * Reads a number of sectors from the compactflash card. A sector is 512 bytes
- * long.
- *  - sec is the first sector to be read.
- *  - cnt is the number of sectors to read.
- *  - ptr is the starting address to write the data to.
- * The number of sectors read is returned.
- */
-int plat_cf_read(int sec, int cnt, void *ptr);
-
-/**
- * Writes a number of sectors to the compactflash card. A sector is 512 bytes
- * long.
- *  - sec is the first sector to write.
- *  - cnt is the number of sectors to write.
- *  - ptr is the starting address to read the data from.
- * The number of sectors written is returned.
- */
-int plat_cf_write(int sec, int cnt, const void *ptr);
-
-#endif
-
 #endif
