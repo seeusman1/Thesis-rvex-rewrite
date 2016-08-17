@@ -136,8 +136,11 @@ very-clean: clean
 
 
 #------------------------------------------------------------------------------
-# GRLIB makefile chaining/shorthands
+# GRLIB makefile chaining/shorthands and version tagging
 #------------------------------------------------------------------------------
+
+ARCHIVE_TOOLS = ../../versions/tools
+ARCHIVE_DIR = work/archive
 
 # Chain to the grlib makefile.
 gr-%: work
@@ -147,6 +150,7 @@ gr-%: work
 # readme. THIS DOES A LOT OF EXTRA WORK BECAUSE IT STARTS FROM SCRATCH. FIXME!
 .PHONY: sim-%
 sim-%: work compile-%
+	$(ARCHIVE_TOOLS)/gen_platform_version_pkg.py $(ARCHIVE_DIR)
 	cd work && $(MAKE) \
 		distclean\
 		migclean\
@@ -163,14 +167,13 @@ sim-%: work compile-%
 # Like sim-%, but does a little less extra work.
 .PHONY: resim-%
 resim-%: work compile-%
+	$(ARCHIVE_TOOLS)/gen_platform_version_pkg.py $(ARCHIVE_DIR)
 	cd work && $(MAKE) \
 		vsim\
 		map_xilinx_verilog_lib\
 		vsim-launch
 
 # Runs synthesis. This also archives the core when it finishes generating.
-ARCHIVE_TOOLS = ../../versions/tools
-ARCHIVE_DIR = work/archive
 .PHONY: synth
 synth: work
 	
