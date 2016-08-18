@@ -130,6 +130,7 @@ debug:
 clean:
 	cd examples && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
+	cd vivado && rm -rf standalone.{cache,hw,runs,sim} vivado.* .Xil
 
 # Cleans rvex compilation intermediate files.
 .PHONY: clean-ex
