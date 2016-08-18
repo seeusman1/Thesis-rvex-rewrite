@@ -181,4 +181,4 @@ clean:
 
 .PHONY: clean-synth
 clean-synth:
-	rm -rf synth-*
+	find -name "synth-*" -type d | xargs rm -rf
