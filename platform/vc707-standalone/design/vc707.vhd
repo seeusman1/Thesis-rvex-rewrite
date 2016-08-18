@@ -118,29 +118,29 @@ architecture Behavioral of vc707 is
   
   -- Vivado appearently doesn't handle the generics as well as ISE, so we're
   -- using a constant for the configuration instead of the function that
-  -- generates a configuration.  
+  -- generates a configuration. 
   
   constant CORE_CFG  : rvex_generic_config_type := (
-    numLanesLog2                => 1,
-    numLaneGroupsLog2           => 0,
-    numContextsLog2             => 0,
+    numLanesLog2                => 3,
+    numLaneGroupsLog2           => 2,
+    numContextsLog2             => 2,
     genBundleSizeLog2           => 1,
     bundleAlignLog2             => 1,
-    multiplierLanes             => 2#11#,
+    multiplierLanes             => 2#11111111#,
     memLaneRevIndex             => 1,
     numBreakpoints              => 0,
     forwarding                  => true,
-    traps                       => 1,
+    traps                       => 2,
     limmhFromNeighbor           => true,
     limmhFromPreviousPair       => false,
     reg63isLink                 => false,
     cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
-    unifiedStall                => true,
+    unifiedStall                => false,
     gpRegImpl                   => RVEX_GPREG_IMPL_MEM,
-    traceEnable                 => false,
-    perfCountSize               => 0,
-    cachePerfCountEnable        => false
+    traceEnable                 => true,
+    perfCountSize               => 7,
+    cachePerfCountEnable        => true
   );
   
   constant CACHE_CFG : cache_generic_config_type := (
