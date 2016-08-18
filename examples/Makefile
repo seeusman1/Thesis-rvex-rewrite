@@ -89,9 +89,9 @@ ifndef DEBUG
 DEBUG = false
 endif
 
-# Compiler to use, must be HP, GCC or ST200. Default = HP.
+# Compiler to use, must be HP, GCC or O64.
 ifndef COMPILER
-COMPILER = HP
+COMPILER = O64
 endif
 
 # Whether LIMMH from previous syllable pair is supported by the core
