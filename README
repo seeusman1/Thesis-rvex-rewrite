@@ -224,37 +224,9 @@ The rvex core files are located in :/lib/rvex/core. The code should be self-
 documenting; there's a lot of comments in there. Start with core.vhd.
 In the config directory are sources that are used to generate VHDL code and 
 documentation. These can be used to do a large amount of design-time
-configuration (that can not be done using generics). 
+configuration (that can not be done using generics).
 
-The manual is located in :/doc/reference-manual.pdf
-
-If you change things, please try to keep at least the documentation in the
-VHDL comments up-to-date. If you make permanent changes to the debugging
-interface (i.e. the control register map), be sure to update the rvd memory map
-definitions in :/tools/debug-interface/src/default-memory.map. The next time
-you run any make command to do with rvd, you will be queried to commit the new 
-you run any make currently active memory map.
-
--------------------------------------------------------------------------------
--- Adding/modifying control registers
--------------------------------------------------------------------------------
-
-The steps below explain how to properly add control registers to the rvex core.
-Modifying/removing registers follows the same steps, pretty much.
-
- 1. Add the mnemonics for the new registers to
-    lib/rvex/core/core_ctrlRegs_pkg.vhd. While you're there, you might want to
-    look over the subprograms in that file which can be used to easily make
-    certain types of registers.
-    
- 2. Define the logic for your new registers in:
-     - lib/rvex/core/core_contextRegLogic.vhd for context-specific registers
-     - lib/rvex/core/core_globalRegLogic.vhd for context-specific registers
-
- 3. Register the new mnemonics in the following files:
-     - platform/core_tests/design/core_tb.vhd (bottom of the file)
-     - examples/src/rvex.h
-     - tools/debug-interface/src/default-memory.map
+The manual is located in :/doc/userman.pdf
 
 --=============================================================================
 -- Adding programs
