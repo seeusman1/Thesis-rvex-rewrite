@@ -95,22 +95,33 @@ class Rvd:
 
     def write(self, address, data):
         """Write the bytearray data to rvsrv.
-        The return value is a tupple with the following format:
-        (code, addr, count, data)
-        Where code is either 'OK', or 'Fault', addr is the address given as
-        input, count is the number of bytes that were to be written, and data
-        contains the error code in the case of failure, and otherwise None.
+        Returns the number of bytes successfully written, or None if the server
+        did not respond.
+        
+        Split the data into chunks of size 4096 before sending, because that is
+        what rvsrv expects.
         """
-        command = "Write,{:08x},{:d},{};".format(address, len(data),
-                ''.join('{:02x}'.format(x) for x in data)).encode('utf-8')
-        res = self.socket.send(command)
-        res = self.recv_all()
-        match = re.match(r'OK,Write,(?P<mode>OK|Fault),(?P<addr>[0-9a-zA-Z]+),'+
-                '(?P<count>[0-9]+)(?:,(?P<data>[0-9a-zA-Z]+))?;', res)
-        if not match:
-            return None
-        return (match.group('mode'), int(match.group('addr'), 16),
-                int(match.group('count')), match.group('data'))
+        chunk_size = 4*1024
+        bytes_sent = 0
+        while len(data) - bytes_sent > 0:
+            # offset from start of alignment
+            offset = address % chunk_size
+            # number of bytes in chunk
+            bytes_to_send = min(chunk_size - offset, len(data) - bytes_sent)
+            chunk = data[bytes_sent:bytes_sent + bytes_to_send]
+            command = "Write,{:08x},{:d},{};".format(address + bytes_sent,
+                    len(chunk),
+                    ''.join('{:02x}'.format(x) for x in chunk)).encode('utf-8')
+            res = self.socket.send(command)
+            res = self.recv_all()
+            match = re.match(r'OK,Write,(?P<mode>OK|Fault),(?P<addr>[0-9a-zA-Z]+),'+
+                    '(?P<count>[0-9]+)(?:,(?P<data>[0-9a-zA-Z]+))?;', res)
+            if not match:
+                return None
+            if not match.group('mode') == 'OK':
+                break
+            bytes_sent += len(chunk)
+        return bytes_sent
 
     def writeInt(self, address, count, data):
         """Converts the integer value data into an array of bytes of length
@@ -118,7 +129,7 @@ class Rvd:
         Raises an exception on failure.
         """
         res = self.write(address, data.to_bytes(count, byteorder='big'))
-        if res[0] == 'OK':
+        if res == count:
             return
         raise RuntimeError('write access failed: {}'.format(res))
 
