@@ -12,7 +12,7 @@ endif
 
 .PHONY: all
 
-all: $(BIN)/rvsrv $(BIN)/rvd $(BIN)/rvtrace
+all: $(BIN)/rvsrv $(BIN)/rvd $(BIN)/rvtrace $(BIN)/runrvex
 
 RVSRV_SRCS  = $(SRC)/rvsrv/*.c
 RVSRV_SRCS += $(SRC)/rvsrv/pcie/*.c
@@ -39,4 +39,7 @@ RTRACE_SOURCES += $(SRC)/common/*.c
 $(BIN)/rvtrace: $(RTRACE_SOURCES)
 	mkdir -p $(BIN)
 	$(CC) $(CFLAGS) -Wall -I $(SRC)/common -o $@ $^
+
+$(BIN)/runrvex: runrvex/runrvex.py
+	ln -rfs $< $@
 
