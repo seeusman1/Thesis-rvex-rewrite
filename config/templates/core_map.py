@@ -1,3 +1,4 @@
+from collections import OrderedDict
 
 def raise_(ex):
     raise ex
@@ -21,6 +22,34 @@ class Context:
 
     def step(self):
         self._rvd.writeInt(self._DCR, 1, 0x0a)
+    
+    def get_perf_counter(self, addr):
+        d = self._rvd.readIntMultiple(addr, 4, 2)
+        if len(d) != 2:
+            raise RuntimeError('read access failed')
+        lo = d[0]
+        hi = d[1]
+        res = 0
+        if self._core.FIELD_EXT0_P > 4:
+            if (lo >> 24) != (hi & 0xff):
+                res = hi << 24
+            else:
+                res = (hi << 24) | lo
+        else:
+            res = lo
+        return res
+    
+    def get_perf_counters(self):
+        """Return a dict mapping counter names to values.
+        """
+        names = ['CYC', 'CYCH', 'STALL', 'STALLH', 'BUN', 'BUNH', 'SYL', 'SYLH',
+                 'NOP', 'NOPH', 'IACC', 'IACCH', 'IMISS', 'IMISSH', 'DRACC',
+                 'DRACCH', 'DRMISS', 'DRMISSH', 'DWACC', 'DWACCH', 'DWMISS',
+                 'DWMISSH', 'DBYPASS', 'DBYPASSH', 'DWBUF', 'DWBUFH']
+        result = OrderedDict()
+        for name in names:
+            result[name] = self.get_perf_counter(getattr(self, '_{}'.format(name)))
+        return result
 
     class GPREGS:
 
@@ -33,8 +62,9 @@ class Context:
         def __setitem__(self, index, value):
             self._c._rvd.writeInt(self._c._CREG_GPREG + index*4, 4, value)
 
-    def __init__(self, rvd, base_address, index):
+    def __init__(self, rvd, core, base_address, index):
         self._rvd = rvd
+        self._core = core
         self._CREG = base_address
         self._CUR_CONTEXT = index
 
@@ -61,7 +91,7 @@ class Core:
         self._rvd = rvd
         self._CREG_GLOB = base_address
 @CORE_REGISTER_ADDR
-        self.context = [Context(rvd, base_address, x) for x in
+        self.context = [Context(rvd, self, base_address, x) for x in
                 range(self.FIELD_DCFG_NC+1)]
         return
 

@@ -105,7 +105,7 @@ class Rvd:
         bytes_sent = 0
         while len(data) - bytes_sent > 0:
             # offset from start of alignment
-            offset = address % chunk_size
+            offset = (address + bytes_sent) % chunk_size
             # number of bytes in chunk
             bytes_to_send = min(chunk_size - offset, len(data) - bytes_sent)
             chunk = data[bytes_sent:bytes_sent + bytes_to_send]
@@ -135,35 +135,54 @@ class Rvd:
 
 
     def read(self, address, count):
-        """Reads count bytes from address and return a tupple containing the
-        result in the following format:
-        (code, addr, count, data)
-        Where code is either 'OK', or 'Fault', addr is the address given as
-        input, count is the number of bytes that were to be read, and data
-        contains the bytes read in the case of success, and the error code
-        in the case of failure.
+        """Reads count bytes from address over rvd. 
+        
+        The read request is split into 4096 byte alligned chunks, and the
+        result is return as a bytearray. If the length of the result is not
+        equal to count, it means there was an error while reading.
         """
-        command = "Read,{:08x},{:d};".format(address, count).encode('utf-8')
-        res = self.socket.send(command)
-        res = self.recv_all()
-        match = re.match(r'OK,Read,(?P<mode>OK|Fault),(?P<addr>[0-9a-zA-Z]+),'
-                r'(?P<count>[0-9]+),(?P<data>[0-9a-zA-Z]+);', res)
-        if not match:
-            return None
-        return (match.group('mode'), int(match.group('addr'), 16),
-                int(match.group('count')),
-                bytearray.fromhex(match.group('data')))
+        chunk_size = 4*1024
+        result = bytearray()
+        while count - len(result) > 0:
+            offset = (address + len(result)) % chunk_size
+            bytes_to_read = min(chunk_size - offset, count - len(result))
+            command = "Read,{:08x},{:d};".format(address + len(result),
+                                                 bytes_to_read).encode('utf-8')
+            res = self.socket.send(command)
+            res = self.recv_all()
+            match = re.match(r'OK,Read,(?P<mode>OK|Fault),(?P<addr>[0-9a-zA-Z]+),'
+                    r'(?P<count>[0-9]+),(?P<data>[0-9a-zA-Z]+);', res)
+            if not match:
+                return None
+            if not match.group('mode') == 'OK':
+                break
+            result.extend(bytearray.fromhex(match.group('data')))
+        return result
 
-    def readInt(self, address, count):
-        """Reads count bytes from the given address and converts the result
+    def readInt(self, address, size):
+        """Reads size bytes from the given address and converts the result
         into an integer value before returning it.
         Raises an exception if the read access failed.
         """
-        res = self.read(address, count)
-        if res[0] == 'OK':
-            return int.from_bytes(res[3], byteorder='big')
-        raise RuntimeError('read access failed: {}'.format(res))
-
+        res = self.read(address, size)
+        if len(res) == size:
+            return int.from_bytes(res, byteorder='big')
+        raise RuntimeError('read access failed')
+    
+    def readIntMultiple(self, address, size, count):
+        """Read count ints of size bytes from address.
+        
+        First read size*count bytes from address, and then convert into count
+        ints each of size bytes.
+        Returns a list of ints.
+        """
+        res = self.read(address, size*count)
+        if not len(res) == size*count:
+            raise RuntimeError('read access failed')
+        result = []
+        for i in range(count):
+            result.append(int.from_bytes(res[i*size:(i+1)*size], byteorder='big'))
+        return result
 
     def __init__(self, host='localhost', port=21079):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

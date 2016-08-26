@@ -46,8 +46,14 @@ def allDone(core):
     return True
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('filename')
+    parser = argparse.ArgumentParser(description="""Run programs on FPGA as if
+                                     they were run in the simulator.""")
+    parser.add_argument('--init',
+                        type=lambda x: int(x, 16),
+                        default = 0,
+                        help='Initial rVEX configuration.')
+    parser.add_argument('filename',
+                        help='Program to run on rVEX.')
     parser.add_argument('child_args', nargs=argparse.REMAINDER)
     args = parser.parse_args()
     rvd = Rvd()
@@ -98,6 +104,11 @@ def main():
             if allDone(core):
                 break
         s.close()
+        for context in core:
+            perf = context.get_perf_counters()
+            print('Context:', context._CUR_CONTEXT)
+            for counter in perf.keys():
+                print('\t{}: {}'.format(counter, perf[counter]))
         print('end', datetime.datetime.now(), file=sys.stderr)
 
 
