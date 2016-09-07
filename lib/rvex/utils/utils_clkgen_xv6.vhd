@@ -74,21 +74,21 @@ entity utils_clkgen is
     
     -- Initial MMCM state.
     INITIAL_POWERDOWN           : std_logic := '0';
-    INITIAL_RESET               : std_logic := '0';
+    INITIAL_RESET               : std_logic := '1';
     
     -- VCO divider (1-80) and multiplier (5-64). The VCO frequency must be
     -- within 600 and 1200 MHz.
     VCO_DIVIDE                  : natural := 10; -- 20 MHz
-    VCO_MULT                    : natural := 60; -- 30=600MHz, 60=1200 MHz
+    VCO_MULT                    : natural := 45; -- 30=600MHz, 60=1200 MHz
     
     -- Initial divide amounts for CLKOUT outputs (1-128).
-    CLKOUT0_DIVIDE              : natural := 1;
-    CLKOUT1_DIVIDE              : natural := 1;
-    CLKOUT2_DIVIDE              : natural := 1;
-    CLKOUT3_DIVIDE              : natural := 1;
-    CLKOUT4_DIVIDE              : natural := 1;
-    CLKOUT5_DIVIDE              : natural := 1;
-    CLKOUT6_DIVIDE              : natural := 1;
+    CLKOUT0_DIVIDE              : natural := 90;
+    CLKOUT1_DIVIDE              : natural := 90;
+    CLKOUT2_DIVIDE              : natural := 90;
+    CLKOUT3_DIVIDE              : natural := 90;
+    CLKOUT4_DIVIDE              : natural := 90;
+    CLKOUT5_DIVIDE              : natural := 90;
+    CLKOUT6_DIVIDE              : natural := 90;
     
     -- Initial phase offsets for CLKOUT outputs (-360.000-360.000).
     CLKOUT0_PHASE               : real := 0.0;

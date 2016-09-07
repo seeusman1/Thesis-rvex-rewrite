@@ -61,6 +61,12 @@ use rvex.bus_pkg.all;
 -------------------------------------------------------------------------------
 entity hsi_fpga is
 --=============================================================================
+  generic (
+    
+    -- Reference clock period in ns.
+    CLK_REF_PERIOD              : real := 5.0 -- 200 MHz
+    
+  );
   port (
     
     ---------------------------------------------------------------------------
@@ -97,19 +103,23 @@ entity hsi_fpga is
     ---------------------------------------------------------------------------
     -- Internal signals
     ---------------------------------------------------------------------------
+    -- MMCM reference clock. The period for this clock must be specified in the
+    -- generics.
+    clk_ref                     : in  std_logic;
+    
     -- Internal bus clock.
     clk                         : in  std_logic;
     
     -- Active-high FPGA reset.
-    reset                       : out std_logic;
+    reset                       : in  std_logic;
     
     -- Master bus interface.
-    asic2fpga_mem               : in  bus_mst2slv_type;
-    fpga2asic_mem               : out bus_slv2mst_type;
+    asic2fpga_mem               : out bus_mst2slv_type;
+    fpga2asic_mem               : in  bus_slv2mst_type;
     
-    -- Slave bus interface.
-    fpga2asic_ctrl              : out bus_mst2slv_type;
-    asic2fpga_ctrl              : in  bus_slv2mst_type;
+    -- Slave bus interface (8 MB address space needed).
+    fpga2asic_ctrl              : in  bus_mst2slv_type;
+    asic2fpga_ctrl              : out bus_slv2mst_type;
     
     -- Peripheral interrupt signals, to be forwarded to the ASIC (unless the
     -- spf pins are used for other purposes).
@@ -122,9 +132,56 @@ end hsi_fpga;
 architecture Behavioral of hsi_fpga is
 --=============================================================================
   
+  -- Interface clock and active-high reset.
+  signal if_clk                 : std_logic;
+  signal if_reset               : std_logic;
+  
+  -- MMCM access bus.
+  signal switch2mmcm            : bus_mst2slv_type;
+  signal mmcm2switch            : bus_slv2mst_type;
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
+  
+  -----------------------------------------------------------------------------
+  -- Clock generator
+  -----------------------------------------------------------------------------
+  clkgen: entity work.hsi_fpga_clkgen
+    generic map (
+      CLK_REF_PERIOD            => CLK_REF_PERIOD
+    )
+    port map (
+      p_clk_do                  => p_clk_do,
+      if_reset                  => if_reset,
+      if_clk                    => if_clk,
+      clk_ref                   => clk_ref,
+      reset                     => reset,
+      clk                       => clk,
+      bus2mmcm                  => switch2mmcm,
+      mmcm2bus                  => mmcm2switch
+    );
+  
+  -----------------------------------------------------------------------------
+  -- Bus switch
+  -----------------------------------------------------------------------------
+  bus_switch entity work.hsi_fpga_switch
+    port map (
+      reset                     => reset,
+      clk                       => clk,
+      if_reset                  => if_reset,
+      if_clk                    => if_clk,
+      switch2busm               => asic2fpga_mem,
+      busm2switch               => fpga2asic_mem,
+      buss2switch               => fpga2asic_ctrl,
+      switch2buss               => asic2fpga_ctrl,
+      switch2mmcm               => switch2mmcm,
+      mmcm2switch               => mmcm2switch,
+      para2switch               => 
+      switch2para               => 
+      switch2seri               => 
+      seri2switch               => 
+    );
   
 end Behavioral;
 
