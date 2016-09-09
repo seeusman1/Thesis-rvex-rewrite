@@ -89,15 +89,14 @@ class Rvd:
         res = self.recv_all()
         match = re.match(r'OK,Stop;', res)
         if not match:
-            return None
+            return False
         return True
 
 
     def write(self, address, data):
         """Write the bytearray data to rvsrv.
-        Returns the number of bytes successfully written, or None if the server
-        did not respond.
-        
+        Returns the number of bytes successfully written.
+
         Split the data into chunks of size 4096 before sending, because that is
         what rvsrv expects.
         """
@@ -117,7 +116,7 @@ class Rvd:
             match = re.match(r'OK,Write,(?P<mode>OK|Fault),(?P<addr>[0-9a-zA-Z]+),'+
                     '(?P<count>[0-9]+)(?:,(?P<data>[0-9a-zA-Z]+))?;', res)
             if not match:
-                return None
+                break
             if not match.group('mode') == 'OK':
                 break
             bytes_sent += len(chunk)
@@ -135,8 +134,8 @@ class Rvd:
 
 
     def read(self, address, count):
-        """Reads count bytes from address over rvd. 
-        
+        """Reads count bytes from address over rvd.
+
         The read request is split into 4096 byte alligned chunks, and the
         result is return as a bytearray. If the length of the result is not
         equal to count, it means there was an error while reading.
@@ -153,7 +152,7 @@ class Rvd:
             match = re.match(r'OK,Read,(?P<mode>OK|Fault),(?P<addr>[0-9a-zA-Z]+),'
                     r'(?P<count>[0-9]+),(?P<data>[0-9a-zA-Z]+);', res)
             if not match:
-                return None
+                break
             if not match.group('mode') == 'OK':
                 break
             result.extend(bytearray.fromhex(match.group('data')))
@@ -168,10 +167,10 @@ class Rvd:
         if len(res) == size:
             return int.from_bytes(res, byteorder='big')
         raise RuntimeError('read access failed')
-    
+
     def readIntMultiple(self, address, size, count):
         """Read count ints of size bytes from address.
-        
+
         First read size*count bytes from address, and then convert into count
         ints each of size bytes.
         Returns a list of ints.
