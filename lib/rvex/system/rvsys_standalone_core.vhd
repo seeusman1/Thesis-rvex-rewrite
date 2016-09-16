@@ -116,6 +116,14 @@ entity rvsys_standalone_core is
     -- doing anything.
     rvsa2rctrl_idle             : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
     
+    -- Active high break output. This is asserted when the core is waiting for
+    -- an externally handled breakpoint, or the B flag in DCR is otherwise set.
+    rvsa2rctrl_break            : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
+    
+    -- Active high trace stall output. This can be used to stall other cores
+    -- and timers simultaneously in order to be able to trace more accurately.
+    rvsa2rctrl_traceStall       : out std_logic;
+    
     -- Active high context reset input. When high, the context control
     -- registers (including PC, done and break flag) will be reset.
     rctrl2rvsa_reset            : in  std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0) := (others => '0');
@@ -244,6 +252,8 @@ begin -- architecture
       rv2rctrl_irqAck           => rvsa2rctrl_irqAck,
       rctrl2rv_run              => rctrl2rvsa_run,
       rv2rctrl_idle             => rvsa2rctrl_idle,
+      rv2rctrl_break            => rvsa2rctrl_break,
+      rv2rctrl_traceStall       => rvsa2rctrl_traceStall,
       rctrl2rv_reset            => rctrl2rvsa_reset,
       rctrl2rv_resetVect        => rctrl2rvsa_resetVect,
       rv2rctrl_done             => rvsa2rctrl_done,

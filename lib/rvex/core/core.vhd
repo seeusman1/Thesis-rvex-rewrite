@@ -310,6 +310,14 @@ entity core is
     -- doing anything.
     rv2rctrl_idle               : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
+    -- Active high break output. This is asserted when the core is waiting for
+    -- an externally handled breakpoint, or the B flag in DCR is otherwise set.
+    rv2rctrl_break              : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Active high trace stall output. This can be used to stall other cores
+    -- and timers simultaneously in order to be able to trace more accurately.
+    rv2rctrl_traceStall         : out std_logic;
+    
     -- Active high context reset input. When high, the context control
     -- registers (including PC, done and break flag) will be reset.
     rctrl2rv_reset              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
@@ -752,6 +760,9 @@ begin -- architecture
   -- Forward the internal stall signal to the memory.
   rv2mem_stallOut <= stall;
   
+  -- Forward the trace stall signal to the run control system.
+  rv2rctrl_traceStall <= traceStall;
+  
   -----------------------------------------------------------------------------
   -- Decode memory faults
   -----------------------------------------------------------------------------
@@ -1154,6 +1165,9 @@ begin -- architecture
       cxreg2creg_readData           => cxreg2creg_readData
       
     );
+  
+  -- Connect the break output to the DCR.B registers.
+  rv2rctrl_break <= cxreg2cxplif_brk;
   
   -----------------------------------------------------------------------------
   -- Instantiate the global (common to all contexts) control register logic

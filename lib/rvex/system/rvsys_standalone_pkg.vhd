@@ -85,6 +85,11 @@ package rvsys_standalone_pkg is
     -- (peripheral space).
     cache_bypassRange           : addrRange_type;
     
+    -- Whether to inject latency cycles in a cached system. When enabled, the
+    -- memory access latency is runtime configurable from 2 to 255 cycles. When
+    -- disabled, there is no additional latency.
+    inject_latency              : boolean;
+    
     -- Depth of the instruction memory, represented as log2(number_of_bytes).
     imemDepthLog2B              : natural;
     
@@ -117,6 +122,7 @@ package rvsys_standalone_pkg is
     cache_enable                => false,
     cache_config                => CACHE_DEFAULT_CONFIG,
     cache_bypassRange           => addrRange(match => "1-------------------------------"),
+    inject_latency              => true,
     imemDepthLog2B              => 16,
     dmemDepthLog2B              => 16,
     traceDepthLog2B             => 13,
@@ -148,6 +154,7 @@ package rvsys_standalone_pkg is
     cache_config                : cache_generic_config_type := CACHE_DEFAULT_CONFIG;
     cache_config_valid          : boolean := false;
     cache_bypassRange           : addrRange_type := ADDR_RANGE_UNDEF;
+    inject_latency              : integer := -1;
     imemDepthLog2B              : integer := -1;
     dmemDepthLog2B              : integer := -1;
     traceDepthLog2B             : integer := -1;
@@ -175,6 +182,7 @@ package body rvsys_standalone_pkg is
     cache_config                : cache_generic_config_type := CACHE_DEFAULT_CONFIG;
     cache_config_valid          : boolean := false;
     cache_bypassRange           : addrRange_type := ADDR_RANGE_UNDEF;
+    inject_latency              : integer := -1;
     imemDepthLog2B              : integer := -1;
     dmemDepthLog2B              : integer := -1;
     traceDepthLog2B             : integer := -1;
@@ -193,6 +201,7 @@ package body rvsys_standalone_pkg is
     if cache_enable /= -1                      then cfg.cache_enable      := boolean'val(cache_enable);      end if;
     if cache_config_valid                      then cfg.cache_config      := cache_config;                   end if;
     if cache_bypassRange /= ADDR_RANGE_UNDEF   then cfg.cache_bypassRange := cache_bypassRange;              end if;
+    if inject_latency /= -1                    then cfg.inject_latency    := boolean'val(inject_latency);    end if;
     if imemDepthLog2B >= 0                     then cfg.imemDepthLog2B    := imemDepthLog2B;                 end if;
     if dmemDepthLog2B >= 0                     then cfg.dmemDepthLog2B    := dmemDepthLog2B;                 end if;
     if traceDepthLog2B >= 0                    then cfg.traceDepthLog2B   := traceDepthLog2B;                end if;

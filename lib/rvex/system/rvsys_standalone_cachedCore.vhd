@@ -117,6 +117,14 @@ entity rvsys_standalone_cachedCore is
     -- doing anything.
     rvsa2rctrl_idle             : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
     
+    -- Active high break output. This is asserted when the core is waiting for
+    -- an externally handled breakpoint, or the B flag in DCR is otherwise set.
+    rvsa2rctrl_break            : out std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0);
+    
+    -- Active high trace stall output. This can be used to stall other cores
+    -- and timers simultaneously in order to be able to trace more accurately.
+    rvsa2rctrl_traceStall       : out std_logic;
+    
     -- Active high context reset input. When high, the context control
     -- registers (including PC, done and break flag) will be reset.
     rctrl2rvsa_reset            : in  std_logic_vector(2**CFG.core.numContextsLog2-1 downto 0) := (others => '0');
@@ -278,6 +286,8 @@ begin -- architecture
       rv2rctrl_irqAck           => rvsa2rctrl_irqAck,
       rctrl2rv_run              => rctrl2rvsa_run,
       rv2rctrl_idle             => rvsa2rctrl_idle,
+      rv2rctrl_break            => rvsa2rctrl_break,
+      rv2rctrl_traceStall       => rvsa2rctrl_traceStall,
       rctrl2rv_reset            => rctrl2rvsa_reset,
       rctrl2rv_resetVect        => rctrl2rvsa_resetVect,
       rv2rctrl_done             => rvsa2rctrl_done,
@@ -452,7 +462,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- This block artificially delays bus requests to simulate a high-latency
   -- memory environment for the cache.
-  bus_latency_extend_block: block is
+  bus_latency_extend_block: if CFG.inject_latency generate
     
     -- State register. The actual bus requests are made in state 0, the rest of
     -- the states are just used to lengthen the ack based on the latency
@@ -560,7 +570,15 @@ begin -- architecture
       and  (dbg2rv_writeMask(3) = '1')
       else latency;
     
-  end block;
+  end generate;
+  
+  -- If latency injection is disabled, connect the external bus directly to the
+  -- arbiter master bus.
+  no_latency_block: if not CFG.inject_latency generate
+  begin
+    rv2mem <= cache2bus_arb;
+    bus2cache_arb <= mem2rv;
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Connect the debug bus trivially
