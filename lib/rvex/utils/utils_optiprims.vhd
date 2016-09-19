@@ -211,7 +211,8 @@ begin
     for i1 in -1 to WIDTH-1 loop
       for i2 in -1 to WIDTH-1 loop
         for i3 in 0 to WIDTH-1 loop
-          inp <= (i3 => '1', others => '0');
+          inp <= (others => '0');
+          inp(i3) <= '1';
           if i2 >= 0 then
             inp(i2) <= '1';
           end if;
@@ -403,15 +404,21 @@ begin
   outp <= outl;
   
   -- Generate the any signal.
-  any_wideor_inst: entity work.utils_wideor
-    generic map (
-      WIDTH => NUM_LOG2 + 1
-    )
-    port map (
-      inp(NUM_LOG2 downto 1)  => outl,
-      inp(0)                  => inp(0),
-      outp                    => any
-    );
+  any_block: block is
+    signal or_inp : std_logic_vector(NUM_LOG2 downto 0);
+  begin
+    or_inp(NUM_LOG2 downto 1) <= outl;
+    or_inp(0)                 <= inp(0);
+    
+    any_wideor_inst: entity work.utils_wideor
+      generic map (
+        WIDTH => NUM_LOG2 + 1
+      )
+      port map (
+        inp                     => or_inp,
+        outp                    => any
+      );
+  end block;
   
 end architecture;
 
@@ -446,7 +453,8 @@ begin
     for i1 in -1 to 2**NUM_LOG2-1 loop
       for i2 in -1 to 2**NUM_LOG2-1 loop
         for i3 in 0 to 2**NUM_LOG2-1 loop
-          inp <= (i3 => '1', others => '0');
+          inp <= (others => '0');
+          inp(i3) <= '1';
           if i2 >= 0 then
             inp(i2) <= '1';
           end if;
@@ -579,15 +587,21 @@ begin
   -- Generate the any signal. We note that the MSB of the output is set if any
   -- of the upper half of the input bits are high, so we only need to check the
   -- lower half and the MSB of the output to get the any signal.
-  any_wideor_inst: entity work.utils_wideor
-    generic map (
-      WIDTH => 2**NUM_LOG2/2 + 1
-    )
-    port map (
-      inp(2**NUM_LOG2/2)            => outl(NUM_LOG2-1),
-      inp(2**NUM_LOG2/2-1 downto 0) => inp(2**NUM_LOG2/2-1 downto 0),
-      outp                          => any
-    );
+  any_block: block is
+    signal or_inp : std_logic_vector(2**NUM_LOG2/2 downto 0);
+  begin
+    or_inp(2**NUM_LOG2/2)            <= outl(NUM_LOG2-1);
+    or_inp(2**NUM_LOG2/2-1 downto 0) <= inp(2**NUM_LOG2/2-1 downto 0);
+    
+    any_wideor_inst: entity work.utils_wideor
+      generic map (
+        WIDTH => 2**NUM_LOG2/2 + 1
+      )
+      port map (
+        inp                     => or_inp,
+        outp                    => any
+      );
+  end block;
   
 end architecture;
 
