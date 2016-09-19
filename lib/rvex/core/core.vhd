@@ -753,10 +753,18 @@ begin -- architecture
       stall <= (others => s);
     else
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-        stall(laneGroup) <= mem2rv_stallIn(laneGroup)
-                         or debugBusStall(laneGroup)
-                         or traceStall
-                         or rctrl2rv_traceStall;
+        if CFG.stallInactive then
+          stall(laneGroup) <= mem2rv_stallIn(laneGroup)      -- Stall due to cache/memory.
+                           or debugBusStall(laneGroup)       -- Stall during debug bus accesses.
+                           or traceStall                     -- Stall while we are tracing.
+                           or rctrl2rv_traceStall            -- Stall if other cores are tracing.
+                           or not cfg2any_active(laneGroup); -- Stall inactive lane groups.
+        else
+          stall(laneGroup) <= mem2rv_stallIn(laneGroup)
+                           or debugBusStall(laneGroup)
+                           or traceStall
+                           or rctrl2rv_traceStall;
+        end if;
       end loop;
     end if;
   end process;

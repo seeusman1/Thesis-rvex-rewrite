@@ -187,6 +187,14 @@ package core_opcodeDatapath_pkg is
     op3BranchRegs               : std_logic;
     brFmt                       : std_logic;
     
+    -- Latch enable flags for the functional unit inputs. When disabled and
+    -- power-saving latches are enabled at design-time, the inputs to the
+    -- respective functional units are latched/disabled to prevent as much
+    -- switching activity as possible.
+    enableALU                   : std_logic;
+    enableMul                   : std_logic;
+    enableMem                   : std_logic;
+    
     -- Special instruction flags. These are set only when the respective
     -- instruction is executed.
     isLIMMH                     : std_logic;
