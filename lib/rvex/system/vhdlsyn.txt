@@ -1,4 +1,5 @@
 rvsys_grlib_pkg.vhd
+rvsys_grlib_rctrl.vhd
 rvsys_grlib.vhd
 rvsys_standalone_pkg.vhd
 rvsys_standalone_core.vhd

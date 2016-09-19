@@ -318,6 +318,9 @@ entity core is
     -- and timers simultaneously in order to be able to trace more accurately.
     rv2rctrl_traceStall         : out std_logic;
     
+    -- Trace stall input. This just stalls all lane groups when asserted.
+    rctrl2rv_traceStall         : in  std_logic := '0';
+    
     -- Active high context reset input. When high, the context control
     -- registers (including PC, done and break flag) will be reset.
     rctrl2rv_reset              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
@@ -743,7 +746,7 @@ begin -- architecture
     variable s : std_logic;
   begin
     if CFG.unifiedStall then
-      s := traceStall;
+      s := traceStall or rctrl2rv_traceStall;
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
         s := s or mem2rv_stallIn(laneGroup) or debugBusStall(laneGroup);
       end loop;
@@ -752,7 +755,8 @@ begin -- architecture
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
         stall(laneGroup) <= mem2rv_stallIn(laneGroup)
                          or debugBusStall(laneGroup)
-                         or traceStall;
+                         or traceStall
+                         or rctrl2rv_traceStall;
       end loop;
     end if;
   end process;

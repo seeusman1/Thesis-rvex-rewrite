@@ -241,6 +241,9 @@ entity periph_irq is
     -- is waiting for an externally handled breakpoint.
     rv2irq_break                : in  std_logic_vector(NUM_CONTEXTS-1 downto 0) := (others => '0');
     
+    -- Trace stall input. When this is asserted, the timer is stopped.
+    rv2irq_traceStall           : in  std_logic := '0';
+    
     -- Active high context reset output. When high, the context control
     -- registers (including PC, done and break flag) should be reset.
     irq2rv_reset                : out std_logic_vector(NUM_CONTEXTS-1 downto 0);
@@ -364,7 +367,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Interrupt handling
   -----------------------------------------------------------------------------
-  irq_handlers: for ctxt in 0 to NUM_CONTEXTS generate
+  irq_handlers: for ctxt in 0 to NUM_CONTEXTS-1 generate
     constant PRIO_DEC_WIDTH   : natural := NUM_IRQ_LOG2+CONFIG_PRIO_ENABLE;
     
     -- Priority decoder signals. The priority decoder is taken from the
@@ -546,7 +549,7 @@ begin -- architecture
   begin
     timer_compare: entity work.utils_wideor
       generic map (
-        WIDTH     => timer_type'length
+        WIDTH     => timer_type'length - 1
       )
       port map (
         inp       => timer_value_r(timer_type'HIGH downto 1),
@@ -561,7 +564,8 @@ begin -- architecture
   brk_broad_gen: if BREAKPOINT_BROADCASTING = 1 generate
   begin
     process (
-      rv2irq_break, brkkBroadcastCtxt_r, brkkBroadcastTimer_r
+      rv2irq_break, brkkBroadcastCtxt_r, brkkBroadcastTimer_r,
+      rv2irq_traceStall
     ) is
       variable flag : std_logic;
     begin
@@ -579,8 +583,8 @@ begin -- architecture
         irq2rv_run(rxCtxt) <= flag;
       end loop;
       
-      -- Broadcasr from contexts to the timer.
-      flag := '1';
+      -- Broadcast from the contexts and the trace stall input to the timer.
+      flag := not rv2irq_traceStall;
       for txCtxt in 0 to NUM_CONTEXTS-1 loop
         if brkkBroadcastTimer_r(txCtxt) = '1' then
           if rv2irq_break(txCtxt) = '1' then
@@ -597,7 +601,7 @@ begin -- architecture
   no_brk_broad_gen: if BREAKPOINT_BROADCASTING = 1 generate
   begin
     irq2rv_run <= (others => '1');
-    timer_run <= '1';
+    timer_run <= not rv2irq_traceStall;
   end generate;
   
   -----------------------------------------------------------------------------
