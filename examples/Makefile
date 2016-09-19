@@ -431,12 +431,12 @@ _start.o-%: default_start.o
 
 # How to link;
 .SECONDEXPANSION:
-%.elf: _start.o-% %.o $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$@)
+%.elf: _start.o-% %.o $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$@ $$(OBJECTS))
 	$(LD) _start.o $(filter-out $<,$^) -o $@ $(LDFLAGS)
 
 # How to link all BENCH_EXECUTABLES together so they all run from a single
 # main():
-all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES)) $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$(BENCH_EXECUTABLES))
+all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES)) $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$(BENCH_EXECUTABLES) $$(OBJECTS))
 	$(PYTHON3) $(GEN_EXAMPLES)/all-at-once.py $(BENCH_EXECUTABLES) > all-at-once.s
 	$(AS) $(ASFLAGS) all-at-once.s -o all-at-once.o
 	$(LD) _start.o all-at-once.o $(filter-out $<,$^) -o $@
