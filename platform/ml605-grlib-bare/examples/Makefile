@@ -7,7 +7,7 @@ RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 
 # Platform-specific executables.
-EXECUTABLES = graph
+EXECUTABLES = multi
 
 # Platform-specific object files to link.
 OBJECTS = platform.o
@@ -63,13 +63,6 @@ gdb-%: %.elf upload-%
 .PHONY: run-%
 run-%: start-%
 	$(RVD) -c0 exec WAIT_COMPLETE
-
-.PHONY: graph
-graph: graph.srec
-	$(RVD) -c4 -d"all:PRINT_STATE{1}" break
-	$(RVD) -c4 upload srec $< MEM
-	$(RVD) -c4 -d"all:PRINT_STATE{1}" reset
-	$(RVD) -c4 write CREG 0x80000000
 
 .PHONY: run-all
 run-all: $(patsubst %,run-%,$(BENCH_EXECUTABLES))

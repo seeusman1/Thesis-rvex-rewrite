@@ -598,7 +598,7 @@ begin -- architecture
   end generate;
   
   -- If breakpoint broadcasting is disabled, tie all the run signals high.
-  no_brk_broad_gen: if BREAKPOINT_BROADCASTING = 1 generate
+  no_brk_broad_gen: if BREAKPOINT_BROADCASTING /= 1 generate
   begin
     irq2rv_run <= (others => '1');
     timer_run <= not rv2irq_traceStall;
@@ -672,7 +672,7 @@ begin -- architecture
         -- constantly requests interrupts.
         if TIMER_BITS > 1 then
           if timer_run = '1' then
-            if unsigned(timer_reload_r(TIMER_BITS-1 downto 1)) = 0 then
+            if timer_gtOne = '0' then
               if timer_value_r(0) = '1' then
                 
                 -- Request the timer interrupt.
@@ -835,7 +835,7 @@ begin -- architecture
                   if we = '1' then
                     irqPrio_r(ctxt) <= wdat(perIRQ_type'range);
                   end if;
-                  rdat(perIRQ_type'range) := irqLevel_r(ctxt);
+                  rdat(perIRQ_type'range) := irqPrio_r(ctxt);
                 end if;
                 
               -- ICR_ENAn
