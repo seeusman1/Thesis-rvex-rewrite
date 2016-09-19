@@ -30,7 +30,65 @@ int rvex_fail(const char *str);
 /* INTERRUPTS                                                                 */
 /******************************************************************************/
 
-// TODO
+// Interrupt controller interface.
+typedef struct {
+  unsigned int brbro;
+  unsigned int rvect;
+  unsigned int level;
+  unsigned int prio;
+  unsigned int ena;
+  unsigned int disa;
+  unsigned int pend;
+  unsigned int clear;
+} irqctrl_ctxt_t;
+
+typedef struct {
+  unsigned int done;
+  unsigned int idle;
+  unsigned int brk;
+  unsigned int caps;
+  unsigned int RESERVED_A[2];
+  unsigned int period;
+  unsigned int time;
+  unsigned int RESERVED_B[248];
+  irqctrl_ctxt_t c[31];
+} irqctrl_t;
+
+#define PLAT_IRQCTRL ((volatile irqmp_t*)0xD2000000)
+
+// Interrupt sources.
+#define IRQ_TICK      1
+#define IRQ_DBG_UART  2
+
+/**
+ * Registers the specified interrupt handler function for the specified IRQ.
+ * Only one handler can be registered at a time. data is passed to the handler.
+ */
+void plat_irq_register(
+  int irq,
+  void (*handler)(unsigned long data),
+  unsigned long data
+);
+
+/**
+ * Enables or masks an interrupt.
+ */
+void plat_irq_enable(int irq, int enable);
+
+/**
+ * Returns whether the specified interrupt is pending.
+ */
+int plat_irq_ispending(int irq);
+
+/**
+ * Clears a pending interrupt.
+ */
+void plat_irq_clear(int irq);
+
+/**
+ * Forces the specified interrupt on the specified context.
+ */
+void plat_irq_force(int irq, int context);
 
 
 /******************************************************************************/
@@ -76,3 +134,5 @@ int plat_serial_write(int iface, const void *buf, int count);
  */
 int plat_serial_read(int iface, void *buf, int count);
 
+
+#endif

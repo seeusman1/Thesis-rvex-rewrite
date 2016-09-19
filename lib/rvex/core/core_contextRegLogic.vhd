@@ -914,7 +914,7 @@ begin -- architecture                                                           
           cr_sccr_r_r(ctxt) <= bool2bit(int2bool(0));
           cr_sccr_i_r(ctxt) <= bool2bit(int2bool(0));
           cr_lr_lr_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
-          cr_pc_pc_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
+          cr_pc_pc_r(ctxt) <= rctrl2cxreg_resetVect(ctxt);
           cr_th_th_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_ph_ph_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
           cr_tp_tp_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
@@ -1015,7 +1015,7 @@ begin -- architecture                                                           
             cr_sccr_r_r(ctxt) <= bool2bit(int2bool(0));
             cr_sccr_i_r(ctxt) <= bool2bit(int2bool(0));
             cr_lr_lr_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
-            cr_pc_pc_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
+            cr_pc_pc_r(ctxt) <= rctrl2cxreg_resetVect(ctxt);
             cr_th_th_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             cr_ph_ph_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));
             cr_tp_tp_r(ctxt) <= std_logic_vector(to_unsigned(0, 32));

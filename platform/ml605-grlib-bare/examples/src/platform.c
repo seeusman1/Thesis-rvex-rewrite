@@ -17,7 +17,87 @@ int rvex_fail(const char *str)    { plat_serial_puts(0, str);       _stop(); }
 /* INTERRUPTS                                                                 */
 /******************************************************************************/
 
-// TODO
+#define IRQ_COUNT 32
+#define CTXT_COUNT 32
+
+static void (*volatile irq_handlers[CTXT_COUNT * IRQ_COUNT])(unsigned long data);
+static unsigned long irq_handlers_data[CTXT_COUNT * IRQ_COUNT];
+
+/**
+ * Interrupt callback from startup.
+ */
+void interrupt(int irq) {
+  
+  // Unpack the IRQ data.
+  int idx = irq & 0x1F;
+  int level = irq & 0x3F;
+  int core = (irq >> 10) & 0x1F;
+  int h = core * IRQ_COUNT + idx;
+  void (*handler)(unsigned long data) = irq_handlers[h];
+  
+  // Continue processing if there is a handler.
+  if (handler) {
+    
+    // Read the current interrupt level and set the new level. This allows the
+    // handler to re-enable interrupts safely if nesting is enabled in
+    // hardware; higher-priority interrupts will then nest.
+    int prev_level = PLAT_IRQCTRL->level;
+    PLAT_IRQCTRL->level = level;
+    
+    // Run the interrupt handler.
+    handler(irq_handlers_data[h]);
+    
+    // Make sure interrupts are disabled, then restore the interrupt level.
+    CR_CCR = CR_CCR_IEN_C;
+    PLAT_IRQCTRL->level = prev_level;
+    
+  }
+}
+
+/**
+ * Registers the specified interrupt handler function for the specified IRQ.
+ * Only one handler can be registered at a time.
+ */
+void plat_irq_register(
+  int irq,
+  void (*handler)(unsigned long data),
+  unsigned long data
+) {
+  int h = CR_CID * IRQ_COUNT + irq;
+  irq_handlers[h] = handler;
+  irq_handlers_data[h] = data;
+}
+
+/**
+ * Enables or masks an interrupt.
+ */
+void plat_irq_enable(int irq, int enable) {
+  // TODO: need to modify the hardware such that COID specifies the context
+  // offset, not the lane group offset as it currently does. Then COID + CID
+  // specifies the interrupt controller index. Otherwise we can't know which
+  // register to access here.
+}
+
+/**
+ * Returns whether the specified interrupt is pending.
+ */
+int plat_irq_ispending(int irq) {
+  // TODO, see above.
+}
+
+/**
+ * Clears a pending interrupt.
+ */
+void plat_irq_clear(int irq) {
+  // TODO, see above.
+}
+
+/**
+ * Forces the specified interrupt on the specified context.
+ */
+void plat_irq_force(int irq, int context) {
+  // TODO, see above.
+}
 
 
 /******************************************************************************/
