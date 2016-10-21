@@ -54,7 +54,7 @@ typedef struct {
   irqctrl_ctxt_t c[31];
 } irqctrl_t;
 
-#define PLAT_IRQCTRL ((volatile irqmp_t*)0xD2000000)
+#define PLAT_IRQCTRL ((volatile irqctrl_t*)0xD2000000)
 
 // Interrupt sources.
 #define IRQ_TICK      1

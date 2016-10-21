@@ -24,7 +24,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
     variable v        : ddr_reg_type;   -- local variables for registers
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/config.vhd	2016-09-19 13:59:40.075064962 +0200
++++ work/config.vhd	2016-09-27 17:42:38.622446522 +0200
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -41,7 +41,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
  package config is
  -- Technology and synthesis options
    constant CFG_FABTECH : integer := virtex6;
-@@ -21,62 +30,38 @@ package config is
+@@ -21,62 +30,36 @@ package config is
    constant CFG_NOASYNC : integer := 0;
    constant CFG_SCAN : integer := 0;
  -- LEON3 processor core
@@ -104,22 +104,20 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  constant CFG_RVEX_CFG : rvex_grlib_generic_config_array(0 to CFG_NRVEX-1) := (
 +    
 +    -- Core 0 configuration
-+    0 => rvex_grlib_cfg(
++    others => rvex_grlib_cfg(
 +      core => rvex_cfg(
-+        numLanesLog2          => 3,
-+        numLaneGroupsLog2     => 2,
-+        numContextsLog2       => 2,
++        numLanesLog2          => 1,
++        numLaneGroupsLog2     => 0,
++        numContextsLog2       => 0,
 +        bundleAlignLog2       => 0,
 +        limmhFromPreviousPair => 0,
-+        traceEnable           => 1,
++        traceEnable           => 0,
 +        perfCountSize         => 4,
-+        cachePerfCountEnable  => 7
++        cachePerfCountEnable  => 1
 +      ), core_valid => true,
 +    
 +      -- Cache configuration
 +      cache => cache_cfg(
-+        --instrCacheLinesLog2 => 10, -- 1024*32 = 32 kiB per block, 128 kiB total
-+        --dataCacheLinesLog2  => 11  -- 2048*4 = 8 kiB per block, 32 kiB total
 +        instrCacheLinesLog2 => 9,  -- 512*32 = 16 kiB per block, 64 kiB total
 +        dataCacheLinesLog2  => 10  -- 1024*4 = 4 kiB per block, 16 kiB total
 +      ), cache_valid => true)
@@ -135,7 +133,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
    constant CFG_FPNPEN : integer := 0;
    constant CFG_AHBIO : integer := 16#FFF#;
    constant CFG_APBADDR : integer := 16#800#;
-@@ -84,84 +69,13 @@ package config is
+@@ -84,84 +67,13 @@ package config is
    constant CFG_AHB_MONERR : integer := 0;
    constant CFG_AHB_MONWAR : integer := 0;
    constant CFG_AHB_DTRACE : integer := 0;
@@ -2350,7 +2348,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/leon3mp.vhd	2016-09-19 13:59:40.083064897 +0200
++++ work/leon3mp.vhd	2016-09-27 17:42:17.658611344 +0200
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License
@@ -2360,7 +2358,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
  ------------------------------------------------------------------------------
  
  library ieee;
-@@ -45,808 +45,763 @@ library esa;
+@@ -45,808 +45,909 @@ library esa;
  use esa.memoryctrl.all;
  use work.config.all;
  use work.ml605.all;
@@ -2375,6 +2373,11 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +use rvex.core_pkg.all;
 +use rvex.cache_pkg.all;
 +use rvex.rvsys_grlib_pkg.all;
++-- pragma translate_off
++use rvex.utils_pkg.all;
++use rvex.simUtils_pkg.all;
++use rvex.simUtils_mem_pkg.all;
++-- pragma translate_on
 +library unisim;
 +use unisim.vcomponents.all;
 +library work;
@@ -2388,8 +2391,11 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 -    disas    : integer := CFG_DISAS;     -- Enable disassembly to console
 -    dbguart  : integer := CFG_DUART;     -- Print UART on console
 -    pclow    : integer := CFG_PCLOW;
-     SIM_BYPASS_INIT_CAL : string := "OFF"
-     );
+-    SIM_BYPASS_INIT_CAL : string := "OFF"
+-    );
++    SIM_BYPASS_INIT_CAL : string := "OFF";
++    DISABLE_DDR_SIM : boolean := false
++  );
    port (
 -    reset     : in    std_ulogic;
 -    errorn    : out   std_ulogic;
@@ -3496,19 +3502,6 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 -    emdc_pad : outpad generic map (level => cmos, voltage => x25v, tech => padtech)
 -      port map (emdc, etho.mdc);
 -  end generate;
--
-------------------------------------------------------------------------
-----  AHB ROM ----------------------------------------------------------
-------------------------------------------------------------------------
--
--  bpromgen : if CFG_AHBROMEN /= 0 generate
--    brom : entity work.ahbrom
--      generic map (hindex => 6, haddr => CFG_AHBRODDR, pipe => CFG_AHBROPIP)
--      port map ( rstn, clkm, ahbsi, ahbso(6));
--  end generate;
--  nobpromgen : if CFG_AHBROMEN = 0 generate
--     ahbso(6) <= ahbs_none;
--  end generate;
 +    
 +  end block;
 +  
@@ -3552,7 +3545,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +        CFG                     => CFG_RVEX_CFG(i),
 +        PLATFORM_TAG            => RVEX_PLATFORM_TAG,
 +        AHB_MASTER_INDEX_START  => LIND,
-+        CHECK_MEM               => true,
++        CHECK_MEM               => false,
 +        CHECK_MEM_FILE          => "ram.srec"
 +      )
 +      port map (
@@ -3578,31 +3571,17 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      );
  
 ------------------------------------------------------------------------
-----  AHB RAM ----------------------------------------------------------
+----  AHB ROM ----------------------------------------------------------
 ------------------------------------------------------------------------
 -
--  ahbramgen : if CFG_AHBRAMEN = 1 generate
--    ahbram0 : ahbram
--      generic map (hindex => 3, haddr => CFG_AHBRADDR, tech => CFG_MEMTECH,
--                   kbytes => CFG_AHBRSZ, pipe => CFG_AHBRPIPE)
--      port map (rstn, clkm, ahbsi, ahbso(3));
+-  bpromgen : if CFG_AHBROMEN /= 0 generate
+-    brom : entity work.ahbrom
+-      generic map (hindex => 6, haddr => CFG_AHBRODDR, pipe => CFG_AHBROPIP)
+-      port map ( rstn, clkm, ahbsi, ahbso(6));
+-  end generate;
+-  nobpromgen : if CFG_AHBROMEN = 0 generate
+-     ahbso(6) <= ahbs_none;
    end generate;
--  nram : if CFG_AHBRAMEN = 0 generate ahbso(3) <= ahbs_none; end generate;
--
-------------------------------------------------------------------------
-----  Test report module  ----------------------------------------------
-------------------------------------------------------------------------
--
---- pragma translate_off
--
--  test0 : ahbrep generic map (hindex => 4, haddr => 16#200#)
--	port map (rstn, clkm, ahbsi, ahbso(4));
--
---- pragma translate_on
--
-------------------------------------------------------------------------
-----  Drive unused bus elements  ---------------------------------------
-------------------------------------------------------------------------
 +  
 +  -- Merge the trace stall signals.
 +  trace_merge: process (rv2rctrl_traceStall) is
@@ -3628,9 +3607,15 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    reset <= not rstn;
 +    clk <= clkm;
  
--  nam1 : for i in (CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP) to NAHBMST-1 generate
--    ahbmo(i) <= ahbm_none;
--  end generate;
+------------------------------------------------------------------------
+----  AHB RAM ----------------------------------------------------------
+------------------------------------------------------------------------
+-
+-  ahbramgen : if CFG_AHBRAMEN = 1 generate
+-    ahbram0 : ahbram
+-      generic map (hindex => 3, haddr => CFG_AHBRADDR, tech => CFG_MEMTECH,
+-                   kbytes => CFG_AHBRSZ, pipe => CFG_AHBRPIPE)
+-      port map (rstn, clkm, ahbsi, ahbso(3));
 +    irqctrl: entity rvex.periph_irq
 +      generic map (
 +        BASE_ADDRESS            => X"D2000000",
@@ -3676,71 +3661,230 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  ------------------------------------------------------------------------------
 +  -- Memory controller
 +  ------------------------------------------------------------------------------
-+  
-+  -- MIG instantiation.
-+  ddr3ctrl: entity work.mig_37
-+    generic map (
-+      SIM_BYPASS_INIT_CAL       => SIM_BYPASS_INIT_CAL,
-+      CLKOUT_DIVIDE4            => work.config.CFG_MIG_CLK4
-+    )
-+    port map (
-+      clk_ref_p                 => clk_ref_p,
-+      clk_ref_n                 => clk_ref_n,
-+      ddr3_dq                   => ddr3_dq,
-+      ddr3_addr                 => ddr3_addr,
-+      ddr3_ba                   => ddr3_ba,
-+      ddr3_ras_n                => ddr3_ras_n,
-+      ddr3_cas_n                => ddr3_cas_n,
-+      ddr3_we_n                 => ddr3_we_n,
-+      ddr3_reset_n              => ddr3_reset_n,
-+      ddr3_cs_n                 => ddr3_cs_n,
-+      ddr3_odt                  => ddr3_odt,
-+      ddr3_cke                  => ddr3_cke,
-+      ddr3_dm                   => ddr3_dm,
-+      ddr3_dqs_p                => ddr3_dqs_p,
-+      ddr3_dqs_n                => ddr3_dqs_n,
-+      ddr3_ck_p                 => ddr3_ck_p,
-+      ddr3_ck_n                 => ddr3_ck_n,
-+      app_wdf_wren              => migi.app_wdf_wren,
-+      app_wdf_data              => migi.app_wdf_data,
-+      app_wdf_mask              => migi.app_wdf_mask,
-+      app_wdf_end               => migi.app_wdf_end,
-+      app_addr                  => migi.app_addr,
-+      app_cmd                   => migi.app_cmd,
-+      app_en                    => migi.app_en,
-+      app_rdy                   => migo.app_rdy,
-+      app_wdf_rdy               => migo.app_wdf_rdy,
-+      app_rd_data               => migo.app_rd_data,
-+      app_rd_data_valid         => migo.app_rd_data_valid,
-+      tb_rst                    => open,
-+      tb_clk                    => clkddr,
-+      clk_ahb                   => clkm,
-+      clk100                    => clk100,
-+      phy_init_done             => phy_init_done,
-+      sys_rst_13                => reset,
-+      sys_rst_14                => rstraw
-+    );
-+  
-+  ahb2mig0 : ahb2mig_ml605
-+    generic map (
-+      hindex                    => 0,
-+      haddr                     => 16#000#,
-+      hmask                     => 16#C00#,
-+      MHz                       => 400,  -- Only used for sim debug messages.
-+      Mbyte                     => 1024, -- Only used for sim debug messages.
-+      nosync                    => boolean'pos(CFG_MIG_CLK4=12) --CFG_CLKDIV/12)
-+    ) 
-+    port map (
-+      rst                       => rstn,
-+      clk_ahb                   => clkm,
-+      clk_ddr                   => clkddr,
-+      ahbsi                     => ahbsi,
-+      ahbso                     => ahbso(0),
-+      migi                      => migi,
-+      migo                      => migo
-+    );
++  -- pragma translate_off
++  mig_gen: if not DISABLE_DDR_SIM generate
++  begin
++  -- pragma translate_on
 +    
-+  
++    -- MIG instantiation.
++    ddr3ctrl: entity work.mig_37
++      generic map (
++        SIM_BYPASS_INIT_CAL       => SIM_BYPASS_INIT_CAL,
++        CLKOUT_DIVIDE4            => work.config.CFG_MIG_CLK4
++      )
++      port map (
++        clk_ref_p                 => clk_ref_p,
++        clk_ref_n                 => clk_ref_n,
++        ddr3_dq                   => ddr3_dq,
++        ddr3_addr                 => ddr3_addr,
++        ddr3_ba                   => ddr3_ba,
++        ddr3_ras_n                => ddr3_ras_n,
++        ddr3_cas_n                => ddr3_cas_n,
++        ddr3_we_n                 => ddr3_we_n,
++        ddr3_reset_n              => ddr3_reset_n,
++        ddr3_cs_n                 => ddr3_cs_n,
++        ddr3_odt                  => ddr3_odt,
++        ddr3_cke                  => ddr3_cke,
++        ddr3_dm                   => ddr3_dm,
++        ddr3_dqs_p                => ddr3_dqs_p,
++        ddr3_dqs_n                => ddr3_dqs_n,
++        ddr3_ck_p                 => ddr3_ck_p,
++        ddr3_ck_n                 => ddr3_ck_n,
++        app_wdf_wren              => migi.app_wdf_wren,
++        app_wdf_data              => migi.app_wdf_data,
++        app_wdf_mask              => migi.app_wdf_mask,
++        app_wdf_end               => migi.app_wdf_end,
++        app_addr                  => migi.app_addr,
++        app_cmd                   => migi.app_cmd,
++        app_en                    => migi.app_en,
++        app_rdy                   => migo.app_rdy,
++        app_wdf_rdy               => migo.app_wdf_rdy,
++        app_rd_data               => migo.app_rd_data,
++        app_rd_data_valid         => migo.app_rd_data_valid,
++        tb_rst                    => open,
++        tb_clk                    => clkddr,
++        clk_ahb                   => clkm,
++        clk100                    => clk100,
++        phy_init_done             => phy_init_done,
++        sys_rst_13                => reset,
++        sys_rst_14                => rstraw
++      );
++    
++    ahb2mig0 : ahb2mig_ml605
++      generic map (
++        hindex                    => 0,
++        haddr                     => 16#000#,
++        hmask                     => 16#C00#,
++        MHz                       => 400,  -- Only used for sim debug messages.
++        Mbyte                     => 1024, -- Only used for sim debug messages.
++        nosync                    => boolean'pos(CFG_MIG_CLK4=12) --CFG_CLKDIV/12)
++      ) 
++      port map (
++        rst                       => rstn,
++        clk_ahb                   => clkm,
++        clk_ddr                   => clkddr,
++        ahbsi                     => ahbsi,
++        ahbso                     => ahbso(0),
++        migi                      => migi,
++        migo                      => migo
++      );
++    
++  -- pragma translate_off
+   end generate;
+-  nram : if CFG_AHBRAMEN = 0 generate ahbso(3) <= ahbs_none; end generate;
+-
+------------------------------------------------------------------------
+----  Test report module  ----------------------------------------------
+------------------------------------------------------------------------
+-
+--- pragma translate_off
+-
+-  test0 : ahbrep generic map (hindex => 4, haddr => 16#200#)
+-	port map (rstn, clkm, ahbsi, ahbso(4));
+-
+--- pragma translate_on
+-
+------------------------------------------------------------------------
+----  Drive unused bus elements  ---------------------------------------
+------------------------------------------------------------------------
+-
+-  nam1 : for i in (CFG_NCPU+CFG_AHB_UART+CFG_AHB_JTAG+CFG_GRETH+1+CFG_PCIEXP) to NAHBMST-1 generate
+-    ahbmo(i) <= ahbm_none;
++  sim_mem_gen: if DISABLE_DDR_SIM generate
++    signal reset        : std_logic;
++    signal bridge2model : bus_mst2slv_type;
++    signal model2bridge : bus_slv2mst_type;
++  begin
++    reset <= not rstn;
++    
++    -- Generate 400 MHz clock.
++    process is
++    begin
++      clkddr <= '1';
++      wait for 1250 ps;
++      clkddr <= '0';
++      wait for 1250 ps;
++    end process;
++    
++    -- Generate 100 MHz clock.
++    process is
++    begin
++      clk100 <= '1';
++      wait for 5000 ps;
++      clk100 <= '0';
++      wait for 5000 ps;
++    end process;
++    
++    -- Generate configurable clock (1200 MHz / CFG_MIG_CLK4).
++    process is
++    begin
++      clkm <= '1';
++      wait for CFG_MIG_CLK4 * 417 ps;
++      clkm <= '0';
++      wait for CFG_MIG_CLK4 * 417 ps;
++      clkm <= '1';
++      wait for CFG_MIG_CLK4 * 416 ps;
++      clkm <= '0';
++      wait for CFG_MIG_CLK4 * 417 ps;
++      clkm <= '1';
++      wait for CFG_MIG_CLK4 * 417 ps;
++      clkm <= '0';
++      wait for CFG_MIG_CLK4 * 416 ps;
++    end process;
++    
++    -- Generate PHY done signal.
++    process is
++    begin
++      phy_init_done <= '0';
++      wait for 1 us;
++      phy_init_done <= '1';
++      wait;
++    end process;
++    
++    -- Connect the DDR simulation model to nothing.
++    ddr3_dq      <= (others => 'Z');
++    ddr3_dm      <= (others => '0');
++    ddr3_addr    <= (others => '0');
++    ddr3_ba      <= (others => '0');
++    ddr3_ras_n   <= '1';
++    ddr3_cas_n   <= '1';
++    ddr3_we_n    <= '1';
++    ddr3_reset_n <= '0';
++    ddr3_cs_n    <= (others => '1');
++    ddr3_odt     <= (others => '0');
++    ddr3_cke     <= (others => '0');
++    ddr3_dqs_p   <= (others => 'Z');
++    ddr3_dqs_n   <= (others => 'Z');
++    ddr3_ck_p    <= (others => '0');
++    ddr3_ck_n    <= (others => '1');
++    
++    -- Convert the AHB bus slave interface to r-VEX bus.
++    mem_bridge_inst: entity rvex.ahb2bus
++      generic map (
++        AHB_INDEX       => 0,
++        AHB_ADDR        => 16#000#,
++        AHB_MASK        => 16#C00#,
++        AHB_VENDOR_ID   => VENDOR_TUDELFT,
++        AHB_DEVICE_ID   => TUDELFT_BRIDGE
++      )
++      port map (
++        reset           => reset,
++        clk             => clkm,
++        ahb2bridge      => ahbsi,
++        bridge2ahb      => ahbso(0),
++        bridge2bus      => bridge2model,
++        bus2bridge      => model2bridge
++      );
++    
++    -- Simulate the memory.
++    mem_model: process is
++      variable mem      : rvmem_memoryState_type;
++      variable readData : rvex_data_type;
++      variable l        : std.textio.line;
++      variable c        : character;
++    begin
++      
++      -- Load the srec file into the memory.
++      rvmem_clear(mem, '0');
++      rvmem_loadSRec(mem, "ram.srec");
++      
++      -- Initialize the bus output.
++      model2bridge <= BUS_SLV2MST_IDLE;
++      
++      -- Handle memory requests.
++      loop
++        
++        -- Wait for the next clock.
++        wait until rising_edge(clkm);
++        
++        -- If we have a request, delay for some amount of cycles.
++        if bridge2model.readEnable = '1' or bridge2model.writeEnable = '1' then
++          model2bridge <= BUS_SLV2MST_IDLE;
++          model2bridge.busy <= '1';
++          wait until rising_edge(clkm);
++          wait until rising_edge(clkm);
++          wait until rising_edge(clkm);
++          wait until rising_edge(clkm);
++          wait until rising_edge(clkm);
++        end if;
++        
++        -- Handle the bus request.
++        model2bridge <= BUS_SLV2MST_IDLE;
++        if bridge2model.readEnable = '1' then
++          rvmem_read(mem, bridge2model.address, readData);
++          model2bridge.readData <= readData;
++          model2bridge.ack <= '1';
++        elsif bridge2model.writeEnable = '1' then
++          rvmem_write(mem, bridge2model.address, bridge2model.writeData, bridge2model.writeMask);
++          model2bridge.ack <= '1';
++        end if;
++        
++      end loop;
++      
++    end process;
++    
+   end generate;
++  -- pragma translate_on
 +  ------------------------------------------------------------------------------
 +  -- GRMON JTAG interface
 +  ------------------------------------------------------------------------------
@@ -22055,7 +22199,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
  end rtl;
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd work/testbench.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/testbench.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/testbench.vhd	2016-09-19 14:24:55.186848324 +0200
++++ work/testbench.vhd	2016-09-27 17:33:22.242818888 +0200
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License
@@ -22128,8 +22272,9 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +
    d3 : entity work.leon3mp
 -    generic map (fabtech, memtech, padtech, disas, dbguart, pclow,
+-                 SIM_BYPASS_INIT_CAL)
 +    generic map (fabtech, memtech, padtech,
-                  SIM_BYPASS_INIT_CAL)
++                 SIM_BYPASS_INIT_CAL, true)
      port map (
 -      reset     => rst,
 -      errorn    => error,
