@@ -405,13 +405,13 @@ begin -- architecture
   
   -- Snoop the debug bus to generate the cache flush signals.
   sc2icache_flush <= dbg2rv_writeData(2**CFG.core.numLaneGroupsLog2-1 downto 0)
-    when (dbg2rv_addr(7 downto 2) = uint2vect(CR_AFF, 6))
+    when (dbg2rv_addr(9 downto 2) = uint2vect(CR_AFF, 8))
     and  (dbg2rv_writeEnable = '1')
     and  (dbg2rv_writeMask(0) = '1')
     else (others => '0');
   
   sc2dcache_flush <= dbg2rv_writeData(2**CFG.core.numLaneGroupsLog2+7 downto 8)
-    when (dbg2rv_addr(7 downto 2) = uint2vect(CR_AFF, 6))
+    when (dbg2rv_addr(9 downto 2) = uint2vect(CR_AFF, 8))
     and  (dbg2rv_writeEnable = '1')
     and  (dbg2rv_writeMask(1) = '1')
     else (others => '0');
@@ -569,7 +569,7 @@ begin -- architecture
     
     -- Connect the latency register input to the debug bus.
     latency_next <= unsigned(dbg2rv_writeData(31 downto 24))
-      when (dbg2rv_addr(7 downto 2) = uint2vect(CR_AFF, 6))
+      when (dbg2rv_addr(9 downto 2) = uint2vect(CR_AFF, 8))
       and  (dbg2rv_writeEnable = '1')
       and  (dbg2rv_writeMask(3) = '1')
       else latency;
