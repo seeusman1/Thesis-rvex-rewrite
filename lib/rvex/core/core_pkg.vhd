@@ -201,8 +201,8 @@ package core_pkg is
     traceEnable                 => false,
     perfCountSize               => 4,
     cachePerfCountEnable        => false,
-    stallInactive               => false,
-    enablePowerLatches          => false
+    stallInactive               => true,
+    enablePowerLatches          => true
   );
   
   -- Minimal rvex core configuration.

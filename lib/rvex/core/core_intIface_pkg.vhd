@@ -131,6 +131,9 @@ package core_intIface_pkg is
     -- Read address for all stages which receive forwarding information.
     addr                        : rvex_gpRegAddr_array(S_RD to S_FW);
     
+    -- Read enable signal.
+    readEnable                  : std_logic_vector(S_RD to S_FW);
+    
   end record;
 
   type gpreg2pl_readPort_type is record

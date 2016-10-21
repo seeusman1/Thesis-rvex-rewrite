@@ -63,13 +63,13 @@ entity core_gpRegs_mem is
   generic (
     
     -- log2 of the number of registers to instantiate.
-    NUM_REGS_LOG2               : natural;
+    NUM_REGS_LOG2               : natural := 6;
     
     -- Number of write ports to instantiate.
-    NUM_WRITE_PORTS             : natural;
+    NUM_WRITE_PORTS             : natural := 2;
     
     -- Number of read ports to instantiate.
-    NUM_READ_PORTS              : natural
+    NUM_READ_PORTS              : natural := 2
     
   );
   port (
@@ -99,6 +99,7 @@ entity core_gpRegs_mem is
     -- Read ports
     ---------------------------------------------------------------------------
     -- Only the lower NUM_REGS_LOG2 bits of the address are used.
+    readEnable                  : in  std_logic_vector(NUM_READ_PORTS-1 downto 0);
     readAddr                    : in  rvex_address_array(NUM_READ_PORTS-1 downto 0);
     readData                    : out rvex_data_array(NUM_READ_PORTS-1 downto 0)
     
@@ -140,6 +141,8 @@ begin -- architecture
             if writeEnable(writePort) = '1' then
               ram(vect2uint(writeAddr(writePort)(NUM_REGS_LOG2-1 downto 0))) <= writeData(writePort);
             end if;
+          end if;
+          if (clkEn and readEnable(readPort)) = '1' then
             readData_int(writePort) <= ram(vect2uint(readAddr(readPort)(NUM_REGS_LOG2-1 downto 0)));
           end if;
         end if;

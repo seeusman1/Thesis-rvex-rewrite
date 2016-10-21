@@ -2075,8 +2075,55 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Drive the general purpose register addresses for each forwarded stage.
     for stage in S_RD to S_FW loop
+      
+      -- Setup port A.
       pl2gpreg_readPortA.addr(stage) <= s(stage).dp.src1;
+      pl2gpreg_readPortA.readEnable(stage) <= s(stage).valid;
+      
+      -- Setup port B.
       pl2gpreg_readPortB.addr(stage) <= s(stage).dp.src2;
+      pl2gpreg_readPortB.readEnable(stage) <= s(stage).valid;
+      
+      -- If power latch optimizations are enabled, disable the readEnable
+      -- signal if we can know in advance that the value won't be used.
+      if CFG.enablePowerLatches then
+        
+        -- Disable port A when we're reading r0.
+        -- TODO: this doesn't work, find out why.
+        --if s(stage).dp.src1 = GPREG_ZERO then
+        --  pl2gpreg_readPortA.readEnable(stage) <= '0';
+        --end if;
+        
+        -- Disable port A when it's going to be overridden by the link register.
+        if s(stage).dp.c.op1LinkReg = '0' then
+          -- Used for operand 1.
+          -- TODO: disable anyway when op1 is not used by the instruction.
+        else
+          -- Unused.
+          pl2gpreg_readPortA.readEnable(stage) <= '0';
+        end if;
+        
+        -- Disable port B when we're reading r0.
+        -- TODO: this might not work because it doesn't work for port A, though
+        -- this one does not fail the conformance test.
+        --if s(stage).dp.src2 = GPREG_ZERO then
+        --  pl2gpreg_readPortB.readEnable(stage) <= '0';
+        --end if;
+        
+        -- Disable port B when its value won't be used.
+        if s(stage).dp.c.stackOp = '0' and s(stage).dp.useImm = '0' then
+          -- Used for operand 2.
+          -- TODO: disable anyway when op2 is not used by the instruction.
+        elsif s(stage).dp.c.op3LinkReg = '0' and s(stage).dp.c.op3BranchRegs = '0' then
+          -- Used for operand 3.
+          -- TODO: disable anyway when op3 is not used by the instruction.
+        else
+          -- Unused.
+          pl2gpreg_readPortB.readEnable(stage) <= '0';
+        end if;
+        
+      end if;
+      
     end loop;
     
     -- Copy the read values into the pipeline for each forwarded stage. Only
@@ -2288,7 +2335,7 @@ begin -- architecture
     if HAS_MUL then
       
       -- Drive multiplication unit inputs.
-      if s(S_ALU).dp.c.enableMul = '1' or not CFG.enablePowerLatches then
+      if s(S_MUL).dp.c.enableMul = '1' or not CFG.enablePowerLatches then
         pl2mulu_opcode(S_MUL) <= s(S_MUL).opcode;
         pl2mulu_op1(S_MUL)    <= s(S_MUL).dp.op1;
         pl2mulu_op2(S_MUL)    <= s(S_MUL).dp.op2;
@@ -2514,7 +2561,7 @@ begin -- architecture
     -- should not be issued when a trap is detected in this stage.
     if HAS_MEM then
       
-      if s(S_ALU).dp.c.enableMem = '1' or not CFG.enablePowerLatches then
+      if s(S_MEM).dp.c.enableMem = '1' or not CFG.enablePowerLatches then
         pl2memu_valid(S_MEM)  <= s(S_MEM).valid;
         pl2memu_opcode(S_MEM) <= s(S_MEM).opcode;
         pl2memu_opAddr(S_MEM) <= s(S_MEM).dp.resAdd;
