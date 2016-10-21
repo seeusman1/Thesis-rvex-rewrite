@@ -1,6 +1,6 @@
 
 RVLIB = ../../../lib/rvex
-VHDL_LIBS = common utils bus core cache work
+VHDL_LIBS = unisim common utils bus core cache work
 
 include ../../share/modelsim.makefile
 
