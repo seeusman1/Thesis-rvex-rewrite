@@ -2089,10 +2089,9 @@ begin -- architecture
       if CFG.enablePowerLatches then
         
         -- Disable port A when we're reading r0.
-        -- TODO: this doesn't work, find out why.
-        --if s(stage).dp.src1 = GPREG_ZERO then
-        --  pl2gpreg_readPortA.readEnable(stage) <= '0';
-        --end if;
+        if s(stage).dp.src1 = GPREG_ZERO then
+          pl2gpreg_readPortA.readEnable(stage) <= '0';
+        end if;
         
         -- Disable port A when it's going to be overridden by the link register.
         if s(stage).dp.c.op1LinkReg = '0' then
@@ -2104,11 +2103,9 @@ begin -- architecture
         end if;
         
         -- Disable port B when we're reading r0.
-        -- TODO: this might not work because it doesn't work for port A, though
-        -- this one does not fail the conformance test.
-        --if s(stage).dp.src2 = GPREG_ZERO then
-        --  pl2gpreg_readPortB.readEnable(stage) <= '0';
-        --end if;
+        if s(stage).dp.src2 = GPREG_ZERO then
+          pl2gpreg_readPortB.readEnable(stage) <= '0';
+        end if;
         
         -- Disable port B when its value won't be used.
         if s(stage).dp.c.stackOp = '0' and s(stage).dp.useImm = '0' then
@@ -2941,6 +2938,17 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Drive stage outputs
     ---------------------------------------------------------------------------
+    -- If power optimizations are enabled, only update the datapath-related
+    -- signals if the new instruction is actually valid.
+    if CFG.enablePowerLatches then
+      for stage in S_FIRST to S_LAST-1 loop
+        if s(stage).valid = '0' and s(stage).limmValid = '0' then
+          s(stage).dp := si(stage+1).dp;
+        end if;
+      end loop;
+    end if;
+    
+    -- Assign the stage output/register input signal.
     so <= s;
     
   end process;
