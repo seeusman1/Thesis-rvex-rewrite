@@ -108,6 +108,12 @@ def parse(indir):
             syllable = copy.deepcopy(group_params)
             apply_params(syllable, group)
             
+            # Set the general purpose register read port enable flags.
+            if '\\rx' in group['cmd'][3]:
+                syllable['datapath']['gpRegRdEnaA'] = "'1'"
+            if '\\ry' in group['cmd'][3]:
+                syllable['datapath']['gpRegRdEnaB'] = "'1'"
+            
             opcode = group['cmd'][1].strip()
             if len(opcode) != 9:
                 raise Exception('Number of bits in opcode must be 9 at ' +

@@ -187,6 +187,12 @@ package core_opcodeDatapath_pkg is
     op3BranchRegs               : std_logic;
     brFmt                       : std_logic;
     
+    -- Special instruction flags. These are set only when the respective
+    -- instruction is executed.
+    isLIMMH                     : std_logic;
+    isTrap                      : std_logic;
+    isNOP                       : std_logic;
+    
     -- Latch enable flags for the functional unit inputs. When disabled and
     -- power-saving latches are enabled at design-time, the inputs to the
     -- respective functional units are latched/disabled to prevent as much
@@ -195,11 +201,11 @@ package core_opcodeDatapath_pkg is
     enableMul                   : std_logic;
     enableMem                   : std_logic;
     
-    -- Special instruction flags. These are set only when the respective
-    -- instruction is executed.
-    isLIMMH                     : std_logic;
-    isTrap                      : std_logic;
-    isNOP                       : std_logic;
+    -- Register read port enables. When disabled and power-saving latches
+    -- are enabled at design-time, the RAM blocks for the read ports are
+    -- disabled.
+    gpRegRdEnaA                 : std_logic;
+    gpRegRdEnaB                 : std_logic;
     
   end record;
   

@@ -2093,12 +2093,8 @@ begin -- architecture
           pl2gpreg_readPortA.readEnable(stage) <= '0';
         end if;
         
-        -- Disable port A when it's going to be overridden by the link register.
-        if s(stage).dp.c.op1LinkReg = '0' then
-          -- Used for operand 1.
-          -- TODO: disable anyway when op1 is not used by the instruction.
-        else
-          -- Unused.
+        -- Disable port A when it's not used by the instruction.
+        if s(stage).dp.c.gpRegRdEnaA = '0' then
           pl2gpreg_readPortA.readEnable(stage) <= '0';
         end if;
         
@@ -2107,15 +2103,8 @@ begin -- architecture
           pl2gpreg_readPortB.readEnable(stage) <= '0';
         end if;
         
-        -- Disable port B when its value won't be used.
-        if s(stage).dp.c.stackOp = '0' and s(stage).dp.useImm = '0' then
-          -- Used for operand 2.
-          -- TODO: disable anyway when op2 is not used by the instruction.
-        elsif s(stage).dp.c.op3LinkReg = '0' and s(stage).dp.c.op3BranchRegs = '0' then
-          -- Used for operand 3.
-          -- TODO: disable anyway when op3 is not used by the instruction.
-        else
-          -- Unused.
+        -- Disable port B when it's not used by the instruction.
+        if s(stage).dp.c.gpRegRdEnaB = '0' then
           pl2gpreg_readPortB.readEnable(stage) <= '0';
         end if;
         
