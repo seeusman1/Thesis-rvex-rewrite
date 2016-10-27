@@ -446,7 +446,7 @@ begin -- architecture
     -- Decode the priority decoder output and mask it with the interrupt
     -- level.
     prio_outp: process (
-      prio_output, irqLevel_r
+      prio_output, irqLevel_r, prio_any
     ) is
       variable irqReqLevel_v  : level_type;
       variable irqReq_v       : std_logic;

@@ -742,7 +742,9 @@ begin -- architecture
   resetOut <= gbreg2rv_reset;
   
   -- Generate the stall signals.
-  stall_gen: process (mem2rv_stallIn, debugBusStall, traceStall) is
+  stall_gen: process (
+    mem2rv_stallIn, debugBusStall, traceStall, rctrl2rv_traceStall
+  ) is
     variable s : std_logic;
   begin
     if CFG.unifiedStall then
