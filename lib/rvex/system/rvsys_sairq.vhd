@@ -70,14 +70,14 @@ use rvex.cache_pkg.all;
 --         ,-' |     demux     |<-o--| arbiter |  :  |         |
 --        , .--|>=0xFFFFC000   |  |  |         |<----|  cache  |
 --       :  |  '---------------'  |  '---------'     |         |
---       .-----.   (does not    ` '----------------->|snoop    |     .-------.
---       | reg |  use standard   `.         .------->|flush    |<===>|cache  |
---       '-----' bus components*)  `-..     |        '---------'     |       |
+--       :  |      (does not    ` '----------------->|snoop    |     .-------.
+--       :  |     use standard   `.         .------->|flush    |<===>|cache  |
+--       :  |    bus components*)  `-..     |        '---------'     |       |
 --       :  |  .---------.     .---------------.                     |       |
---        ` '->|low-pri  |     |       bit 13=0|-------------------->|debug  |
---         `.  | arbiter |---->|  demux/flush  |     .---------.     | r-VEX |
+--        ` '->|low-pri  | reg |       bit 13=0|-------------------->|debug  |
+--         `.  | arbiter |<=|=>|  demux/flush  |     .---------.     | r-VEX |
 --  Debug ---->|hi-pri   |     |       bit 13=1|---->|         |     |       |
---             '---------'- - -'---------------'     | irqctrl |<===>|rctrl  |
+--            `'---------'- - -'---------------'     | irqctrl |<===>|rctrl  |
 --   IRQs ------------------------------------------>|         |     |       |
 --                                                   '---------'     |       |
 --  Trace <----------------------------------------------------------|trace  |
@@ -160,20 +160,20 @@ entity rvsys_sairq is
   port (
     
     -- Active high synchronous reset input.
-    reset                       : in  std_logic;
+    reset                       : in  std_logic := '0';
     
     -- Clock input, registers are rising edge triggered.
     clk                         : in  std_logic;
     
     -- Active high global clock enable input.
-    clkEn                       : in  std_logic;
+    clkEn                       : in  std_logic := '1';
     
     -- Memory bus for the cache.
     rv2mem                      : out bus_mst2slv_type;
     mem2rv                      : in  bus_slv2mst_type;
     
     -- Debug bus.
-    dbg2rv                      : in  bus_mst2slv_type;
+    dbg2rv                      : in  bus_mst2slv_type := BUS_MST2SLV_IDLE;
     rv2dbg                      : out bus_slv2mst_type;
     
     -- Interrupt inputs (active high strobe).
@@ -508,8 +508,8 @@ begin -- architecture
       periph2irq                => irq2rv,
       
       -- Bus interface.
-      bus2irq                   => icon2irq,
-      irq2bus                   => irq2icon
+      bus2irq                   => icon2irq,--NOTE: THIS UNIT ASSUMES THAT THIS
+      irq2bus                   => irq2icon --IS ALWAYS A SINGLE-CYCLE BUS.
       
     );
   
@@ -519,15 +519,317 @@ begin -- architecture
   -- The block below implements the following:
   --
   --             .-------------.
-  --             |  <0xFFFFC000|------------------------------------> rv2mem
-  -- arb2icon -->|    demux    |   .---.   .---------.   .-------.
-  --             | >=0xFFFFC000|-->|reg|-->|low-pri  |   |  b13=0|--> icon2rv
-  --             '-------------'   '---'   | arbiter |-->| demux |
-  --   dbg2rv ---------------------------->|hi-pri   |   |  b13=1|--> icon2irq
-  --                                       '---------'   '-------'
+  --             |  <0xFFFFC000|------------------------------> rv2mem
+  -- arb2icon -->|   demux A   |   .---------.   .---------.
+  --             | >=0xFFFFC000|-->|low-pri  |   |   b13=0 |--> icon2rv
+  --             '-------------'   | arbiter |-->| demux B |
+  --   dbg2rv ---------------------|hi-pri   |   |   b13=1 |--> icon2irq
+  --                               '---------'   '---------'
+  --
   icon_block: block is
+    
+    -- Demux A control signals.
+    signal dema_request_mux     : std_logic;
+    signal dema_result_mux      : std_logic;
+    
+    -- Demux A to arbiter bus.
+    signal dema2arb_address     : std_logic_vector(13 downto 2);
+    signal dema2arb_readEnable  : std_logic;
+    signal dema2arb_writeEnable : std_logic;
+    signal dema2arb_writeMask   : rvex_mask_type;
+    signal dema2arb_writeData   : rvex_data_type;
+    signal arb2dema_readData    : rvex_data_type;
+    signal arb2dema_fault       : std_logic;
+    signal arb2dema_busy        : std_logic;
+    signal arb2dema_ack         : std_logic;
+    
+    -- Debug to arbiter bus.
+    signal dbg2arb_address      : std_logic_vector(13 downto 2);
+    signal dbg2arb_readEnable   : std_logic;
+    signal dbg2arb_writeEnable  : std_logic;
+    signal dbg2arb_writeMask    : rvex_mask_type;
+    signal dbg2arb_writeData    : rvex_data_type;
+    signal arb2dbg_readData     : rvex_data_type;
+    signal arb2dbg_fault        : std_logic;
+    signal arb2dbg_busy         : std_logic;
+    signal arb2dbg_ack          : std_logic;
+    
+    -- Delayed request signals for the arbiter (to break long bus request
+    -- paths).
+    signal dema2arb_address_r   : std_logic_vector(13 downto 2);
+    signal dema2arb_readEnable_r: std_logic;
+    signal dema2arb_writeEnable_r:std_logic;
+    signal dema2arb_writeMask_r : rvex_mask_type;
+    signal dema2arb_writeData_r : rvex_data_type;
+    signal dbg2arb_address_r    : std_logic_vector(13 downto 2);
+    signal dbg2arb_readEnable_r : std_logic;
+    signal dbg2arb_writeEnable_r: std_logic;
+    signal dbg2arb_writeMask_r  : rvex_mask_type;
+    signal dbg2arb_writeData_r  : rvex_data_type;
+    
+    -- Arbiter bus state signals. The timing is as shown in the diagram. The
+    -- request to the r-VEX debug bus/interrupt controller access bus is active
+    -- while phase(0) is asserted and stall is not asserted (in this case the
+    -- other bus has requested something as well and took precedence). The
+    -- result is valid while phase(1) is asserted; this is subsequently delayed
+    -- by one cycle before being returned to the master to break the return
+    -- path in two as well.
+    --
+    --         |__    __    __    __    __    __    __    __    __    __    |
+    --     clk |  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/  \__/|
+    --         |............................................................|
+    --         |_____  ________________  ________________  _________________|
+    -- request |nop__><req1____________><req2____________><nop______________|
+    --         |                         ____              ____             |
+    --  result |------------------------<res1>------------<res2>------------|
+    --         |             ___________       _________________            |
+    --    busy |____________/           \_____/                 \___________|
+    --         |                         _____                   _____      |
+    --     ack |________________________/     \_________________/     \_____|
+    --         |............................................................|
+    --         |             _____             ___________                  |
+    -- phase(0)|____________/     \___________/           \_________________|
+    --         |                   _____                   _____            |
+    -- phase(1)|__________________/     \_________________/     \___________|
+    --         |                                 ___                        |
+    --   stall |______________________________///   \\\_____________________|
+    --         |                                                            |
+    signal dema2arb_phase       : std_logic_vector(1 downto 0);
+    signal dbg2arb_phase        : std_logic_vector(1 downto 0);
+    signal dema2arb_stall       : std_logic;
+    
+    -- Mux select signals for the r-VEX debug bus and the interrupt controller
+    -- access bus requests. '0' indicates dema2arb, '1' indicates dbg2arb.
+    signal arb2rv_mux           : std_logic;
+    signal arb2irq_mux          : std_logic;
+    
   begin
-    -- TODO
+    
+    -------------
+    -- Demux A --
+    -------------
+    
+    -- Determine which bus the request is intended for.
+    dema_request_mux <= '1' when
+      arb2icon.address(31 downto 14) = "11111111"&"11111111"&"11" else '0';
+    
+    -- Construct the rv2mem request signal.
+    rv2mem <= bus_gate(arb2icon, not dema_request_mux);
+    
+    -- Construct the dema2arb request signal.
+    dema2arb_address <= arb2icon.address(13 downto 2);
+    dema2arb_readEnable <= arb2icon.readEnable and dema_request_mux;
+    dema2arb_writeEnable <= arb2icon.writeEnable and dema_request_mux;
+    dema2arb_writeMask <= arb2icon.writeMask;
+    dema2arb_writeData <= arb2icon.writeData;
+    
+    -- Delay the mux signal by one cycle to align it with the busy/ack response
+    -- signals.
+    demux_a_reg: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if clkEn = '1' then
+          dema_result_mux <= dema_request_mux;
+        end if;
+      end if;
+    end process;
+    
+    -- Select the result. The ack/busy signals can just be wired-or assuming
+    -- everything else is implemented correctly.
+    demux_a_result: process (
+      dema_result_mux, mem2rv, arb2dema_readData, arb2dema_fault,
+      arb2dema_busy, arb2dema_ack
+    ) is
+    begin
+      icon2arb <= BUS_SLV2MST_IDLE;
+      if dema_result_mux = '1' then
+        icon2arb.readData <= arb2dema_readData;
+        icon2arb.fault <= arb2dema_fault;
+      else
+        icon2arb.readData <= mem2rv.readData;
+        icon2arb.fault <= mem2rv.fault;
+      end if;
+      icon2arb.busy <= arb2dema_busy or mem2rv.busy;
+      icon2arb.ack <= arb2dema_ack or mem2rv.ack;
+    end process;
+    
+    -------------------
+    -- Debug arbiter --
+    -------------------
+    
+    -- Unpack dbg2rv and pack rv2dbg.
+    dbg2arb_address <= dbg2rv.address(13 downto 2);
+    dbg2arb_readEnable <= dbg2rv.readEnable;
+    dbg2arb_writeEnable <= dbg2rv.writeEnable;
+    dbg2arb_writeMask <= dbg2rv.writeMask;
+    dbg2arb_writeData <= dbg2rv.writeData;
+    rv2dbg_pack_proc: process (
+      arb2dbg_readData, arb2dbg_fault, arb2dbg_busy, arb2dbg_ack
+    ) is
+    begin
+      rv2dbg <= BUS_SLV2MST_IDLE;
+      rv2dbg.readData <= arb2dbg_readData;
+      rv2dbg.fault <= arb2dbg_fault;
+      rv2dbg.busy <= arb2dbg_busy;
+      rv2dbg.ack <= arb2dbg_ack;
+    end process;
+    
+    -- Instantiate the arbiter registers.
+    enable_regs: process (clk) is
+    begin
+      if rising_edge(clk) then
+        if reset = '1' then
+          
+          -- Reset the dema2arb and arb2dema signals.
+          dema2arb_readEnable_r  <= '0';
+          dema2arb_writeEnable_r <= '0';
+          arb2dema_busy          <= '0';
+          arb2dema_ack           <= '0';
+          
+          -- Reset the dbg2arb and arb2dbg signals.
+          dbg2arb_readEnable_r   <= '0';
+          dbg2arb_writeEnable_r  <= '0';
+          arb2dbg_busy           <= '0';
+          arb2dbg_ack            <= '0';
+          
+        elsif clkEn = '1' then
+          
+          -- Register the dema2arb bus requests to break combinatorial paths.
+          dema2arb_readEnable_r  <= dema2arb_readEnable;
+          dema2arb_writeEnable_r <= dema2arb_writeEnable;
+          if dema2arb_writeEnable = '1' or dema2arb_readEnable = '1' then
+            dema2arb_address_r   <= dema2arb_address;
+          end if;
+          if dema2arb_writeEnable = '1' then
+            dema2arb_writeMask_r <= dema2arb_writeMask;
+            dema2arb_writeData_r <= dema2arb_writeData;
+          end if;
+          
+          -- Generate the dema2arb phase signals. Refer to the timing diagram
+          -- at the signal declaration for an explanation.
+          dema2arb_phase(0)
+            <= (dema2arb_writeEnable or dema2arb_readEnable) -- Only when request is active.
+            and (
+              (not (dema2arb_phase(0) or dema2arb_phase(1))) -- Don't start while busy.
+              or (dema2arb_phase(0) and dema2arb_stall) -- Stay in state if stalled.
+            );
+          dema2arb_phase(1) <= dema2arb_phase(0) and not dema2arb_stall;
+          
+          -- Drive the result signals.
+          if dema2arb_phase(1) = '0' then
+            arb2dema_busy <= dema2arb_readEnable or dema2arb_writeEnable;
+            arb2dema_ack <= '0';
+          else
+            arb2dema_busy <= '0';
+            arb2dema_ack <= '1';
+            if dema2arb_address_r(13) = '0' then
+              -- Connect to r-VEX debug bus result.
+              arb2dema_readData <= rv2icon_readData;
+              arb2dema_fault <= '0';
+            else
+              -- Connect to interrupt controller access bus result.
+              arb2dema_readData <= irq2icon.readData;
+              arb2dema_fault <= irq2icon.fault;
+            end if;
+          end if;
+          
+          
+          -- Register the dbg2arb bus requests to break combinatorial paths.
+          dbg2arb_readEnable_r   <= dbg2arb_readEnable;
+          dbg2arb_writeEnable_r  <= dbg2arb_writeEnable;
+          if dbg2arb_writeEnable = '1' or dbg2arb_readEnable = '1' then
+            dbg2arb_address_r    <= dbg2arb_address;
+          end if;
+          if dbg2arb_writeEnable = '1' then
+            dbg2arb_writeMask_r  <= dbg2arb_writeMask;
+            dbg2arb_writeData_r  <= dbg2arb_writeData;
+          end if;
+          
+          -- Generate the dema2arb phase signals. Refer to the timing diagram
+          -- at the signal declaration for an explanation.
+          dbg2arb_phase(0)
+            <= (dbg2arb_writeEnable or dbg2arb_readEnable) -- Only when request is active.
+            and not (dbg2arb_phase(0) or dbg2arb_phase(1)); -- Don't start while busy.
+          dbg2arb_phase(1) <= dbg2arb_phase(0);
+          
+          -- Drive the result signals.
+          if dbg2arb_phase(1) = '0' then
+            arb2dbg_busy <= dbg2arb_readEnable or dbg2arb_writeEnable;
+            arb2dbg_ack <= '0';
+          else
+            arb2dbg_busy <= '0';
+            arb2dbg_ack <= '1';
+            if dbg2arb_address_r(13) = '0' then
+              -- Connect to r-VEX debug bus result.
+              arb2dbg_readData <= rv2icon_readData;
+              arb2dbg_fault <= '0';
+            else
+              -- Connect to interrupt controller access bus result.
+              arb2dbg_readData <= irq2icon.readData;
+              arb2dbg_fault <= irq2icon.fault;
+            end if;
+          end if;
+          
+          -- Drive the request mux signals.
+          arb2rv_mux <= '0';
+          arb2irq_mux <= '0';
+          if dbg2arb_readEnable = '1' or dbg2arb_writeEnable = '1' then
+            arb2rv_mux <= not dbg2arb_address(13);
+            arb2irq_mux <= dbg2arb_address(13);
+          end if;
+          
+        end if;
+      end if;
+    end process;
+    
+    -- The dbg2arb bus overrides the dema2arb bus when two accesses conflict.
+    -- In this case, the dema2arb bus must be stalled.
+    dema2arb_stall
+       <= (dema2arb_phase(0) and dbg2arb_phase(0)) -- Both active.
+      and (dema2arb_address_r(13) xnor dbg2arb_address_r(13)); -- Same bus.
+    
+    -- Drive the bus request signals.
+    bus_req_proc: process (
+      dema2arb_address_r, dema2arb_readEnable_r, dema2arb_writeEnable_r,
+      dema2arb_writeMask_r, dema2arb_writeData_r, dbg2arb_address_r,
+      dbg2arb_readEnable_r, dbg2arb_writeEnable_r, dbg2arb_writeMask_r,
+      dbg2arb_writeData_r, arb2rv_mux, arb2irq_mux
+    ) is
+    begin
+      
+      -- Drive the r-VEx debug bus.
+      if arb2rv_mux = '0' then
+        icon2rv_addr        <= X"0000"&"000" & dema2arb_address_r(12 downto 2) & "00";
+        icon2rv_readEnable  <= dema2arb_readEnable_r;
+        icon2rv_writeEnable <= dema2arb_writeEnable_r;
+        icon2rv_writeMask   <= dema2arb_writeMask_r;
+        icon2rv_writeData   <= dema2arb_writeData_r;
+      else
+        icon2rv_addr        <= X"0000"&"000" & dbg2arb_address_r(12 downto 2) & "00";
+        icon2rv_readEnable  <= dbg2arb_readEnable_r;
+        icon2rv_writeEnable <= dbg2arb_writeEnable_r;
+        icon2rv_writeMask   <= dbg2arb_writeMask_r;
+        icon2rv_writeData   <= dbg2arb_writeData_r;
+      end if;
+      
+      -- Drive the interrupt controller access bus.
+      icon2irq <= BUS_MST2SLV_IDLE;
+      if arb2irq_mux = '0' then
+        icon2irq.address    <= X"0000"&"000" & dema2arb_address_r(12 downto 2) & "00";
+        icon2irq.readEnable <= dema2arb_readEnable_r;
+        icon2irq.writeEnable<= dema2arb_writeEnable_r;
+        icon2irq.writeMask  <= dema2arb_writeMask_r;
+        icon2irq.writeData  <= dema2arb_writeData_r;
+      else
+        icon2irq.address    <= X"0000"&"000" & dbg2arb_address_r(12 downto 2) & "00";
+        icon2irq.readEnable <= dbg2arb_readEnable_r;
+        icon2irq.writeEnable<= dbg2arb_writeEnable_r;
+        icon2irq.writeMask  <= dbg2arb_writeMask_r;
+        icon2irq.writeData  <= dbg2arb_writeData_r;
+      end if;
+      
+    end process;
+    
   end block;
   
 end Behavioral;
