@@ -53,6 +53,9 @@ use rvex.common_pkg.all;
 use rvex.core_pkg.all;
 use rvex.core_intIface_pkg.all;
 use rvex.core_pipeline_pkg.all;
+-- pragma translate_off
+use rvex.simUtils_pkg.all;
+-- pragma translate_on
 
 --=============================================================================
 -- This entity contains the general purpose register file and associated
@@ -387,6 +390,86 @@ begin -- architecture
         readData                => readData_comb
         
       );
+  end generate;
+
+  asic_mem_gen: if INST_SYNTH_MEM and CFG.gpRegImpl = RVEX_GPREG_IMPL_ASIC generate
+    -- pragma translate_off
+    signal readData_comb_check      : rvex_data_array(NUM_READ_PORTS-1 downto 0);
+    -- pragma translate_on
+  begin
+    synth_mem: entity rvex.core_gpRegs_asic
+      generic map (
+        NUM_REGS_LOG2           => NUM_REGS_LOG2,
+        NUM_WRITE_PORTS         => NUM_WRITE_PORTS,
+        NUM_READ_PORTS          => NUM_READ_PORTS
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- Write ports.
+        writeEnable             => writeEnable,
+        writeAddr               => writeAddr,
+        writeData               => writeData,
+        
+        -- Read ports.
+        readAddr                => readAddr,
+        readData                => readData_comb
+        
+      );
+    
+    -- pragma translate_off
+    -- Check consistency...
+    sim_mem: entity rvex.core_gpRegs_sim
+      generic map (
+        NUM_REGS_LOG2           => NUM_REGS_LOG2,
+        NUM_WRITE_PORTS         => NUM_WRITE_PORTS,
+        NUM_READ_PORTS          => NUM_READ_PORTS
+      )
+      port map (
+        
+        -- System control.
+        reset                   => reset,
+        clk                     => clk,
+        clkEn                   => clkEn,
+        
+        -- Write ports.
+        writeEnable             => writeEnable,
+        writeAddr               => writeAddr,
+        writeData               => writeData,
+        
+        -- Read ports.
+        readAddr                => readAddr,
+        readData                => readData_comb_check
+        
+      );
+    
+    process is
+      variable addrs  : rvex_address_array(NUM_READ_PORTS-1 downto 0);
+    begin
+      addrs := readAddr;
+      wait until rising_edge(clk);
+      for prt in 0 to NUM_READ_PORTS-1 loop
+        if not is_x(addrs(prt)) then
+          if to_integer(unsigned(addrs(prt))) mod 64 /= 0 then
+            if readData_comb(prt) /= readData_comb_check(prt) then
+              if (not is_x(readData_comb(prt))) and not is_x(readData_comb_check(prt)) then
+                report "Regfile error. Port=" & integer'image(prt) & "; reg=" &
+                  integer'image(to_integer(unsigned(addrs(prt)))) & "; correct=" &
+                  rvs_hex(readData_comb_check(prt)) & "; wrong=" &
+                  rvs_hex(readData_comb(prt)) severity warning;
+              end if;
+            end if;
+          end if;
+        end if;
+      end loop;
+    end process;
+    
+    -- pragma translate_on
+    
   end generate;
 
   -- Simulation only model of the block RAM based memory.

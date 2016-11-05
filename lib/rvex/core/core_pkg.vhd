@@ -170,6 +170,7 @@ package core_pkg is
   -- Values for gpRegImpl.
   constant RVEX_GPREG_IMPL_MEM    : natural := 0;
   constant RVEX_GPREG_IMPL_SIMPLE : natural := 1;
+  constant RVEX_GPREG_IMPL_ASIC   : natural := 2;
   
   -- Default rvex core configuration.
   constant RVEX_DEFAULT_CONFIG  : rvex_generic_config_type := (
