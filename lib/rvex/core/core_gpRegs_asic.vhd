@@ -598,6 +598,7 @@ entity reg1 is
   port (
     clk           : in    std_logic;
     write_enables : in    bitvec8;
+    write_enable  : in    std_logic;
     write_datas   : in    bitvec8;
     read_enables  : in    bitvec16;
     read_datas    : inout bitvec16
@@ -607,8 +608,6 @@ end reg1;
 architecture structural of reg1 is
   signal din4 : bitvec4;
   signal din  : std_logic;
-  signal wen2 : bitvec2;
-  signal wen  : std_logic;
   signal dout : std_logic;
 begin
   
@@ -619,13 +618,8 @@ begin
   din_3: AOI22 port map (write_datas(6), write_enables(6), write_datas(7), write_enables(7), din4(3));
   din_x: ND4   port map (din4(0), din4(1), din4(2), din4(3), din);
   
-  -- Generate an 8-wide or gate for the write enable signal.
-  wen_0: NR4   port map (write_enables(0), write_enables(1), write_enables(2), write_enables(3), wen2(0));
-  wen_1: NR4   port map (write_enables(4), write_enables(5), write_enables(6), write_enables(7), wen2(1));
-  wen_x: ND2   port map (wen2(0), wen2(1), wen);
-  
   -- Instantiate the memory element.
-  mem:   DFEQ  port map (din, wen, clk, dout);
+  mem:   DFEQ  port map (din, write_enable, clk, dout);
   
   -- Instantiate the output buffers.
   buf_gen: for i in read_datas'range generate
@@ -655,7 +649,16 @@ entity reg32 is
 end reg32;
 
 architecture structural of reg32 is
+  signal write_enable2  : bitvec2;
+  signal write_enable   : std_logic;
 begin
+  
+  -- Generate an 8-wide or gate for the write enable signals.
+  wen_0: NR4 port map (write_enables(0), write_enables(1), write_enables(2), write_enables(3), write_enable2(0));
+  wen_1: NR4 port map (write_enables(4), write_enables(5), write_enables(6), write_enables(7), write_enable2(1));
+  wen_x: ND2 port map (write_enable2(0), write_enable2(1), write_enable);
+  
+  -- Generate the bit registers.
   bit_gen: for i in 31 downto 0 generate
     signal write_datas_x  : bitvec8;
     signal read_datas_x   : bitvec16;
@@ -671,6 +674,7 @@ begin
       port map (
         clk           => clk,
         write_enables => write_enables,
+        write_enable  => write_enable,
         write_datas   => write_datas_x,
         read_enables  => read_enables,
         read_datas    => read_datas_x
@@ -827,7 +831,8 @@ begin
 end structural;
 
 --=============================================================================
--- A block of eight 32-bit registers with 8 write ports and 16 read ports.
+-- A block of 126 32-bit registers with 8 write ports and 16 read ports; i.e.
+-- the complete register file for an 8-way, 2-context r-VEX.
 --=============================================================================
 library ieee;
 use ieee.std_logic_1164.all;
@@ -836,7 +841,7 @@ library rvex;
 use rvex.asic_primitives.all;
 use rvex.asic_types.all;
 
-entity reg128x32 is
+entity reg126x32 is
   port (
     clk             : in  std_logic;
     
@@ -851,9 +856,9 @@ entity reg128x32 is
     read_datas      : out bitvec32_array(15 downto 0)
     
   );
-end reg128x32;
+end reg126x32;
 
-architecture structural of reg128x32 is
+architecture structural of reg126x32 is
   signal write_addresses_local  : bitvec3_vec2_array(7 downto 0);
   signal write_enables_local    : bitvec16_array(7 downto 0);
   signal read_addresses_local   : bitvec3_vec2_array(15 downto 0);
@@ -941,6 +946,9 @@ library rvex;
 use rvex.common_pkg.all;
 use rvex.utils_pkg.all;
 use rvex.asic_types.all;
+-- pragma translate_off
+use rvex.simUtils_pkg.all;
+-- pragma translate_on
 
 --=============================================================================
 entity core_gpRegs_asic is
@@ -954,7 +962,19 @@ entity core_gpRegs_asic is
     NUM_WRITE_PORTS             : natural := 8;
     
     -- Number of read ports to instantiate. MUST BE 16.
-    NUM_READ_PORTS              : natural := 16
+    NUM_READ_PORTS              : natural := 16;
+    
+    -- Where to place the register(s) in the read path. If there is one
+    -- register, then the memory is read-before-write for READ_DATA_REG or
+    -- write-before read for READ_CMD_REG. Placing the register in the read
+    -- command is probably better because it gets rid of a forwarding stage, is
+    -- probably better power-wise due to reduced hazards in the read address.
+    -- Timing might be worse because the command is readily available while the
+    -- result goes through the ALU before the next register, but the register
+    -- read happens simultaneously to forwarding, so unless forwarding is faster
+    -- than the register read it probably doesn't matter anyway.
+    READ_CMD_REG                : boolean := true;
+    READ_DATA_REG               : boolean := false
     
   );
   port (
@@ -1031,22 +1051,32 @@ begin -- architecture
     end loop;
   end process;
   
-  -- Register the read control signals (the memory is async-read) and pack them
-  -- properly.
-  process (clk) is
-  begin
-    if rising_edge(clk) then
-      if clkEn = '1' then
-        for prt in 15 downto 0 loop
-          read_addresses(prt) <= readAddr(prt)(6 downto 0);
-          read_enables(prt) <= readEnable(prt);
-        end loop;
+  -- Pack the read control signals properly.
+  cmd_reg_gen: if READ_CMD_REG generate
+    process (clk) is
+    begin
+      if rising_edge(clk) then
+        if clkEn = '1' then
+          for prt in 15 downto 0 loop
+            read_addresses(prt) <= readAddr(prt)(6 downto 0);
+            read_enables(prt) <= readEnable(prt);
+          end loop;
+        end if;
       end if;
-    end if;
-  end process;
+    end process;
+  end generate;
+  no_cmd_reg_gen: if not READ_CMD_REG generate
+    process (readAddr, readEnable)
+    begin
+      for prt in 15 downto 0 loop
+        read_addresses(prt) <= readAddr(prt)(6 downto 0);
+        read_enables(prt) <= readEnable(prt);
+      end loop;
+    end process;
+  end generate;
   
   -- Instantiate the unit.
-  gpregs: entity rvex.reg128x32
+  gpregs: entity rvex.reg126x32
     port map (
       clk             => clk,
       write_addresses => write_addresses,
@@ -1057,13 +1087,88 @@ begin -- architecture
       read_datas      => read_datas
     );
   
-  -- Unpack the read data signal.
-  process (read_datas) is
+  -- Simulate correct behavior of the general purpose registers to check
+  -- correctness.
+  -- pragma translate_off
+  -- Describe the RAM.
+  check_block: block is
+    signal ram  : bitvec32_array(0 to 127) := (others => (others => 'U'));
   begin
-    for prt in 15 downto 0 loop
-      readData(prt) <= read_datas(prt);
-    end loop;
-  end process;
+    check_proc: process (clk) is
+      variable wval : bitvec32;
+      variable wen  : boolean;
+      variable addr : natural;
+      variable rval : bitvec32;
+      variable cval : bitvec32;
+    begin
+      if rising_edge(clk) then
+        
+        -- Handle/check the previous (combinatorial) reads.
+        for prt in 0 to 15 loop
+          if read_enables(prt) = '1' then
+            addr := to_integer(unsigned(read_addresses(prt)));
+            next when addr mod 64 = 0;
+            rval := read_datas(prt);
+            cval := ram(addr);
+            assert rval = cval
+              report "Register file check error in previous cycle:" &
+              " port=" & integer'image(prt) & " addr=" & integer'image(addr) &
+              " correct=" & rvs_hex(cval) & " read=" & rvs_hex(rval)
+              severity warning;
+          end if;
+        end loop;
+        
+        -- Handle writes.
+        for reg in 1 to 127 loop
+          
+          -- Can't write to $r0.0.
+          next when reg mod 64 = 0;
+          
+          -- Arbitrate using or().
+          wval := (others => '0');
+          wen := false;
+          for prt in 0 to 7 loop
+            if to_integer(unsigned(write_addresses(prt))) = reg then
+              if write_enables(prt) = '1' then
+                wval := wval or write_datas(prt);
+                wen := true;
+              end if;
+            end if;
+          end loop;
+          
+          -- Handle the write.
+          if wen then
+            ram(reg) <= wval;
+          end if;
+          
+        end loop;
+        
+      end if;
+    end process;
+  end block;
+  -- pragma translate_on
+  
+  -- Unpack the read data signal.
+  data_reg_gen: if READ_DATA_REG generate
+    process (clk) is
+    begin
+      if rising_edge(clk) then
+        if clkEn = '1' then
+          for prt in 15 downto 0 loop
+            readData(prt) <= read_datas(prt);
+          end loop;
+        end if;
+      end if;
+    end process;
+  end generate;
+  no_data_reg_gen: if not READ_DATA_REG generate
+    process (read_datas) is
+    begin
+      for prt in 15 downto 0 loop
+        readData(prt) <= read_datas(prt);
+      end loop;
+    end process;
+  end generate;
   
 end Behavioral;
 
