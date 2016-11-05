@@ -92,13 +92,13 @@ VEXPARSE_ENABLE = false
 VEXPARSE_FLAGS = 
 ifeq ($(DYNAMIC), true-O0)
 VEXPARSE_ENABLE = true
-VEXPARSE_FLAGS = --resched --O0
+VEXPARSE_FLAGS = --resched $(shell if grep -q docopt $(TOOLS)/vexparse/main.py; then echo --O0; else echo -O0; fi)
 else ifeq ($(DYNAMIC), true-O1)
 VEXPARSE_ENABLE = true
-VEXPARSE_FLAGS = --resched --O1
+VEXPARSE_FLAGS = --resched $(shell if grep -q docopt $(TOOLS)/vexparse/main.py; then echo --O1; else echo -O1; fi)
 else ifeq ($(DYNAMIC), true-O2)
 VEXPARSE_ENABLE = true
-VEXPARSE_FLAGS = --resched --O2
+VEXPARSE_FLAGS = --resched $(shell if grep -q docopt $(TOOLS)/vexparse/main.py; then echo --O2; else echo -O2; fi)
 else ifeq ($(DYNAMIC), true-noresched)
 VEXPARSE_ENABLE = true
 endif

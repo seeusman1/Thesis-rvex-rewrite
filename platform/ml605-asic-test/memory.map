@@ -8,14 +8,11 @@ all: _NUM_CONTEXTS           { 4 }
 0..3: CREG_GLOB               { CREG + 0x000 }
 0..3: CREG_GPREG              { CREG + 0x100 + (_CUR_CONTEXT * 0x400) }
 0..3: CREG_CTXT               { CREG + 0x200 + (_CUR_CONTEXT * 0x400) }
-0..3: PLATFORM                { 0xD0000400 }
-0..3: CACHE                   { 0xD0000800 }
-0..3: MMU                     { 0xD0000C00 }
 0..3: _TRACE_ADDR             { 0xD0002000 }
 
 # Flushes the cache.
 0..3: FLUSH_CACHE {
-  write(CACHE, 0x0F0F0000);
+  write(AFF, 0xFFFFFFFF);
 }
 
 # This is evaluated when "rvd reset" is called.
