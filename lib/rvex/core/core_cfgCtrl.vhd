@@ -554,7 +554,7 @@ begin -- architecture
       
       -- Determine how the PC addition value should be aligned.
       numGroupsLog2 := vect2uint(newNumPipelaneGroupsLog2ForContext_r(
-        vect2uint(newConfiguration_r(laneGroup*4+CFG.numLaneGroupsLog2-1 downto laneGroup*4))
+        vect2uint(newConfiguration_r(laneGroup*4+CFG.numContextsLog2-1 downto laneGroup*4))
       ));
       
       align := min_nat(
