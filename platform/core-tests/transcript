@@ -1,0 +1,11 @@
+# //  ModelSim SE-64 10.2a Mar 15 2013 Linux 4.1.27-27-default
+# //
+# //  Copyright 1991-2013 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  THIS WORK CONTAINS TRADE SECRET AND PROPRIETARY INFORMATION
+# //  WHICH IS THE PROPERTY OF MENTOR GRAPHICS CORPORATION OR ITS
+# //  LICENSORS AND IS SUBJECT TO LICENSE TERMS.
+# //
+# ** Error: (vish-3296) Unknown option '--help'.
+# Use the -help option for complete vsim usage.

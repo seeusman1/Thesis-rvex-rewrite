@@ -102,12 +102,12 @@ reset
 rctrl   0 irq 33
 
 -- Wait until the processor is asserting the interrupt enable flag.
-wait    80 write * 0 0 exclusive
+wait    800 write * 0 0 exclusive
 rctrl   0 check irq high
 
 -- The processor should now enter the trap handler, in which it writes the
 -- interrupt ID to mem 8.
-wait    80 write * 8 33 exclusive
+wait    800 write * 8 33 exclusive
 
 -- Immediately trigger another interrupt.
 rctrl   0 irq 42
@@ -115,13 +115,13 @@ rctrl   0 irq 42
 -- The processor should write 0 to mem 8 at the end of the trap handler, after
 -- which it should enter the panic handler because the trap handler disabled
 -- the ready for trap bit in the saved context control register.
-wait    80 write * 8 exclusive
-wait    40 write * 12 42 exclusive
+wait    800 write * 8 exclusive
+wait    400 write * 12 42 exclusive
 
 -- After the panic handler, the processor should just loop writing to mem 4.
-wait    40 write * 4 exclusive
-wait    40 write * 4 exclusive
-wait    40 write * 4 exclusive
+wait    400 write * 4 exclusive
+wait    400 write * 4 exclusive
+wait    400 write * 4 exclusive
 
 -- Make sure there is no interrupt pending anymore (if this is the case, the
 -- ack signal or the test runner is faulty.

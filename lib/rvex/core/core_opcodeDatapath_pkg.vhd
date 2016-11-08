@@ -193,6 +193,20 @@ package core_opcodeDatapath_pkg is
     isTrap                      : std_logic;
     isNOP                       : std_logic;
     
+    -- Latch enable flags for the functional unit inputs. When disabled and
+    -- power-saving latches are enabled at design-time, the inputs to the
+    -- respective functional units are latched/disabled to prevent as much
+    -- switching activity as possible.
+    enableALU                   : std_logic;
+    enableMul                   : std_logic;
+    enableMem                   : std_logic;
+    
+    -- Register read port enables. When disabled and power-saving latches
+    -- are enabled at design-time, the RAM blocks for the read ports are
+    -- disabled.
+    gpRegRdEnaA                 : std_logic;
+    gpRegRdEnaB                 : std_logic;
+    
   end record;
   
   -- Array type.

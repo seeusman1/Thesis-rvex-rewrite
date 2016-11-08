@@ -47,7 +47,7 @@ reset
 write   dbg word CR_TP 0x00000020
 
 -- Wait until the processor is idle.
-wait    400 idle 0
+wait    1000 idle 0
 
 -- Verify that the RFI instruction branched.
 read    dmem word  0 33

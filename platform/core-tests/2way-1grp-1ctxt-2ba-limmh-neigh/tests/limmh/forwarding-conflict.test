@@ -46,7 +46,7 @@ reset
 write   dbg word CR_PH 0x00000100
 
 -- Wait until the processor is idle.
-wait    40 idle 0
+wait    400 idle 0
 
 -- Verify that our current PC is 0x108, i.e. at the stop in the panic handler.
 read    dbg word CR_PC 0x00000108

@@ -155,6 +155,7 @@ sim-%: work compile-%
 		distclean\
 		migclean\
 		scripts-clean\
+		install-unimacro\
 		mig39\
 		install-secureip\
 		compile_xilinx_verilog_lib\

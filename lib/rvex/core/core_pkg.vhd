@@ -165,6 +165,14 @@ package core_pkg is
     -- just be in the cache.
     cachePerfCountEnable        : boolean;
     
+    -- When enabled, a disabled lane group will be forcibly stalled. This may
+    -- save power.
+    stallInactive               : boolean;
+    
+    -- When enabled, latches are inserted in various places to prevent
+    -- switching activity spent generating unused data.
+    enablePowerLatches          : boolean;
+    
   end record;
   
   -- Values for gpRegImpl.
@@ -193,7 +201,9 @@ package core_pkg is
     gpRegImpl                   => RVEX_GPREG_IMPL_MEM,
     traceEnable                 => false,
     perfCountSize               => 4,
-    cachePerfCountEnable        => false
+    cachePerfCountEnable        => false,
+    stallInactive               => true,
+    enablePowerLatches          => true
   );
   
   -- Minimal rvex core configuration.
@@ -217,7 +227,9 @@ package core_pkg is
     gpRegImpl                   => RVEX_GPREG_IMPL_MEM,
     traceEnable                 => false,
     perfCountSize               => 0,
-    cachePerfCountEnable        => false
+    cachePerfCountEnable        => false,
+    stallInactive               => false,
+    enablePowerLatches          => false
   );
   
   -- Generates a configuration for the rvex core. None of the parameters are
@@ -250,7 +262,9 @@ package core_pkg is
     gpRegImpl                   : integer := -1;
     traceEnable                 : integer := -1;
     perfCountSize               : integer := -1;
-    cachePerfCountEnable        : integer := -1
+    cachePerfCountEnable        : integer := -1;
+    stallInactive               : integer := -1;
+    enablePowerLatches          : integer := -1
   ) return rvex_generic_config_type;
   
   -- Converts a lane index to a group index.
@@ -372,7 +386,9 @@ package body core_pkg is
     gpRegImpl                   : integer := -1;
     traceEnable                 : integer := -1;
     perfCountSize               : integer := -1;
-    cachePerfCountEnable        : integer := -1
+    cachePerfCountEnable        : integer := -1;
+    stallInactive               : integer := -1;
+    enablePowerLatches          : integer := -1
   ) return rvex_generic_config_type is
     variable cfg  : rvex_generic_config_type;
   begin
@@ -405,6 +421,8 @@ package body core_pkg is
     if traceEnable            >= 0 then cfg.traceEnable           := int2bool(traceEnable); end if;
     if perfCountSize          >= 0 then cfg.perfCountSize         := perfCountSize; end if;
     if cachePerfCountEnable   >= 0 then cfg.cachePerfCountEnable  := int2bool(cachePerfCountEnable); end if;
+    if stallInactive          >= 0 then cfg.stallInactive         := int2bool(stallInactive); end if;
+    if enablePowerLatches     >= 0 then cfg.enablePowerLatches    := int2bool(enablePowerLatches); end if;
     
     cfg.cregStartAddress := overrideStdLogicVect(cfg.cregStartAddress, cregStartAddress);
     for i in 0 to 7 loop

@@ -157,6 +157,7 @@ architecture Behavioral of core_gpRegs is
   signal writeEnable              : std_logic_vector(NUM_WRITE_PORTS-1 downto 0);
   signal writeAddr                : rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
   signal writeData                : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+  signal readEnable               : std_logic_vector(NUM_READ_PORTS-1 downto 0);
   signal readAddr                 : rvex_address_array(NUM_READ_PORTS-1 downto 0);
   signal readData_comb            : rvex_data_array(NUM_READ_PORTS-1 downto 0);
   signal readData_reg             : rvex_data_array(NUM_READ_PORTS-1 downto 0);
@@ -191,6 +192,20 @@ begin -- architecture
         ADDR_UNUSED
         & creg2gpreg_ctxt
         & creg2gpreg_addr
+        
+      );
+    
+    -- Connect read enable.
+    readEnable(readPort)
+      <= (
+        
+        -- Pipelane connection.
+        pl2gpreg_readPorts(readPort).readEnable(S_RD)
+        
+      ) when creg2gpreg_claim = '0' or readPort /= 0 else (
+        
+        -- Debug override connection.
+        '1'
         
       );
     
@@ -360,6 +375,7 @@ begin -- architecture
         writeData               => writeData,
         
         -- Read ports.
+        readEnable              => readEnable,
         readAddr                => readAddr,
         readData                => readData_comb
         
@@ -367,7 +383,7 @@ begin -- architecture
   end generate;
   
   simple_mem_gen: if INST_SYNTH_MEM and CFG.gpRegImpl = RVEX_GPREG_IMPL_SIMPLE generate
-    synth_mem: entity rvex.core_gpRegs_simple
+    simple_mem: entity rvex.core_gpRegs_simple
       generic map (
         NUM_REGS_LOG2           => NUM_REGS_LOG2,
         NUM_WRITE_PORTS         => NUM_WRITE_PORTS,

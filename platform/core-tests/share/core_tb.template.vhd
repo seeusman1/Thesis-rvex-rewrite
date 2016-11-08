@@ -1006,7 +1006,7 @@ begin -- architecture
       stim2mem_writeData <= syllable;
       wait for 0 ns;
       stim2mem_writeEnable <= '0';
-      wait for 0 ns;
+      wait for 1 ps; -- Prevent iteration limit problems.
       
       -- Increment the loading pointer.
       loadPtr := std_logic_vector(vect2unsigned(loadPtr) + 4);

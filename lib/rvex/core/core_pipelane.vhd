@@ -2075,8 +2075,41 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Drive the general purpose register addresses for each forwarded stage.
     for stage in S_RD to S_FW loop
+      
+      -- Setup port A.
       pl2gpreg_readPortA.addr(stage) <= s(stage).dp.src1;
+      pl2gpreg_readPortA.readEnable(stage) <= s(stage).valid;
+      
+      -- Setup port B.
       pl2gpreg_readPortB.addr(stage) <= s(stage).dp.src2;
+      pl2gpreg_readPortB.readEnable(stage) <= s(stage).valid;
+      
+      -- If power latch optimizations are enabled, disable the readEnable
+      -- signal if we can know in advance that the value won't be used.
+      if CFG.enablePowerLatches then
+        
+        -- Disable port A when we're reading r0.
+        if s(stage).dp.src1 = GPREG_ZERO then
+          pl2gpreg_readPortA.readEnable(stage) <= '0';
+        end if;
+        
+        -- Disable port A when it's not used by the instruction.
+        if s(stage).dp.c.gpRegRdEnaA = '0' then
+          pl2gpreg_readPortA.readEnable(stage) <= '0';
+        end if;
+        
+        -- Disable port B when we're reading r0.
+        if s(stage).dp.src2 = GPREG_ZERO then
+          pl2gpreg_readPortB.readEnable(stage) <= '0';
+        end if;
+        
+        -- Disable port B when it's not used by the instruction.
+        if s(stage).dp.c.gpRegRdEnaB = '0' then
+          pl2gpreg_readPortB.readEnable(stage) <= '0';
+        end if;
+        
+      end if;
+      
     end loop;
     
     -- Copy the read values into the pipeline for each forwarded stage. Only
@@ -2251,10 +2284,12 @@ begin -- architecture
     -- Connect pipeline to ALU and optionally select PC+1 as integer result
     ---------------------------------------------------------------------------
     -- Drive ALU inputs.
-    pl2alu_opcode(S_ALU)  <= s(S_ALU).opcode;
-    pl2alu_op1(S_ALU)     <= s(S_ALU).dp.op1;
-    pl2alu_op2(S_ALU)     <= s(S_ALU).dp.op2;
-    pl2alu_opBr(S_ALU)    <= s(S_ALU).dp.opBr;
+    if s(S_ALU).dp.c.enableALU = '1' or not CFG.enablePowerLatches then
+      pl2alu_opcode(S_ALU)  <= s(S_ALU).opcode;
+      pl2alu_op1(S_ALU)     <= s(S_ALU).dp.op1;
+      pl2alu_op2(S_ALU)     <= s(S_ALU).dp.op2;
+      pl2alu_opBr(S_ALU)    <= s(S_ALU).dp.opBr;
+    end if;
       
     -- Copy ALU integer outputs into pipeline.
     s(S_ALU+L_ALU1).dp.resAdd     := alu2pl_resultAdd(S_ALU+L_ALU1);
@@ -2286,9 +2321,11 @@ begin -- architecture
     if HAS_MUL then
       
       -- Drive multiplication unit inputs.
-      pl2mulu_opcode(S_MUL) <= s(S_MUL).opcode;
-      pl2mulu_op1(S_MUL)    <= s(S_MUL).dp.op1;
-      pl2mulu_op2(S_MUL)    <= s(S_MUL).dp.op2;
+      if s(S_MUL).dp.c.enableMul = '1' or not CFG.enablePowerLatches then
+        pl2mulu_opcode(S_MUL) <= s(S_MUL).opcode;
+        pl2mulu_op1(S_MUL)    <= s(S_MUL).dp.op1;
+        pl2mulu_op2(S_MUL)    <= s(S_MUL).dp.op2;
+      end if;
       
       -- Copy multiplication unit output into pipeline.
       s(S_MUL+L_MUL).dp.resMul      := mulu2pl_result(S_MUL+L_MUL);
@@ -2510,10 +2547,14 @@ begin -- architecture
     -- should not be issued when a trap is detected in this stage.
     if HAS_MEM then
       
-      pl2memu_valid(S_MEM)  <= s(S_MEM).valid;
-      pl2memu_opcode(S_MEM) <= s(S_MEM).opcode;
-      pl2memu_opAddr(S_MEM) <= s(S_MEM).dp.resAdd;
-      pl2memu_opData(S_MEM) <= s(S_MEM).dp.op3;
+      if s(S_MEM).dp.c.enableMem = '1' or not CFG.enablePowerLatches then
+        pl2memu_valid(S_MEM)  <= s(S_MEM).valid;
+        pl2memu_opcode(S_MEM) <= s(S_MEM).opcode;
+        pl2memu_opAddr(S_MEM) <= s(S_MEM).dp.resAdd;
+        pl2memu_opData(S_MEM) <= s(S_MEM).dp.op3;
+      else
+        pl2memu_valid(S_MEM)  <= '0';
+      end if;
       
     end if;
     
@@ -2886,6 +2927,17 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Drive stage outputs
     ---------------------------------------------------------------------------
+    -- If power optimizations are enabled, only update the datapath-related
+    -- signals if the new instruction is actually valid.
+    if CFG.enablePowerLatches then
+      for stage in S_FIRST to S_LAST-1 loop
+        if s(stage).valid = '0' and s(stage).limmValid = '0' then
+          s(stage).dp := si(stage+1).dp;
+        end if;
+      end loop;
+    end if;
+    
+    -- Assign the stage output/register input signal.
     so <= s;
     
   end process;
