@@ -1,0 +1,86 @@
+name    Test ALU adder instructions
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+
+-- Initialize memories.
+init
+
+-- Test 2<<n + 1 and 1 - 2.
+load    add r0.1 = r0.0, 2
+load    add r0.2 = r0.0, 1
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     add-kernel.inc
+
+-- Test random numbers 0x6560d079 and 0x2cff892c.
+load    limmh 1, 0x6560d079
+load    add r0.1 = r0.0, 0x6560d079
+load    limmh 3, 0x2cff892c
+load    add r0.2 = r0.0, 0x2cff892c
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     add-kernel.inc
+
+-- Test random numbers 0x6900957a and 0xed8dc2cc.
+load    limmh 1, 0x6900957a
+load    add r0.1 = r0.0, 0x6900957a
+load    limmh 3, 0xed8dc2cc
+load    add r0.2 = r0.0, 0xed8dc2cc
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     add-kernel.inc
+
+-- Stop the processor.
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stop ;;
+
+-- Reset the processor.
+reset
+
+-- Test 2 + 1 and 1 - 2.
+wait    400 write *  0   3  exclusive  -- 2 + 1
+wait    40  write *  4   5  exclusive  -- 2<<1 + 1
+wait    40  write *  8   9  exclusive  -- 2<<2 + 1
+wait    40  write * 12  17  exclusive  -- 2<<3 + 1
+wait    40  write * 16  33  exclusive  -- 2<<4 + 1
+wait    40  write * 20  -1  exclusive  -- 1 - 2
+
+-- Test random numbers 0x6560d079 and 0x2cff892c.
+wait    400 write *  0  0x926059A5 exclusive
+wait    40  write *  4  0xF7C12A1E exclusive
+wait    40  write *  8  0xC282CB10 exclusive
+wait    40  write * 12  0x58060CF4 exclusive
+wait    40  write * 16  0x830C90BC exclusive
+wait    40  write * 20  0xC79EB8B3 exclusive
+
+-- Test random numbers 0x6900957a and 0xed8dc2cc.
+wait    400 write *  0  0x568E5846 exclusive
+wait    40  write *  4  0xBF8EEDC0 exclusive
+wait    40  write *  8  0x919018B4 exclusive
+wait    40  write * 12  0x35926E9C exclusive
+wait    40  write * 16  0x7D971A6C exclusive
+wait    40  write * 20  0x848D2D52 exclusive
+
+-- Wait until the processor is idle.
+wait    40 idle 0
+

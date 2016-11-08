@@ -1,0 +1,35 @@
+-- Because VHDL can't list files in a directory, we need some kind of index
+-- file to help it. Just list every file you want to conformance test in this
+-- file.
+
+-- Test basic STW and STOP functionality, which pretty much all other tests
+-- rely on.
+sanity.test
+
+-- Test register files and forwarding. This also kind of tests ADD, CMPEQ,
+-- STBR, MOVTL and STW (link).
+regs/index.suite
+
+-- Test LIMMH instructions.
+limmh/index.suite
+
+-- Test ALU instructions.
+alu/index.suite
+
+-- Test MUL instructions.
+mul/index.suite
+
+-- Test memory unit instructions.
+mem/index.suite
+
+-- Test branch unit instructions.
+branch/index.suite
+
+-- Test dynamic reconfiguration.
+reconf/index.suite
+
+-- Test debug support.
+debug/index.suite
+
+-- Real-world program: sorting.
+ucbqsort.test

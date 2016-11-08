@@ -1,0 +1,19 @@
+-- Test suite for the register files and forwarding logic.
+
+-- Test general purpose register file (requires ADD and STW). Also tests if
+-- writes to r0.0 are properly ignored.
+gp-regs.test
+gp-forwarding.test
+gp-regs-gen.test
+
+-- Test branch register file (requires CMPEQ and STBR).
+br-regs.test
+br-forwarding.test
+
+-- Test link register (requires ADD, MOVTL and STW (link)).
+link-reg.test
+link-forwarding.test
+
+-- Test link = r0.63 logic (requires ADD, MOVTL and STW (link)).
+link-is-r63.test
+link-is-not-r63.test

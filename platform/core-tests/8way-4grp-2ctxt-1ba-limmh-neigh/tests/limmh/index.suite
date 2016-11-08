@@ -1,0 +1,29 @@
+-- This test suite contains test cases for LIMMH forwarding. All cases depend
+-- on correct behavior for NOP, STOP, STW and ADD instructions, the general
+-- purpose register file and forwarding. from-previous-pair-trap.test also
+-- depends on RFI, TRAP and in general, sane trap handling.
+
+-- The following test cases test LIMMH behavior when the respective forwarding
+-- method is enabled in the CFG vector.
+from-neighbor.test
+from-previous-pair.test
+
+-- The following test cases test LIMMH behavior when the respective forwarding
+-- method is DISABLED in the CFG vector.
+from-neighbor-disabled.test
+from-previous-pair-disabled.test
+
+-- This test case tests whether the LIMMH instructions from the preceding
+-- syllable pair are properly fetched in the case of a branch to the middle of
+-- a bundle, which must be possible using RFI.
+from-previous-pair-rfi.test
+
+-- This tests the trap which is caused when the destined LIMMH lane isn't using
+-- it, which might well point to an invalid forwarding request (or a broken
+-- assembler).
+limmh-unused.test
+
+-- This tests the trap which is caused when two LIMMH syllables try to forward
+-- to the same lane.
+forwarding-conflict.test
+

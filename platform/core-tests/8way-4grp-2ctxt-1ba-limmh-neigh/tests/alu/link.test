@@ -1,0 +1,113 @@
+name    Test MOVFL, MOVTL, LDW (link) and STW (link)
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+
+-- Initialize memories.
+init
+
+-- Load a random value into r0.1, and load the link register from a zero memory
+-- location.
+load    limmh 1, 0x12345678
+load    add r0.1 = r0.0, 0x12345678
+load    add r0.2 = r0.0, 0
+load    nop
+load    nop
+load    nop
+load    ldw l0.0 = 0[r0.0]
+load    nop ;;
+
+-- Delay for a bit, in case forwarding is disabled.
+loadnops  64
+
+-- Move the random value to the link register, while dumping the value read at
+-- memory address 0.
+load    movtl l0.0 = r0.1
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stw 0[r0.0] = l0.0
+load    nop ;;
+
+-- Delay for a bit, in case forwarding is disabled.
+loadnops  64
+
+-- Copy the random value back into a register and dump the value.
+load    movfl r0.2 = l0.0
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stw 0[r0.0] = l0.0
+load    nop ;;
+
+-- Delay for a bit, in case forwarding is disabled.
+loadnops  64
+
+-- Dump the value of the register.
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stw 0[r0.0] = r0.2
+load    nop ;;
+
+-- Load a different value into the link register from the memory.
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    ldw l0.0 = 4[r0.0]
+load    nop ;;
+
+-- Delay for a bit, in case forwarding is disabled.
+loadnops  64
+
+-- Copy it back to a register and dump the value.
+load    movfl r0.2 = l0.0
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stw 0[r0.0] = l0.0
+load    nop ;;
+
+-- Delay for a bit, in case forwarding is disabled.
+loadnops  64
+
+-- Dump the value of the register and stop.
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stw 8[r0.0] = r0.2
+load    stop ;;
+
+-- Reset the processor.
+reset
+
+-- Write some random value into the memory for LDW to load.
+write   dmem word 4 0x3456789A
+
+-- Make sure that the processor writes the correct values.
+wait    400 write *  0   0x00000000  exclusive
+wait    40  write *  0   0x12345678  exclusive
+wait    40  write *  0   0x12345678  exclusive
+wait    40  write *  0   0x3456789A  exclusive
+wait    40  write *  8   0x3456789A  exclusive
+
+-- Wait for the processor to stop.
+wait    40  idle 0
+

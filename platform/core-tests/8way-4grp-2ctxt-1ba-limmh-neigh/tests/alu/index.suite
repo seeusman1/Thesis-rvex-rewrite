@@ -1,0 +1,37 @@
+-- This test suite tests all the ALU instructions.
+--
+-- It assumes that when ADD can be used to load (long) immediates, the
+-- immediate datapath will work for all other ALU instructions as well.
+
+-- Test ADD, SH1ADD, SH2ADD, SH3ADD, SH4ADD and SUB.
+add.test
+
+-- Test AND, ANDC, OR, ORC and XOR.
+bitwise.test
+
+-- Test MAX, MAXU, MIN, MINU, SLCT and SLCTF.
+selection.test
+
+-- Test SHL, SHR and SHRU.
+shift.test
+
+-- Test SBIT, SBITF, TBIT, TBITF (only the branch destination version of the
+-- TBIT and TBITF instructions are tested), and CLZ.
+bit.test
+
+-- Test SXTB, SXTH, ZXTB and ZXTH.
+extend.test
+
+-- Test CMPEQ, CMPGE, CMPGEU, CMPGT, CMPGTU, CMPLE, CMPLEU, CMPLT, CMPLTU and
+-- CMPNE.
+compare.test
+
+-- Test NANDL, NORL, ORL and ANDL.
+logical.test
+
+-- Test DIVS and ADDCG. Requires forwarding; compiled/assembled using external
+-- applications, i.e. a C compiler. I believe it was the HP one.
+div.test
+
+-- Test MOVTL and MOVFL.
+link.test

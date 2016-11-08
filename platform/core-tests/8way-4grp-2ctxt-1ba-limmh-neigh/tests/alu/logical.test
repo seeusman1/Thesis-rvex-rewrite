@@ -1,0 +1,89 @@
+name    Test ALU logical instructions
+
+-- Check configuration.
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+
+-- Initialize memories.
+init
+
+-- Test 0x12345678 and 0x87654321.
+load    limmh 1, 0x12345678
+load    add r0.1 = r0.0, 0x12345678
+load    limmh 3, 0x87654321
+load    add r0.2 = r0.0, 0x87654321
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     logical-kernel.inc
+
+-- Test 0 and 0x87654321.
+load    nop
+load    add r0.1 = r0.0, 0
+load    limmh 3, 0x87654321
+load    add r0.2 = r0.0, 0x87654321
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     logical-kernel.inc
+
+-- Test 0x12345678 and 0.
+load    limmh 1, 0x12345678
+load    add r0.1 = r0.0, 0x12345678
+load    nop
+load    add r0.2 = r0.0, 0
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     logical-kernel.inc
+
+-- Test 0 and 0.
+load    nop
+load    add r0.1 = r0.0, 0
+load    nop
+load    add r0.2 = r0.0, 0
+load    nop
+load    nop
+load    nop
+load    nop ;;
+
+inc     logical-kernel.inc
+
+-- Reset the processor.
+reset
+
+-- Test true and true.
+wait    400 write *  4 0 exclusive  -- nandl
+wait    40  write *  8 0 exclusive  -- norl
+wait    40  write * 12 1 exclusive  -- orl
+wait    40  write * 16 1 exclusive  -- andl
+read    dmem byte 0 0b1100          -- branch equivalents of the above
+
+-- Test false and true.
+wait    400 write *  4 1 exclusive  -- nandl
+wait    40  write *  8 0 exclusive  -- norl
+wait    40  write * 12 1 exclusive  -- orl
+wait    40  write * 16 0 exclusive  -- andl
+read    dmem byte 0 0b0101          -- branch equivalents of the above
+
+-- Test true and false.
+wait    400 write *  4 1 exclusive  -- nandl
+wait    40  write *  8 0 exclusive  -- norl
+wait    40  write * 12 1 exclusive  -- orl
+wait    40  write * 16 0 exclusive  -- andl
+read    dmem byte 0 0b0101          -- branch equivalents of the above
+
+-- Test false and false.
+wait    400 write *  4 1 exclusive  -- nandl
+wait    40  write *  8 1 exclusive  -- norl
+wait    40  write * 12 0 exclusive  -- orl
+wait    40  write * 16 0 exclusive  -- andl
+read    dmem byte 0 0b0011          -- branch equivalents of the above
+
