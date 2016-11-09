@@ -920,36 +920,73 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the general purpose register file
   -----------------------------------------------------------------------------
-  gpreg_inst: entity rvex.core_gpRegs
-    generic map (
-      CFG                           => CFG
-    )
-    port map (
-      
-      -- System control.
-      reset                         => reset_s,
-      clk                           => clk,
-      clkEn                         => clkEn,
-      stall                         => stall,
+  gpreg_normal: if CFG.gpRegImpl /= RVEX_GPREG_IMPL_ASIC generate
+    gpreg_inst: entity rvex.core_gpRegs
+      generic map (
+        CFG                           => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                         => reset_s,
+        clk                           => clk,
+        clkEn                         => clkEn,
+        stall                         => stall,
 
-      -- Decoded configuration signals.
-      cfg2any_coupled               => cfg2any_coupled,
-      cfg2any_context               => cfg2any_context,
-      
-      -- Read and write ports.
-      pl2gpreg_readPorts            => pl2gpreg_readPorts,
-      gpreg2pl_readPorts            => gpreg2pl_readPorts,
-      pl2gpreg_writePorts           => pl2gpreg_writePorts,
-      
-      -- Debug interface.
-      creg2gpreg_claim              => creg2gpreg_claim,
-      creg2gpreg_addr               => creg2gpreg_addr,
-      creg2gpreg_ctxt               => creg2gpreg_ctxt,
-      creg2gpreg_writeEnable        => creg2gpreg_writeEnable,
-      creg2gpreg_writeData          => creg2gpreg_writeData,
-      gpreg2creg_readData           => gpreg2creg_readData
-      
-    );
+        -- Decoded configuration signals.
+        cfg2any_coupled               => cfg2any_coupled,
+        cfg2any_context               => cfg2any_context,
+        
+        -- Read and write ports.
+        pl2gpreg_readPorts            => pl2gpreg_readPorts,
+        gpreg2pl_readPorts            => gpreg2pl_readPorts,
+        pl2gpreg_writePorts           => pl2gpreg_writePorts,
+        
+        -- Debug interface.
+        creg2gpreg_claim              => creg2gpreg_claim,
+        creg2gpreg_addr               => creg2gpreg_addr,
+        creg2gpreg_ctxt               => creg2gpreg_ctxt,
+        creg2gpreg_writeEnable        => creg2gpreg_writeEnable,
+        creg2gpreg_writeData          => creg2gpreg_writeData,
+        gpreg2creg_readData           => gpreg2creg_readData
+        
+      );
+  end generate;
+  
+  -- The ASIC has a custom design for both the register file and forwarding
+  -- logic.
+  gpreg_asic: if CFG.gpRegImpl = RVEX_GPREG_IMPL_ASIC generate
+    gpreg_inst: entity rvex.core_gpRegs_asic
+      generic map (
+        CFG                           => CFG
+      )
+      port map (
+        
+        -- System control.
+        reset                         => reset_s,
+        clk                           => clk,
+        clkEn                         => clkEn,
+        stall                         => stall,
+
+        -- Decoded configuration signals.
+        cfg2any_coupled               => cfg2any_coupled,
+        cfg2any_context               => cfg2any_context,
+        
+        -- Read and write ports.
+        pl2gpreg_readPorts            => pl2gpreg_readPorts,
+        gpreg2pl_readPorts            => gpreg2pl_readPorts,
+        pl2gpreg_writePorts           => pl2gpreg_writePorts,
+        
+        -- Debug interface.
+        creg2gpreg_claim              => creg2gpreg_claim,
+        creg2gpreg_addr               => creg2gpreg_addr,
+        creg2gpreg_ctxt               => creg2gpreg_ctxt,
+        creg2gpreg_writeEnable        => creg2gpreg_writeEnable,
+        creg2gpreg_writeData          => creg2gpreg_writeData,
+        gpreg2creg_readData           => gpreg2creg_readData
+        
+      );
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Instantiate the instruction buffer

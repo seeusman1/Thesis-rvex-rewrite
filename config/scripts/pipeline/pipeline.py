@@ -116,7 +116,7 @@ def parse(indir):
         ('S_WB',    ['x >= S_ALU + L_ALU1 + L_ALU2',
                      'x >= S_MUL + L_MUL1 + L_MUL2',
                      'x >= S_MEM + L_MEM']),
-        ('L_WB',    ['x == 1']),
+        ('L_WB',    ['x in [0, 1]']),
         ('S_SWB',   ['x >= S_ALU + L_ALU1 + L_ALU2',
                      'x >= S_MUL + L_MUL1 + L_MUL2',
                      'x >= S_MEM + L_MEM']),

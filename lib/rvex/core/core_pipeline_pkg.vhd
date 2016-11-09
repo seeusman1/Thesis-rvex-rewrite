@@ -110,7 +110,7 @@ package core_pipeline_pkg is
   -- definitions determine the latency of a block, i.e., how many stages later
   -- the results of a block are expected to be valid.
 
-  constant S_LAST               : natural := 6;                                                      -- GENERATED --
+  constant S_LAST               : natural := 5;                                                      -- GENERATED --
   constant S_BR                 : natural := 3;
   constant S_FW                 : natural := 3;
   constant S_SRD                : natural := 3;
@@ -125,7 +125,7 @@ package core_pipeline_pkg is
   constant L_ALU1               : natural := 0;
   constant S_TRAP               : natural := 2;
   constant L_ALU2               : natural := 1;
-  constant L_WB                 : natural := 1;
+  constant L_WB                 : natural := 0;
   constant L_ALU                : natural := 1;
   constant S_BRK                : natural := 4;
   constant S_PCP1               : natural := 1;
