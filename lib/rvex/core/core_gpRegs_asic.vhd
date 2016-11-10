@@ -1760,13 +1760,11 @@ begin -- architecture
   
   -- Connect the read data output.
   read_data_gen: for prt in 0 to 15 generate
-    gpreg2pl_readPorts(prt) <= (
-      data  => (S_RD+L_RD => read_datas(S_RD+L_RD+1)(prt)),
-      valid => (S_RD+L_RD => '1')
-    );
+    gpreg2pl_readPorts(prt).data(S_RD+L_RD) <= read_datas(S_RD+L_RD+1)(prt);
+    gpreg2pl_readPorts(prt).valid(S_RD+L_RD) <= '1';
   end generate;
   
-  gpreg2creg_readData <= read_datas(S_WB)(0);
+  gpreg2creg_readData <= read_datas(S_WB+1)(0);
   
 end Behavioral;
 

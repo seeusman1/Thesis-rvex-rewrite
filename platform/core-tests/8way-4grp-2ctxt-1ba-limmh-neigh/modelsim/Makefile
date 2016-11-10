@@ -1,6 +1,6 @@
 
 RVLIB = ../../../../lib/rvex
-VHDL_LIBS = unisim common utils core work
+VHDL_LIBS = common utils core work
 
 include ../../../share/modelsim.makefile
 
