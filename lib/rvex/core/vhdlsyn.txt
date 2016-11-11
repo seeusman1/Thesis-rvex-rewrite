@@ -27,8 +27,9 @@ core_globalRegLogic.vhd
 core_gpRegs_mem.vhd
 core_gpRegs_sim.vhd
 core_gpRegs_simple.vhd
-core_gpRegs_asic.vhd
 core_gpRegs.vhd
+core_gpRegs_asic.vhd
+core_gpRegs_asic_behav1.vhd
 core_limmRouting.vhd
 core_memu.vhd
 core_mulu.vhd
