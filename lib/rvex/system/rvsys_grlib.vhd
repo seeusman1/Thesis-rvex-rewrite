@@ -96,7 +96,16 @@ entity rvsys_grlib is
     CHECK_MEM                   : boolean := false;
     
     -- S-record initialization file for the memory checking code.
-    CHECK_MEM_FILE              : string := ""
+    CHECK_MEM_FILE              : string := "";
+    
+    -- Register consistency check output filename.
+    RCC_RECORD                  : string := "";
+    
+    -- Register consistency check input filename.
+    RCC_CHECK                   : string := "";
+    
+    -- Context to use for the consistency check.
+    RCC_CTXT                    : natural := 0
     
   );
   port (
@@ -166,7 +175,10 @@ begin -- architecture
       PLATFORM_TAG              => PLATFORM_TAG,
       AHB_MASTER_INDEX_START    => AHB_MASTER_INDEX_START,
       CHECK_MEM                 => CHECK_MEM,
-      CHECK_MEM_FILE            => CHECK_MEM_FILE
+      CHECK_MEM_FILE            => CHECK_MEM_FILE,
+      RCC_RECORD                => RCC_RECORD,
+      RCC_CHECK                 => RCC_CHECK,
+      RCC_CTXT                  => RCC_CTXT
     )
     port map (
       clki                      => clki,
