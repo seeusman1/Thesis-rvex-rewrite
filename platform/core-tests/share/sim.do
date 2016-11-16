@@ -12,6 +12,9 @@ vsim -t ps -novopt -L unisim work.core_tb
 onerror {resume}
 add wave -group "Test case info" sim:/core_tb/sim_*
 
+# Log everything when running in the GUI.
+add log -r sim:/core_tb/*
+
 # Change radix to hexadecimal.
 radix hex
 

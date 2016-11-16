@@ -24,7 +24,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
     variable v        : ddr_reg_type;   -- local variables for registers
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/config.vhd	2016-11-03 17:06:11.105073780 +0100
++++ work/config.vhd	2016-11-15 10:39:15.280209449 +0100
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -41,7 +41,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
  package config is
  -- Technology and synthesis options
    constant CFG_FABTECH : integer := virtex6;
-@@ -21,62 +30,43 @@ package config is
+@@ -21,62 +30,45 @@ package config is
    constant CFG_NOASYNC : integer := 0;
    constant CFG_SCAN : integer := 0;
  -- LEON3 processor core
@@ -117,10 +117,12 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    cregStartAddress            => X"FFFFFC00",
 +    resetVectors                => (others => (others => '0')),
 +    unifiedStall                => 0,
-+    gpRegImpl                   => RVEX_GPREG_IMPL_MEM,
++    gpRegImpl                   => RVEX_GPREG_IMPL_ASIC_BEHAV1,
 +    traceEnable                 => 0,
-+    perfCountSize               => 0,
-+    cachePerfCountEnable        => 0
++    perfCountSize               => 4,
++    cachePerfCountEnable        => 0,
++    stallInactive               => 1,
++    enablePowerLatches          => 1
 +  );
 +  constant ASIC_CCFG : cache_generic_config_type := cache_cfg(
 +    instrCacheLinesLog2         => 8, --  2^8 [lines/block] * 2^2 [lane groups] * 2^3 [lanes] * 4 [bytes/syllable] = 32 kiB
@@ -140,7 +142,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
    constant CFG_FPNPEN : integer := 0;
    constant CFG_AHBIO : integer := 16#FFF#;
    constant CFG_APBADDR : integer := 16#800#;
-@@ -84,84 +74,13 @@ package config is
+@@ -84,84 +76,13 @@ package config is
    constant CFG_AHB_MONERR : integer := 0;
    constant CFG_AHB_MONWAR : integer := 0;
    constant CFG_AHB_DTRACE : integer := 0;
@@ -2355,7 +2357,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/leon3mp.vhd	2016-11-03 17:16:33.203936354 +0100
++++ work/leon3mp.vhd	2016-11-03 17:43:18.082683577 +0100
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License
@@ -2365,7 +2367,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
  ------------------------------------------------------------------------------
  
  library ieee;
-@@ -45,808 +45,839 @@ library esa;
+@@ -45,808 +45,833 @@ library esa;
  use esa.memoryctrl.all;
  use work.config.all;
  use work.ml605.all;
@@ -3250,12 +3252,6 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      );
 +      i := i + 1;
 +      
-+      -- Interrupt trigger.
-+      retval(i) := addrRangeAndMap(
-+        match => "------10" & "--------" & "--------" & "--------"
-+      );
-+      i := i + 1;
-+      
 +      return retval;
 +    end function;
 +
@@ -3909,8 +3905,8 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +        if reset = '0' then
 +          
 +          -- Map bit indices in the 32-bit write data word to interrupts.
-+          if bus2uart.address(3 downto 2) = "11" then
-+            if rvbsi(1).writeEnable = '1' and bus2uart.writeMask = "1111" then
++          if rvbsi(1).address(3 downto 2) = "11" then
++            if rvbsi(1).writeEnable = '1' and rvbsi(1).writeMask = "1111" then
 +              irq <= rvbsi(1).writeData(irq'range);
 +            end if;
 +          end if;
