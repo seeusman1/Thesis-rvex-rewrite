@@ -683,12 +683,14 @@ begin -- architecture
           -- Reset the dema2arb and arb2dema signals.
           dema2arb_readEnable_r  <= '0';
           dema2arb_writeEnable_r <= '0';
+          dema2arb_phase         <= "00";
           arb2dema_busy          <= '0';
           arb2dema_ack           <= '0';
           
           -- Reset the dbg2arb and arb2dbg signals.
           dbg2arb_readEnable_r   <= '0';
           dbg2arb_writeEnable_r  <= '0';
+          dbg2arb_phase          <= "00";
           arb2dbg_busy           <= '0';
           arb2dbg_ack            <= '0';
           

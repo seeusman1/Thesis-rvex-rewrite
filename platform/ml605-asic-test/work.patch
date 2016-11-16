@@ -24,7 +24,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
     variable v        : ddr_reg_type;   -- local variables for registers
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd work/config.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/config.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/config.vhd	2016-11-15 10:39:15.280209449 +0100
++++ work/config.vhd	2016-11-16 14:00:22.613712327 +0100
 @@ -13,6 +13,15 @@
  library techmap;
  use techmap.gencomp.all;
@@ -113,7 +113,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    traps                       => 2,
 +    limmhFromNeighbor           => 1,
 +    limmhFromPreviousPair       => 0,
-+    reg63isLink                 => 1,
++    reg63isLink                 => 0,
 +    cregStartAddress            => X"FFFFFC00",
 +    resetVectors                => (others => (others => '0')),
 +    unifiedStall                => 0,
@@ -2357,7 +2357,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +INST "*/pcie_clocking_i/mmcm_adv_i" LOC = MMCM_ADV_X0Y7;
 diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd work/leon3mp.vhd
 --- ../../grlib/grlib-gpl-1.3.7-b4144/designs/leon3-xilinx-ml605/leon3mp.vhd	2014-04-16 16:51:31.000000000 +0200
-+++ work/leon3mp.vhd	2016-11-03 17:43:18.082683577 +0100
++++ work/leon3mp.vhd	2016-11-16 13:59:54.477960419 +0100
 @@ -18,7 +18,7 @@
  --
  --  You should have received a copy of the GNU General Public License
@@ -2367,7 +2367,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
  ------------------------------------------------------------------------------
  
  library ieee;
-@@ -45,808 +45,833 @@ library esa;
+@@ -45,808 +45,827 @@ library esa;
  use esa.memoryctrl.all;
  use work.config.all;
  use work.ml605.all;
@@ -3228,7 +3228,6 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 ----  APB Bridge and various periherals -------------------------------
 -----------------------------------------------------------------------
 +    signal reset        : std_logic;
-+    signal clk          : std_logic;
 +    
 +    -- Busses between the demuxer and the bus stages.
 +    signal rvbsi_s      : bus_mst2slv_array(0 to N_RVB_SLAVES - 1);
@@ -3258,7 +3257,6 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  begin
 +
 +    reset <= not rstn;
-+    clk <= clkm;
 +
 +    -- Instantiate the bus bridge.
 +    rvex_bus_bridge_inst: entity rvex.ahb2bus
@@ -3271,7 +3269,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      )
 +      port map (
 +        reset           => reset,
-+        clk             => clk,
++        clk             => clkm,
 +        ahb2bridge      => ahbsi,
 +        bridge2ahb      => ahbso(2),
 +        bridge2bus      => rvbmo,
@@ -3299,7 +3297,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      )
 +      port map (
 +        reset           => reset,
-+        clk             => clk,
++        clk             => clkm,
 +        clkEn           => '1',
 +        mst2demux       => rvbmo,
 +        demux2mst       => rvbmi,
@@ -3312,7 +3310,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      rvex_bus_stage: entity rvex.bus_stage
 +        port map (
 +          reset           => reset,
-+          clk             => clk,
++          clk             => clkm,
 +          clkEn           => '1',
 +          mst2stage       => rvbsi_s(i),
 +          stage2mst       => rvbso_s(i),
@@ -3501,7 +3499,6 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  ------------------------------------------------------------------------------
 +  asic_mockup_block: block
 +    signal reset        : std_logic;
-+    signal clk          : std_logic;
 +    signal airq         : std_logic_vector(ASIC_IRQ_NUM_IRQ downto 1);
 +    signal rv2mem       : bus_mst2slv_type;
 +    signal mem2rv       : bus_slv2mst_type;
@@ -3517,7 +3514,6 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 -                   kbytes => CFG_AHBRSZ, pipe => CFG_AHBRPIPE)
 -      port map (rstn, clkm, ahbsi, ahbso(3));
 +    reset <= not rstn;
-+    clk <= clkm;
 +    
 +    -- The timer interrupt cannot be controlled from the FPGA in the ASIC
 +    -- platform.
@@ -3534,7 +3530,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      )
 +      port map (
 +        reset             => reset,
-+        clk               => clk,
++        clk               => clkm,
 +        bus2bridge        => rv2mem,
 +        bridge2bus        => mem2rv,
 +        bridge2ahb        => ahbmo(0),
@@ -3557,7 +3553,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      )
 +      port map (
 +        reset                       => reset,
-+        clk                         => clk,
++        clk                         => clkm,
 +        rv2mem                      => rv2mem,
 +        mem2rv                      => mem2rv,
 +        dbg2rv                      => rvbsi(0),
@@ -3847,7 +3843,6 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  -- Debug UART
 +  rvuartgen : block
 +    signal reset        : std_logic;
-+    signal clk          : std_logic;
 +    signal rx           : std_logic;
 +    signal tx           : std_logic;
 +    signal uart2dbg_bus : bus_mst2slv_type;
@@ -3856,7 +3851,6 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +  begin
 +
 +    reset <= not rstn;
-+    clk <= clkm;
 +
 +    -- Instantiate the AHB master for the debug UART.
 +    rvex_uart_mst_inst: entity rvex.bus2ahb
@@ -3869,7 +3863,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      )
 +      port map (
 +        reset             => reset,
-+        clk               => clk,
++        clk               => clkm,
 +        bus2bridge        => uart2dbg_bus,
 +        bridge2bus        => dbg2uart_bus,
 +        bridge2ahb        => ahbmo(2),
@@ -3885,7 +3879,7 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +      )
 +      port map (
 +        reset             => reset,
-+        clk               => clk,
++        clk               => clkm,
 +        clkEn             => '1',
 +        rx                => rx,
 +        tx                => tx,
@@ -3898,9 +3892,9 @@ diff -rupN '--exclude=ram.srec' '--exclude=ptag.vhd' ../../grlib/grlib-gpl-1.3.7
 +    
 +    -- Snoop the UART access bus for writes to address 0xC for triggering
 +    -- interrupts. This address is ignored by the UART.
-+    irq_trig: process (clk) is
++    irq_trig: process (clkm) is
 +    begin
-+      if rising_edge(clk) then
++      if rising_edge(clkm) then
 +        irq <= (others => '0');
 +        if reset = '0' then
 +          
