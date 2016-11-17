@@ -174,7 +174,7 @@ begin -- architecture
   -- Instantiate the standalone core.
   core: entity rvex.rvsys_standalone_core
     generic map (
-      CFG                     => CFG
+      CFG                     => CFG.core
     )
     port map (
       

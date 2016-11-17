@@ -288,7 +288,7 @@ begin -- architecture
     -- Instantiate the standalone core.
     core: entity rvex.rvsys_standalone_core
       generic map (
-        CFG                     => CFG,
+        CFG                     => CFG.core,
         CORE_ID                 => CORE_ID,
         PLATFORM_TAG            => PLATFORM_TAG,
         RCC_RECORD              => RCC_RECORD,
