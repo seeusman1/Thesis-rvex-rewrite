@@ -68,7 +68,7 @@ help:
 	@echo "  make monitor-nobuf   : same as monitor, but with line buffering and echo"
 	@echo "                         disabled."
 	@echo ""
-	@echo "  make clean           : cleans C and modelsim output files."
+	@echo "  make clean           : cleans C, modelsim and Vivado output files."
 	@echo ""
 	@echo "  make clean-synth     : removes synthesis temporary and output files generated"
 	@echo "                         by make synth-<prog>."
@@ -130,6 +130,7 @@ debug:
 clean:
 	cd examples && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
+	cd vivado && ls | grep -v ".gitignore" | grep -v "standalone.xpr" | xargs rm -rf
 
 # Cleans rvex compilation intermediate files.
 .PHONY: clean-ex
