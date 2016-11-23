@@ -101,43 +101,44 @@ use std.textio.all;
 -- rctrl    |       .=====.  |   .----.      .-----.      .-----.    |
 -- reset <--+------>|cxreg|<-+-->|creg|<---->|gbreg|<---->|     |<---+--> mem
 -- and done |       '====='  |   '----'      '-----'      | cfg |    |
---          |        |   |   |      ^           ^   ...<--|     |    |
---          |        |   '---+------+-----------+-------->|     |    |
---          |        v       |      |           |         '-----'    |--> sim
---          |        - - -   |      |           |                    |
---          |       |trace|<-'      |           |                    |
---          |        - - -          |           |                    |
---          |          |            |           |                    |
---          '----------+------------+-----------+--------------------'
---                     |            |           |
---                     v            v           |
---                   trsink        dbg    imem affinity
+--          |        ^ | |   |      ^           ^   ...<--|     |    |
+--          |    .---' | '---+------+-----------+-------->|     |    |
+--          |    v     |     v      |           |         '-----'    |--> sim
+--          |  - - -   |   - - -    |           |                    |
+--          | | pcc |  '->|trace|   |           |                    |
+--          |  - - -       - - -    |           |                    |
+--          |    ^           |      |           |                    |
+--          '----+-----------+------+-----------+--------------------'
+--               |           |      |           |
+--               |           v      v           |
+--             cntsrc      trsink  dbg    imem affinity
 --
 -- . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 --
 -- The abbreviations for the blocks used in the diagram are the following.
 -- 
---  - rv     = RVex processor             @ core.vhd
---  - pls    = PipeLaneS                  @ core_pipelanes.vhd
---  - pl     = PipeLane                   @ core_pipelane.vhd
---  - br     = BRanch unit                @ core_branch.vhd
---  - alu    = Arith. Logic Unit          @ core_alu.vhd
---  - memu   = MEMory Unit                @ core_memu.vhd
---  - mulu   = MULtiply Unit              @ core_mulu.vhd
---  - brku   = BReaKpoint Unit            @ core_breakpoint.vhd
---  - gpreg  = General Purpose REGisters  @ core_gpRegs.vhd
---  - fwd    = ForWarDing logic           @ core_forward.vhd
---  - cxplif = ConteXt-PipeLane InterFace @ core_contextPipelaneIFace.vhd
---  - dmsw   = Data Memory SWitch         @ core_dmemSwitch.vhd
---  - sbit   = Stop BIT related routing   @ core_stopBitRouting.vhd
---  - trap   = TRAP routing               @ core_trapRouting.vhd
---  - limm   = Long IMMediate routing     @ core_limmRouting.vhd
---  - ibuf   = Instruction BUFfer         @ core_instructionBuffer.vhd
---  - cxreg  = ConteXt REGister logic     @ core_contextRegLogic.vhd
---  - creg   = Control REGisters          @ core_ctrlRegs.vhd
---  - gbreg  = GloBal REGister logic      @ core_globalRegLogic.vhd
---  - cfg    = ConFiGuration control      @ core_cfgCtrl.vhd
---  - trace  = TRACE unit                 @ core_trace.vhd
+--  - rv     = RVex processor              @ core.vhd
+--  - pls    = PipeLaneS                   @ core_pipelanes.vhd
+--  - pl     = PipeLane                    @ core_pipelane.vhd
+--  - br     = BRanch unit                 @ core_branch.vhd
+--  - alu    = Arith. Logic Unit           @ core_alu.vhd
+--  - memu   = MEMory Unit                 @ core_memu.vhd
+--  - mulu   = MULtiply Unit               @ core_mulu.vhd
+--  - brku   = BReaKpoint Unit             @ core_breakpoint.vhd
+--  - gpreg  = General Purpose REGisters   @ core_gpRegs.vhd
+--  - fwd    = ForWarDing logic            @ core_forward.vhd
+--  - cxplif = ConteXt-PipeLane InterFace  @ core_contextPipelaneIFace.vhd
+--  - dmsw   = Data Memory SWitch          @ core_dmemSwitch.vhd
+--  - sbit   = Stop BIT related routing    @ core_stopBitRouting.vhd
+--  - trap   = TRAP routing                @ core_trapRouting.vhd
+--  - limm   = Long IMMediate routing      @ core_limmRouting.vhd
+--  - ibuf   = Instruction BUFfer          @ core_instructionBuffer.vhd
+--  - cxreg  = ConteXt REGister logic      @ core_contextRegLogic.vhd
+--  - creg   = Control REGisters           @ core_ctrlRegs.vhd
+--  - gbreg  = GloBal REGister logic       @ core_globalRegLogic.vhd
+--  - cfg    = ConFiGuration control       @ core_cfgCtrl.vhd
+--  - trace  = TRACE unit                  @ core_trace.vhd
+--  - pcc    = Performance Counter Control @ core_percCntCtrl.vhd
 --  - mem    = interface common to instruction and data MEMory/cache
 --  - imem   = Instruction MEMory/cache
 --  - dmem   = Data MEMory/cache
@@ -145,6 +146,7 @@ use std.textio.all;
 --  - rctrl  = Run ConTRoL
 --  - sim    = vhdl SIMulation only
 --  - trsink = TRace data SINK
+--  - cntsrc = performance CouNTer SouRCe
 --
 -- The pipelane (pl), ALU and multiplier blocks are instantiated for each
 -- pipelane (although the multiplier can be disabled for selected pipelanes
@@ -496,6 +498,20 @@ entity core is
     rv2dbg_readData             : out rvex_data_type;
     
     ---------------------------------------------------------------------------
+    -- Performance counter interface
+    ---------------------------------------------------------------------------
+    -- Increment signals for the 16 selectable external count sources. The
+    -- first index refers to the count source channel, the second index refers
+    -- to the lane group where the signal originates from. If multiple lane
+    -- groups that are selected with the performance counter mask have their
+    -- increment signal high at the same time, the counter will increment by
+    -- the amount of signals that are high (i.e., the performance counters can 
+    -- increment by more than one per cycle). If the core has less than 8 lane
+    -- groups, the upper indices of each performance counter input are ignored
+    -- and should be optimized away.
+    cntsrc2rv_incrementPerfCnt  : in  rvex_byte_array(0 to 15) := (others => '0');
+    
+    ---------------------------------------------------------------------------
     -- Trace interface
     ---------------------------------------------------------------------------
     -- These signals connect to the optional trace unit. When the trace unit is
@@ -561,6 +577,13 @@ architecture Behavioral of core is
   -- add to the current PC to get PC_plusOne, should it be the active branch
   -- unit.
   signal cfg2any_pcAddVal             : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  
+  -- The log2 of the number of lane groups assigned to each context. Only
+  -- valid when the context is active.
+  signal cfg2any_numGrpsPerCtxtLog2   : rvex_2bit_array(2**CFG.numContextsLog2-1 downto 0);
+  
+  -- Whether a context is currently assigned to any lane groups.
+  signal cfg2any_ctxtActive           : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   
   -----------------------------------------------------------------------------
   -- Internal signals
@@ -718,6 +741,10 @@ architecture Behavioral of core is
   signal cxreg2trace_regEn            : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2trace_cacheEn          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
   signal cxreg2trace_instrEn          : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  
+  -- Context register logic <-> trace control unit signals.
+  signal cfg2pcc_reconfigRequest      : std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+  signal cfg2pcc_reconfigCommit       : std_logic;
   
   -----------------------------------------------------------------------------
   -- Simulation-only signals
@@ -1286,7 +1313,13 @@ begin -- architecture
       cfg2any_active                => cfg2any_active,
       cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
       cfg2any_laneIndex             => cfg2any_laneIndex,
-      cfg2any_pcAddVal              => cfg2any_pcAddVal
+      cfg2any_pcAddVal              => cfg2any_pcAddVal,
+      cfg2any_numGrpsPerCtxtLog2    => cfg2any_numGrpsPerCtxtLog2,
+      cfg2any_ctxtActive            => cfg2any_ctxtActive,
+      
+      -- Performance counter information signals.
+      cfg2pcc_reconfigRequest       => cfg2pcc_reconfigRequest,
+      cfg2pcc_reconfigCommit        => cfg2pcc_reconfigCommit
       
     );
   

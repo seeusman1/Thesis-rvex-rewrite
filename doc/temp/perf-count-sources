@@ -1,0 +1,145 @@
+
+SMMMssss
+ - S = major source
+ - M = mask bits
+ - s = minor source
+.
+
+
+MINOR SOURCE (4-bit):
+  For major source = internal = 0 (first digit < 8):
+    0000 = *0 - never count, counter disabled             -
+    0001 = *1 - active cycles                             +1 for one lane in ctxt c if stall(l) = 0 and brk(c) = '0' and traceStall = '0'
+    0010 = *2 - stall cycles                              +1 for one lane in ctxt c if stall(l) = 1 and brk(c) = '0' and traceStall = '0'
+    0011 = *3 - total cycles                              +1 for one lane in ctxt c if brk(c) = '0' and traceStall = '0'
+    0100 = *4 - interrupt pending                         +1 for each context where irq(c) = 1 and brk(c) = '0' and traceStall = '0'
+    0101 = *5 - interrupt accepted                        +1 for each context where irqAck(c) = 1
+    0110 = *6 - reconfiguration pending                   +1 for each context where reconfigRequest(c) = 1 and (cfgCtrl.commit = '1' or (brk(c) = '0' and traceStall = '0'))
+    0111 = *7 - reconfiguration accepted                  +1 for each context where reconfigRequest(c) = 1 and cfgCtrl.commit = '1'
+    1000 = *8 - committed syllables                       +1 for each lane where valid(l)(S_LAST) = '1' and stall(l) = '0'
+    1001 = *9 - committed useful syllables                +1 for each lane where valid(l)(S_LAST) = '1' and not nop/limmh and stall(l) = '0'
+    1010 = *A - committed bundles                         +1 for one lane in ctxt c if valid(l)(S_LAST) = '1' and stall(l) = '0'
+    1011 = *B - committed syllables with stop bit set     +1 for each lane where valid(l)(S_LAST) = '1' and stop_bit(l)(S_LAST) = '1' and stall(l) = '0'
+    1100 = *C - committed taken branch instructions       +1 for each branch unit lane where branchTaken(l)(S_BR) = '1' and stall(l) = '0'
+    1101 = *D - committed branch instructions             +1 for each branch unit lane where branchValid(l)(S_BR) = '1' and stall(l) = '0'
+    1110 = *E - breakpoint hit                            +1 for each lane where breakpointHit(l)(cntr)(S_LAST) is '1' and stall(l) = '0'
+    1111 = *F - counter 0: always increment counter by 1 regardless of the mask
+                others: carry out from previous counter
+    
+  For major source = external = 1 (first digit >= 8):
+    0000 = *0 - insn access
+    0001 = *1 - insn miss
+    0010 = *2 - data cache access or bypass (hit or miss or bypass)
+    0011 = *3 - data cache access (hit or miss)
+    0100 = *4 - data cache miss (miss)
+    0101 = *5 - data bypass (bypass)
+    0110 = *6 - data read cache access (read and [hit or miss])
+    0111 = *7 - data read cache miss (read and miss)
+    1000 = *8 - data read bypass (read and bypass)
+    1001 = *9 - data write cache access (write and [hit or miss])
+    1010 = *A - data write cache miss (32-bit write and miss)
+    1011 = *B - data write cache miss + update (8-bit/16-bit write and miss)
+    1100 = *C - data write bypass (write and bypass)
+    1101 = *D - write buffer wait (any data access that had to wait at least one cycle)
+    1110 = *E - write buffer stall (stalled by cache while write buffer filled)
+    1111 = *F - memory bus claimed
+
+MASK (3-bit):
+  000 - own context only, 2-way only
+  001 - own context only, 4-way only
+  010 - own context only, 8-way only
+  011 - own context only, any run configuration
+  100 - own context only, user mode
+  101 - own context only, kernel mode
+  110 - any context (count at most one at a time)
+  111 - all contexts (increment for each marked context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+###############################################################################
+                         O L D   I N F O R M A T I O N
+###############################################################################
+
+
+0xo1 / 0xo3 = active cycle fraction
+0xo2 / 0xo3 = stall cycle fraction
+0xo4 / 0xo6 = apparent ILP including NOP/LIMMH overhead
+0xo4 / 0xo7 = generic binary ILP including NOP/LIMMH overhead
+0xo5 / 0xo6 = apparent useful ILP
+0xo5 / 0xo7 = generic binary useful ILP
+0xo8 / 0xo6 = fraction of apparent instructions that are a taken branch
+0xo9 / 0xo6 = fraction of apparent instructions that are a branch
+0xo8 / 0xo7 = fraction of generic binary bundles that are a taken branch
+0xo9 / 0xo7 = fraction of generic binary bundles that are a branch
+0xo8 / 0xo9 = fraction of branches that are taken
+0xoA / 0xoB = average interrupt latency
+0xoB / 0x70 = interrupts per time unit (cycle)
+0x*C / 0x*E = reconfiguration overhead per reconfiguration (the infamous 5 cycles actually measured)
+0x7C / 0x70 = reconfiguration overhead (fraction of thread total blocking any thread by reconfiguration)
+0x7D / 0x73 = reconfiguration overhead (fraction of thread cycles blocked by reconfiguration)
+0x1E / 0x70 = reconfigurations per time unit (cycle) affecting this context
+0x7E / 0x70 = reconfigurations per time unit (cycle) affecting any context
+
+
+
+MINOR SOURCE (4-bit):
+  For major source = internal = 0 (first digit < 8):
+    0000 = *0 - counter 0: total core cycles              +1 for lane 0
+                others: carry out from previous counter   +1 for lane 0 if carry
+    0001 = *1 - active cycles                             +1 for the first lane in ctxt c if stall(c) = 0
+    0010 = *2 - stall cycles                              +1 for the first lane in ctxt c if stall(c) = 1
+    0011 = *3 - total cycles                              +1 for the first lane in ctxt c
+    0100 = *4 - committed syllables                       +1 for each lane if valid = 1
+    0101 = *5 - committed useful syllables                +1 for each lane if valid = 1 and not nop/limmh
+    0110 = *6 - committed bundles                         +1 for the first lane in ctxt c if valid = 1
+    0111 = *7 - committed syllables with stop bit set     +1 for each lane if valid = 1 and stop bit = 1
+    1000 = *8 - committed taken branch instructions       +1 for each branch unit lane if branch instruction taken
+    1001 = *9 - committed branch instructions             +1 for each branch unit lane if valid branch instruction
+    1010 = *A - interrupt pending                         +1 for the first lane in ctxt c if irq(c) = 1
+    1011 = *B - interrupt accepted                        +1 for the first lane in ctxt c if irqAck(c) = 1
+    1100 = *C - reconfiguration pending                   +1 for lane 0 if any cfgCtrl.requestReconfig = 1
+    1101 = *D - contexts blocked due to reconfiguration   +1 for the first lane in ctxt c if cfgCtrl.requestReconfig(c) = 1
+    1110 = *E - reconfiguration accepted                  mask=always: +1 for lane 0 if cfgCtrl.commit = 1
+                                                          mask=others: +1 for the first lane in ctxt c if cfgCtrl.requestReconfig(c) = 1 and cfgCtrl.commit = 1
+    1111 = *F - breakpoint hit                            +1 for each lane where brku.hit is 1 for the breakpoint corresponding with this counter
+    
+  For major source = external = 1 (first digit >= 8):
+    0000 = *0 - insn access
+    0001 = *1 - insn miss
+    0010 = *2 - data cache access or bypass (hit or miss or bypass)
+    0011 = *3 - data cache access (hit or miss)
+    0100 = *4 - data cache miss (miss)
+    0101 = *5 - data bypass (bypass)
+    0110 = *6 - data read cache access (read and [hit or miss])
+    0111 = *7 - data read cache miss (read and miss)
+    1000 = *8 - data read bypass (read and bypass)
+    1001 = *9 - data write cache access (write and [hit or miss])
+    1010 = *A - data write cache miss (32-bit write and miss)
+    1011 = *B - data write cache miss + update (8-bit/16-bit write and miss)
+    1100 = *C - data write bypass (write and bypass)
+    1101 = *D - write buffer wait (any data access that had to wait at least one cycle)
+    1110 = *E - write buffer stall (stalled by cache while write buffer filled)
+    1111 = *F - memory bus claimed
+
+MASK (3-bit):
+  000 - never (register can be used as scratchpad instead)
+  001 - own context only, 2-way only
+  010 - own context only, 4-way only
+  011 - own context only, 8-way only
+  100 - own context only, kernel mode
+  101 - own context only, user mode
+  110 - own context only, any run configuration
+  111 - always

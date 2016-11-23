@@ -194,7 +194,25 @@ entity core_cfgCtrl is
     -- The amount which the branch unit residing in the indexed lane should
     -- add to the current PC to get PC_plusOne, should it be the active branch
     -- unit.
-    cfg2any_pcAddVal            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0)
+    cfg2any_pcAddVal            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+    
+    -- Whether a context is currently assigned to any lane groups.
+    cfg2any_ctxtActive          : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- The log2 of the number of lane groups assigned to each context. Only
+    -- valid when the context is active.
+    cfg2any_numGrpsPerCtxtLog2  : out rvex_2bit_array(2**CFG.numContextsLog2-1 downto 0);
+    
+    ---------------------------------------------------------------------------
+    -- Performance counter information signals
+    ---------------------------------------------------------------------------
+    -- Whether the reconfiguration controller is requesting each context to
+    -- stop in order to commit a new configuration.
+    cfg2pcc_reconfigRequest     : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Whether the reconfiguration controller is about to commit a new
+    -- configuration. This is active for exactly one clkEn'd cycle.
+    cfg2pcc_reconfigCommit      : out std_logic
     
   );
 end core_cfgCtrl;
@@ -610,7 +628,7 @@ begin -- architecture
   
   -- Generate the requestReconfig bits for each context.
   gen_request_reconfig_bits: process (
-    contextsToUpdate, decoderBusy, busy_r
+    contextsToUpdate, curContextEnable_r, decoderBusy, busy_r, commit
   ) is
   begin
     for i in 2**CFG.numContextsLog2-1 downto 0 loop
@@ -620,6 +638,18 @@ begin -- architecture
       -- busy_r is still high.
       cfg2cxplif_requestReconfig(i)
         <= contextsToUpdate(i) and busy_r and not decoderBusy;
+      
+      -- The performance counters basically get the same signal, except the
+      -- signal is disabled when the context is currently disabled and commit
+      -- is low. This allows the performance counters to (more accurately)
+      -- measure the reconfiguration overhead; a context being enabled does not
+      -- stall its program unnecessarily. The signal is however enabled when
+      -- commit is high, to allow the counters to correctly measure the number
+      -- of reconfigurations for each context (turning a context back on is
+      -- still a reconfiguration).
+      cfg2pcc_reconfigRequest(i)
+        <= contextsToUpdate(i) and busy_r and not decoderBusy
+        and (curContextEnable_r(i) or commit);
       
     end loop;
   end process;
@@ -689,6 +719,9 @@ begin -- architecture
     end if;
   end process;
   
+  -- Output the commit signal to the performance counter block.
+  cfg2pcc_reconfigCommit <= commit;
+  
   -- Generate the current configuration registers.
   cur_config_regs: process (clk) is
     variable addValMinusOne : unsigned(31 downto 0);
@@ -744,6 +777,8 @@ begin -- architecture
   cfg2any_coupled <= curCoupleMatrix_r;
   cfg2any_laneIndex <= curLaneIndex_r;
   cfg2any_pcAddVal <= curPcAddVal_r;
+  cfg2any_numGrpsPerCtxtLog2 <= curNumPipelaneGroupsLog2ForContext_r;
+  cfg2any_ctxtActive <= curContextEnable_r;
   
   -- Construct the vector containing the number of groups working together for
   -- each lane group and extract the contexts from the configuration vector.

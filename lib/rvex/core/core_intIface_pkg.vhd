@@ -116,6 +116,11 @@ package core_intIface_pkg is
   -- undefined values to '0' here.
   constant RVEX_UNDEF           : std_logic := 'U';
   
+  -- The maximum supported number of configurable performance counters. If this
+  -- is changed, the control register configuration needs to be updated and the
+  -- control registers need to be regenerated.
+  constant MAX_CFG_PERF_CNTS    : natural := 4;
+  
   -----------------------------------------------------------------------------
   -- General purpose register file read/write ports
   -----------------------------------------------------------------------------
@@ -242,6 +247,89 @@ package core_intIface_pkg is
   
   -- Array type for the above.
   type cxreg2pl_breakpoint_info_array is array (natural range <>) of cxreg2pl_breakpoint_info_type;
+  
+  -----------------------------------------------------------------------------
+  -- Performance counter control signal types
+  -----------------------------------------------------------------------------
+  -- Configurable performance counter configuration signals from the context
+  -- control registers to the performance counter control unit.
+  type cxreg2pcc_counter_cfg_type is record
+    
+    -- Major count source:
+    --   0 = internal count sources.
+    --   1 = external count sources.
+    src_major                   : std_logic_vector(MAX_CFG_PERF_CNTS-1 downto 0);
+    
+    -- Minor count source. If the major count source is 0, then:
+    --   0000 = 0 - Counter disabled. Register can be used as scratchpad.
+    --   0001 = 1 - Active (unstalled) cycles.
+    --   0010 = 2 - Stall cycles, not counting trace stalls. Also does not
+    --              count if CR_DCR.B is set.
+    --   0011 = 3 - Total cycles, not counting trace stalls. Also does not
+    --              count if CR_DCR.B is set.
+    --   0100 = 4 - Interrupt pending. Does not count trace stalls or delays
+    --              due to the B flag in DCR, but it DOES count delays due to
+    --              the context not being active.
+    --   0101 = 5 - Interrupt accepted.
+    --   0110 = 6 - Reconfiguration pending for affected contexts only. Does
+    --              not count trace stalls, but ignores other stall sources.
+    --              This count source always counts if "reconfiguration
+    --              accepted" counts, even for contexts that were disabled and
+    --              were therefore not blocked, to ensure that the ratio
+    --              between the two counters is useful (average overhead).
+    --   0111 = 7 - Reconfiguration accepted. This only counts for contexts
+    --              affected by the reconfiguration.
+    --   1000 = 8 - Committed syllables.
+    --   1001 = 9 - Committed syllables, excluding NOP, LIMMH, and annotation
+    --              instructions.
+    --   1010 = A - Committed (apparent) bundles.
+    --   1011 = B - Committed syllables with stop bit set (i.e., generic binary
+    --              bundles).
+    --   1100 = C - Committed taken branch instructions.
+    --   1101 = D - Committed branch instructions.
+    --   1110 = E - Breakpoint hit. Use in conjunction with the breakpoint
+    --              disable flag in CCR (so the breakpoints do not actually
+    --              cause the processor to enter debug mode) to do profiling.
+    --   1111 = F - Counter 0 always counts (also when all lane groups are
+    --              disabled/the core is sleeping, and also during trace
+    --              stalls). Other counters count if the previous counter
+    --              overflows. This count source completely overrules the mask
+    --              configuration.
+    -- 
+    -- If the major count source is 1, the increment signals are taken from the
+    -- cntsrc2rv_incrementPerfCnt input signal.
+    src_minor                   : rvex_4bit_array(MAX_CFG_PERF_CNTS-1 downto 0);
+    
+    -- Mask configuration. Determines which lane groups/contexts are counted
+    -- and when.
+    --   000 - Count our own context only, and only in 2-way mode.
+    --   001 - Count our own context only, and only in 4-way mode.
+    --   010 - Count our own context only, and only in 8-way mode.
+    --   011 - Count our own context only, run configuration does not matter.
+    --   100 - Count our own context only, and only in user mode.
+    --   101 - Count our own context only, and only in kernel mode.
+    --   110 - Count if any increment signal from any context is high.
+    --   111 - Count all increment signals from all contexts.
+    mask                        : rvex_2bit_array(MAX_CFG_PERF_CNTS-1 downto 0);
+    
+    -- Carry out from this counter. Used as a possible count source for the
+    -- next counter.
+    carry_out                   : std_logic_vector(MAX_CFG_PERF_CNTS-1 downto 0);
+    
+  end record;
+  
+  -- Configurable performance counter configuration signals from the context
+  -- control registers to the performance counter control unit.
+  type pcc2cxreg_counter_inc_type is record
+    
+    -- Value to add to the counter.
+    inc                         : rvex_byte_type(MAX_CFG_PERF_CNTS-1 downto 0);
+    
+  end record;
+  
+  -- Array types for the above.
+  type cxreg2pcc_counter_cfg_array is array (natural range <>) of cxreg2pcc_counter_cfg_type;
+  type pcc2cxreg_counter_inc_array is array (natural range <>) of pcc2cxreg_counter_inc_type;
   
   -----------------------------------------------------------------------------
   -- Trace information records
