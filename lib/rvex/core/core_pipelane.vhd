@@ -1434,14 +1434,12 @@ begin -- architecture
     memu2pl_trace_writeMask(S_MEM)<= (others => '0');
     memu2pl_trace_writeData(S_MEM)<= (others => '0');
     
-    -- Set the outputs going to the rest of the processor to hi-Z, so they can
-    -- be easily merged with the signals coming from the pipelane in the group
-    -- which does have a memory unit.
-    memu2dmsw_addr(S_MEM)         <= (others => 'Z');
-    memu2dmsw_writeData(S_MEM)    <= (others => 'Z');
-    memu2dmsw_writeMask(S_MEM)    <= (others => 'Z');
-    memu2dmsw_writeEnable(S_MEM)  <= 'Z';
-    memu2dmsw_readEnable(S_MEM)   <= 'Z';
+    -- The memory unit outputs are not connected in core_pipelanes.
+    memu2dmsw_addr(S_MEM)         <= (others => RVEX_UNDEF);
+    memu2dmsw_writeData(S_MEM)    <= (others => RVEX_UNDEF);
+    memu2dmsw_writeMask(S_MEM)    <= (others => RVEX_UNDEF);
+    memu2dmsw_writeEnable(S_MEM)  <= RVEX_UNDEF;
+    memu2dmsw_readEnable(S_MEM)   <= RVEX_UNDEF;
     
   end generate;
   
