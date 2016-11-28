@@ -366,6 +366,11 @@ architecture Behavioral of core_pipelanes is
   signal pl2cxplif2_sylNop          : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   
   -- Data memory switch <-> pipelane interconnect signals.
+  signal memu2dmsw_addr_lane        : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+  signal memu2dmsw_writeData_lane   : rvex_data_array(2**CFG.numLanesLog2-1 downto 0);
+  signal memu2dmsw_writeMask_lane   : rvex_mask_array(2**CFG.numLanesLog2-1 downto 0);
+  signal memu2dmsw_writeEnable_lane : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+  signal memu2dmsw_readEnable_lane  : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal memu2dmsw_addr             : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal memu2dmsw_writeData        : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal memu2dmsw_writeMask        : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -523,11 +528,11 @@ begin -- architecture
         ibuf2pl_exception(S_IF+L_IF)      => ibuf2pl_exception(laneGroup),
         
         -- Data memory interface.
-        memu2dmsw_addr(S_MEM)             => memu2dmsw_addr(laneGroup),
-        memu2dmsw_writeData(S_MEM)        => memu2dmsw_writeData(laneGroup),
-        memu2dmsw_writeMask(S_MEM)        => memu2dmsw_writeMask(laneGroup),
-        memu2dmsw_writeEnable(S_MEM)      => memu2dmsw_writeEnable(laneGroup),
-        memu2dmsw_readEnable(S_MEM)       => memu2dmsw_readEnable(laneGroup),
+        memu2dmsw_addr(S_MEM)             => memu2dmsw_addr_lane(lane),
+        memu2dmsw_writeData(S_MEM)        => memu2dmsw_writeData_lane(lane),
+        memu2dmsw_writeMask(S_MEM)        => memu2dmsw_writeMask_lane(lane),
+        memu2dmsw_writeEnable(S_MEM)      => memu2dmsw_writeEnable_lane(lane),
+        memu2dmsw_readEnable(S_MEM)       => memu2dmsw_readEnable_lane(lane),
         dmsw2memu_readData(S_MEM+L_MEM)   => dmsw2memu_readData(laneGroup),
         dmsw2pl_exception(S_MEM+L_MEM)    => dmsw2pl_exception(laneGroup),
         
@@ -599,6 +604,24 @@ begin -- architecture
       );
     
   end generate; -- for each lane
+  
+  -- Connect the memory unit outputs from the lanes with memory units to the
+  -- lane-group-indexed signals.
+  mem_unit_connect_gen: for grp in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
+    
+    -- Determine the index of the lane that contains the memory unit for this
+    -- lane group.
+    constant memUnitLane : natural := group2lastLane(grp, CFG) - CFG.memLaneRevIndex;
+    
+  begin
+    
+    memu2dmsw_addr(grp)         <= memu2dmsw_addr_lane(memUnitLane);
+    memu2dmsw_writeData(grp)    <= memu2dmsw_writeData_lane(memUnitLane);
+    memu2dmsw_writeMask(grp)    <= memu2dmsw_writeMask_lane(memUnitLane);
+    memu2dmsw_writeEnable(grp)  <= memu2dmsw_writeEnable_lane(memUnitLane);
+    memu2dmsw_readEnable(grp)   <= memu2dmsw_readEnable_lane(memUnitLane);
+    
+  end generate;
   
   -----------------------------------------------------------------------------
   -- Instantiate context to pipelane interface

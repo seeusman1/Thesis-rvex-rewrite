@@ -288,7 +288,7 @@ begin -- architecture
     -- Instantiate the standalone core.
     core: entity rvex.rvsys_standalone_core
       generic map (
-        CFG                     => CFG,
+        CFG                     => CFG.core,
         CORE_ID                 => CORE_ID,
         PLATFORM_TAG            => PLATFORM_TAG,
         RCC_RECORD              => RCC_RECORD,
@@ -731,7 +731,7 @@ begin -- architecture
     imem_ram_gen: for blk in 0 to NUM_BLOCKS-1 generate
       imem_ram_inst: entity rvex.bus_ramBlock
         generic map (
-          DEPTH_LOG2B           => CFG.dmemDepthLog2B - INTERLEAVE_LOG2,
+          DEPTH_LOG2B           => CFG.imemDepthLog2B - INTERLEAVE_LOG2,
           MEM_INIT              => MEM_INIT,
           MEM_OFFSET            => blk mod 2**INTERLEAVE_LOG2,
           MEM_STRIDE            => 2**INTERLEAVE_LOG2
