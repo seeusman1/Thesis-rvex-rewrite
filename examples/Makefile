@@ -382,11 +382,6 @@ else
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@
 endif
 
-# Always compile VEXdiv with HP
-VEXdiv.s: $(GENERIC_SRC)/VEXdiv.c
-	$(TOOLS)/vex-3.43/bin/cc -I$(GEN_EXAMPLES)/src -fno-xnop -fexpand-div -fmm=$(GEN_EXAMPLES)/pipe_1_$(ISSUE_WIDTH)_fw.mm \
-	-S $< -o $@
-
 #Dirty tricks to force other FP library in case we're using Open64
 .PHONY: FORCE
 FORCE:
