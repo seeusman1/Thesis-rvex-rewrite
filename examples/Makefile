@@ -243,7 +243,7 @@ endif
 # Linker setup.
 LD = $(BUILD)/rvex-elf32-ld
 ifneq ($(DEBUG), false)
-ASFLAGS += -g
+LDFLAGS += -g
 endif
 
 # Compiler setup.
