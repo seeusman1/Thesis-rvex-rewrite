@@ -86,7 +86,7 @@ def write_entry(output, r, syl, end=',', indent='    '):
     s = 'valid => "' + valid_imm + valid_reg + '"'
     
     # Write decoding information.
-    for unit in ['datapath', 'alu', 'branch', 'memory', 'multiplier']:
+    for unit in ['datapath', 'alu', 'fpu', 'branch', 'memory', 'multiplier']:
         s += ', ' + unit + 'Ctrl => ('
         first = True
         for field in syl[unit]:
