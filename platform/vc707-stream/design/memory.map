@@ -1,0 +1,39 @@
+
+# Number of contexts in the core.
+all: _NUM_CONTEXTS           { 4 }
+
+# Memory map as seen from the debugging interface.
+all: IMEM                    { 0x10000000 }
+all: DMEM                    { 0x20000000 }
+all: IDMEM                   { 0x30000000 }
+all: _TRACE_ADDR             { 0xE0000000 }
+all: CREG                    { 0xF0000000 }
+
+# Flushes the cache.
+all: FLUSH_CACHE {
+  write(AFF+2, 0xFFFFh);
+}
+
+# Cache bus latency register, write only, byte-sized.
+all: CACHE_BUS_LATENCY       { AFF }
+
+# This is evaluated when "rvd reset" is called.
+all:_RESET {
+  write(DCRF, 0x09hh); # break
+  FLUSH_CACHE;
+  set(reg, 0);
+  while (reg < 64, (
+    writeWord(CREG_GPREG + (reg*4), 0);
+    set(reg, reg + 1);
+  ));
+  write(DCRF, 0x80hh); # reset
+}
+
+# Convert a core/gdb address to a debug bus address.
+all:_GDB_ADDR_R {
+  if (_GDB_ADDR < 0x10000000, _GDB_ADDR | 0x20000000, _GDB_ADDR)
+}
+all:_GDB_ADDR_W {
+  if (_GDB_ADDR < 0x10000000, _GDB_ADDR | 0x30000000, _GDB_ADDR)
+}
+

@@ -52,4 +52,6 @@ for obj in objs:
   scanDeps(obj)
 
 for dep in curDeps:
-  print(dep + ".o")
+  print(dep + '.o')
+
+print('deps.py: dependencies for objects ' + ', '.join([x + '.o' for x in objs]) + ': ' + ', '.join([x + '.o' for x in curDeps]), file=sys.stderr)

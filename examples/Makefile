@@ -92,13 +92,13 @@ VEXPARSE_ENABLE = false
 VEXPARSE_FLAGS = 
 ifeq ($(DYNAMIC), true-O0)
 VEXPARSE_ENABLE = true
-VEXPARSE_FLAGS = --resched --O0
+VEXPARSE_FLAGS = --resched $(shell if grep -q docopt $(TOOLS)/vexparse/main.py; then echo --O0; else echo -O0; fi)
 else ifeq ($(DYNAMIC), true-O1)
 VEXPARSE_ENABLE = true
-VEXPARSE_FLAGS = --resched --O1
+VEXPARSE_FLAGS = --resched $(shell if grep -q docopt $(TOOLS)/vexparse/main.py; then echo --O1; else echo -O1; fi)
 else ifeq ($(DYNAMIC), true-O2)
 VEXPARSE_ENABLE = true
-VEXPARSE_FLAGS = --resched --O2
+VEXPARSE_FLAGS = --resched $(shell if grep -q docopt $(TOOLS)/vexparse/main.py; then echo --O2; else echo -O2; fi)
 else ifeq ($(DYNAMIC), true-noresched)
 VEXPARSE_ENABLE = true
 endif
@@ -431,12 +431,12 @@ _start.o-%: default_start.o
 
 # How to link;
 .SECONDEXPANSION:
-%.elf: _start.o-% %.o $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$@)
+%.elf: _start.o-% %.o $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$@ $$(OBJECTS))
 	$(LD) _start.o $(filter-out $<,$^) -o $@ $(LDFLAGS)
 
 # How to link all BENCH_EXECUTABLES together so they all run from a single
 # main():
-all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES)) $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$(BENCH_EXECUTABLES))
+all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES)) $$(OBJECTS) $$(shell $$(PYTHON3) $$(GEN_EXAMPLES)/deps.py -p$$(PLATFORM_SRC) -p$$(GENERIC_SRC) $$(BENCH_EXECUTABLES) $$(OBJECTS))
 	$(PYTHON3) $(GEN_EXAMPLES)/all-at-once.py $(BENCH_EXECUTABLES) > all-at-once.s
 	$(AS) $(ASFLAGS) all-at-once.s -o all-at-once.o
 	$(LD) _start.o all-at-once.o $(filter-out $<,$^) -o $@

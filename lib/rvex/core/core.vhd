@@ -310,6 +310,17 @@ entity core is
     -- doing anything.
     rv2rctrl_idle               : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
     
+    -- Active high break output. This is asserted when the core is waiting for
+    -- an externally handled breakpoint, or the B flag in DCR is otherwise set.
+    rv2rctrl_break              : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+    
+    -- Active high trace stall output. This can be used to stall other cores
+    -- and timers simultaneously in order to be able to trace more accurately.
+    rv2rctrl_traceStall         : out std_logic;
+    
+    -- Trace stall input. This just stalls all lane groups when asserted.
+    rctrl2rv_traceStall         : in  std_logic := '0';
+    
     -- Active high context reset input. When high, the context control
     -- registers (including PC, done and break flag) will be reset.
     rctrl2rv_reset              : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0) := (others => '0');
@@ -735,22 +746,34 @@ begin -- architecture
     variable s : std_logic;
   begin
     if CFG.unifiedStall then
-      s := traceStall;
+      s := traceStall or rctrl2rv_traceStall;
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
         s := s or mem2rv_stallIn(laneGroup) or debugBusStall(laneGroup);
       end loop;
       stall <= (others => s);
     else
       for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-        stall(laneGroup) <= mem2rv_stallIn(laneGroup)
-                         or debugBusStall(laneGroup)
-                         or traceStall;
+        if CFG.stallInactive then
+          stall(laneGroup) <= mem2rv_stallIn(laneGroup)      -- Stall due to cache/memory.
+                           or debugBusStall(laneGroup)       -- Stall during debug bus accesses.
+                           or traceStall                     -- Stall while we are tracing.
+                           or rctrl2rv_traceStall            -- Stall if other cores are tracing.
+                           or not cfg2any_active(laneGroup); -- Stall inactive lane groups.
+        else
+          stall(laneGroup) <= mem2rv_stallIn(laneGroup)
+                           or debugBusStall(laneGroup)
+                           or traceStall
+                           or rctrl2rv_traceStall;
+        end if;
       end loop;
     end if;
   end process;
   
   -- Forward the internal stall signal to the memory.
   rv2mem_stallOut <= stall;
+  
+  -- Forward the trace stall signal to the run control system.
+  rv2rctrl_traceStall <= traceStall;
   
   -----------------------------------------------------------------------------
   -- Decode memory faults
@@ -1154,6 +1177,9 @@ begin -- architecture
       cxreg2creg_readData           => cxreg2creg_readData
       
     );
+  
+  -- Connect the break output to the DCR.B registers.
+  rv2rctrl_break <= cxreg2cxplif_brk;
   
   -----------------------------------------------------------------------------
   -- Instantiate the global (common to all contexts) control register logic

@@ -187,7 +187,9 @@ begin -- architecture
   
   -- Setup writeData and writeMask according to the access size and LSBs of the
   -- address.
-  det_mask_and_alignment: process (pl2memu_opAddr, pl2memu_opData, ctrl) is
+  det_mask_and_alignment: process (
+    pl2memu_opAddr, pl2memu_opData, ctrl, pl2memu_valid
+  ) is
   begin
     case ctrl(S_MEM).accessSizeBLog2 is
       
@@ -237,6 +239,12 @@ begin -- architecture
         misalignedAccess(S_MEM) <= pl2memu_opAddr(S_MEM)(0) or pl2memu_opAddr(S_MEM)(1);
         
     end case;
+    
+    -- Do not generate alignment traps when the instruction is not valid.
+    if pl2memu_valid(S_MEM) = '0' then
+      misalignedAccess(S_MEM) <= '0';
+    end if;
+    
   end process;
   
   -- Forward the address to the trace system.

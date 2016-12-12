@@ -96,6 +96,7 @@ PCP1 += \bs ? 0 : \of;
 \syllable{00100110-}{RETURN}{\rs = \rs, \sa, \lr}
 \datapath{gpRegWE}{'1'}
 \datapath{stackOp}{'1'}
+\datapath{gpRegRdEnaA}{'1'}
 \alu{op1Mux}{EXTEND32}
 \alu{op2Mux}{EXTEND32}
 \alu{opBrMux}{FALSE}
@@ -119,6 +120,7 @@ PCP1 = \lr;
 \syllable{00100111-}{RFI}{\rs = \rs, \sa}
 \datapath{gpRegWE}{'1'}
 \datapath{stackOp}{'1'}
+\datapath{gpRegRdEnaA}{'1'}
 \alu{op1Mux}{EXTEND32}
 \alu{op2Mux}{EXTEND32}
 \alu{opBrMux}{FALSE}

@@ -23,6 +23,21 @@
 \datapath{isTrap}{'0'}
 \datapath{isNOP}{'1'}
 
+% These parameters specify which functional units need to be active to process
+% an instruction. When power-saving latches are enabled, a zero here latches
+% the inputs of the functional unit to save switching activity.
+\datapath{enableALU}{'1'}
+\datapath{enableMem}{'0'}
+\datapath{enableMul}{'0'}
+
+% These parameters specify which general purpose register read ports need to be
+% active to process an instruction. A zero here disables the associated RAM
+% blocks to save power if power-saving latches are enabled. NOTE: these flags
+% are set automatically by the python scripts based on the existence of \rx and
+% \ry in the assembly syntax definition.
+\datapath{gpRegRdEnaA}{'0'}
+\datapath{gpRegRdEnaB}{'0'}
+
 % Refer to the structure and type declarations in core_opcodeAlu_pkg.vhd for
 % documentation of the following attributes.
 \alu{op1Mux}{EXTEND32}
@@ -63,3 +78,5 @@
 \multiplier{op2unsigned}{'0'}
 \multiplier{resultSel}{PASS}
 
+
+\fpu{hello}{'0'}

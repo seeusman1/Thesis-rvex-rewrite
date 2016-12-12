@@ -510,19 +510,18 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Connect the outputs from the output network to the lane groups
   -----------------------------------------------------------------------------
-  out_network_output_gen : for i in 0 to 2**RCFG.numLaneGroupsLog2-1 generate
-    signal miss : std_logic;
+  -- Drive the instruction output. We have to do this outside the generate
+  -- statement because you cannot assign an array in an array partially in a
+  -- process; it would drive 'U' on the unassigned signals. The instruction
+  -- output is valid when stall is low and readEnable from the highest indexed
+  -- coupled lane group was high in the previous cycle.
+  process (outNetwork(RCFG.numLaneGroupsLog2)) is
+    variable omd                    : outNetworkEdge_type;
+    variable offset                 : natural range 0 to 2**RCFG.numLaneGroupsLog2-1;
+    constant LANE_GROUP_SIZE_BLOG2  : natural := laneGroupInstrSizeBLog2(RCFG, CCFG);
+    constant LANE_GROUP_SIZE_BITS   : natural := 8 * 2**LANE_GROUP_SIZE_BLOG2;
   begin
-    
-    -- Instruction output to the lane group. Valid when stall is low and
-    -- readEnable from the highest indexed coupled lane group was high in the
-    -- previous cycle.
-    process (outNetwork(RCFG.numLaneGroupsLog2)(i)) is
-      variable omd                    : outNetworkEdge_type;
-      variable offset                 : natural range 0 to 2**RCFG.numLaneGroupsLog2-1;
-      constant LANE_GROUP_SIZE_BLOG2  : natural := laneGroupInstrSizeBLog2(RCFG, CCFG);
-      constant LANE_GROUP_SIZE_BITS   : natural := 8 * 2**LANE_GROUP_SIZE_BLOG2;
-    begin
+    for i in 0 to 2**RCFG.numLaneGroupsLog2-1 loop
       
       -- Shorthand for our output signal.
       omd := outNetwork(RCFG.numLaneGroupsLog2)(i);
@@ -531,15 +530,6 @@ begin -- architecture
       offset := to_integer(unsigned(omd.PC_r(
         LANE_GROUP_SIZE_BLOG2 + RCFG.numLaneGroupsLog2 - 1 downto LANE_GROUP_SIZE_BLOG2
       )));
-      
-      -- VHDL doesn't seem to understand that we're only ever assigning part
-      -- of icache2rv_instr each time this process is instantiated by the
-      -- generate statement. To get it to stop forcing 'U' on signals from
-      -- processes which shouldn't even be assigning the signal, we initialize
-      -- with 'Z' instead and let the std_logic resolution function handle it.
-      -- Synthesis tools should handle this appropriately too, I would think;
-      -- this is very ugly though.
-      icache2rv_instr <= (others => (others => 'Z'));
       
       -- Drive the syllable outputs.
       for laneIndex in 0 to 2**(RCFG.numLanesLog2 - RCFG.numLaneGroupsLog2)-1 loop
@@ -550,8 +540,14 @@ begin -- architecture
             LANE_GROUP_SIZE_BITS*offset + 32*laneIndex
           );
       end loop;
-      
-    end process;
+    
+    end loop;
+  end process;
+  
+  -- Drive the rest of the signals.
+  out_network_output_gen : for i in 0 to 2**RCFG.numLaneGroupsLog2-1 generate
+    signal miss : std_logic;
+  begin
     
     -- Stall output. If readEnable from the highest indexed coupled lane group
     -- is low, this is always low.

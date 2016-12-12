@@ -46,6 +46,7 @@ def parse(indir):
      - 'noasm': set to True if \noasm{} was specified, False otherwise.
      - 'datapath': dict with datapath control key-value pairs.
      - 'alu': dict with alu control key-value pairs.
+     - 'fpu': dict with FPU control key-value pairs.
      - 'branch': dict with branch control key-value pairs.
      - 'memory': dict with memory control key-value pairs.
      - 'multiplier': dict with multiplier control key-value pairs.
@@ -63,6 +64,7 @@ def parse(indir):
         'class': (1, False),
         'datapath': (2, False),
         'alu': (2, False),
+        'fpu': (2, False),
         'branch': (2, False),
         'memory': (2, False),
         'multiplier': (2, False),
@@ -75,6 +77,7 @@ def parse(indir):
         'noasm': 'False',
         'datapath': {},
         'alu': {},
+        'fpu': {},
         'branch': {},
         'memory': {},
         'multiplier': {}
@@ -107,6 +110,12 @@ def parse(indir):
                             group['origin'])
             syllable = copy.deepcopy(group_params)
             apply_params(syllable, group)
+            
+            # Set the general purpose register read port enable flags.
+            if '\\rx' in group['cmd'][3]:
+                syllable['datapath']['gpRegRdEnaA'] = "'1'"
+            if '\\ry' in group['cmd'][3]:
+                syllable['datapath']['gpRegRdEnaB'] = "'1'"
             
             opcode = group['cmd'][1].strip()
             if len(opcode) != 9:

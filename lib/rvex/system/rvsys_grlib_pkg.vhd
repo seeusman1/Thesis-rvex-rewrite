@@ -104,6 +104,12 @@ package rvsys_grlib_pkg is
     config : rvex_grlib_generic_config_array
   ) return integer;
     
+  -- Calulates the total number of contexts in a GRLIB system based on the
+  -- provided configuration.
+  function rvex_grlib_num_contexts(
+    config : rvex_grlib_generic_config_array
+  ) return integer;
+    
 end rvsys_grlib_pkg;
 
 --=============================================================================
@@ -138,5 +144,18 @@ package body rvsys_grlib_pkg is
       end loop;
       return count;
   end rvex_grlib_num_lane_groups;
+  
+  -- Calulates the total number of contexts in a GRLIB system based on the
+  -- provided configuration.
+  function rvex_grlib_num_contexts(
+    config : rvex_grlib_generic_config_array
+  ) return integer is
+    variable count : integer := 0;
+  begin
+      for index in config'low to config'high loop
+          count := count + 2**config(index).core.numContextsLog2;
+      end loop;
+      return count;
+  end rvex_grlib_num_contexts;
   
 end rvsys_grlib_pkg;
