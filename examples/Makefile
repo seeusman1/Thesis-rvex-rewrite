@@ -265,12 +265,13 @@ else
 CFLAGS += -g
 endif
 
-else
-FPLIB=libcfpi-st220.cc.a
+else # Open64
 CFLAGS = -I$(GEN_EXAMPLES)/src -mcore=st220 -EB -fshort-double -fno-dismissible-load \
 -fno-exceptions -mno-auto-prefetch -std=c99 -fno-builtin $(INCLUDES)
+LDFLAGS += -nostartfiles -lgcc 
 ifeq ($(ISSUE_WIDTH), 8)
-CC=/shares/group/ce-rvex/tools/builds/open64_8issue_16UNROLL/bin/st200-gcc
+CC=/shares/group/ce-rvex/tools/builds/open64_8issue/bin/st200-gcc
+LD=/shares/group/ce-rvex/tools/builds/open64_8issue/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3 -CG:LAO_activation=0
 else
@@ -278,6 +279,7 @@ CFLAGS += -g
 endif
 else ifeq ($(ISSUE_WIDTH), 4)
 CC=/shares/group/ce-rvex/tools/builds/open64_4issue/bin/st200-gcc
+LD=/shares/group/ce-rvex/tools/builds/open64_4issue/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3
 else
@@ -285,6 +287,7 @@ CFLAGS += -g
 endif
 else
 CC=/shares/group/ce-rvex/tools/builds/open64_2issue/bin/st200-gcc
+LD=/shares/group/ce-rvex/tools/builds/open64_2issue/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3 -CG:LAO_activation=0
 else
@@ -382,18 +385,11 @@ else
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< -o $@
 endif
 
-#Dirty tricks to force other FP library in case we're using Open64
-.PHONY: FORCE
-FORCE:
-
+# O64 compiler uses libgcc for division and floating point operations
 ifeq ($(COMPILER), O64)
-ifeq ($(ISSUE_WIDTH), 4)
-floatlib.o: IFR4_stat/LIBFP/libcfpi-st220.cc.a FORCE
+.PHONY: floatlib.o VEXdiv.o
+floatlib.o VEXdiv.o: empty.o
 	cp $< $@
-else ifeq ($(ISSUE_WIDTH), 8)
-floatlib.o: IFR8_stat/LIBFP/libcfpi-st220.cc.a FORCE
-	cp $< $@
-endif
 endif
 
 # How to assemble;
