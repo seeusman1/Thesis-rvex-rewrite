@@ -83,7 +83,11 @@ endif
 #   true-nofix - do not run vexparse prior to assembly.
 # Default = true-O1.
 ifndef DYNAMIC
+ifeq ($(ISSUE_WIDTH), 8)
 DYNAMIC = true-O1
+else
+DYNAMIC = true-nofix
+endif
 endif
 ifeq ($(DYNAMIC), true)
 override DYNAMIC = true-O1
