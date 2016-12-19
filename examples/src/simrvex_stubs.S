@@ -5,7 +5,9 @@ sim_exit::
 	mov	$r0.4 = $r0.3
 	mov	$r0.3 = 0x1
 	;;
-	goto	__dotsyscall
+	trap 0x91
+	;;
+	return $l0.0
 	;;
 
 /*
@@ -20,7 +22,9 @@ sim_trace::
 	mov	$r0.4 = $r0.3
 	mov	$r0.3 = 100
 	;;
-	goto	__dotsyscall
+	trap 0x91
+	;;
+	return $l0.0
 	;;
 
 sim_write::
@@ -31,13 +35,7 @@ sim_write::
 	mov	$r0.4 = $r0.3
 	mov	$r0.3 = 0x11
 	;;
-
-__dotsyscall:: /* Simulator looks for this */
-	nop
-	;;
-	nop
-	;;
-	nop
+	trap 0x91
 	;;
 	return $l0.0
 	;;
