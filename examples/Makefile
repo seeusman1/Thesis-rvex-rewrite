@@ -344,7 +344,7 @@ all: $(EXECUTABLES)
 
 # How to compile platform-specific sources;
 %.s: $(PLATFORM_SRC)/%.c
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -S $<
 ifeq ($(COMPILER), HP)
 	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 endif
@@ -352,11 +352,11 @@ endif
 # Where to get platform-specific assembly files and how to preprocess them;
 ifeq ($(COMPILER), HP)
 %.s: $(PLATFORM_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< > $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< > $@
 	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 else
 %.s: $(PLATFORM_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< -o $@
 endif
 
 # How to compile generic sources;
@@ -364,10 +364,10 @@ io.s: $(GENERIC_SRC)/io.c
 	$(CC) $(CFLAGS) -I/data/other/newlib/build/rvex/rvex-elf32/include \
 	-I/data/tools/st200/ST200R7.3.0/include/ \
 	-I/data/tools/st200/ST200R7.3.0/target/core/st220 \
-	$(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
+	$(patsubst %,-D%,$(DEFS)) -S $<
 
 %.s: $(GENERIC_SRC)/%.c
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -S $<
 ifeq ($(COMPILER), HP)
 	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 endif
@@ -375,11 +375,11 @@ endif
 # Where to get generic assembly files and how to preprocess them;
 ifeq ($(COMPILER), HP)
 %.s: $(GENERIC_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< > $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< > $@
 	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 else
 %.s: $(GENERIC_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< -o $@
 endif
 
 #Dirty tricks to force other FP library in case we're using Open64
