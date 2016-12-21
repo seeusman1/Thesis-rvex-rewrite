@@ -58,8 +58,7 @@ entity core_fpu_add is
     -- Operand and control inputs
     ---------------------------------------------------------------------------
     -- Opcode
-    --pl2fadd_opcode              : in  rvex_opcode_array(S_FADD to S_FADD);
-    pl2fadd_opcode              : in  std_logic; -- '0' add, '1' sub
+    pl2fadd_opcode              : in  rvex_opcode_array(S_FADD to S_FADD);
     
     -- 32-bit operands
     pl2fadd_opl                 : in  rvex_data_array(S_FADD to S_FADD);
