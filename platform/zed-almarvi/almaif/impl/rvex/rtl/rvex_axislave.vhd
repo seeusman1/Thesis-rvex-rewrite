@@ -222,6 +222,54 @@ architecture Behavioral of rvex_axislave is
   -- Run control signals.
   signal rvex_resetVect         : rvex_address_array(2**NUM_CONTEXTS_LOG2-1 downto 0);
   
+  -- Construct r-VEX configuration in a forward-compatible way.
+  function CORE_CFG return rvex_generic_config_type is
+    variable c : rvex_generic_config_type;
+  begin
+    c := RVEX_DEFAULT_CONFIG;
+    c.numLanesLog2          := NUM_LANES_LOG2;
+    c.numLaneGroupsLog2     := NUM_GROUPS_LOG2;
+    c.numContextsLog2       := NUM_CONTEXTS_LOG2;
+    c.genBundleSizeLog2     := GEN_BUNDLE_SIZE_LOG2;
+    c.bundleAlignLog2       := BUNDLE_ALIGN_LOG2;
+    c.multiplierLanes       := 2#11111111#;
+    c.memLaneRevIndex       := 1;
+    c.numBreakpoints        := NUM_BREAKPOINTS;
+    c.forwarding            := true;
+    c.limmhFromNeighbor     := true;
+    c.limmhFromPreviousPair := false;
+    c.reg63isLink           := false;
+    c.cregStartAddress      := X"FFFFFC00";
+    c.resetVectors          := (others => (others => '0'));
+    c.unifiedStall          := true;
+    c.gpRegImpl             := RVEX_GPREG_IMPL_MEM;
+    c.traceEnable           := TRACE_ENABLE;
+    c.perfCountSize         := PERF_COUNTER_SIZE;
+    c.cachePerfCountEnable  := false;
+    return c;
+  end CORE_CFG;
+  
+  function SYS_CFG return rvex_sa_generic_config_type is
+    variable c : rvex_sa_generic_config_type;
+  begin
+    c := RVEX_SA_DEFAULT_CONFIG;
+    c.core              := CORE_CFG;
+    c.cache_enable      := false;
+    c.cache_config      := CACHE_DEFAULT_CONFIG;
+    c.cache_bypassRange := addrRange(match => "--------------------------------");
+    c.imemDepthLog2B    := IMEM_DEPTH_LOG2;
+    c.dmemDepthLog2B    := DMEM_DEPTH_LOG2;
+    c.traceDepthLog2B   := 11; -- Fixed to 2 kiB
+    c.debugBusMap_imem  := mapSection("01");
+    c.debugBusMap_dmem  := mapSection("10");
+    c.debugBusMap_rvex  := mapSection("11");
+    c.debugBusMap_trace := mapSection("00");
+    c.debugBusMap_mutex := true;
+    c.rvexDataMap_dmem  := addrRangeAndMap(match => "0-------------------------------");
+    c.rvexDataMap_bus   := addrRangeAndMap(match => "1-------------------------------");
+    return c;
+  end SYS_CFG;
+  
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -374,42 +422,7 @@ begin -- architecture
     generic map (
       -- Normally, these are set using the setter functions. These are broken
       -- in Vivado though (unspecified things will just become X)
-      CFG                       => (
-        core                      => (
-          numLanesLog2              => NUM_LANES_LOG2,
-          numLaneGroupsLog2         => NUM_GROUPS_LOG2,
-          numContextsLog2           => NUM_CONTEXTS_LOG2,
-          genBundleSizeLog2         => GEN_BUNDLE_SIZE_LOG2,
-          bundleAlignLog2           => BUNDLE_ALIGN_LOG2,
-          multiplierLanes           => 2#11111111#,
-          memLaneRevIndex           => 1,
-          numBreakpoints            => NUM_BREAKPOINTS,
-          forwarding                => true,
-          limmhFromNeighbor         => true,
-          limmhFromPreviousPair     => false,--BUNDLE_ALIGN_LOG2 >= NUM_LANES_LOG2, -- doesn't work with Vivado
-          reg63isLink               => false,
-          cregStartAddress          => X"FFFFFC00",
-          resetVectors              => (others => (others => '0')),
-          unifiedStall              => true,
-          gpRegImpl                 => RVEX_GPREG_IMPL_MEM,
-          traceEnable               => TRACE_ENABLE,
-          perfCountSize             => PERF_COUNTER_SIZE,
-          cachePerfCountEnable      => false
-        ),
-        cache_enable              => false,
-        cache_config              => CACHE_DEFAULT_CONFIG,
-        cache_bypassRange         => addrRange(match => "--------------------------------"),
-        imemDepthLog2B            => IMEM_DEPTH_LOG2,
-        dmemDepthLog2B            => DMEM_DEPTH_LOG2,
-        traceDepthLog2B           => 11, -- Fixed to 2 kiB
-        debugBusMap_imem          => mapSection("01"),
-        debugBusMap_dmem          => mapSection("10"),
-        debugBusMap_rvex          => mapSection("11"),
-        debugBusMap_trace         => mapSection("00"),
-        debugBusMap_mutex         => true,
-        rvexDataMap_dmem          => addrRangeAndMap(match => "0-------------------------------"),
-        rvexDataMap_bus           => addrRangeAndMap(match => "1-------------------------------")
-      ),
+      CFG                       => SYS_CFG,
       CORE_ID                   => CORE_ID,
       PLATFORM_TAG              => X"414C4D41525649" -- "ALMARVI" in ASCII
     )
