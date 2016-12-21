@@ -19,10 +19,11 @@ use STD.TEXTIO.all;
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
-library work;
-use work.fixed_float_types.all;
 
-package fixed_pkg is
+library rvex;
+use rvex.fpu_fixed_float_types.all;
+
+package fpu_fixed_pkg is
 -- generic (
   -- Rounding routine to use in fixed point, fixed_round or fixed_truncate
   constant fixed_round_style    : fixed_round_style_type    := fixed_round;
@@ -1404,7 +1405,7 @@ function "MOD"(X, Y: in REAL ) return REAL;
 -- rtl_synthesis on
 -- pragma synthesis_on
 
-end package fixed_pkg;
+end package fpu_fixed_pkg;
 -------------------------------------------------------------------------------
 -- Proposed package body for the VHDL-200x-FT fixed_pkg package
 -- (Fixed point math package)
@@ -1417,7 +1418,7 @@ end package fixed_pkg;
 library IEEE;
 use IEEE.MATH_REAL.all;
 
-package body fixed_pkg is
+package body fpu_fixed_pkg is
 
 
 function SYS_fmod(X: REAL; Y: REAL) return REAL; 
@@ -8334,4 +8335,4 @@ end SYS_fmod;
 --       fraction => fraction);
 --   end function to_SFix;
 
-end package body fixed_pkg;
+end package body fpu_fixed_pkg;

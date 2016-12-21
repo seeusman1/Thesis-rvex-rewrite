@@ -21,11 +21,12 @@ use STD.TEXTIO.all;
 library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
-library work;
-use work.fixed_float_types.all;
-use work.fixed_pkg.all;
 
-package float_pkg is
+library rvex;
+use rvex.fpu_fixed_float_types.all;
+use rvex.fpu_fixed_pkg.all;
+
+package fpu_float_pkg is
 -- generic (
   -- Defaults for sizing routines, when you do a "to_float" this will be
   -- the default size.  Example float32 would be 8 and 23 (8 downto -23)
@@ -894,7 +895,7 @@ package float_pkg is
 --   function realtobits (arg : REAL) return STD_LOGIC_VECTOR;
 --   function bitstoreal (arg : STD_LOGIC_VECTOR) return REAL;
 
-end package float_pkg;
+end package fpu_float_pkg;
 -------------------------------------------------------------------------------
 -- Proposed package body for the VHDL-200x-FT float_pkg package
 -- This version is optimized for Synthesis, and not for simulation.
@@ -907,7 +908,7 @@ end package float_pkg;
 --  Created for VHDL-200X par, David Bishop (dbishop@vhdl.org)
 -------------------------------------------------------------------------------
 
-package body float_pkg is
+package body fpu_float_pkg is
 
   -- Author David Bishop (dbishop@vhdl.org)
   -----------------------------------------------------------------------------
@@ -6120,4 +6121,4 @@ package body float_pkg is
 --     return to_real (arg64);
 --   end function bitstoreal;
 
-end package body float_pkg;
+end package body fpu_float_pkg;

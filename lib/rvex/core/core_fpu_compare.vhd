@@ -30,14 +30,18 @@ use IEEE.std_logic_1164.all;
 
 library IEEE;
 use IEEE.std_logic_1164.all;
-use ieee.numeric_std.all;
+use IEEE.numeric_std.all;
 
-library work;
-use work.fixed_float_types.all;
-use work.fixed_pkg.all;
-use work.float_pkg.all;
+library rvex;
+use rvex.fpu_fixed_pkg.all;
+use rvex.fpu_float_pkg.all;
+use rvex.fpu_fixed_float_types.all;
 
-use work.rvex.all;
+use rvex.common_pkg.all;
+use rvex.core_intIface_pkg.all;
+use rvex.core_pipeline_pkg.all;
+use rvex.core_opcode_pkg.all;
+use rvex.core_opcodeFpu_pkg.all;
 
 entity core_fpu_compare is
   port (

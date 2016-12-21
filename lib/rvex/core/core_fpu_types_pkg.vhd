@@ -13,7 +13,7 @@
 -- Date       : $Date: 2007-09-11 14:52:13-04 $
 -- --------------------------------------------------------------------
 
-package fixed_float_types is
+package fpu_fixed_float_types is
 
   -- Types used for generics of fixed_generic_pkg
   
@@ -31,4 +31,4 @@ package fixed_float_types is
                       round_neginf,     -- Round toward negative infinity
                       round_zero);      -- Round toward zero (truncate)
 
-end package fixed_float_types;
+end package fpu_fixed_float_types;
