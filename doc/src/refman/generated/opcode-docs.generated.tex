@@ -2089,6 +2089,282 @@ information.
 $r0.d = ((long long)$r0.x * (short)[$r0.y|imm]) >> 32;
 \end{lstlisting}
 
+\insndocsection{Floating-point instructions}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\refstepcounter{InstructionCounter}\label{opc:ADDF}
+\noindent\textbf{\footnotesize\texttt{\detokenize{addf $r0.d = $r0.x, $r0.y}}}
+
+\noindent\textbf{\footnotesize\texttt{\detokenize{addf $r0.d = $r0.x, imm}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 0} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{6}{|@{}c@{} }{\scriptsize y} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize imm} & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Performs a single-precision floating-point addition.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = $r0.x + [$r0.y|imm];
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\refstepcounter{InstructionCounter}\label{opc:SUBF}
+\noindent\textbf{\footnotesize\texttt{\detokenize{subf $r0.d = $r0.x, $r0.y}}}
+
+\noindent\textbf{\footnotesize\texttt{\detokenize{subf $r0.d = $r0.x, imm}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{|@{}c@{} }{\tiny 0} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{6}{|@{}c@{} }{\scriptsize y} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize imm} & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Performs a single-precision floating-point subtraction.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = $r0.x - [$r0.y|imm];
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\refstepcounter{InstructionCounter}\label{opc:MPYF}
+\noindent\textbf{\footnotesize\texttt{\detokenize{mpyf $r0.d = $r0.x, $r0.y}}}
+
+\noindent\textbf{\footnotesize\texttt{\detokenize{mpyf $r0.d = $r0.x, imm}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 0} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{6}{|@{}c@{} }{\scriptsize y} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize imm} & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Performs a single-precision floating-point multiplication.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = $r0.x * [$r0.y|imm];
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\refstepcounter{InstructionCounter}\label{opc:CMPGEF}
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpgef $r0.d = $r0.x, $r0.y}}}
+
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpgef $r0.d = $r0.x, imm}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{|@{}c@{} }{\tiny 0} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{6}{|@{}c@{} }{\scriptsize y} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize imm} & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Single-precision floating-point compare. Determines whether the first operand is greater than or equal to the second operand and stores
+the result in an integer register.
+
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = $r0.x >= [$r0.y|imm];
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpgef $b0.bd = $r0.x, $r0.y}}}
+
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpgef $b0.bd = $r0.x, imm}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 0} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{3}{|@{}c@{} }{\scriptsize bd} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{6}{|@{}c@{} }{\scriptsize y} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{3}{|@{}c@{} }{\scriptsize bd} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize imm} & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Single-precision floating-point compare. Determines whether the first operand is greater than or equal to the second operand and stores
+the result in a branch register.
+
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$b0.bd = $r0.x >= [$r0.y|imm];
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\refstepcounter{InstructionCounter}\label{opc:CMPEQF}
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpeqf $r0.d = $r0.x, $r0.y}}}
+
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpeqf $r0.d = $r0.x, imm}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{|@{}c@{} }{\tiny 0} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{6}{|@{}c@{} }{\scriptsize y} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize imm} & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Single-precision floating-point compare. Determines whether the first operand is equal to the second operand and stores
+the result in an integer register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = $r0.x == [$r0.y|imm];
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpeqf $b0.bd = $r0.x, $r0.y}}}
+
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpeqf $b0.bd = $r0.x, imm}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 0} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{3}{|@{}c@{} }{\scriptsize bd} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{6}{|@{}c@{} }{\scriptsize y} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{3}{|@{}c@{} }{\scriptsize bd} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize imm} & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Single-precision floating-point compare. Determines whether the first operand is equal to the second operand and stores
+the result in a branch register.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$b0.bd = $r0.x == [$r0.y|imm];
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\refstepcounter{InstructionCounter}\label{opc:CMPGTF}
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpgtf $r0.d = $r0.x, $r0.y}}}
+
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpgtf $r0.d = $r0.x, imm}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{|@{}c@{} }{\tiny 0} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{6}{|@{}c@{} }{\scriptsize y} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize imm} & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Single-precision floating-point compare. Determines whether the first operand is greater than the second operand and stores
+the result in an integer register.
+
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = $r0.x > [$r0.y|imm];
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpgtf $b0.bd = $r0.x, $r0.y}}}
+
+\noindent\textbf{\footnotesize\texttt{\detokenize{cmpgtf $b0.bd = $r0.x, imm}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 0} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{3}{|@{}c@{} }{\scriptsize bd} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{6}{|@{}c@{} }{\scriptsize y} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{3}{|@{}c@{} }{\scriptsize } & \multicolumn{3}{|@{}c@{} }{\scriptsize bd} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize imm} & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Single-precision floating-point compare. Determines whether the first operand is greater than the second operand and stores
+the result in a branch register.
+
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$b0.bd = $r0.x > [$r0.y|imm];
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\refstepcounter{InstructionCounter}\label{opc:CONVIF}
+\noindent\textbf{\footnotesize\texttt{\detokenize{convif $r0.d = $r0.x}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{|@{}c@{} }{\scriptsize } & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Converts a single-precision floating-point number to a signed integer.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (float) $r0.x;
+\end{lstlisting}
+
+\vskip 10pt
+\noindent\begin{minipage}{\textwidth}
+\refstepcounter{InstructionCounter}\label{opc:CONVFI}
+\noindent\textbf{\footnotesize\texttt{\detokenize{convfi $r0.d = $r0.x}}}
+
+\noindent\footnotesize
+\begin{tabular}{*{32}{@{}p{0.03125 \textwidth}}@{}}
+ & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & & \\
+\multicolumn{1}{|@{}c@{}}{\tiny31} & \multicolumn{1}{ @{}c@{}}{\tiny30} & \multicolumn{1}{ @{}c@{}}{\tiny29} & \multicolumn{1}{ @{}c@{}}{\tiny28} & \multicolumn{1}{ @{}c@{}}{\tiny27} & \multicolumn{1}{ @{}c@{}}{\tiny26} & \multicolumn{1}{ @{}c@{}}{\tiny25} & \multicolumn{1}{ @{}c@{}}{\tiny24} & \multicolumn{1}{|@{}c@{}}{\tiny23} & \multicolumn{1}{ @{}c@{}}{\tiny22} & \multicolumn{1}{ @{}c@{}}{\tiny21} & \multicolumn{1}{ @{}c@{}}{\tiny20} & \multicolumn{1}{ @{}c@{}}{\tiny19} & \multicolumn{1}{ @{}c@{}}{\tiny18} & \multicolumn{1}{ @{}c@{}}{\tiny17} & \multicolumn{1}{ @{}c@{}}{\tiny16} & \multicolumn{1}{|@{}c@{}}{\tiny15} & \multicolumn{1}{ @{}c@{}}{\tiny14} & \multicolumn{1}{ @{}c@{}}{\tiny13} & \multicolumn{1}{ @{}c@{}}{\tiny12} & \multicolumn{1}{ @{}c@{}}{\tiny11} & \multicolumn{1}{ @{}c@{}}{\tiny10} & \multicolumn{1}{ @{}c@{}}{\tiny9} & \multicolumn{1}{ @{}c@{}}{\tiny8} & \multicolumn{1}{|@{}c@{}}{\tiny7} & \multicolumn{1}{ @{}c@{}}{\tiny6} & \multicolumn{1}{ @{}c@{}}{\tiny5} & \multicolumn{1}{ @{}c@{}}{\tiny4} & \multicolumn{1}{ @{}c@{}}{\tiny3} & \multicolumn{1}{ @{}c@{}}{\tiny2} & \multicolumn{1}{ @{}c@{}}{\tiny1} & \multicolumn{1}{ @{}c@{}|}{\tiny0}\\
+\cline{1-32}
+\multicolumn{1}{|@{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 1} & \multicolumn{1}{ @{}c@{} }{\tiny 0} & \multicolumn{1}{|@{}c@{} }{\scriptsize } & \multicolumn{6}{|@{}c@{} }{\scriptsize d} & \multicolumn{6}{|@{}c@{} }{\scriptsize x} & \multicolumn{9}{|@{}c@{} }{\scriptsize } & \multicolumn{1}{|@{}c@{} }{\tiny S} & \multicolumn{1}{|@{}c@{}|}{\scriptsize }\\
+\cline{1-32}
+\end{tabular}
+\normalsize
+\end{minipage}\vskip 10pt
+\noindent Converts a signed integer to a single-precision floating-point number.
+
+\begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
+$r0.d = (int) $r0.x;
+\end{lstlisting}
+
 \insndocsection{Memory instructions}
 Some \rvex{} pipelanes have a memory unit. The memory unit supports byte,
 halfword and word operations. Sign or zero extension is part of the byte and

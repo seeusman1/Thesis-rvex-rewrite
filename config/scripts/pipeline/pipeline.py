@@ -107,6 +107,31 @@ def parse(indir):
                      'x >= S_SRD']),
         ('L_MUL1',  ['x >= 0']),
         ('L_MUL2',  ['x >= 0']),
+        ('S_FADD',  ['x >= S_LIMM',
+                     'x >= S_RD + L_RD',
+                     'x >= S_SRD']),
+        ('L_FADD1', ['x == 0 or x == 1']),
+        ('L_FADD2', ['x == 0 or x == 1']),
+        ('L_FADD3', ['x == 0 or x == 1']),
+        ('S_FCMP',  ['x >= S_LIMM',
+                     'x >= S_RD + L_RD',
+                     'x >= S_SRD']),
+        ('L_FCMP1', ['x == 0 or x == 1']),
+        ('L_FCMP2', ['x == 0 or x == 1']),
+        ('S_FCFI',  ['x >= S_LIMM',
+                     'x >= S_RD + L_RD',
+                     'x >= S_SRD']),
+        ('S_FCIF',  ['x >= S_LIMM',
+                     'x >= S_RD + L_RD',
+                     'x >= S_SRD']),
+        ('L_FCIF1', ['x == 0 or x == 1']),
+        ('L_FCIF2', ['x == 0 or x == 1']),
+        ('S_FMUL',  ['x >= S_LIMM',
+                     'x >= S_RD + L_RD',
+                     'x >= S_SRD']),
+        ('L_FMUL1', ['x == 0 or x == 1']),
+        ('L_FMUL2', ['x == 0 or x == 1']),
+        ('L_FMUL3', ['x == 0 or x == 1']),
         ('S_MEM',   ['x >= S_RD + L_RD',
                      'x >= S_SRD',
                      'x >= S_ALU + L_ALU1']),
@@ -115,10 +140,20 @@ def parse(indir):
         ('L_BRK',   ['x == 0']),
         ('S_WB',    ['x >= S_ALU + L_ALU1 + L_ALU2',
                      'x >= S_MUL + L_MUL1 + L_MUL2',
+                     'x >= S_FADD + L_FADD1 + L_FADD2 + L_FADD3',
+                     'x >= S_FCMP + L_FCMP1 + L_FCMP2',
+                     'x >= S_FCFI',
+                     'x >= S_FCIF + L_FCIF1 + L_FCIF2',
+                     'x >= S_FMUL + L_FMUL1 + L_FMUL2 + L_FMUL3',
                      'x >= S_MEM + L_MEM']),
         ('L_WB',    ['x == 1']),
         ('S_SWB',   ['x >= S_ALU + L_ALU1 + L_ALU2',
                      'x >= S_MUL + L_MUL1 + L_MUL2',
+                     'x >= S_FADD + L_FADD1 + L_FADD2 + L_FADD3',
+                     'x >= S_FCMP + L_FCMP1 + L_FCMP2',
+                     'x >= S_FCFI',
+                     'x >= S_FCIF + L_FCIF1 + L_FCIF2',
+                     'x >= S_FMUL + L_FMUL1 + L_FMUL2 + L_FMUL3',
                      'x >= S_MEM + L_MEM']),
         ('S_LTRP',  ['x >= S_MEM + L_MEM']),
         ('S_LAST',  [])
@@ -133,6 +168,11 @@ def parse(indir):
     # Add some generated stuff.
     defs['L_ALU'] = defs['L_ALU1'] + defs['L_ALU2']
     defs['L_MUL'] = defs['L_MUL1'] + defs['L_MUL2']
+
+    defs['L_FADD'] = defs['L_FADD1'] + defs['L_FADD2'] + defs['L_FADD3']
+    defs['L_FCMP'] = defs['L_FCMP1'] + defs['L_FCMP2']
+    defs['L_FCIF'] = defs['L_FCIF1'] + defs['L_FCIF2']
+    defs['L_FMUL'] = defs['L_FMUL1'] + defs['L_FMUL2'] + defs['L_FMUL3']
     
     # This thing is a bit ugly. I don't know why this ever seemed like a good
     # idea. It has to do with the instruction buffer and the stop bit system and
@@ -167,6 +207,7 @@ def parse(indir):
 # ctrl        (IF setup)
 # arith       ALU
 # arith       MUL
+# arith       FPU
 # ctrl/mem    MEM result
 # ctrl        BRK
 # ctrl        (STRAP)

@@ -110,38 +110,57 @@ package core_pipeline_pkg is
   -- definitions determine the latency of a block, i.e., how many stages later
   -- the results of a block are expected to be valid.
 
-  constant S_LAST               : natural := 6;                                                      -- GENERATED --
+  constant L_FADD3              : natural := 1;                                                      -- GENERATED --
+  constant L_FADD2              : natural := 0;
+  constant L_FADD1              : natural := 0;
+  constant S_LAST               : natural := 6;
   constant S_BR                 : natural := 3;
+  constant L_FMUL               : natural := 1;
   constant S_FW                 : natural := 3;
   constant S_SRD                : natural := 3;
   constant S_ALU                : natural := 3;
-  constant S_MEM                : natural := 4;
+  constant S_FCFI               : natural := 3;
+  constant S_MEM                : natural := 4;                                                      -- GENERATED --
   constant S_SWB                : natural := 5;
+  constant S_FCMP               : natural := 3;
+  constant L_FCMP1              : natural := 0;
   constant S_STOP               : natural := 2;
   constant S_WB                 : natural := 5;
   constant L_MUL                : natural := 2;
-  constant L_BRK                : natural := 0;                                                      -- GENERATED --
-  constant S_BTGT               : natural := 2;
+  constant L_FCMP               : natural := 1;
+  constant L_BRK                : natural := 0;
+  constant L_FCIF               : natural := 1;
+  constant S_BTGT               : natural := 2;                                                      -- GENERATED --
   constant L_ALU1               : natural := 0;
   constant S_TRAP               : natural := 2;
   constant L_ALU2               : natural := 1;
+  constant S_FMUL               : natural := 3;
   constant L_WB                 : natural := 1;
+  constant L_FADD               : natural := 1;
+  constant S_FCIF               : natural := 3;
   constant L_ALU                : natural := 1;
   constant S_BRK                : natural := 4;
-  constant S_PCP1               : natural := 1;
-  constant L_MUL2               : natural := 1;
-  constant L_MEM                : natural := 1;                                                      -- GENERATED --
+  constant S_PCP1               : natural := 1;                                                      -- GENERATED --
+  constant L_FCIF2              : natural := 1;
+  constant L_FCIF1              : natural := 0;
+  constant L_FMUL2              : natural := 1;
+  constant L_FMUL3              : natural := 0;
+  constant L_FMUL1              : natural := 0;
+  constant L_MEM                : natural := 1;
   constant S_LTRP               : natural := 5;
   constant S_RD                 : natural := 2;
   constant L_RD                 : natural := 1;
-  constant L_IF                 : natural := 1;
+  constant L_IF                 : natural := 1;                                                      -- GENERATED --
   constant S_FIRST              : natural := 1;
   constant S_MUL                : natural := 3;
+  constant L_FCMP2              : natural := 1;
   constant S_IF                 : natural := 1;
   constant S_LIMM               : natural := 2;
+  constant L_MUL2               : natural := 1;
   constant L_MUL1               : natural := 1;
-  constant L_IF_MEM             : natural := 1;                                                      -- GENERATED --
-  constant S_SFW                : natural := 3;
+  constant S_FADD               : natural := 3;
+  constant L_IF_MEM             : natural := 1;
+  constant S_SFW                : natural := 3;                                                      -- GENERATED --
 
 end core_pipeline_pkg;
 
