@@ -82,6 +82,14 @@ package core_opcodeFpu_pkg is
   -----------------------------------------------------------------------------
   type fpuCtrlSignals_type is record
 
+    -- When this instruction is executed on a lane without the required unit,
+    -- an invalid instruction exception will be raised.
+    isFAddInstruction           : std_logic;
+    isFCompareInstruction       : std_logic;
+    isFConvfiInstruction        : std_logic;
+    isFConvifInstruction        : std_logic;
+    isFMulInstruction           : std_logic;
+
     -- Adder and compare unit control signals
     addOp                       : fpuAddOp_type;
     cmpOp                       : fpuCmpOp_type;
@@ -96,6 +104,12 @@ package core_opcodeFpu_pkg is
   
   -- Default value.
   constant FPU_CTRL_NOP         : fpuCtrlSignals_type := (
+    isFAddInstruction           => '0',
+    isFCompareInstruction       => '0',
+    isFConvfiInstruction        => '0',
+    isFConvifInstruction        => '0',
+    isFMulInstruction           => '0',
+
     addOp                       => ADD,
     cmpOp                       => EQ,
     unsignedOp                  => '0'

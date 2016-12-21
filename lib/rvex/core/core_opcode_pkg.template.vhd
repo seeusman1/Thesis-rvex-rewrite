@@ -123,6 +123,9 @@ package core_opcode_pkg is
     
     -- Control signals for the multiplier unit.
     multiplierCtrl              : multiplierCtrlSignals_type;
+
+    -- Control signals for the FPU.
+    fpuCtrl                     : fpuCtrlSignals_type;
     
   end record;
   
