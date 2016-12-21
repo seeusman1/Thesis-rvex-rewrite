@@ -124,6 +124,11 @@ use std.textio.all;
 --  - alu    = Arith. Logic Unit          @ core_alu.vhd
 --  - memu   = MEMory Unit                @ core_memu.vhd
 --  - mulu   = MULtiply Unit              @ core_mulu.vhd
+--  - fadd   = Fpu ADDer                  @ core_fpu_add.vhd
+--  - fcmp   = Fpu CoMPare                @ core_fpu_compare.vhd
+--  - fcfi   = Fpu Convert Float to Int   @ core_fpu_convfi.vhd
+--  - fcif   = Fpu Convert Int to Float   @ core_fpu_convif.vhd
+--  - fmul   = Fpu MULtiply               @ core_fpu_mul.vhd
 --  - brku   = BReaKpoint Unit            @ core_breakpoint.vhd
 --  - gpreg  = General Purpose REGisters  @ core_gpRegs.vhd
 --  - fwd    = ForWarDing logic           @ core_forward.vhd

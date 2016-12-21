@@ -249,6 +249,21 @@ entity core_pipelane is
     
     -- Determines whether this pipelane has a multiplier or not.
     HAS_MUL                     : boolean;
+
+    -- Determines whether this pipelane has a floating-point adder or not.
+    HAS_FADD                    : boolean;
+
+    -- Determines whether this pipelane has a floating-point compare unit or not.
+    HAS_FCMP                    : boolean;
+
+    -- Determines whether this pipelane has a floating-point convert-to-int unit or not.
+    HAS_FCFI                    : boolean;
+
+    -- Determines whether this pipelane has a floating-point convert-to-float unit or not.
+    HAS_FCIF                    : boolean;
+
+    -- Determines whether this pipelane has a floating-point multiplier or not.
+    HAS_FMUL                    : boolean;
     
     -- Determines whether this pipelane has a memory unit or not.
     HAS_MEM                     : boolean;
@@ -1023,6 +1038,36 @@ architecture Behavioral of core_pipelane is
   signal pl2mulu_op1            : rvex_data_array(S_MUL to S_MUL);
   signal pl2mulu_op2            : rvex_data_array(S_MUL to S_MUL);
   signal mulu2pl_result         : rvex_data_array(S_MUL+L_MUL to S_MUL+L_MUL);
+
+  -- Pipelane <-> Floating-point unit interconnect. Refer to the entity of
+  -- each component for more information about the signals.
+  -- FPU add
+  signal pl2fadd_opcode         : rvex_opcode_array(S_FADD to S_FADD);
+  signal pl2fadd_opl            : rvex_data_array(S_FADD to S_FADD);
+  signal pl2fadd_opr            : rvex_data_array(S_FADD to S_FADD);
+  signal fadd2pl_result         : rvex_data_array(S_FADD+L_FADD to S_FADD+L_FADD);
+
+  -- FPU compare
+  signal pl2fcmp_opcode         : rvex_opcode_array(S_FCMP to S_FCMP);
+  signal pl2fcmp_opl            : rvex_data_array(S_FCMP to S_FCMP);
+  signal pl2fcmp_opr            : rvex_data_array(S_FCMP to S_FCMP);
+  signal fcmp2pl_result         : rvex_data_array(S_FCMP+L_FCMP to S_FCMP+L_FCMP);
+  signal fcmp2pl_resultBr       : std_logic_vector(S_FCMP+L_FCMP to S_FCMP+L_FCMP);
+
+  -- FPU convert float to int
+  signal pl2fcfi_opcode         : rvex_opcode_array(S_FCFI to S_FCFI);
+  signal pl2fcfi_op             : rvex_data_array(S_FCFI to S_FCFI);
+  signal fcfi2pl_result         : rvex_data_array(S_FCFI to S_FCFI);
+
+  -- FPU convert int to float
+  signal pl2fcif_opcode         : rvex_opcode_array (S_FCIF to S_FCIF);
+  signal pl2fcif_op             : rvex_data_array(S_FCIF to S_FCIF);
+  signal fcif2pl_result         : rvex_data_array (S_FCIF+L_FCIF to S_FCIF+L_FCIF);
+
+  -- FPU multiply
+  signal pl2fmul_opl            : rvex_data_array(S_FMUL to S_FMUL);
+  signal pl2fmul_opr            : rvex_data_array(S_FMUL to S_FMUL);
+  signal fmul2pl_result         : rvex_data_array(S_FMUL+L_FMUL to S_FMUL+L_FMUL);
   
   -- Pipelane <-> memory unit interconnect. Refer to memory unit entity for
   -- more information about the signals.
@@ -1382,6 +1427,145 @@ begin -- architecture
     mulu2pl_result(S_MUL+L_MUL) <= (others => RVEX_UNDEF);
     
   end generate;
+
+  -- Instantiate FPU add, if there should be one.
+  fadd_gen: if HAS_FADD generate
+    fadd_inst: entity rvex.core_fpu_add
+      port map (
+
+        -- System control
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+      
+        -- Operand and control inputs
+        pl2fadd_opcode(S_FADD)          => pl2fadd_opcode(S_FADD),
+        pl2fadd_opl(S_FADD)             => pl2fadd_opl(S_FADD),
+        pl2fadd_opr(S_FADD)             => pl2fadd_opr(S_FADD),
+      
+        -- Outputs
+        fadd2pl_result(S_FADD+L_FADD)   => fadd2pl_result(S_FADD+L_FADD)
+
+      );
+  end generate;
+  no_fadd_gen: if not HAS_FADD generate
+
+    -- Set outputs to undefined
+    fadd2pl_result(S_FADD+L_FADD) <= (others => RVEX_UNDEF);
+
+  end generate;
+
+  -- Instantiate FPU compare, if there should be one.
+  fcmp_gen: if HAS_FCMP generate
+    fcmp_inst: entity rvex.core_fpu_compare
+      port map (
+
+        -- System control
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+      
+        -- Operand and control inputs
+        pl2fcmp_opcode(S_FCMP)          => pl2fcmp_opcode(S_FCMP),
+        pl2fcmp_opl(S_FCMP)             => pl2fcmp_opl(S_FCMP),
+        pl2fcmp_opr(S_FCMP)             => pl2fcmp_opr(S_FCMP),
+      
+        -- Outputs
+        fcmp2pl_result(S_FCMP+L_FCMP)   => fcmp2pl_result(S_FCMP+L_FCMP),
+        fcmp2pl_resultBr(S_FCMP+L_FCMP) => fcmp2pl_resultBr(S_FCMP+L_FCMP)
+
+    );
+  end generate;
+  no_fcmp_gen: if not HAS_FCMP generate
+
+    -- Set outputs to undefined
+    fcmp2pl_result(S_FCMP+L_FCMP)   <= (others => RVEX_UNDEF);
+    fcmp2pl_resultBr(S_FCMP+L_FCMP) <= RVEX_UNDEF;
+
+  end generate;
+
+  -- Instantiate FPU convert to int, if there should be one.
+  fcfi_gen: if HAS_FCFI generate
+    fcfi_inst: entity rvex.core_fpu_convfi
+      port map (
+
+        -- System control
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+      
+        -- Operand and control inputs
+        pl2fcfi_opcode(S_FCFI)          => pl2fcfi_opcode(S_FCFI),
+        pl2fcfi_op(S_FCFI)              => pl2fcfi_op(S_FCFI),
+      
+        -- Outputs
+        fcfi2pl_result(S_FCFI+L_FCFI)   => fcfi2pl_result(S_FCFI+L_FCFI)
+
+    );
+  end generate;
+  no_fcfi_gen: if not HAS_FCFI generate
+  
+    -- Set outputs to undefined
+    fcfi2pl_result(S_FCFI+L_FCFI) <= (others => RVEX_UNDEF);
+
+  end generate;
+
+  -- Instantiate FPU convert to float, if there should be one.
+  fcif_gen: if HAS_FCIF generate
+    fcif_inst: entity rvex.core_fpu_convif
+      port map (
+
+        -- System control
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+      
+        -- Operand and control inputs
+        pl2fcif_opcode(S_FCIF)          => pl2fcif_opcode(S_FCIF),
+        pl2fcif_op(S_FCIF)              => pl2fcif_op(S_FCIF),
+      
+        -- Outputs
+        fcif2pl_result(S_FCIF+L_FCIF)   => fcif2pl_result(S_FCIF+L_FCIF)
+
+    );
+  end generate;
+  no_fcif_gen: if not HAS_FCIF generate
+  
+    -- Set outputs to undefined
+    fcif2pl_result(S_FCIF+L_FCIF) <= (others => RVEX_UNDEF);
+
+  end generate;
+
+  -- Instantiate FPU multiply, if there should be one.
+  fmul_gen: if HAS_FMUL generate
+    fmul_inst: entity rvex.core_fpu_mul
+      port map (
+
+        -- System control
+        reset                           => reset,
+        clk                             => clk,
+        clkEn                           => clkEn,
+        stall                           => stall,
+      
+        -- Operand inputs
+        pl2fmul_opl(S_FMUL)             => pl2fmul_opl(S_FMUL),
+        pl2fmul_opr(S_FMUL)             => pl2fmul_opr(S_FMUL),
+      
+        -- Outputs
+        fmul2pl_result(S_FMUL+L_FMUL)   => fmul2pl_result(S_FMUL+L_FMUL)
+
+    );
+  end generate;
+  no_fmul_gen: if not HAS_FMUL generate
+
+    -- Set outputs to undefined
+    fmul2pl_result(S_FMUL+L_FMUL) <= (others => RVEX_UNDEF);
+
+  end generate;
   
   -- Instantiate the memory unit, if there should be one.
   memu_gen: if HAS_MEM generate
@@ -1546,6 +1730,10 @@ begin -- architecture
     
     -- Signals from the multiplier.
     mulu2pl_result,
+
+    -- Signals from the FPU
+    fadd2pl_result, fcmp2pl_result, fcmp2pl_resultBr, fcfi2pl_result,
+    fcif2pl_result, fmul2pl_result,
     
     -- Signals from the memory unit.
     memu2pl_result, memu2pl_trap, memu2pl_trace_enable, memu2pl_trace_addr,
@@ -2011,6 +2199,38 @@ begin -- architecture
         flag := '1';
       end if;
     end if;
+
+    -- If a certain floating-point operation is not available, make sure
+    -- this instruction does not require it.
+    if not HAS_FADD then
+      if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).fpuCtrl.isFAddInstruction = '1' then
+        flag := '1';
+      end if;
+    end if;
+
+    if not HAS_FCMP then
+      if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).fpuCtrl.isFCompareInstruction = '1' then
+        flag := '1';
+      end if;
+    end if;
+
+    if not HAS_FCFI then
+      if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).fpuCtrl.isFConvfiInstruction = '1' then
+        flag := '1';
+      end if;
+    end if
+
+    if not HAS_FCIF then
+      if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).fpuCtrl.isFConvifInstruction = '1' then
+        flag := '1';
+      end if;
+    end if
+
+    if not HAS_FMUL then
+      if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).fpuCtrl.isFMulInstruction = '1' then
+        flag := '1';
+      end if;
+    end if
     
     -- Append the illegal opcode exception to the trap listing if our flag is
     -- set.
@@ -2335,6 +2555,104 @@ begin -- architecture
         s(S_MUL+L_MUL).dp.resLinkValid := s(S_MUL+L_MUL).dp.linkWE_lo;
       end if;
       
+    end if;
+
+    ---------------------------------------------------------------------------
+    -- Connect pipeline to floating-point unit
+    ---------------------------------------------------------------------------
+    -- Adder
+    if HAS_FADD then
+
+      -- Drive inputs
+      if s(S_FADD).dp.c.enableFAdd = '1' or not CFG.enablePowerLatches then
+        pl2fadd_opcode(S_FADD) <= s(S_FADD).dp.opcode;
+        pl2fadd_opl(S_FADD)    <= s(S_FADD).dp.op1;
+        pl2fadd_opr(S_FADD)    <= s(S_FADD).dp.op2;
+      end if;
+
+      -- Set the result and result valid bit if the FADD result is selected.
+      if s(S_FADD+L_FADD).dp.c.funcSel = FADD then
+        s(S_FADD+L_FADD).dp.res := fadd2pl_result(S_FADD+L_FADD);
+        s(S_FADD+L_FADD).dp.resValid := s(S_FADD+L_FADD).dp.gpRegWE_lo;
+        s(S_FADD+L_FADD).dp.resLinkValid := s(S_FADD+L_FADD).dp.linkWE_lo;
+      end if;
+
+    end if;
+
+    -- Compare
+    if HAS_FCMP then
+
+      -- Drive inputs
+      if s(S_FCMP).dp.c.enableFCmp = '1' or not CFG.enablePowerLatches then
+        pl2fcmp_opcode(S_FCMP) <= s(S_FCMP).dp.opcode;
+        pl2fcmp_opl(S_FCMP)    <= s(S_FCMP).dp.op1;
+        pl2fcmp_opr(S_FCMP)    <= s(S_FCMP).dp.op2;
+      end if;
+
+      -- Set the result, branch result and result valid bit if the FCMP result is selected.
+      if s(S_FCMP+L_FCMP).dp.c.funcSel = FCMP then
+        s(S_FCMP+L_FCMP).dp.res := fcmp2pl_result(S_FCMP+L_FCMP);
+        s(S_FCMP+L_FCMP).dp.resBr := fcmp2pl_resultBr(S_FCMP+L_FCMP);
+        s(S_FCMP+L_FCMP).dp.resValid := s(S_FCMP+L_FCMP).dp.gpRegWE_lo;
+        s(S_FCMP+L_FCMP).dp.resLinkValid := s(S_FCMP+L_FCMP).dp.linkWE_lo;
+        s(S_FCMP+L_FCMP).dp.resBrValid := (others => s(S_FCMP+L_FCMP).dp.c.allBrRegsWE);
+      end if;
+
+    end if;
+
+    -- Convert float to in
+    if HAS_FCFI then
+
+      -- Drive inputs
+      if s(S_FCFI).dp.c.enableFCfi = '1' or not CFG.enablePowerLatches then
+        pl2fcfi_opcode(S_FCFI) <= s(S_FCFI).dp.opcode;
+        pl2fcfi_op(S_FCFI)     <= s(S_FCFI).dp.op2;
+      end if;
+
+      -- Set the result and result valid bit if the FCFI result is selected.
+      if s(S_FCFI+L_FCFI).dp.c.funcSel = FCFI then
+        s(S_FCFI+L_FCFI).dp.res := fcfi2pl_result(S_FCFI+L_FCFI);
+        s(S_FCFI+L_FCFI).dp.resValid := s(S_FCFI+L_FCFI).dp.gpRegWE_lo;
+        s(S_FCFI+L_FCFI).dp.resLinkValid := s(S_FCFI+L_FCFI).dp.linkWE_lo;
+      end if;
+
+    end if;
+
+    -- Convert int to float
+    if HAS_FCIF then
+
+      -- Drive inputs
+      if s(S_FCIF).dp.c.enableFCif = '1' or not CFG.enablePowerLatches then
+        pl2fcif_opcode(S_FCIF) <= s(S_FCIF).dp.opcode;
+        pl2fcif_op(S_FCIF)     <= s(S_FCIF).dp.op2;
+      end if;
+
+      -- Set the result and result valid bit if the FCIF result is selected.
+      if s(S_FCIF+L_FCIF).dp.c.funcSel = FCIF then
+        s(S_FCIF+L_FCIF).dp.res := fcif2pl_result(S_FCIF+L_FCIF);
+        s(S_FCIF+L_FCIF).dp.resValid := s(S_FCIF+L_FCIF).dp.gpRegWE_lo;
+        s(S_FCIF+L_FCIF).dp.resLinkValid := s(S_FCIF+L_FCIF).dp.linkWE_lo;
+      end if;
+
+    end if;
+
+    -- Multiply
+    if HAS_FMUL then
+
+      -- Drive inputs
+      if s(S_FMUL).dp.c.enableFMul = '1' or not CFG.enablePowerLatches then
+        pl2fmul_opcode(S_FMUL) <= s(S_FMUL).dp.opcode;
+        pl2fmul_opl(S_FMUL)    <= s(S_FMUL).dp.op1;
+        pl2fmul_opr(S_FMUL)    <= s(S_FMUL).dp.op2;
+      end if;
+
+      -- Set the result and result valid bit if the FMUL result is selected.
+      if s(S_FMUL+L_FMUL).dp.c.funcSel = FMUL then
+        s(S_FMUL+L_FMUL).dp.res := fmul2pl_result(S_FMUL+L_FMUL);
+        s(S_FMUL+L_FMUL).dp.resValid := s(S_FMUL+L_FMUL).dp.gpRegWE_lo;
+        s(S_FMUL+L_FMUL).dp.resLinkValid := s(S_FMUL+L_FMUL).dp.linkWE_lo;
+      end if;
+
     end if;
     
     ---------------------------------------------------------------------------

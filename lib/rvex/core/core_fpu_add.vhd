@@ -73,7 +73,8 @@ entity core_fpu_add is
     ---------------------------------------------------------------------------
     -- 32-bit output
     fadd2pl_result              : out rvex_data_array(S_FADD+L_FADD to S_FADD+L_FADD)
-    );
+  
+  );
 end entity;
 
 

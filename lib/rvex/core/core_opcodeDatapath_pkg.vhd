@@ -171,7 +171,7 @@ package core_opcodeDatapath_pkg is
   -- Branch unit control signals
   -----------------------------------------------------------------------------
   -- Enumeration type for the funcSel control signal.
-  type datapathFuncSel_type is (ALU, MEM, MUL, PCP1);
+  type datapathFuncSel_type is (ALU, MEM, FADD, FCMP, FCFI, FCIF, FMUL, MUL, PCP1);
   
   -- Data path control signals. Refer to the schematics and documentation above
   -- for more information.
@@ -200,6 +200,11 @@ package core_opcodeDatapath_pkg is
     enableALU                   : std_logic;
     enableMul                   : std_logic;
     enableMem                   : std_logic;
+    enableFAdd                  : std_logic;
+    enableFCmp                  : std_logic;
+    enableFCfi                  : std_logic;
+    enableFCif                  : std_logic;
+    enableFMul                  : std_logic;
     
     -- Register read port enables. When disabled and power-saving latches
     -- are enabled at design-time, the RAM blocks for the read ports are
