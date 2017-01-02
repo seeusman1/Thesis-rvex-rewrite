@@ -1,0 +1,61 @@
+
+# Toolchain setup.
+TOOLS = ../../tools
+GEN_EXAMPLES = ../../example_programs
+
+# Platform-specific executables.
+EXECUTABLES = convolution convolution_5x5 convolution_7x7 greyscale median framebuffertest
+
+# Platform-specific object files to link.
+OBJECTS = rvex-simrvex.o simrvex_stubs.o
+
+# Include generic examples makefile.
+include $(GEN_EXAMPLES)/Makefile
+
+.PHONY: help
+help:
+	@echo ""
+	@echo " This platform allows you to easily run test programs on the simrvex simulator."
+	@echo ""
+	@echo ""
+	@echo " Make targets:"
+	@echo ""
+	@echo "  make <prog>          : just compiles the specified program."
+	@echo ""
+	@echo "  make sim-<prog>      : runs prog on the simulator"
+	@echo ""
+	@echo "  make simtest-<prog>  : runs prog on the simulator and checks return code."
+	@echo ""
+	@echo "  make simtestall      : calls simtest-<prog> for all executables."
+	@echo "  will output a list of success/failures to file \'simtestall\'"
+	@echo ""
+	@echo "  make clean           : cleans intermediate files."
+	@echo ""
+	$(MAKE) --no-print-directory list-executables
+	@echo ""
+
+# How to run simrvex
+sim-%: %.elf
+	${SIM} $<
+
+.PHONY: simtestall
+simtestall: simtestall-clean $(POWERSTONE:%=simtest-%)
+
+.PHONY: simtestall-clean
+simtestall-clean:
+	echo -n "" > simtestall
+
+#The Powerstone programs all return 0xdeadbeef. 
+#We take the last register contents using tail and grep for that value in r3 (return value register).
+simtest-% : %.elf
+	@${SIM} -t1,0 $^|tail -n 40 | grep "RET: 0";\
+	if [ $$? != 0 ] ; then \
+	echo "Program returned unexpected exit code" ; echo $* >> simtestall; echo -e "\t\tError!" >> simtestall; \
+	else \
+	echo "Program Finished Successfully" ; echo $* >> simtestall; echo -e "\t\tOK" >> simtestall;  \
+	fi
+
+simtrace-% : %.elf
+	${SIM} -t1,0 $< > $@
+
+
