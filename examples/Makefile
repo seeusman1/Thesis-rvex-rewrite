@@ -31,48 +31,6 @@ BUNDLE_ALIGN = $(ISSUE_WIDTH)
 # in the platform specific makefiles.
 endif
 
-# Filename to give to io.c. replace the dot (.) by an underscore here,
-# the linker wants that.
-# You will need to add the file to the .dep file and convert it to elf
-# yourself.
-ifndef FILENAME
-FILENAMEDEF =
-else
-FILENAMEDEF = -DFILENAME=$(FILENAME)
-endif
-
-# Which libraries to link against. We have the uClibc library for use on 
-# Linux (2.0 nommu).
-# Or newlib for use on the bare-metal core. For newlib you might need 
-# to include an application-specific version of io.c that includes your input 
-# file(s). io.c contains a printf implementation that writes to the UART and 
-# stores all output in a circular buffer in memory. 
-# This can be used by xSTsim to read the output after the program exits.
-ifdef RVEXLIB_UCLIBC
-INCLUDES = -I/data/uCLinux/generic_binary/uCLinux/uClibc/include \
- -I/data/uCLinux/generic_binary/uCLinux/linux-2.0.x/include/ \
- -I/data/tools/st200/ST200R7.3.0/include/ \
- -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = --no-demangle /data/uCLinux/generic_binary/uCLinux/uClibc/lib/crt0.o \
- -L/data/uCLinux/generic_binary/uCLinux/uClibc/lib -lm -lc floatlib.o
-endif
-
-ifdef RVEXLIB_NEWLIB_FILE
-DEFS+= IO_LINK_FILE
-INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
- -I/data/tools/st200/ST200R7.3.0/include/ \
- -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = matrix.txt.elf -Telf32rvex.x --no-demangle  --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
-endif
-
-ifdef RVEXLIB_NEWLIB_NOFILE
-INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
- -I/data/tools/st200/ST200R7.3.0/include/ \
- -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = -Telf32rvex.x --no-demangle --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
-endif
-
-
 # Generic binary behavior. Must be one of the following;
 #   false     - compile for the specified issue width only.
 #   true      - alias for true-O1.
