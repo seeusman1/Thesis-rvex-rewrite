@@ -43,8 +43,6 @@ static inline int min(int a, int b)
 char strbuf[12];
 int main()
 {
-	//puts("convolution starting\n");
-
 	int i, x, y, filterX, filterY, inbufX, inbufY;
 	unsigned int* fb = (unsigned int*)FB_ADDRESS;
 	unsigned int* inbuf = (unsigned int*)FB_ADDRESS; //you probably want to change this to something useful
@@ -151,8 +149,6 @@ if(runs){
 	} //runs
 #endif
 
-
-	puts("Convolution 5x5 Finished\n");
 	while (1) ; //loop, otherwise the simulator will exit and close the framebuffer window
 	return 0;
 }

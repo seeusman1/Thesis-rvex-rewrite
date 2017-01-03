@@ -24,10 +24,7 @@ unsigned int inbuf[HSIZE*VSIZE]; //you probably want to change this to something
 char strbuf[12];
 int main()
 {
-
-	unsigned int timerread;
     unsigned int* fb = (unsigned int*)FB_ADDRESS;
-	puts("greyscale starting\n");
 
     int i, x, y, filterX, filterY, inbufX, inbufY;
 
@@ -96,8 +93,6 @@ if(runs){
     } //runs
 #endif
 
-
-	puts("greyscale finished\n");
 	while (1) ; //loop, otherwise the simulator will exit and close the fb window
     return 0;
 }

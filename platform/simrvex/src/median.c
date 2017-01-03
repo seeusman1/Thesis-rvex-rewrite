@@ -36,7 +36,6 @@ int main()
 	register currChan;
 	int i, j, x, y, filterX, filterY;
 	volatile unsigned int* fb = (unsigned int*)FB_ADDRESS;
-	//puts("median starting\n");
 
 	*((volatile unsigned long *)FB_WIDTH_REG)   = HSIZE;
 	*((volatile unsigned long *)FB_HEIGHT_REG)  = VSIZE;
@@ -295,7 +294,6 @@ puts("window sorted:\n");
 	} //runs
 #endif
 
-	//puts("Finished\n");
 	while (1) ; //loop, otherwise the simulator will exit and close the fb window
 	return 0;
 }

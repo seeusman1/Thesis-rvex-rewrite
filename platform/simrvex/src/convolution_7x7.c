@@ -45,8 +45,6 @@ unsigned int inbuf[HSIZE*VSIZE]; //you probably want to change this to something
 char strbuf[12];
 int main()
 {
-	//puts("convolution starting\n");
-
 	int i, x, y, filterX, filterY, inbufX, inbufY;
 	unsigned int* fb = (unsigned int*)FB_ADDRESS;
 
@@ -152,8 +150,6 @@ if(runs){
     } //runs
 #endif
 
-
-	puts("Convolution 7x7 Finished\n");
 	while (1) ; //loop, otherwise the simulator will exit and close the fb window
     return 0;
 }
