@@ -12,6 +12,10 @@ ifeq ($(PCIE_ENABLE), 1)
 	PCIE_FLAG = -P$(PCIE_CDEV)
 endif
 
+ifndef RVSRV_HOST
+	RVSRV_HOST = localhost
+endif
+
 #------------------------------------------------------------------------------
 # Environment setup
 #------------------------------------------------------------------------------
@@ -41,7 +45,7 @@ catlog:
 	@cat /var/tmp/rvsrv/rvsrv-p$(TCP_PORT_DEBUG).log
 
 monitor: copyconf
-	@echo "Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running."; $(NETCAT) localhost $(TCP_PORT_APP)
+	@echo "Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running."; $(NETCAT) $(RVSRV_HOST) $(TCP_PORT_APP)
 
 monitor-nobuf: copyconf
 	@echo "Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running."; stty -echo -icanon && $(NETCAT) localhost $(TCP_PORT_APP)
