@@ -6,6 +6,7 @@ core_intIface_pkg.vhd
 core_opcodeDatapath_pkg.vhd
 core_opcodeAlu_pkg.vhd
 core_opcodeBranch_pkg.vhd
+core_opcodeFpu_pkg.vhd
 core_opcodeMemory_pkg.vhd
 core_opcodeMultiplier_pkg.vhd
 core_opcode_pkg.vhd
@@ -31,6 +32,13 @@ core_gpRegs.vhd
 core_limmRouting.vhd
 core_memu.vhd
 core_mulu.vhd
+core_fpu_fixed_pkg.vhd
+core_fpu_float_pkg.vhd
+core_fpu_add.vhd
+core_fpu_compare.vhd
+core_fpu_convfi.vhd
+core_fpu_convif.vhd
+core_fpu_mul.vhd
 core_pipelane.vhd
 core_stopBitRouting.vhd
 core_trapRouting.vhd

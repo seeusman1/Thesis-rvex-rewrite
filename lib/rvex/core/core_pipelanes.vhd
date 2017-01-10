@@ -445,7 +445,22 @@ begin -- architecture
     
     -- Whether lane should have a multiplier.
     constant mul: boolean := testBit(CFG.multiplierLanes, lane);
-    
+
+    -- Whether lane should have a floating-point adder
+    constant fadd: boolean := testbit(CFG.faddLanes, lane);
+
+    -- Whether lane should have a floating-point compare unit
+    constant fcmp: boolean := testbit(CFG.fcmpLanes, lane);
+
+    -- Whether lane should have a floating-point convert-to-int unit
+    constant fcfi: boolean := testbit(CFG.fcfiLanes, lane);
+
+    -- Whether lane should have a floating-point convert-to-float unit
+    constant fcif: boolean := testbit(CFG.fcifLanes, lane);
+
+    -- Whether lane should have a floating-point multiplier
+    constant fmul: boolean := testbit(CFG.fmulLanes, lane);
+
     -- Whether lane should have a memory unit.
     constant mem: boolean := laneIndexRev = CFG.memLaneRevIndex;
     
@@ -473,6 +488,11 @@ begin -- architecture
         -- Lane configuration.
         LANE_INDEX                        => lane,
         HAS_MUL                           => mul,
+        HAS_FADD                          => fadd,
+        HAS_FCMP                          => fcmp,
+        HAS_FCFI                          => fcfi,
+        HAS_FCIF                          => fcif,
+        HAS_FMUL                          => fmul,
         HAS_MEM                           => mem,
         HAS_BRK                           => brk,
         HAS_BR                            => br,
