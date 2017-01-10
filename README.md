@@ -1,33 +1,216 @@
 
---=============================================================================
--- Installation
---=============================================================================
-
-Note: this assumes that you downloaded an rvex release. If you're new to the
-rvex project and got this from the (private) git repositories instead, check
-out README.INTERNAL.
+Installation
+============
 
 You will need at least the following things (this list is probably not
 complete):
 
- - A linux environment. Cygwin may work kind of, but you'll probably need to
-   handle the symlinks in the repo properly somehow.
- - Xilinx ISE. Version 14.7 is STRONGLY RECOMMENDED; older versions are known
-   to synthesize the rvex incorrectly. Vivado is used in the grlib and Virtex-7
-   based platforms.
+ - A linux environment. Cygwin may work kind of, but there's a lot of symlinks
+   which you would need to handle somehow.
+ - Xilinx ISE 14.7 for the Virtex-6 platforms (older versions are known to
+   synthesize some things incorrectly) and/or Vivado 2015.4 for the Virtex-7
+   platforms (other versions may work as well).
  - Modelsim. The system is tested using version SE 10.2a; older versions are
    known to crash when simulating the core.
  - GNU make
- - gcc
- - python 3.x
+ - GCC
+ - Python 3.x
 
-The release comes with binutils-gdb and gcc pre-built. If you wish to compile
-them yourself, you will need their build dependencies. gcc is forcibly compiled
-in 32-bit mode, so you will need the 32-bit versions of its build dependencies.
+All the ρ-VEX specific things should™ work out of the box; they either come
+precompiled or are simple C programs without any external dependencies. Some
+things (for instance grlib) are not part of the release archive itself, but
+will be downloaded from the TU Delft FTP automatically when referred to by the
+makefiles.
 
-In general, as long as you have the dependencies installed, you shouldn't need
-to do anything else to get the system to work. If things are missing or are not
-yet compiled, the makefiles should take care of it as soon as you do something.
+
+Directory structure
+===================
+
+This section describes the directory structure of the ρ-VEX release in no
+particular order.
+
+
+doc/
+----
+
+This directory contains the ρ-VEX user manual, its LaTeX sources, and any other
+documentation we have. The user manual is special in that parts of it are
+auto-generated based on configuration files. That is, if you for instance change
+the ρ-VEX control registers or move opcodes around, the user manual should
+update accordingly (assuming, of course, that the inline documentation in the
+configuration files is kept up-to-date).
+
+
+lib/
+----
+
+This directory contains the VHDL code of the ρ-VEX and peripherals.
+
+
+grlib/
+------
+
+This directory contains logic to download the right version of the grlib GPL
+hardware IP library from the TU Delft FTP, and patch it to allow it to use the
+ρ-VEX.
+
+
+config/
+-------
+
+This directory contains configuration files for some key components of the core.
+The idea is that these files can be used to generate as many different things as
+possible.
+
+Running make will first of all patch source code. Then it will try to regenerate
+the PDF documentation, which may fail if you don't have LaTeX along with all the
+packages that are used.
+
+The scripts and templates folders contain the source files needed to generate
+everything. The other folders contain the actual configuration files (.tex or
+.ini files).
+
+
+platform/
+---------
+
+This directory contains a number of hardware and simulation systems that use the
+ρ-VEX in some way. A non-exhaustive list is given in the "platforms" section.
+
+
+test-progs/
+-----------
+
+TODO
+
+
+tools/
+------
+
+TODO
+
+
+versions/
+---------
+
+TODO
+
+
+Platforms
+=========
+
+This section lists some of the provided ρ-VEX, along with some basic usage
+instructions. For more informations on these platforms or the undocumented ones,
+running make without an argument should always list the available commands.
+Reading the makefiles and HDL sources is the next best thing.
+
+simrvex
+-------
+
+This "platform" encapsulates the simrvex architectural simulator. simrvex is
+very fast in comparison to modelsim, running at similar speeds as an ρ-VEX core
+at ~10MHz. To simulate a program, do the following.
+
+    $ cd platform/simrvex
+    # source Modelsim environment script
+    # source Xilinx ISE 14.7 environment script
+    $ make sim-<test program name>
+
+There is also a command that batch runs a number of test programs:
+
+    $ make simtestall
+
+
+core-tests
+----------
+
+This simulation-only platform serves as a basic conformance test for the ρ-VEX
+core. The conformance test is run as follows:
+
+    $ cd platform/core-tests
+    # source Modelsim environment script
+    # source Xilinx ISE 14.7 environment script
+    $ make conformance -j
+
+This will eventually return a pass or fail in the console. Log files for each
+tested core configuration are saved in the calling directory. If some tests
+fail, the conformance test can be run in the Modelsim GUI as follows:
+
+    $ cd <core configuration directory>
+    $ make vsim
+
+The simulation will start automatically, with the ρ-VEX debug output and some
+outputs from the conformance test runner added to the waveform for debugging.
+
+
+cache-test
+----------
+
+This simulation-only platform is used to test the ρ-VEX cache, and may be used
+to debug simple ρ-VEX applications using Modelsim. The process is as follows:
+
+    $ cd platform/cache-test
+    # source Modelsim environment script
+    # source Xilinx ISE 14.7 environment script
+    $ make vsim-<test program name>
+
+Test program name must be set to the test program that you want to use. Running
+make with no argument will among other things list the known programs. The
+fastest realistic program is named ucbqsort-fast.
+
+Make will first compile the program using the default compiler configuration.
+It will then start the Modelsim GUI. The simulation itself is not started
+automatically, allowing you to add whatever signals you want. The most commonly
+used signal is rv2sim. You can then start simulating using the run command.
+
+    VSIM x> add wave sim:/testbench/rvex_inst/rv2sim
+    VSIM x> run 100 ms
+
+Serial/debug output from the program is piped to the transcript, so after some
+time, you should see (for instance)
+
+    # ucbqsort-fast: success
+
+appear.
+
+You can change the core and cache configuration in design/testbench.vhd using
+the RCFG and CCFG constants. If you've changed only VHDL and want to restart
+the simulation, you can run
+
+    VSIM x> do sim.do
+
+to restart; otherwise, you should close Modelsim and run make again. Note that
+significantly different configurations may require different compiler flags.
+These are NOT automatically inferred. Check out test-progs/Makefile in the root
+of the repository (the local platform-specific version links to the generic
+version) for more information. Don't forget to clean when changing compiler
+flags, make won't detect that and rebuild by itself.
+
+
+ml605-standalone and vc707-standalone
+-------------------------------------
+
+These platforms consist of an ρ-VEX core, separate local memories for
+instruction and data using block RAMs, a UART debug interface, and optionally a
+cache (only useful for testing - the block RAMs are single cycle already unless
+too many accesses are done at once). The block RAMs can be preloaded with a test
+binary during synthesis, or they can be loaded dynamically using the debug
+interface. The platforms are intended to be used for the ML605 and VC707
+development boards from Xilinx respectively, but they should be easy to port to
+different boards.
+
+
+TODO
+
+
+
+
+OLD STUFF BELOW HERE, TODO
+=======================================================================================================
+
+
+
+
 
 --=============================================================================
 -- Basic platform usage
