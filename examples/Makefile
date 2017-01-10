@@ -184,7 +184,7 @@ RM = rm -f
 MKDIR = mkdir
 PYTHON = python3
 VEXPARSE = $(PYTHON) $(TOOLS)/vexparse/main.py
-SIM = ADAPTOR_CONFIG=${GEN_EXAMPLES}/plugin.conf $(TOOLS)/sim/bin/simrvex
+SIM = ADAPTOR_CONFIG=${GEN_EXAMPLES}/plugin.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200 $(TOOLS)/simrvex/bin/simrvex
 GDB = $(BUILD)/rvex-elf32-gdb
 PLATFORM_SRC = src
 GENERIC_SRC = $(GEN_EXAMPLES)/src
@@ -391,7 +391,7 @@ $(EXECUTABLES):
 
 # How to run simrvex
 sim-%: %.elf
-	${SIM} $<
+	$(SIM) $< --batch $(SIMFLAGS)
 
 .PHONY: simtestall
 simtestall: simtestall-clean $(POWERSTONE:%=simtest-%)
