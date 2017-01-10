@@ -1,7 +1,7 @@
 
 # Toolchain setup.
 TOOLS = ../../../tools
-GEN_EXAMPLES = ../../../examples
+GEN_EXAMPLES = ../../../example_programs
 DEBUGIFACE = $(TOOLS)/debug-interface
 RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
@@ -9,8 +9,8 @@ RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 # Platform-specific executables.
 EXECUTABLES = time Demodispatch_multi mandelbrot_multi raytracer_multi greyscale_multi convolution_multi
 
-# Platform-specific object files to link.
-OBJECTS = rvex-grlib.o
+# Platform-specific code to link.
+OBJECTS = platform.a
 
 # Platform specific targets for help.
 TARGETS = \

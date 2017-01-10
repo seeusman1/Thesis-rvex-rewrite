@@ -264,10 +264,9 @@ static int frequency_khz;
  * Initializes the timer.
  */
 static void plat_time_init(void) {
-  
-  // Determine the frequency using the PS/2 clock prescaler register, which is
-  // set such that the PS/2 clock is 10 kHz.
-  frequency_khz = PLAT_PS2(0)->timer * 10;
+
+  // Assuming 37.5MHz clock frequency  
+  frequency_khz = CLOCK_FREQ_KHZ; 
   
   // Set the timer1 prescaler such that it rolls over approximately every
   // microsecond.
@@ -288,9 +287,6 @@ static void plat_time_init(void) {
   // in the peripheral (this is a thing apparently).
   PLAT_GPTIMER2->scaler_reload = 1;
   PLAT_GPTIMER2->scaler_val = 0;
-  
-  // Configure the audio samplerate timer to approximately 44.1 kHz.
-  plat_audio_setsamplerate(44100);
   
 }
 
@@ -383,66 +379,14 @@ int plat_tick(
   
 }
 
-
-/******************************************************************************/
-/* AUDIO                                                                      */
-/******************************************************************************/
-
-/**
- * Sets the audio samplerate. rate must be specified in Hz. The actual
- * samplerate will approximate the requested rate.
- */
-int plat_audio_setsamplerate(int rate) {
-  
-  // (platform frequency / 2) / rate -> reload + 1
-  int reload = (plat_frequency() * 500 + (rate >> 1)) / rate - 1;
-  
-  // Configure the audio samplerate timer.
-  PLAT_GPTIMER2->tim1_reload = reload;
-  PLAT_GPTIMER2->tim1_val = reload;
-  
-}
-
-/**
- * Writes to the audio buffer. Same interface as POSIX write. Fills the buffer
- * up as far as possible given the input, doesn't block. Unsigned 8-bit mono
- * samples are expected.
- */
-int plat_audio_write(const void *buf, int count) {
-  const unsigned char *cbuf = (const unsigned char*)buf;
-  int remain;
-  count = min(count, plat_audio_avail());
-  remain = count;
-  while (remain--) {
-    PLAT_AUDIO_DATA = *cbuf++;
-  }
-  return count;
-}
-
-/**
- * Returns the number of samples that can currently be written to the buffer.
- */
-int plat_audio_avail(void) {
-  return PLAT_AUDIO_FIFOLEN - PLAT_AUDIO_REMAIN;
-}
-
-/**
- * Returns the number of samples currently in the buffer.
- */
-int plat_audio_remain(void) {
-  return PLAT_AUDIO_REMAIN;
-}
-
-
 /******************************************************************************/
 /* VIDEO                                                                      */
 /******************************************************************************/
-
 static const unsigned char plat_video_chrontel_init[] = {
   0x1c,  0x04,
   0x1d,  0x45,
   0x1e,  0xf0,
-  0x1f,  0x88,
+  0x1f,  0x8a,
   0x20,  0x22,
   0x21,  0x09,
   0x23,  0x00,
@@ -460,8 +404,10 @@ static const unsigned char plat_video_chrontel_init[] = {
   0
 };
 
+
+
 /**
- * Initializes the Chrontel DAC for VGA or DVI output (both work).
+ * Initializes the Chrontel DAC for VGA or DVI output.
  */
 void plat_video_chrontel(void) {
   const unsigned char *ptr = plat_video_chrontel_init;
@@ -472,7 +418,7 @@ void plat_video_chrontel(void) {
 }
 
 static resinfo_t m640x480 = {
-  /*.clksel =          */0, /* pixclock = 40000 */
+  /*.clksel =          */0,
   /*.left_margin =    */48,
   /*.right_margin =   */16,
   /*.upper_margin =   */31,
@@ -482,7 +428,7 @@ static resinfo_t m640x480 = {
 };  
 
 static resinfo_t m800x600 = {
-  /*.clksel =          */3, /* pixclock = 25000 */
+  /*.clksel =          */1,
   /*.left_margin =    */88,
   /*.right_margin =   */40,
   /*.upper_margin =   */23,
@@ -491,9 +437,16 @@ static resinfo_t m800x600 = {
   /*.vsync_len =       */4
 };
 
-/*
- * This platform does not support 1024x768, it needs a faster pixelclock.
- */
+
+static resinfo_t m1024x768 = {
+  /*.clksel =           */3,
+  /*.left_margin =    */160,
+  /*.right_margin =    */24,
+  /*.upper_margin =    */29,
+  /*.lower_margin =     */3,
+  /*.hsync_len =      */136,
+  /*.vsync_len =        */6
+};
 
 /**
  * Disable video output
@@ -534,7 +487,9 @@ void* plat_video_init(int w, int h, int bpp, int dvi, const void *frame) {
     bdsel = 3;
   
   // Select resolution
-  if (w == 800 && h == 600)
+  if (w == 1024 && h == 768)
+    resinfo = &m1024x768;
+  else if (w == 800 && h == 600)
     resinfo = &m800x600;
   else
     resinfo = &m640x480;
@@ -581,265 +536,6 @@ void plat_video_swap(const void *frame) {
 void plat_video_palette(int index, int r, int g, int b) {
   PLAT_SVGA->clut = (index << 24) | (r << 16) | (g << 8) | b;
 }
-
-
-/******************************************************************************/
-/* PS/2                                                                       */
-/******************************************************************************/
-
-// Scan code to Windows virtual key code lookup table.
-static const unsigned char scan2key[] = {
-  0,      0x78,   0,      0x74,   0x72,   0x70,   0x71,   0x7B,
-  0,      0x79,   0x77,   0x75,   0x73,   0x09,   0xC0,   0,
-  0,      0xA4,   0xA0,   0,      0xA2,   'Q',    '1',    0,
-  0,      0,      'Z',    'S',    'A',    'W',    '2',    0,
-  0,      'C',    'X',    'D',    'E',    '4',    '3',    0,
-  0,      0x20,   'V',    'F',    'T',    'R',    '5',    0,
-  0,      'N',    'B',    'H',    'G',    'Y',    '6',    0,
-  0,      0,      'M',    'J',    'U',    '7',    '8',    0,
-  0,      0xBC,   'K',    'I',    'O',    '0',    '9',    0,
-  0,      0xBE,   0xBF,   'L',    0xBA,   'P',    0xBD,   0,
-  0,      0,      0xDE,   0,      0xDB,   0xBB,   0,      0,
-  0x14,   0xA1,   0x0D,   0xDD,   0,      0xDC,   0,      0,
-  0,      0,      0,      0,      0,      0,      0x08,   0,
-  0,      0x61,   0,      0x64,   0x67,   0,      0,      0,
-  0x60,   0x6E,   0x62,   0x65,   0x66,   0x68,   0x1B,   0x90,
-  0x7A,   0x6B,   0x63,   0x6D,   0x6A,   0x69,   0x91,   0,
-  0,      0,      0,      0x76,   0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0xA5,   0,      0,      0xA3,   0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0x5B,
-  0,      0,      0,      0,      0,      0,      0,      0x5C,
-  0,      0,      0,      0,      0,      0,      0,      0x5D,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0x6F,   0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0x5E,   0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0x23,   0,      0x25,   0x24,   0,      0,      0,
-  0x2D,   0x2E,   0x28,   0,      0x27,   0x26,   0,      0,
-  0,      0,      0x22,   0,      0,      0x21,   0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-  0,      0,      0,      0,      0,      0,      0,      0,
-};
-
-// Interrupt handler for keyboards.
-static void ps2_kb_handler(unsigned long data) {
-  ps2kbdstate_t *state = (ps2kbdstate_t*)data;
-  volatile apbps2_t *ps2 = state->ps2;
-  
-  while (ps2->status & 1) {
-    int frame = ps2->data;
-    int key, event;
-    unsigned char k;
-    int i;
-    
-    // Handle break and extended flags.
-    if (frame == 0xE0) {
-      state->ext = 1;
-      continue;
-    } else if (frame == 0xF0) {
-      state->up = 1;
-      continue;
-    }
-    
-    // Decode the scan code and ignore unknown keys.
-    key = scan2key[((int)state->ext) << 8 | frame];
-    if (!key) {
-      state->ext = 0;
-      state->up = 0;
-      continue;
-    }
-    
-    // Update the key state table.
-    k = state->events[key >> 3];
-    if (state->up) {
-      k &= ~(1 << (key & 7));
-      event = key;
-    } else {
-      k |= 1 << (key & 7);
-      event = key | 0x100;
-    }
-    state->events[key >> 3] = k;
-    
-    // Add the event to the FIFO if there's room.
-    i = state->count;
-    if (i < KBD_EVENT_BUFFER_DEPTH) {
-      state->count = i + 1;
-      i = state->widx;
-      state->events[i] = event;
-      state->widx = (i + 1) & (KBD_EVENT_BUFFER_DEPTH - 1);
-    }
-    
-    // Reset the state for the next scan code sequence.
-    state->ext = 0;
-    state->up = 0;
-    
-  }
-  
-}
-
-/**
- * Initializes PS/2 interface iface in keyboard mode. state must point to a
- * caller-allocated keyboard state record.
- */
-void plat_ps2_kb_init(ps2kbdstate_t *state, int iface) {
-  
-  // Clear the state.
-  memset(state, 0, sizeof(ps2kbdstate_t));
-  
-  // Get the IRQ number and peripheral address for this interface.
-  state->ps2 = PLAT_PS2(iface);
-  if (iface == 0) {
-    state->irq = IRQ_PS20;
-  } else {
-    state->irq = IRQ_PS21;
-  }
-  
-  // Empty the hardware receive buffer, just in case.
-  while (state->ps2->status & 1) {
-    volatile int dummy = state->ps2->data;
-  }
-  
-  // Enable and set up the interrupt.
-  plat_irq_register(state->irq, ps2_kb_handler, (unsigned long)state);
-  plat_irq_clear(state->irq);
-  plat_irq_enable(state->irq, 1);
-  
-  // Enable the peripheral.
-  state->ps2->control = 7;
-  
-}
-
-/**
- * Returns whether a given key (KEY_*, input-event-codes.h) is currently down.
- * This is multi-context safe as it does not write to the state record.
- */
-int plat_ps2_kb_getkey(const ps2kbdstate_t *state, unsigned char key) {
-  unsigned char k = state->events[key >> 3];
-  return (k >> (key & 7)) & 1;
-}
-
-/**
- * Gets the next keyboard event from the event buffer. Returns -1 if the buffer
- * is empty. Otherwise, bit 7..0 contain the Linux key code. Bit 8 is set if the
- * key was pressed (or typematic'd by the keyboard) and is cleared when it is
- * released. This is not multi-context safe.
- */
-int plat_ps2_kb_pop(ps2kbdstate_t *state) {
-  int count, ridx, event;
-  
-  // Disable interrupts while we access the FIFO.
-  CR_CCR = CR_CCR_IEN_C;
-  count = state->count;
-  if (count) {
-    ridx = state->ridx;
-    state->count = count - 1;
-    state->ridx = (ridx + 1) & (KBD_EVENT_BUFFER_DEPTH-1);
-    event = state->events[ridx];
-  } else {
-    event = -1;
-  }
-  CR_CCR = CR_CCR_IEN;
-  
-  return event;
-}
-
-// Key to name data.
-static const char *key2namestr = "?\0A\0B\0C\0D\0E\0F\0G\0H\0I\0J\0K\0L\0M\0N\0"
-"O\0P\0Q\0R\0S\0T\0U\0V\0W\0X\0Y\0Z\0000\0001\0002\0003\0004\0005\0006\0007\08"
-"\09\0BACKQUOTE\0DASH\0EQUALS\0BACKSLASH\0BACK\0SPACE\0TAB\0CAPITAL\0LSHIFT\0LC"
-"ONTROL\0LWIN\0LMENU\0RSHIFT\0RCONTROL\0RWIN\0RMENU\0APPS\0RETURN\0ESCAPE\0F1\0"
-"F2\0F3\0F4\0F5\0F6\0F7\0F8\0F9\0F10\0F11\0F12\0SCROLL\0OPEN\0INSERT\0HOME\0PRI"
-"OR\0DELETE\0END\0NEXT\0UP\0LEFT\0DOWN\0RIGHT\0NUMLOCK\0DIVIDE\0MULTIPLY\0SUBTR"
-"ACT\0ADD\0DECIMAL\0NUMPAD0\0NUMPAD1\0NUMPAD2\0NUMPAD3\0NUMPAD4\0NUMPAD5\0NUMPA"
-"D6\0NUMPAD7\0NUMPAD8\0NUMPAD9\0NUMPADRET\0CLOSE\0SEMICOL\0QUOTE\0COMMA\0PERIOD"
-"\0SLASH";
-
-static const unsigned char key2nameidx[] = {
-  0,   0,   0,   0,   0,   0,   0,   0,   53,  58,  0,   0,   0,   94,  0,   0,
-  0,   0,   0,   0,   60,  0,   0,   0,   0,   0,   0,   97,  0,   0,   0,   0,
-  55,  132, 141, 139, 130, 145, 143, 150, 147, 0,   0,   0,   0,   126, 135, 0,
-  27,  28,  29,  30,  31,  32,  33,  34,  35,  36,  0,   0,   0,   0,   0,   0,
-  0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,
-  16,  17,  18,  19,  20,  21,  22,  23,  24,  25,  26,  72,  86,  91,  215, 0,
-  175, 179, 183, 187, 191, 195, 199, 203, 207, 211, 160, 169, 0,   165, 171, 157,
-  101, 102, 104, 105, 107, 108, 110, 111, 113, 114, 116, 118, 0,   0,   0,   0,
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-  153, 120, 0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-  64,  78,  68,  81,  75,  88,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   223, 44,  230, 42,  233, 237,
-  37,  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   124, 48,  220, 227, 0,
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-  0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,
-};
-
-/**
- * Converts a key code to a string representing the name of the key for
- * debugging.
- */
-const char *plat_ps2_kb_key2name(unsigned char key) {
-  const char *name = key2namestr + (((int)key2nameidx[key])<<1);
-  if (!*name) {
-    name++;
-  }
-  return name;
-}
-
-/**
- * Sets the keyboard LEDs.
- */
-void plat_ps2_kb_setleds(ps2kbdstate_t *state, int leds) {
-  
-  while (state->ps2->status & (1 << 5));
-  state->ps2->data = 0xED;
-  while (state->ps2->status & (1 << 5));
-  state->ps2->data = leds;
-  
-}
-
-/**
- * Initializes PS/2 interface iface in mouse mode. handler is called from the
- * trap handler when an update is received from the mouse.
- */
-//void plat_ps2_mouse_init(int iface, void (*handler)(int dx, int dy, int btns)) {
-//  // TODO
-//}
-
 
 /******************************************************************************/
 /* I2C                                                                        */
@@ -933,7 +629,7 @@ int plat_i2c_write(volatile i2cmst_t *p, int addr, int reg, const char *data, in
   
   // Make sure the peripheral is initialized.
   p->ctrl = 0x00;
-  p->prescale = PLAT_PS2(0)->timer / 50;
+  p->prescale = CLOCK_FREQ_KHZ / 500;
   p->ctrl = 0x80;
   
   // Start the transfer.
@@ -963,7 +659,7 @@ int plat_i2c_read(volatile i2cmst_t *p, int addr, int reg, char *data, int count
   
   // Make sure the peripheral is initialized.
   p->ctrl = 0x00;
-  p->prescale = PLAT_PS2(0)->timer / 50;
+  p->prescale = CLOCK_FREQ_KHZ / 500;
   p->ctrl = 0x80;
   
   // Start the transfer.

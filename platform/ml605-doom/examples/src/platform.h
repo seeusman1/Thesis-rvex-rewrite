@@ -241,12 +241,28 @@ typedef struct {
   unsigned int clut;
 } svgactrl_t;
 
+typedef struct {
+  unsigned int clksel;
+  unsigned int left_margin;
+  unsigned int right_margin;
+  unsigned int upper_margin;
+  unsigned int low_margin;
+  unsigned int hsync_len;
+  unsigned int vsync_len;
+} resinfo_t;
+
 #define PLAT_SVGA ((volatile svgactrl_t*)(0x80000600))
+#define FB_ALIGN  1024
 
 /**
- * Initializes the Chrontel DAC for VGA or DVI output (both work).
+ * Initializes the Chrontel DAC for VGA or DVI output.
  */
 void plat_video_chrontel(void);
+
+/**
+ * Disable video output
+ */
+void plat_video_disable(void);
 
 /**
  * Initializes the VGA/DVI output.
@@ -255,13 +271,15 @@ void plat_video_chrontel(void);
  *  - bpp specifies the bits per pixel and must be 8, 16 or 32.
  *  - dvi should be nonzero to output a DVI signal or zero to output a VGA
  *    signal.
- *  - frame should point to the framebuffer, which must be w*h*bpp/8 bytes in
- *    size.
+ *  - frame should point to the framebuffer, which must be w*h*bpp/8 + 1024 bytes in
+ *    size. It will be aligned if necessary. The function can override the location
+ * as some platforms have a specific memory regions instead of reading from main 
+ * memory. The new framebuffer location will be passed using the return value.
  * 640x480 uses standard timing. Anything else results in non-standard
- * sync/porch timing and may or may not work. Returns 0 on success or -1 if an
- * I2C error occurs.
+ * sync/porch timing and may or may not work. Returns a pointer to the 
+ * framebuffer.
  */
-int plat_video_init(int w, int h, int bpp, int dvi, const void *frame);
+void* plat_video_init(int w, int h, int bpp, int dvi, const void *frame);
 
 /**
  * Returns nonzero during vsyncs.

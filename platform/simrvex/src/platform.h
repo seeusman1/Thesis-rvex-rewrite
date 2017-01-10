@@ -11,7 +11,7 @@
  */
 void plat_init(void);
 
-// Debugging stuff needed by start.o. These use serial port 0 (the debug port).
+// Debugging stuff needed by start.o.
 int putchar(int character);
 int puts(const char *str);
 int rvex_succeed(const char *str);
@@ -86,9 +86,6 @@ void plat_irq_force(int irq, int context);
 /* SERIAL PORTS                                                               */
 /******************************************************************************/
 
-// Assuming 37.5MHz clock frequency  
-#define CLOCK_FREQ_KHZ 37500
-
 // rVEX debug UART peripheral.
 #define PLAT_DEBUGUART_DATA (*((volatile unsigned char *)(0xD1000000)))
 #define PLAT_DEBUGUART_STAT (*((volatile unsigned char *)(0xD1000004)))
@@ -132,6 +129,9 @@ int plat_serial_read(int iface, void *buf, int count);
 /******************************************************************************/
 /* TIMING                                                                     */
 /******************************************************************************/
+
+// Assuming 37.5MHz clock frequency  
+#define CLOCK_FREQ_KHZ 37500
 
 // GRLIB general purpose timer peripheral.
 typedef struct {
@@ -182,41 +182,20 @@ int plat_tick(
 /******************************************************************************/
 /* VIDEO                                                                      */
 /******************************************************************************/
-
-// SVGA control interface.
-typedef struct {
-  unsigned int status;
-  unsigned int vidlen;
-  unsigned int fplen;
-  unsigned int synclen;
-  unsigned int linelen;
-  const void *framebuf;
-  const unsigned int clocks[4];
-  unsigned int clut;
-} svgactrl_t;
-
-typedef struct {
-  unsigned int clksel;
-  unsigned int left_margin;
-  unsigned int right_margin;
-  unsigned int upper_margin;
-  unsigned int low_margin;
-  unsigned int hsync_len;
-  unsigned int vsync_len;
-} resinfo_t;
-
-#define PLAT_SVGA ((volatile svgactrl_t*)(0x80000600))
-#define FB_ALIGN  1024
-
-/**
- * Initializes the Chrontel DAC for VGA or DVI output.
- */
-void plat_video_chrontel(void);
+#define FB_ALIGNMENT          4
+#define FB_MAGIC_REG          0x20000000
+#define FB_COMMAND_REG        (FB_MAGIC_REG + FB_ALIGNMENT)
+#define FB_WIDTH_REG          (FB_MAGIC_REG + 2 * FB_ALIGNMENT)
+#define FB_HEIGHT_REG         (FB_MAGIC_REG + 3 * FB_ALIGNMENT)
+#define FB_DEPTH_REG          (FB_MAGIC_REG + 4 * FB_ALIGNMENT)
+#define FB_FREEZE_REG         (FB_MAGIC_REG + 5 * FB_ALIGNMENT)
+#define FB_ADDRESS            0x20100000
 
 /**
  * Disable video output
  */
 void plat_video_disable(void);
+
 
 /**
  * Initializes the VGA/DVI output.
@@ -251,40 +230,5 @@ void plat_video_swap(const void *frame);
  */
 void plat_video_palette(int index, int r, int g, int b);
 
-
-/******************************************************************************/
-/* I2C                                                                        */
-/******************************************************************************/
-
-// GRLIB I2C master peripheral.
-typedef struct {
-  unsigned int prescale;
-  unsigned int ctrl;
-  unsigned int data;
-  unsigned int cmdstat;
-} i2cmst_t;
-
-#define PLAT_I2C_DVI   ((volatile i2cmst_t*)0x80000900)
-#define PLAT_I2C_MAIN  ((volatile i2cmst_t*)0x80000c00)
-
-/**
- * Writes to an I2C device (blocking).
- *  - p must be set to the I2C peripheral address.
- *  - addr is the 7-bit I2C address (in bit 6..0).
- *  - reg is the I2C device register offset (first byte that is sent).
- *  - data and count specify the values to be written (second and later bytes).
- * Returns 0 if successful or -1 if the slave did not acknowledge somthing.
- */
-int plat_i2c_write(volatile i2cmst_t *p, int addr, int reg, const char *data, int count);
-
-/**
- * Reads from an I2C device (blocking).
- *  - p must be set to the I2C peripheral address.
- *  - addr is the 7-bit I2C address (in bit 6..0).
- *  - reg is the I2C device register offset.
- *  - data and count specify the values to be read.
- * Returns 0 if successful or -1 if the slave did not acknowledge somthing.
- */
-int plat_i2c_read(volatile i2cmst_t *p, int addr, int reg, char *data, int count);
 
 #endif

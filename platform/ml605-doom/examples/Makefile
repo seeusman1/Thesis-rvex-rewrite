@@ -1,7 +1,7 @@
 
 # Toolchain setup.
 TOOLS = ../../../tools
-GEN_EXAMPLES = ../../../examples
+GEN_EXAMPLES = ../../../example_programs
 DEBUGIFACE = $(TOOLS)/debug-interface
 RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
@@ -10,7 +10,7 @@ RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 EXECUTABLES = graph
 
 # Platform-specific object files to link.
-OBJECTS = platform.o
+OBJECTS = platform.a
 
 # Platform specific targets for help.
 TARGETS = \

@@ -1,5 +1,5 @@
 
-#include "simrvex_framebuffer.h"
+#include "platform.h"
 
 //Optimization that forces the compiler to keep the filter in registers
 //#define REGISTER_OPT
@@ -10,8 +10,8 @@
 /* The following code is from Iodev.org, modified for integer */
 #define filterWidth 3
 #define filterHeight 3
-#define HSIZE 256
-#define VSIZE 256
+#define HSIZE 640
+#define VSIZE 480
 
 //Converted to fixed-point using INT_FACTOR as 1.0
 #define INT_FACTOR 256
@@ -70,16 +70,16 @@ static inline int min(int a, int b)
 	else return b;
 }
 
+unsigned int inbuf[HSIZE*VSIZE]; //you probably want to change this to something useful
+unsigned int fb_mem[(HSIZE*VSIZE)+1024];
+char strbuf[12];
 int main()
 {
-	int i, x, y, filterX, filterY, imageX, imageY;
-	volatile unsigned int* fb = (unsigned int*)FB_ADDRESS;
-	unsigned int* inbuf = (unsigned int*)FB_ADDRESS; //you probably want to change this to something useful
-
-	*((volatile unsigned long *)FB_WIDTH_REG)   = HSIZE;
-	*((volatile unsigned long *)FB_HEIGHT_REG)  = VSIZE;
-	*((volatile unsigned long *)FB_DEPTH_REG)   = 32;
-	*((volatile unsigned long *)FB_COMMAND_REG) = 1;
+	int i, x, y, filterX, filterY, inbufX, inbufY;
+	unsigned int* fb;
+	
+	plat_init();
+	fb = plat_video_init(HSIZE, VSIZE, 32, 0, fb_mem);
 
 	/* write a test screen */
 #define CEILING(x,y) (((x) + (y) - 1) / (y))
@@ -101,8 +101,9 @@ int main()
 	/* Clear framebuffer */
 	for (i = 0; i < HSIZE*VSIZE; i++)
 	{
-		inbuf[i] = 0;
+		fb[i] = 0;
 	}
+
 
 #ifdef REGISTER_OPT
 	register int filter[filterWidth][filterHeight] =
@@ -127,18 +128,18 @@ int main()
 		int red = 0, green = 0, blue = 0;
 		int curPix;
 
-		//multiply every value of the filter with corresponding image pixel
+		//multiply every value of the filter with corresponding inbuf pixel
 #ifndef REGISTER_OPT
 		for(filterX = 0; filterX < filterWidth; filterX++)
 //		#pragma unroll(4)
 		for(filterY = 0; filterY < filterHeight; filterY++)
 		{
-//			imageX = (x - filterWidth / 2 + filterX + HSIZE) % HSIZE;
-//			imageY = (y - filterHeight / 2 + filterY + VSIZE) % VSIZE;
-			imageX = (x - filterWidth / 2 + filterX);// % HSIZE;
-			imageY = (y - filterHeight / 2 + filterY);// % VSIZE;
+//			inbufX = (x - filterWidth / 2 + filterX + HSIZE) % HSIZE;
+//			inbufY = (y - filterHeight / 2 + filterY + VSIZE) % VSIZE;
+			inbufX = (x - filterWidth / 2 + filterX);// % HSIZE;
+			inbufY = (y - filterHeight / 2 + filterY);// % VSIZE;
 
-			curPix = inbuf[imageX + (imageY*HSIZE)];
+			curPix = inbuf[inbufX + (inbufY*HSIZE)];
 			
 			red   += (((unsigned int)((curPix>>16)&0xFF)) * filter[filterX][filterY])/INT_FACTOR;
 			green += (((unsigned int)((curPix>> 8)&0xFF)) * filter[filterX][filterY])/INT_FACTOR;
@@ -188,11 +189,11 @@ int main()
 #ifdef DEBUG
 if(runs){
 			puts("Old RGB:\n");
-			tohex(strbuf, ((inbuf[imageX + (imageY*HSIZE)]>>16)&0xFF));
+			tohex(strbuf, ((inbuf[inbufX + (inbufY*HSIZE)]>>16)&0xFF));
 			puts(strbuf);
-			tohex(strbuf, ((inbuf[imageX + (imageY*HSIZE)]>> 8)&0xFF));
+			tohex(strbuf, ((inbuf[inbufX + (inbufY*HSIZE)]>> 8)&0xFF));
 			puts(strbuf);
-			tohex(strbuf, (inbuf[imageX + (imageY*HSIZE)]&0xFF));
+			tohex(strbuf, (inbuf[inbufX + (inbufY*HSIZE)]&0xFF));
 			puts(strbuf);
 
 			puts("RGB additions:\n");
@@ -234,7 +235,6 @@ if(runs){
 	} //runs
 #endif
 
-	while (1) ; //loop, otherwise the simulator will exit and close the framebuffer window
 	return 0;
 }
 

@@ -212,7 +212,7 @@ endif
 # Compiler setup.
 ifeq ($(COMPILER), HP)
 CC = $(TOOLS)/vex-3.43/bin/cc
-CFLAGS = -I$(GEN_EXAMPLES)/src -fno-xnop -c99inline -fmm=$(GEN_EXAMPLES)/pipe_1_$(ISSUE_WIDTH)_fw.mm
+CFLAGS = -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -fno-xnop -c99inline -fmm=$(GEN_EXAMPLES)/pipe_1_$(ISSUE_WIDTH)_fw.mm
 # We add the floating point and division libraries, along with common.o, as .a files.
 # That way, the linker will remove the code if it is not referenced, preventing 
 # unneeded code size increase.
@@ -228,7 +228,7 @@ endif
 
 else ifeq ($(COMPILER), GCC)
 CC = $(TOOLS)/build/bin/vex-gcc
-CFLAGS = -I$(GEN_EXAMPLES)/src
+CFLAGS = -I$(PLATFORM_SRC) -I$(GENERIC_SRC)
 FLOATLIB=floatlib.a
 DIVLIB=VEXdiv.a
 ifeq ($(DEBUG), false)
@@ -238,7 +238,7 @@ CFLAGS += -g
 endif
 
 else # Open64
-CFLAGS = -I$(GEN_EXAMPLES)/src -mcore=st220 -EB -fshort-double -fno-dismissible-load \
+CFLAGS = -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -mcore=st220 -EB -fshort-double -fno-dismissible-load \
 -fno-exceptions -mno-auto-prefetch -std=c99 -fno-builtin $(INCLUDES)
 LDFLAGS += -nostartfiles -lgcc 
 ifeq ($(ISSUE_WIDTH), 8)
@@ -385,20 +385,20 @@ _start.o-%: default_start.o
 	$(CP) default_start.o _start.o
 
 # How to link;
-%.elf: _start.o-% %.o common.a $(OBJECTS) $(FLOATLIB) $(DIVLIB)
+%.elf: _start.o-% %.o $(OBJECTS) common.a $(FLOATLIB) $(DIVLIB)
 	$(LD) _start.o $(filter-out $<,$^) -o $@ $(LDFLAGS)
 
 # How to link all BENCH_EXECUTABLES together so they all run from a single
 # main():
 .SECONDEXPANSION:
-all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES)) common.a $(OBJECTS) $(FLOATLIB) $(DIVLIB)
+all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES)) $(OBJECTS) common.a $(FLOATLIB) $(DIVLIB)
 	$(PYTHON3) $(GEN_EXAMPLES)/all-at-once.py $(BENCH_EXECUTABLES) > all-at-once.s
 	$(AS) $(ASFLAGS) all-at-once.s -o all-at-once.o
 	$(LD) _start.o all-at-once.o $(filter-out $<,$^) -o $@
 
 # How to create an archive file from a single object file (See HP Compiler setup above);
 %.a: %.o
-	$(AR) q $@ $<
+	$(AR) r $@ $<
 
 # How to generate an srec;
 %.srec: %.elf

@@ -1,27 +1,27 @@
 
-#include "simrvex_framebuffer.h"
+#include "platform.h"
 
 //#define DEBUG
 
 /* The following code is from Iodev.org, modified for integer */
 #define filterWidth 3
 #define filterHeight 3
-#define HSIZE 256
-#define VSIZE 256
+#define HSIZE 640
+#define VSIZE 480
 
-inline int max(int a, int b)
+static inline int max(int a, int b)
 {
 	if (a > b) return a;
 	else return b;
 }
 
-inline int min(int a, int b)
+static inline int min(int a, int b)
 {
 	if (a < b) return a;
 	else return b;
 }
 
-inline void swap(unsigned char *a, unsigned char *b)
+static inline void swap(unsigned char *a, unsigned char *b)
 {
 	unsigned char tmp = *a;
 	*a = *b;
@@ -29,18 +29,17 @@ inline void swap(unsigned char *a, unsigned char *b)
 }
 
 unsigned int inbuf[HSIZE*VSIZE]; //you probably want to change this to something useful
+unsigned int fb_mem[(HSIZE*VSIZE)+1024];
 char strbuf[12];
 int main()
 {
 	register unsigned int window[filterWidth*filterHeight];
 	register currChan;
 	int i, j, x, y, filterX, filterY;
-	volatile unsigned int* fb = (unsigned int*)FB_ADDRESS;
+	unsigned int* fb;
 
-	*((volatile unsigned long *)FB_WIDTH_REG)   = HSIZE;
-	*((volatile unsigned long *)FB_HEIGHT_REG)  = VSIZE;
-	*((volatile unsigned long *)FB_DEPTH_REG)   = 32;
-	*((volatile unsigned long *)FB_COMMAND_REG) = 1;
+	plat_init();
+	fb = plat_video_init(HSIZE, VSIZE, 32, 0, fb_mem);
 
 	/* write a test screen */
 #define CEILING(x,y) (((x) + (y) - 1) / (y))
@@ -294,7 +293,6 @@ puts("window sorted:\n");
 	} //runs
 #endif
 
-	while (1) ; //loop, otherwise the simulator will exit and close the fb window
 	return 0;
 }
 

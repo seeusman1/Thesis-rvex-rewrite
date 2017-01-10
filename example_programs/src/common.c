@@ -19,6 +19,15 @@ void * memcpy(void * dest,const void *src,unsigned long count)
 	return dest;
 }
 
+
+void *memset(void *ptr, int value, unsigned int num) {
+  unsigned char *cptr = (unsigned char*)ptr;
+  while (num--) {
+    *cptr = value;
+  }
+  return ptr;
+}
+
 int strncmp(const char *s1, const char *s2, unsigned long n) {
   unsigned long i;
   for(i=0; i<n; i++) {
@@ -99,4 +108,14 @@ double sqrt(double val) {
   }
   return x;
 }
+
+
+int min(int a, int b) {
+  return (a > b) ? b : a;
+}
+
+int max(int a, int b) {
+  return (a > b) ? a : b;
+}
+
 

@@ -6,11 +6,15 @@ GEN_EXAMPLES = ../../example_programs
 # Platform-specific executables.
 EXECUTABLES = convolution convolution_5x5 convolution_7x7 greyscale median framebuffertest
 
-# Platform-specific object files to link.
-OBJECTS = rvex-simrvex.o simrvex_stubs.o
+# Platform-specific code to link.
+OBJECTS = platform.a
 
 # Include generic examples makefile.
 include $(GEN_EXAMPLES)/Makefile
+
+# How to create the platform.a library
+platform.a: platform.o simrvex_stubs.o
+	$(AR) r $@ $^
 
 .PHONY: help
 help:

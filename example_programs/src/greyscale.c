@@ -1,37 +1,33 @@
 
-#include "simrvex_framebuffer.h"
+#include "platform.h"
 
-#define INTEGER
-
-#define HSIZE 1280
-#define VSIZE 1024
+#define HSIZE 640
+#define VSIZE 480
 
 //#define DEBUG
 
-inline int max(int a, int b)
+static inline int max(int a, int b)
 {
 	if (a > b) return a;
 	else return b;
 }
 
-inline int min(int a, int b)
+static inline int min(int a, int b)
 {
 	if (a < b) return a;
 	else return b;
 }
 
 unsigned int inbuf[HSIZE*VSIZE]; //you probably want to change this to something useful
+unsigned int fb_mem[(HSIZE*VSIZE)+1024];
 char strbuf[12];
 int main()
 {
-    unsigned int* fb = (unsigned int*)FB_ADDRESS;
-
     int i, x, y, filterX, filterY, inbufX, inbufY;
+    unsigned int* fb;
 
-	*((volatile unsigned long *)FB_WIDTH_REG)   = HSIZE;
-	*((volatile unsigned long *)FB_HEIGHT_REG)  = VSIZE;
-	*((volatile unsigned long *)FB_DEPTH_REG)   = 32;
-	*((volatile unsigned long *)FB_COMMAND_REG) = 1;
+	plat_init();
+	fb = plat_video_init(HSIZE, VSIZE, 32, 0, fb_mem);
 
 	/* write a test screen */
 #define CEILING(x,y) (((x) + (y) - 1) / (y))
@@ -93,7 +89,6 @@ if(runs){
     } //runs
 #endif
 
-	while (1) ; //loop, otherwise the simulator will exit and close the fb window
     return 0;
 }
 

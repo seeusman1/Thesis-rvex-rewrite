@@ -1,13 +1,13 @@
 
-#include "simrvex_framebuffer.h"
+#include "platform.h"
 
 //#define DEBUG
 
 /* The following code is from Iodev.org, modified for integer */
 #define filterWidth 7
 #define filterHeight 7
-#define HSIZE 256
-#define VSIZE 256
+#define HSIZE 640
+#define VSIZE 480
 
 //Converted to fixed-point using INT_FACTOR as 1.0
 #define INT_FACTOR 1536
@@ -42,16 +42,15 @@ int bias = 0;
 #endif
 
 unsigned int inbuf[HSIZE*VSIZE]; //you probably want to change this to something useful
+unsigned int fb_mem[(HSIZE*VSIZE)+1024];
 char strbuf[12];
 int main()
 {
 	int i, x, y, filterX, filterY, inbufX, inbufY;
-	unsigned int* fb = (unsigned int*)FB_ADDRESS;
-
-	*((volatile unsigned long *)FB_WIDTH_REG)   = HSIZE;
-	*((volatile unsigned long *)FB_HEIGHT_REG)  = VSIZE;
-	*((volatile unsigned long *)FB_DEPTH_REG)   = 32;
-	*((volatile unsigned long *)FB_COMMAND_REG) = 1;
+	unsigned int* fb;
+	
+	plat_init();
+	fb = plat_video_init(HSIZE, VSIZE, 32, 0, fb_mem);
 
 	/* write a test screen */
 #define CEILING(x,y) (((x) + (y) - 1) / (y))
@@ -150,7 +149,6 @@ if(runs){
     } //runs
 #endif
 
-	while (1) ; //loop, otherwise the simulator will exit and close the fb window
     return 0;
 }
 
