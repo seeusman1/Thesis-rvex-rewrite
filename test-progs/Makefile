@@ -222,45 +222,16 @@ else
 CFLAGS += -g
 endif
 
-else ifeq ($(COMPILER), GCC)
-CC = $(TOOLS)/build/bin/vex-gcc
-CFLAGS = -I$(PLATFORM_SRC) -I$(GENERIC_SRC)
-FLOATLIB=floatlib.a
-DIVLIB=VEXdiv.a
-ifeq ($(DEBUG), false)
-CFLAGS += -O3
-else
-CFLAGS += -g
-endif
-
 else # Open64
-CFLAGS = -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -mcore=st220 -EB -fshort-double -fno-dismissible-load \
--fno-exceptions -mno-auto-prefetch -std=c99 -fno-builtin $(INCLUDES)
+CFLAGS = --issue $(ISSUE_WIDTH) -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -fshort-double \
+-fno-exceptions -std=c99 -fno-builtin $(INCLUDES)
 LDFLAGS += -nostartfiles -lgcc 
-ifeq ($(ISSUE_WIDTH), 8)
-CC=/shares/group/ce-rvex/tools/builds/open64_8issue/bin/st200-gcc
-LD=/shares/group/ce-rvex/tools/builds/open64_8issue/bin/st200-gcc
-ifeq ($(DEBUG), false)
-CFLAGS += -O3 -CG:LAO_activation=0
-else
-CFLAGS += -g
-endif
-else ifeq ($(ISSUE_WIDTH), 4)
-CC=/shares/group/ce-rvex/tools/builds/open64_4issue/bin/st200-gcc
-LD=/shares/group/ce-rvex/tools/builds/open64_4issue/bin/st200-gcc
+CC=$(TOOLS)/open64/bin/st200-gcc
+LD=$(TOOLS)/open64/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3
 else
 CFLAGS += -g
-endif
-else
-CC=/shares/group/ce-rvex/tools/builds/open64_2issue/bin/st200-gcc
-LD=/shares/group/ce-rvex/tools/builds/open64_2issue/bin/st200-gcc
-ifeq ($(DEBUG), false)
-CFLAGS += -O3 -CG:LAO_activation=0
-else
-CFLAGS += -g
-endif
 endif
 endif
 
@@ -286,7 +257,11 @@ help:
 	@echo "  make <target> ISSUE_WIDTH=<2|4|8>                (default = 8)"
 	@echo "  make <target> DYNAMIC=<(see Makefile)>           (default = true-O1)"
 	@echo "  make <target> DYNAMIC_CORE=<true|false>          (default = same as DYNAMIC)"
+<<<<<<< HEAD:test-progs/Makefile
 	@echo "  make <target> COMPILER=<HP|GCC|O64>            (default = HP)"
+=======
+	@echo "  make <target> COMPILER=<HP|O64>                  (default = HP)"
+>>>>>>> master:examples/Makefile
 	@echo "  make <target> LIMMH_PREV=<true|false>            (default = true)"
 	@echo "  make <target> DEFS=<list of preprocessor defs>   (default = <none>)"
 	@echo ""
@@ -330,11 +305,16 @@ else
 endif
 
 # How to compile generic sources;
+ifeq ($(COMPILER), O64)
 io.s: $(GENERIC_SRC)/io.c
-	$(CC) $(CFLAGS) -I/data/other/newlib/build/rvex/rvex-elf32/include \
-	-I/data/tools/st200/ST200R7.3.0/include/ \
-	-I/data/tools/st200/ST200R7.3.0/target/core/st220 \
+	$(CC) $(CFLAGS) -I$(TOOLS)/newlib/rvex-elf32/include \
 	$(patsubst %,-D%,$(DEFS)) -S $<
+else
+io.s:
+	@echo "Attempted to compile io.c using incorrect compiler."
+	@echo "Please build with COMPILER=O64."
+	@exit 1
+endif
 
 %.s: $(GENERIC_SRC)/%.c
 	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -S $<
