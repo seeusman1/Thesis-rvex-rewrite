@@ -1030,6 +1030,7 @@ architecture Behavioral of core_pipelane is
   signal pl2memu_opcode         : rvex_opcode_array(S_MEM to S_MEM);
   signal pl2memu_opAddr         : rvex_address_array(S_MEM to S_MEM);
   signal pl2memu_opData         : rvex_data_array(S_MEM to S_MEM);
+  signal pl2memu_enableTrap     : std_logic_vector(S_MEM to S_MEM);
   signal memu2pl_trap           : trap_info_array(S_MEM to S_MEM);
   signal memu2pl_result         : rvex_data_array(S_MEM+L_MEM to S_MEM+L_MEM);
   signal memu2pl_trace_enable   : std_logic_vector(S_MEM to S_MEM);
@@ -1402,6 +1403,7 @@ begin -- architecture
         pl2memu_opcode(S_MEM)           => pl2memu_opcode(S_MEM),
         pl2memu_opAddr(S_MEM)           => pl2memu_opAddr(S_MEM),
         pl2memu_opData(S_MEM)           => pl2memu_opData(S_MEM),
+        pl2memu_enableTrap(S_MEM)       => pl2memu_enableTrap(S_MEM),
         memu2pl_trap(S_MEM)             => memu2pl_trap(S_MEM),
         memu2pl_result(S_MEM+L_MEM)     => memu2pl_result(S_MEM+L_MEM),
         
@@ -2546,12 +2548,23 @@ begin -- architecture
     if HAS_MEM then
       
       if s(S_MEM).dp.c.enableMem = '1' or not CFG.enablePowerLatches then
-        pl2memu_valid(S_MEM)  <= s(S_MEM).valid;
-        pl2memu_opcode(S_MEM) <= s(S_MEM).opcode;
-        pl2memu_opAddr(S_MEM) <= s(S_MEM).dp.resAdd;
-        pl2memu_opData(S_MEM) <= s(S_MEM).dp.op3;
+        pl2memu_valid(S_MEM)        <= s(S_MEM).valid;
+        pl2memu_opcode(S_MEM)       <= s(S_MEM).opcode;
+        pl2memu_opAddr(S_MEM)       <= s(S_MEM).dp.resAdd;
+        pl2memu_opData(S_MEM)       <= s(S_MEM).dp.op3;
+        
+        -- Note on enableTrap: this is used to enable/disable the combinatorial
+        -- misaligned access detection logic. Instruction valid is checked when
+        -- the trap is actually merged into the trap pipeline, so we don't need
+        -- valid to be high to generate it. Moreover, we cannot base it on
+        -- valid, because valid will be deasserted combinatorially when a trap
+        -- occurs, causing a timing loop. We do however need to disable it if
+        -- we've gated the memory unit inputs, because in this case the trap
+        -- output signal itself becomes invalid and may cause spurious traps. 
+        pl2memu_enableTrap(S_MEM)   <= '1';
       else
-        pl2memu_valid(S_MEM)  <= '0';
+        pl2memu_valid(S_MEM)        <= '0';
+        pl2memu_enableTrap(S_MEM)   <= '0';
       end if;
       
     end if;
