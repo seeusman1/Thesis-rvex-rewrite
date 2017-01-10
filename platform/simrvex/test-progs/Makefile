@@ -12,6 +12,9 @@ OBJECTS = platform.a
 # Include generic test program makefile.
 include $(GEN_TEST_PROGS)/Makefile
 
+# Simulator command line.
+SIM = ADAPTOR_CONFIG=cfg/plugin.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200 $(TOOLS)/simrvex/bin/simrvex
+
 # How to create the platform.a library
 platform.a: platform.o simrvex_stubs.o
 	$(AR) r $@ $^
@@ -52,7 +55,7 @@ simtestall-clean:
 #The Powerstone programs all return 0xdeadbeef. 
 #We take the last register contents using tail and grep for that value in r3 (return value register).
 simtest-% : %.elf
-	@${SIM} -t1,0 $^|tail -n 40 | grep "RET: 0";\
+	@${SIM} -t1,0 --batch $^|tail -n 40 | grep "RET: 0";\
 	if [ $$? != 0 ] ; then \
 	echo "Program returned unexpected exit code" ; echo $* >> simtestall; echo -e "\t\tError!" >> simtestall; \
 	else \
