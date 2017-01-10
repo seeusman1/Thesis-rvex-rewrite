@@ -1,7 +1,7 @@
 
 # Toolchain setup.
 TOOLS = ../../../../tools
-GEN_EXAMPLES = ../../../../examples
+GEN_TEST_PROGS = ../../../../test-progs
 
 # Platform-specific executables.
 EXECUTABLES = div extReconf factorial
@@ -22,5 +22,5 @@ recompile:
 	$(MAKE) clean
 	$(MAKE) ucbqsort-fast.srec div.srec extReconf.srec factorial.srec
 
-# Include generic examples makefile.
-include $(GEN_EXAMPLES)/Makefile
+# Include generic test program makefile.
+include $(GEN_TEST_PROGS)/Makefile

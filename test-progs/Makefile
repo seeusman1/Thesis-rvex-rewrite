@@ -4,7 +4,7 @@
 # It can also be included from different directories for different platforms.
 # In this case, the following things should be defined by the calling makefile;
 #   TOOLS - point to tools directory in repo w.r.t. calling makefile
-#   GEN_EXAMPLES - point to the directory in which this makefile resides
+#   GEN_TEST_PROGS - point to the directory in which this makefile resides
 #   EXECUTABLES - list of platform-specific programs to compile
 #   OBJECTS - list of platform-specific object files to build and link
 #   TARGETS - list of platform-specific make targets for make help
@@ -100,8 +100,8 @@ endif
 ifndef OBJECTS
 OBJECTS = rvex-simrvex.o simrvex_stubs.o
 endif
-ifndef GEN_EXAMPLES
-GEN_EXAMPLES = .
+ifndef GEN_TEST_PROGS
+GEN_TEST_PROGS = .
 endif
 ifndef START
 START = default_start
@@ -185,10 +185,10 @@ RM = rm -f
 MKDIR = mkdir
 PYTHON = python3
 VEXPARSE = $(PYTHON) $(TOOLS)/vexparse/main.py
-SIM = ADAPTOR_CONFIG=${GEN_EXAMPLES}/plugin.conf $(TOOLS)/sim/bin/simrvex
+SIM = ADAPTOR_CONFIG=${GEN_TEST_PROGS}/plugin.conf $(TOOLS)/sim/bin/simrvex
 GDB = $(BUILD)/rvex-elf32-gdb
 PLATFORM_SRC = src
-GENERIC_SRC = $(GEN_EXAMPLES)/src
+GENERIC_SRC = $(GEN_TEST_PROGS)/src
 
 # Assembler setup.
 AS = $(BUILD)/rvex-elf32-as
@@ -212,7 +212,7 @@ endif
 # Compiler setup.
 ifeq ($(COMPILER), HP)
 CC = $(TOOLS)/vex-3.43/bin/cc
-CFLAGS = -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -fno-xnop -c99inline -fmm=$(GEN_EXAMPLES)/pipe_1_$(ISSUE_WIDTH)_fw.mm
+CFLAGS = -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -fno-xnop -c99inline -fmm=$(GEN_TEST_PROGS)/pipe_1_$(ISSUE_WIDTH)_fw.mm
 # We add the floating point and division libraries, along with common.o, as .a files.
 # That way, the linker will remove the code if it is not referenced, preventing 
 # unneeded code size increase.
@@ -392,7 +392,7 @@ _start.o-%: default_start.o
 # main():
 .SECONDEXPANSION:
 all-at-once.elf: _start.o-all-at-once $$(patsubst %,%-sub.o,$$(BENCH_EXECUTABLES)) $(OBJECTS) common.a $(FLOATLIB) $(DIVLIB)
-	$(PYTHON3) $(GEN_EXAMPLES)/all-at-once.py $(BENCH_EXECUTABLES) > all-at-once.s
+	$(PYTHON3) $(GEN_TEST_PROGS)/all-at-once.py $(BENCH_EXECUTABLES) > all-at-once.s
 	$(AS) $(ASFLAGS) all-at-once.s -o all-at-once.o
 	$(LD) _start.o all-at-once.o $(filter-out $<,$^) -o $@
 

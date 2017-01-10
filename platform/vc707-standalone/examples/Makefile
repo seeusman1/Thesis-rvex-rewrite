@@ -1,7 +1,7 @@
 
 # Toolchain setup.
 TOOLS = ../../../tools
-GEN_EXAMPLES = ../../../examples
+GEN_TEST_PROGS = ../../../test-progs
 DEBUGIFACE = $(TOOLS)/debug-interface
 RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
@@ -34,8 +34,8 @@ TARGETS = \
 # Additional things to clean.
 CLEAN = *.bin tools/b2v ../design/mem_init_pkg.vhd *.rawtrace *.trace
 
-# Include generic examples makefile.
-include $(GEN_EXAMPLES)/Makefile
+# Include generic test program makefile.
+include $(GEN_TEST_PROGS)/Makefile
 
 # How to upload;
 .PHONY: upload-%

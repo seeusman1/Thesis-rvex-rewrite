@@ -4,7 +4,7 @@
 
 # Toolchain setup.
 TOOLS = ../../../tools
-GEN_EXAMPLES = ../../../examples
+GEN_TEST_PROGS = ../../../test-progs
 DEBUGIFACE = $(TOOLS)/debug-interface
 RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
@@ -41,8 +41,8 @@ TARGETS = \
 # Additional things to clean.
 CLEAN = *.bin *.rawtrace *.trace
 
-# Include generic examples makefile.
-include $(GEN_EXAMPLES)/Makefile
+# Include generic test program makefile.
+include $(GEN_TEST_PROGS)/Makefile
 
 # How to split up srec files into the three memories.
 %.imem.srec %.dmem.srec %.pmem.srec %.bin %_data.bin %_param.bin: %.srec

@@ -1,7 +1,7 @@
 
 # Toolchain setup.
 TOOLS = ../../../tools
-GEN_EXAMPLES = ../../../example_programs
+GEN_TEST_PROGS = ../../../test-progs
 DEBUGIFACE = $(TOOLS)/debug-interface
 RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
@@ -28,8 +28,8 @@ CLEAN =
 # Core configuration.
 BUNDLE_ALIGN = 2
 
-# Include generic examples makefile.
-include $(GEN_EXAMPLES)/Makefile
+# Include generic test program makefile.
+include $(GEN_TEST_PROGS)/Makefile
 
 # How to upload;
 .PHONY: upload-%

@@ -1,7 +1,7 @@
 
 # Toolchain setup.
 TOOLS = ../../tools
-GEN_EXAMPLES = ../../example_programs
+GEN_TEST_PROGS = ../../test-progs
 
 # Platform-specific executables.
 EXECUTABLES = convolution convolution_5x5 convolution_7x7 greyscale median framebuffertest
@@ -9,8 +9,8 @@ EXECUTABLES = convolution convolution_5x5 convolution_7x7 greyscale median frame
 # Platform-specific code to link.
 OBJECTS = platform.a
 
-# Include generic examples makefile.
-include $(GEN_EXAMPLES)/Makefile
+# Include generic test program makefile.
+include $(GEN_TEST_PROGS)/Makefile
 
 # How to create the platform.a library
 platform.a: platform.o simrvex_stubs.o

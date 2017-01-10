@@ -1,7 +1,7 @@
 
 # Toolchain setup.
 TOOLS = ../../../tools
-GEN_EXAMPLES = ../../../examples
+GEN_TEST_PROGS = ../../../test-progs
 
 # Platform-specific executables.
 EXECUTABLES = 
@@ -13,8 +13,8 @@ OBJECTS = rvex-sim.o
 TARGETS = \
 "make copy-<program>      selects the given program for simulation"
 
-# Include generic examples makefile.
-include $(GEN_EXAMPLES)/Makefile
+# Include generic test program makefile.
+include $(GEN_TEST_PROGS)/Makefile
 
 # Copies the given program machine code and disassembly to the filename which
 # is used by the simulation code.
