@@ -110,7 +110,7 @@ BORROW23   = .3.2
 BORROW4567 = .5.4.7.6
 endif
 ifeq ($(ISSUE_WIDTH), 2)
-BORROW = $(BORROW01).
+BORROW = $(BORROW01)
 else ifeq ($(ISSUE_WIDTH), 4)
 BORROW = $(BORROW01)$(BORROW23)
 else

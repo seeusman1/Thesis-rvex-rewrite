@@ -43,7 +43,7 @@ help:
 
 # How to run simrvex
 sim-%: %.elf
-	${SIM} $<
+	${SIM} $< $(SIMFLAGS)
 
 .PHONY: simtestall
 simtestall: simtestall-clean $(POWERSTONE:%=simtest-%)

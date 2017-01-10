@@ -13,7 +13,7 @@ OBJECTS = rvex-tests.o
 ISSUE_WIDTH = 2
 LANECONFIG = 7B
 BUNDLE_ALIGN = 2
-DYNAMIC = false
+DYNAMIC = true-O1
 LIMMH_PREV = false
 
 # Recompiles the test case executables.
