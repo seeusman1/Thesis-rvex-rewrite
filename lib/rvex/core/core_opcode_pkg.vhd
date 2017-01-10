@@ -56,11 +56,12 @@ use rvex.core_opcodeAlu_pkg.all;
 use rvex.core_opcodeBranch_pkg.all;
 use rvex.core_opcodeMemory_pkg.all;
 use rvex.core_opcodeMultiplier_pkg.all;
+use rvex.core_opcodeFpu_pkg.all;
 
 --=============================================================================
 -- This package specifies basic decoding signals for all opcodes. In theory,
--- when you want to implement a new instruction which makes use of existing
--- logic in the pipelanes, you only need to change things here and in the                            -- GENERATED --
+-- when you want to implement a new instruction which makes use of existing                          -- GENERATED --
+-- logic in the pipelanes, you only need to change things here and in the
 -- rvex_opcode<unit>_pkg associated with the unit you want to change. If you
 -- also need new control signals, you'll obviously have to change the code of
 -- the functional unit as well.
@@ -69,8 +70,8 @@ package core_opcode_pkg is
 --=============================================================================
 
   -----------------------------------------------------------------------------
-  -- Misc. instruction set constants
-  -----------------------------------------------------------------------------                      -- GENERATED --
+  -- Misc. instruction set constants                                                                 -- GENERATED --
+  -----------------------------------------------------------------------------
   -- Special "general purpose" register which is always tied to 0.
   constant GPREG_ZERO           : rvex_gpRegAddr_type := "000000";
 
@@ -79,8 +80,8 @@ package core_opcode_pkg is
   constant GPREG_STACK          : rvex_gpRegAddr_type := "000001";
 
   -- Special "general purpose" register which optionally maps to the link
-  -- register, based on configuration.
-  constant GPREG_LINK           : rvex_gpRegAddr_type := "111111";                                   -- GENERATED --
+  -- register, based on configuration.                                                               -- GENERATED --
+  constant GPREG_LINK           : rvex_gpRegAddr_type := "111111";
 
   -- Determines which encoding is used for the relative branch offset. May be
   -- set to 2 or 3. When set to 3, the old encoding is used, where the LSB of
@@ -89,8 +90,8 @@ package core_opcode_pkg is
   constant BRANCH_OFFS_SHIFT    : natural := 3;
 
   -----------------------------------------------------------------------------
-  -- Opcode table entry type
-  -----------------------------------------------------------------------------                      -- GENERATED --
+  -- Opcode table entry type                                                                         -- GENERATED --
+  -----------------------------------------------------------------------------
   -- Constrained string type for syntax specifications.
   subtype syllable_syntax_type is string(1 to 50);
 
@@ -99,8 +100,8 @@ package core_opcode_pkg is
   type opcodeTableEntry_type is record
 
     -- Instruction name/syntax for disassembly in VHDL simulation. Syntax_reg
-    -- is for syllables with bit 23 cleared, syntax_imm is for syllables with
-    -- bit 23 set. See also the documentation just below the =Opcode decoding                        -- GENERATED --
+    -- is for syllables with bit 23 cleared, syntax_imm is for syllables with                        -- GENERATED --
+    -- bit 23 set. See also the documentation just below the =Opcode decoding
     -- table= header.
     syntax_reg                  : syllable_syntax_type;
     syntax_imm                  : syllable_syntax_type;
@@ -109,8 +110,8 @@ package core_opcode_pkg is
     -- instruction raises an invalid instruction exception. This is indexed
     -- by bit 23 of the syllable, which determines whether operand 2 is a
     -- register or an immediate.
-    valid                       : std_logic_vector(1 downto 0);
-                                                                                                     -- GENERATED --
+    valid                       : std_logic_vector(1 downto 0);                                      -- GENERATED --
+
     -- Control signals for datapath.
     datapathCtrl                : datapathCtrlSignals_type;
 
@@ -119,8 +120,8 @@ package core_opcode_pkg is
 
     -- Control signals for the branch unit.
     branchCtrl                  : branchCtrlSignals_type;
-
-    -- Control signals for the memory unit.                                                          -- GENERATED --
+                                                                                                     -- GENERATED --
+    -- Control signals for the memory unit.
     memoryCtrl                  : memoryCtrlSignals_type;
 
     -- Control signals for the multiplier unit.
@@ -129,8 +130,8 @@ package core_opcode_pkg is
     -- Control signals for the FPU.
     fpuCtrl                     : fpuCtrlSignals_type;
 
-  end record;
-                                                                                                     -- GENERATED --
+  end record;                                                                                        -- GENERATED --
+
   -- Array type of the above to get a table. The index of this table is the
   -- opcode (the MSB of the syllable).
   type opcodeTable_type is array (0 to 2**rvex_opcode_type'LENGTH-1) of opcodeTableEntry_type;
@@ -139,8 +140,8 @@ package core_opcode_pkg is
   -- Opcode decoding table
   --===========================================================================
   -- This table specifies how all instructions are decoded. It is generated by
-  -- the scripts in the config directory.
-  --                                                                                                 -- GENERATED --
+  -- the scripts in the config directory.                                                            -- GENERATED --
+  --
   -- Indexes in this table correspond to syllable bit 31 downto 24. The syntax
   -- formatter makes the following replacements when decoding the instruction.
   --   "%r1" --> Bit 22..17 in unsigned decimal.
@@ -149,8 +150,8 @@ package core_opcode_pkg is
   --   "%id" --> immediate, respecting long immediates. Displays the immediate
   --             in signed decimal form.
   --   "%iu" --> Same as above, but in unsigned decimal form.
-  --   "%ih" --> Same as above, but in hex form.
-  --   "%i1" --> Bit 27..25 in unsigned decimal for LIMMH target lane.                               -- GENERATED --
+  --   "%ih" --> Same as above, but in hex form.                                                     -- GENERATED --
+  --   "%i1" --> Bit 27..25 in unsigned decimal for LIMMH target lane.
   --   "%i2" --> Bit 24..02 in hex for LIMMH.
   --   "%b1" --> Bit 26..24 in unsigned decimal.
   --   "%b2" --> Bit 19..17 in unsigned decimal.
@@ -159,90 +160,49 @@ package core_opcode_pkg is
   --   "%bt" --> Next PC + bit 23..5 in hex (branch target).
   --   "#"   --> Cluster identifier (maps to 0).
 
-
-  -----------------------------------------------------------------------------                      -- GENERATED --
+                                                                                                     -- GENERATED --
+  -----------------------------------------------------------------------------
   -- Undefined entries
   -----------------------------------------------------------------------------
   constant opcodeTableEntry_default : opcodeTableEntry_type := (
     syntax_reg => "unknown                                           ",
     syntax_imm => "unknown                                           ",
-    valid => "00", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-    op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableALU => '1',
-    brFmt => '0', isNOP => '1', funcSel => ALU, linkWE => '0', allBrRegsWE => '0',
-    op3BranchRegs => '0', brRegWE => '0', gpRegRdEnaB => '0', gpRegRdEnaA => '0',
-    enableMul => '0', isLIMMH => '0', isTrap => '0'), aluCtrl => (compare => '0',                    -- GENERATED --
-    bitwiseOp => BITW_OR, op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-    intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0', divs => '0',
-    opBrMux => PASS), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+    valid => "00", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+    gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',
+    funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+    op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',                          -- GENERATED --
+    allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+    stackOp => '0', isNOP => '1', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+    aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+    op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+    brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+    fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
     isFConvfiInstruction => '0', isFAddInstruction => '0',
     isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
     unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-    branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+    branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                     -- GENERATED --
     RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
     readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-    multiplierCtrl => (op2unsigned => '0', op1unsigned => '0', resultSel => PASS,                    -- GENERATED --
+    multiplierCtrl => (op2unsigned => '0', op1unsigned => '0', resultSel => PASS,
     op1sel => LOW_HALF, op2sel => LOW_HALF, isMultiplyInstruction => '0')
   );
 
   constant OPCODE_TABLE : opcodeTable_type := (
 
     ---------------------------------------------------------------------------
-    -- ALU arithmetic instructions
+    -- ALU arithmetic instructions                                                                   -- GENERATED --
     ---------------------------------------------------------------------------
     98 => (
-      syntax_reg => "add r#.%r1 = r#.%r2, r#.%r3                       ",                            -- GENERATED --
+      syntax_reg => "add r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "add r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                     -- GENERATED --
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),                                                                                               -- GENERATED --
-    107 => (
-      syntax_reg => "sh1add r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "sh1add r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => SHL1, op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,                   -- GENERATED --
-      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
-      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
-      isMultiplyInstruction => '0')
-    ),
-    108 => (
-      syntax_reg => "sh2add r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "sh2add r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',                      -- GENERATED --
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => SHL2, op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
@@ -255,16 +215,86 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
+    107 => (
+      syntax_reg => "sh1add r#.%r1 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "sh1add r#.%r1 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL1,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    108 => (
+      syntax_reg => "sh2add r#.%r1 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "sh2add r#.%r1 = r#.%r2, %ih                       ",                            -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL2,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                                        -- GENERATED --
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),                                                                                               -- GENERATED --
     109 => (
       syntax_reg => "sh3add r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "sh3add r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => SHL3, op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL3,                             -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    110 => (
+      syntax_reg => "sh4add r#.%r1 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "sh4add r#.%r1 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL4,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
@@ -277,41 +307,20 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-    110 => (
-      syntax_reg => "sh4add r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "sh4add r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => SHL4, op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
-      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
-      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
     26 => (
-      syntax_reg => "sub r#.%r1 = r#.%r3, r#.%r2                       ",                            -- GENERATED --
+      syntax_reg => "sub r#.%r1 = r#.%r3, r#.%r2                       ",
       syntax_imm => "sub r#.%r1 = %ih, r#.%r2                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                      -- GENERATED --
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
@@ -320,40 +329,41 @@ package core_opcode_pkg is
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
-    ),                                                                                               -- GENERATED --
-    120 to 127 => (
+    ),
+    120 to 127 => (                                                                                  -- GENERATED --
       syntax_reg => "addcg r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3     ",
       syntax_imm => "unknown                                           ",
-      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',                                      -- GENERATED --
-      intResultMux => ADDER, brResultMux => CARRY_OUT, unsignedOp => '1',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "01", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,                                   -- GENERATED --
+      brResultMux => CARRY_OUT, unsignedOp => '1', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
       isMultiplyInstruction => '0')
     ),
     112 to 119 => (
       syntax_reg => "divs r#.%r1, b#.%b3 = b#.%b1, r#.%r2, r#.%r3      ",
       syntax_imm => "unknown                                           ",
-      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => SHL1, op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      valid => "01", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => SHL1,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => DIVS, unsignedOp => '0', divs => '1', opBrMux => PASS),
       fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
@@ -373,19 +383,19 @@ package core_opcode_pkg is
     111 => (                                                                                         -- GENERATED --
       syntax_reg => "shl r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "shl r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '1',
-      intResultMux => SHIFTER, brResultMux => PASS, unsignedOp => '1',                               -- GENERATED --
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '1', intResultMux => SHIFTER,                                 -- GENERATED --
+      brResultMux => PASS, unsignedOp => '1', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -396,19 +406,19 @@ package core_opcode_pkg is
     24 => (
       syntax_reg => "shr r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "shr r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',                      -- GENERATED --
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => SHIFTER, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => SHIFTER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -419,19 +429,19 @@ package core_opcode_pkg is
     25 => (
       syntax_reg => "shru r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "shru r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => SHIFTER, brResultMux => PASS, unsignedOp => '1',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),                                     -- GENERATED --
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => SHIFTER,
+      brResultMux => PASS, unsignedOp => '1', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -446,19 +456,19 @@ package core_opcode_pkg is
     99 => (
       syntax_reg => "and r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "and r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',                      -- GENERATED --
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -469,19 +479,19 @@ package core_opcode_pkg is
     100 => (
       syntax_reg => "andc r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "andc r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),                                     -- GENERATED --
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -492,19 +502,19 @@ package core_opcode_pkg is
     105 => (
       syntax_reg => "or r#.%r1 = r#.%r2, r#.%r3                        ",                            -- GENERATED --
       syntax_imm => "or r#.%r1 = r#.%r2, %ih                           ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,                                      -- GENERATED --
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),                        -- GENERATED --
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -515,19 +525,19 @@ package core_opcode_pkg is
     106 => (
       syntax_reg => "orc r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "orc r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,                              -- GENERATED --
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
@@ -538,19 +548,19 @@ package core_opcode_pkg is
     31 => (
       syntax_reg => "xor r#.%r1 = r#.%r2, r#.%r3                       ",
       syntax_imm => "xor r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_XOR,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_XOR, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -565,19 +575,19 @@ package core_opcode_pkg is
     44 => (
       syntax_reg => "sbit r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "sbit r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => SET_BIT,                              -- GENERATED --
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => TRUE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => SET_BIT, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
@@ -588,406 +598,16 @@ package core_opcode_pkg is
     45 => (
       syntax_reg => "sbitf r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "sbitf r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => SET_BIT,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    92 => (
-      syntax_reg => "tbit r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "tbit r#.%r1 = r#.%r2, %ih                         ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => TBIT, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    93 => (                                                                                          -- GENERATED --
-      syntax_reg => "tbit b#.%b2 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "tbit b#.%b2 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => TBIT, unsignedOp => '0', divs => '0',                     -- GENERATED --
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')                                                                  -- GENERATED --
-    ),
-    94 => (
-      syntax_reg => "tbitf r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "tbitf r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,                             -- GENERATED --
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => TBITF, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    95 => (
-      syntax_reg => "tbitf b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "tbitf b#.%b2 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => TBITF, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-
-    ---------------------------------------------------------------------------
-    -- ALU boolean instructions
-    ---------------------------------------------------------------------------
-    90 => (                                                                                          -- GENERATED --
-      syntax_reg => "andl r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "andl r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => LOGIC_AND, unsignedOp => '0',                             -- GENERATED --
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
-      isMultiplyInstruction => '0')
-    ),
-    91 => (
-      syntax_reg => "andl b#.%b2 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "andl b#.%b2 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',                      -- GENERATED --
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => LOGIC_AND, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    88 => (
-      syntax_reg => "orl r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "orl r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => LOGIC_OR, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),                                     -- GENERATED --
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    89 => (
-      syntax_reg => "orl b#.%b2 = r#.%r2, r#.%r3                       ",                            -- GENERATED --
-      syntax_imm => "orl b#.%b2 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => LOGIC_OR, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,                                      -- GENERATED --
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')                                                                  -- GENERATED --
-    ),
-    84 => (
-      syntax_reg => "nandl r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "nandl r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,                             -- GENERATED --
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => LOGIC_NAND, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    85 => (
-      syntax_reg => "nandl b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "nandl b#.%b2 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => LOGIC_NAND, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    86 => (
-      syntax_reg => "norl r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "norl r#.%r1 = r#.%r2, %ih                         ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => LOGIC_NOR, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',                                     -- GENERATED --
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),                                                                                               -- GENERATED --
-    87 => (
-      syntax_reg => "norl b#.%b2 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "norl b#.%b2 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',                                      -- GENERATED --
-      intResultMux => BOOL, brResultMux => LOGIC_NOR, unsignedOp => '0',
-      divs => '0', opBrMux => FALSE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-
-    ---------------------------------------------------------------------------
-    -- ALU compare instructions
-    ---------------------------------------------------------------------------
-    64 => (
-      syntax_reg => "cmpeq r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpeq r#.%r1 = r#.%r2, %ih                        ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_EQ, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    65 => (                                                                                          -- GENERATED --
-      syntax_reg => "cmpeq b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpeq b#.%b2 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_EQ, unsignedOp => '0', divs => '0',                   -- GENERATED --
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')                                                                  -- GENERATED --
-    ),
-    66 => (
-      syntax_reg => "cmpge r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpge r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,                             -- GENERATED --
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_GE, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    67 => (
-      syntax_reg => "cmpge b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmpge b#.%b2 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_GE, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    68 => (
-      syntax_reg => "cmpgeu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgeu r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_GE, unsignedOp => '1', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => SET_BIT, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
@@ -998,18 +618,418 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
+    92 => (
+      syntax_reg => "tbit r#.%r1 = r#.%r2, r#.%r3                      ",
+      syntax_imm => "tbit r#.%r1 = r#.%r2, %ih                         ",                            -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => TBIT, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                                        -- GENERATED --
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),                                                                                               -- GENERATED --
+    93 => (
+      syntax_reg => "tbit b#.%b2 = r#.%r2, r#.%r3                      ",
+      syntax_imm => "tbit b#.%b2 = r#.%r2, %ih                         ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,                         -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => TBIT, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    94 => (
+      syntax_reg => "tbitf r#.%r1 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "tbitf r#.%r1 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => TBITF, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    95 => (
+      syntax_reg => "tbitf b#.%b2 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "tbitf b#.%b2 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => TBITF, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+                                                                                                     -- GENERATED --
+    ---------------------------------------------------------------------------
+    -- ALU boolean instructions
+    ---------------------------------------------------------------------------
+    90 => (
+      syntax_reg => "andl r#.%r1 = r#.%r2, r#.%r3                      ",
+      syntax_imm => "andl r#.%r1 = r#.%r2, %ih                         ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => LOGIC_AND, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    91 => (
+      syntax_reg => "andl b#.%b2 = r#.%r2, r#.%r3                      ",
+      syntax_imm => "andl b#.%b2 = r#.%r2, %ih                         ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => LOGIC_AND, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    88 => (                                                                                          -- GENERATED --
+      syntax_reg => "orl r#.%r1 = r#.%r2, r#.%r3                       ",
+      syntax_imm => "orl r#.%r1 = r#.%r2, %ih                          ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,                                    -- GENERATED --
+      brResultMux => LOGIC_OR, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
+      isMultiplyInstruction => '0')
+    ),
+    89 => (
+      syntax_reg => "orl b#.%b2 = r#.%r2, r#.%r3                       ",
+      syntax_imm => "orl b#.%b2 = r#.%r2, %ih                          ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => LOGIC_OR, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    84 => (
+      syntax_reg => "nandl r#.%r1 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "nandl r#.%r1 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => LOGIC_NAND, unsignedOp => '0', divs => '0',
+      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    85 => (
+      syntax_reg => "nandl b#.%b2 = r#.%r2, r#.%r3                     ",                            -- GENERATED --
+      syntax_imm => "nandl b#.%b2 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => LOGIC_NAND, unsignedOp => '0', divs => '0',                                     -- GENERATED --
+      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')                                                                  -- GENERATED --
+    ),
+    86 => (
+      syntax_reg => "norl r#.%r1 = r#.%r2, r#.%r3                      ",
+      syntax_imm => "norl r#.%r1 = r#.%r2, %ih                         ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => LOGIC_NOR, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    87 => (
+      syntax_reg => "norl b#.%b2 = r#.%r2, r#.%r3                      ",
+      syntax_imm => "norl b#.%b2 = r#.%r2, %ih                         ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => LOGIC_NOR, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+
+    ---------------------------------------------------------------------------
+    -- ALU compare instructions                                                                      -- GENERATED --
+    ---------------------------------------------------------------------------
+    64 => (
+      syntax_reg => "cmpeq r#.%r1 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "cmpeq r#.%r1 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_EQ, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    65 => (
+      syntax_reg => "cmpeq b#.%b2 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "cmpeq b#.%b2 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_EQ, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    66 => (
+      syntax_reg => "cmpge r#.%r1 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "cmpge r#.%r1 = r#.%r2, %ih                        ",                            -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_GE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                                        -- GENERATED --
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),                                                                                               -- GENERATED --
+    67 => (
+      syntax_reg => "cmpge b#.%b2 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "cmpge b#.%b2 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,                      -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_GE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    68 => (
+      syntax_reg => "cmpgeu r#.%r1 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "cmpgeu r#.%r1 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_GE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
     69 => (
       syntax_reg => "cmpgeu b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgeu b#.%b2 = r#.%r2, %ih                       ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_GE, unsignedOp => '1', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      syntax_imm => "cmpgeu b#.%b2 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_GE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1023,15 +1043,16 @@ package core_opcode_pkg is
     70 => (                                                                                          -- GENERATED --
       syntax_reg => "cmpgt r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmpgt r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_GT, unsignedOp => '0', divs => '0',                   -- GENERATED --
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,                                    -- GENERATED --
+      brResultMux => CMP_GT, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1039,109 +1060,68 @@ package core_opcode_pkg is
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')                                                                  -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
+      isMultiplyInstruction => '0')
     ),
     71 => (
       syntax_reg => "cmpgt b#.%b2 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmpgt b#.%b2 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,                             -- GENERATED --
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_GT, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_GT, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
     72 => (
       syntax_reg => "cmpgtu r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "cmpgtu r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_GT, unsignedOp => '1', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_GT, unsignedOp => '1', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
     73 => (
-      syntax_reg => "cmpgtu b#.%b2 = r#.%r2, r#.%r3                    ",
+      syntax_reg => "cmpgtu b#.%b2 = r#.%r2, r#.%r3                    ",                            -- GENERATED --
       syntax_imm => "cmpgtu b#.%b2 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_GT, unsignedOp => '1', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    74 => (
-      syntax_reg => "cmple r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmple r#.%r1 = r#.%r2, %ih                        ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_LE, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    75 => (                                                                                          -- GENERATED --
-      syntax_reg => "cmple b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmple b#.%b2 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_LE, unsignedOp => '0', divs => '0',                   -- GENERATED --
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_GT, unsignedOp => '1', divs => '0', opBrMux => TRUE),                       -- GENERATED --
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1152,18 +1132,88 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')                                                                  -- GENERATED --
     ),
+    74 => (
+      syntax_reg => "cmple r#.%r1 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "cmple r#.%r1 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_LE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    75 => (
+      syntax_reg => "cmple b#.%b2 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "cmple b#.%b2 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_LE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
     76 => (
       syntax_reg => "cmpleu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpleu r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,                             -- GENERATED --
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_LE, unsignedOp => '1', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      syntax_imm => "cmpleu r#.%r1 = r#.%r2, %ih                       ",                            -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_LE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                                        -- GENERATED --
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),                                                                                               -- GENERATED --
+    77 => (
+      syntax_reg => "cmpleu b#.%b2 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "cmpleu b#.%b2 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,                      -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_LE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1174,44 +1224,23 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-    77 => (
-      syntax_reg => "cmpleu b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpleu b#.%b2 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_LE, unsignedOp => '1', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
     78 => (
       syntax_reg => "cmplt r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmplt r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_LT, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_LT, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
@@ -1220,16 +1249,17 @@ package core_opcode_pkg is
     ),
     79 => (
       syntax_reg => "cmplt b#.%b2 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "cmplt b#.%b2 = r#.%r2, %ih                        ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_LT, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      syntax_imm => "cmplt b#.%b2 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_LT, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1243,15 +1273,16 @@ package core_opcode_pkg is
     80 => (                                                                                          -- GENERATED --
       syntax_reg => "cmpltu r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "cmpltu r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_LT, unsignedOp => '1', divs => '0',                   -- GENERATED --
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,                                    -- GENERATED --
+      brResultMux => CMP_LT, unsignedOp => '1', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1259,162 +1290,71 @@ package core_opcode_pkg is
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')                                                                  -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
+      isMultiplyInstruction => '0')
     ),
     81 => (
       syntax_reg => "cmpltu b#.%b2 = r#.%r2, r#.%r3                    ",
       syntax_imm => "cmpltu b#.%b2 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,                             -- GENERATED --
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_LT, unsignedOp => '1', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_LT, unsignedOp => '1', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
     82 => (
       syntax_reg => "cmpne r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "cmpne r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_NE, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_NE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
     83 => (
-      syntax_reg => "cmpne b#.%b2 = r#.%r2, r#.%r3                     ",
+      syntax_reg => "cmpne b#.%b2 = r#.%r2, r#.%r3                     ",                            -- GENERATED --
       syntax_imm => "cmpne b#.%b2 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '1',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => BOOL, brResultMux => CMP_NE, unsignedOp => '0', divs => '0',
-      opBrMux => TRUE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-
-    ---------------------------------------------------------------------------
-    -- ALU selection instructions                                                                    -- GENERATED --
-    ---------------------------------------------------------------------------
-    56 to 63 => (
-      syntax_reg => "slct r#.%r1 = b#.%b1, r#.%r2, r#.%r3              ",
-      syntax_imm => "slct r#.%r1 = b#.%b1, r#.%r2, %ih                 ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,                             -- GENERATED --
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => OP_SEL, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => PASS), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '1', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => BOOL,
+      brResultMux => CMP_NE, unsignedOp => '0', divs => '0', opBrMux => TRUE),                       -- GENERATED --
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    48 to 55 => (
-      syntax_reg => "slctf r#.%r1 = b#.%b1, r#.%r2, r#.%r3             ",
-      syntax_imm => "slctf r#.%r1 = b#.%b1, r#.%r2, %ih                ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => OP_SEL, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => INVERT), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    101 => (
-      syntax_reg => "max r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "max r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => OP_SEL, brResultMux => CMP_GE, unsignedOp => '0',
-      divs => '0', opBrMux => TRUE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),                                     -- GENERATED --
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    102 => (
-      syntax_reg => "maxu r#.%r1 = r#.%r2, r#.%r3                      ",                            -- GENERATED --
-      syntax_imm => "maxu r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => OP_SEL, brResultMux => CMP_GE, unsignedOp => '1',
-      divs => '0', opBrMux => TRUE), fpuCtrl => (addOp => ADD,                                       -- GENERATED --
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -1422,22 +1362,72 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')                                                                  -- GENERATED --
     ),
-    103 => (
-      syntax_reg => "min r#.%r1 = r#.%r2, r#.%r3                       ",
-      syntax_imm => "min r#.%r1 = r#.%r2, %ih                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,                             -- GENERATED --
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => OP_SEL, brResultMux => CMP_LE, unsignedOp => '0',
-      divs => '0', opBrMux => TRUE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+
+    ---------------------------------------------------------------------------
+    -- ALU selection instructions
+    ---------------------------------------------------------------------------
+    56 to 63 => (
+      syntax_reg => "slct r#.%r1 = b#.%b1, r#.%r2, r#.%r3              ",
+      syntax_imm => "slct r#.%r1 = b#.%b1, r#.%r2, %ih                 ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    48 to 55 => (
+      syntax_reg => "slctf r#.%r1 = b#.%b1, r#.%r2, r#.%r3             ",                            -- GENERATED --
+      syntax_imm => "slctf r#.%r1 = b#.%b1, r#.%r2, %ih                ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => INVERT),                       -- GENERATED --
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')                                                                  -- GENERATED --
+    ),
+    101 => (
+      syntax_reg => "max r#.%r1 = r#.%r2, r#.%r3                       ",
+      syntax_imm => "max r#.%r1 = r#.%r2, %ih                          ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,
+      brResultMux => CMP_GE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
@@ -1445,22 +1435,22 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-    104 => (
-      syntax_reg => "minu r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "minu r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '1', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32INV, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => OP_SEL, brResultMux => CMP_LE, unsignedOp => '1',
-      divs => '0', opBrMux => TRUE), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
+    102 => (
+      syntax_reg => "maxu r#.%r1 = r#.%r2, r#.%r3                      ",
+      syntax_imm => "maxu r#.%r1 = r#.%r2, %ih                         ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,
+      brResultMux => CMP_GE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -1468,20 +1458,90 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
+    103 => (
+      syntax_reg => "min r#.%r1 = r#.%r2, r#.%r3                       ",
+      syntax_imm => "min r#.%r1 = r#.%r2, %ih                          ",                            -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,
+      brResultMux => CMP_LE, unsignedOp => '0', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                                        -- GENERATED --
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),                                                                                               -- GENERATED --
+    104 => (
+      syntax_reg => "minu r#.%r1 = r#.%r2, r#.%r3                      ",
+      syntax_imm => "minu r#.%r1 = r#.%r2, %ih                         ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '1', bitwiseOp => BITW_AND, op1Mux => EXTEND32INV,                      -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,
+      brResultMux => CMP_LE, unsignedOp => '1', divs => '0', opBrMux => TRUE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
 
     ---------------------------------------------------------------------------
-    -- ALU type conversion instructions                                                              -- GENERATED --
+    -- ALU type conversion instructions
     ---------------------------------------------------------------------------
     27 => (
       syntax_reg => "sxtb r#.%r1 = r#.%r2                              ",
+      syntax_imm => "unknown                                           ",                            -- GENERATED --
+      valid => "01", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND8,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                                        -- GENERATED --
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),                                                                                               -- GENERATED --
+    28 => (
+      syntax_reg => "sxth r#.%r1 = r#.%r2                              ",
       syntax_imm => "unknown                                           ",
-      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,                             -- GENERATED --
-      op1Mux => EXTEND8, op2Mux => ZERO, shiftLeft => '0', intResultMux => ADDER,
+      valid => "01", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND16,                         -- GENERATED --
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
       fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
@@ -1494,44 +1554,23 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-    28 => (
-      syntax_reg => "sxth r#.%r1 = r#.%r2                              ",
-      syntax_imm => "unknown                                           ",
-      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND16, op2Mux => ZERO, shiftLeft => '0', intResultMux => ADDER,
-      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
-      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
     29 => (
       syntax_reg => "zxtb r#.%r1 = r#.%r2                              ",
       syntax_imm => "unknown                                           ",
-      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND8, op2Mux => ZERO, shiftLeft => '0', intResultMux => ADDER,
+      valid => "01", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND8,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '1', divs => '0', opBrMux => FALSE),
       fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
@@ -1540,14 +1579,15 @@ package core_opcode_pkg is
     ),
     30 => (
       syntax_reg => "zxth r#.%r1 = r#.%r2                              ",
-      syntax_imm => "unknown                                           ",                            -- GENERATED --
-      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND16, op2Mux => ZERO, shiftLeft => '0', intResultMux => ADDER,
+      syntax_imm => "unknown                                           ",
+      valid => "01", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND16,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => ADDER,
       brResultMux => PASS, unsignedOp => '1', divs => '0', opBrMux => FALSE),
       fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
@@ -1567,19 +1607,19 @@ package core_opcode_pkg is
     96 => (
       syntax_reg => "nop                                               ",
       syntax_imm => "nop                                               ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '0',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '1', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -1590,15 +1630,85 @@ package core_opcode_pkg is
     145 => (
       syntax_reg => "clz r#.%r1 = r#.%r2                               ",
       syntax_imm => "unknown                                           ",
-      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '1', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => CLZ, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "01", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '1', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => CLZ,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    11 => (                                                                                          -- GENERATED --
+      syntax_reg => "movtl l#.0 = r#.%r3                               ",
+      syntax_imm => "movtl l#.0 = %ih                                  ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '1', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => OP_SEL,                                  -- GENERATED --
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
+      isMultiplyInstruction => '0')
+    ),
+    12 => (
+      syntax_reg => "movfl r#.%r1 = l#.0                               ",
+      syntax_imm => "unknown                                           ",
+      valid => "01", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '1', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    144 => (
+      syntax_reg => "trap r#.%r2, r#.%r3                               ",
+      syntax_imm => "trap r#.%r2, %ih                                  ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '1', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -1609,118 +1719,50 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-    11 => (
-      syntax_reg => "movtl l#.0 = r#.%r3                               ",                            -- GENERATED --
-      syntax_imm => "movtl l#.0 = %ih                                  ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '1',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => OP_SEL, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                     -- GENERATED --
+
+    ---------------------------------------------------------------------------                      -- GENERATED --
+    -- Multiply instructions
+    ---------------------------------------------------------------------------
+    0 => (
+      syntax_reg => "mpyll r#.%r1 = r#.%r2, r#.%r3                     ",
+      syntax_imm => "mpyll r#.%r1 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),                                                                                               -- GENERATED --
-    12 => (
-      syntax_reg => "movfl r#.%r1 = l#.0                               ",
-      syntax_imm => "unknown                                           ",
-      valid => "01", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '1', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',                                          -- GENERATED --
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    144 => (
-      syntax_reg => "trap r#.%r2, r#.%r3                               ",
-      syntax_imm => "trap r#.%r2, %ih                                  ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '1'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-
-    ---------------------------------------------------------------------------
-    -- Multiply instructions
-    ---------------------------------------------------------------------------                      -- GENERATED --
-    0 => (
-      syntax_reg => "mpyll r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpyll r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',                                          -- GENERATED --
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '1')
     ),
     1 => (
       syntax_reg => "mpyllu r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "mpyllu r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',                   -- GENERATED --
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '1', op1unsigned => '1',
@@ -1728,69 +1770,69 @@ package core_opcode_pkg is
       isMultiplyInstruction => '1')
     ),
     2 => (
-      syntax_reg => "mpylh r#.%r1 = r#.%r2, r#.%r3                     ",
+      syntax_reg => "mpylh r#.%r1 = r#.%r2, r#.%r3                     ",                            -- GENERATED --
       syntax_imm => "mpylh r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',                                         -- GENERATED --
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),                         -- GENERATED --
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => HIGH_HALF,
-      isMultiplyInstruction => '1')
+      isMultiplyInstruction => '1')                                                                  -- GENERATED --
     ),
-    3 => (                                                                                           -- GENERATED --
+    3 => (
       syntax_reg => "mpylhu r#.%r1 = r#.%r2, r#.%r3                    ",
       syntax_imm => "mpylhu r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',                               -- GENERATED --
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
       multiplierCtrl => (op2unsigned => '1', op1unsigned => '1',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => HIGH_HALF,                                    -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => HIGH_HALF,
       isMultiplyInstruction => '1')
     ),
     4 => (
       syntax_reg => "mpyhh r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "mpyhh r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',                      -- GENERATED --
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => HIGH_HALF, op2sel => HIGH_HALF,
@@ -1798,69 +1840,69 @@ package core_opcode_pkg is
     ),
     5 => (
       syntax_reg => "mpyhhu r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "mpyhhu r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',                         -- GENERATED --
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),                                     -- GENERATED --
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      syntax_imm => "mpyhhu r#.%r1 = r#.%r2, %ih                       ",                            -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                                        -- GENERATED --
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '1', op1unsigned => '1',
       resultSel => PASS, op1sel => HIGH_HALF, op2sel => HIGH_HALF,
       isMultiplyInstruction => '1')
-    ),
+    ),                                                                                               -- GENERATED --
     6 => (
-      syntax_reg => "mpyl r#.%r1 = r#.%r2, r#.%r3                      ",                            -- GENERATED --
+      syntax_reg => "mpyl r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "mpyl r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,                                       -- GENERATED --
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,                          -- GENERATED --
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
       resultSel => PASS, op1sel => WORD, op2sel => LOW_HALF,
-      isMultiplyInstruction => '1')                                                                  -- GENERATED --
+      isMultiplyInstruction => '1')
     ),
     7 => (
       syntax_reg => "mpylu r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "mpylu r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,                              -- GENERATED --
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '1', op1unsigned => '1',
       resultSel => PASS, op1sel => WORD, op2sel => LOW_HALF,
       isMultiplyInstruction => '1')
@@ -1868,19 +1910,19 @@ package core_opcode_pkg is
     8 => (
       syntax_reg => "mpyh r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "mpyh r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -1888,69 +1930,69 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => WORD, op2sel => HIGH_HALF,
       isMultiplyInstruction => '1')
     ),
-    9 => (
+    9 => (                                                                                           -- GENERATED --
       syntax_reg => "mpyhu r#.%r1 = r#.%r2, r#.%r3                     ",
-      syntax_imm => "mpyhu r#.%r1 = r#.%r2, %ih                        ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',                                     -- GENERATED --
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      syntax_imm => "mpyhu r#.%r1 = r#.%r2, %ih                        ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,                                     -- GENERATED --
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '1', op1unsigned => '1',
-      resultSel => PASS, op1sel => WORD, op2sel => HIGH_HALF,
+      resultSel => PASS, op1sel => WORD, op2sel => HIGH_HALF,                                        -- GENERATED --
       isMultiplyInstruction => '1')
-    ),                                                                                               -- GENERATED --
+    ),
     10 => (
       syntax_reg => "mpyhs r#.%r1 = r#.%r2, r#.%r3                     ",
       syntax_imm => "mpyhs r#.%r1 = r#.%r2, %ih                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',                                          -- GENERATED --
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => SHL16, op1sel => WORD, op2sel => HIGH_HALF,
       isMultiplyInstruction => '1')
     ),
     146 => (
       syntax_reg => "mpylhus r#.%r1 = r#.%r2, r#.%r3                   ",
       syntax_imm => "mpylhus r#.%r1 = r#.%r2, %ih                      ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',                   -- GENERATED --
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '1', op1unsigned => '0',
@@ -1958,49 +2000,49 @@ package core_opcode_pkg is
       isMultiplyInstruction => '1')
     ),
     147 => (
-      syntax_reg => "mpyhhs r#.%r1 = r#.%r2, r#.%r3                    ",
+      syntax_reg => "mpyhhs r#.%r1 = r#.%r2, r#.%r3                    ",                            -- GENERATED --
       syntax_imm => "mpyhhs r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
-      funcSel => MUL, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '1', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',                                         -- GENERATED --
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => MUL, brRegWE => '0', enableMul => '1', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),                         -- GENERATED --
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => SHR16, op1sel => WORD, op2sel => HIGH_HALF,
-      isMultiplyInstruction => '1')
+      isMultiplyInstruction => '1')                                                                  -- GENERATED --
     ),
-                                                                                                     -- GENERATED --
+
     ---------------------------------------------------------------------------
     -- Floating-point instructions
     ---------------------------------------------------------------------------
     151 => (
       syntax_reg => "addf r#.%r1 = r#.%r2, r#.%r3                      ",
       syntax_imm => "addf r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '1', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',                   -- GENERATED --
+      funcSel => FADD, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '1',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '1',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
@@ -2008,113 +2050,21 @@ package core_opcode_pkg is
       isMultiplyInstruction => '0')
     ),
     152 => (
-      syntax_reg => "subf r#.%r1 = r#.%r2, r#.%r3                      ",
+      syntax_reg => "subf r#.%r1 = r#.%r2, r#.%r3                      ",                            -- GENERATED --
       syntax_imm => "subf r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => SUBTRACT,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '1', isFConvifInstruction => '0',                                         -- GENERATED --
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    153 => (                                                                                         -- GENERATED --
-      syntax_reg => "mpyf r#.%r1 = r#.%r2, r#.%r3                      ",
-      syntax_imm => "mpyf r#.%r1 = r#.%r2, %ih                         ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',                               -- GENERATED --
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '1', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
-      isMultiplyInstruction => '0')
-    ),
-    154 => (
-      syntax_reg => "cmpgef r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgef r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',                      -- GENERATED --
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '1', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => GE, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    155 => (
-      syntax_reg => "cmpgef b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgef b#.%b2 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',                         -- GENERATED --
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '1', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => GE, unsignedOp => '0'),                                     -- GENERATED --
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    156 => (
-      syntax_reg => "cmpeqf r#.%r1 = r#.%r2, r#.%r3                    ",                            -- GENERATED --
-      syntax_imm => "cmpeqf r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,                                       -- GENERATED --
-      isFCompareInstruction => '1', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => FADD, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '1',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),                         -- GENERATED --
+      fpuCtrl => (addOp => SUBTRACT, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '1',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -2122,22 +2072,22 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')                                                                  -- GENERATED --
     ),
-    157 => (
-      syntax_reg => "cmpeqf b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpeqf b#.%b2 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,                              -- GENERATED --
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '1', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+    153 => (
+      syntax_reg => "mpyf r#.%r1 = r#.%r2, r#.%r3                      ",
+      syntax_imm => "mpyf r#.%r1 = r#.%r2, %ih                         ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => FMUL, brRegWE => '0', enableMul => '0', enableFMul => '1',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '1', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
@@ -2145,22 +2095,22 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-    158 => (
-      syntax_reg => "cmpgtf r#.%r1 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgtf r#.%r1 = r#.%r2, %ih                       ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '1', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => GT, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',                                        -- GENERATED --
+    154 => (
+      syntax_reg => "cmpgef r#.%r1 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "cmpgef r#.%r1 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => FCMP, brRegWE => '0', enableMul => '0', enableFMul => '0',                          -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '1',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => GE,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -2168,22 +2118,22 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-    159 => (
-      syntax_reg => "cmpgtf b#.%b2 = r#.%r2, r#.%r3                    ",
-      syntax_imm => "cmpgtf b#.%b2 = r#.%r2, %ih                       ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '1', isFConvfiInstruction => '0',                                     -- GENERATED --
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => GT, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+    155 => (
+      syntax_reg => "cmpgef b#.%b2 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "cmpgef b#.%b2 = r#.%r2, %ih                       ",                            -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => FCMP, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '1',                                        -- GENERATED --
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => GE,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -2191,22 +2141,22 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),                                                                                               -- GENERATED --
-    149 => (
-      syntax_reg => "convif r#.%r1 = r#.%r2                            ",
-      syntax_imm => "convif r#.%r1 = r#.%r2                            ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',                                          -- GENERATED --
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '1',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+    156 => (
+      syntax_reg => "cmpeqf r#.%r1 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "cmpeqf r#.%r1 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => FCMP, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,                          -- GENERATED --
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '1',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -2214,22 +2164,22 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-    150 => (
-      syntax_reg => "convfi r#.%r1 = r#.%r2                            ",
-      syntax_imm => "convfi r#.%r1 = r#.%r2                            ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '1', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '1',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+    157 => (
+      syntax_reg => "cmpeqf b#.%b2 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "cmpeqf b#.%b2 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => FCMP, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '1',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
@@ -2237,132 +2187,230 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
+    158 => (
+      syntax_reg => "cmpgtf r#.%r1 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "cmpgtf r#.%r1 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',                          -- GENERATED --
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => FCMP, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '1',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => GT,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    159 => (                                                                                         -- GENERATED --
+      syntax_reg => "cmpgtf b#.%b2 = r#.%r2, r#.%r3                    ",
+      syntax_imm => "cmpgtf b#.%b2 = r#.%r2, %ih                       ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => FCMP, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,                                     -- GENERATED --
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '1',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => GT,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
+      isMultiplyInstruction => '0')
+    ),
+    149 => (
+      syntax_reg => "convif r#.%r1 = r#.%r2                            ",
+      syntax_imm => "convif r#.%r1 = r#.%r2                            ",
+      valid => "11", datapathCtrl => (enableFCif => '1', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
+      funcSel => FCIF, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '1', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    150 => (
+      syntax_reg => "convfi r#.%r1 = r#.%r2                            ",
+      syntax_imm => "convfi r#.%r1 = r#.%r2                            ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableFCfi => '1', enableALU => '0',                   -- GENERATED --
+      funcSel => FCFI, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '1', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
 
-    ---------------------------------------------------------------------------
-    -- Memory instructions
     ---------------------------------------------------------------------------                      -- GENERATED --
+    -- Memory instructions
+    ---------------------------------------------------------------------------
     16 => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldw r#.%r1 = %ih[r#.%r2]                          ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MEM, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',                                      -- GENERATED --
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => MEM, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',                     -- GENERATED --
       readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
     17 => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldh r#.%r1 = %ih[r#.%r2]                          ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MEM, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',                      -- GENERATED --
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
-      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_HALFWORD,                                    -- GENERATED --
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')
-    ),
-    18 => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "ldhu r#.%r1 = %ih[r#.%r2]                         ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MEM, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '1',
-      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_HALFWORD,
-      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
-      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
-      op2sel => LOW_HALF, isMultiplyInstruction => '0')
-    ),
-    19 => (
-      syntax_reg => "unknown                                           ",
-      syntax_imm => "ldb r#.%r1 = %ih[r#.%r2]                          ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
-      funcSel => MEM, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => MEM, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
-      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_BYTE, writeEnable => '0'),
+      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_HALFWORD,
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
+      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')
+    ),
+    18 => (
+      syntax_reg => "unknown                                           ",                            -- GENERATED --
+      syntax_imm => "ldhu r#.%r1 = %ih[r#.%r2]                         ",
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => MEM, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),                        -- GENERATED --
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '1',
+      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_HALFWORD,
+      writeEnable => '0'), multiplierCtrl => (op2unsigned => '0',
+      op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
+      op2sel => LOW_HALF, isMultiplyInstruction => '0')                                              -- GENERATED --
+    ),
+    19 => (
+      syntax_reg => "unknown                                           ",
+      syntax_imm => "ldb r#.%r1 = %ih[r#.%r2]                          ",
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => MEM, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
+      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_BYTE, writeEnable => '0'),                   -- GENERATED --
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
     20 => (
-      syntax_reg => "unknown                                           ",                            -- GENERATED --
+      syntax_reg => "unknown                                           ",
       syntax_imm => "ldbu r#.%r1 = %ih[r#.%r2]                         ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MEM, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                     -- GENERATED --
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => MEM, brRegWE => '0', enableMul => '0', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
-      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',                    -- GENERATED --
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '1',
       readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_BYTE, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
-    ),                                                                                               -- GENERATED --
+    ),
     13 => (
       syntax_reg => "unknown                                           ",
-      syntax_imm => "ldw l#.0 = %ih[r#.%r2]                            ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MEM, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '1',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',                                      -- GENERATED --
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      syntax_imm => "ldw l#.0 = %ih[r#.%r2]                            ",                            -- GENERATED --
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => MEM, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '1', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                                        -- GENERATED --
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -2370,43 +2418,45 @@ package core_opcode_pkg is
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
       readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
-    ),
+    ),                                                                                               -- GENERATED --
     46 => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "ldbr %ih[r#.%r2]                                  ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => MEM, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '1', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',                      -- GENERATED --
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => MEM, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '1', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,                         -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '1',
-      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_BYTE, writeEnable => '0'),                   -- GENERATED --
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      readEnable => '1', accessSizeBLog2 => ACCESS_SIZE_BYTE, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
     21 => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "stw %ih[r#.%r2] = r#.%r1                          ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '0', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -2420,17 +2470,18 @@ package core_opcode_pkg is
     22 => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "sth %ih[r#.%r2] = r#.%r1                          ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',                             -- GENERATED --
-      funcSel => ALU, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
-      isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
@@ -2439,18 +2490,19 @@ package core_opcode_pkg is
       op1unsigned => '0', resultSel => PASS, op1sel => LOW_HALF,
       op2sel => LOW_HALF, isMultiplyInstruction => '0')
     ),
-    23 => (
-      syntax_reg => "unknown                                           ",                            -- GENERATED --
+    23 => (                                                                                          -- GENERATED --
+      syntax_reg => "unknown                                           ",
       syntax_imm => "stb %ih[r#.%r2] = r#.%r1                          ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                     -- GENERATED --
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,                                   -- GENERATED --
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
@@ -2458,207 +2510,95 @@ package core_opcode_pkg is
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_BYTE, writeEnable => '1'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
       isMultiplyInstruction => '0')
-    ),                                                                                               -- GENERATED --
+    ),
     14 => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "stw %ih[r#.%r2] = l#.0                            ",
-      valid => "10", datapathCtrl => (op3LinkReg => '1', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',                                      -- GENERATED --
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '1',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',                     -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '1'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,                                     -- GENERATED --
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
     47 => (
       syntax_reg => "unknown                                           ",
       syntax_imm => "stbr %ih[r#.%r2]                                  ",
-      valid => "10", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '1', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '1', brRegWE => '0',
-      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',                      -- GENERATED --
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "10", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '1', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '1', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
-      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '1', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_BYTE, writeEnable => '1'),                   -- GENERATED --
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_BYTE, writeEnable => '1'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
 
-    ---------------------------------------------------------------------------
+    ---------------------------------------------------------------------------                      -- GENERATED --
     -- Branch instructions
     ---------------------------------------------------------------------------
     32 => (
-      syntax_reg => "goto %bt                                          ",                            -- GENERATED --
+      syntax_reg => "goto %bt                                          ",
       syntax_imm => "goto %bt                                          ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,                                       -- GENERATED --
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '1', stop => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',                    -- GENERATED --
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '1', stop => '0',
       branchIfFalse => '1', branchToLink => '0', link => '0', branchIfTrue => '1',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',                     -- GENERATED --
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')                                                                  -- GENERATED --
+      isMultiplyInstruction => '0')
     ),
     33 => (
       syntax_reg => "igoto l#.0                                        ",
       syntax_imm => "igoto l#.0                                        ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,                              -- GENERATED --
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '1', stop => '0',
-      branchIfFalse => '1', branchToLink => '1', link => '0', branchIfTrue => '1',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    34 => (
-      syntax_reg => "call l#.0 = %bt                                   ",
-      syntax_imm => "call l#.0 = %bt                                   ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => PCP1, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '1',                                     -- GENERATED --
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '1', stop => '0',                                        -- GENERATED --
-      branchIfFalse => '1', branchToLink => '0', link => '1', branchIfTrue => '1',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    35 => (
-      syntax_reg => "icall l#.0 = l#.0                                 ",
-      syntax_imm => "icall l#.0 = l#.0                                 ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => PCP1, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '1',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',                                     -- GENERATED --
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '1', stop => '0',
-      branchIfFalse => '1', branchToLink => '1', link => '1', branchIfTrue => '1',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),                                                                                               -- GENERATED --
-    36 => (
-      syntax_reg => "br b#.%b3, %bt                                    ",
-      syntax_imm => "br b#.%b3, %bt                                    ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',                                          -- GENERATED --
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '1', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '1',
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    37 => (
-      syntax_reg => "brf b#.%b3, %bt                                   ",
-      syntax_imm => "brf b#.%b3, %bt                                   ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',                                      -- GENERATED --
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '1', stop => '0',
-      branchIfFalse => '1', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
-      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
-      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
-      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
-      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
-      isMultiplyInstruction => '0')
-    ),
-    38 => (
-      syntax_reg => "return r#.1 = r#.1, %bi, l#.0                     ",
-      syntax_imm => "return r#.1 = r#.1, %bi, l#.0                     ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '1',                             -- GENERATED --
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',                   -- GENERATED --
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,                            -- GENERATED --
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '1', stop => '0',
@@ -2669,82 +2609,198 @@ package core_opcode_pkg is
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-    39 => (
-      syntax_reg => "rfi r#.1 = r#.1, %bi                              ",                            -- GENERATED --
-      syntax_imm => "rfi r#.1 = r#.1, %bi                              ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '1',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '1', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_AND,
-      op1Mux => EXTEND32, op2Mux => EXTEND32, shiftLeft => '0',
-      intResultMux => ADDER, brResultMux => PASS, unsignedOp => '0', divs => '0',
-      opBrMux => FALSE), fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                     -- GENERATED --
+    34 => (
+      syntax_reg => "call l#.0 = %bt                                   ",                            -- GENERATED --
+      syntax_imm => "call l#.0 = %bt                                   ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',
+      funcSel => PCP1, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '1', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),                         -- GENERATED --
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
       isFConvfiInstruction => '0', isFAddInstruction => '0',
       isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
       unsignedOp => '0'), branchCtrl => (isBranchInstruction => '1', stop => '0',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
-      RFI => '1'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      branchIfFalse => '1', branchToLink => '0', link => '1', branchIfTrue => '1',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')                                                                  -- GENERATED --
+    ),
+    35 => (
+      syntax_reg => "icall l#.0 = l#.0                                 ",
+      syntax_imm => "icall l#.0 = l#.0                                 ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',
+      funcSel => PCP1, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '1', brFmt => '0', isLIMMH => '0'),                    -- GENERATED --
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '1', stop => '0',
+      branchIfFalse => '1', branchToLink => '1', link => '1', branchIfTrue => '1',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),                   -- GENERATED --
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    36 => (
+      syntax_reg => "br b#.%b3, %bt                                    ",
+      syntax_imm => "br b#.%b3, %bt                                    ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',                           -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '1', stop => '0',                    -- GENERATED --
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '1',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    37 => (
+      syntax_reg => "brf b#.%b3, %bt                                   ",
+      syntax_imm => "brf b#.%b3, %bt                                   ",                            -- GENERATED --
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',                                        -- GENERATED --
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '1', stop => '0',
+      branchIfFalse => '1', branchToLink => '0', link => '0', branchIfTrue => '0',
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),                                                                                               -- GENERATED --
-    40 => (
-      syntax_reg => "stop                                              ",
-      syntax_imm => "stop                                              ",
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '1',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '0',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',                                          -- GENERATED --
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '1', stop => '1',
-      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
+    38 => (
+      syntax_reg => "return r#.1 = r#.1, %bi, l#.0                     ",
+      syntax_imm => "return r#.1 = r#.1, %bi, l#.0                     ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '1', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,                         -- GENERATED --
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '1', stop => '0',
+      branchIfFalse => '1', branchToLink => '1', link => '0', branchIfTrue => '1',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',                                     -- GENERATED --
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
     ),
-
-    ---------------------------------------------------------------------------
-    -- Long immediate instructions
-    ---------------------------------------------------------------------------
-    128 to 143 => (
-      syntax_reg => "limmh %i1, %i2                                    ",
-      syntax_imm => "limmh %i1, %i2                                    ",                            -- GENERATED --
-      valid => "11", datapathCtrl => (op3LinkReg => '0', stackOp => '0',
-      funcSel => ALU, op1LinkReg => '0', enableMem => '0', enableALU => '0',
-      brFmt => '0', isNOP => '0', gpRegWE => '0', linkWE => '0',
-      allBrRegsWE => '0', op3BranchRegs => '0', brRegWE => '0',
-      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableMul => '0', isLIMMH => '1',
-      isTrap => '0'), aluCtrl => (compare => '0', bitwiseOp => BITW_OR,
-      op1Mux => EXTEND32, op2Mux => ZERO, shiftLeft => '0',
-      intResultMux => BITWISE, brResultMux => PASS, unsignedOp => '0',
-      divs => '0', opBrMux => PASS), fpuCtrl => (addOp => ADD,
-      isFCompareInstruction => '0', isFConvfiInstruction => '0',                                     -- GENERATED --
-      isFAddInstruction => '0', isFConvifInstruction => '0',
-      isFMulInstruction => '0', cmpOp => EQ, unsignedOp => '0'),
-      branchCtrl => (isBranchInstruction => '0', stop => '0',
+    39 => (
+      syntax_reg => "rfi r#.1 = r#.1, %bi                              ",
+      syntax_imm => "rfi r#.1 = r#.1, %bi                              ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '1', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_AND, op1Mux => EXTEND32,
+      op2Mux => EXTEND32, shiftLeft => '0', intResultMux => ADDER,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => FALSE),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '1', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
+      RFI => '1'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
+    40 => (
+      syntax_reg => "stop                                              ",
+      syntax_imm => "stop                                              ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',                          -- GENERATED --
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '1',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',                                         -- GENERATED --
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '1', stop => '1',
       branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',
       RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
       readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
       multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
       resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
       isMultiplyInstruction => '0')
-    ),                                                                                               -- GENERATED --
+    ),
+                                                                                                     -- GENERATED --
+    ---------------------------------------------------------------------------
+    -- Long immediate instructions
+    ---------------------------------------------------------------------------
+    128 to 143 => (
+      syntax_reg => "limmh %i1, %i2                                    ",
+      syntax_imm => "limmh %i1, %i2                                    ",
+      valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '0',
+      gpRegRdEnaB => '0', gpRegRdEnaA => '0', enableFCfi => '0', enableALU => '0',
+      funcSel => ALU, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',                        -- GENERATED --
+      allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
+      stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '1'),
+      aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
+      op2Mux => ZERO, shiftLeft => '0', intResultMux => BITWISE,
+      brResultMux => PASS, unsignedOp => '0', divs => '0', opBrMux => PASS),
+      fpuCtrl => (addOp => ADD, isFCompareInstruction => '0',
+      isFConvfiInstruction => '0', isFAddInstruction => '0',
+      isFConvifInstruction => '0', isFMulInstruction => '0', cmpOp => EQ,
+      unsignedOp => '0'), branchCtrl => (isBranchInstruction => '0', stop => '0',
+      branchIfFalse => '0', branchToLink => '0', link => '0', branchIfTrue => '0',                   -- GENERATED --
+      RFI => '0'), memoryCtrl => (isMemoryInstruction => '0', unsignedOp => '0',
+      readEnable => '0', accessSizeBLog2 => ACCESS_SIZE_WORD, writeEnable => '0'),
+      multiplierCtrl => (op2unsigned => '0', op1unsigned => '0',
+      resultSel => PASS, op1sel => LOW_HALF, op2sel => LOW_HALF,
+      isMultiplyInstruction => '0')
+    ),
     others => opcodeTableEntry_default
   );
 
-end core_opcode_pkg;
+end core_opcode_pkg;                                                                                 -- GENERATED --
 
 package body core_opcode_pkg is
 end core_opcode_pkg;

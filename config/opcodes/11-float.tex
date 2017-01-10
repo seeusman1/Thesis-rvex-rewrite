@@ -3,9 +3,15 @@
 \section{Floating-point instructions}
 %===============================================================================
 \class{FPU}
+\datapath{gpRegWE}{'1'}
+\datapath{isNOP}{'0'}
+\datapath{enableALU}{'0'}
+\datapath{enableMem}{'0'}
 
 %-------------------------------------------------------------------------------
 \syllable{10010111-}{ADDF}{\rd = \rx, \ry}
+\datapath{funcSel}{FADD}
+\datapath{enableFAdd}{'1'}
 \fpu{isFAddInstruction}{'1'}
 \fpu{addOp}{ADD}
 Performs a single-precision floating-point addition.
@@ -16,6 +22,8 @@ Performs a single-precision floating-point addition.
 
 %-------------------------------------------------------------------------------
 \syllable{10011000-}{SUBF}{\rd = \rx, \ry}
+\datapath{funcSel}{FADD}
+\datapath{enableFAdd}{'1'}
 \fpu{isFAddInstruction}{'1'}
 \fpu{addOp}{SUBTRACT}
 Performs a single-precision floating-point subtraction.
@@ -26,6 +34,8 @@ Performs a single-precision floating-point subtraction.
 
 %-------------------------------------------------------------------------------
 \syllable{10011001-}{MPYF}{\rd = \rx, \ry}
+\datapath{funcSel}{FMUL}
+\datapath{enableFMul}{'1'}
 \fpu{isFMulInstruction}{'1'}
 Performs a single-precision floating-point multiplication.
 
@@ -35,6 +45,8 @@ Performs a single-precision floating-point multiplication.
 
 %-------------------------------------------------------------------------------
 \syllable{10011010-}{CMPGEF}{\rd = \rx, \ry}
+\datapath{funcSel}{FCMP}
+\datapath{enableFCmp}{'1'}
 \fpu{isFCompareInstruction}{'1'}
 \fpu{cmpOp}{GE}
 Single-precision floating-point compare. Determines whether the first operand is greater than or equal to the second operand and stores
@@ -47,6 +59,8 @@ the result in an integer register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011011-}{CMPGEF}{\bd = \rx, \ry}
+\datapath{funcSel}{FCMP}
+\datapath{enableFCmp}{'1'}
 \fpu{isFCompareInstruction}{'1'}
 \fpu{cmpOp}{GE}
 Single-precision floating-point compare. Determines whether the first operand is greater than or equal to the second operand and stores
@@ -59,6 +73,8 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 %\syllable{10011010-}{CMPLTF}{\rd = \rx, \ry}
+%\datapath{funcSel}{FCMP}
+%\datapath{enableFCmp}{'1'}
 %\fpu{isFCompareInstruction}{'1'}
 %\fpu{cmpOp}{GE}
 %Single-precision floating-point compare. Determines whether the first operand is less than the second operand and stores
@@ -70,6 +86,8 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 %\syllable{10011011-}{CMPLTF}{\bd = \rx, \ry}
+%\datapath{funcSel}{FCMP}
+%\datapath{enableFCmp}{'1'}
 %\fpu{isFCompareInstruction}{'1'}
 %\fpu{cmpOp}{GE}
 %Single-precision floating-point compare. Determines whether the first operand is less than the second operand and stores
@@ -81,6 +99,8 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011100-}{CMPEQF}{\rd = \rx, \ry}
+\datapath{funcSel}{FCMP}
+\datapath{enableFCmp}{'1'}
 \fpu{isFCompareInstruction}{'1'}
 \fpu{cmpOp}{EQ}
 Single-precision floating-point compare. Determines whether the first operand is equal to the second operand and stores
@@ -92,6 +112,8 @@ the result in an integer register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011101-}{CMPEQF}{\bd = \rx, \ry}
+\datapath{funcSel}{FCMP}
+\datapath{enableFCmp}{'1'}
 \fpu{isFCompareInstruction}{'1'}
 \fpu{cmpOp}{EQ}
 Single-precision floating-point compare. Determines whether the first operand is equal to the second operand and stores
@@ -103,6 +125,8 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011110-}{CMPGTF}{\rd = \rx, \ry}
+\datapath{funcSel}{FCMP}
+\datapath{enableFCmp}{'1'}
 \fpu{isFCompareInstruction}{'1'}
 \fpu{cmpOp}{GT}
 Single-precision floating-point compare. Determines whether the first operand is greater than the second operand and stores
@@ -115,6 +139,8 @@ the result in an integer register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011111-}{CMPGTF}{\bd = \rx, \ry}
+\datapath{funcSel}{FCMP}
+\datapath{enableFCmp}{'1'}
 \fpu{isFCompareInstruction}{'1'}
 \fpu{cmpOp}{GT}
 Single-precision floating-point compare. Determines whether the first operand is greater than the second operand and stores
@@ -127,6 +153,8 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 %\syllable{10011110-}{CMPLEF}{\rd = \rx, \ry}
+%\datapath{funcSel}{FCMP}
+%\datapath{enableFCmp}{'1'}
 %\fpu{isFCompareInstruction}{'1'}
 %\fpu{cmpOp}{GT}
 %Single-precision floating-point compare. Determines whether the first operand is less than or equal to the second operand and stores
@@ -138,6 +166,8 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 %\syllable{10011111-}{CMPLEF}{\bd = \rx, \ry}
+%\datapath{funcSel}{FCMP}
+%\datapath{enableFCmp}{'1'}
 %\fpu{isFCompareInstruction}{'1'}
 %\fpu{cmpOp}{GT}
 %Single-precision floating-point compare. Determines whether the first operand is less than or equal to the second operand and stores
@@ -149,6 +179,8 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 \syllable{10010101-}{CONVIF}{\rd = \rx}
+\datapath{funcSel}{FCIF}
+\datapath{enableFCif}{'1'}
 \fpu{isFConvifInstruction}{'1'}
 \fpu{unsignedOp}{'0'}
 Converts a single-precision floating-point number to a signed integer.
@@ -159,6 +191,8 @@ Converts a single-precision floating-point number to a signed integer.
 
 %-------------------------------------------------------------------------------
 \syllable{10010110-}{CONVFI}{\rd = \rx}
+\datapath{funcSel}{FCFI}
+\datapath{enableFCfi}{'1'}
 \fpu{isFConvfiInstruction}{'1'}
 \fpu{unsignedOp}{'0'}
 Converts a signed integer to a single-precision floating-point number.

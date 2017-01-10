@@ -54,6 +54,7 @@ use rvex.core_opcodeAlu_pkg.all;
 use rvex.core_opcodeBranch_pkg.all;
 use rvex.core_opcodeMemory_pkg.all;
 use rvex.core_opcodeMultiplier_pkg.all;
+use rvex.core_opcodeFpu_pkg.all;
 
 --=============================================================================
 -- This package specifies basic decoding signals for all opcodes. In theory,
