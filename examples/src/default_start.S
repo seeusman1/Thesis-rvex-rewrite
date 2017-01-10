@@ -126,20 +126,14 @@ mov $r0.60 = 0
   ISSUE_2
   
   /* Load hardware context ID. */
-#ifdef XSTSIM
-  c0  add     $r0.11      = $r0.0, $r0.0
-#else
   c0  ldb     $r0.11      = CR_CID_ADDR[$r0.0]
-#endif
 ;;
   /* Set r0.25 if the BSS size is 0. */
   c0  cmpleu  $r0.25      = $r0.22, $r0.21
   ISSUE_2
   
-#ifndef XSTSIM
   /* Set panic handler address. */
   c0  stw     CR_PH_ADDR[$r0.0] = $r0.23
-#endif
 
   ISSUE_4
 
@@ -155,10 +149,8 @@ mov $r0.60 = 0
   c0  mpyl    $r0.12      = $r0.11, 0x1000
   ISSUE_4
   
-#ifndef XSTSIM
   /* Set trap handler address. */
   c0  stw     CR_TH_ADDR[$r0.0] = $r0.24
-#endif
 ;;
   /* Skip BSS init if BSS size is 0 or if we're not context 0. */
   c0  br                    $b0.0, 2f
@@ -184,7 +176,6 @@ mov $r0.60 = 0
   /* Call main. */
   c0  call    $l0.0       = main
 ;;
-#ifndef XSTSIM
   c0  sxtb    $r0.3       = $r0.3
 ;;
   /* Store the main return value in the designated scratchpad register. */
@@ -193,7 +184,6 @@ mov $r0.60 = 0
   /* Load the processor total cycle counter into register 63. */
   c0  ldw $r0.63 = CR_CNT_ADDR[$r0.0]
 ;;
-#endif
 	.global _stop
 _stop::
   /* Stop this context. */
@@ -212,15 +202,9 @@ _stop::
   .section .text
   .proc 
 _panic_handler::
-stop
-;;
   
   /* Try to write a failure message to stdout: "<context ID>: panic." */
-#ifdef XSTSIM
-  c0  add     $r0.57      = $r0.0, $r0.0
-#else
   c0  ldb     $r0.57      = CR_CID_ADDR[$r0.0]
-#endif
   ISSUE_4
   c0  add     $r0.3       = $r0.0, '\n'
   c0  call    $l0.0       = putchar

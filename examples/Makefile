@@ -31,48 +31,6 @@ BUNDLE_ALIGN = $(ISSUE_WIDTH)
 # in the platform specific makefiles.
 endif
 
-# Filename to give to io.c. replace the dot (.) by an underscore here,
-# the linker wants that.
-# You will need to add the file to the .dep file and convert it to elf
-# yourself.
-ifndef FILENAME
-FILENAMEDEF =
-else
-FILENAMEDEF = -DFILENAME=$(FILENAME)
-endif
-
-# Which libraries to link against. We have the uClibc library for use on 
-# Linux (2.0 nommu).
-# Or newlib for use on the bare-metal core. For newlib you might need 
-# to include an application-specific version of io.c that includes your input 
-# file(s). io.c contains a printf implementation that writes to the UART and 
-# stores all output in a circular buffer in memory. 
-# This can be used by xSTsim to read the output after the program exits.
-ifdef RVEXLIB_UCLIBC
-INCLUDES = -I/data/uCLinux/generic_binary/uCLinux/uClibc/include \
- -I/data/uCLinux/generic_binary/uCLinux/linux-2.0.x/include/ \
- -I/data/tools/st200/ST200R7.3.0/include/ \
- -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = --no-demangle /data/uCLinux/generic_binary/uCLinux/uClibc/lib/crt0.o \
- -L/data/uCLinux/generic_binary/uCLinux/uClibc/lib -lm -lc floatlib.o
-endif
-
-ifdef RVEXLIB_NEWLIB_FILE
-DEFS+= IO_LINK_FILE
-INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
- -I/data/tools/st200/ST200R7.3.0/include/ \
- -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = matrix.txt.elf -Telf32rvex.x --no-demangle  --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
-endif
-
-ifdef RVEXLIB_NEWLIB_NOFILE
-INCLUDES = -I/data/other/newlib/build/rvex/rvex-elf32/include \
- -I/data/tools/st200/ST200R7.3.0/include/ \
- -I/data/tools/st200/ST200R7.3.0/target/core/st220
-LDFLAGS = -Telf32rvex.x --no-demangle --defsym end=__STACK_START -L/data/other/newlib/build/rvex/rvex-elf32/lib -lm -lc -lnosys floatlib.o
-endif
-
-
 # Generic binary behavior. Must be one of the following;
 #   false     - compile for the specified issue width only.
 #   true      - alias for true-O1.
@@ -83,7 +41,11 @@ endif
 #   true-nofix - do not run vexparse prior to assembly.
 # Default = true-O1.
 ifndef DYNAMIC
+ifeq ($(ISSUE_WIDTH), 8)
 DYNAMIC = true-O1
+else
+DYNAMIC = true-nofix
+endif
 endif
 ifeq ($(DYNAMIC), true)
 override DYNAMIC = true-O1
@@ -243,7 +205,7 @@ endif
 # Linker setup.
 LD = $(BUILD)/rvex-elf32-ld
 ifneq ($(DEBUG), false)
-ASFLAGS += -g
+LDFLAGS += -g
 endif
 
 # Compiler setup.
@@ -256,40 +218,16 @@ else
 CFLAGS += -g
 endif
 
-else ifeq ($(COMPILER), GCC)
-CC = $(TOOLS)/build/bin/vex-gcc
-CFLAGS = -I$(GEN_EXAMPLES)/src
+else # Open64
+CFLAGS = --issue $(ISSUE_WIDTH) -I$(GEN_EXAMPLES)/src -fshort-double \
+-fno-exceptions -std=c99 -fno-builtin $(INCLUDES)
+LDFLAGS += -nostartfiles -lgcc 
+CC=$(TOOLS)/open64/bin/st200-gcc
+LD=$(TOOLS)/open64/bin/st200-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3
 else
 CFLAGS += -g
-endif
-
-else
-FPLIB=libcfpi-st220.cc.a
-CFLAGS = -I$(GEN_EXAMPLES)/src -mcore=st220 -EB -fshort-double -fno-dismissible-load \
--fno-exceptions -mno-auto-prefetch -std=c99 -fno-builtin $(INCLUDES)
-ifeq ($(ISSUE_WIDTH), 8)
-CC=/shares/group/ce-rvex/tools/builds/open64_8issue_16UNROLL/bin/st200-gcc
-ifeq ($(DEBUG), false)
-CFLAGS += -O3 -CG:LAO_activation=0
-else
-CFLAGS += -g
-endif
-else ifeq ($(ISSUE_WIDTH), 4)
-CC=/shares/group/ce-rvex/tools/builds/open64_4issue/bin/st200-gcc
-ifeq ($(DEBUG), false)
-CFLAGS += -O3
-else
-CFLAGS += -g
-endif
-else
-CC=/shares/group/ce-rvex/tools/builds/open64_2issue/bin/st200-gcc
-ifeq ($(DEBUG), false)
-CFLAGS += -O3 -CG:LAO_activation=0
-else
-CFLAGS += -g
-endif
 endif
 endif
 
@@ -316,7 +254,7 @@ help:
 	@echo "  make <target> ISSUE_WIDTH=<2|4|8>                (default = 8)"
 	@echo "  make <target> DYNAMIC=<(see Makefile)>           (default = true-O1)"
 	@echo "  make <target> DYNAMIC_CORE=<true|false>          (default = same as DYNAMIC)"
-	@echo "  make <target> COMPILER=<HP|GCC|ST200>            (default = HP)"
+	@echo "  make <target> COMPILER=<HP|O64>                  (default = HP)"
 	@echo "  make <target> LIMMH_PREV=<true|false>            (default = true)"
 	@echo "  make <target> DEFS=<list of preprocessor defs>   (default = <none>)"
 	@echo ""
@@ -344,7 +282,7 @@ all: $(EXECUTABLES)
 
 # How to compile platform-specific sources;
 %.s: $(PLATFORM_SRC)/%.c
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -S $<
 ifeq ($(COMPILER), HP)
 	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 endif
@@ -352,22 +290,27 @@ endif
 # Where to get platform-specific assembly files and how to preprocess them;
 ifeq ($(COMPILER), HP)
 %.s: $(PLATFORM_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< > $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< > $@
 	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 else
 %.s: $(PLATFORM_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< -o $@
 endif
 
 # How to compile generic sources;
+ifeq ($(COMPILER), O64)
 io.s: $(GENERIC_SRC)/io.c
-	$(CC) $(CFLAGS) -I/data/other/newlib/build/rvex/rvex-elf32/include \
-	-I/data/tools/st200/ST200R7.3.0/include/ \
-	-I/data/tools/st200/ST200R7.3.0/target/core/st220 \
-	$(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
+	$(CC) $(CFLAGS) -I$(TOOLS)/newlib/rvex-elf32/include \
+	$(patsubst %,-D%,$(DEFS)) -S $<
+else
+io.s:
+	@echo "Attempted to compile io.c using incorrect compiler."
+	@echo "Please build with COMPILER=O64."
+	@exit 1
+endif
 
 %.s: $(GENERIC_SRC)/%.c
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -S $<
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -S $<
 ifeq ($(COMPILER), HP)
 	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 endif
@@ -375,30 +318,18 @@ endif
 # Where to get generic assembly files and how to preprocess them;
 ifeq ($(COMPILER), HP)
 %.s: $(GENERIC_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< > $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< > $@
 	$(SED) -i -e "s/^\(\.stab[sn][^\w].*\);$$/\1/" $@
 else
 %.s: $(GENERIC_SRC)/%.S
-	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS) $(XSTSIM)) -E $< -o $@
+	$(CC) $(CFLAGS) $(patsubst %,-D%,$(DEFS)) -E $< -o $@
 endif
 
-# Always compile VEXdiv with HP
-VEXdiv.s: $(GENERIC_SRC)/VEXdiv.c
-	$(TOOLS)/vex-3.43/bin/cc -I$(GEN_EXAMPLES)/src -fno-xnop -fexpand-div -fmm=$(GEN_EXAMPLES)/pipe_1_$(ISSUE_WIDTH)_fw.mm \
-	-S $< -o $@
-
-#Dirty tricks to force other FP library in case we're using Open64
-.PHONY: FORCE
-FORCE:
-
+# O64 compiler uses libgcc for division and floating point operations
 ifeq ($(COMPILER), O64)
-ifeq ($(ISSUE_WIDTH), 4)
-floatlib.o: IFR4_stat/LIBFP/libcfpi-st220.cc.a FORCE
+.PHONY: floatlib.o VEXdiv.o
+floatlib.o VEXdiv.o: empty.o
 	cp $< $@
-else ifeq ($(ISSUE_WIDTH), 8)
-floatlib.o: IFR8_stat/LIBFP/libcfpi-st220.cc.a FORCE
-	cp $< $@
-endif
 endif
 
 # How to assemble;

@@ -16,18 +16,21 @@ LINKER = linker.x
 # Development machine rules.
 ifeq ($(shell uname -m | grep -q arm; echo $$?),1)
 
-# Prefix for the open64 r-VEX compiler tools and gcc-like driver script.
-COMPILER_PREFIX = ../../../../../../../tools/o64/bin/rvex-elf32-
+# Link to the rvex-rewrite tools directory.
+TOOLS = ../../../../../../../tools
 
 # Compiler tools.
-CC        = $(COMPILER_PREFIX)gcc
-OBJDUMP   = $(COMPILER_PREFIX)objdump
-OBJCOPY   = $(COMPILER_PREFIX)objcopy
+CC        = $(TOOLS)/open64/bin/st200-gcc
+OBJDUMP   = $(TOOLS)/rvex-elf32-32bit/bin/rvex-elf32-objdump
+OBJCOPY   = $(TOOLS)/rvex-elf32-32bit/bin/rvex-elf32-objcopy
+
+CFLAGS += -nostartfiles -O3
 
 # Test for compiler tool existence before doing anything.
 ifeq ("$(wildcard $(CC))","")
 all:
 	@echo "Error: could not find r-VEX Open64 compiler toolchain."
+	@echo "Looked in: $(CC)"
 else
 
 # Standard tools.

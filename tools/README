@@ -1,0 +1,52 @@
+
+After checking out the rvex-rewrite repository, this directory will be mostly
+empty. The following things should be put here to get everything to work:
+
+'- .
+   |+ debug-interface       `.
+   |- open64                  > Should already be present.
+   |  |+ bin                ,'
+   |  |
+   |  |- issue2             `.
+   |  |  |+ bin              |  2-issue version of the open64 compiler. Symlink to
+   |  |  |+ include           > /shares/group/ce-rvex/tools/builds/open64_2issue
+   |  |  |+ lib              |  if you have the r-VEX share configured.
+   |  |  '+ sbin            ,'
+   |  |
+   |  |- issue4             `.
+   |  |  |+ bin              |  4-issue version of the open64 compiler. Symlink to
+   |  |  |+ include           > /shares/group/ce-rvex/tools/builds/open64_4issue
+   |  |  |+ lib              |  if you have the r-VEX share configured.
+   |  |  '+ sbin            ,'
+   |  |
+   |  '- issue8             `.
+   |     |+ bin              |  8-issue version of the open64 compiler. Symlink to
+   |     |+ include           > /shares/group/ce-rvex/tools/builds/open64_8issue
+   |     |+ lib              |  if you have the r-VEX share configured.
+   |     '+ sbin            ,'
+   |
+   |- newlib                `.  newlib C library. Symlink to
+   |  |+ rvex-elf32           > /shares/group/ce-rvex/tools/builds/newlib/
+   |  '+ share              ,'  if you have the r-VEX share configured.
+   |
+   |- rvex-elf32-32bit      `.
+   |  |+ bin                 |
+   |  |+ include             |  r-VEX assembler. Symlink to
+   |  |+ lib                  > /shares/group/ce-rvex/tools/builds/rvex-elf32-32bit
+   |  |+ libexec             |  if you have the r-VEX share configured.
+   |  |+ rvex-elf32          |
+   |  |+ share               |
+   |  '+ vex                ,'
+   |
+   |- vex-3.43              `.
+   |  |+ bin                 |
+   |  |+ include              > HP VEX compiler. Download from
+   |  |+ lib                 |  http://www.hpl.hp.com/downloads/vex/vex-3.43.i586.tgz
+   |  |+ share               |
+   |  '- LICENSE.txt        ,'
+   |
+   '- vexparse              `.
+      |  ...                  > r-VEX generic binary assembly converter. Clone from
+      |- main.py             |  https://bitbucket.org/anarcobra/vexparse
+      '  ...                ,'
+
