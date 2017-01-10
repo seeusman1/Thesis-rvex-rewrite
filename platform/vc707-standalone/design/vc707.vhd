@@ -166,7 +166,7 @@ architecture Behavioral of vc707 is
   );
   
   -- S-rec file specifying the initial contents for the memories.
-  constant SREC_FILENAME        : string := "../examples/init.srec";
+  constant SREC_FILENAME        : string := "../test-progs/init.srec";
   
   -- This determines the internal clock frequency.
   function f_clk_fn return real is

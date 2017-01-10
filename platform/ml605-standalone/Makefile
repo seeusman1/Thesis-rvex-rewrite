@@ -86,7 +86,7 @@ help:
 	@echo "  make clean-synth     : removes synthesis temporary and output files generated"
 	@echo "                         by make synth-<prog>."
 	@echo ""
-	@cd examples && $(MAKE) --no-print-directory list-executables
+	@cd test-progs && $(MAKE) --no-print-directory list-executables
 	@echo " In addition, you can use \"none\" to initialize the memories with zeros for all"
 	@echo " targets but upload-<prog> and run-<prog>."
 	@echo ""
@@ -96,7 +96,7 @@ help:
 
 .PHONY: compile-%
 compile-%:
-	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
+	cd test-progs && $(MAKE) $(patsubst compile-%,copy-%,$@)
 
 .PHONY: vsim-%
 vsim-%: compile-%
@@ -143,31 +143,31 @@ prog-%: synth-%/routed.bit
 
 .PHONY: upload-%
 upload-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: start-%
 start-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: run-%
 run-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: trace-%
 trace-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: gdb-%
 gdb-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: server stop monitor monitor-nobuf
 server stop monitor monitor-nobuf:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: debug
 debug:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 	cat ../../tools/debug-interface/debug > debug
 	echo 'export RVD_OPT="-m$(shell pwd)/design/memory.map"' >> debug
 	@echo ""
@@ -176,7 +176,7 @@ debug:
 
 .PHONY: clean
 clean:
-	cd examples && $(MAKE) clean
+	cd test-progs && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
 
 .PHONY: clean-synth

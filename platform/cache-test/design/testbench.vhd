@@ -30,7 +30,7 @@ architecture Behavioral of testbench is
     instrCacheLinesLog2         => 8,
     dataCacheLinesLog2          => 8
   );
-  constant SREC_FILENAME        : string := "../examples/sim.srec";
+  constant SREC_FILENAME        : string := "../test-progs/sim.srec";
   
   -- System control signals in the rvex library format.
   signal reset                  : std_logic;

@@ -1,7 +1,7 @@
 
 # Toolchain setup.
-TOOLS = ../../tools
-GEN_TEST_PROGS = ../../test-progs
+TOOLS = ../../../tools
+GEN_TEST_PROGS = ../../../test-progs
 
 # Platform-specific executables.
 EXECUTABLES = convolution convolution_5x5 convolution_7x7 greyscale median framebuffertest

@@ -77,37 +77,37 @@ $(RVD): $(RVD_SOURCE) $(RVD_INC)
 
 
 #-------------------------------------------------------------------------------
-# Chain to the makefile in examples/ for testing the r-VEX on the board with
+# Chain to the makefile in test-progs/ for testing the r-VEX on the board with
 # the usual programs and benchmarks
 #-------------------------------------------------------------------------------
 
 .PHONY: upload-%
 upload-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: start-%
 start-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: run-%
 run-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: trace-%
 trace-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: gdb-%
 gdb-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: server stop monitor monitor-nobuf
 server stop monitor monitor-nobuf:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: debug
 debug:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 	cat ../../tools/debug-interface/debug > debug
 	echo 'export RVD_OPT="-m$(shell pwd)/rvd-inc/almarvi.map"' >> debug
 	@echo ""
@@ -116,7 +116,7 @@ debug:
 
 .PHONY: clean-ex
 clean-ex:
-	cd examples && $(MAKE) clean
+	cd test-progs && $(MAKE) clean
 
 
 #-------------------------------------------------------------------------------
