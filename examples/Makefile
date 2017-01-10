@@ -41,11 +41,7 @@ endif
 #   true-nofix - do not run vexparse prior to assembly.
 # Default = true-O1.
 ifndef DYNAMIC
-ifeq ($(ISSUE_WIDTH), 8)
 DYNAMIC = true-O1
-else
-DYNAMIC = true-nofix
-endif
 endif
 ifeq ($(DYNAMIC), true)
 override DYNAMIC = true-O1
@@ -132,19 +128,19 @@ endif
 ifndef LANECONFIG
 ifeq ($(ISSUE_WIDTH), 2)
 ifeq ($(DYNAMIC_CORE), false)
- LANECONFIG = 7B
+ LANECONFIG = FB
 else
  LANECONFIG = FB
 endif
 else ifeq ($(ISSUE_WIDTH), 4)
 ifeq ($(DYNAMIC_CORE), false)
- LANECONFIG = 337B
+ LANECONFIG = FBBB
 else
  LANECONFIG = FBFB
 endif
 else
 ifeq ($(DYNAMIC_CORE), false)
- LANECONFIG = 3333337B
+ LANECONFIG = FBBBBBBB
 else
  LANECONFIG = FBFBFBFB
 endif
