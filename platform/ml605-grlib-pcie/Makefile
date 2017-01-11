@@ -121,7 +121,7 @@ update-%.patch: clean
 # Cleans all grlib and rvex compilation intermediate files.
 .PHONY: clean
 clean: clean-ex
-	-cd work && $(MAKE) distclean scripts-clean migclean
+	-cd work && $(MAKE) distclean scripts-clean migclean pcieclean
 	rm -f work/*_beh.prj
 	rm -f work/xilinx.log
 	rm -f work/timing.twr
@@ -157,6 +157,7 @@ sim-%: work compile-%
 		scripts-clean\
 		install-unimacro\
 		mig39\
+		pcie\
 		install-secureip\
 		compile_xilinx_verilog_lib\
 		compile.vsim\
@@ -183,7 +184,7 @@ synth: work
 	rm -f synth.patch
 	
 	# Synthesis.
-	cd work && $(MAKE) mig39 planahead MAP_COST_TABLE=$(MAP_COST_TABLE)
+	cd work && $(MAKE) mig39 pcie planahead MAP_COST_TABLE=$(MAP_COST_TABLE)
 	
 	# More version management.
 	touch work/xilinx.log
@@ -198,6 +199,7 @@ ise: work
 		scripts-clean\
 		migclean\
 		mig39\
+		pcie\
 		ise-launch
 
 
