@@ -5,4 +5,5 @@ core
 cache
 gaisler
 periph
+sysace_virtex6
 system
