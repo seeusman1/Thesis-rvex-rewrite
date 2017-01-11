@@ -12,9 +12,9 @@ complete):
    platforms (other versions may work as well).
  - Modelsim. The system is tested using version SE 10.2a; older versions are
    known to crash when simulating the core.
- - GNU make
- - GCC
  - Python 3.x
+ - GNU make, GCC, diff/patch, wget, and probably some of the other usual dev
+   tools.
 
 All the ρ-VEX specific things should™ work out of the box; they either come
 precompiled or are simple C programs without any external dependencies. Some
@@ -112,11 +112,10 @@ very fast in comparison to modelsim, running at similar speeds as an ρ-VEX core
 at ~10MHz. To simulate a program, do the following.
 
     $ cd platform/simrvex
-    # source Modelsim environment script
-    # source Xilinx ISE 14.7 environment script
     $ make sim-<test program name>
 
-There is also a command that batch runs a number of test programs:
+There is also a command that batch runs a number of test programs at once to
+check if they run correctly:
 
     $ make simtestall
 
@@ -129,7 +128,7 @@ core. The conformance test is run as follows:
 
     $ cd platform/core-tests
     # source Modelsim environment script
-    # source Xilinx ISE 14.7 environment script
+    # source Xilinx ISE 14.7 or Vivado environment script
     $ make conformance -j
 
 This will eventually return a pass or fail in the console. Log files for each
@@ -151,7 +150,7 @@ to debug simple ρ-VEX applications using Modelsim. The process is as follows:
 
     $ cd platform/cache-test
     # source Modelsim environment script
-    # source Xilinx ISE 14.7 environment script
+    # source Xilinx ISE 14.7 or Vivado environment script
     $ make vsim-<test program name>
 
 Test program name must be set to the test program that you want to use. Running
@@ -167,11 +166,9 @@ used signal is rv2sim. You can then start simulating using the run command.
     VSIM x> run 100 ms
 
 Serial/debug output from the program is piped to the transcript, so after some
-time, you should see (for instance)
+time, you should see (for instance) the following appear:
 
     # ucbqsort-fast: success
-
-appear.
 
 You can change the core and cache configuration in design/testbench.vhd using
 the RCFG and CCFG constants. If you've changed only VHDL and want to restart
@@ -199,8 +196,165 @@ interface. The platforms are intended to be used for the ML605 and VC707
 development boards from Xilinx respectively, but they should be easy to port to
 different boards.
 
+### Simulation
 
-TODO
+Starting a simulation using Modelsim works the same as it does in cache-test.
+That is:
+
+    $ cd platform/<board>-standalone
+    # source Modelsim environment script
+    # source Xilinx ISE 14.7 or Vivado environment script
+    $ make vsim-<test program name>
+
+Unlike cache-test, the standalone platforms will automatically add some signals
+to the waveform to do with testing reconfiguration and interrupts, as well as
+the usual rv2sim signal. Note that the signal paths differ between the cached
+and no-cache versions. The do file will try to add both versions, so you will
+always see errors in the transcript that you can safely ignore. The simulation
+is started and application output is reported as follows:
+
+    VSIM x> run 100 ms
+    # Application UART: ucbqsort-fast: success
+
+The toplevel VHDL file and simulation testbench are located in the design
+folder. Particularly, the core and cache configuration can be changed at the
+top of the architecture in ml605.vhd. Furthermore, if you want to test the debug
+serial port, ml605_tb.vhd contains some commented-out code to help with that.
+Like in cache-test, if you change any VHDL code you can restart the simulation
+as follows:
+
+    VSIM x> do sim.do
+
+However, if you change C code you will need to run the make command again.
+
+### Synthesis for ML605
+
+There are two ways to synthesize ml605-standalone: manually through the ISE GUI
+or directly from the command line. The latter will automatically assign a
+version tag to the system and archive the sources, synthesis settings, and
+accompanying synthesis results, which the GUI will not, but the GUI allows you
+to change settings in a more intuitive way. Also, the automated scripts will
+extract the VHDL file list from the GUI project. Therefore, let's start with the
+GUI method.
+
+To launch ISE, do the following:
+
+    $ cd platform/ml605-standalone
+    # source Xilinx ISE 14.7 environment script
+    $ make ise[-<test program name>]
+
+The program name is optional. If none is provided, the block RAMs will be
+initialized with zeros. You can now synthesize the platform as you would
+anything else.
+
+Synthesis from the command line works as follows:
+
+    $ cd platform/ml605-standalone
+    # source Xilinx ISE 14.7 environment script
+    $ make synth[-<test program name>]
+
+This generates a working directory of the form `synth-<timestamp>`, which
+contains a copy of all the design files. This allows you to continue developing
+while running synthesis, or to run synthesis for different configurations
+simultaneously. When synthesis completes, you will see something like this:
+
+    ############################################################################
+    # Build complete and archived!
+    # Archive file: ml605-standalone-w-ckpTv-<...>-core-L9TgS-t.tar.gz
+    # Stored in: <r-VEX install path>/versions/platforms
+    ############################################################################
+
+The archive file that it refers to contains the following:
+
+ - the generated bit file
+ - all VHDL source files and the constraints file
+ - synthesis settings
+ - Xilinx logs
+
+The name of the archive is derived from the platform version tag (in this case
+`w-ckpTv`) and the core version tag (in this case `L9TgS-t`). The platform
+version tag this platform is a hash of all the source and configuration files.
+The core version tag is an intelligent hash of the files in lib/rvex/core that
+ignores changes in VHDL comments. These tags are baked into the generated
+hardware and can be read out using the serial debug interface, allowing an
+unidentified bit file to be retraced to its source files.
+
+### Synthesis for VC707
+
+There is currently no command-line synthesis option for the VC707, you need to
+use the Vivado GUI. You can start the GUI as follows:
+
+    $ cd platform/vc707-standalone
+    # source Vivado environment script
+    $ make vivado[-<test program name>]
+
+The program name is optional. If none is provided, the block RAMs will be
+initialized with zeros. You can now synthesize the platform as you would
+anything else.
+
+### Using the FPGA design
+
+You can communicate with the processor using rvd. Refer to the section on rvd
+and rvsrv below for more information.
+
+
+ml605-grlib, ml605-grlib-bare, and ml605-doom
+---------------------------------------------
+
+These platforms are various systems that use the GRLIB GPL hardware IP library
+as peripherals. Roughly:
+
+ - ml605-grlib is a very basic port of the ML605 LEON3 example platform from
+   GRLIB. It essentially replaces the quad-core version of the platform with a
+   single cached quad-context reconfigurable ρ-VEX using bus bridges and an
+   interrupt controller bridge, and replaces the primary GRLIB serial peripheral
+   with the ρ-VEX debug serial peripheral.
+
+ - ml605-bare is a modified version of ml605-grlib where almost all peripherals
+   except for the JTAG and DDR controller are removed, in an attempt to speed up
+   synthesis time.
+
+ - ml605-doom is the platform that we use internally for our demos. It has a
+   toplevel file that is written from scratch instead of being derived from the
+   LEON3 example project, with the following peripherals:
+    - DDR memory
+    - GRLIB interrupt controller
+    - Four timers
+    - VGA output
+    - Mono PWM audio output
+    - Two PS/2 interfaces
+    - 3 I2C interfaces (VGA/DVI, PMbus, external)
+   The PS/2 and external I2C interfaces are broken out using the LCD connector,
+   so it is advisable to remove the LCD. The audio output is done using one of
+   the LEDs and its associated header pin.
+
+The platforms all work in the same way. A patch file is provided that can be
+applied to the LEON3 example project from GRLIB to turn the example project into
+the ρ-VEX platform. The scripts take care of this for you:
+
+    $ cd platform/<platform name>
+    $ make work
+
+This generates the `work` directory that contains most project files. You can
+update the patch file if need be using:
+
+    $ make update-patch
+
+Finally, you can completely clean everything, INCLUDING any changes made to the
+work directory, using:
+
+    $ make very-clean
+
+That basically just deletes the work directory entirely.
+
+
+### Simulation
+
+### Synthesis
+
+
+
+
 
 
 

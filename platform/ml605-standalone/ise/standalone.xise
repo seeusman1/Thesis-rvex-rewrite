@@ -236,7 +236,7 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/system/rvsys_standalone.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="81"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="80"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="81"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/bus/bus_pkg.vhd" xil_pn:type="FILE_VHDL">
@@ -338,12 +338,12 @@
     </file>
     <file xil_pn:name="../../../lib/rvex/periph/periph_uart.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="82"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="81"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="82"/>
       <library xil_pn:name="rvex"/>
     </file>
     <file xil_pn:name="../design/ml605.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="83"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="82"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="83"/>
     </file>
     <file xil_pn:name="../design/ml605_tb.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="84"/>
@@ -353,7 +353,7 @@
     </file>
     <file xil_pn:name="../design/mem_init_pkg.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="80"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="79"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="80"/>
     </file>
     <file xil_pn:name="../../../lib/rvex/cache/cache.vhd" xil_pn:type="FILE_VHDL">
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="69"/>
@@ -440,10 +440,6 @@
       <association xil_pn:name="Implementation" xil_pn:seqID="77"/>
       <library xil_pn:name="rvex"/>
     </file>
-    <file xil_pn:name="../../../lib/rvex/temp/trace_tb.vhd" xil_pn:type="FILE_VHDL">
-      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="0"/>
-      <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
-    </file>
     <file xil_pn:name="../design/ml605.ucf" xil_pn:type="FILE_UCF">
       <association xil_pn:name="Implementation" xil_pn:seqID="0"/>
     </file>
@@ -466,6 +462,10 @@
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="91"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="36"/>
       <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../design/ptag-zero.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="100"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="79"/>
     </file>
   </files>
 

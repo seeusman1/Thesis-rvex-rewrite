@@ -89,7 +89,8 @@ compile-%:
 vsim-%: compile-%
 	cd modelsim && $(MAKE) vsim
 
-.PHONY: vivado-%
+.PHONY: vivado vivado-%
+vivado: vivado-none
 vivado-%: compile-%
 	cd vivado && vivado standalone.xpr
 
@@ -130,7 +131,8 @@ debug:
 clean:
 	cd test-progs && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
-	cd vivado && ls | grep -v ".gitignore" | grep -v "standalone.xpr" | xargs rm -rf
+	cd vivado && ls -a | grep -Ev "^\.\.?$$" | grep -v ".gitignore" | grep -v "standalone.xpr" | xargs rm -rf
+	rm design/mem_init_pkg.vhd
 
 # Cleans rvex compilation intermediate files.
 .PHONY: clean-ex

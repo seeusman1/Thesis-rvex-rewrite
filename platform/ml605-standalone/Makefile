@@ -102,15 +102,17 @@ compile-%:
 vsim-%: compile-%
 	cd modelsim && $(MAKE) vsim
 
-.PHONY: ise-%
+.PHONY: ise ise-%
+ise: ise-none
 ise-%: compile-%
 	cd ise && ise standalone.xise
 
-.PHONY: synth-%
+.PHONY: synth synth-%
 ifndef NAME
 NAME := $(shell date +%Y-%m-%d-%H-%M-%S-%N)
 endif
 SYNTH := synth-$(NAME)
+synth: synth-none
 synth-%: compile-%
 	
 	# Make unique synthesis directory.

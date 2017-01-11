@@ -116,54 +116,46 @@ end vc707;
 architecture Behavioral of vc707 is
 --=============================================================================
   
-  -- Vivado appearently doesn't handle the generics as well as ISE, so we're
-  -- using a constant for the configuration instead of the function that
-  -- generates a configuration.  
+  -- r-VEX configuration.
+  function CORE_CFG_FN return rvex_generic_config_type is
+    variable c : rvex_generic_config_type;
+  begin
+    c := RVEX_DEFAULT_CONFIG;
+    c.numLanesLog2          := 3;
+    c.numLaneGroupsLog2     := 2;
+    c.numContextsLog2       := 2;
+    c.bundleAlignLog2       := 1;
+    c.limmhFromPreviousPair := false;
+    c.traceEnable           := false;
+    return c;
+  end CORE_CFG_FN;
   
-  constant CORE_CFG  : rvex_generic_config_type := (
-    numLanesLog2                => 1,
-    numLaneGroupsLog2           => 0,
-    numContextsLog2             => 0,
-    genBundleSizeLog2           => 1,
-    bundleAlignLog2             => 1,
-    multiplierLanes             => 2#11#,
-    memLaneRevIndex             => 1,
-    numBreakpoints              => 0,
-    forwarding                  => true,
-    traps                       => 1,
-    limmhFromNeighbor           => true,
-    limmhFromPreviousPair       => false,
-    reg63isLink                 => false,
-    cregStartAddress            => X"FFFFFC00",
-    resetVectors                => (others => (others => '0')),
-    unifiedStall                => true,
-    gpRegImpl                   => RVEX_GPREG_IMPL_MEM,
-    traceEnable                 => false,
-    perfCountSize               => 0,
-    cachePerfCountEnable        => false
-  );
+  -- Cache configuration (if used).
+  function CACHE_CFG_FN return cache_generic_config_type is
+    variable c : cache_generic_config_type;
+  begin
+    c := CACHE_DEFAULT_CONFIG;
+    c.instrCacheLinesLog2   := 8; -- 256*32 = 8 kiB per block, 32 kiB total
+    c.dataCacheLinesLog2    := 8; -- 256*4 = 1 kiB per block, 4 kiB total
+    return c;
+  end CACHE_CFG_FN;
   
-  constant CACHE_CFG : cache_generic_config_type := (
-    instrCacheLinesLog2         => 8, -- 256*32 = 8 kiB per block, 32 kiB total
-    dataCacheLinesLog2          => 8  -- 256*4 = 1 kiB per block, 4 kiB total
-  );
+  -- System configuration.
+  function CFG_FN return rvex_sa_generic_config_type is
+    variable c : rvex_sa_generic_config_type;
+  begin
+    c := RVEX_SA_DEFAULT_CONFIG;
+    c.core                  := CORE_CFG_FN;
+    c.cache_enable          := false; -- Whether to use the cache or not 
+    c.cache_config          := CACHE_CFG_FN;
+    c.imemDepthLog2B        := 18; -- 256 kiB
+    c.dmemDepthLog2B        := 18; -- 256 kiB
+    return c;
+  end CFG_FN;
   
-  constant CFG                  : rvex_sa_generic_config_type := (
-    core                        => CORE_CFG,
-    cache_enable                => false,
-    cache_config                => CACHE_CFG,
-    cache_bypassRange           => addrRange(match => "1-------------------------------"),
-    ImemDepthLog2B              => 18,
-    dmemDepthLog2B              => 18,
-    traceDepthLog2B             => 13,
-    debugBusMap_imem            => addrRangeAndMap(match => "00-1----------------------------"),
-    debugBusMap_dmem            => addrRangeAndMap(match => "001-----------------------------"),
-    debugBusMap_rvex            => addrRangeAndMap(match => "1111----------------------------"),
-    debugBusMap_trace           => addrRangeAndMap(match => "1110----------------------------"),
-    debugBusMap_mutex           => false,
-    rvexDataMap_dmem            => addrRangeAndMap(match => "0-------------------------------"),
-    rvexDataMap_bus             => addrRangeAndMap(match => "1-------------------------------")
-  );
+  -- Load the configuration into a constant. This is necessary for modelsim
+  -- apparently.
+  constant CFG  : rvex_sa_generic_config_type := CFG_FN;
   
   -- S-rec file specifying the initial contents for the memories.
   constant SREC_FILENAME        : string := "../test-progs/init.srec";

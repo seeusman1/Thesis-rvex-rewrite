@@ -55,12 +55,12 @@ use rvex.simUtils_pkg.all;
 --=============================================================================
 -- This testbench does some basic tests on the ML605 toplevel entity.
 -------------------------------------------------------------------------------
-entity ml605_tb is
-end ml605_tb;
+entity vc707_tb is
+end vc707_tb;
 --=============================================================================
 
 --=============================================================================
-architecture Behavioral of ml605_tb is
+architecture Behavioral of vc707_tb is
 --=============================================================================
   
   -- 200 MHz system clock source.
@@ -82,7 +82,7 @@ begin -- architecture
 --=============================================================================
   
   -- Instantiate the unit-under-test.
-  uut: entity work.ml605
+  uut: entity work.vc707
     generic map (
       -- Baud rate to use for the UART.
       F_BAUD                    => 125000.0,
@@ -92,12 +92,7 @@ begin -- architecture
       -- when full syscon accuracy is not needed. When set, F_SYSCLK is used to
       -- configure the baud rate of the UART; it is ignored otherwise.
       DIRECT_RESET_AND_CLOCK    => true,
-      F_SYSCLK                  => 1000000.0,
-      
-      -- Register consistency check configuration (see core.vhd).
-      RCC_RECORD                => "",
-      RCC_CHECK                 => "",
-      RCC_CTXT                  => 0
+      F_SYSCLK                  => 1000000.0
     )
     port map (
       
