@@ -154,7 +154,7 @@ EXECUTABLES += $(POWERSTONE)
 
 # Random other applications.
 EXECUTABLES += ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite\
-	soma x264 uart helloworld all-at-once
+	soma x264 uart helloworld all-at-once mandel
 
 # List of platform-agnostic (generic) programs which run and complete without
 # interaction, and test for success/failure. On success, main() should return
@@ -204,7 +204,8 @@ endif
 # Compiler setup.
 ifeq ($(COMPILER), HP)
 CC = $(TOOLS)/vex-3.43/bin/cc
-CFLAGS = -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -fno-xnop -c99inline -fmm=$(GEN_TEST_PROGS)/cfg/pipe_1_$(ISSUE_WIDTH)_fw.mm
+CFLAGS += -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -fno-xnop -c99inline -fmm=$(GEN_TEST_PROGS)/cfg/pipe_1_$(ISSUE_WIDTH)_fw.mm
+DEFS += HPVEX=HPVEX
 # We add the floating point and division libraries, along with common.o, as .a files.
 # That way, the linker will remove the code if it is not referenced, preventing 
 # unneeded code size increase.
@@ -219,8 +220,9 @@ CFLAGS += -g
 endif
 
 else # Open64
-CFLAGS = --issue $(ISSUE_WIDTH) -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -fshort-double \
+CFLAGS += --issue $(ISSUE_WIDTH) -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -fshort-double \
 -fno-exceptions -std=c99 -fno-builtin $(INCLUDES)
+DEFS += O64=O64
 LDFLAGS += -nostartfiles -lgcc 
 CC=$(TOOLS)/open64/bin/st200-gcc
 LD=$(TOOLS)/open64/bin/st200-gcc
@@ -229,6 +231,10 @@ CFLAGS += -O3
 else
 CFLAGS += -g
 endif
+endif
+
+ifdef XCFLAGS
+CFLAGS += $(XCFLAGS)
 endif
 
 # Make magic.
