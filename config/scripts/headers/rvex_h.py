@@ -29,7 +29,10 @@ def generate(regs, trps, dirs):
                 tcode += '32_R'
             if ent[2][0] == 'W':
                 tcode += 'W'
-            append_def(regdefs, ent[1] + '_ADDR', "(CREG_BASE + 0x%03X)" % ent[3])
+            append_def(regdefs, ent[1] + '_OFFSET', "(0x%03X)" % ent[3])
+            append_def(regdefs, ent[1] + '_ADDR', "(CREG_BASE + %s_OFFSET)" % ent[1])
+            append_def(regdefs, ent[1] + '_REL_ADDR(base)', "((base) + %s_OFFSET)" % ent[1])
+            append_def(regdefs, ent[1] + '_REL(base)', "CREG_%s(%s_REL_ADDR(base))" % (tcode, ent[1]))
             append_def(regdefs, ent[1], "CREG_%s(%s_ADDR)" % (tcode, ent[1]))
             regdefs.append('\n')
         
