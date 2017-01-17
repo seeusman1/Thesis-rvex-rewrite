@@ -3,9 +3,14 @@ After checking out the rvex-rewrite repository, this directory will be mostly
 empty. The following things should be put here to get everything to work:
 
 '- .
-   |+ debug-interface       `.
-   |- open64                  > Should already be present.
-   |  |+ bin                ,'
+   |+ debug-interface        >  Should already be present. Contains rvd, rvsrv, pyrvd.
+   |
+   |- newlib                `.  newlib C library. Symlink to
+   |  |+ rvex-elf32           > /shares/group/ce-rvex/tools/builds/newlib/
+   |  '+ share              ,'  if you have the r-VEX share configured.
+   |
+   |- open64                `.  Should already be present. Contains a script that
+   |  |+ bin                ,'  selects the appropriate compiler from the list below.
    |  |
    |  |- issue2             `.
    |  |  |+ bin              |  2-issue version of the open64 compiler. Symlink to
@@ -25,10 +30,6 @@ empty. The following things should be put here to get everything to work:
    |     |+ lib              |  if you have the r-VEX share configured.
    |     '+ sbin            ,'
    |
-   |- newlib                `.  newlib C library. Symlink to
-   |  |+ rvex-elf32           > /shares/group/ce-rvex/tools/builds/newlib/
-   |  '+ share              ,'  if you have the r-VEX share configured.
-   |
    |- rvex-elf32-32bit      `.
    |  |+ bin                 |
    |  |+ include             |  r-VEX assembler. Symlink to
@@ -37,6 +38,11 @@ empty. The following things should be put here to get everything to work:
    |  |+ rvex-elf32          |
    |  |+ share               |
    |  '+ vex                ,'
+   |
+   |- simrvex               `.  simrvex simulator. Symlink to
+   |  |+ bin                  > /shares/group/ce-rvex/tools/simrvex
+   |  |+ include             |  if you have the r-VEX share configured.
+   |  '+ lib64              ,'
    |
    |- vex-3.43              `.
    |  |+ bin                 |
