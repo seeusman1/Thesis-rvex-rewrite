@@ -100,6 +100,11 @@ entity core_memu is
     pl2memu_opAddr              : in  rvex_address_array(S_MEM to S_MEM);
     pl2memu_opData              : in  rvex_data_array(S_MEM to S_MEM);
     
+    -- Enables or disables the misaligned access trap output independently from
+    -- valid. This is necessary to prevent a timing loop. Refer to the driver
+    -- code in pipelane for more information.
+    pl2memu_enableTrap          : in  std_logic_vector(S_MEM to S_MEM);
+    
     -- Misaligned access trap output.
     memu2pl_trap                : out trap_info_array(S_MEM to S_MEM);
     
@@ -188,7 +193,7 @@ begin -- architecture
   -- Setup writeData and writeMask according to the access size and LSBs of the
   -- address.
   det_mask_and_alignment: process (
-    pl2memu_opAddr, pl2memu_opData, ctrl, pl2memu_valid
+    pl2memu_opAddr, pl2memu_opData, ctrl, pl2memu_valid, pl2memu_enableTrap
   ) is
   begin
     case ctrl(S_MEM).accessSizeBLog2 is
@@ -240,8 +245,8 @@ begin -- architecture
         
     end case;
     
-    -- Do not generate alignment traps when the instruction is not valid.
-    if pl2memu_valid(S_MEM) = '0' then
+    -- Do not generate alignment traps when the trap output is disabled.
+    if pl2memu_enableTrap(S_MEM) = '0' then
       misalignedAccess(S_MEM) <= '0';
     end if;
     
