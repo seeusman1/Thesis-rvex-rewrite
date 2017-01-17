@@ -93,6 +93,23 @@ package core_pkg is
     -- Defines which lanes have a multiplier. Bit 0 of this number maps to lane
     -- 0, bit 1 to lane 1, etc.
     multiplierLanes             : natural;
+
+    -- Defines which lanes have which floating-point units. Bit 0 of these
+    -- numbers maps to lane 0, bit 1 to lane 1, etc.
+    -- Floating-point add
+    faddLanes                   : natural;
+
+    -- Floating-point compare
+    fcompareLanes               : natural;
+
+    -- Floating-point convert-to-int
+    fconvfiLanes                : natural;
+
+    -- Floating-point convert-to-float
+    fconvifLanes                : natural;
+
+    -- Floating-point multiply
+    fmultiplyLanes              : natural;
     
     -- Lane index for the memory unit, counting down from the last lane in each
     -- lane group. So memLaneRevIndex = 0 results in the memory unit being in
@@ -187,6 +204,11 @@ package core_pkg is
     genBundleSizeLog2           => 3,
     bundleAlignLog2             => 3,
     multiplierLanes             => 2#11111111#,
+    faddLanes                   => 2#11111111#,
+    fcompareLanes               => 2#11111111#,
+    fconvfiLanes                => 2#11111111#,
+    fconvifLanes                => 2#11111111#,
+    fmultiplyLanes              => 2#11111111#,
     memLaneRevIndex             => 1,
     numBreakpoints              => 4,
     forwarding                  => true,
@@ -213,6 +235,11 @@ package core_pkg is
     genBundleSizeLog2           => 3,
     bundleAlignLog2             => 1,
     multiplierLanes             => 2#00#,
+    faddLanes                   => 2#00#,
+    fcompareLanes               => 2#00#,
+    fconvfiLanes                => 2#00#,
+    fconvifLanes                => 2#00#,
+    fmultiplyLanes              => 2#00#,
     memLaneRevIndex             => 1,
     numBreakpoints              => 0,
     forwarding                  => false,
@@ -247,6 +274,11 @@ package core_pkg is
     genBundleSizeLog2           : integer := -1;
     bundleAlignLog2             : integer := -1;
     multiplierLanes             : integer := -1;
+    faddLanes                   : integer := -1;
+    fcompareLanes               : integer := -1;
+    fconvfiLanes                : integer := -1;
+    fconvifLanes                : integer := -1;
+    fmultiplyLanes              : integer := -1;
     memLaneRevIndex             : integer := -1;
     branchLaneRevIndex          : integer := 0; -- No longer supported, must be zero.
     numBreakpoints              : integer := -1;
@@ -371,6 +403,11 @@ package body core_pkg is
     genBundleSizeLog2           : integer := -1;
     bundleAlignLog2             : integer := -1;
     multiplierLanes             : integer := -1;
+    faddLanes                   : integer := -1;
+    fcompareLanes               : integer := -1;
+    fconvfiLanes                : integer := -1;
+    fconvifLanes                : integer := -1;
+    fmultiplyLanes              : integer := -1;
     memLaneRevIndex             : integer := -1;
     branchLaneRevIndex          : integer := 0; -- No longer supported, must be zero.
     numBreakpoints              : integer := -1;
@@ -408,6 +445,11 @@ package body core_pkg is
     if genBundleSizeLog2      >= 0 then cfg.genBundleSizeLog2     := genBundleSizeLog2; end if;
     if bundleAlignLog2        >= 0 then cfg.bundleAlignLog2       := bundleAlignLog2; end if;
     if multiplierLanes        >= 0 then cfg.multiplierLanes       := multiplierLanes; end if;
+    if faddLanes              >= 0 then cfg.faddLanes             := faddLanes; end if;
+    if fcompareLanes          >= 0 then cfg.fcompareLanes         := fcompareLanes; end if; 
+    if fconvfiLanes           >= 0 then cfg.fconvfiLanes          := fconvfiLanes; end if;
+    if fconvifLanes           >= 0 then cfg.fconvifLanes          := fconvifLanes; end if;
+    if fmultiplyLanes         >= 0 then cfg.fmultiplyLanes        := fmultiplyLanes; end if;
     if memLaneRevIndex        >= 0 then cfg.memLaneRevIndex       := memLaneRevIndex; end if;
     if numBreakpoints         >= 0 then cfg.numBreakpoints        := numBreakpoints; end if;
     if forwarding             >= 0 then cfg.forwarding            := int2bool(forwarding); end if;

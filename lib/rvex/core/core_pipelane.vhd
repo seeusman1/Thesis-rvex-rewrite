@@ -1731,7 +1731,7 @@ begin -- architecture
     -- Signals from the multiplier.
     mulu2pl_result,
 
-    -- Signals from the FPU
+    -- Signals from the floating-point units
     fadd2pl_result, fcmp2pl_result, fcmp2pl_resultBr, fcfi2pl_result,
     fcif2pl_result, fmul2pl_result,
     
@@ -2558,9 +2558,9 @@ begin -- architecture
     end if;
 
     ---------------------------------------------------------------------------
-    -- Connect pipeline to floating-point unit
+    -- Connect pipeline to floating-point units
     ---------------------------------------------------------------------------
-    -- Adder
+    -- Floating-point adder
     if HAS_FADD then
 
       -- Drive inputs
@@ -2579,7 +2579,7 @@ begin -- architecture
 
     end if;
 
-    -- Compare
+    -- Floating-point compare
     if HAS_FCMP then
 
       -- Drive inputs
@@ -2600,7 +2600,7 @@ begin -- architecture
 
     end if;
 
-    -- Convert float to in
+    -- Floating-point convert float to in
     if HAS_FCFI then
 
       -- Drive inputs
@@ -2618,7 +2618,7 @@ begin -- architecture
 
     end if;
 
-    -- Convert int to float
+    -- Floating-point convert int to float
     if HAS_FCIF then
 
       -- Drive inputs
@@ -2636,7 +2636,7 @@ begin -- architecture
 
     end if;
 
-    -- Multiply
+    -- Floating-point multiply
     if HAS_FMUL then
 
       -- Drive inputs

@@ -450,16 +450,16 @@ begin -- architecture
     constant fadd: boolean := testbit(CFG.faddLanes, lane);
 
     -- Whether lane should have a floating-point compare unit
-    constant fcmp: boolean := testbit(CFG.fcmpLanes, lane);
+    constant fcmp: boolean := testbit(CFG.fcompareLanes, lane);
 
     -- Whether lane should have a floating-point convert-to-int unit
-    constant fcfi: boolean := testbit(CFG.fcfiLanes, lane);
+    constant fcfi: boolean := testbit(CFG.fconvfiLanes, lane);
 
     -- Whether lane should have a floating-point convert-to-float unit
-    constant fcif: boolean := testbit(CFG.fcifLanes, lane);
+    constant fcif: boolean := testbit(CFG.fconvifLanes, lane);
 
     -- Whether lane should have a floating-point multiplier
-    constant fmul: boolean := testbit(CFG.fmulLanes, lane);
+    constant fmul: boolean := testbit(CFG.fmultiplyLanes, lane);
 
     -- Whether lane should have a memory unit.
     constant mem: boolean := laneIndexRev = CFG.memLaneRevIndex;
