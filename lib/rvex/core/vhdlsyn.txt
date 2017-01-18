@@ -32,6 +32,7 @@ core_gpRegs.vhd
 core_limmRouting.vhd
 core_memu.vhd
 core_mulu.vhd
+core_fpu_types_pkg.vhd
 core_fpu_fixed_pkg.vhd
 core_fpu_float_pkg.vhd
 core_fpu_add.vhd

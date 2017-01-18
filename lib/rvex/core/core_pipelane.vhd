@@ -1503,14 +1503,14 @@ begin -- architecture
         pl2fcfi_op(S_FCFI)              => pl2fcfi_op(S_FCFI),
       
         -- Outputs
-        fcfi2pl_result(S_FCFI+L_FCFI)   => fcfi2pl_result(S_FCFI+L_FCFI)
+        fcfi2pl_result(S_FCFI)          => fcfi2pl_result(S_FCFI)
 
     );
   end generate;
   no_fcfi_gen: if not HAS_FCFI generate
   
     -- Set outputs to undefined
-    fcfi2pl_result(S_FCFI+L_FCFI) <= (others => RVEX_UNDEF);
+    fcfi2pl_result(S_FCFI) <= (others => RVEX_UNDEF);
 
   end generate;
 
@@ -2220,19 +2220,19 @@ begin -- architecture
       if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).fpuCtrl.isFConvfiInstruction = '1' then
         flag := '1';
       end if;
-    end if
+    end if;
 
     if not HAS_FCIF then
       if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).fpuCtrl.isFConvifInstruction = '1' then
         flag := '1';
       end if;
-    end if
+    end if;
 
     if not HAS_FMUL then
       if OPCODE_TABLE(vect2uint(s(S_IF+L_IF).opcode)).fpuCtrl.isFMulInstruction = '1' then
         flag := '1';
       end if;
-    end if
+    end if;
     
     -- Append the illegal opcode exception to the trap listing if our flag is
     -- set.
@@ -2567,7 +2567,7 @@ begin -- architecture
 
       -- Drive inputs
       if s(S_FADD).dp.c.enableFAdd = '1' or not CFG.enablePowerLatches then
-        pl2fadd_opcode(S_FADD) <= s(S_FADD).dp.opcode;
+        pl2fadd_opcode(S_FADD) <= s(S_FADD).opcode;
         pl2fadd_opl(S_FADD)    <= s(S_FADD).dp.op1;
         pl2fadd_opr(S_FADD)    <= s(S_FADD).dp.op2;
       end if;
@@ -2586,18 +2586,19 @@ begin -- architecture
 
       -- Drive inputs
       if s(S_FCMP).dp.c.enableFCmp = '1' or not CFG.enablePowerLatches then
-        pl2fcmp_opcode(S_FCMP) <= s(S_FCMP).dp.opcode;
+        pl2fcmp_opcode(S_FCMP) <= s(S_FCMP).opcode;
         pl2fcmp_opl(S_FCMP)    <= s(S_FCMP).dp.op1;
         pl2fcmp_opr(S_FCMP)    <= s(S_FCMP).dp.op2;
       end if;
 
       -- Set the result, branch result and result valid bit if the FCMP result is selected.
       if s(S_FCMP+L_FCMP).dp.c.funcSel = FCMP then
+        i := vect2uint(s(S_FCMP+L_FCMP).dp.destBr);
         s(S_FCMP+L_FCMP).dp.res := fcmp2pl_result(S_FCMP+L_FCMP);
-        s(S_FCMP+L_FCMP).dp.resBr := fcmp2pl_resultBr(S_FCMP+L_FCMP);
+        s(S_FCMP+L_FCMP).dp.resBr(i) := fcmp2pl_resultBr(S_FCMP+L_FCMP);
         s(S_FCMP+L_FCMP).dp.resValid := s(S_FCMP+L_FCMP).dp.gpRegWE_lo;
         s(S_FCMP+L_FCMP).dp.resLinkValid := s(S_FCMP+L_FCMP).dp.linkWE_lo;
-        s(S_FCMP+L_FCMP).dp.resBrValid := (others => s(S_FCMP+L_FCMP).dp.c.allBrRegsWE);
+        s(S_FCMP+L_FCMP).dp.resBrValid(i) := s(S_FCMP+L_FCMP).dp.c.brRegWE;
       end if;
 
     end if;
@@ -2607,15 +2608,15 @@ begin -- architecture
 
       -- Drive inputs
       if s(S_FCFI).dp.c.enableFCfi = '1' or not CFG.enablePowerLatches then
-        pl2fcfi_opcode(S_FCFI) <= s(S_FCFI).dp.opcode;
+        pl2fcfi_opcode(S_FCFI) <= s(S_FCFI).opcode;
         pl2fcfi_op(S_FCFI)     <= s(S_FCFI).dp.op2;
       end if;
 
       -- Set the result and result valid bit if the FCFI result is selected.
-      if s(S_FCFI+L_FCFI).dp.c.funcSel = FCFI then
-        s(S_FCFI+L_FCFI).dp.res := fcfi2pl_result(S_FCFI+L_FCFI);
-        s(S_FCFI+L_FCFI).dp.resValid := s(S_FCFI+L_FCFI).dp.gpRegWE_lo;
-        s(S_FCFI+L_FCFI).dp.resLinkValid := s(S_FCFI+L_FCFI).dp.linkWE_lo;
+      if s(S_FCFI).dp.c.funcSel = FCFI then
+        s(S_FCFI).dp.res := fcfi2pl_result(S_FCFI);
+        s(S_FCFI).dp.resValid := s(S_FCFI).dp.gpRegWE_lo;
+        s(S_FCFI).dp.resLinkValid := s(S_FCFI).dp.linkWE_lo;
       end if;
 
     end if;
@@ -2625,7 +2626,7 @@ begin -- architecture
 
       -- Drive inputs
       if s(S_FCIF).dp.c.enableFCif = '1' or not CFG.enablePowerLatches then
-        pl2fcif_opcode(S_FCIF) <= s(S_FCIF).dp.opcode;
+        pl2fcif_opcode(S_FCIF) <= s(S_FCIF).opcode;
         pl2fcif_op(S_FCIF)     <= s(S_FCIF).dp.op2;
       end if;
 
@@ -2643,7 +2644,6 @@ begin -- architecture
 
       -- Drive inputs
       if s(S_FMUL).dp.c.enableFMul = '1' or not CFG.enablePowerLatches then
-        pl2fmul_opcode(S_FMUL) <= s(S_FMUL).dp.opcode;
         pl2fmul_opl(S_FMUL)    <= s(S_FMUL).dp.op1;
         pl2fmul_opr(S_FMUL)    <= s(S_FMUL).dp.op2;
       end if;

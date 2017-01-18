@@ -90,13 +90,13 @@
          <ClosedNode>/utils_uart - Behavioral |home|jeroen|rvex|cache-test|vhdl|utils|utils_uart.vhd</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>ibuf_inst - core_instructionBuffer - Behavioral (/bulk/rvex/rvex-rewrite/lib/rvex/core/core_instructionBuffer.vhd)</SelectedItem>
+         <SelectedItem>synth_mem - core_gpRegs_mem - Behavioral (/home/mattidreef/rvex-rewrite/lib/rvex/core/core_gpRegs_mem.vhd)</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >3</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002d2000000020000000000000000000000000200000064ffffffff000000810000000300000002000002d20000000100000003000000000000000100000003</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002f6000000020000000000000000000000000200000064ffffffff000000810000000300000002000002f60000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
-      <CurrentItem>ibuf_inst - core_instructionBuffer - Behavioral (/bulk/rvex/rvex-rewrite/lib/rvex/core/core_instructionBuffer.vhd)</CurrentItem>
+      <CurrentItem>synth_mem - core_gpRegs_mem - Behavioral (/home/mattidreef/rvex-rewrite/lib/rvex/core/core_gpRegs_mem.vhd)</CurrentItem>
    </ItemView>
    <ItemView engineview="SynthesisOnly" sourcetype="" guiview="Process" >
       <ClosedNodes>
@@ -117,13 +117,13 @@
          <ClosedNodesVersion>1</ClosedNodesVersion>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>core_pipelanes.vhd</SelectedItem>
+         <SelectedItem>core_pipeline_pkg.vhd</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >16</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >30</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000000000000010000000000000000000000000000000000000214000000040101000100000000000000000000000064ffffffff000000810000000000000004000000f60000000100000000000000240000000100000000000000660000000100000000000000940000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000000000000000100000000000000000000000000000000000004cc000000040101000100000000000000000000000064ffffffff000000810000000000000004000000f600000001000000000000002400000001000000000000006600000001000000000000034c0000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem>core_pipelanes.vhd</CurrentItem>
+      <CurrentItem>core_pipeline_pkg.vhd</CurrentItem>
    </ItemView>
    <ItemView guiview="Library" >
       <ClosedNodes>
@@ -133,9 +133,9 @@
       <SelectedItems>
          <SelectedItem>work</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >50</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >52</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000000000000010000000000000000000000000000000000000101000000010001000100000000000000000000000064ffffffff000000810000000000000001000001010000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000000000000010000000000000000000000000000000000000105000000010001000100000000000000000000000064ffffffff000000810000000000000001000001050000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
       <CurrentItem>work</CurrentItem>
    </ItemView>
@@ -153,7 +153,7 @@
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000214000000010000000100000000000000000000000064ffffffff000000810000000000000001000002140000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000111000000010000000100000000000000000000000064ffffffff000000810000000000000001000001110000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
       <CurrentItem>Synthesize - XST</CurrentItem>
    </ItemView>
@@ -259,13 +259,13 @@
          <ClosedNode>/uart_tb - behavioral |home|jeroen|rvex|cache-test|vhdl|temp|uart_tb.vhd/uut - periph_UART - Behavioral/uart_inst - utils_uart - Behavioral</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem>pls_inst - core_pipelanes - Behavioral (/bulk/rvex/rvex-rewrite/lib/rvex/core/core_pipelanes.vhd)</SelectedItem>
+         <SelectedItem>testbench - Behavioral (/home/mattidreef/rvex-rewrite/platform/cache-test/design/testbench.vhd)</SelectedItem>
       </SelectedItems>
-      <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
+      <ScrollbarPosition orientation="vertical" >1</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff0000000000000001000000010000000000000000000000000000000002020000000100000001000000640000024d000000020000000000000000000000000200000064ffffffff0000008100000003000000020000024d0000000100000003000000000000000100000003</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff000000000000000100000001000000000000000000000000000000000202000000010000000100000064000002f6000000020000000000000000000000000200000064ffffffff000000810000000300000002000002f60000000100000003000000000000000100000003</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >true</UserChangedColumnWidths>
-      <CurrentItem>pls_inst - core_pipelanes - Behavioral (/bulk/rvex/rvex-rewrite/lib/rvex/core/core_pipelanes.vhd)</CurrentItem>
+      <CurrentItem>testbench - Behavioral (/home/mattidreef/rvex-rewrite/platform/cache-test/design/testbench.vhd)</CurrentItem>
    </ItemView>
    <ItemView engineview="BehavioralSim" sourcetype="" guiview="Process" >
       <ClosedNodes>
@@ -273,26 +273,26 @@
          <ClosedNode>Design Utilities/Compile HDL Simulation Libraries</ClosedNode>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem/>
+         <SelectedItem></SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000224000000010000000100000000000000000000000064ffffffff000000810000000000000001000002240000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000121000000010000000100000000000000000000000064ffffffff000000810000000000000001000001210000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem/>
+      <CurrentItem></CurrentItem>
    </ItemView>
    <ItemView engineview="BehavioralSim" sourcetype="DESUT_VHDL_ARCHITECTURE" guiview="Process" >
       <ClosedNodes>
          <ClosedNodesVersion>1</ClosedNodesVersion>
       </ClosedNodes>
       <SelectedItems>
-         <SelectedItem></SelectedItem>
+         <SelectedItem>Behavioral Check Syntax</SelectedItem>
       </SelectedItems>
       <ScrollbarPosition orientation="vertical" >0</ScrollbarPosition>
       <ScrollbarPosition orientation="horizontal" >0</ScrollbarPosition>
-      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000224000000010000000100000000000000000000000064ffffffff000000810000000000000001000002240000000100000000</ViewHeaderState>
+      <ViewHeaderState orientation="horizontal" >000000ff00000000000000010000000100000000000000000000000000000000000000000000000121000000010000000100000000000000000000000064ffffffff000000810000000000000001000001210000000100000000</ViewHeaderState>
       <UserChangedColumnWidths orientation="horizontal" >false</UserChangedColumnWidths>
-      <CurrentItem></CurrentItem>
+      <CurrentItem>Behavioral Check Syntax</CurrentItem>
    </ItemView>
    <ItemView engineview="SynthesisOnly" sourcetype="DESUT_VHDL_PACKAGE_DECL" guiview="Process" >
       <ClosedNodes>

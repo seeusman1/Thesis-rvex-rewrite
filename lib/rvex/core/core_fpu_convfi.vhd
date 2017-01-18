@@ -40,6 +40,8 @@ use rvex.core_pipeline_pkg.all;
 use rvex.core_opcode_pkg.all;
 use rvex.core_opcodeFpu_pkg.all;
 
+use rvex.utils_pkg.all;
+
 entity core_fpu_convfi is
   port (
   

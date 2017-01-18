@@ -40,6 +40,8 @@ use rvex.core_pipeline_pkg.all;
 use rvex.core_opcode_pkg.all;
 use rvex.core_opcodeFpu_pkg.all;
 
+use rvex.utils_pkg.all;
+
 entity core_fpu_add is
   port (
   
@@ -217,7 +219,7 @@ begin
     l := to_float(si(P_DEC).op_l(ew+mw downto 0), ew, mw);
     r := to_float(si(P_DEC).op_r(ew+mw downto 0), ew, mw);
     
-    if (si(P_DEC).add_sub = SUB) then
+    if (si(P_DEC).add_sub = SUBTRACT) then
       r(r'high) := not r(r'high);
     end if;
 

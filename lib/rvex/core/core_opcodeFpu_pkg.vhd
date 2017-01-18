@@ -63,7 +63,7 @@ package core_opcodeFpu_pkg is
   );
 
   -- Compare unit control signal
-  type fpuCmpOp_type is
+  type fpuCmpOp_type is (
     -- EQual, Not Equal
     EQ,
     NE,

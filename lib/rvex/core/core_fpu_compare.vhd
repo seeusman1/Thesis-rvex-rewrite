@@ -43,6 +43,8 @@ use rvex.core_pipeline_pkg.all;
 use rvex.core_opcode_pkg.all;
 use rvex.core_opcodeFpu_pkg.all;
 
+use rvex.utils_pkg.all;
+
 entity core_fpu_compare is
   port (
   
@@ -169,7 +171,7 @@ begin
   -----------------------------------------------------------------------------
   si(P_DEC).op_l   <= pl2fcmp_opl(S_FCMP);
   si(P_DEC).op_r   <= pl2fcmp_opr(S_FCMP);
-  si(P_DEC).opcode <= OPCODE_TABLE(vect2uint(pl2fcmp_opcode(S_FCMP))).fpuCtrl.cmpOp;;
+  si(P_DEC).opcode <= OPCODE_TABLE(vect2uint(pl2fcmp_opcode(S_FCMP))).fpuCtrl.cmpOp;
 
   -----------------------------------------------------------------------------
   -- Execute phase 1 (decode)
@@ -312,7 +314,7 @@ begin
   phase_result : process(si(P_RES)) is
   
     variable ltype, rtype : valid_fpstate;
-    variable eq, gt       : std_logic;
+    variable veq, vgt       : std_logic;
   
   begin
   
@@ -321,8 +323,8 @@ begin
     
     ltype := si(P_RES).ltype;
     rtype := si(P_RES).rtype;
-    eq    := si(P_RES).eq;
-    gt    := si(P_RES).gt;
+    veq   := si(P_RES).eq;
+    vgt   := si(P_RES).gt;
   
     -- Added: check for NaN
     if (ltype = nan or ltype = quiet_nan or rtype = nan or rtype = quiet_nan) then
@@ -333,12 +335,12 @@ begin
       end if;
     else
       case si(P_RES).opcode is
-        when EQ => so(P_RES).result <= eq;
-        when NE => so(P_RES).result <= not eq;
-        when LT => so(P_RES).result <= not (eq or gt);
-        when LE => so(P_RES).result <= not gt;
-        when GT => so(P_RES).result <= gt;
-        when GE => so(P_RES).result <= eq or gt;
+        when EQ => so(P_RES).result <= veq;
+        when NE => so(P_RES).result <= not veq;
+        when LT => so(P_RES).result <= not (veq or vgt);
+        when LE => so(P_RES).result <= not vgt;
+        when GT => so(P_RES).result <= vgt;
+        when GE => so(P_RES).result <= veq or vgt;
         when others  => so(P_RES).result <= '0';
       end case;
     end if;
