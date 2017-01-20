@@ -7,8 +7,8 @@ import sys
 usage = 'all.py <object> [<object2> ...]'
 
 if len(sys.argv) == 0:
-	print(usage, file=sys.stderr)
-	sys.exit(2)
+  print(usage, file=sys.stderr)
+  sys.exit(2)
 
 print("""
 
@@ -22,7 +22,7 @@ c0 add $r0.63 = $r0.0, 0
 """)
 
 for f in sys.argv[1:]:
-print("""
+  print("""
 
 c0 call $l0.0 = %s_main
 ;;

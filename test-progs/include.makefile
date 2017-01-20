@@ -152,14 +152,28 @@ POWERSTONE = adpcm bcnt blit compress crc des engine fir g3fax jpeg pocsag qurt 
 #POWERSTONE += whetstone auto
 EXECUTABLES += $(POWERSTONE)
 
-# Random other applications with zero platform dependencies other than a UART.
+# Random other applications with zero platform dependencies other than a UART
+# transmission.
 EXECUTABLES += ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite\
-	soma x264 uart helloworld all-at-once mandel
+	soma x264 helloworld
+
+# "uart" is also an executable, but it also needs getchar, which isn't
+# universally available.
+
+# Executables that only work with HP VEX for whatever reason:
+ifeq ($(COMPILER), HP)
+EXECUTABLES += all-at-once
+endif
+
+# Executables that only work with Open64 for whatever reason:
+ifeq ($(COMPILER), O64)
+EXECUTABLES += 
+endif
 
 # List of platform-agnostic (generic) programs which run and complete without
 # interaction, and test for success/failure. On success, main() should return
 # 0.
-BENCH_EXECUTABLES  = adpcm bcnt blit crc engine fir g3fax itver2 jpeg matrix des compress
+BENCH_EXECUTABLES += adpcm bcnt blit crc engine fir g3fax itver2 jpeg matrix des compress
 BENCH_EXECUTABLES += pocsag qurt soma ucbqsort v42 x264 
 
 # Toolchain setup.
@@ -282,8 +296,25 @@ list-executables:
 	done
 	@echo ""
 
+# Compile all executables.
 .PHONY: all
 all: $(EXECUTABLES)
+
+# Compile all executables with a number of configurations that should work.
+# This cleans itself afterwards, so it's not useful at all for anything except
+# checking that there are no random syntax errors or problems with vexparse or
+# something.
+.PHONY: conformance
+conformance:
+	$(MAKE) clean
+	$(MAKE) all COMPILER=HP DYNAMIC=true-O2
+	$(MAKE) clean
+	$(MAKE) all COMPILER=O64 ISSUE_WIDTH=8 DYNAMIC=true-O2
+	$(MAKE) clean
+	$(MAKE) all COMPILER=O64 ISSUE_WIDTH=4 DYNAMIC=true-O2
+	$(MAKE) clean
+	$(MAKE) all COMPILER=O64 ISSUE_WIDTH=2 DYNAMIC=true-O2
+	$(MAKE) clean
 
 # How to compile platform-specific sources;
 %.s: $(PLATFORM_SRC)/%.c
@@ -349,7 +380,7 @@ endif
 # subprograms in a bigger program (prefixes global symbols with the object
 # name);
 %-sub.o: %.o
-	$(OBJDUMP) -t $< | grep -E '^[0-9a-fA-F]{8} g' | sed -r 's/^.* (\w+)$$/\1 $(patsubst %.o,%,$<)_\1/g' > $(patsubst %.o,%.syms,$<)
+	$(OBJDUMP) -t $< | grep -E '^[0-9a-fA-F]{8} g' | sed -r 's/^.* ((\w|\.)+)$$/\1 $(patsubst %.o,%,$<)_\1/g' > $(patsubst %.o,%.syms,$<)
 	$(OBJCOPY) --redefine-syms $(patsubst %.o,%.syms,$<) $< $@
 
 # Special rule for _start.o, may be overwritten target-specifically;

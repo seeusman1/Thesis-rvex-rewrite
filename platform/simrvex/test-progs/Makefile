@@ -3,17 +3,24 @@
 TOOLS = ../../../tools
 GEN_TEST_PROGS = ../../../test-progs
 
-# Platform-specific executables.
-EXECUTABLES = convolution convolution_5x5 convolution_7x7 greyscale median framebuffertest mandel
+# Platform-specific executables. Only work with O64.
+ifeq ($(COMPILER), O64)
+EXECUTABLES = convolution_3x3 convolution_5x5 convolution_7x7 greyscale median mandel
+endif
 
 # Platform-specific code to link.
 OBJECTS = platform.a
+
+# Stuff to clean in addition to the usual.
+CLEAN = simtestall
 
 # Include generic test program makefile.
 include $(GEN_TEST_PROGS)/include.makefile
 
 # Simulator command line.
-SIM = ADAPTOR_CONFIG=cfg/plugin.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200 $(TOOLS)/simrvex/bin/simrvex
+SIM_PREFIX = ADAPTOR_CONFIG=cfg/plugin.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200
+SIM_EXEC = $(TOOLS)/simrvex/bin/simrvex
+SIM = $(SIM_PREFIX) $(SIM_EXEC)
 
 # How to create the platform.a library
 platform.a: platform.o simrvex_stubs.o
@@ -34,7 +41,8 @@ help:
 	@echo "  make simtest-<prog>  : runs prog on the simulator and checks return code."
 	@echo ""
 	@echo "  make simtestall      : calls simtest-<prog> for all executables."
-	@echo "  will output a list of success/failures to file \'simtestall\'"
+	@echo "                         will output a list of success/failures to file"
+	@echo "                         \'simtestall\'"
 	@echo ""
 	@echo "  make clean           : cleans intermediate files."
 	@echo ""
@@ -52,8 +60,6 @@ simtestall: simtestall-clean $(POWERSTONE:%=simtest-%)
 simtestall-clean:
 	echo -n "" > simtestall
 
-#The Powerstone programs all return 0xdeadbeef. 
-#We take the last register contents using tail and grep for that value in r3 (return value register).
 simtest-% : %.elf
 	@${SIM} -t1,0 --batch $^|tail -n 40 | grep "RET: 0";\
 	if [ $$? != 0 ] ; then \
@@ -65,4 +71,22 @@ simtest-% : %.elf
 simtrace-% : %.elf
 	${SIM} -t1,0 $< > $@
 
+.PHONY: conformance
+conformance:
+	$(MAKE) clean
+	$(MAKE) all check-all COMPILER=HP DYNAMIC=true-O2
+	$(MAKE) clean
+	$(MAKE) all check-all COMPILER=O64 ISSUE_WIDTH=8 DYNAMIC=true-O2
+	$(MAKE) clean
+	$(MAKE) all check-all COMPILER=O64 ISSUE_WIDTH=4 DYNAMIC=true-O2
+	$(MAKE) clean
+	$(MAKE) all check-all COMPILER=O64 ISSUE_WIDTH=2 DYNAMIC=true-O2
+	$(MAKE) clean
 
+.PHONY: check-all
+check-all: $(patsubst %,check-%,$(BENCH_EXECUTABLES))
+
+.PHONY: check-%
+check-%: %.elf
+	@echo $? COMPILER=$(COMPILER) ISSUE_WIDTH=$(ISSUE_WIDTH) DYNAMIC=$(DYNAMIC)
+	@$(SIM) -t1,0 --batch $^|tail -n 40 | grep "RET: 0"
