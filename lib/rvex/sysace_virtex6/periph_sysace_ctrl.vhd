@@ -47,8 +47,8 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-library rvex;
-use rvex.common_pkg.all;
+library work;
+use work.common_pkg.all;
 
 --=============================================================================
 -- This component of the system ACE peripheral manages the sector buffer,
@@ -199,7 +199,7 @@ begin
   end process;
   
   -- Instantiate the cross-clock domain synchronization unit.
-  ctrl_sync: entity rvex.utils_sync
+  ctrl_sync: entity work.utils_sync
     port map (
       reset                     => reset,
       

@@ -49,8 +49,8 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.bus_pkg.all;
+library work;
+use work.bus_pkg.all;
 
 --=============================================================================
 -- This unit represents a 16-byte deep, 8-bit wide FIFO buffer for use in the

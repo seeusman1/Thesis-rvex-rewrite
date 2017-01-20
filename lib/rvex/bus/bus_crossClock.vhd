@@ -49,8 +49,8 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.bus_pkg.all;
+library work;
+use work.bus_pkg.all;
 
 --=============================================================================
 -- Clock-domain crossing for the rvex bus.
@@ -154,7 +154,7 @@ begin
   -- Synchronization
   -----------------------------------------------------------------------------
   -- Control signal synchronization.
-  ctrl_sync: entity rvex.utils_sync
+  ctrl_sync: entity work.utils_sync
     port map (
       reset                     => reset,
       a_clk                     => mst_clk,

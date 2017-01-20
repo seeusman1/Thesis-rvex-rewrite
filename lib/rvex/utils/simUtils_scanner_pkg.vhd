@@ -51,8 +51,8 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.simUtils_pkg.all;
+library work;
+use work.simUtils_pkg.all;
 
 --=============================================================================
 -- This package contains simulation/elaboration-only methods for string

@@ -47,10 +47,10 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_pipeline_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.core_pkg.all;
+use work.core_pipeline_pkg.all;
 
 --=============================================================================
 -- This package contains type definitions and constants relevant only to the

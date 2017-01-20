@@ -48,7 +48,7 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
+library work;
 
 --=============================================================================
 -- This testbench instantiates and provides stimuli for utils_uart for manual
@@ -87,7 +87,7 @@ begin -- architecture
 --=============================================================================
   
   -- Generate unit under test 1.
-  uut1: entity rvex.utils_uart
+  uut1: entity work.utils_uart
     generic map (
       F_CLK                     => 10000000.0,
       F_BAUD                    => 115200.0,
@@ -112,7 +112,7 @@ begin -- architecture
   
   -- Generate unit under test 2. This is just a receiver listening to uut1,
   -- having a frequency mismatch.
-  uut2: entity rvex.utils_uart
+  uut2: entity work.utils_uart
     generic map (
       F_CLK                     => 10000000.0,
       F_BAUD                    => 109785.6, -- Notice misalignment here; 4.7% lower frequency.
@@ -132,7 +132,7 @@ begin -- architecture
   
   -- Generate unit under test 3. Same as 2, but with a frequency mismatch in
   -- the other direction.
-  uut3: entity rvex.utils_uart
+  uut3: entity work.utils_uart
     generic map (
       F_CLK                     => 10000000.0,
       F_BAUD                    => 120614.4, -- Notice misalignment here; 4.7% higher frequency.

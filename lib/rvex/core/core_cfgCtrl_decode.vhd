@@ -48,11 +48,11 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_intIface_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.core_pkg.all;
+use work.core_intIface_pkg.all;
 
 --=============================================================================
 -- This entity contains the control logic which decodes configuration requests

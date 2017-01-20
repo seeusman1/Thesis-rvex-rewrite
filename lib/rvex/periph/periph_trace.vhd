@@ -48,10 +48,10 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.bus_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.bus_pkg.all;
 
 --=============================================================================
 -- This peripheral acts as a sink for the trace bytestream which the rvex core
@@ -165,7 +165,7 @@ begin -- architecture
     -- I'm lazily abusing a RAM block implementation intended to be connected
     -- to a bus here because XST wasn't recognizing my dumbed-down description
     -- of exactly this implementation as RAM blocks for some reason.
-    ram_block_inst: entity rvex.bus_ramBlock
+    ram_block_inst: entity work.bus_ramBlock
       generic map (
         DEPTH_LOG2B             => DEPTH_LOG2B
       )

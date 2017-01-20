@@ -49,13 +49,13 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_ctrlRegs_pkg.all;
-use rvex.cache_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.bus_pkg.all;
+use work.core_pkg.all;
+use work.core_ctrlRegs_pkg.all;
+use work.cache_pkg.all;
 
 --=============================================================================
 -- This unit wraps a single r-VEX core, L1 cache, and interrupt controller. It
@@ -269,7 +269,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the rvex core
   -----------------------------------------------------------------------------
-  core: entity rvex.core
+  core: entity work.core
     generic map (
       CFG                       => RCFG,
       CORE_ID                   => 0,
@@ -346,7 +346,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the cache
   -----------------------------------------------------------------------------
-  cache: entity rvex.cache
+  cache: entity work.cache
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -426,7 +426,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Bus access arbiter
   -----------------------------------------------------------------------------
-  cache_arbiter: entity rvex.bus_arbiter
+  cache_arbiter: entity work.bus_arbiter
     generic map (
       NUM_MASTERS               => 2**RCFG.numLaneGroupsLog2
     )
@@ -473,7 +473,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Interrupt controller
   -----------------------------------------------------------------------------
-  irq_ctrl: entity rvex.periph_irq
+  irq_ctrl: entity work.periph_irq
     generic map (
       BASE_ADDRESS              => X"FFFFE000",
       NUM_CONTEXTS              => 2**RCFG.numContextsLog2,

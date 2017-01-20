@@ -48,18 +48,18 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
 -- pragma translate_off
-use rvex.simUtils_pkg.all;
-use rvex.simUtils_mem_pkg.all;
+use work.simUtils_pkg.all;
+use work.simUtils_mem_pkg.all;
 -- pragma translate_on
-use rvex.bus_pkg.all;
-use rvex.bus_addrConv_pkg.all;
-use rvex.core_pkg.all;
-use rvex.cache_pkg.all;
-use rvex.rvsys_grlib_pkg.all;
+use work.bus_pkg.all;
+use work.bus_addrConv_pkg.all;
+use work.core_pkg.all;
+use work.cache_pkg.all;
+use work.rvsys_grlib_pkg.all;
 
 library grlib;
 use grlib.amba.all;
@@ -337,7 +337,7 @@ begin -- architecture
   begin
     
     -- Instantiate the rvex core.
-    rvex_inst: entity rvex.core
+    rvex_inst: entity work.core
       generic map (
         CFG                       => CFG.core,
         coreID                    => AHB_MASTER_INDEX_START,
@@ -556,7 +556,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the trace data buffer
   -----------------------------------------------------------------------------
-  trace_buffer: entity rvex.periph_trace
+  trace_buffer: entity work.periph_trace
     generic map (
       DEPTH_LOG2B                 => 13 -- 8kiB = 2x 4kiB
     )
@@ -595,7 +595,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the cache
   -----------------------------------------------------------------------------
-  cache_inst: entity rvex.cache
+  cache_inst: entity work.cache
     generic map (
       RCFG                      => CFG.core,
       CCFG                      => CFG.cache
@@ -719,7 +719,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   ahb_bus_bridge_gen: for laneGroup in 2**CFG.core.numLaneGroupsLog2-1 downto 0 generate
     
-    ahb_bus_bridge_inst: entity rvex.bus2ahb
+    ahb_bus_bridge_inst: entity work.bus2ahb
       generic map (
         
         -- Generic information as passed to grlib.dma2ahb.
@@ -757,7 +757,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Bus snooper
   -----------------------------------------------------------------------------
-  ahb_snoop_inst: entity rvex.ahb_snoop
+  ahb_snoop_inst: entity work.ahb_snoop
     generic map (
       FIRST_MASTER        => AHB_MASTER_INDEX_START,
       NUM_CACHE_BLOCKS    => 2**CFG.core.numLaneGroupsLog2
@@ -849,7 +849,7 @@ begin -- architecture
   begin
     
     -- Instantiate the demuxing unit.
-    debug_bus_demux_inst: entity rvex.bus_demux
+    debug_bus_demux_inst: entity work.bus_demux
       generic map (
         ADDRESS_MAP       => ADDR_MAP
       )

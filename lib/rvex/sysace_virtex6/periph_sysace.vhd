@@ -47,9 +47,9 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.bus_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.bus_pkg.all;
 
 --=============================================================================
 -- This peripheral allows the usage of the CompactFlash card on the ML605
@@ -142,7 +142,7 @@ begin
   -----------------------------------------------------------------------------
   -- Instantiate back-end unit. This controls system ACE register access timing
   -- and also blocks sysace buffer accesses when the buffer is not ready.
-  sysace_back_inst: entity rvex.periph_sysace_back
+  sysace_back_inst: entity work.periph_sysace_back
     port map (
       
       -- System control.
@@ -173,7 +173,7 @@ begin
   -----------------------------------------------------------------------------
   -- Instantiate the front-end unit. This controls the register access patterns
   -- needed to read and write sectors from and to the compactflash card.
-  sysace_front_inst: entity rvex.periph_sysace_front
+  sysace_front_inst: entity work.periph_sysace_front
     port map (
       
       -- System control.
@@ -209,7 +209,7 @@ begin
   -----------------------------------------------------------------------------
   -- Instantiate the sector buffer. This provides most of the cross-clock
   -- domain stuff by constructed from a true-dual-port block RAM.
-  sysace_buf_inst: entity rvex.periph_sysace_buf
+  sysace_buf_inst: entity work.periph_sysace_buf
     port map (
       
       -- Interface with the front-end.
@@ -235,7 +235,7 @@ begin
   -- Instantiate control/sync unit
   -----------------------------------------------------------------------------
   -- Instantiate the sector buffer control unit that handles "cache" misses.
-  sysace_ctrl_inst: entity rvex.periph_sysace_ctrl
+  sysace_ctrl_inst: entity work.periph_sysace_ctrl
     generic map (
       ADDRESS_BITS              => ADDRESS_BITS
     )

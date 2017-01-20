@@ -48,12 +48,12 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_intIface_pkg.all;
-use rvex.core_ctrlRegs_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.core_pkg.all;
+use work.core_intIface_pkg.all;
+use work.core_ctrlRegs_pkg.all;
 
 --=============================================================================
 -- This entity contains the control registers as accessed from the debug bus
@@ -339,7 +339,7 @@ begin -- architecture
   -- specific registers for the busses from the cores, and append the context
   -- to the address.
   glob_ctxt_bus_switch_gen: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
-    glob_ctxt_bus_switch_inst: entity rvex.core_ctrlRegs_busSwitch
+    glob_ctxt_bus_switch_inst: entity work.core_ctrlRegs_busSwitch
       generic map (
         NUM_SLAVES                    => 2,
         BOUNDARIES                    => (1 => X"00000200"),
@@ -390,7 +390,7 @@ begin -- architecture
   end generate;
   
   -- Instantiate the bus switch for the debug bus.
-  debug_bus_switch_inst: entity rvex.core_ctrlRegs_busSwitch
+  debug_bus_switch_inst: entity work.core_ctrlRegs_busSwitch
     generic map (
       NUM_SLAVES                    => 3,
       BOUNDARIES                    => (
@@ -555,7 +555,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate lane group to context bus switch
   -----------------------------------------------------------------------------
-  context_lane_switch: entity rvex.core_ctrlRegs_contextLaneSwitch
+  context_lane_switch: entity work.core_ctrlRegs_contextLaneSwitch
     generic map (
       CFG                       => CFG
     )

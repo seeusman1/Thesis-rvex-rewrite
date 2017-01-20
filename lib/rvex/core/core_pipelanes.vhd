@@ -48,16 +48,16 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_intIface_pkg.all;
-use rvex.core_pipeline_pkg.all;
-use rvex.core_trap_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.core_pkg.all;
+use work.core_intIface_pkg.all;
+use work.core_pipeline_pkg.all;
+use work.core_trap_pkg.all;
 
 -- pragma translate_off
-use rvex.simUtils_pkg.all;
+use work.simUtils_pkg.all;
 -- pragma translate_on
 
 --=============================================================================
@@ -464,7 +464,7 @@ begin -- architecture
     
   begin
     
-    pl_inst: entity rvex.core_pipelane
+    pl_inst: entity work.core_pipelane
       generic map (
         
         -- Global configuration.
@@ -626,7 +626,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate context to pipelane interface
   -----------------------------------------------------------------------------
-  cxplif_inst: entity rvex.core_contextPipelaneIFace
+  cxplif_inst: entity work.core_contextPipelaneIFace
     generic map (
       CFG                               => CFG
     )
@@ -764,7 +764,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   dmsw_gen: for laneGroup in 2**CFG.numLaneGroupsLog2-1 downto 0 generate
     
-    dmsw_inst: entity rvex.core_dmemSwitch
+    dmsw_inst: entity work.core_dmemSwitch
       generic map (
         CFG                             => CFG
       )
@@ -809,7 +809,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate stop bit and branch operation routing
   -----------------------------------------------------------------------------
-  sbit_inst: entity rvex.core_stopBitRouting
+  sbit_inst: entity work.core_stopBitRouting
     generic map (
       CFG                       => CFG
     )
@@ -836,7 +836,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate LIMM routing network
   -----------------------------------------------------------------------------
-  limm_inst: entity rvex.core_limmRouting
+  limm_inst: entity work.core_limmRouting
     generic map (
       CFG                       => CFG
     )
@@ -866,7 +866,7 @@ begin -- architecture
   -- Instantiate trap routing network
   -----------------------------------------------------------------------------
   trap_routing: if CFG.traps > 0 generate
-    trap_inst: entity rvex.core_trapRouting
+    trap_inst: entity work.core_trapRouting
       generic map (
         CFG                       => CFG
       )
