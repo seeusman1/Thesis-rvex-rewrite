@@ -42,7 +42,7 @@ TARGETS = \
 CLEAN = *.bin *.rawtrace *.trace
 
 # Include generic test program makefile.
-include $(GEN_TEST_PROGS)/Makefile
+include $(GEN_TEST_PROGS)/include.makefile
 
 # How to split up srec files into the three memories.
 %.imem.srec %.dmem.srec %.pmem.srec %.bin %_data.bin %_param.bin: %.srec

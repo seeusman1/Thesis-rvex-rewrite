@@ -152,7 +152,7 @@ POWERSTONE = adpcm bcnt blit compress crc des engine fir g3fax jpeg pocsag qurt 
 #POWERSTONE += whetstone auto
 EXECUTABLES += $(POWERSTONE)
 
-# Random other applications.
+# Random other applications with zero platform dependencies other than a UART.
 EXECUTABLES += ucbqsort-fast adpcm1 dft itver2 itver2-repeat matrix memwrite\
 	soma x264 uart helloworld all-at-once mandel
 
@@ -275,7 +275,7 @@ help:
 
 list-executables:
 	@echo ""
-	@echo " The following programs are available:"
+	@echo " The following programs are available using current compiler ($(COMPILER)):"
 	@echo ""
 	@for exec in $(EXECUTABLES) ; do \
 		echo "  $$exec" ; \

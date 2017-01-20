@@ -4,13 +4,13 @@ TOOLS = ../../../tools
 GEN_TEST_PROGS = ../../../test-progs
 
 # Platform-specific executables.
-EXECUTABLES = convolution convolution_5x5 convolution_7x7 greyscale median framebuffertest
+EXECUTABLES = convolution convolution_5x5 convolution_7x7 greyscale median framebuffertest mandel
 
 # Platform-specific code to link.
 OBJECTS = platform.a
 
 # Include generic test program makefile.
-include $(GEN_TEST_PROGS)/Makefile
+include $(GEN_TEST_PROGS)/include.makefile
 
 # Simulator command line.
 SIM = ADAPTOR_CONFIG=cfg/plugin.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200 $(TOOLS)/simrvex/bin/simrvex

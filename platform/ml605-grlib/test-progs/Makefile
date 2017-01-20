@@ -7,7 +7,7 @@ RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 
 # Platform-specific executables.
-EXECUTABLES = time Demodispatch_multi mandelbrot_multi raytracer_multi greyscale_multi convolution_multi
+EXECUTABLES = time Demodispatch_multi mandelbrot_multi raytracer_multi greyscale_multi convolution_multi mandel
 
 # Platform-specific code to link.
 OBJECTS = platform.a
@@ -29,7 +29,7 @@ CLEAN =
 BUNDLE_ALIGN = 2
 
 # Include generic test program makefile.
-include $(GEN_TEST_PROGS)/Makefile
+include $(GEN_TEST_PROGS)/include.makefile
 
 # How to upload;
 .PHONY: upload-%
