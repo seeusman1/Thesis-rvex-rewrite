@@ -1,0 +1,85 @@
+
+\subsubsection{Run control}
+\label{sec:core-ug-cfg-inst-iface-rctrl}
+
+The run control signals provide an interface between the core and an interrupt 
+controller or a master processor if the \rvex{} is used as a coprocessor. All 
+signals are optional. All signals are arrays of some sort, indexed by hardware 
+context IDs in descending order.
+
+\begin{itemize}
+
+\item \code{rctrl2rv_irq : in std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+\item \code{rctrl2rv_irqID : in rvex_address_array(}\textit{number of contexts - 1}\code{ downto 0)}
+\item \code{rv2rctrl_irqAck : out std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+
+When \code{rctrl2rv_irq} is high, an interrupt trap will be generated within the 
+indexed context as soon as possible, if the interrupt enable flag in the context 
+control register is set. Interrupt entry is acknowledged by 
+\code{rv2rctrl_irqAck} being asserted high for one \code{clkEn}abled cycle. 
+\code{rctrl2rv_irqID} is sampled in exactly that cycle and is made available to 
+the trap handler through the trap argument register. When not specified, 
+\code{rctrl2rv_irq} is tied to \code{'0'} and \code{rctrl2rv_irqID} is tied to 
+\code{X"00000000"}.
+
+When \code{rv2rctrl_irqAck} is high, an interrupt controller would typically 
+release \code{rctrl2rv_irq} and set \code{rctrl2rv_irqID} to a value signalling 
+that no interrupt is active on the subsequent clock edge. Alternatively, if more
+interrupts are pending,  \code{rctrl2rv_irq} may remain high and
+\code{rctrl2rv_irqID} may be set to the  code identifying the next interrupt.
+
+Releasing \code{rctrl2rv_irq} before an interrupt is acknowledged may still 
+cause an interrupt trap to be caused. This is due to the fact that traps take 
+time to propagate through the pipeline. The core will still assert 
+\code{rv2rctrl_irqAck} upon entry of the trap service routine in this case. In 
+order to properly account for this behavior, interrupt controllers should ignore 
+\code{rv2rctrl_irqAck} if no interrupt is active, and there should be a special 
+\code{rctrl2rv_irqID} value that signals `no interrupt'. The trap service 
+routine should return to application code as soon as possible in this case.
+
+\vspace{1em}
+\item \code{rctrl2rv_run : in std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+\item \code{rv2rctrl_idle : out std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+
+When \code{rctrl2rv_run} is asserted low, the indexed context will stop 
+executing instructions as soon as possible. It will finish instructions that 
+were already in the pipeline and have already committed data, and set the 
+program counter to point to the next instruction that should be issued for the 
+program to resume correctly later. As soon as \code{rctrl2rv_run} is asserted
+high again, the context will resume, assuming there is nothing else preventing
+it from running. When \code{rctrl2rv_run} is not specified, it is tied to
+\code{'1'}.
+
+Only when the context has completely stopped, i.e., there are no instructions in 
+the pipeline, will \code{rv2rctrl_idle} be asserted high. This may also happen 
+while \code{rctrl2rv_run} is high, when the core is being halted for a different 
+reason. Such reasons include preparing for reconfiguration, the context not 
+having lane groups assigned to it, and the B flag in \creg{DCR}. 
+\code{rv2rctrl_idle} remains high until the next instruction is fetched.
+
+\vspace{1em}
+\item \code{rctrl2rv_reset : in std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+\item \code{rctrl2rv_resetVect : in rvex_address_array(}\textit{number of contexts - 1}\code{ downto 0)}
+\item \code{rv2rctrl_done : out std_logic_vector(}\textit{number of contexts - 1}\code{ downto 0)}
+
+When \code{rctrl2rv_reset} is asserted high, the context control registers for 
+the indexed context are synchronously reset in the next \code{clkEn}abled cycle. 
+Note that this behavior is different from the master \code{reset} signal, which 
+ignores \code{clkEn}. When it is not specified, it is tied to \code{'0'}.
+
+\code{rctrl2rv_resetVect} determines the reset vector for each context, i.e. the
+initial program counter. When it is not specified, it is tied to the reset
+vector specified by the \code{CFG} generic.
+
+\code{rv2rctrl_done} is connected to the D flag in \creg{DCR}, which is set when 
+the processor executes a \insn{STOP} instruction. The only way to clear this 
+signal without debug bus accesses is to assert \code{reset} or 
+\code{rctrl2rv_reset}.
+
+When the \rvex{} is running as a co-processor, \code{rctrl2rv_reset} could be 
+used as an active low flag indicating that the currently loaded kernel needs to 
+be executed, in which case \code{rv2rctrl_done} signals completion.
+\code{rctrl2rv_resetVect} marks the entry point for the kernel.
+
+\end{itemize}
+

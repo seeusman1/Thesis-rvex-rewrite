@@ -1,0 +1,53 @@
+
+\subsubsection{LAC object objects and references}
+\label{sec:core-ug-cfg-cregs-refs}
+
+All objects except for predefined constants
+(Section~\ref{sec:core-ug-cfg-cregs-predef}) need to be declared using the
+\code{\iface*} and \code{\decl*} commands. These objects can then be referenced
+as follows, for both reads and writes.
+
+\begin{itemize}
+
+\item The most basic way to reference an object is to use its full name. For 
+inputs, this takes the form \code{<unit>2cxreg_<name>} or 
+\code{<unit>2gbreg_<name>}, depending on whether it is part of the context or 
+global register file interface. Likewise, outputs take the form 
+\code{cxreg2<unit>_<name>} or \code{gbreg2<unit>_<name>}. Finally, objects
+declared using the \code{\decl*} commands take the form
+\code{cr_<register-mnemonic>_<field-mnemonic>_<name>}. The register and field
+mnemonics are included to make them unique within global scope.
+
+\item In the LAC sections for a certain field, objects that are declared in the
+same field can be referenced using just \code{_<name>}. That is, the
+\code{cr_<register-mnemonic>_<field-mnemonic>} part of the object name is
+implicit in the reference.
+
+\item To explicitly specify a context for context-specific objects, an \code{@} 
+symbol and a natural literal determining the context may be appended. For 
+instance, \code{_pc@2} references the value of \code{_pc} for context 2. Note 
+that the context \emph{must} be a literal, not even constant objects are 
+permitted. The only thing that is permitted is \code{\n{}} in generated 
+registers, as this expands to a natural literal before parsing, similar to how a 
+C macro would behave. If the context is not explicitly specified, the current 
+context is used. If there is no current context, the context must be explicitly 
+specified.
+
+\item Member access for aggregate types is done by appending a \code{.} (decimal 
+point) followed by the member name. Rudimentary support is provided for array 
+members using \code{{<index>}}. As with explicitly specified contexts, only 
+natural literals and \code{\n{}} (in a \code{\registergen} environment) are 
+allowed for specifying the index.
+
+\item VHDL-like bit indexes and slices are supported for \code{unsigned} and 
+\code{bitvec} types. Indexing a single bit is done by appending 
+\code{[<position>]} to the end of the reference, where \code{<position>} may be 
+any natural-typed expression. The result of the indexing operation is a 
+\code{bit}. Slicing is done using \code{[<position>, <length>]}, where 
+\code{<position>} still accepts any natural-typed expression, but 
+\code{<length>} only supports natural literals. This is necessary to determine 
+the resulting type at compile time, which is an \code{unsigned} or \code{bitvec} 
+of size \code{<length>}. \code{<position>} specifies the lower bit index of the
+slice range.
+
+\end{itemize}

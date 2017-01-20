@@ -1,0 +1,167 @@
+
+\label{sec:core-ug-intro}
+
+Let us begin by defining some terminology. The \rvex{} processor is a Very Large 
+Instruction Word (VLIW) processor, which means that each instruction can specify 
+multiple independent operations. Such operations are called \textit{syllables}; 
+a full instruction is called a \textit{bundle}. \textit{Instruction} may be used 
+for either a bundle or a syllable, depending on context. A VLIW processor 
+capable of executing $n$ syllables per cycle is called an $n$\textit{-way} VLIW 
+processor.
+
+Because the amount of syllables in a bundle is usually\footnote{It is uncommon 
+for the compiler to find enough parallelism in a program to fill an entire 
+bundle. Therefore, if the bundle size is fixed, a lot of syllables will be NOP. 
+While a fixed bundle size results in much simpler hardware, the size of the 
+binary will be excessive. While main memory footprint is not so much an issue 
+nowadays, memory throughput and latency is; the efficiency of the instruction 
+coding directly affects execution speed as the memory is usually the 
+bottleneck.} not fixed, the processor needs a way to tell which syllables belong 
+to which bundle. In the VEX architecture, this is done by means of a 
+\textit{stop bit} in each syllable. If the stop bit is set, the next syllable in 
+the program starts a new bundle. Otherwise, the next syllable is part of the 
+same bundle.
+
+When a VLIW processor executes a bundle, each syllable will be routed to its own 
+\textit{(pipe)lane}. Note the `a' in lane; this is not a typo for pipeline 
+(although each pipelane, confusingly, does contain its own pipeline). In other 
+words, the pipelane is the thing that contains the computational resources to 
+execute a syllable.
+
+\subsection{Reconfiguration}
+\label{sec:core-ug-intro-reconf}
+
+What makes the \rvex{} processor special compared to other VLIW processors, is 
+that while the total number of pipelanes is obviously fixed, the pipelanes can 
+be distributed between different programs, running in parallel. This 
+distribution can be changed at runtime by means of \textit{reconfiguration}.
+
+Note that `reconfiguration' here is used to describe a process within the system 
+described by a single FPGA bitstream. In other words, the FPGA bitstream does 
+not need to be fully or partially reloaded when the \rvex{} processor 
+reconfigures itself. This allows reconfiguration to be done in a single cycle in 
+theory, although it comes at the cost of needing FPGA slice muxes or LUTs to 
+permit reconfiguration, instead of using the FPGA fabric directly.
+
+Not all pipelanes are seperable by means of reconfiguration. Groups of 
+inseperable pipelanes are called \textit{lane groups}. Sometimes they are also 
+referred to as \textit{lanepairs} when a lane group contains two pipelanes, 
+which is the most common configuration.
+
+In order to be able to run multiple programs on a single \rvex{} processor core 
+at the same time, an \rvex{} processor supports multiple \textit{contexts}. 
+Formally, a context contains the complete state of a program, from program 
+counter to register file. However, a more useful way to think of \rvex{} 
+contexts is as virtual processor cores. By means of reconfiguration, the amount 
+of lane groups dedicated to each virtual core can be changed. In fact, it is 
+possible to completely pause such a virtual core by simply assigning zero lane 
+groups to it.
+
+\subsection{Generic binaries}
+\label{sec:core-ug-intro-gen-bin}
+
+To compile for a VLIW processor, the compiler needs to be aware of what the 
+maximum number of syllables per bundle is. However, reconfiguration changes this 
+value at runtime, which would imply that each program should be compiled 
+multiple times, for each bundle size possible with reconfiguration. This would 
+severely limit the usefulness of reconfiguration, as it would be extremely 
+difficult to reconfigure in the middle of program execution. At best, the 
+program counters would be the only things that would not match between the two 
+binaries.
+
+The solution to this problem is a \textit{generic binary} \cite{brandon2013}.
+Generic binaries are compiled for the largest possible bundle size at which
+they may execute, referred to as the \textit{generic bundle size}. This allows
+the compiler to extract as much parallelism as may ever be used. The difference
+between a normal binary compiled for the generic bundle size and a generic
+binary lies in additional rules imposed to the program by the assembler. These
+rules are carefully picked to ensure that, for instance, a bundle with four
+syllables in it still runs correctly if the two syllable pairs are run
+sequentially. Unless otherwise specified, an \rvex{} generic binary refers to a
+binary compiled such that it runs correctly on 8-way, 4-way and 2-way \rvex{}
+processor cores.
+
+\subsection{Intended applications}
+\label{sec:core-ug-intro-applic}
+
+On the short term, the current version of the \rvex{} processor is still
+primarily intended for research. The VHDL is written in a highly flexible and
+configurable way, thus making modifications for experiments relatively easy. At
+the same time, several complex features have been added to the core, in order to
+make it possible to, for instance, run Linux on it. Most notably, precise trap
+support has been added since the previous \rvex{} version, necessary for adding
+a memory-management unit.
+
+This combination of flexibility and complexity comes at a cost: speed. The 
+current version of the \rvex{} processor only runs at 37.5 MHz on a high-end 
+Virtex 6 FPGA using the default configuration, while almost completely filling 
+it up. Much more interesting is what the \rvex{} architecture is capable of on 
+the long run when better optimized, or even ported to an ASIC.
+
+In general, VLIW processors are well-suited for executing highly parallel 
+programs, such as those found in digital signal processing (DSP). In particular, 
+the reconfiguration capabilities of the \rvex{} processor allow it to be used in 
+places where multiple DSP algorithms run in parallel in a real-time system, such 
+that each task has its own deadlines.
+
+To demonstrate, consider a hypothetical audio/video decoder DSP with the
+following characteristics as an example.
+
+\begin{itemize}
+
+\item The audio and video decoders do not depend on each other and can thus be
+executed in parallel. The decoders themselves are not multithreaded.
+
+\item Both tasks run 1.5x as fast when running on a 4-way VLIW compared to a
+2-way VLIW. % It should be shown somewhere that this is reasonable if I put this
+% in my thesis.
+
+\item The execution times of both tasks are data dependent. For example, if
+there is a lot of movement in the video, then the video task will take longer
+to complete.
+
+\item It is possible to heuristically predict whether or not either decoder
+will meet its deadline at its current execution speed before the deadline, in
+a way that does not cost an excessive amount of additional computation. This
+can be done, for example, by decoding audio and video a few frames in advance,
+and assuming that if the current frame is computationally intensive, the next
+one will probably be too (locality).
+
+\item The audio task takes priority over the video task, as choppy audio is 
+perceived as more intrusive than choppy video.
+
+\item For simplicity, assume that while the video decoder is decoding a single
+frame, the audio decoder has to decode a frame's worth of audio samples. In
+other words, the audio and video decoding tasks start at the same time and have
+the same deadline. In addition, assume that both tasks need an approximately
+equal amount of processing time for a single frame.
+
+\end{itemize}
+
+\noindent Let us now analyze the performance of this system if it were 
+implemented on two 2-way VLIW processors. Each processor is simply assigned to 
+one of the tasks. The primary downside to this system in the context of this 
+discussion is that if the audio is overly complex, the audio decoder will miss 
+its deadline, regardless of the whether the video processor was fully utilized 
+or not.
+
+To prevent this from happening, one may instead choose to implement the system
+on a single 4-way VLIW with a real-time operating system (RTOS) kernel. Notice
+that this system has the same amount of compute resources as the previous
+system. Now, the RTOS will ensure that the audio decoder runs before the video
+decoder. Because the audio decoder runs 1.5x as fast, it will likely meet its
+deadline now. While unlikely, it is possible that the video decoder will also
+complete in time now, but even if it does not, choppy video was considered
+favorable over choppy audio. The major downside of this system is that it is
+effectively much slower than the 2x2-way system, as the decoders do not
+actually run twice as fast when given twice as many computational resources,
+as the instruction level parallelism just is not always there.
+
+The power of the \rvex{} processor is that it can basically switch between these 
+two implementations at runtime, depending on the actual load each task 
+experiences. When neither task is in danger of failing to meet its deadline, the 
+\rvex{} processor could run in 2x2-way mode. However, if one of the tasks starts 
+falling behind the other because it is more computationally intensive, the 
+\rvex{} processor could reconfigure to 1x4-way mode for that task. When it 
+catches up, it will switch back to 2x2-way mode, as that is more efficient.
+

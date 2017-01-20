@@ -1,0 +1,34 @@
+
+\subsection{Data types}
+\label{sec:core-ug-inst-types}
+
+The following basic VHDL data types are used for the ports and generics. They
+are defined in \code{common_pkg}.
+
+\begin{lstlisting}[numbers=none]
+subtype rvex_address_type     is std_logic_vector(31 downto  0);
+subtype rvex_data_type        is std_logic_vector(31 downto  0);
+subtype rvex_mask_type        is std_logic_vector( 3 downto  0);
+subtype rvex_syllable_type    is std_logic_vector(31 downto  0);
+subtype rvex_byte_type        is std_logic_vector( 7 downto  0);
+
+type rvex_address_array       is array (natural range <>) of rvex_address_type;
+type rvex_data_array          is array (natural range <>) of rvex_data_type;
+type rvex_mask_array          is array (natural range <>) of rvex_mask_type;
+type rvex_syllable_array      is array (natural range <>) of rvex_syllable_type;
+type rvex_byte_array          is array (natural range <>) of rvex_byte_type;
+\end{lstlisting}
+
+\noindent The \code{address}, \code{data} and \code{syllable} types all 
+represent 32-bit words. The distinction is made only for clarity; one can not 
+simply give the \rvex{} processor 64-bit address map by widening the address 
+type.
+
+The \code{mask} type is used for byte-masking the data vectors for bus
+operations. As all memory operations operate on 32-bit words, the \code{mask}
+type has four bits to mask each byte. The most significant bit of the these
+masks maps to the most significant byte of the 32-bit word, and thus to the
+lowest byte address, as the \rvex{} system is big endian.
+
+The \code{byte} type should be self-explanatory.
+

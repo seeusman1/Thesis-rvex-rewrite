@@ -1,0 +1,58 @@
+
+\subsubsection{LAC operators}
+\label{sec:core-ug-cfg-cregs-ops}
+
+Table~\ref{tbl:core-ug-cfg-cregs-ops} lists all the operators that are available 
+in LAC. Note that member access, member array indexing, the explicit context 
+\code{@} symbol and slices are not considered to be operators, but parts of a 
+reference.
+
+LAC operator precedence is identical to C operator precedence. As can be
+expected, parentheses can be used to explicitly specify evaluation order.
+
+\begin{table}[h]
+\centering
+\caption{LAC operators.}
+\label{tbl:core-ug-cfg-cregs-ops}
+\footnotesize\begin{tabular}{|l|l|l|l|} \hline
+\textbf{Prec.} & \textbf{Op.} & \textbf{Description} & \textbf{Assoc.} \\
+\hline
+1 & \texttt{\detokenize{!}} & Logical complement & Right-to-left \\
+  & \texttt{\detokenize{~}} & One's complement & \\
+  & \texttt{\detokenize{(type)}} & Type cast & \\
+\hline
+2 & \texttt{\detokenize{*}} & Multiplication & Left-to-right \\
+  & \texttt{\detokenize{/}} & Division & \\
+  & \texttt{\%} & Modulo & \\
+\hline
+3 & \texttt{\detokenize{+}} & Addition & Left-to-right \\
+  & \texttt{\detokenize{-}} & Subtraction & \\
+  & \texttt{\$} & \texttt{bitvec}/\texttt{unsigned} concatenation & \\
+\hline
+4 & \texttt{\detokenize{<<}} & Left shift & Left-to-right \\
+  & \texttt{\detokenize{>>}} & Right shift & \\
+\hline
+5 & \texttt{\detokenize{<}} & Less than & Left-to-right \\
+  & \texttt{\detokenize{<=}} & Less than or equal to & \\
+  & \texttt{\detokenize{>}} & Greater than & \\
+  & \texttt{\detokenize{>=}} & Greater than or equal to & \\
+\hline
+6 & \texttt{\detokenize{==}} & Equality & Left-to-right \\
+  & \texttt{\detokenize{!=}} & Inequality & \\
+\hline
+7 & \texttt{\&} & Bitwise and & Left-to-right \\
+\hline
+8 & \texttt{\^} & Bitwise xor & Left-to-right \\
+\hline
+9 & \texttt{\detokenize{|}} & Bitwise or & Left-to-right \\
+\hline
+10 & \texttt{\&\&} & Boolean and & Left-to-right \\
+\hline
+11 & \texttt{\^}\texttt{\^} & Boolean xor & Left-to-right \\
+\hline
+12 & \texttt{\detokenize{||}} & Boolean or & Left-to-right \\
+\hline
+\end{tabular}\normalsize
+\end{table}
+
+\FloatBarrier
