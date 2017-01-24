@@ -19,8 +19,10 @@ include $(GEN_TEST_PROGS)/include.makefile
 
 # Simulator command line.
 SIM_PREFIX = ADAPTOR_CONFIG=cfg/plugin.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200
+SIM_PREFIX_NOFB = ADAPTOR_CONFIG=cfg/plugin-nofb.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200
 SIM_EXEC = $(TOOLS)/simrvex/bin/simrvex
 SIM = $(SIM_PREFIX) $(SIM_EXEC)
+SIM_NOFB = $(SIM_PREFIX_NOFB) $(SIM_EXEC)
 
 # How to create the platform.a library
 platform.a: platform.o simrvex_stubs.o
@@ -68,6 +70,7 @@ simtest-% : %.elf
 	echo "Program Finished Successfully" ; echo $* >> simtestall; echo -e "\t\tOK" >> simtestall;  \
 	fi
 
+.PRECIOUS: simtrace-%
 simtrace-% : %.elf
 	${SIM} -t1,0 $< > $@
 
@@ -89,4 +92,4 @@ check-all: $(patsubst %,check-%,$(BENCH_EXECUTABLES))
 .PHONY: check-%
 check-%: %.elf
 	@echo $? COMPILER=$(COMPILER) ISSUE_WIDTH=$(ISSUE_WIDTH) DYNAMIC=$(DYNAMIC)
-	@$(SIM) -t1,0 --batch $^|tail -n 40 | grep "RET: 0"
+	$(SIM_NOFB) --run-cycles 50000000 -t1,0 --batch $^|tail -n 40 | grep "RET: 0"

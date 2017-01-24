@@ -10,3 +10,4 @@
 *.syms
 cache-runs
 simtestall
+simtrace-*
