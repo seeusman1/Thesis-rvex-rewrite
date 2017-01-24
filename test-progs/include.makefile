@@ -195,6 +195,7 @@ VEXPARSE = $(PYTHON) $(TOOLS)/vexparse/main.py
 GDB = $(BUILD)/rvex-elf32-gdb
 PLATFORM_SRC = src
 GENERIC_SRC = $(GEN_TEST_PROGS)/src
+CONFORM = python3 $(TOOLS)/misc/conform.py
 
 # Assembler setup.
 AS = $(BUILD)/rvex-elf32-as
@@ -305,16 +306,31 @@ all: $(EXECUTABLES)
 # checking that there are no random syntax errors or problems with vexparse or
 # something.
 .PHONY: conformance
-conformance:
-	$(MAKE) clean
-	$(MAKE) all COMPILER=HP DYNAMIC=true-O2
-	$(MAKE) clean
-	$(MAKE) all COMPILER=O64 ISSUE_WIDTH=8 DYNAMIC=true-O2
-	$(MAKE) clean
-	$(MAKE) all COMPILER=O64 ISSUE_WIDTH=4 DYNAMIC=true-O2
-	$(MAKE) clean
-	$(MAKE) all COMPILER=O64 ISSUE_WIDTH=2 DYNAMIC=true-O2
-	$(MAKE) clean
+conformance: conformance-H8 conformance-O8 conformance-O4 conformance-O2
+	@$(MAKE) clean 2>&1 >/dev/null
+
+.PHONY: conformance-H8
+conformance-H8:
+	@$(CONFORM) "Compile all with HP 8-issue + vexparse -O2" "$(MAKE) -ks clean conformance-compile-all COMPILER=HP ISSUE_WIDTH=8 DYNAMIC=true-O2"
+
+.PHONY: conformance-O8
+conformance-O8:
+	@$(CONFORM) "Compile all with Open64 8-issue + vexparse -O2" "$(MAKE) -ks clean conformance-compile-all COMPILER=O64 ISSUE_WIDTH=8 DYNAMIC=true-O2"
+
+.PHONY: conformance-O4
+conformance-O4:
+	@$(CONFORM) "Compile all with Open64 4-issue + vexparse -O2" "$(MAKE) -ks clean conformance-compile-all COMPILER=O64 ISSUE_WIDTH=4 DYNAMIC=true-O2"
+
+.PHONY: conformance-O2
+conformance-O2:
+	@$(CONFORM) "Compile all with Open64 2-issue + vexparse -O2" "$(MAKE) -ks clean conformance-compile-all COMPILER=O64 ISSUE_WIDTH=2 DYNAMIC=true-O2"
+
+.PHONY: conformance-compile-all
+conformance-compile-all: $(patsubst %,conformance-compile-%,$(EXECUTABLES))
+
+.PHONY: conformance-compile-%
+conformance-compile-%:
+	@$(CONFORM) $* "$(MAKE) -ks $*.elf"
 
 # How to compile platform-specific sources;
 %.s: $(PLATFORM_SRC)/%.c

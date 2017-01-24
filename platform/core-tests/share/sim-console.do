@@ -16,5 +16,7 @@ vsim -c -t ps -novopt -L unisim work.core_tb
 set NumericStdNoWarnings 1
 set StdArithNoWarnings 1
 
+puts "START_SIM"
+
 run -all
 exit

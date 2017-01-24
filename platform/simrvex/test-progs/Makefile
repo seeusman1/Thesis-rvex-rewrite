@@ -1,4 +1,6 @@
 
+.NOTPARALLEL:
+
 # Toolchain setup.
 TOOLS = ../../../tools
 GEN_TEST_PROGS = ../../../test-progs
@@ -75,21 +77,31 @@ simtrace-% : %.elf
 	${SIM} -t1,0 $< > $@
 
 .PHONY: conformance
-conformance:
-	$(MAKE) clean
-	$(MAKE) all check-all COMPILER=HP DYNAMIC=true-O2
-	$(MAKE) clean
-	$(MAKE) all check-all COMPILER=O64 ISSUE_WIDTH=8 DYNAMIC=true-O2
-	$(MAKE) clean
-	$(MAKE) all check-all COMPILER=O64 ISSUE_WIDTH=4 DYNAMIC=true-O2
-	$(MAKE) clean
-	$(MAKE) all check-all COMPILER=O64 ISSUE_WIDTH=2 DYNAMIC=true-O2
-	$(MAKE) clean
+conformance: conformance-H8 conformance-O8 conformance-O4 conformance-O2
 
-.PHONY: check-all
-check-all: $(patsubst %,check-%,$(BENCH_EXECUTABLES))
+.PHONY: conformance-H8
+conformance-H8:
+	@$(CONFORM) "Compile all with HP 8-issue + vexparse -O2"                  "$(MAKE) -ks clean conformance-compile-all COMPILER=HP ISSUE_WIDTH=8 DYNAMIC=true-O2"
+	@$(CONFORM) "Simulate benchmarks compiled with HP 8-issue + vexparse -O2" "$(MAKE) -ks conformance-run-all           COMPILER=HP ISSUE_WIDTH=8 DYNAMIC=true-O2"
 
-.PHONY: check-%
-check-%: %.elf
-	@echo $? COMPILER=$(COMPILER) ISSUE_WIDTH=$(ISSUE_WIDTH) DYNAMIC=$(DYNAMIC)
-	$(SIM_NOFB) --run-cycles 50000000 -t1,0 --batch $^|tail -n 40 | grep "RET: 0"
+.PHONY: conformance-O8
+conformance-O8:
+	@$(CONFORM) "Compile all with Open64 8-issue + vexparse -O2"                  "$(MAKE) -ks clean conformance-compile-all COMPILER=O64 ISSUE_WIDTH=8 DYNAMIC=true-O2"
+	@$(CONFORM) "Simulate benchmarks compiled with Open64 8-issue + vexparse -O2" "$(MAKE) -ks conformance-run-all           COMPILER=O64 ISSUE_WIDTH=8 DYNAMIC=true-O2"
+
+.PHONY: conformance-O4
+conformance-O4:
+	@$(CONFORM) "Compile all with Open64 4-issue + vexparse -O2"                  "$(MAKE) -ks clean conformance-compile-all COMPILER=O64 ISSUE_WIDTH=4 DYNAMIC=true-O2"
+	@$(CONFORM) "Simulate benchmarks compiled with Open64 4-issue + vexparse -O2" "$(MAKE) -ks conformance-run-all           COMPILER=O64 ISSUE_WIDTH=4 DYNAMIC=true-O2"
+
+.PHONY: conformance-O2
+conformance-O2:
+	@$(CONFORM) "Compile all with Open64 2-issue + vexparse -O2"                  "$(MAKE) -ks clean conformance-compile-all COMPILER=O64 ISSUE_WIDTH=2 DYNAMIC=true-O2"
+	@$(CONFORM) "Simulate benchmarks compiled with Open64 2-issue + vexparse -O2" "$(MAKE) -ks conformance-run-all           COMPILER=O64 ISSUE_WIDTH=2 DYNAMIC=true-O2"
+
+.PHONY: conformance-run-all
+conformance-run-all: $(patsubst %,conformance-run-%,$(BENCH_EXECUTABLES))
+
+.PHONY: conformance-run-%
+conformance-run-%: %.elf
+	@$(CONFORM) $* "$(SIM_NOFB) --run-cycles 50000000 -t1,0 --batch $^ | tail -n 40 | grep \"RET: 0\""
