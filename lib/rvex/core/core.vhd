@@ -52,18 +52,18 @@ use IEEE.numeric_std.all;
 use IEEE.std_logic_textio.all;
 -- pragma translate_on
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_intIface_pkg.all;
-use rvex.core_trap_pkg.all;
-use rvex.core_pipeline_pkg.all;
-use rvex.core_ctrlRegs_pkg.all;
---use rvex.cache_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.core_pkg.all;
+use work.core_intIface_pkg.all;
+use work.core_trap_pkg.all;
+use work.core_pipeline_pkg.all;
+use work.core_ctrlRegs_pkg.all;
+--use work.cache_pkg.all;
 
 -- pragma translate_off
-use rvex.simUtils_pkg.all;
+use work.simUtils_pkg.all;
 use std.textio.all;
 -- pragma translate_on
 
@@ -802,7 +802,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the pipelanes
   -----------------------------------------------------------------------------
-  pls_inst: entity rvex.core_pipelanes
+  pls_inst: entity work.core_pipelanes
     generic map (
       CFG                           => CFG
     )
@@ -918,7 +918,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the general purpose register file
   -----------------------------------------------------------------------------
-  gpreg_inst: entity rvex.core_gpRegs
+  gpreg_inst: entity work.core_gpRegs
     generic map (
       CFG                           => CFG
     )
@@ -953,7 +953,7 @@ begin -- architecture
   -- Instantiate the instruction buffer
   -----------------------------------------------------------------------------
   ibuf_gen: if CFG.bundleAlignLog2 < CFG.numLanesLog2 generate
-    ibuf_inst: entity rvex.core_instructionBuffer
+    ibuf_inst: entity work.core_instructionBuffer
       generic map (
         CFG                         => CFG
       )
@@ -1000,7 +1000,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the control registers
   -----------------------------------------------------------------------------
-  creg_inst: entity rvex.core_ctrlRegs
+  creg_inst: entity work.core_ctrlRegs
     generic map (
       CFG                           => CFG
     )
@@ -1089,7 +1089,7 @@ begin -- architecture
   end generate;
   
   -- Instantiate.
-  cxreg_inst: entity rvex.core_contextRegLogic
+  cxreg_inst: entity work.core_contextRegLogic
     generic map (
       CFG                           => CFG
     )
@@ -1196,7 +1196,7 @@ begin -- architecture
   end process;
   coreID_byte <= std_logic_vector(to_unsigned(CORE_ID + coreID, 8));
   
-  gbreg_inst: entity rvex.core_globalRegLogic
+  gbreg_inst: entity work.core_globalRegLogic
     generic map (
       CFG                           => CFG
     )
@@ -1243,7 +1243,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate configuration logic
   -----------------------------------------------------------------------------
-  cfg_inst: entity rvex.core_cfgCtrl
+  cfg_inst: entity work.core_cfgCtrl
     generic map (
       CFG                           => CFG
     )
@@ -1298,7 +1298,7 @@ begin -- architecture
   -- Instantiate trace control unit
   -----------------------------------------------------------------------------
   trace_gen: if CFG.traceEnable generate
-    trace_inst: entity rvex.core_trace
+    trace_inst: entity work.core_trace
       generic map (
         CFG                         => CFG
       )

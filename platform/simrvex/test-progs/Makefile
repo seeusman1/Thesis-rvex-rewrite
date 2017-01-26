@@ -1,19 +1,30 @@
 
+.NOTPARALLEL:
+
 # Toolchain setup.
 TOOLS = ../../../tools
 GEN_TEST_PROGS = ../../../test-progs
 
-# Platform-specific executables.
-EXECUTABLES = convolution convolution_5x5 convolution_7x7 greyscale median framebuffertest
+# Platform-specific executables. Only work with O64.
+ifeq ($(COMPILER), O64)
+EXECUTABLES = convolution_3x3 convolution_5x5 convolution_7x7 greyscale median mandel
+endif
 
 # Platform-specific code to link.
 OBJECTS = platform.a
 
+# Stuff to clean in addition to the usual.
+CLEAN = simtestall
+
 # Include generic test program makefile.
-include $(GEN_TEST_PROGS)/Makefile
+include $(GEN_TEST_PROGS)/include.makefile
 
 # Simulator command line.
-SIM = ADAPTOR_CONFIG=cfg/plugin.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200 $(TOOLS)/simrvex/bin/simrvex
+SIM_PREFIX = ADAPTOR_CONFIG=cfg/plugin.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200
+SIM_PREFIX_NOFB = ADAPTOR_CONFIG=cfg/plugin-nofb.conf LD_LIBRARY_PATH=$(TOOLS)/simrvex/lib64/sim200
+SIM_EXEC = $(TOOLS)/simrvex/bin/simrvex
+SIM = $(SIM_PREFIX) $(SIM_EXEC)
+SIM_NOFB = $(SIM_PREFIX_NOFB) $(SIM_EXEC)
 
 # How to create the platform.a library
 platform.a: platform.o simrvex_stubs.o
@@ -34,7 +45,8 @@ help:
 	@echo "  make simtest-<prog>  : runs prog on the simulator and checks return code."
 	@echo ""
 	@echo "  make simtestall      : calls simtest-<prog> for all executables."
-	@echo "  will output a list of success/failures to file \'simtestall\'"
+	@echo "                         will output a list of success/failures to file"
+	@echo "                         \'simtestall\'"
 	@echo ""
 	@echo "  make clean           : cleans intermediate files."
 	@echo ""
@@ -52,8 +64,6 @@ simtestall: simtestall-clean $(POWERSTONE:%=simtest-%)
 simtestall-clean:
 	echo -n "" > simtestall
 
-#The Powerstone programs all return 0xdeadbeef. 
-#We take the last register contents using tail and grep for that value in r3 (return value register).
 simtest-% : %.elf
 	@${SIM} -t1,0 --batch $^|tail -n 40 | grep "RET: 0";\
 	if [ $$? != 0 ] ; then \
@@ -62,7 +72,36 @@ simtest-% : %.elf
 	echo "Program Finished Successfully" ; echo $* >> simtestall; echo -e "\t\tOK" >> simtestall;  \
 	fi
 
+.PRECIOUS: simtrace-%
 simtrace-% : %.elf
 	${SIM} -t1,0 $< > $@
 
+.PHONY: conformance
+conformance: conformance-H8 conformance-O8 conformance-O4 conformance-O2
 
+.PHONY: conformance-H8
+conformance-H8:
+	@$(CONFORM) "Compile all with HP 8-issue + vexparse -O2"                  "$(MAKE) -ks clean conformance-compile-all COMPILER=HP ISSUE_WIDTH=8 DYNAMIC=true-O2"
+	@$(CONFORM) "Simulate benchmarks compiled with HP 8-issue + vexparse -O2" "$(MAKE) -ks conformance-run-all           COMPILER=HP ISSUE_WIDTH=8 DYNAMIC=true-O2"
+
+.PHONY: conformance-O8
+conformance-O8:
+	@$(CONFORM) "Compile all with Open64 8-issue + vexparse -O2"                  "$(MAKE) -ks clean conformance-compile-all COMPILER=O64 ISSUE_WIDTH=8 DYNAMIC=true-O2"
+	@$(CONFORM) "Simulate benchmarks compiled with Open64 8-issue + vexparse -O2" "$(MAKE) -ks conformance-run-all           COMPILER=O64 ISSUE_WIDTH=8 DYNAMIC=true-O2"
+
+.PHONY: conformance-O4
+conformance-O4:
+	@$(CONFORM) "Compile all with Open64 4-issue + vexparse -O2"                  "$(MAKE) -ks clean conformance-compile-all COMPILER=O64 ISSUE_WIDTH=4 DYNAMIC=true-O2"
+	@$(CONFORM) "Simulate benchmarks compiled with Open64 4-issue + vexparse -O2" "$(MAKE) -ks conformance-run-all           COMPILER=O64 ISSUE_WIDTH=4 DYNAMIC=true-O2"
+
+.PHONY: conformance-O2
+conformance-O2:
+	@$(CONFORM) "Compile all with Open64 2-issue + vexparse -O2"                  "$(MAKE) -ks clean conformance-compile-all COMPILER=O64 ISSUE_WIDTH=2 DYNAMIC=true-O2"
+	@$(CONFORM) "Simulate benchmarks compiled with Open64 2-issue + vexparse -O2" "$(MAKE) -ks conformance-run-all           COMPILER=O64 ISSUE_WIDTH=2 DYNAMIC=true-O2"
+
+.PHONY: conformance-run-all
+conformance-run-all: $(patsubst %,conformance-run-%,$(BENCH_EXECUTABLES))
+
+.PHONY: conformance-run-%
+conformance-run-%: %.elf
+	@$(CONFORM) $* "$(SIM_NOFB) --run-cycles 50000000 -t1,0 --batch $^ | tail -n 40 | grep \"RET: 0\""

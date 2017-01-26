@@ -47,8 +47,8 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-library rvex;
-use rvex.core_intIface_pkg.all;
+library work;
+use work.core_intIface_pkg.all;
 
 --=============================================================================
 -- This package specifies the control signal encoding for the branch unit.

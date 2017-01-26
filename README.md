@@ -16,6 +16,15 @@ complete):
  - GNU make, GCC, diff/patch, wget, and probably some of the other usual dev
    tools.
 
+If you also want to be able to (re)generate the documentation, you also need:
+
+ - LaTeX, with nonstandard packages:
+    - import.sty
+    - multirow.sty
+    - tabto.sty
+    - todonotes.sty
+ - Perl
+
 All the ρ-VEX specific things should™ work out of the box; they either come
 precompiled or are simple C programs without any external dependencies. Some
 things (for instance grlib) are not part of the release archive itself, but

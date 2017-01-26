@@ -1,0 +1,20 @@
+
+\subsubsection{System control}
+\label{sec:core-ug-cfg-inst-iface-syscon}
+
+The system control signals include the clock source for the core, a synchronous 
+reset signal and a global clock enable signal. \code{clk} and \code{reset} are 
+required \code{std_logic} input signals. \code{clkEn} is an optional 
+\code{std_logic} input signal.
+
+The core is clocked on the rising edge of \code{clk} while \code{clkEn} is high. 
+When a rising edge on \code{clk} occurs while \code{reset} is high, most
+components of the core will be reset, regardless of the state of \code{clkEn}.
+The only component of the core that is not reset by this is the general purpose
+register file. This is because this register file is implemented using block
+RAMs, which have no physical reset input in Xilinx FPGAs.
+
+The \code{resetOut} signal is asserted high for one cycle when the debug bus 
+writes a one to the reset bit in \creg{GSR}. This signal may be used to reset 
+support systems as well as the core, or it may be ignored.
+

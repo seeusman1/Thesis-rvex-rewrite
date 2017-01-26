@@ -48,11 +48,11 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.core_pkg.all;
-use rvex.cache_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.bus_pkg.all;
+use work.core_pkg.all;
+use work.cache_pkg.all;
 
 --=============================================================================
 -- This is the toplevel entity for the reconfigurable instruction and data
@@ -186,7 +186,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the instruction cache
   -----------------------------------------------------------------------------
-  icache_inst: entity rvex.cache_instr
+  icache_inst: entity work.cache_instr
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -229,7 +229,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the data cache
   -----------------------------------------------------------------------------
-  dcache_inst: entity rvex.cache_data
+  dcache_inst: entity work.cache_data
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -298,7 +298,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   bus_arbiter_gen: for laneGroup in 2**RCFG.numLaneGroupsLog2-1 downto 0 generate
     
-    bus_arbiter_inst: entity rvex.bus_arbiter
+    bus_arbiter_inst: entity work.bus_arbiter
       generic map (
         NUM_MASTERS             => 2
       )

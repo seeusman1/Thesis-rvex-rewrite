@@ -49,12 +49,12 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.bus_addrConv_pkg.all;
-use rvex.core_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.bus_pkg.all;
+use work.bus_addrConv_pkg.all;
+use work.core_pkg.all;
 
 --=============================================================================
 -- This unit represents a single "streaming" r-VEX core. The r-VEX has
@@ -295,7 +295,7 @@ begin -- architecture
   -- Instantiate the rvex core
   -----------------------------------------------------------------------------
   -- Instantiate the standalone core.
-  core: entity rvex.rvsys_standalone_core
+  core: entity work.rvsys_standalone_core
     generic map (
       CFG                       => CORE_CFG,
       CORE_ID                   => CORE_ID,
@@ -326,7 +326,7 @@ begin -- architecture
   -- Instantiate the debug bus logic
   -----------------------------------------------------------------------------
   -- Instantiate the cross-clock domain bridge for the debug bus.
-  debug_bus_xclk_inst: entity rvex.bus_crossClock
+  debug_bus_xclk_inst: entity work.bus_crossClock
     port map (
       reset                     => reset_dbg,
       
@@ -346,7 +346,7 @@ begin -- architecture
   
   -- Instantiate the debug bus demuxer for the case where the instruction
   -- memory is enabled.
-  debug_bus_demux_inst: entity rvex.bus_demux
+  debug_bus_demux_inst: entity work.bus_demux
     generic map (
       ADDRESS_MAP(0)            => DEBUG_BUS_IMEM,
       ADDRESS_MAP(1)            => DEBUG_BUS_DMEM,
@@ -371,7 +371,7 @@ begin -- architecture
   -- external bus
   -----------------------------------------------------------------------------
   -- Instantiate the demuxing block.
-  data_bus_demux_inst: entity rvex.bus_demux
+  data_bus_demux_inst: entity work.bus_demux
     generic map (
       ADDRESS_MAP(0)            => CORE_LOCAL,
       ADDRESS_MAP(1)            => CORE_REMOTE
@@ -393,7 +393,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Arbiter for the local port, switching between the debug bus and the local
   -- processor.
-  dmem_arbiter: entity rvex.bus_arbiter
+  dmem_arbiter: entity work.bus_arbiter
     generic map (
       NUM_MASTERS               => 2
     )
@@ -410,7 +410,7 @@ begin -- architecture
     );
   
   -- Instantiate the memory itself.
-  dmem_ram: entity rvex.bus_ramBlock
+  dmem_ram: entity work.bus_ramBlock
     generic map (
       DEPTH_LOG2B               => DMEM_DEPTH_LOG2,
       MEM_INIT                  => DMEM_INIT
@@ -489,7 +489,7 @@ begin -- architecture
     
     -- Instantiate the bus demux which routes debug bus accesses to the
     -- instruction memory to all blocks involved.
-    imem_debug_demux_inst: entity rvex.bus_demux
+    imem_debug_demux_inst: entity work.bus_demux
       generic map (
         ADDRESS_MAP             => DBG_ADDRESS_MAP,
         MUTUALLY_EXCLUSIVE      => false
@@ -511,7 +511,7 @@ begin -- architecture
     begin
       
       -- Arbiter for port A to switch between debug bus and rvex.
-      imem_arbiter_a: entity rvex.bus_arbiter
+      imem_arbiter_a: entity work.bus_arbiter
         generic map (
           NUM_MASTERS           => 2
         )
@@ -551,7 +551,7 @@ begin -- architecture
       
     -- Instantiate the memory itself.
     imem_ram_gen: for blk in 0 to NUM_BLOCKS-1 generate
-      imem_ram_inst: entity rvex.bus_ramBlock
+      imem_ram_inst: entity work.bus_ramBlock
         generic map (
           DEPTH_LOG2B           => IMEM_DEPTH_LOG2 - INTERLEAVE_LOG2,
           MEM_INIT              => IMEM_INIT,

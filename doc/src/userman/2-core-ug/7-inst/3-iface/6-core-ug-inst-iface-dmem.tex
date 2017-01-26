@@ -1,0 +1,79 @@
+
+\subsubsection{Data memory interface}
+\label{sec:core-ug-cfg-inst-iface-dmem}
+
+These signals interface between the \rvex{} and the data memory or cache. All 
+signals in this section are clock gated by not only \code{clkEn}, but also by 
+the respective signal in \code{rv2mem_stallOut}. They should be considered to be 
+invalid when the respective \code{rv2mem_stallOut} signal is high. The number of 
+enabled clock cycles after which the reply for a request is assumed to be valid 
+is defined by \code{L_MEM}, which is defined in \code{core_pipeline_pkg}. 
+\code{L_MEM} defaults to 1.
+
+\begin{itemize}
+  
+\item \code{rv2dmem_addr : out rvex_address_array(}\textit{number of lane groups - 1}\code{ downto 0)}
+
+Memory address that is to be accessed if \code{rv2dmem_readEnable} or 
+\code{rv2dmem_writeEnable} is high. The two least significant bits of the 
+address will always be \code{"00"} and may be ignored. Note that a configurable 
+1 kiB block within this 4 GiB memory space is inaccessible, because it is 
+replaced by the core control registers. This is configurable through the 
+\code{cregStartAddress} entry in \code{CFG}, which defaults to 0xFFFFFC00, 
+meaning that addresses 0xFFFFFC00 through 0xFFFFFFFF are inaccessible.
+
+\vspace{1em}
+\item \code{rv2dmem_readEnable : out std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+
+Active high read enable signal from the core for each memory unit. When high 
+during an enabled rising clock edge, the \rvex{} expects the access result to be 
+valid \code{L_MEM} enabled cycles later.
+
+\vspace{1em}
+\item \code{rv2dmem_writeData : out rvex_data_array(}\textit{number of lane groups - 1}\code{ downto 0)}
+\item \code{rv2dmem_writeMask : out rvex_mask_array(}\textit{number of lane groups - 1}\code{ downto 0)}
+
+These signals define the write operation to be performed when 
+\code{rv2dmem_writeEnable} is high. \code{rv2dmem_writeMask} contains a bit for 
+each byte in \code{rv2dmem_writeData}, which determines whether the byte should 
+be written or not: when high, the respective byte should be written; when low, 
+the byte should not be affected. Mask bit $i$ governs data bits $i*8+7$ downto 
+$i*8$. This corresponds to byte address $a + 3 - i$, where $a$ is the word
+address specified by \code{rv2dmem_addr}, because the \rvex{} is big endian.
+
+\vspace{1em}
+\item \code{rv2dmem_writeEnable : out std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+
+Active high write enable signal from the core for each memory unit. When high 
+during an enabled rising clock edge, the \rvex{} expects either that the write 
+request defined by \code{rv2dmem_addr}, \code{rv2dmem_writeData} and 
+\code{rv2dmem_writeMask} will be performed, or that \code{dmem2rv_ifaceFault} or 
+\code{dmem2rv_busFault} is asserted high \code{L_MEM} cycles later.
+
+\vspace{1em}
+\item \code{dmem2rv_readData : in rvex_data_array(}\textit{number of lane groups - 1}\code{ downto 0)}
+
+This is expected to contain the read data for read requested by 
+\code{rv2dmem_readEnable} and \code{rv2dmem_addr} \code{L_MEM} enabled cycles 
+earlier, unless \code{dmem2rv_ifaceFault} or \code{dmem2rv_busFault} are high.
+
+\vspace{1em}
+\item \code{dmem2rv_ifaceFault : in std_logic_vector(}\textit{number of lane groups - 1}\code{ downto 0)}
+
+These signals are expected to be valid \code{L_MEM} enabled cycles after a read 
+or write request. \code{dmem2rv_ifaceFault} being high indicates that the read 
+or write could not be performed because the memory system is incapable of 
+servicing the specific type of memory access. For instance, the reconfigurable 
+cache asserts this signal if more than one request is made at a time by coupled 
+lane groups. \code{dmem2rv_busFault} being high indicates that some kind of bus 
+fault occured, for example if a memory access was made to unmapped memory.
+
+In either case, a \code{DMEM_FAULT} trap will be issued. The trap argument will 
+be set to the address that was requested.
+
+\todo[inline]{There is currently no way to distinguish between a data memory
+interface fault and a bus fault. A new trap should probably be added to the core
+for this sometime.}
+
+\end{itemize}
+

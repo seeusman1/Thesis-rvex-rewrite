@@ -58,11 +58,11 @@ use gaisler.spi.all;
 library techmap;
 use techmap.gencomp.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.simUtils_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.bus_addrConv_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.simUtils_pkg.all;
+use work.bus_pkg.all;
+use work.bus_addrConv_pkg.all;
 
 --=============================================================================
 -- This testbench may be used to test the bus2ahb interface. A dummy, but
@@ -396,7 +396,7 @@ begin -- architecture
     begin
       
       -- Instantiate the bus bridge.
-      rvex_bus_bridge_inst: entity rvex.ahb2bus
+      rvex_bus_bridge_inst: entity work.ahb2bus
         generic map (
           AHB_INDEX             => 3,
           AHB_ADDR              => 16#A00#,
@@ -412,7 +412,7 @@ begin -- architecture
         );
       
       -- Instantiate a bus demuxer so we can get bus errors.
-      rvex_bus_demux_inst: entity rvex.bus_demux
+      rvex_bus_demux_inst: entity work.bus_demux
         generic map (
           ADDRESS_MAP           => ADDR_MAP
         )
@@ -427,7 +427,7 @@ begin -- architecture
         );
       
       -- Instantiate the memory.
-      rvex_bus_memory_inst: entity rvex.bus_ramBlock_singlePort
+      rvex_bus_memory_inst: entity work.bus_ramBlock_singlePort
         generic map (
           DEPTH_LOG2B           => 12
         )
@@ -457,7 +457,7 @@ begin -- architecture
     begin
       
       -- Instantiate the bus snooper.
-      ahb_snoop_inst: entity rvex.ahb_snoop
+      ahb_snoop_inst: entity work.ahb_snoop
         generic map (
           FIRST_MASTER          => 0,
           NUM_CACHE_BLOCKS      => NUM_CACHE_BLOCKS
@@ -508,7 +508,7 @@ begin -- architecture
   -- Unit under test and stimuli
   --===========================================================================
   -- Connect bus2ahb unit under test.
-  uut: entity rvex.bus2ahb
+  uut: entity work.bus2ahb
     port map (
       reset       => reset,
       clk         => clk,

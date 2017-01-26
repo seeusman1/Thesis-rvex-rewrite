@@ -214,20 +214,20 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_intIface_pkg.all;
-use rvex.core_pipeline_pkg.all;
-use rvex.core_trap_pkg.all;
-use rvex.core_opcode_pkg.all;
-use rvex.core_opcodeDatapath_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.core_pkg.all;
+use work.core_intIface_pkg.all;
+use work.core_pipeline_pkg.all;
+use work.core_trap_pkg.all;
+use work.core_opcode_pkg.all;
+use work.core_opcodeDatapath_pkg.all;
 
 -- pragma translate_off
-use rvex.simUtils_pkg.all;
-use rvex.core_asDisas_pkg.all;
-use rvex.core_opcodeMemory_pkg.all;
+use work.simUtils_pkg.all;
+use work.core_asDisas_pkg.all;
+use work.core_opcodeMemory_pkg.all;
 -- pragma translate_on
 
 --=============================================================================
@@ -1224,7 +1224,7 @@ begin -- architecture
   --===========================================================================
   -- Instantiate the branch unit, if there should be one.
   br_gen: if HAS_BR generate
-    br_inst: entity rvex.core_br
+    br_inst: entity work.core_br
       generic map (
         CFG                             => CFG
       )
@@ -1328,7 +1328,7 @@ begin -- architecture
   end generate;
   
   -- Instantiate the ALU.
-  alu_inst: entity rvex.core_alu
+  alu_inst: entity work.core_alu
     generic map (
       CFG                               => CFG
     )
@@ -1355,7 +1355,7 @@ begin -- architecture
   
   -- Instantiate the multiplier, if there should be one.
   mulu_gen: if HAS_MUL generate
-    mulu_inst: entity rvex.core_mulu
+    mulu_inst: entity work.core_mulu
       generic map (
         CFG                             => CFG
       )
@@ -1386,7 +1386,7 @@ begin -- architecture
   
   -- Instantiate the memory unit, if there should be one.
   memu_gen: if HAS_MEM generate
-    memu_inst: entity rvex.core_memu
+    memu_inst: entity work.core_memu
       generic map (
         CFG                             => CFG
       )
@@ -1447,7 +1447,7 @@ begin -- architecture
   
   -- Instantiate breakpoint unit, if there should be one.
   brku_gen: if HAS_BRK generate
-    brku_inst: entity rvex.core_brku
+    brku_inst: entity work.core_brku
       generic map (
         CFG                             => CFG
       )

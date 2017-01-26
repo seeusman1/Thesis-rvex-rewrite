@@ -1,4 +1,7 @@
 
+TOOLS = ../../tools
+CONFORM = python3 $(TOOLS)/misc/conform.py
+
 .PHONY: help
 help:
 	@echo ""
@@ -53,11 +56,10 @@ CONFIGURATIONS := $(patsubst %/core_cfg.vhd,%,$(shell ls -d */core_cfg.vhd))
 
 .PHONY: conformance
 conformance: $(patsubst %,conformance-%,$(CONFIGURATIONS))
-	@echo "Conformance test passed."
 
 .PHONY: conformance-%
 conformance-%: %
-	cd $< && make conformance 2>&1 > ../$<.log
+	@$(CONFORM) $* "cd $< && make conformance"
 
 .PHONY: clean
 clean: $(patsubst %,clean-%,$(CONFIGURATIONS))

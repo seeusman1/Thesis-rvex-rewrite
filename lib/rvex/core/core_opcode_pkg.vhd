@@ -49,13 +49,13 @@
 library IEEE;
 use IEEE.std_logic_1164.all;
 
-library rvex;
-use rvex.core_intIface_pkg.all;                                                                      -- GENERATED --
-use rvex.core_opcodeDatapath_pkg.all;
-use rvex.core_opcodeAlu_pkg.all;
-use rvex.core_opcodeBranch_pkg.all;
-use rvex.core_opcodeMemory_pkg.all;
-use rvex.core_opcodeMultiplier_pkg.all;
+library work;
+use work.core_intIface_pkg.all;                                                                      -- GENERATED --
+use work.core_opcodeDatapath_pkg.all;
+use work.core_opcodeAlu_pkg.all;
+use work.core_opcodeBranch_pkg.all;
+use work.core_opcodeMemory_pkg.all;
+use work.core_opcodeMultiplier_pkg.all;
 
 --=============================================================================
 -- This package specifies basic decoding signals for all opcodes. In theory,

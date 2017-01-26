@@ -1,0 +1,195 @@
+--------------------------------------------------------------------------------
+ Configuration word decoding complexity
+--------------------------------------------------------------------------------
+
+The configuration decoder is a multicycle state machine, which has a
+data-dependent latency. Let this latency in clock cycles be named C(cfg).
+
+  C(cfg)  =  num_unique_contexts(cfg) + num_disabled_groups(cfg)
+
+num_unique_contexts(cfg) is the number of contexts present in the configuration
+word. For instance, num_unique_contexts(0x1123) is 3, because it includes
+contexts 1, 2 and 3. num_unique_contexts(0x1188) is only 1 though, because 0x8
+denotes a deactivated lane group, not a context.
+
+num_disabled_groups(cfg) counts the number of disabled lane groups. For
+instance, num_disabled_groups(0x1188) is 2, because 0x8 appears twice in the
+configuration word.
+
+Notice that 1 <= C(cfg) <= num_groups.
+
+
+--------------------------------------------------------------------------------
+ Timing metrics
+--------------------------------------------------------------------------------
+
+The following values are lower limits ONLY because of the indeterminacy of the
+memory system. If the memory system is single cycle (at least during the
+reconfiguration) and never blocks a reconfiguration, the actual time will equal
+these numbers. In other words, these equations assume single cycle memory.
+
+
+Number of cycles from the issue of the reconfiguration request instruction to
+the issue of the first instruction in the new configuration is at least:
+
+  S_MEM-1 + 2 + C + 2  =  7 + C
+
+
+Number of cycles from the last instruction issue in the old configuration to the
+first instruction issue in the new configuration, the number of cycles is at
+least:
+
+  S_BR-1 + 2  =  4
+
+
+--------------------------------------------------------------------------------
+ Instruction issue counts
+--------------------------------------------------------------------------------
+
+The instruction counts are upper limits ONLY because of the indeterminacy of the
+memory system. If the memory system is single cycle (at least during the
+reconfiguration) and never blocks a reconfiguration, the instruction counts will
+equal these numbers. In other words, these equations assume single cycle memory.
+
+
+Maximum amount of instructions executed before busy flag in CR_GSR is valid
+after a reconfiguration request is made:
+
+  1
+
+(so two bundle boudaries are needed between the STW to CR_CRR and the LDW from
+CR_GSR).
+
+
+Maximum amount of instructions executed before error flag in CR_GSR is set in
+case of a misconfiguration:
+
+  1 + C
+
+
+Maximum amount of instructions executed in the old configuration after a
+reconfiguration request is made:
+
+  2 + C + S_MEM-S_BR  =  3 + C
+
+  
+--------------------------------------------------------------------------------
+ Successful reconfiguration
+--------------------------------------------------------------------------------
+
+<CLOCK CYCLE>
+ - S_MEM (pipeline stage 4) is writing to CR_CRR control register.
+
+<CLOCK CYCLE>
+ - Reconfiguration request from control regs to CFG ctrl active.
+ - Arbitration among requests is performed.
+ - NOTE: during this cycle, the flags in CR_GSR are not yet updated. A NOP is
+   required between requesting a reconfiguration and reading whether arbitration
+   was successful.
+
+(simulation st.rcfgState.busy = 2+C)
+<CLOCK CYCLE>
+(simulation st.rcfgState.busy = 2+C)
+ - Status flags in CR_GSR are updated (which source won arbitration, reconfig
+   busy, error flag is reset).
+ - First decoding cycle. There is one cycle per context in the configuration,
+   plus one cycle for each disabled lane group.
+
+(simulation st.rcfgState.busy = 2+C)
+<ONE TO FOUR CLOCK CYCLES (C)>
+(simulation st.rcfgState.busy = 2)
+ - Decoding completed.
+ - requestReconfig is activated for contexts that are affected by the
+   reconfiguration. This will cause the branch unit to essentially branch to the
+   current program counter to prevent further instruction cache misses. In
+   addition, stages up to S_BR-1 (stage 2) will be invalidated, as is the norm
+   with any kind of branch. Instructions in pipeline stage 3 onwards will still
+   complete. If these cause a trap, the PC will be set to the trap point
+   instead, such that the trapping instruction is reissued when the context
+   resumes.
+ - The blockReconfig signals going into the reconfiguration controller are
+   registered, to make sure they don't become the critical path. This means that
+   the reconfiguration controller only knows whether reconfiguration was being
+   blocked in the previous cycle. While requestReconfig is high, it is
+   guaranteed that there will be no rising edge on the blockReconfig signal, so
+   there will be no problem. However, in the previous cycle, requestReconfig was
+   not high yet, so even if there appears to be nothing blocking reconfiguration
+   this cycle, we cannot assert our commit signal yet. We need to wait one more
+   cycle at least before we can do this.
+
+(simulation st.rcfgState.busy = 2)
+<ZERO OR MORE CLOCK CYCLES*>
+(simulation st.rcfgState.busy = 2)
+ - Contexts for which requestReconfig is set are all idle and the cache write
+   buffers are empty (blockReconfig low)
+
+(simulation st.rcfgState.busy = 2)
+<CLOCK CYCLE>
+(simulation st.rcfgState.busy = 1)
+ - requestReconfig signals are latched; there is a cycle delay to prevent this
+   from becoming the critical path. Maybe this can be removed though, it's
+   probably a bit excessive.
+ - Internal commit signal is asserted. This is the write enable signal for all
+   the current configuration output registers.
+
+(simulation st.rcfgState.busy = 1)
+<CLOCK CYCLE>
+(simulation st.rcfgState.busy = 0)
+ - Busy flag in CR_GSR is cleared.
+ - The new configuration is active.
+
+
+* This is the time it takes for the pipelines and the cache to become ready for
+a reconfiguration. If the previous configuration was 0x8888 or they were idle
+for some other reason, this will be zero cycles. In ANY other case, it will be
+at least S_LAST-S_BR+1 = 4 cycles, which is the amount of time that the pipeline
+needs to flush.
+
+
+--------------------------------------------------------------------------------
+ Invalid reconfiguration requested: reserved bits are set
+--------------------------------------------------------------------------------
+
+<CLOCK CYCLE>
+ - S_MEM (pipeline stage 4) is writing to CR_CRR control register.
+
+<CLOCK CYCLE>
+ - Reconfiguration request from control regs to CFG ctrl active.
+ - Arbitration among requests is performed.
+
+ - NOTE: during this cycle, the flags in CR_GSR are not yet updated. A NOP is
+   required between requesting a reconfiguration and reading whether arbitration
+   was successful.
+
+<CLOCK CYCLE>
+ - Status flags in CR_GSR are updated (which source won arbitration). Error flag
+   is set to report the error.
+
+
+--------------------------------------------------------------------------------
+ Invalid reconfiguration requested: misalignment/noncontiguous
+--------------------------------------------------------------------------------
+
+<CLOCK CYCLE>
+ - S_MEM (pipeline stage 4) is writing to CR_CRR control register.
+
+<CLOCK CYCLE>
+ - Reconfiguration request from control regs to CFG ctrl active.
+ - Arbitration among requests is performed.
+ - NOTE: during this cycle, the flags in CR_GSR are not yet updated. A NOP is
+   required between requesting a reconfiguration and reading whether arbitration
+   was successful.
+
+<CLOCK CYCLE>
+ - Status flags in CR_GSR are updated (which source won arbitration, reconfig
+   busy, error flag is reset).
+ - First decoding cycle. There is one cycle per context in the configuration,
+   plus one cycle for each disabled lane group.
+
+<ZERO TO THREE CLOCK CYCLES (C-1)>
+ - Decoder sets its error and completed flag.
+
+<CLOCK CYCLE>
+ - Busy flag in CR_GSR is cleared and error flag is set to report the error.
+
+

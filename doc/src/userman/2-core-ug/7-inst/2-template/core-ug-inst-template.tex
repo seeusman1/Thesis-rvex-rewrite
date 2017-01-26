@@ -1,0 +1,92 @@
+\subsection{Instantiation template}
+\label{sec:core-ug-inst-template}
+
+The following listing serves as an instantiation template for the core. The code
+is documented in the following sections.
+
+If you get errors when instantiating the core with this template, the
+documentation might be out of date. Fear not, for the signals are also
+documented in the entity description in \code{core.vhdl}.
+
+\begin{lstlisting}[numbers=none]
+library rvex;
+use rvex.common_pkg.all;
+use rvex.core_pkg.all;
+
+-- ...
+
+rvex_inst: entity rvex.core
+  generic map (
+    
+    -- Core configuration.
+    CFG => rvex_cfg(
+      numLanesLog2              => 3,
+      numLaneGroupsLog2         => 2,
+      numContextsLog2           => 2
+      -- ...
+    ),
+    CORE_ID                     => CORE_ID,
+    PLATFORM_TAG                => PLATFORM_TAG
+    
+  )
+  port map (
+    
+    -- System control.
+    reset                       => reset,
+    resetOut                    => resetOut,
+    clk                         => clk,
+    clkEn                       => clkEn,
+    
+    -- Run control interface.
+    rctrl2rv_irq                => rctrl2rv_irq,
+    rctrl2rv_irqID              => rctrl2rv_irqID,
+    rv2rctrl_irqAck             => rv2rctrl_irqAck,
+    rctrl2rv_run                => rctrl2rv_run,
+    rv2rctrl_idle               => rv2rctrl_idle,
+    rctrl2rv_reset              => rctrl2rv_reset,
+    rctrl2rv_resetVect          => rctrl2rv_resetVect,
+    rv2rctrl_done               => rv2rctrl_done,
+    
+    -- Common memory interface.
+    rv2mem_decouple             => rv2mem_decouple,
+    mem2rv_blockReconfig        => mem2rv_blockReconfig,
+    mem2rv_stallIn              => mem2rv_stallIn,
+    rv2mem_stallOut             => rv2mem_stallOut,
+    mem2rv_cacheStatus          => mem2rv_cacheStatus,
+    
+    -- Instruction memory interface.
+    rv2imem_PCs                 => rv2imem_PCs,
+    rv2imem_fetch               => rv2imem_fetch,
+    rv2imem_cancel              => rv2imem_cancel,
+    imem2rv_instr               => imem2rv_instr,
+    imem2rv_affinity            => imem2rv_affinity,
+    imem2rv_busFault            => imem2rv_busFault,
+    
+    -- Data memory interface.
+    rv2dmem_addr                => rv2dmem_addr,
+    rv2dmem_readEnable          => rv2dmem_readEnable,
+    rv2dmem_writeData           => rv2dmem_writeData,
+    rv2dmem_writeMask           => rv2dmem_writeMask,
+    rv2dmem_writeEnable         => rv2dmem_writeEnable,
+    dmem2rv_readData            => dmem2rv_readData,
+    dmem2rv_ifaceFault          => dmem2rv_ifaceFault,
+    dmem2rv_busFault            => dmem2rv_busFault,
+    
+    -- Control/debug bus interface.
+    dbg2rv_addr                 => dbg2rv_addr,
+    dbg2rv_readEnable           => dbg2rv_readEnable,
+    dbg2rv_writeEnable          => dbg2rv_writeEnable,
+    dbg2rv_writeMask            => dbg2rv_writeMask,
+    dbg2rv_writeData            => dbg2rv_writeData,
+    rv2dbg_readData             => rv2dbg_readData,
+    
+    -- Trace interface.
+    rv2trsink_push              => rv2trsink_push,
+    rv2trsink_data              => rv2trsink_data,
+    rv2trsink_end               => rv2trsink_end,
+    trsink2rv_busy              => trsink2rv_busy
+    
+  );
+
+\end{lstlisting}
+

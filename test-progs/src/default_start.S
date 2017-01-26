@@ -18,108 +18,13 @@
   .proc 
 _start::
 
-/* clear register file (I know this is bullshit) */
-mov $r0.1 = 0
-mov $r0.2 = 0
-ISSUE_2
-mov $r0.3 = 0
-mov $r0.4 = 0
-ISSUE_4
-mov $r0.5 = 0
-mov $r0.6 = 0
-ISSUE_2
-mov $r0.7 = 0
-mov $r0.8 = 0
-;;
-mov $r0.11 = 0
-mov $r0.12 = 0
-ISSUE_2
-mov $r0.13 = 0
-mov $r0.14 = 0
-ISSUE_4
-mov $r0.15 = 0
-mov $r0.16 = 0
-ISSUE_2
-mov $r0.17 = 0
-mov $r0.18 = 0
-;;
-mov $r0.21 = 0
-mov $r0.22 = 0
-ISSUE_2
-mov $r0.23 = 0
-mov $r0.24 = 0
-ISSUE_4
-mov $r0.25 = 0
-mov $r0.26 = 0
-ISSUE_2
-mov $r0.27 = 0
-mov $r0.28 = 0
-;;
-mov $r0.31 = 0
-mov $r0.32 = 0
-ISSUE_2
-mov $r0.33 = 0
-mov $r0.34 = 0
-ISSUE_4
-mov $r0.35 = 0
-mov $r0.36 = 0
-ISSUE_2
-mov $r0.37 = 0
-mov $r0.38 = 0
-;;
-mov $r0.41 = 0
-mov $r0.42 = 0
-ISSUE_2
-mov $r0.43 = 0
-mov $r0.44 = 0
-ISSUE_4
-mov $r0.45 = 0
-mov $r0.46 = 0
-ISSUE_2
-mov $r0.47 = 0
-mov $r0.48 = 0
-;;
-mov $r0.51 = 0
-mov $r0.52 = 0
-ISSUE_2
-mov $r0.53 = 0
-mov $r0.54 = 0
-ISSUE_4
-mov $r0.55 = 0
-mov $r0.56 = 0
-ISSUE_2
-mov $r0.57 = 0
-mov $r0.58 = 0
-;;
-mov $r0.61 = 0
-mov $r0.62 = 0
-ISSUE_2
-mov $r0.63 = 0
-mov $r0.9 = 0
-ISSUE_4
-mov $r0.10 = 0
-mov $r0.19 = 0
-ISSUE_2
-mov $r0.20 = 0
-mov $r0.29 = 0
-;;
-mov $r0.30 = 0
-mov $r0.39 = 0
-ISSUE_2
-mov $r0.40 = 0
-mov $r0.49 = 0
-ISSUE_4
-mov $r0.55 = 0
-mov $r0.59 = 0
-ISSUE_2
-mov $r0.60 = 0
-;;
-
+#ifndef NO_BSS_CLEAR
   /* Load BSS section start and end. */
   c0  add     $r0.21      = $r0.0, __BSS_START
   ISSUE_2
   c0  add     $r0.22      = $r0.0, __BSS_END
   ISSUE_4
+#endif
   
   /* Load panic handler address. */
   c0  add     $r0.23      = $r0.0, _panic_handler
@@ -128,21 +33,24 @@ mov $r0.60 = 0
   /* Load hardware context ID. */
   c0  ldb     $r0.11      = CR_CID_ADDR[$r0.0]
 ;;
+#ifndef NO_BSS_CLEAR
   /* Set r0.25 if the BSS size is 0. */
   c0  cmpleu  $r0.25      = $r0.22, $r0.21
-  ISSUE_2
+  ISSUE_4
+#endif
   
   /* Set panic handler address. */
   c0  stw     CR_PH_ADDR[$r0.0] = $r0.23
-
-  ISSUE_4
+  ISSUE_2
 
   /* Load trap handler address. */
   c0  add     $r0.24      = $r0.0, _trap_handler
 ;;
+#ifndef NO_BSS_CLEAR
   /* Set b0.0 if the BSS size is 0 or if we're not running in context 0. */
   c0  orl     $b0.0       = $r0.25, $r0.11
   ISSUE_2
+#endif
   
   /* Multiply the context ID by the per-context stack size (chosen manually), */
   /* so each context has its own stack. */
@@ -151,7 +59,17 @@ mov $r0.60 = 0
   
   /* Set trap handler address. */
   c0  stw     CR_TH_ADDR[$r0.0] = $r0.24
+  ISSUE_2
+  
+  /* Initialize CR_RET with -1 to indicate failure if the program never writes
+  to it. */
+  c0  add     $r0.24      = $r0.0, -1
 ;;
+  c0  stb     CR_RET_ADDR[$r0.0] = $r0.24
+#ifdef NO_BSS_CLEAR
+;;
+#else
+  ISSUE_2
   /* Skip BSS init if BSS size is 0 or if we're not context 0. */
   c0  br                    $b0.0, 2f
 ;;
@@ -169,10 +87,119 @@ mov $r0.60 = 0
   c0  brf                   $b0.0, 1b
 ;;
 2:
-  /* Initialize the stack pointer. */
+#endif
+  /* Initialize the stack pointer and clear the register file. */
   c0  sub     $r0.1       = __STACK_START, $r0.12
   ISSUE_2
 
+#ifndef NO_REGFILE_RESET
+  c0  add     $r0.2       = $r0.0, 0
+  c0  add     $r0.3       = $r0.0, 0
+  ISSUE_4
+  c0  add     $r0.4       = $r0.0, 0
+  c0  add     $r0.5       = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.6       = $r0.0, 0
+  c0  add     $r0.7       = $r0.0, 0
+;;
+  c0  add     $r0.8       = $r0.0, 0
+  c0  add     $r0.9       = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.10      = $r0.0, 0
+  c0  add     $r0.11      = $r0.0, 0
+  ISSUE_4
+  c0  add     $r0.12      = $r0.0, 0
+  c0  add     $r0.13      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.14      = $r0.0, 0
+  c0  add     $r0.15      = $r0.0, 0
+;;
+  c0  add     $r0.16      = $r0.0, 0
+  c0  add     $r0.17      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.18      = $r0.0, 0
+  c0  add     $r0.19      = $r0.0, 0
+  ISSUE_4
+  c0  add     $r0.20      = $r0.0, 0
+  c0  add     $r0.21      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.22      = $r0.0, 0
+  c0  add     $r0.23      = $r0.0, 0
+;;
+  c0  add     $r0.24      = $r0.0, 0
+  c0  add     $r0.25      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.26      = $r0.0, 0
+  c0  add     $r0.27      = $r0.0, 0
+  ISSUE_4
+  c0  add     $r0.28      = $r0.0, 0
+  c0  add     $r0.29      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.30      = $r0.0, 0
+  c0  add     $r0.31      = $r0.0, 0
+;;
+  c0  add     $r0.32      = $r0.0, 0
+  c0  add     $r0.33      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.34      = $r0.0, 0
+  c0  add     $r0.35      = $r0.0, 0
+  ISSUE_4
+  c0  add     $r0.36      = $r0.0, 0
+  c0  add     $r0.37      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.38      = $r0.0, 0
+  c0  add     $r0.39      = $r0.0, 0
+;;
+  c0  add     $r0.40      = $r0.0, 0
+  c0  add     $r0.41      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.42      = $r0.0, 0
+  c0  add     $r0.43      = $r0.0, 0
+  ISSUE_4
+  c0  add     $r0.44      = $r0.0, 0
+  c0  add     $r0.45      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.46      = $r0.0, 0
+  c0  add     $r0.47      = $r0.0, 0
+;;
+  c0  add     $r0.48      = $r0.0, 0
+  c0  add     $r0.49      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.50      = $r0.0, 0
+  c0  add     $r0.51      = $r0.0, 0
+  ISSUE_4
+  c0  add     $r0.52      = $r0.0, 0
+  c0  add     $r0.53      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.54      = $r0.0, 0
+  c0  add     $r0.55      = $r0.0, 0
+;;
+  c0  add     $r0.56      = $r0.0, 0
+  c0  add     $r0.57      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.58      = $r0.0, 0
+  c0  add     $r0.59      = $r0.0, 0
+  ISSUE_4
+  c0  add     $r0.60      = $r0.0, 0
+  c0  add     $r0.61      = $r0.0, 0
+  ISSUE_2
+  c0  add     $r0.62      = $r0.0, 0
+  c0  add     $r0.63      = $r0.0, 0
+;;
+  c0  orl     $b0.0       = $r0.0, 0
+  c0  orl     $b0.1       = $r0.0, 0
+  ISSUE_2
+  c0  orl     $b0.2       = $r0.0, 0
+  c0  orl     $b0.3       = $r0.0, 0
+  ISSUE_4
+  c0  orl     $b0.4       = $r0.0, 0
+  c0  orl     $b0.5       = $r0.0, 0
+  ISSUE_2
+  c0  orl     $b0.6       = $r0.0, 0
+  c0  orl     $b0.7       = $r0.0, 0
+;;
+#endif
+  
   /* Call main. */
   c0  call    $l0.0       = main
 ;;
@@ -181,7 +208,7 @@ mov $r0.60 = 0
   /* Store the main return value in the designated scratchpad register. */
   c0  stb     CR_RET_ADDR[$r0.0] = $r0.3
 ;;
-	.global _stop
+  .global _stop
 _stop::
   /* Stop this context. */
   c0  stop

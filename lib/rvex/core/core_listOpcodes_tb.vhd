@@ -51,12 +51,12 @@ use IEEE.numeric_std.all;
 library std;
 use std.textio.all;
 
-library rvex;
-use rvex.utils_pkg.all;
-use rvex.simUtils_pkg.all;
-use rvex.simUtils_scanner_pkg.all;
-use rvex.core_intIface_pkg.all;
-use rvex.core_opcode_pkg.all;
+library work;
+use work.utils_pkg.all;
+use work.simUtils_pkg.all;
+use work.simUtils_scanner_pkg.all;
+use work.core_intIface_pkg.all;
+use work.core_opcode_pkg.all;
 
 --=============================================================================
 -- This "testbench" simply dumps a list of all the implemented and free opcodes

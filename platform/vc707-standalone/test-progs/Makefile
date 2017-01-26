@@ -35,7 +35,7 @@ TARGETS = \
 CLEAN = *.bin tools/b2v ../design/mem_init_pkg.vhd *.rawtrace *.trace
 
 # Include generic test program makefile.
-include $(GEN_TEST_PROGS)/Makefile
+include $(GEN_TEST_PROGS)/include.makefile
 
 # How to upload;
 .PHONY: upload-%

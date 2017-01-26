@@ -50,16 +50,16 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;                                                                                        -- GENERATED --
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_intIface_pkg.all;
-use rvex.core_ctrlRegs_pkg.all;
-use rvex.core_trap_pkg.all;
-use rvex.core_pipeline_pkg.all;
-use rvex.core_opcode_pkg.all;
-use rvex.core_version_pkg.all;
+library work;                                                                                        -- GENERATED --
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.core_pkg.all;
+use work.core_intIface_pkg.all;
+use work.core_ctrlRegs_pkg.all;
+use work.core_trap_pkg.all;
+use work.core_pipeline_pkg.all;
+use work.core_opcode_pkg.all;
+use work.core_version_pkg.all;
                                                                                                      -- GENERATED --
 --=============================================================================
 -- This entity contains the specifications and logic for the control registers

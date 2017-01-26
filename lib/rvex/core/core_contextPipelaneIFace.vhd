@@ -48,13 +48,13 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_intIface_pkg.all;
-use rvex.core_pipeline_pkg.all;
-use rvex.core_trap_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.core_pkg.all;
+use work.core_intIface_pkg.all;
+use work.core_pipeline_pkg.all;
+use work.core_trap_pkg.all;
 
 --=============================================================================
 -- This block interfaces between the pipelanes (the branch units in particular)
@@ -1050,7 +1050,7 @@ begin -- architecture
           writeEnables(index) <= brLinkWritePort_arb(laneGroup).brForwardEnable(stage + index + 1)(b);
         end generate;
         
-        br_fwd: entity rvex.core_forward
+        br_fwd: entity work.core_forward
           generic map (
             ENABLE_FORWARDING     => CFG.forwarding,
             DATA_WIDTH            => 1,
@@ -1092,7 +1092,7 @@ begin -- architecture
         writeEnables(index) <= brLinkWritePort_arb(laneGroup).linkForwardEnable(stage + index + 1);
       end generate;
       
-      link_fwd: entity rvex.core_forward
+      link_fwd: entity work.core_forward
         generic map (
           ENABLE_FORWARDING       => CFG.forwarding,
           DATA_WIDTH              => 32,

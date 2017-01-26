@@ -49,8 +49,8 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.utils_pkg.all;
+library work;
+use work.utils_pkg.all;
 
 --=============================================================================
 -- This is part of the utils_uart entity. It handles byte synchronization for
@@ -132,7 +132,7 @@ begin -- architecture
   --        |                                                                 |
   
   -- Instantiate the bit synchronization/receiver unit.
-  rx_bit_inst: entity rvex.utils_uart_rxBit
+  rx_bit_inst: entity work.utils_uart_rxBit
     port map (
       reset                     => reset,
       clk                       => clk,

@@ -1,0 +1,136 @@
+
+\subsubsection{LAC type system}
+\label{sec:core-ug-cfg-cregs-types}
+
+The primitive types supported by LAC and their VHDL equivalents are shown in
+Table~\ref{tbl:core-ug-cfg-cregs-types-primitive}. The C equivalents of the types
+range from \code{uint8_t} to \code{uint64_t}. The smallest available C type
+that the LAC/VHDL type fits in is used. Note that this means that
+\code{bitvec} and \code{unsigned} types of more than 64 bits are not supported.
+
+\begin{table}[h]
+\centering
+\caption{LAC primitive types.}
+\label{tbl:core-ug-cfg-cregs-types-primitive}
+\newcommand{\lactypentry}[3]{\texttt{\detokenize{#1}} & #2 & \texttt{\detokenize{#3}}\\ \hline}
+\footnotesize\begin{tabular}{|l|l|l|} \hline
+\textbf{LAC type name} & \textbf{Supported values} & \textbf{VHDL type name} \\ \hline
+\lactypentry{boolean}{\texttt{true} or \texttt{false}}{boolean}
+\lactypentry{natural}{0..2147483647 (31 bit)}{natural}
+\lactypentry{bit}{\texttt{'0'} or \texttt{'1'}}{std_logic}
+\lactypentry{bitvec<n>}{$n$ bits of \texttt{'0'} or \texttt{'1'}}{std_logic_vector(n-1 downto 0)}
+\lactypentry{unsigned<n>}{$n$ bits of \texttt{'0'} or \texttt{'1'}}{unsigned(n-1 downto 0)}
+\end{tabular}\normalsize
+\end{table}
+
+In addition to the scalar primitives in the table, LAC also supports hardcoded 
+aggregate types, i.e. the equivalent of a VHDL record or C struct. Rudimentary 
+support is provided for array-typed aggregate members to be compatible with 
+existing VHDL data structures at the time it was developed, though these arrays 
+can only be indexed by integer literals.
+
+In addition, objects can be instantiated per hardware context, which also 
+results in an array. If per-context objects are used in a context control
+register implementation, they are implicitely indexed by the context which the
+register belongs to. Otherwise, a context may only be explicitely specified as
+an integer literal.
+
+Arrays present a problem in VHDL code output. Of the primitive types, only
+\code{bit} actually has a VHDL array type. To get around this, and also to have
+the generated code be consistent with the human-written VHDL sources, a number
+of derived types are available. These are listed along with the supported
+aggregate types in Table~\ref{tbl:core-ug-cfg-cregs-types-derived}.
+
+\begin{table}[h]
+\centering
+\caption{LAC derived types.}
+\label{tbl:core-ug-cfg-cregs-types-derived}
+\newcommand{\lactypentry}[5]{
+    \texttt{\detokenize{#1}} & \texttt{\detokenize{#3}} & \texttt{\detokenize{#5}} \\
+    \texttt{\detokenize{(#2)}} & \texttt{\detokenize{#4}} & \\ \hline
+}
+\footnotesize\begin{tabular}{|l|l|l|} \hline
+\textbf{LAC} & \textbf{VHDL} & \textbf{C} \\ \hline
+\lactypentry{byte}          {bitvec8}  {rvex_byte_type}               {rvex_byte_array}               {uint8_t}
+\lactypentry{data}          {bitvec32} {rvex_data_type}               {rvex_data_array}               {uint32_t}
+\lactypentry{address}       {bitvec32} {rvex_address_type}            {rvex_address_array}            {uint32_t}
+\lactypentry{sylstatus}     {bitvec16} {rvex_sylStatus_type}          {rvex_sylStatus_array}          {uint16_t}
+\lactypentry{brregdata}     {bitvec8}  {rvex_brRegData_type}          {rvex_brRegData_array}          {uint8_t}
+\lactypentry{trapcause}     {bitvec8}  {rvex_trap_type}               {rvex_trap_array}               {uint8_t}
+\lactypentry{twobit}        {bitvec2}  {rvex_2bit_type}               {rvex_2bit_array}               {uint8_t}
+\lactypentry{threebit}      {bitvec3}  {rvex_3bit_type}               {rvex_3bit_array}               {uint8_t}
+\lactypentry{fourbit}       {bitvec4}  {rvex_4bit_type}               {rvex_4bit_array}               {uint8_t}
+\lactypentry{sevenByte}     {bitvec56} {rvex_7byte_type}              {rvex_7byte_array}              {uint64_t}
+\lactypentry{trapinfo}      {aggregate}{trap_info_type}               {trap_info_array}               {trapInfo_t}
+\lactypentry{breakpointinfo}{aggregate}{cxreg2pl_breakpoint_info_type}{cxreg2pl_breakpoint_info_array}{breakpointInfo_t}
+\lactypentry{cachestatus}   {aggregate}{rvex_cacheStatus_type}        {rvex_cacheStatus_array}        {cacheStatus_t}
+\lactypentry{cfgvect}       {aggregate}{rvex_generic_config_type}     {-}                             {cfgVect_t}
+\end{tabular}\normalsize
+\end{table}
+
+\FloatBarrier
+\paragraph*{Coercion and typecasts} Typically, LAC will take care of typing for
+you by coercing one type into another on the fly. If LAC does not know how to do
+it or a cast would be ambiguous, you can cast manually using C-style typecasts.
+The following rules apply.
+
+\begin{itemize}
+
+\item Conversions between \code{boolean} and \code{natural} works as they do in
+C. That is, \code{false} converts to zero and vice versa, \code{true} converts
+to one, and nonzero converts to \code{true}.
+
+\item Conversions between \code{boolean} and \code{bit} use positive logic. That
+is, \code{'1'} equals \code{true} and \code{'0'} equals \code{false}.
+
+\item \code{bit} and \code{bitvec1} are interchangeable.
+
+\item \code{bitvec<n>} and \code{unsigned<n>} are interchangeable.
+
+\item When a \code{bitvec<n>} is cast to a \code{bitvec} of different size, the
+vector is zero-extended or truncated.
+
+\item When a \code{bitvec<n>} is cast to a \code{natural} or vice versa, the
+value is zero-extended or truncated, with the \code{natural} behaving as a
+31-bit value.
+
+\end{itemize}
+
+\paragraph*{Access types} Aside from having a type that describes what kind of 
+values are allowed for an object, LAC objects also have an `access type'. This 
+describes the access priviliges, scoping rules and general behavior of an 
+object. The following access types are available.
+
+\begin{itemize}
+
+\item \emph{Input}: represents an input port of the VHDL entity. They are 
+available everywhere but in constant object initializers. They are read only.
+
+\item \emph{Register output}: represents an output port of the VHDL entity,
+driven from the clocked process. They are write only.
+
+\item \emph{Combinatorial output}: represents an output port of the VHDL entity,
+driven combinatorially using a \code{\connect} command. These objects may not
+be used in LAC sections.
+
+\item \emph{Register}: represents a user defined register, declared using a
+\code{\declRegister} command. These may be read and written in any LAC section,
+regardless of where they are declared. They behave like VHDL signals; that is,
+when they are written to, the read value of a register is not affected until the
+next clock cycle.
+
+\item \emph{Variable}: represents a user defined variable, declared using a
+\code{\declVariable} command. These may be read and written in the
+\code{\implementation} section of only the field to which they belong.
+Furthermore, they may be read in any \code{\finally} section.
+
+\item \emph{Constant}: represents a user defined constant, declared using a
+\code{\declConstant} command. They are read only and globally scoped.
+
+\item \emph{Predefined constant}: represents a predefined constant, such as a
+package constant or the \code{CFG} generic. They are read only and globally
+scoped. Section~\ref{sec:core-ug-cfg-cregs-predef} lists the available
+predefined constants.
+
+\end{itemize}
+

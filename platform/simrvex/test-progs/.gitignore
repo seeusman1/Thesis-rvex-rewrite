@@ -7,5 +7,7 @@
 *.bin
 *.rawtrace
 *.trace
+*.syms
 cache-runs
 simtestall
+simtrace-*

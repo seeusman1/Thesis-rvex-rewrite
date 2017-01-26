@@ -51,10 +51,10 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.simUtils_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.simUtils_pkg.all;
 
 --=============================================================================
 -- This package contains a way to make a universally accessible 2^32 byte

@@ -23,4 +23,4 @@ recompile:
 	$(MAKE) ucbqsort-fast.srec div.srec extReconf.srec factorial.srec
 
 # Include generic test program makefile.
-include $(GEN_TEST_PROGS)/Makefile
+include $(GEN_TEST_PROGS)/include.makefile

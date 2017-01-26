@@ -1,0 +1,50 @@
+
+\subsubsection{LAC statements}
+\label{sec:core-ug-cfg-cregs-stmts}
+
+LAC only supports the following statements.
+
+\vskip 6 pt
+\codehead{<reference> = <expression>;}
+
+\noindent Assignment statement.
+
+\vskip 6 pt
+\codehead{if (<expression>) <statement>}
+
+\noindent Conditional statement without \code{else}.
+
+\vskip 6 pt
+\codehead{if (<expression>) <statement> else <statement>}
+
+\noindent Conditional statement with \code{else}.
+
+\vskip 6 pt
+\codehead{{ <statement*> }}
+
+\noindent C-style block statement.
+
+\vskip 6 pt
+\codehead{<?vhdl ... ?>}
+
+\codehead{<?c ... ?>}
+
+\noindent Verbatim block statements. Anything written in place of the ellipsis 
+is in principle outputted straight to the VHDL or C output. This allows the 
+usage of constructs unknown to LAC. Even in these sections however, it is 
+possible to have the code generator convert LAC-style references to the target 
+language. This is particularly useful for C output, where the LAC objects are 
+part of special data structures. The syntaxes for such converted references are 
+as follows.
+
+\begin{lstlisting}[numbers=none, language=nothing]
+@read <name>
+@read <name>@<context>
+@lvalue <name>
+@lvalue <name>@<context>
+\end{lstlisting}
+
+\noindent In addition to being convenient syntactic sugar, the LAC generator 
+keeps track of which objects are read from and written to. Not using this syntax 
+may result in incorrect optimizations.
+

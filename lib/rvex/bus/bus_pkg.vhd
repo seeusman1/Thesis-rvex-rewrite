@@ -48,9 +48,9 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
 
 --=============================================================================
 -- This package contains definitions to do with the bus system used within the

@@ -50,8 +50,8 @@ use IEEE.std_logic_1164.all;
 library unimacro;
 use unimacro.vcomponents.all;
 
-library rvex;
-use rvex.common_pkg.all;
+library work;
+use work.common_pkg.all;
 
 --=============================================================================
 -- This component of the system ACE peripheral instantiates the block RAM that

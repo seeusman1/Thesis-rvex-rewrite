@@ -48,11 +48,11 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.core_pkg.all;
-use rvex.cache_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.bus_pkg.all;
+use work.core_pkg.all;
+use work.cache_pkg.all;
 
 --=============================================================================
 -- This entity represents a single instruction cache block.
@@ -289,7 +289,7 @@ begin
   -----------------------------------------------------------------------------
   -- Instantiate cache line storage
   -----------------------------------------------------------------------------
-  data_ram: entity rvex.cache_instr_blockData
+  data_ram: entity work.cache_instr_blockData
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -306,7 +306,7 @@ begin
   -----------------------------------------------------------------------------
   -- Instantiate cache tag storage and comparators
   -----------------------------------------------------------------------------
-  tag_ram: entity rvex.cache_instr_blockTag
+  tag_ram: entity work.cache_instr_blockTag
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -325,7 +325,7 @@ begin
   -----------------------------------------------------------------------------
   -- Instantiate cache line valid bit storage
   -----------------------------------------------------------------------------
-  valid_ram: entity rvex.cache_instr_blockValid
+  valid_ram: entity work.cache_instr_blockValid
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -346,7 +346,7 @@ begin
   -----------------------------------------------------------------------------
   -- Instantiate the miss resolution controller
   -----------------------------------------------------------------------------
-  miss_controller: entity rvex.cache_instr_missCtrl
+  miss_controller: entity work.cache_instr_missCtrl
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
