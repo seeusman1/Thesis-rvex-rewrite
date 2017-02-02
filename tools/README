@@ -3,6 +3,8 @@ After checking out the rvex-rewrite repository, this directory will be mostly
 empty. The following things should be put here to get everything to work:
 
 '- .
+   |+ build-dir              >  Should already be present. Used for building the tools.
+   |
    |+ debug-interface        >  Should already be present. Contains rvd, rvsrv, pyrvd.
    |
    |- newlib                `.  newlib C library. Symlink to

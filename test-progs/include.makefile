@@ -239,8 +239,8 @@ CFLAGS += --issue $(ISSUE_WIDTH) -I$(PLATFORM_SRC) -I$(GENERIC_SRC) -fshort-doub
 -fno-exceptions -std=c99 -fno-builtin $(INCLUDES)
 DEFS += O64=O64
 LDFLAGS += -nostartfiles -lgcc 
-CC=$(TOOLS)/open64/bin/st200-gcc
-LD=$(TOOLS)/open64/bin/st200-gcc
+CC=$(TOOLS)/open64/bin/rvex-gcc
+LD=$(TOOLS)/open64/bin/rvex-gcc
 ifeq ($(DEBUG), false)
 CFLAGS += -O3
 else
