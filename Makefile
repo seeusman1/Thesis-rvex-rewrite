@@ -6,5 +6,5 @@ help:
 .PHONY: conformance
 conformance:
 	# This is by no means complete.
-	cd platform/core-tests && make conformance
+	cd platform && make -ksj conformance
 
