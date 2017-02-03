@@ -128,7 +128,7 @@ void va_end (__gnuc_va_list);		/* Defined in libgcc.a */
 
 #endif /* not TMS320C3x or TMS320C4x */
 #endif /* not __STXP70__*/
-#endif /* not st200 */
+#endif /* not rvex */
 #endif /* not v850 */
 #endif /* not mn10200 */
 #endif /* not mn10300 */
