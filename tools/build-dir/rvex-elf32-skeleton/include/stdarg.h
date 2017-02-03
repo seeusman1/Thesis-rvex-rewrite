@@ -58,8 +58,8 @@
 #ifdef __v850__
 #include "va-v850.h"
 #else
-#ifdef __st200__
-#include "va-st200.h"
+#ifdef __rvex__
+#include "va-rvex.h"
 #else
 #ifdef __STXP70__
 #include "va-stxp70.h"

@@ -20,24 +20,38 @@ help:
 	@echo " Targets:"
 	@echo ""
 	@echo " make build-env-<version> : Downloads and extracts the build environment."
-	@echo " make all               : Builds all tools"
+	@echo " make all                 : Builds all tools"
+	@echo " make issue2             : Builds 2-issue version of the tools"
+	@echo " make issue4             : Builds 4-issue version of the tools"
+	@echo " make issue8             : Builds 8-issue version of the tools"
 	@echo " The following tools are available:"
 	@echo ""
-	@for tool in $(TOOLS) ; do \
+	@for tool in $(ALLTOOLS) ; do \
 		echo "  $$tool" ; \
 	done
 	@echo ""
 
 .PHONY: all
-all: rvex-elf32
+all: rvex-elf32 issue2 issue4 issue8
 
-#phony because even if the directory is created, it may not have been fully built
+# In order to build the 2 and 4-issue versions of the toolchain,
+# The default 8-issue toolchain must be built already
+# because we will use the same binutils and libraries (they are compiled with
+# generic binaries so they will run on other issue widths)
+issue%: build-env-$(CURRENT_VERSION) rvex-elf32
+	cp config/rvex_$*_si.cxx $</open64-rvex/open64-rvex/osprey/targinfo/st200/proc/rvex_si.cxx
+	make -C $< open64-rvex
+	cp -r rvex-elf32 $@
+	cp -r $</open64-rvex/build/* $@/
+	
+
+# phony because even if the directory is created, it may not have been fully built
 .PHONY: rvex-elf32 skeleton
 rvex-elf32: skeleton $(ALLTOOLS)
 	rvex-elf32/bin/rvex-gcc -c ../../test-progs/src/default_start.S -o rvex-elf32/lib/crt0.o
-	
+
 skeleton:
-	cp -r rvex-elf32-skeleton/* rvex-elf32/
+	cp -r rvex-elf32-skeleton rvex-elf32
 	
 
 .PHONY: $(BUILD_LOCAL_TOOLS)
@@ -83,12 +97,7 @@ endif
 
 
 
-# Update the pipeline configuration from the VHDL code and config scripts TODO
-update-config:
-
-
-
-open64-rvex: build-env-$(CURRENT_VERSION) update-config
+open64-rvex: build-env-$(CURRENT_VERSION)
 	make -C $< $@
 	mkdir -p rvex-elf32
 	cp -r $</$@/build/* rvex-elf32/

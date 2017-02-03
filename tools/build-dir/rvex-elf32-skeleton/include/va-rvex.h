@@ -1,7 +1,7 @@
 /* This file has been modified or added by STMicroelectronics, Inc. 1999-2007 */
 
-#ifndef __VA_ST200_H__
-#define __VA_ST200_H__
+#ifndef __VA_RVEX_H__
+#define __VA_RVEX_H__
 
 
 /* 
@@ -63,11 +63,11 @@ typedef int __builtin_va_alist_t __attribute__((__mode__(__word__)));
   In this very specific case, wich is to use this file in specific contexts
   (typically Newlibc) we shall not be guarded against multiple inclusions.
 */
-#if defined __VA_ST200_H__
-#undef __VA_ST200_H__
+#if defined __VA_RVEX_H__
+#undef __VA_RVEX_H__
 #else
-#error "Error in <va-st200.h> : __VA_ST200_H__ expected to be defined at this point"
+#error "Error in <va-rvex.h> : __VA_RVEX_H__ expected to be defined at this point"
 #endif
 
 
-#endif /*__VA_ST200_H__*/
+#endif /*__VA_RVEX_H__*/

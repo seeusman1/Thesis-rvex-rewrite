@@ -79,6 +79,10 @@ print('Generating header files...')
 import headers.rvex_h
 headers.rvex_h.generate(regs, trps, dirs)
 
+# Generate open64_targinfo_proc.h.
+import pipeline.open64_targinfo_proc
+pipeline.open64_targinfo_proc.generate(pl, dirs)
+
 
 #-------------------------------------------------------------------------------
 # rvd memory map generation
