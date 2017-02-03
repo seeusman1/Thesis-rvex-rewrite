@@ -15,8 +15,8 @@ complete):
  - Modelsim. The system is tested using version SE 10.2a; older versions are
    known to crash when simulating the core.
  - Python 3.x
- - GNU make, GCC, diff/patch, wget, and probably some of the other usual dev
-   tools.
+ - GNU make, GCC, diff/patch, wget, netcat, and probably some of the other usual
+   dev tools.
 
 If you want to be able to (re)generate the documentation, you also need:
 
@@ -32,6 +32,173 @@ precompiled or are simple C programs without any external dependencies. Some
 things (for instance grlib and various source files) are not part of the release
 archive itself, but will be downloaded from the TU Delft FTP automatically when
 needed.
+
+
+Quickstart tutorial: running your first ρ-VEX program
+=====================================================
+
+This section is a brief tutorial on how to run a program on the ρ-VEX. If
+everything works as it should, this shouldn't take more than half an hour.
+We will be using the program `ucbqsort` from the Powerstone benchmark suite,
+and run it using simrvex, Modelsim, and (if you have an ML605) ml605-standalone.
+
+Architecture simulation with simrvex
+------------------------------------
+
+Open a terminal and run the following commands. Only type the lines starting
+with a `$` sign, without actually typing the `$`, and replace `<root>` with the
+directory that contains this file.
+
+    $ cd <root>/platform/simrvex
+    $ make trace-ucbqsort
+    ...
+    ucbqsort: success
+
+A framebuffer window will also be opened, which is not used by this program.
+Press enter *in the terminal* to exit the simulator.
+
+The `ucbqsort: success` line is produced by the ρ-VEX: specifically by the
+`rvex_succeed("ucbqsort: success\n");` line in
+`<root>/test-progs/src/ucbqsort.c`. Aside from showing the debug output, the
+`trace` target also generates a trace file:
+`<root>/platform/simrvex/test-progs/simtrace-ucbqsort`. This is a text file
+with the full instruction trace of the program.
+
+
+HDL simulation with Modelsim
+----------------------------
+
+To do a basic simulation in Modelsim, we will use the `cache-test` platform.
+We will use the program `ucbqsort-fast` instead of `ucbqsort` here to speed up
+simulation; `ucbqsort-fast` does exactly the same, but has a smaller input size.
+If you don't mind waiting a little longer, you can of course use `ucbqsort` as
+well. Xilinx ISE or Vivado is needed for its `unisim` and `unimacro` simulation
+files.
+
+    $ cd <root>/platform/cache-test
+    # make sure that Modelsim is in $PATH
+    # source Xilinx ISE 14.7 or Vivado environment script (settings64.sh)
+    $ make vsim-ucbqsort-fast
+
+This will launch the Modelsim GUI. This platform does not add any signals to the
+waveform view by default, so let's add a useful signal now:
+
+    VSIM 2> add wave sim:/testbench/rvex_inst/rv2sim
+
+This is a simulation-only signal consisting of an array of strings that
+represent what the ρ-VEX is doing. Its output is similar to the trace output
+from simrvex, except embedded in the waveform view. The timing of the status
+signal corresponds to the last pipeline stage of the core.
+
+Now that we have the signal, we can run the simulation. `ucbqsort-fast` takes
+about 100 microseconds simulation-time with the default compiler configuration.
+
+    VSIM 2> run 100 us
+    # ucbqsort-fast: success
+
+As you can see, the debug output of the program is piped to the Modelsim
+transcript, just like how the debug output is piped to the console when using
+simrvex.
+
+
+Running the program on the hardware
+-----------------------------------
+
+The release comes with ISE/Vivado projects and prebuilt bitstreams for the
+Xilinx ML605 and VC707 development boards. If you don't have these boards, it
+should be fairly easy to get something basic working, but this is nevertheless
+out of the scope of this tutorial. For now, we will just use the
+`ml605-standalone` or `vc707-standalone` bitstream, depending on which board
+you have.
+
+The first step is, of course, to program the bitstream. There are various ways
+to do this, and I assume that you've done this before if you're reading this,
+so I won't go into detail. The files are here:
+
+    <root>/versions/release-ml605-standalone.bit
+    <root>/versions/release-vc707-standalone.bit
+
+The next step is to get `rvsrv` up and running. `rvsrv` is a tool that bridges
+the debug serial port peripheral to two TCP server sockets. This allows multiple
+applications to essentially access the serial port simultaneously, and it also
+allows you to use a boardserver easily. First, let's go to the right platform
+directory in a terminal:
+
+    $ cd <root>/platform/ml605-standalone
+      OR
+    $ cd <root>/platform/vc707-standalone
+
+Before starting the server, you need to know what device file the UART bridge of
+the development board is mapped to. Usually this will be `/dev/ttyUSB0`. This is
+a system-specific thing, so I will leave this to you. To start the server, run
+the following; of course replacing the serial port device file with whatever
+it's called on your system if necessary.
+
+    $ make server SERIAL_PORT=/dev/ttyUSB0
+
+You should see these things, among other things:
+
+    # Successfully opened serial port /dev/ttyUSB0 with baud rate 115200.
+    # Trying to open TCP server socket at port 21078 for application access...
+    # Now listening on port 21078.
+    # Trying to open TCP server socket at port 21079 for debug access...
+    # Now listening on port 21079.
+    # Daemon process running now, moving log output to /var/tmp/rvsrv/rvsrv-p21079.log.
+
+As the output implies, the tool daemonizes itself (i.e. runs in the background)
+so you can use the same terminal for other things. If you want to stop the
+server at some point, run `make stop` or something like `killall rvsrv`.
+
+`rvsrv` by itself doesn't do anything - you need `rvd` to send debug commands to
+the core. Again, `rvd` by itself does not have any knowledge of the target
+platform, so you need to feed it configuration files that we colloquially call
+memory maps, although they're more like a pattern-matching script. Don't worry
+though: the makefiles will handle all this for you. All you need to do is:
+
+    $ make debug
+    $ source debug
+
+This will set up an alias to `rvd` that contains all the necessary flags to tell
+`rvd` what kind of platform it is talking to. To see it in action, run:
+
+    $ rvd ?
+
+This will give you a state dump of context 0, which should mostly be a lot of
+zeros. So let's run the program now. `make` can handle this for you:
+
+    $ make run-ucbqsort
+
+You should first see the compilation steps, then the software upload to the
+core, then the makefile will wait for program termination (it checks every
+second; `ucbqsort` runs much faster than it looks from the makefile), and
+finally dump the performance counters:
+
+    # Performance counters for context 0:
+    #
+    #            Active cycles = 0x0000000003F9E6 =  260582 cycles
+    #           Stalled cycles = 0x00000000000000 =       0 cycles
+    #   Committed bundle count = 0x0000000002DBBA =  187322 bundles
+    # Committed syllable count = 0x0000000006D9F8 =  449016 syllables
+    #      Committed NOP count = 0x00000000018E87 =  102023 syllables
+
+You'll notice that the debug output is nowhere to be found. For that, you need a
+second terminal, where you run:
+
+    $ cd <root>/platform/<board>-standalone
+    $ make monitor
+    ...
+    # Connecting you to the rvex now, ctrl+c to exit. If you get an error, the server is probably not running.
+
+All this does is run `netcat` for the "application" port of `rvsrv`. This TCP
+socket emulates the serial port as the program sees it, with all the debug
+packets filtered out. It works in both directions: if you type something in the
+monitor and press enter the serial port peripheral will receive it. Most of the
+programs don't use this though.
+
+If you now go back to the other terminal and run `make run-ucbqsort` again, you
+should see the debug output appear in the monitor.
+
+    # ucbqsort: success
 
 
 Directory structure
@@ -58,14 +225,6 @@ lib/
 This directory contains the VHDL code of the ρ-VEX and peripherals.
 
 
-grlib/
-------
-
-This directory contains logic to download the right version of the grlib GPL
-hardware IP library from the TU Delft FTP, and patch it to allow it to use the
-ρ-VEX.
-
-
 config/
 -------
 
@@ -89,6 +248,20 @@ This directory contains a number of hardware and simulation systems that use the
 ρ-VEX in some way. A non-exhaustive list is given in the "platforms" section.
 
 
+versions/
+---------
+
+When you synthesize most platforms using the makefiles, the scripts will
+automatically store the output files, logs, and accompanying source files in an
+archive in this directory. Such an archive is tagged by a so-called platform tag
+and a core tag. The platform tag is (usually) random generated when synthesis
+starts, whereas the core tag is a relatively intelligent hash of the files in
+lib/rvex/core. These tags are also stored as ROM in the ρ-VEX global control
+register file, allowing a loaded bitstream to be identified and traced back to
+the archive. That way, if a problem is found with a bitstream generated earlier,
+it can (hopefully) be traced back to the source and be fixed.
+
+
 test-progs/
 -----------
 
@@ -105,18 +278,12 @@ This directory contains the various tools needed for compilation, debugging,
 etc., both as binaries and as source code where applicable.
 
 
-versions/
----------
+grlib/
+------
 
-When you synthesize most platforms using the makefiles, the scripts will
-automatically store the output files, logs, and accompanying source files in an
-archive in this directory. Such an archive is tagged by a so-called platform tag
-and a core tag. The platform tag is (usually) random generated when synthesis
-starts, whereas the core tag is a relatively intelligent hash of the files in
-lib/rvex/core. These tags are also stored as ROM in the ρ-VEX global control
-register file, allowing a loaded bitstream to be identified and traced back to
-the archive. That way, if a problem is found with a bitstream generated earlier,
-it can (hopefully) be traced back to the source and be fixed.
+This directory contains logic to download the right version of the grlib GPL
+hardware IP library from the TU Delft FTP, and patch it to allow it to use the
+ρ-VEX.
 
 
 Platforms
@@ -127,11 +294,12 @@ instructions. For more informations on these platforms or the undocumented ones,
 running make without an argument should always list the available commands.
 Reading the makefiles and HDL sources is the next best thing.
 
+
 simrvex
 -------
 
 This "platform" encapsulates the simrvex architectural simulator. simrvex is
-very fast in comparison to modelsim, running at similar speeds as an ρ-VEX core
+very fast in comparison to Modelsim, running at similar speeds as an ρ-VEX core
 at ~10MHz. To simulate a program, do the following.
 
     $ cd platform/simrvex
@@ -150,8 +318,8 @@ This simulation-only platform serves as a basic conformance test for the ρ-VEX
 core. The conformance test is run as follows:
 
     $ cd platform/core-tests
-    # source Modelsim environment script
-    # source Xilinx ISE 14.7 or Vivado environment script
+    # make sure that Modelsim is in $PATH
+    # source Xilinx ISE 14.7 or Vivado environment script (settings64.sh)
     $ make conformance -j
 
 This will eventually return a pass or fail in the console. Log files for each
@@ -172,8 +340,8 @@ This simulation-only platform is used to test the ρ-VEX cache, and may be used
 to debug simple ρ-VEX applications using Modelsim. The process is as follows:
 
     $ cd platform/cache-test
-    # source Modelsim environment script
-    # source Xilinx ISE 14.7 or Vivado environment script
+    # make sure that Modelsim is in $PATH
+    # source Xilinx ISE 14.7 or Vivado environment script (settings64.sh)
     $ make vsim-<test program name>
 
 Test program name must be set to the test program that you want to use. Running
@@ -225,8 +393,8 @@ Starting a simulation using Modelsim works the same as it does in cache-test.
 That is:
 
     $ cd platform/<board>-standalone
-    # source Modelsim environment script
-    # source Xilinx ISE 14.7 or Vivado environment script
+    # make sure that Modelsim is in $PATH
+    # source Xilinx ISE 14.7 or Vivado environment script (settings64.sh)
     $ make vsim-<test program name>
 
 Unlike cache-test, the standalone platforms will automatically add some signals
@@ -263,7 +431,7 @@ GUI method.
 To launch ISE, do the following:
 
     $ cd platform/ml605-standalone
-    # source Xilinx ISE 14.7 environment script
+    # source Xilinx ISE 14.7 environment script (settings64.sh)
     $ make ise[-<test program name>]
 
 The program name is optional. If none is provided, the block RAMs will be
@@ -273,7 +441,7 @@ anything else.
 Synthesis from the command line works as follows:
 
     $ cd platform/ml605-standalone
-    # source Xilinx ISE 14.7 environment script
+    # source Xilinx ISE 14.7 environment script (settings64.sh)
     $ make synth[-<test program name>]
 
 This generates a working directory of the form `synth-<timestamp>`, which
@@ -308,7 +476,7 @@ There is currently no command-line synthesis option for the VC707, you need to
 use the Vivado GUI. You can start the GUI as follows:
 
     $ cd platform/vc707-standalone
-    # source Vivado environment script
+    # source Vivado environment script (settings64.sh)
     $ make vivado[-<test program name>]
 
 The program name is optional. If none is provided, the block RAMs will be
@@ -386,15 +554,15 @@ break things when used.
 If necessary, the grlib platforms can be simulated using:
 
     $ cd platform/ml605-<platform name>
-    # source Modelsim environment script
-    # source Xilinx ISE 14.7 or Vivado environment script
+    # make sure that Modelsim is in $PATH
+    # source Xilinx ISE 14.7 or Vivado environment script (settings64.sh)
     $ make sim-<test program name>
 
 After the first run, the following should also work (it's a little bit faster):
 
     $ make resim-<test program name>
 
-This will eventually open modelsim. The simulation itself works a little bit
+This will eventually open Modelsim. The simulation itself works a little bit
 different between the three platforms. ml605-grlib simulates everything down to
 the DDR controller. ml605-grlib-bare and ml605-doom have slightly modified DDR
 controllers however, which do not seem to work with the existing simulation
@@ -423,7 +591,7 @@ Synthesis of the grlib-based platforms should be done from the command line as
 follows.
 
     $ cd platform/ml605-<platform name>
-    # source Xilinx ISE 14.7 environment script
+    # source Xilinx ISE 14.7 environment script (settings64.sh)
     $ make synth
 
 ### Using the FPGA design
