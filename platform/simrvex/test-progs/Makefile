@@ -7,7 +7,7 @@ GEN_TEST_PROGS = ../../../test-progs
 
 # Platform-specific executables. Only work with O64.
 ifeq ($(COMPILER), O64)
-EXECUTABLES = convolution_3x3 convolution_5x5 convolution_7x7 greyscale median mandel
+EXECUTABLES = convolution_3x3 convolution_5x5 convolution_7x7 greyscale median mandel mandel_multi
 endif
 
 # Platform-specific code to link.

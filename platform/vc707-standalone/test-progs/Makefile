@@ -8,7 +8,7 @@ RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 HOSTCC = gcc
 
 # Platform-specific executables.
-EXECUTABLES = timer reconf
+EXECUTABLES = 
 
 # Platform-specific object files to link.
 OBJECTS = rvex-standalone.o

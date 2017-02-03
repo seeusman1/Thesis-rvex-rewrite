@@ -7,7 +7,7 @@ RVD = $(DEBUGIFACE)/bin/rvd.sh
 RVTRACE = $(DEBUGIFACE)/bin/rvtrace
 
 # Platform-specific executables.
-EXECUTABLES = time Demodispatch_multi mandelbrot_multi raytracer_multi greyscale_multi convolution_multi mandel
+EXECUTABLES = time convolution_3x3 convolution_5x5 convolution_7x7 greyscale median mandel mandel_multi
 
 # Platform-specific code to link.
 OBJECTS = platform.a
