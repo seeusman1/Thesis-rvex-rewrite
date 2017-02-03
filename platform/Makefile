@@ -7,8 +7,8 @@ SUPPORTED_PLATFORMS += simrvex core-tests cache-test
 UNSTABLE_PLATFORMS += 
 
 # ML605 platforms.
-SUPPORTED_PLATFORMS += ml605-standalone ml605-doom ml605-grlib ml605-grlib-bare
-UNSTABLE_PLATFORMS += 
+SUPPORTED_PLATFORMS += ml605-standalone ml605-doom ml605-grlib
+UNSTABLE_PLATFORMS += ml605-grlib-bare
 
 # VC707 platforms.
 SUPPORTED_PLATFORMS += vc707-standalone

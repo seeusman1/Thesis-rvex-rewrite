@@ -93,7 +93,7 @@ int main(void) {
   puts("Be sure to use \"make monitor-nobuf\" to disable echo and line buffering!\n");
   
   // Configure the timer to generate an interrupt every second.
-  TIMER->scaler_reload = 375 - 1; // Every 10 microseconds.
+  TIMER->scaler_reload = 300 - 1; // Every 10 microseconds.
   TIMER->tim1_reload = 100 - 1; // Every millisecond.
   TIMER->tim1_config
     = (1 << 0)  // Enable timer.
@@ -115,8 +115,9 @@ int main(void) {
   CR_CCR = CR_CCR_IEN | CR_CCR_RFT;
   
   while (1) {
-    unsigned char c = getchar();
+    unsigned char c;
     int sel;
+    while (!plat_serial_read(0, &c, 1));
     
     switch (c) {
       

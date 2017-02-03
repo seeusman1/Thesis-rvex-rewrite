@@ -489,11 +489,10 @@ You can communicate with the processor using rvd. Refer to the debugging section
 of the user manual (doc folder) for usage information.
 
 
-ml605-grlib, ml605-grlib-bare, and ml605-doom
+ml605-grlib and and ml605-doom
 ---------------------------------------------
 
-These platforms are various systems that use the GRLIB GPL hardware IP library
-as peripherals. Roughly:
+These platforms use the GRLIB GPL hardware IP library as peripherals. Roughly:
 
  - ml605-grlib is a very basic port of the ML605 LEON3 example platform from
    GRLIB. It essentially replaces the quad-core version of the platform with a
@@ -502,10 +501,6 @@ as peripherals. Roughly:
    with the ρ-VEX debug serial peripheral. It ONLY works with the 512MB DDR3
    version of the ML605 board; the later board revisions with 1GB DDR3 may not
    be initialized properly by the platform. This has been fixed for the others.
-
- - ml605-bare is a modified version of ml605-grlib where almost all peripherals
-   except for the JTAG and DDR controller are removed, in an attempt to speed up
-   synthesis time.
 
  - ml605-doom is the platform that we use internally for our demos. It has a
    toplevel file that is written from scratch instead of being derived from the
@@ -564,11 +559,11 @@ After the first run, the following should also work (it's a little bit faster):
 
 This will eventually open Modelsim. The simulation itself works a little bit
 different between the three platforms. ml605-grlib simulates everything down to
-the DDR controller. ml605-grlib-bare and ml605-doom have slightly modified DDR
-controllers however, which do not seem to work with the existing simulation
-model (almost no time was spent trying to debug this though). As a workaround,
-these platforms have a simplified memory model, which has the side effect of
-them also simulating significantly faster.
+the DDR controller. ml605-doom has a slightly modified DDR controller however,
+which do not seem to work with the existing simulation model (almost no time was
+spent trying to debug this though). As a workaround, these platforms have a
+simplified memory model, which has the side effect of them also simulating
+significantly faster.
 
 Each of these platforms simulates the UART completely, including its timing.
 Therefore, debug output will slow down the simulation considerably. However,

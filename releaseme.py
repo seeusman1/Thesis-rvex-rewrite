@@ -7,10 +7,11 @@ version = '4.1'
 # Files/directories that are checked in to rvex-rewrite but should not be
 # released.
 exclude = [
-    'releaseme.py'
+    'releaseme.py',
     'lib/libs.txt',
     'lib/nw_dma',
     'platform/ml605-grlib-pcie',
+    'platform/ml605-grlib-bare',
     'platform/synopsys-90nm',
     'platform/vc707-grlib',
     'platform/vc707-stream',
@@ -25,8 +26,7 @@ exclude = [
 include = [
     'tools/vexparse/*.py',
     'tools/vex-3.43/*',
-    'versions/release-*',
-    'hello'
+    'versions/release-*'
 ]
 
 # Files that should be added.
