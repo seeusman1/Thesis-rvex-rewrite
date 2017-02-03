@@ -36,3 +36,6 @@ clean:
 	cd test-progs && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
 
+.PHONY: conformance
+conformance:
+	cd test-progs && $(MAKE) $@
