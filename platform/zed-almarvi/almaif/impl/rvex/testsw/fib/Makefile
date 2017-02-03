@@ -20,7 +20,7 @@ ifeq ($(shell uname -m | grep -q arm; echo $$?),1)
 TOOLS = ../../../../../../../tools
 
 # Compiler tools.
-CC        = $(TOOLS)/open64/bin/st200-gcc
+CC        = $(TOOLS)/open64/bin/rvex-gcc
 OBJDUMP   = $(TOOLS)/rvex-elf32/bin/rvex-elf32-objdump
 OBJCOPY   = $(TOOLS)/rvex-elf32/bin/rvex-elf32-objcopy
 
