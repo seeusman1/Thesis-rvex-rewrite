@@ -26,6 +26,9 @@ exclude = [
 # Shell-style wildcards work here.
 include = [
     'tools/vexparse/*.py',
+    'tools/rvex-elf32/*',
+    'tools/simrvex/*',
+    'tools/open64/issue*/*',
     'tools/vex-3.43/*',
     'versions/release-*'
 ]
