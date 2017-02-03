@@ -2,7 +2,7 @@
 #include "rvex_io.h"
 #include "platform.h"
 
-#define TIMER TIM1
+#define TIMER PLAT_GPTIMER1
 
 typedef struct {
   int ms;
@@ -15,6 +15,8 @@ volatile time_t current_time = { 0, 0, 0, 0 };
 volatile int configuring = 0;
 volatile int force_update = 1;
 volatile int updating = 0;
+
+void time_interrupt(unsigned long data);
 
 // Select display type:
 
@@ -98,10 +100,13 @@ int main(void) {
     | (1 << 1)  // Auto-restart timer.
     | (1 << 2)  // Load the reload value now.
     | (1 << 3); // Enable the interrupt.
+    
+  // Register the interrupt handler
+  plat_irq_register(IRQ_TIM1A, time_interrupt, 0);
   
   // Enable the interrupt for timer 1.
-  IRQMP->level = (1 << IRQ_TIM1);
-  IRQMP->mask[CR_CID] |= (1 << IRQ_TIM1);
+  PLAT_IRQMP->level = (1 << IRQ_TIM1A);
+  PLAT_IRQMP->mask[CR_CID] |= (1 << IRQ_TIM1A);
   
   // Initialize the display renderer.
   init_display_rom();
@@ -210,96 +215,81 @@ int main(void) {
  * Interrupt handler. This is called from assembly code when an interrupt
  * occurs.
  */
-void interrupt(unsigned int id) {
+void time_interrupt(unsigned long data) {
   
-  // Handle timer1 interrupt.
-  if (id == IRQ_TIM1) {
-    time_t t;
-    
-    // Clear the interrupt flag.
-    TIMER->tim1_config
-      = (1 << 0)  // Enable timer.
-      | (1 << 1)  // Auto-restart timer.
-      | (1 << 3)  // Enable the interrupt.
-      | (1 << 4); // Clear the interrupt pending flag.
-    
-    // Load the current time from volatile memory to registers/local vars.
-    t = current_time;
-    
-    // Increment the current time.
-    t.ms++;
-    if (t.ms >= 1000) {
-      t.ms = 0;
-      t.s++;
-      if (t.s >= 60) {
-        t.s = 0;
-        t.m++;
-        if (t.m >= 60) {
-          t.m = 0;
-          t.h++;
-          if (t.h >= 24) {
-            t.h = 0;
-          }
+  time_t t;
+  
+  // Clear the interrupt flag.
+  TIMER->tim1_config
+    = (1 << 0)  // Enable timer.
+    | (1 << 1)  // Auto-restart timer.
+    | (1 << 3)  // Enable the interrupt.
+    | (1 << 4); // Clear the interrupt pending flag.
+  
+  // Load the current time from volatile memory to registers/local vars.
+  t = current_time;
+  
+  // Increment the current time.
+  t.ms++;
+  if (t.ms >= 1000) {
+    t.ms = 0;
+    t.s++;
+    if (t.s >= 60) {
+      t.s = 0;
+      t.m++;
+      if (t.m >= 60) {
+        t.m = 0;
+        t.h++;
+        if (t.h >= 24) {
+          t.h = 0;
         }
       }
     }
-    
-    // Save the current time.
-    current_time = t;
-    
-    // Print the time while allowing interrupts to nest if t.ms is 0 or 500 or
-    // if the main loop set the force_update flag.
-    if ((t.ms == 0) || (t.ms == 500) || force_update) {
-      if (!updating) {
-        int forced = force_update;
-        static char buf[9];
-        char *bufPtr = buf;
-        updating = 1;
-        force_update = 0;
-        CR_CCR = CR_CCR_IEN | CR_CCR_RFT;
-        if ((t.ms < 500) && (configuring == 1) && !forced) {
-          *bufPtr++ = ' ';
-          *bufPtr++ = ' ';
-        } else {
-          *bufPtr++ = (t.h / 10 + '0');
-          *bufPtr++ = (t.h % 10 + '0');
-        }
-        *bufPtr++ = ((t.ms < 500) ? ' ' : ':');
-        if ((t.ms < 500) && (configuring == 2) && !forced) {
-          *bufPtr++ = ' ';
-          *bufPtr++ = ' ';
-        } else {
-          *bufPtr++ = (t.m / 10 + '0');
-          *bufPtr++ = (t.m % 10 + '0');
-        }
-        *bufPtr++ = ((t.ms < 500) ? ' ' : ':');
-        if ((t.ms < 500) && (configuring == 3) && !forced) {
-          *bufPtr++ = ' ';
-          *bufPtr++ = ' ';
-        } else {
-          *bufPtr++ = (t.s / 10 + '0');
-          *bufPtr++ = (t.s % 10 + '0');
-        }
-        *bufPtr = 0;
-        render(buf);
-        CR_CCR = CR_CCR_IEN_C | CR_CCR_RFT_C;
-        updating = 0;
-      }
-    }
-    
-    return;
   }
   
-  puts("Unknown IRQ ");
-  if (id < 10) {
-    putchar('0' + id);
-  } else if (id < 16) {
-    putchar('1');
-    putchar('0' + id - 10);
-  } else {
-    putchar('?');
+  // Save the current time.
+  current_time = t;
+  
+  // Print the time while allowing interrupts to nest if t.ms is 0 or 500 or
+  // if the main loop set the force_update flag.
+  if ((t.ms == 0) || (t.ms == 500) || force_update) {
+    if (!updating) {
+      int forced = force_update;
+      static char buf[9];
+      char *bufPtr = buf;
+      updating = 1;
+      force_update = 0;
+      CR_CCR = CR_CCR_IEN | CR_CCR_RFT;
+      if ((t.ms < 500) && (configuring == 1) && !forced) {
+        *bufPtr++ = ' ';
+        *bufPtr++ = ' ';
+      } else {
+        *bufPtr++ = (t.h / 10 + '0');
+        *bufPtr++ = (t.h % 10 + '0');
+      }
+      *bufPtr++ = ((t.ms < 500) ? ' ' : ':');
+      if ((t.ms < 500) && (configuring == 2) && !forced) {
+        *bufPtr++ = ' ';
+        *bufPtr++ = ' ';
+      } else {
+        *bufPtr++ = (t.m / 10 + '0');
+        *bufPtr++ = (t.m % 10 + '0');
+      }
+      *bufPtr++ = ((t.ms < 500) ? ' ' : ':');
+      if ((t.ms < 500) && (configuring == 3) && !forced) {
+        *bufPtr++ = ' ';
+        *bufPtr++ = ' ';
+      } else {
+        *bufPtr++ = (t.s / 10 + '0');
+        *bufPtr++ = (t.s % 10 + '0');
+      }
+      *bufPtr = 0;
+      render(buf);
+      CR_CCR = CR_CCR_IEN_C | CR_CCR_RFT_C;
+      updating = 0;
+    }
   }
-  putchar('\n');
-  while (1);
+  
+  return;
   
 }
