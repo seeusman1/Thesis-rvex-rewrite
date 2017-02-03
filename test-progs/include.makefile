@@ -272,6 +272,7 @@ help:
 	@echo "  make <target> COMPILER=<HP|O64>                  (default = HP)"
 	@echo "  make <target> LIMMH_PREV=<true|false>            (default = true)"
 	@echo "  make <target> DEFS=<list of preprocessor defs>   (default = <none>)"
+	@echo "  make <target> XCFLAGS=<list of extra CFLAGS>     (default = <none>)"
 	@echo ""
 	@echo " NOTE: in general, you should clean before building a program using a different"
 	@echo " target or with different modifiers.
