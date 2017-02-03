@@ -13,6 +13,7 @@ TEMP = temp
 CORE_LIB = ../lib/rvex/core
 DOCS = ../doc/src/userman/generated
 RVEX_H = ../test-progs/src/rvex.h
+OPEN64_TARGINFO_PROC_H = ../tools/build-dir/config/open64_targinfo_proc.h
 MEMORY_MAP = ../tools/debug-interface/core.map
 MEMORY_MAP_PY = ../tools/debug-interface/pyrvd/core_map.py
 PLATFORMS = ../platform
@@ -35,6 +36,7 @@ all: $(TEMP)
 	@echo ""
 	@echo "Configuring C/assembly and rvd headers..."
 	$(CP) $(TEMP)/rvex.h $(RVEX_H)
+	$(CP) $(TEMP)/open64_targinfo_proc.h $(OPEN64_TARGINFO_PROC_H)
 	$(CP) $(TEMP)/core.map $(MEMORY_MAP)
 	$(CP) $(TEMP)/core_map.py $(MEMORY_MAP_PY)
 	@echo ""
