@@ -18,6 +18,7 @@ exclude = [
     'platform/zed-almarvi',
     'release-todo',
     'version',
+    'tools/build-dir/download.makefile',
     'tools/README', # This is for TU Delft people checking out the rvex-rewrite repo only
 ]
 
@@ -33,6 +34,12 @@ include = [
 add = {
     'lib/libs.txt': b'rvex\n',
     'version': b'release-' + version.encode('ascii'),
+    'tools/build-dir/download.makefile': (
+        b'\n$(DOWNLOADS):\n' +
+        b'\twget http://ftp.tudelft.nl/TUDelft/rvex/$@.tar.bz2\n' +
+        b'\ttar -xjf $@.tar.bz2\n' +
+        b'\trm $@.tar.bz2\n\n'
+    ),
 }
 
 # Hard-path excludes.
