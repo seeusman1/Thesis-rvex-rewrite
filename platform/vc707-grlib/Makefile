@@ -219,3 +219,6 @@ gdb-%:
 server stop monitor monitor-nobuf:
 	cd test-progs && $(MAKE) $@
 
+.PHONY: conformance
+conformance:
+	cd test-progs && $(MAKE) $@

@@ -132,7 +132,7 @@ clean:
 	cd test-progs && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
 	cd vivado && ls -a | grep -Ev "^\.\.?$$" | grep -v ".gitignore" | grep -v "standalone.xpr" | xargs rm -rf
-	rm design/mem_init_pkg.vhd
+	rm -f design/mem_init_pkg.vhd
 
 # Cleans rvex compilation intermediate files.
 .PHONY: clean-ex
@@ -142,3 +142,7 @@ clean-ex:
 .PHONY: clean-synth
 clean-synth:
 	rm -rf synth-*
+
+.PHONY: conformance
+conformance:
+	cd test-progs && $(MAKE) $@

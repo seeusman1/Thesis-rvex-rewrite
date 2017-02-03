@@ -184,3 +184,7 @@ clean:
 .PHONY: clean-synth
 clean-synth:
 	find -name "synth-*" -type d | xargs rm -rf
+
+.PHONY: conformance
+conformance:
+	cd test-progs && $(MAKE) $@
