@@ -131,17 +131,6 @@ int_64_t neg(int_64_t x)
 }
 
 
-int abs(int x)  
-{
-        if (x < 0) {
-                return -x;
-	}
-        else {
-            	return x;
-	}
-}
-
-
 int_64_t ucast(uint32_t x) 
 {
 	int_64_t llong;

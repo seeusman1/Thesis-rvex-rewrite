@@ -2,14 +2,6 @@
 
 typedef unsigned char uint8_t;
 
-int abs(int a)
-{
-	if (a < 0)
-		return -a;
-	else
-		return a;
-}
-
 static int x264_pixel_sad_16x16( uint8_t *pix1, int i_stride_pix1,
 		uint8_t *pix2, int i_stride_pix2 ) 
 {                                                   
