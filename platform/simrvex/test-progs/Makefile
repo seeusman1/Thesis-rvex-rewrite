@@ -73,8 +73,8 @@ simtest-% : %.elf
 	fi
 
 .PRECIOUS: simtrace-%
-simtrace-% : %.elf
-	${SIM} -t1,0 $< > $@
+trace-% : %.elf
+	${SIM} -t1,0 $< > sim$@
 
 .PHONY: conformance
 conformance: conformance-H8 conformance-O8 conformance-O4 conformance-O2

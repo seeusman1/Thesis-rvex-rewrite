@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="10" Path="/data/rvex-rewrite-clean-2/platform/vc707-standalone/vivado/standalone.xpr">
+<Project Version="7" Minor="10" Path="/data/rvex-rewrite-releasemods/platform/vc707-standalone/vivado/standalone.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="ed3289e1033b4b6d8b226130fc336880"/>
@@ -681,16 +681,26 @@
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
     </Run>
-    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7vx485tffg1761-2" ConstrsSet="constrs_1" Description="Vivado Implementation Defaults" State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true">
+    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7vx485tffg1761-2" ConstrsSet="constrs_1" Description="Uses multiple algorithms for optimization, placement, and routing to get potentially better results." State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2015"/>
+        <StratHandle Name="Performance_Explore" Flow="Vivado Implementation 2015">
+          <Desc>Uses multiple algorithms for optimization, placement, and routing to get potentially better results.</Desc>
+        </StratHandle>
         <Step Id="init_design"/>
-        <Step Id="opt_design"/>
+        <Step Id="opt_design">
+          <Option Id="Directive">0</Option>
+        </Step>
         <Step Id="power_opt_design"/>
-        <Step Id="place_design"/>
+        <Step Id="place_design">
+          <Option Id="Directive">0</Option>
+        </Step>
         <Step Id="post_place_power_opt_design"/>
-        <Step Id="phys_opt_design"/>
-        <Step Id="route_design"/>
+        <Step Id="phys_opt_design" EnableStepBool="1">
+          <Option Id="Directive">0</Option>
+        </Step>
+        <Step Id="route_design">
+          <Option Id="Directive">0</Option>
+        </Step>
         <Step Id="post_route_phys_opt_design"/>
         <Step Id="write_bitstream"/>
       </Strategy>
