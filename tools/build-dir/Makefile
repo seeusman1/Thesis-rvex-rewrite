@@ -50,6 +50,7 @@ rvex-elf32: skeleton $(ALLTOOLS)
 	rvex-elf32/bin/rvex-gcc -c ../../test-progs/src/default_start.S -o rvex-elf32/lib/crt0.o
 
 skeleton:
+	mkdir -p rvex-elf32
 	cp -r rvex-elf32-skeleton/* rvex-elf32/
 	
 
