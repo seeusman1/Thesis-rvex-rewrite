@@ -26,10 +26,7 @@ done
 
 # Check arguments and set default compiler flags for that issue width.
 case $issue in
-    2|8)
-        default_cflags="-CG:LAO_activation=0 --no-deadcode --icache-opt=off -fno-dismissible-load -mno-auto-prefetch"
-    ;;
-    4)
+    2|4|8)
         default_cflags="--no-deadcode --icache-opt=off -fno-dismissible-load -mno-auto-prefetch"
     ;;
     *)
