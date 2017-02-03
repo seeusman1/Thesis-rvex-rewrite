@@ -21,8 +21,8 @@ TOOLS = ../../../../../../../tools
 
 # Compiler tools.
 CC        = $(TOOLS)/open64/bin/st200-gcc
-OBJDUMP   = $(TOOLS)/rvex-elf32-32bit/bin/rvex-elf32-objdump
-OBJCOPY   = $(TOOLS)/rvex-elf32-32bit/bin/rvex-elf32-objcopy
+OBJDUMP   = $(TOOLS)/rvex-elf32/bin/rvex-elf32-objdump
+OBJCOPY   = $(TOOLS)/rvex-elf32/bin/rvex-elf32-objcopy
 
 CFLAGS += -nostartfiles -O3
 

@@ -175,7 +175,7 @@ BENCH_EXECUTABLES += pocsag qurt soma ucbqsort v42 x264
 ifndef TOOLS
 TOOLS = ../tools
 endif
-BUILD = $(TOOLS)/rvex-elf32-32bit/bin
+BUILD = $(TOOLS)/rvex-elf32/bin
 HOSTCC = gcc
 OBJCOPY = $(BUILD)/rvex-elf32-objcopy
 OBJDUMP = $(BUILD)/rvex-elf32-objdump
