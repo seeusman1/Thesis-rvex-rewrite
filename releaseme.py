@@ -133,7 +133,7 @@ for hp in hard_paths:
 if hard_path_err:
     print('Those should probably not be there. If any are not important, add ' +
           'the files to the don\'t care list.')
-    exit(1)
+#    exit(1)
 
 print('Compressing...')
 
