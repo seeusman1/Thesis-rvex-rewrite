@@ -17,6 +17,19 @@ complete):
  - Python 3.x
  - GNU make, GCC, diff/patch, wget, netcat, and probably some of the other usual
    dev tools.
+ 
+If you would like to rebuild the toolchain from source (this can be done 
+automatically from the tools/build-dir directory), you will need the following
+packages:
+
+ - For binutils:
+   - binutils-devel
+ - Additionally, for sim-rVEX:
+   - binutils-devel
+   - libX11
+   - libX11-dev
+   - libxpm
+   - libxpm-dev
 
 If you want to be able to (re)generate the documentation, you also need:
 
