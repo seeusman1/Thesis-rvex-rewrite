@@ -39,7 +39,7 @@ add = {
     'version': b'release-' + version.encode('ascii'),
     'tools/build-dir/download.makefile': (
         b'\n$(DOWNLOADS):\n' +
-        b'\twget http://ftp.tudelft.nl/TUDelft/rvex/$@.tar.bz2\n' +
+        b'\twget http://ftp.tudelft.nl/TUDelft/rvex/releases/4.x/4.1/toolsrc/$@.tar.bz2\n' +
         b'\ttar -xjf $@.tar.bz2\n' +
         b'\trm $@.tar.bz2\n\n'
     ),
