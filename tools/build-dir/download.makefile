@@ -5,8 +5,6 @@ USE_BITBUCKET=FALSE
 LOCAL_TEST=TRUE
 LOCAL_TEST_LOC=/data/workspaces/release/tools
 
-DOWNLOADS=binutils-gdb sim200-1.1-rVEX newlib-cygwin libgcc-rvex
-
 $(DOWNLOADS):
 ifeq ($(USE_BITBUCKET), TRUE)
 	git clone https://bitbucket.org/rvex/$@.git

@@ -1,10 +1,11 @@
 
-.PHONY: help
+.PHONY: all
+all: rvex-elf32 issue2 issue4 issue8
 
-LOCAL_TEST=TRUE
-LOCAL_TEST_LOC=/data/workspaces/release/tools
+CURRENT_VERSION=$(patsubst release-%,%,$(shell cat ../../version))
+DOWNLOADS=build-env-$(CURRENT_VERSION)
+include download.makefile
 
-CURRENT_VERSION =4.1
 
 # Tools that are built normally, using the host machine
 BUILD_LOCAL_TOOLS=binutils-rvex sim-rvex newlib-rvex libgcc-rvex
@@ -14,6 +15,7 @@ BUILD_ENV_TOOLS=open64-rvex
 
 ALLTOOLS = $(BUILD_ENV_TOOLS) $(BUILD_LOCAL_TOOLS)
 
+.PHONY: help $(ALLTOOLS)
 help:
 	@echo ""
 	@echo " This makefile will assist building the rVEX tools."
@@ -31,15 +33,12 @@ help:
 	done
 	@echo ""
 
-.PHONY: all
-all: rvex-elf32 issue2 issue4 issue8
-
 # In order to build the 2 and 4-issue versions of the toolchain,
 # The default 8-issue toolchain must be built already
 # because we will use the same binutils and libraries (they are compiled with
 # generic binaries so they will run on other issue widths)
 issue%: build-env-$(CURRENT_VERSION) rvex-elf32
-	cp config/rvex_$*_si.cxx $</open64-rvex/open64-rvex/osprey/targinfo/st200/proc/rvex_si.cxx
+	cp config/rvex_$*_si.cxx $</open64-rvex/Open64-rVEX/osprey/targinfo/st200/proc/rvex_si.cxx
 	make -C $< open64-rvex
 	cp -r rvex-elf32 $@
 	cp -r $</open64-rvex/build/* $@/
@@ -51,10 +50,9 @@ rvex-elf32: skeleton $(ALLTOOLS)
 	rvex-elf32/bin/rvex-gcc -c ../../test-progs/src/default_start.S -o rvex-elf32/lib/crt0.o
 
 skeleton:
-	cp -r rvex-elf32-skeleton rvex-elf32
+	cp -r rvex-elf32-skeleton/* rvex-elf32/
 	
 
-.PHONY: $(BUILD_LOCAL_TOOLS)
 binutils-rvex: skeleton
 	$(MAKE) -C $@
 	mkdir -p rvex-elf32
@@ -83,20 +81,6 @@ libgcc-rvex: skeleton
 sim-rvex:
 	$(MAKE) -C $@	
 		
-
-
-# Attempts to download the build environment if it doesn't exist.
-build-env-%:
-ifeq ($(LOCAL_TEST), TRUE)
-	cp $(LOCAL_TEST_LOC)/$@.tar.bz2 ./
-else
-	wget http://ftp.tudelft.nl/TUDelft/rvex/$@.tar.bz2
-endif
-	tar -xjf $@.tar.bz2
-	rm $@.tar.bz2
-
-
-
 open64-rvex: build-env-$(CURRENT_VERSION)
 	make -C $< $@
 	mkdir -p rvex-elf32
@@ -109,10 +93,10 @@ open64-rvex: build-env-$(CURRENT_VERSION)
 	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvex-elf32-gcc
 	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvex-elf32-c++
 
-	
+
 .PHONY: clean
-clean: $(patsubst %,clean-%,$(BUILD_LOCAL_TOOLS)) $(patsubst %,clean-env-%,$(BUILD_ENV_TOOLS))
-	rm -rf rvex-elf32
+clean: $(patsubst %,clean-%,$(BUILD_LOCAL_TOOLS))
+	rm -rf rvex-elf32 build-env-$(CURRENT_VERSION) issue2 issue4 issue8
 
 .PHONY: clean-%
 clean-%:

@@ -11,6 +11,7 @@ all: libgcc-rvex
 	cp -r libgcc-rvex/devimage/LIBFP/include build/
 	cp -r libgcc-rvex/devimage/LIBFLIP/include build/
 
+DOWNLOADS=libgcc-rvex
 include ../download.makefile
 
 .PHONY:

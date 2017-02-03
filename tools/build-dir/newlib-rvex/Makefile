@@ -9,6 +9,7 @@ all: newlib-cygwin
 	mv build/rvex-elf32/include/* build/include/newlib
 	mv build/rvex-elf32/lib/* build/lib/newlib/
 
+DOWNLOADS=newlib-cygwin
 include ../download.makefile
 
 .PHONY:
