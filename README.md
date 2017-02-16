@@ -612,3 +612,19 @@ therefore not included; you can download an evaluation version from
 [www.gaisler.com].
 
 
+### Some notes on the Open64 Compiler
+
+The release includes 3 pre-built versions of the open64 compiler; 2-issue, 
+4-issue, and 8-issue (this compiler is not retargetable as HP VEX is).
+This compiler has a GCC front-end so it should behave mostly as GCC would.
+Normally, the Makefiles take care of linking startup code and libraries. 
+The default behavior is to not include these automatically.
+In order to compile larger programs, we have ported the newlib 
+standard C library and added necessary floating point emulation, division,
+and startup code into this toolchain. Because of this, it is often possible
+to port an application to the rVEX by simply defining the CC variable in the
+Makefile of the application as "rvex-gcc -mruntime=newlib". 
+Other -mruntime options are "bare" (default) and "uclibc" (not available in 
+this release).
+
+
