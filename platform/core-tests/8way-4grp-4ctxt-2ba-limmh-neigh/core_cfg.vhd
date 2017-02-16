@@ -100,6 +100,23 @@ package core_cfg is
     -- Defines which lanes have a multiplier. Bit 0 of this number maps to lane
     -- 0, bit 1 to lane 1, etc.
     multiplierLanes             => 2#11111111#,
+
+    -- Defines which lanes have which floating-point units. Bit 0 of these
+    -- numbers maps to lane 0, bit 1 to lane 1, etc.
+    -- Floating-point add
+    faddLanes                   => 2#11111111#,
+
+    -- Floating-point compare
+    fcompareLanes               => 2#11111111#,
+
+    -- Floating-point convert-to-int
+    fconvfiLanes                => 2#11111111#,
+
+    -- Floating-point convert-to-float
+    fconvifLanes                => 2#11111111#,
+
+    -- Floating-point multiply
+    fmultiplyLanes              => 2#11111111#,
     
     -- Lane index for the memory unit, counting down from the last lane in each
     -- lane group. So memLaneRevIndex = 0 results in the memory unit being in

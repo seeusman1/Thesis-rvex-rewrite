@@ -1,0 +1,4 @@
+-- This test suite tests all FPU instructions.
+
+-- Test ADDF and SUBF
+addf.test

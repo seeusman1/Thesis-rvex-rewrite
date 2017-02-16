@@ -116,6 +116,11 @@ use work.core_cfg.all;
 --    - numContexts
 --    - genBundleSize
 --    - multiplierLanes
+--    - faddLanes
+--    - fcompareLanes
+--    - fconvfiLanes
+--    - fconvifLanes
+--    - fmultiplyLanes
 --    - memLaneRevIndex
 --    - branchLaneRevIndex
 --    - numBreakpoints

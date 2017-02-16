@@ -8,28 +8,31 @@ sanity.test
 
 -- Test register files and forwarding. This also kind of tests ADD, CMPEQ,
 -- STBR, MOVTL and STW (link).
-regs/index.suite
+--regs/index.suite
 
 -- Test LIMMH instructions.
-limmh/index.suite
+--limmh/index.suite
 
 -- Test ALU instructions.
-alu/index.suite
+--alu/index.suite
 
 -- Test MUL instructions.
-mul/index.suite
+--mul/index.suite
+
+-- Test FPU instructions.
+fpu/index.suite
 
 -- Test memory unit instructions.
-mem/index.suite
+--mem/index.suite
 
 -- Test branch unit instructions.
-branch/index.suite
+--branch/index.suite
 
 -- Test dynamic reconfiguration.
-reconf/index.suite
+--reconf/index.suite
 
 -- Test debug support.
-debug/index.suite
+--debug/index.suite
 
 -- Real-world program: sorting.
-ucbqsort.test
+--ucbqsort.test
