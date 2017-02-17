@@ -183,7 +183,7 @@ the result in a branch register.
 \datapath{enableFCif}{'1'}
 \fpu{isFConvifInstruction}{'1'}
 \fpu{unsignedOp}{'0'}
-Converts a single-precision floating-point number to a signed integer.
+Converts a signed integer to a single-precision floating-point number.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 \rd = (float) \rx;
@@ -195,7 +195,7 @@ Converts a single-precision floating-point number to a signed integer.
 \datapath{enableFCfi}{'1'}
 \fpu{isFConvfiInstruction}{'1'}
 \fpu{unsignedOp}{'0'}
-Converts a signed integer to a single-precision floating-point number.
+Converts a single-precision floating-point number to a signed integer.
 
 \begin{lstlisting}[numbers=none, basicstyle=\ttfamily\footnotesize, language=C++]
 \rd = (int) \rx;

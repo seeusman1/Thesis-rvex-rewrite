@@ -2603,13 +2603,13 @@ begin -- architecture
 
     end if;
 
-    -- Floating-point convert float to in
+    -- Floating-point convert float to int
     if HAS_FCFI then
 
       -- Drive inputs
       if s(S_FCFI).dp.c.enableFCfi = '1' or not CFG.enablePowerLatches then
         pl2fcfi_opcode(S_FCFI) <= s(S_FCFI).opcode;
-        pl2fcfi_op(S_FCFI)     <= s(S_FCFI).dp.op2;
+        pl2fcfi_op(S_FCFI)     <= s(S_FCFI).dp.op1;
       end if;
 
       -- Set the result and result valid bit if the FCFI result is selected.
@@ -2627,7 +2627,7 @@ begin -- architecture
       -- Drive inputs
       if s(S_FCIF).dp.c.enableFCif = '1' or not CFG.enablePowerLatches then
         pl2fcif_opcode(S_FCIF) <= s(S_FCIF).opcode;
-        pl2fcif_op(S_FCIF)     <= s(S_FCIF).dp.op2;
+        pl2fcif_op(S_FCIF)     <= s(S_FCIF).dp.op1;
       end if;
 
       -- Set the result and result valid bit if the FCIF result is selected.

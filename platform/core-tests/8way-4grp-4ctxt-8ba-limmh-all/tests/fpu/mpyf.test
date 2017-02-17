@@ -1,0 +1,85 @@
+name     Test FPU multiplier instructions
+
+-- Check configuration
+config   genBundleSize         8
+config   memLaneRevIndex       1
+config   branchLaneRevIndex    0
+
+-- Initialize memories
+init
+
+-- Test 2.0 * 3.5
+load     limmh 1, 0x40000000
+load     add r0.1 = r0.0, 0x40000000
+load     limmh 3, 0x40600000
+load     add r0.2 = r0.0, 0x40600000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      mpyf-kernel.inc
+
+-- Test 0x2BFFFFCF and 0xDE00ACFD
+load     limmh 1, 0x2BFFFFCF
+load     add r0.1 = r0.0, 0x2BFFFFCF
+load     limmh 3, 0xDE00ACFD
+load     add r0.2 = r0.0, 0xDE00ACFD
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      mpyf-kernel.inc
+
+-- Test 0x00000000 and 0xBFFFFFCF
+load     limmh 1, 0x00000000
+load     add r0.1 = r0.0, 0x00000000
+load     limmh 3, 0xBFFFFFCF
+load     add r0.2 = r0.0, 0xBFFFFFCF
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      mpyf-kernel.inc
+
+-- Test 0x007FFFFF and 0x7F800000
+load     limmh 1, 0x007FFFFF
+load     add r0.1 = r0.0, 0x007FFFFF
+load     limmh 3, 0x7F800000
+load     add r0.2 = r0.0, 0x7F800000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      mpyf-kernel.inc
+
+-- Stop the processor
+load     nop
+load     nop
+load     nop
+load     nop
+load     nop
+load     nop
+load     nop
+load     stop ;;
+
+-- Reset the processor
+reset
+
+-- Test 2.0 * 3.5
+wait     400 write * 0 0x40E00000 exclusive
+
+-- Test 0x2BFFFFCF and 0xDE00ACFD
+wait     400 write * 0 0xCA80ACE4 exclusive
+
+-- Test 0x00000000 and 0xBFFFFFCF
+wait     400 write * 0 0x80000000 exclusive
+
+-- Test 0x007FFFFF and 0x7F800000
+wait     400 write * 0 0x7F800000 exclusive
+
+-- Wait until the processor is idle
+wait     40 idle 0
