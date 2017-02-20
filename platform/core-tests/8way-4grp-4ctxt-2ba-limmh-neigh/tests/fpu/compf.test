@@ -1,0 +1,116 @@
+name    Test FPU comparison operations
+
+-- Check configuration
+config  genBundleSize         8
+config  memLaneRevIndex       1
+config  branchLaneRevIndex    0
+
+-- Initialize memories
+init
+
+-- Test 0.5 <op> 1.0
+load     limmh 1, 0x3F000000
+load     add r0.1 = r0.0, 0x3F000000
+load     limmh 3, 0x3F800000
+load     add r0.2 = r0.0, 0x3F800000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc     compf-kernel.inc
+
+-- Test 1.0 <op> 1.0
+load     limmh 1, 0x3F800000
+load     add r0.1 = r0.0, 0x3F800000
+load     limmh 3, 0x3F800000
+load     add r0.2 = r0.0, 0x3F800000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc     compf-kernel.inc
+
+-- Test 1.5 <op> 1.0
+load     limmh 1, 0x3FC00000
+load     add r0.1 = r0.0, 0x3FC00000
+load     limmh 3, 0x3F800000
+load     add r0.2 = r0.0, 0x3F800000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc     compf-kernel.inc
+
+-- Test 0.5 <op> -1.0
+load     limmh 1, 0x3F000000
+load     add r0.1 = r0.0, 0x3F000000
+load     limmh 3, 0xBF800000
+load     add r0.2 = r0.0, 0xBF800000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc     compf-kernel.inc
+
+-- Test -1.0 <op> 1.0
+load     limmh 1, 0xBF800000
+load     add r0.1 = r0.0, 0xBF800000
+load     limmh 3, 0x3F800000
+load     add r0.2 = r0.0, 0x3F800000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc     compf-kernel.inc
+
+-- Test -1.5 <op> 1.0
+load     limmh 1, 0xBFC00000
+load     add r0.1 = r0.0, 0xBFC00000
+load     limmh 3, 0x3F800000
+load     add r0.2 = r0.0, 0x3F800000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc     compf-kernel.inc
+
+-- Stop the processor
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    nop
+load    stop ;;
+
+-- Reset the processor
+reset
+
+-- Assert 0.5 < 1.0
+inc     compf-match-lt.inc
+
+-- Assert 1.0 = 1.0
+inc     compf-match-eq.inc
+
+-- Assert 1.5 > 1.0
+inc     compf-match-gt.inc
+
+-- Assert 0.5 > -1.0
+inc     compf-match-gt.inc
+
+-- Assert -1.0 < 1.0
+inc     compf-match-lt.inc
+
+-- Assert -1.5 < 1.0
+inc     compf-match-lt.inc
+
+-- Wait until the processor is idle
+wait    40 idle 0
+

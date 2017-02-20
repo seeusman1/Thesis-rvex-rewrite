@@ -1,0 +1,13 @@
+-- This test suite tests all FPU instructions.
+
+-- Test ADDF and SUBF
+addf.test
+
+-- Test MPYF
+mpyf.test
+
+-- Test CONVIF and CONVFI
+convf.test
+
+-- Test CMPGEF, CMPEQF, CMPGTF
+compf.test

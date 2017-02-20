@@ -1,0 +1,89 @@
+name     Test FPU convert instructions
+
+-- Check configuration
+config   genBundleSize         8
+config   memLaneRevIndex       1
+config   branchLaneRevIndex    0
+
+-- Initialize memories
+init
+
+-- Test 2 -> 2.0 and 3.0 -> 3
+load     add r0.1 = r0.0, 2
+load     nop
+load     limmh 3, 0x40400000
+load     add r0.2 = r0.0, 0x40400000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      convf-kernel.inc
+
+-- Test 0 -> 0.0 and -0.0 -> 0
+load     add r0.1 = r0.0, 0
+load     nop
+load     limmh 3, 0x80000000
+load     add r0.2 = r0.0, 0x80000000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      convf-kernel.inc
+
+-- Test 0xFFFFF97F and 0xCE7C0007
+load     limmh 1, 0xFFFFF97F
+load     add r0.1 = r0.0, 0xFFFFF97F
+load     limmh 3, 0xCE7C0007
+load     add r0.2 = r0.0, 0xCE7C0007
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      convf-kernel.inc
+
+-- Test 0x00000100 and 0x760077FF
+load     limmh 1, 0x00000100
+load     add r0.1 = r0.0, 0x00000100
+load     limmh 3, 0x760077FF
+load     add r0.2 = r0.0, 0x760077FF
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      convf-kernel.inc
+
+-- Stop the processor
+load     nop
+load     nop
+load     nop
+load     nop
+load     nop
+load     nop
+load     nop
+load     stop ;;
+
+-- Reset the processor
+reset
+
+-- Test 2 -> 2.0 and 3.0 -> 3
+wait     400 write * 0 0x40000000 exclusive
+wait     40  write * 4          3 exclusive
+
+-- Test 0 -> 0.0 and -0.0 -> 0
+wait     400 write * 0 0x00000000 exclusive
+wait     40  write * 4          0 exclusive
+
+-- Test 0xFFFFF97F and 0xCE7C0007
+wait     400 write * 0 0xC4D02000 exclusive
+wait     40  write * 4 0xC0FFFE40 exclusive
+
+-- Test 0x00000100 and 0x760077FF
+wait     400 write * 0 0x43800000 exclusive
+wait     40  write * 4 0x7FFFFFFF exclusive
+
+-- Wait until the processor is idle
+wait     40 idle 0

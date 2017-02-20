@@ -19,6 +19,9 @@ alu/index.suite
 -- Test MUL instructions.
 mul/index.suite
 
+-- Test FPU instructions.
+fpu/index.suite
+
 -- Test memory unit instructions.
 mem/index.suite
 

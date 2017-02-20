@@ -1,0 +1,105 @@
+name     Test FPU adder instructions
+
+-- Check configuration
+config   genBundleSize         8
+config   memLaneRevIndex       1
+config   branchLaneRevIndex    0
+
+-- Initialize memories
+init
+
+-- Test 1.0 + 0.5 and 1.0 - 0.5
+load     limmh 1, 0x3F800000
+load     add r0.1 = r0.0, 0x3F800000
+load     limmh 3, 0x3F000000
+load     add r0.2 = r0.0, 0x3F000000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      addf-kernel.inc
+
+-- Test -2 + -6 and -2 - -6
+load     limmh 1, 0xC0000000
+load     add r0.1 = r0.0, 0xC0000000
+load     limmh 3, 0xC0C00000
+load     add r0.2 = r0.0, 0xC0C00000
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      addf-kernel.inc
+
+-- Test 0x00000000 and 0x41FFFFEB
+load     limmh 1, 0x00000000
+load     add r0.1 = r0.0, 0x00000000
+load     limmh 3, 0x41FFFFEB
+load     add r0.2 = r0.0, 0x41FFFFEB
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      addf-kernel.inc
+
+-- Test 0xC07EEFFF and 0x3E7FF400
+load     limmh 1, 0xC07EEFFF
+load     add r0.1 = r0.0, 0xC07EEFFF
+load     limmh 3, 0x3E7FF400
+load     add r0.2 = r0.0, 0x3E7FF400
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      addf-kernel.inc
+
+-- Test 0x4F951295 and 0x41E00002
+load     limmh 1, 0x4F951295
+load     add r0.1 = r0.0, 0x4F951295
+load     limmh 3, 0x41E00002
+load     add r0.2 = r0.0, 0x41E00002
+load     nop
+load     nop
+load     nop
+load     nop ;;
+
+inc      addf-kernel.inc
+
+-- Stop the processor
+load     nop
+load     nop
+load     nop
+load     nop
+load     nop
+load     nop
+load     nop
+load     stop ;;
+
+-- Reset the processor
+reset
+
+-- Test 1.0 + 0.5 and 1.0 - 0.5
+wait     400 write * 0 0x3FC00000 exclusive
+wait     40  write * 4 0x3F000000 exclusive
+
+-- Test -2 + -6 and -2 - -6
+wait     400 write * 0 0xC1000000 exclusive
+wait     40  write * 4 0x40800000 exclusive
+
+-- Test 0x00000000 and 0x41FFFFEB
+wait     400 write * 0 0x41FFFFEB exclusive
+wait     40  write * 4 0xC1FFFFEB exclusive
+
+-- Test 0xC07EEFFF and 0x3E7FF400
+wait     400 write * 0 0xC06EF0BF exclusive
+wait     40  write * 4 0xC087779F exclusive
+
+-- Test 0x4F951295 and 0x41E00002
+wait     400 write * 0 0x4F951295 exclusive
+wait     40  write * 4 0x4F951294 exclusive
+
+-- Wait until the processor is idle
+wait     40 idle 0
