@@ -2123,7 +2123,7 @@ package core_opcode_pkg is
       syntax_imm => "cmpgef b#.%b2 = r#.%r2, %ih                       ",                            -- GENERATED --
       valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
       gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
-      funcSel => FCMP, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      funcSel => FCMP, brRegWE => '1', enableMul => '0', enableFMul => '0',
       op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
       allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
       stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
@@ -2169,7 +2169,7 @@ package core_opcode_pkg is
       syntax_imm => "cmpeqf b#.%b2 = r#.%r2, %ih                       ",
       valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
       gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
-      funcSel => FCMP, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      funcSel => FCMP, brRegWE => '1', enableMul => '0', enableFMul => '0',
       op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
       allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
       stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
@@ -2215,7 +2215,7 @@ package core_opcode_pkg is
       syntax_imm => "cmpgtf b#.%b2 = r#.%r2, %ih                       ",
       valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
       gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
-      funcSel => FCMP, brRegWE => '0', enableMul => '0', enableFMul => '0',
+      funcSel => FCMP, brRegWE => '1', enableMul => '0', enableFMul => '0',
       op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
       allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
       stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
