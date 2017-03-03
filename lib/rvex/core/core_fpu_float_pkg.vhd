@@ -867,6 +867,14 @@ package fpu_float_pkg is
     constant exponent_width : NATURAL := float_exponent_width;  -- exponent
     constant fraction_width : NATURAL := float_fraction_width)  -- fraction
     return UNRESOLVED_float;
+  function pos_maxfp (
+    constant exponent_width : NATURAL := float_exponent_width;  -- exponent
+    constant fraction_width : NATURAL := float_fraction_width)  -- fraction
+    return UNRESOLVED_float;
+  function neg_maxfp (
+    constant exponent_width : NATURAL := float_exponent_width;  -- exponent
+    constant fraction_width : NATURAL := float_fraction_width)  -- fraction
+    return UNRESOLVED_float;
   -- size_res versions
   function zerofp (
     size_res : UNRESOLVED_float)        -- variable is only use for sizing
@@ -884,6 +892,12 @@ package fpu_float_pkg is
     size_res : UNRESOLVED_float)        -- variable is only use for sizing
     return UNRESOLVED_float;
   function neg_zerofp (
+    size_res : UNRESOLVED_float)        -- variable is only use for sizing
+    return UNRESOLVED_float;
+  function pos_maxfp (
+    size_res : UNRESOLVED_float)        -- variable is only use for sizing
+    return UNRESOLVED_float;
+  function neg_maxfp (
     size_res : UNRESOLVED_float)        -- variable is only use for sizing
     return UNRESOLVED_float;
 
@@ -1527,8 +1541,13 @@ package body fpu_float_pkg is
       result := zerofp (fraction_width => fraction_width,
                         exponent_width => exponent_width);
     elsif infres then
-      result := pos_inffp (fraction_width => fraction_width,
-                           exponent_width => exponent_width);
+      if float_round_style = round_zero then
+        result := pos_maxfp (fraction_width => fraction_width,
+                             exponent_width => exponent_width);
+      else
+        result := pos_inffp (fraction_width => fraction_width,
+                             exponent_width => exponent_width);
+      end if;
     else
       sfract := fract srl shiftr;       -- shift
       if shiftr > 0 then
@@ -5999,7 +6018,7 @@ package body fpu_float_pkg is
     variable result : UNRESOLVED_float (exponent_width downto -fraction_width) :=
       (others => '0');                  -- zero
   begin
-    result (exponent_width-1 downto 0) := (others => '1');  -- Exponent all "1"
+    result(exponent_width-1 downto 0) := (others => '1');  -- Exponent all '1'
     return result;
   end function pos_inffp;
 
@@ -6010,7 +6029,7 @@ package body fpu_float_pkg is
     variable result : UNRESOLVED_float (exponent_width downto -fraction_width) :=
       (others => '0');                  -- zero
   begin
-    result (exponent_width downto 0) := (others => '1');  -- top bits all "1"
+    result(exponent_width downto 0) := (others => '1');  -- top bits all '1'
     return result;
   end function neg_inffp;
 
@@ -6024,6 +6043,31 @@ package body fpu_float_pkg is
     result (exponent_width) := '1';
     return result;
   end function neg_zerofp;
+
+  function pos_maxfp (
+    constant exponent_width : NATURAL := float_exponent_width;  -- exponent
+    constant fraction_width : NATURAL := float_fraction_width)  -- fraction
+    return UNRESOLVED_float is
+    variable result : UNRESOLVED_float (exponent_width downto -fraction_width) :=
+      (others => '0');                  -- zero
+  begin
+    result(exponent_width-1 downto 1) := (others => '1');  -- Exponent max-1
+    result(-1 downto -fraction_width) := (others => '1');  -- Fraction all '1'
+    return result;
+  end function pos_maxfp;
+
+  function neg_maxfp (
+    constant exponent_width : NATURAL := float_exponent_width;  -- exponent
+    constant fraction_width : NATURAL := float_fraction_width)  -- fraction
+    return UNRESOLVED_float is
+    variable result : UNRESOLVED_float (exponent_width downto -fraction_width) :=
+      (others => '0');                  -- zero
+  begin
+    result(exponent_width)            := '1';              -- Sign bit
+    result(exponent_width-1 downto 1) := (others => '1');  -- Exponent max-1
+    result(-1 downto -fraction_width) := (others => '1');  -- Fraction all '1'
+    return result;
+  end function neg_maxfp;
 
   -- size_res versions
   function zerofp (
@@ -6079,6 +6123,24 @@ package body fpu_float_pkg is
       exponent_width => size_res'high,
       fraction_width => -size_res'low);
   end function neg_zerofp;
+
+  function pos_maxfp (
+    size_res : UNRESOLVED_float)        -- variable is only use for sizing
+    return UNRESOLVED_float is
+  begin
+    return pos_maxfp (
+      exponent_width => size_res'high,
+      fraction_width => -size_res'low);
+  end function pos_maxfp;
+
+  function neg_maxfp (
+    size_res : UNRESOLVED_float)        -- variable is only use for sizing
+    return UNRESOLVED_float is
+  begin
+    return neg_maxfp (
+      exponent_width => size_res'high,
+      fraction_width => -size_res'low);
+  end function neg_maxfp;
 
 --   function to_float (
 --     arg                     : STD_LOGIC_VECTOR;

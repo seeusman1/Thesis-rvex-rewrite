@@ -81,10 +81,10 @@ architecture rtl of core_fpu_mul is
   type operationState_type is record
 
     -- Operands
-    --op_l                        : unresolved_float(ew downto -mw);
-    --op_r                        : unresolved_float(ew downto -mw);
     op_l                        : std_logic_vector (busw-1 downto 0);
     op_r                        : std_logic_vector (busw-1 downto 0);
+    opf_l                       : unresolved_float(ew downto -mw);
+    opf_r                       : unresolved_float(ew downto -mw);
     lfract                      : unsigned (mw downto 0);
     rfract                      : unsigned (mw downto 0);
     ltype                       : valid_fpstate;
@@ -106,6 +106,8 @@ architecture rtl of core_fpu_mul is
   constant operationState_init : operationState_type := (
     op_l                        => (others => '0'),
     op_r                        => (others => '0'),
+    opf_l                       => (others => '0'),
+    opf_r                       => (others => '0'),
     lfract                      => (others => '0'),
     rfract                      => (others => '0'),
     ltype                       => nan,
@@ -222,6 +224,8 @@ begin
     so(P_DEC).add_exp  <= resize (exponl, ew+2) + exponr + 1;
     
     -- Outputs
+	so(P_DEC).opf_l    <= l;
+	so(P_DEC).opf_r    <= r;
     so(P_DEC).lfract   <= fractl;
     so(P_DEC).rfract   <= fractr;
     so(P_DEC).xor_sign <= fp_sign;
@@ -362,11 +366,18 @@ begin
     if (lfptype = isx or rfptype = isx) then
       fpresult := (others => 'X');
       
-    elsif ((lfptype = nan or lfptype = quiet_nan or
-            rfptype = nan or rfptype = quiet_nan)) then
-      -- Return quiet NAN, IEEE754-1985-7.1,1
-      fpresult := qnanfp (fraction_width => mw,
-                          exponent_width => ew);
+--    elsif ((lfptype = nan or lfptype = quiet_nan or
+--            rfptype = nan or rfptype = quiet_nan)) then
+--      -- Return quiet NAN, IEEE754-1985-7.1,1
+--      fpresult := qnanfp (fraction_width => mw,
+--                          exponent_width => ew);
+
+    elsif (lfptype = nan or lfptype = quiet_nan) then
+      fpresult := si(P_NRM).opf_l;
+      fpresult(-1) := '1';
+    elsif (rfptype = nan or rfptype = quiet_nan) then
+      fpresult := si(P_NRM).opf_r;
+      fpresult(-1) := '1';
                           
     elsif (((lfptype = pos_inf or lfptype = neg_inf) and
             (rfptype = pos_zero or rfptype = neg_zero)) or

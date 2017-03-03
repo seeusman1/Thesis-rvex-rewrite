@@ -91,10 +91,10 @@ architecture rtl of core_fpu_add is
   type operationState_type is record
   
     -- Inputs
-    --op_l                        : unresolved_float(ew downto -mw);
-    --op_r                        : unresolved_float(ew downto -mw);
     op_l                        : std_logic_vector (busw-1 downto 0);
     op_r                        : std_logic_vector (busw-1 downto 0);
+    opf_l                       : unresolved_float(ew downto -mw);
+    opf_r                       : unresolved_float(ew downto -mw);
     
     add_sub                     : fpuAddOp_type;
     
@@ -129,6 +129,8 @@ architecture rtl of core_fpu_add is
   constant operationState_init : operationState_type := (
     op_l                        => (others => '0'),
     op_r                        => (others => '0'),
+    opf_l                       => (others => '0'),
+    opf_r                       => (others => '0'),
     add_sub                     => ADD,
     
     lsign                       => '0',
@@ -204,7 +206,7 @@ begin
   -- Execute phase 1 (decode)
   -----------------------------------------------------------------------------  
   add_phase1 : process (si(P_DEC))
-    variable l, r             : UNRESOLVED_float(ew downto -mw);  -- inputs
+    variable l, r, rmod       : UNRESOLVED_float(ew downto -mw);  -- inputs
     variable lfptype, rfptype : valid_fpstate;
     variable fractl, fractr   : UNSIGNED (mw+guard_bits+1 downto 0);  -- fractions
     variable urfract, ulfract : UNSIGNED (mw downto 0);
@@ -218,16 +220,17 @@ begin
     -- Decode inputs
     l := to_float(si(P_DEC).op_l(ew+mw downto 0), ew, mw);
     r := to_float(si(P_DEC).op_r(ew+mw downto 0), ew, mw);
+    rmod := r;
     
     if (si(P_DEC).add_sub = SUBTRACT) then
-      r(r'high) := not r(r'high);
+      rmod(rmod'high) := not rmod(rmod'high);
     end if;
 
     lfptype := classfp(l);
-    rfptype := classfp(r);
+    rfptype := classfp(rmod);
       
     lresize := resize(arg => to_x01(l));
-    rresize := resize(arg => to_x01(r));
+    rresize := resize(arg => to_x01(rmod));
     
     break_number (
       arg         => lresize,
@@ -246,8 +249,11 @@ begin
     );
     fractr := (others => '0');
     fractr(mw+guard_bits downto guard_bits) := urfract;
-		
+
 		-- To next stage
+    so(P_DEC).opf_l  <= l;
+    so(P_DEC).opf_r  <= r;
+
     so(P_DEC).shiftx <= (exponl(ew-1) & exponl) - exponr;
     
     so(P_DEC).lsign  <= l(l'high);
@@ -255,7 +261,7 @@ begin
     so(P_DEC).lfract <= fractl;
     so(P_DEC).ltype  <= lfptype;
     
-    so(P_DEC).rsign  <= r(r'high);
+    so(P_DEC).rsign  <= rmod(rmod'high);
     so(P_DEC).rexp   <= exponr;
     so(P_DEC).rfract <= fractr;
     so(P_DEC).rtype  <= rfptype;
@@ -474,17 +480,32 @@ begin
     
     if (lfptype = isx or rfptype = isx) then
       fpresult := (others => 'X');
-    elsif (lfptype = nan or lfptype = quiet_nan or
-           rfptype = nan or rfptype = quiet_nan)
-      -- Return quiet NAN, IEEE754-1985-7.1,1
-      or (lfptype = pos_inf and rfptype = neg_inf)
-      or (lfptype = neg_inf and rfptype = pos_inf) then
+
+--    elsif (lfptype = nan or lfptype = quiet_nan or
+--           rfptype = nan or rfptype = quiet_nan)
+--      -- Return quiet NAN, IEEE754-1985-7.1,1
+--      or (lfptype = pos_inf and rfptype = neg_inf)
+--      or (lfptype = neg_inf and rfptype = pos_inf) then
+--      -- Return quiet NAN, IEEE754-1985-7.1,2
+--      fpresult := qnanfp;
+
+    elsif (lfptype = nan or lfptype = quiet_nan) then
+      fpresult := si(P_NRM).opf_l;
+      fpresult(-1) := '1';
+    elsif (rfptype = nan or rfptype = quiet_nan) then
+      fpresult := si(P_NRM).opf_r;
+      fpresult(-1) := '1';
+
+    elsif (lfptype = pos_inf and rfptype = neg_inf)
+       or (lfptype = neg_inf and rfptype = pos_inf) then
       -- Return quiet NAN, IEEE754-1985-7.1,2
       fpresult := qnanfp;
+
     elsif (lfptype = pos_inf or rfptype = pos_inf) then   -- x + inf = inf
       fpresult := pos_inffp;
     elsif (lfptype = neg_inf or rfptype = neg_inf) then   -- x - inf = -inf
       fpresult := neg_inffp;
+
     elsif (lfptype = neg_zero and rfptype = neg_zero) then   -- -0 + -0 = -0
       fpresult := neg_zerofp;
     else
