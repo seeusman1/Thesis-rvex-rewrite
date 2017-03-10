@@ -1538,15 +1538,31 @@ package body fpu_float_pkg is
       infres := true;
     end if;
     if zerores then
-      result := zerofp (fraction_width => fraction_width,
-                        exponent_width => exponent_width);
+      result := zerofp(fraction_width => fraction_width,
+                       exponent_width => exponent_width);
     elsif infres then
-      if float_round_style = round_zero then
-        result := pos_maxfp (fraction_width => fraction_width,
-                             exponent_width => exponent_width);
-      else
-        result := pos_inffp (fraction_width => fraction_width,
-                             exponent_width => exponent_width);
+      if float_round_style = round_zero then      -- round to max/min
+        result := pos_maxfp(fraction_width => fraction_width,
+                            exponent_width => exponent_width);
+      elsif float_round_style = round_inf then    -- round up to +inf/min
+        if sign = '0' then
+          result := pos_inffp(fraction_width => fraction_width,
+                              exponent_width => exponent_width);
+        else
+          result := pos_maxfp(fraction_width => fraction_width,
+                              exponent_width => exponent_width);
+        end if;
+      elsif float_round_style = round_neginf then -- round down to max/-inf
+        if sign = '0' then
+          result := pos_maxfp(fraction_width => fraction_width,
+                              exponent_width => exponent_width);
+        else
+          result := pos_inffp(fraction_width => fraction_width,
+                              exponent_width => exponent_width);
+        end if;
+      else -- float_round_style = nearest         -- round to +inf/-inf
+        result := pos_inffp(fraction_width => fraction_width,
+                            exponent_width => exponent_width);
       end if;
     else
       sfract := fract srl shiftr;       -- shift

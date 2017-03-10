@@ -87,9 +87,9 @@ end entity;
 
 architecture rtl of core_fpu_compare is
 
-  constant busw                 : integer := 32;
-  constant mw                   : integer := 23;
-  constant ew                   : integer := 8;
+  constant mw                   : integer := float_fraction_width;
+  constant ew                   : integer := float_exponent_width;
+  constant busw                 : integer := mw+ew+1;
   
 
   type operationState_type is record
@@ -272,7 +272,10 @@ begin
     --  so(P_CMP).gt <= '0';
     --  so(P_CMP).eq <= '1';
     --els
-    if( lsign = '0' and rsign = '1' ) then
+    if (labs = 0 and rabs = 0) then -- Check for zero inputs (+0 = -0)
+	  so(P_CMP).gt <= '0';
+      so(P_CMP).eq <= '1';
+    elsif( lsign = '0' and rsign = '1' ) then
       so(P_CMP).gt <= '1';
       so(P_CMP).eq <= '0';
     elsif( lsign = '1' and rsign = '0' ) then

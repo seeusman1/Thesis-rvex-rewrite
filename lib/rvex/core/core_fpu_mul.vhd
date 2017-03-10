@@ -72,9 +72,9 @@ end entity;
 
 architecture rtl of core_fpu_mul is
 
-  constant busw                 : integer := 32;
-  constant ew                   : integer := 8;
-  constant mw                   : integer := 23;
+  constant mw                   : integer := float_fraction_width;
+  constant ew                   : integer := float_exponent_width;
+  constant busw                 : integer := mw+ew+1;
   constant guard_bits           : natural := 23;
   
   

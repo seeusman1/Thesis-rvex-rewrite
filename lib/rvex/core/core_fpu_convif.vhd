@@ -81,10 +81,10 @@ end entity;
 
 architecture rtl of core_fpu_convif is
 
-  constant busw : integer := 32;
-  constant ew   : integer := 8;
-  constant mw   : integer := 23;
-  constant intw : integer := 32;  
+  constant mw                   : integer := float_fraction_width;
+  constant ew                   : integer := float_exponent_width;
+  constant busw                 : integer := mw+ew+1;
+  constant intw                 : integer := busw; 
   
   type operationState_type is record
   
