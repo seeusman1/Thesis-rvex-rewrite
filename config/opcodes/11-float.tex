@@ -45,7 +45,6 @@ Performs a single-precision floating-point multiplication.
 
 %-------------------------------------------------------------------------------
 \syllable{10011010-}{CMPGEF}{\rd = \rx, \ry}
-\datapath{gpRegWE}{'1'}
 \datapath{funcSel}{FCMP}
 \datapath{enableFCmp}{'1'}
 \fpu{isFCompareInstruction}{'1'}
@@ -60,6 +59,7 @@ the result in an integer register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011011-}{CMPGEF}{\bd = \rx, \ry}
+\datapath{gpRegWE}{'0'}
 \datapath{brRegWE}{'1'}
 \datapath{funcSel}{FCMP}
 \datapath{enableFCmp}{'1'}
@@ -75,7 +75,6 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 %\syllable{10011010-}{CMPLTF}{\rd = \rx, \ry}
-%\datapath{gpRegWE}{'1'}
 %\datapath{funcSel}{FCMP}
 %\datapath{enableFCmp}{'1'}
 %\fpu{isFCompareInstruction}{'1'}
@@ -89,6 +88,7 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 %\syllable{10011011-}{CMPLTF}{\bd = \rx, \ry}
+%\datapath{gpRegWE}{'0'}
 %\datapath{brRegWE}{'1'}
 %\datapath{funcSel}{FCMP}
 %\datapath{enableFCmp}{'1'}
@@ -103,7 +103,6 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011100-}{CMPEQF}{\rd = \rx, \ry}
-\datapath{gpRegWE}{'1'}
 \datapath{funcSel}{FCMP}
 \datapath{enableFCmp}{'1'}
 \fpu{isFCompareInstruction}{'1'}
@@ -117,6 +116,7 @@ the result in an integer register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011101-}{CMPEQF}{\bd = \rx, \ry}
+\datapath{gpRegWE}{'0'}
 \datapath{brRegWE}{'1'}
 \datapath{funcSel}{FCMP}
 \datapath{enableFCmp}{'1'}
@@ -131,7 +131,6 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011110-}{CMPGTF}{\rd = \rx, \ry}
-\datapath{gpRegWE}{'1'}
 \datapath{funcSel}{FCMP}
 \datapath{enableFCmp}{'1'}
 \fpu{isFCompareInstruction}{'1'}
@@ -146,6 +145,7 @@ the result in an integer register.
 
 %-------------------------------------------------------------------------------
 \syllable{10011111-}{CMPGTF}{\bd = \rx, \ry}
+\datapath{gpRegWE}{'0'}
 \datapath{brRegWE}{'1'}
 \datapath{funcSel}{FCMP}
 \datapath{enableFCmp}{'1'}
@@ -161,7 +161,6 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 %\syllable{10011110-}{CMPLEF}{\rd = \rx, \ry}
-%\datapath{gpRegWE}{'1'}
 %\datapath{funcSel}{FCMP}
 %\datapath{enableFCmp}{'1'}
 %\fpu{isFCompareInstruction}{'1'}
@@ -175,6 +174,7 @@ the result in a branch register.
 
 %-------------------------------------------------------------------------------
 %\syllable{10011111-}{CMPLEF}{\bd = \rx, \ry}
+%\datapath{gpRegWE}{'0'}
 %\datapath{brRegWE}{'1'}
 %\datapath{funcSel}{FCMP}
 %\datapath{enableFCmp}{'1'}

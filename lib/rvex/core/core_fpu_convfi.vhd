@@ -128,18 +128,22 @@ begin
   conv_to_int: process(si(P_F2I)) is
   
     variable op_slv            : std_logic_vector(busw-1 downto 0);
+    variable op_fp             : unresolved_float(ew downto -mw);
+    variable op_class          : valid_fpstate;
     variable trunc_result_temp : std_logic_vector(intw downto 0);
     variable trunc_result      : std_logic_vector (intw-1 downto 0);
     
   begin
     
-    op_slv := si(P_F2I).op;
+    op_slv   := si(P_F2I).op;
+    op_fp    := to_float(op_slv(ew+mw downto 0),ew,mw);
+    op_class := classfp(op_fp);
   
     -- CFIU: output zero for negative inputs
     if( op_slv( op_slv'high ) = '1' and si(P_F2I).conv_u = '1' ) then
       trunc_result_temp := (others=>'0');
     else
-      trunc_result_temp := std_logic_vector(to_signed(to_float(op_slv(ew+mw downto 0),ew,mw), intw+1, float_round_style, false));
+      trunc_result_temp := std_logic_vector(to_signed(op_fp, intw+1, float_round_style, false));
     end if;
     
     -- Added: correct max/min conversion for signed
@@ -153,6 +157,11 @@ begin
       else
         trunc_result := trunc_result_temp(intw) & trunc_result_temp( intw-2 downto 0 );
       end if;
+    end if;
+
+    -- Added: NaN handling
+    if op_class = nan or op_class = quiet_nan then
+      trunc_result := ('0', others => '1');
     end if;
     
     so(P_F2I).result <= trunc_result;

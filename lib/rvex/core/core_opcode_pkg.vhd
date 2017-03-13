@@ -2124,7 +2124,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
       gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
       funcSel => FCMP, brRegWE => '1', enableMul => '0', enableFMul => '0',
-      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
       allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
       stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
@@ -2170,7 +2170,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
       gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
       funcSel => FCMP, brRegWE => '1', enableMul => '0', enableFMul => '0',
-      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',                        -- GENERATED --
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',                        -- GENERATED --
       allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
       stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
@@ -2216,7 +2216,7 @@ package core_opcode_pkg is
       valid => "11", datapathCtrl => (enableFCif => '0', enableFCmp => '1',
       gpRegRdEnaB => '1', gpRegRdEnaA => '1', enableFCfi => '0', enableALU => '0',
       funcSel => FCMP, brRegWE => '1', enableMul => '0', enableFMul => '0',
-      op1LinkReg => '0', enableMem => '0', gpRegWE => '1', enableFAdd => '0',
+      op1LinkReg => '0', enableMem => '0', gpRegWE => '0', enableFAdd => '0',
       allBrRegsWE => '0', op3BranchRegs => '0', isTrap => '0', op3LinkReg => '0',
       stackOp => '0', isNOP => '0', linkWE => '0', brFmt => '0', isLIMMH => '0'),
       aluCtrl => (compare => '0', bitwiseOp => BITW_OR, op1Mux => EXTEND32,
