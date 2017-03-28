@@ -284,6 +284,13 @@ $(DEVTREE): $(KERNEL_DEP)
 	@echo "			};" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
 	@echo "		};" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
 	@echo "	};" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
+	@echo "	chosen {" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
+	@echo "		bootargs = \"console=ttyPS1,115200 root=/dev/mmcblk0p2 rw earlyprintk rootfstype=ext4 rootwait\";" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
+	@echo "	};" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
+	@echo "};" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
+	@echo "" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
+	@echo "&uart0 {" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
+	@echo "	status = \"okay\";" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
 	@echo "};" >> $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
 	$(DTC) -I dts -O dtb -o $@ $(KERNEL_DTS_PATH)/zynq-zed-no-pl.dts
 else
