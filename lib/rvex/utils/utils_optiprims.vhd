@@ -128,6 +128,7 @@ begin
       -- Instantiate the carry4 primitive.
       carry4_inst: carry4
         port map (
+          cyinit => '0',
           ci => cy(c*4),
           di => "1111",
           s  => o,
@@ -363,6 +364,7 @@ begin
           -- Instantiate the carry4 primitive, which is what this is all about.
           carry4_inst: carry4
             port map (
+              cyinit => '0',
               ci => cy(c),
               di => o5,
               s  => o6,
