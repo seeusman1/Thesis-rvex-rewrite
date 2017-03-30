@@ -23,9 +23,6 @@ help:
 	@echo ""
 	@echo " make build-env-<version> : Downloads and extracts the build environment."
 	@echo " make all                 : Builds all tools"
-	@echo " make issue2             : Builds 2-issue version of the tools"
-	@echo " make issue4             : Builds 4-issue version of the tools"
-	@echo " make issue8             : Builds 8-issue version of the tools"
 	@echo " The following tools are available:"
 	@echo ""
 	@for tool in $(ALLTOOLS) ; do \
@@ -37,15 +34,15 @@ help:
 # The default 8-issue toolchain must be built already
 # because we will use the same binutils and libraries (they are compiled with
 # generic binaries so they will run on other issue widths)
-issue%: build-env-$(CURRENT_VERSION) rvex-elf32
+issue%: build-env-$(CURRENT_VERSION)
+	if ! [ -d rvex-elf32 ]; then $(MAKE) rvex-elf32; fi
 	cp config/rvex_$*_si.cxx $</open64-rvex/Open64-rVEX/osprey/targinfo/st200/proc/rvex_si.cxx
 	make -C $< open64-rvex
 	cp -r rvex-elf32 $@
 	cp -r $</open64-rvex/build/* $@/
 	
 
-# phony because even if the directory is created, it may not have been fully built
-.PHONY: rvex-elf32 skeleton
+.PHONY: skeleton
 rvex-elf32: skeleton $(ALLTOOLS)
 	rvex-elf32/bin/rvex-gcc -c ../../test-progs/src/default_start.S -o rvex-elf32/lib/crt0.o
 
