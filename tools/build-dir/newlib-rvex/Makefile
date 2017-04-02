@@ -9,6 +9,7 @@ all: newlib-cygwin
 	mkdir -p build/lib/newlib
 	mv build/rvex-elf32/include/* build/include/newlib
 	mv build/rvex-elf32/lib/* build/lib/newlib/
+	ln -s ../libgcc.a build/lib/newlib/libgcc.a
 
 DOWNLOADS=newlib-cygwin
 include ../download.makefile
