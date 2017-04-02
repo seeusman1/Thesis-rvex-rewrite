@@ -55,7 +55,7 @@ binutils-rvex: skeleton
 	$(MAKE) -C $@
 	mkdir -p rvex-elf32
 	cp -r $@/build/* rvex-elf32/
-	ln -sf rvex-elf32-as rvex-elf32/bin/rvex-as
+	ln -sf rvex-elf32-as rvex-elf32/bin/rvex-ras
 	ln -sf rvex-elf32-ld rvex-elf32/bin/rvex-ld
 	ln -sf rvex-elf32-ar rvex-elf32/bin/rvex-ar
 	ln -sf rvex-elf32-nm rvex-elf32/bin/rvex-nm
@@ -65,6 +65,7 @@ binutils-rvex: skeleton
 	ln -sf rvex-elf32-size rvex-elf32/bin/rvex-size
 	ln -sf rvex-elf32-string rvex-elf32/bin/rvex-strings
 	ln -sf rvex-elf32-strip rvex-elf32/bin/rvex-strip
+	cp -r ../vexparse rvex-elf32/bin
 
 newlib-rvex: skeleton libgcc-rvex 
 	$(MAKE) -C $@
