@@ -1,0 +1,3 @@
+#!/bin/bash
+HERE=`dirname "$(readlink -f "$0")"`
+LD_LIBRARY_PATH=$HERE/../lib64/sim200 $HERE/real-simrvex
