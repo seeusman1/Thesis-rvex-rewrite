@@ -36,7 +36,7 @@ case $issue in
 esac
 
 # Figure out where the compiler is located.
-scriptdir="`dirname $0`"
+scriptdir=$(dirname $(readlink -f $0))
 compiler="`dirname $scriptdir`/issue$issue/bin/`basename $0`"
 
 # Call the compiler.

@@ -3,7 +3,7 @@
 sim_exit::
 	/* Shuffle the arguments */
 	mov	$r0.4 = $r0.3
-	mov	$r0.3 = 0x1
+	mov	$r0.3 = 1
 	;;
 	trap 0x91
 	;;
@@ -19,8 +19,7 @@ sim_exit::
 */
 
 sim_trace::
-	mov	$r0.4 = $r0.3
-	mov	$r0.3 = 100
+	mov	$r0.2 = 217
 	;;
 	trap 0x91
 	;;
@@ -29,11 +28,7 @@ sim_trace::
 
 sim_write::
 	/* Shuffle the arguments */
-	mov	$r0.6 = $r0.5
-	mov	$r0.5 = $r0.4
-	;;
-	mov	$r0.4 = $r0.3
-	mov	$r0.3 = 0x11
+	mov	$r0.2 = 4
 	;;
 	trap 0x91
 	;;

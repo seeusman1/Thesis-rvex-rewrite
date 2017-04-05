@@ -166,8 +166,14 @@ install-issue%:
 	rm -rf ../open64/issue$*
 	cp -r issue$* ../open64/issue$*
 	
+	# Remove random broken symlinks that open64 puts in its sbin...
+	rm -rf ../open64/issue$*/sbin
+	
 	# Replace newlib directories with symlinks (directories won't be caught nicely by fdupes)
 	rm -rf ../open64/issue$*/lib/newlib
 	ln -s ../../../newlib/lib/newlib ../open64/issue$*/lib/newlib
 	rm -rf ../open64/issue$*/include/newlib
 	ln -s ../../../newlib/include/newlib ../open64/issue$*/include/newlib
+	
+	# Fix the vexparse symlink.
+	ln -sf ../../../vexparse ../open64/issue$*/bin/vexparse

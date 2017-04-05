@@ -2,7 +2,7 @@
 
 
 # Version number.
-version = '4.1'
+version = '4.2pre'
 
 # Files/directories that are checked in to rvex-rewrite but should not be
 # released.
@@ -30,6 +30,7 @@ include = [
     'tools/simrvex/*',
     'tools/open64/issue*/*',
     'tools/vex-3.43/*',
+    'tools/newlib/*',
     'versions/release-*'
 ]
 
