@@ -100,10 +100,12 @@ open64-rvex: build-env-$(CURRENT_VERSION)
 	cp -r $</$@/build/* rvex-elf32/
 	mkdir -p rvex-elf32/bin
 	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvex-gcc
+	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvex-cc
 	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvex-c++
 	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvexcc
 	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvexc++
 	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvex-elf32-gcc
+	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvex-elf32-cc
 	ln -sf ../lib/cmplrs/driver rvex-elf32/bin/rvex-elf32-c++
 
 
@@ -141,10 +143,12 @@ install:
 	rm -rf ../rvex-elf32/lib/cmplrs
 	rm -rf ../rvex-elf32/sbin
 	ln -sf ../../open64/bin/rvex-gcc ../rvex-elf32/bin/rvex-gcc
+	ln -sf ../../open64/bin/rvex-gcc ../rvex-elf32/bin/rvex-cc
 	ln -sf ../../open64/bin/rvex-gcc ../rvex-elf32/bin/rvex-c++
 	ln -sf ../../open64/bin/rvex-gcc ../rvex-elf32/bin/rvexcc
 	ln -sf ../../open64/bin/rvex-gcc ../rvex-elf32/bin/rvexc++
 	ln -sf ../../open64/bin/rvex-gcc ../rvex-elf32/bin/rvex-elf32-gcc
+	ln -sf ../../open64/bin/rvex-gcc ../rvex-elf32/bin/rvex-elf32-cc
 	ln -sf ../../open64/bin/rvex-gcc ../rvex-elf32/bin/rvex-elf32-c++
 	
 	# Remove duplicate files between rvex-elf32 and the open64 directories.
