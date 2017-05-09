@@ -3,7 +3,7 @@
 # otherwise, use the release tarballs from the TUDelft FTP server
 USE_BITBUCKET=FALSE
 LOCAL_TEST=TRUE
-LOCAL_TEST_LOC=/shares/group/ce-rvex/ARC2017/rvex-workshop/tools
+LOCAL_TEST_LOC=/shares/group/ce-rvex/ARC2017/rvex-workshop/tools2
 
 $(DOWNLOADS):
 ifeq ($(USE_BITBUCKET), TRUE)

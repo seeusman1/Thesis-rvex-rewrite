@@ -40,8 +40,9 @@ issue%: build-env-$(CURRENT_VERSION)
 	if ! [ -d rvex-elf32 ]; then $(MAKE) rvex-elf32; fi
 	cp config/rvex_$*_si.cxx $</open64-rvex/Open64-rVEX/osprey/targinfo/st200/proc/rvex_si.cxx
 	make -C $< open64-rvex
+	rm -rf $@
 	cp -r rvex-elf32 $@
-	cp -r $</open64-rvex/build/* $@/
+	cp -r $</open64-rvex/build/* $@
 	
 
 .PHONY: skeleton
@@ -137,6 +138,9 @@ install:
 	cp -r rvex-elf32/include ../newlib
 	
 	# Replace open64.
+	rm -rf ../open64
+	mkdir -p ../open64/bin
+	cp rvex-gcc-selector ../open64/bin/rvex-gcc
 	$(MAKE) install-issue8 install-issue4 install-issue2
 	
 	# Remove the compiler from rvex-elf32, point to rvex-gcc script in open64 instead.
@@ -167,7 +171,6 @@ install:
 
 .PHONY: install-issue%
 install-issue%:
-	rm -rf ../open64/issue$*
 	cp -r issue$* ../open64/issue$*
 	
 	# Remove random broken symlinks that open64 puts in its sbin...
@@ -181,3 +184,6 @@ install-issue%:
 	
 	# Fix the vexparse symlink.
 	ln -sf ../../../vexparse ../open64/issue$*/bin/vexparse
+	
+	# Add stddef.h because it's needed for reasons and open64 does not include it for reasons TODO
+	cp rvex-elf32-skeleton/include/stddef.h ../open64/issue$*/include
