@@ -48,11 +48,11 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.core_pkg.all;
-use rvex.cache_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.bus_pkg.all;
+use work.core_pkg.all;
+use work.cache_pkg.all;
 
 --=============================================================================
 -- This entity represents a single data cache block.
@@ -425,7 +425,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate cache line storage
   -----------------------------------------------------------------------------
-  data_ram: entity rvex.cache_data_blockData
+  data_ram: entity work.cache_data_blockData
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -443,7 +443,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate cache tag storage and comparators
   -----------------------------------------------------------------------------
-  tag_ram: entity rvex.cache_data_blockTag
+  tag_ram: entity work.cache_data_blockTag
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -462,7 +462,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate cache line valid bit storage
   -----------------------------------------------------------------------------
-  valid_ram: entity rvex.cache_data_blockValid
+  valid_ram: entity work.cache_data_blockValid
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -485,7 +485,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- This controller handles read misses and CPU writes to cache and the write
   -- buffer.
-  main_controller: entity rvex.cache_data_mainCtrl
+  main_controller: entity work.cache_data_mainCtrl
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG

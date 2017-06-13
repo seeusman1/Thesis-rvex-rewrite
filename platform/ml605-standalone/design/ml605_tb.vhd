@@ -175,14 +175,14 @@ begin -- architecture
     end process;
     
     -- Report bytes sent by the unit-under-test.
-    process is
-    begin
-      loop
-        wait until rising_edge(clk) and raw_rx_strobe = '1';
-        wait for 1 ns;
-        dumpStdOut("                                 Receive " & rvs_hex(raw_rx_data));
-      end loop;
-    end process;
+    --process is
+    --begin
+    --  loop
+    --    wait until rising_edge(clk) and raw_rx_strobe = '1';
+    --    wait for 1 ns;
+    --    dumpStdOut("                                 Receive " & rvs_hex(raw_rx_data));
+    --  end loop;
+    --end process;
     
     -- Generate raw UART to communicate with the unit under test.
     uart_inst: entity rvex.utils_uart

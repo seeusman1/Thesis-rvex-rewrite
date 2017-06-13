@@ -77,15 +77,19 @@ ptag.vhd -> vhdl/ptag.vhd
               continue
             lib = j.attrib['{http://www.xilinx.com/XMLSchema}name']
             break
+          name = str(i.attrib['{http://www.xilinx.com/XMLSchema}name'])
           
-          # Generate a unique local filename.
-          newfilename = 'vhdl' + os.sep + lib + '-' + str(i.attrib['{http://www.xilinx.com/XMLSchema}name']).replace(os.sep, '-')
-          
-          # Append to manifest.
-          manifest.write('%s -> %s\n' % (filename, newfilename))
-          
-          # Append to the project file.
-          project.write('vhdl %s "%s"\n' % (lib, newfilename))
+          # Ignore ptag-zero.vhd.
+          if 'ptag-zero.vhd' not in name:
+            
+            # Generate a unique local filename.
+            newfilename = 'vhdl' + os.sep + lib + '-' + name.replace(os.sep, '-')
+            
+            # Append to manifest.
+            manifest.write('%s -> %s\n' % (filename, newfilename))
+            
+            # Append to the project file.
+            project.write('vhdl %s "%s"\n' % (lib, newfilename))
         
         # Handle UCF files.
         if i.attrib['{http://www.xilinx.com/XMLSchema}type'] == 'FILE_UCF':

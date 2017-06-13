@@ -21,10 +21,10 @@ help:
 	@echo "                         case you prefer that UI or want to use ISIM."
 	@echo ""
 	@echo "  make clean           : removes intermediate files."
-	@cd examples && $(MAKE) --no-print-directory list-executables
+	@cd test-progs && $(MAKE) --no-print-directory list-executables
 
 compile-%:
-	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
+	cd test-progs && $(MAKE) $(patsubst compile-%,copy-%,$@)
 
 vsim-%: compile-%
 	cd modelsim && $(MAKE) vsim
@@ -33,6 +33,9 @@ ise-%: compile-%
 	cd ise && ise cache-test.xise
 
 clean:
-	cd examples && $(MAKE) clean
+	cd test-progs && $(MAKE) clean
 	cd modelsim && $(MAKE) clean
 
+.PHONY: conformance
+conformance:
+	cd test-progs && $(MAKE) $@

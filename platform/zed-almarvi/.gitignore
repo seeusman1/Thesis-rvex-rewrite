@@ -11,6 +11,7 @@
 /almaif/impl/rvex/testsw/*/*.dump
 /almaif/impl/rvex/testsw/*/*.s
 /almaif/impl/rvex/testsw/*/*.o
+/almaif/impl/rvex/testsw/*/*.a
 /almaif/impl/rvex/testsw/*/*.d
 /almaif/impl/rvex/testsw/*/*.elf
 /almaif/impl/rvex/testsw/*/*.srec

@@ -48,11 +48,11 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.core_pkg.all;
-use rvex.core_intIface_pkg.all;
-use rvex.core_pipeline_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.core_pkg.all;
+use work.core_intIface_pkg.all;
+use work.core_pipeline_pkg.all;
 
 --=============================================================================
 -- This entity contains the general purpose register file and associated
@@ -315,7 +315,7 @@ begin -- architecture
       end generate;
       
       -- Generate the forwarding for this stage and read port.
-      forwarding_inst: entity rvex.core_forward
+      forwarding_inst: entity work.core_forward
         generic map (
           ENABLE_FORWARDING     => CFG.forwarding,
           DATA_WIDTH            => 32,
@@ -353,7 +353,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Block RAM based memory for synthesis.
   synth_mem_gen: if INST_SYNTH_MEM and CFG.gpRegImpl = RVEX_GPREG_IMPL_MEM generate
-    synth_mem: entity rvex.core_gpRegs_mem
+    synth_mem: entity work.core_gpRegs_mem
       generic map (
         NUM_REGS_LOG2           => NUM_REGS_LOG2,
         NUM_WRITE_PORTS         => NUM_WRITE_PORTS,
@@ -380,7 +380,7 @@ begin -- architecture
   end generate;
   
   simple_mem_gen: if INST_SYNTH_MEM and CFG.gpRegImpl = RVEX_GPREG_IMPL_SIMPLE generate
-    simple_mem: entity rvex.core_gpRegs_simple
+    simple_mem: entity work.core_gpRegs_simple
       generic map (
         NUM_REGS_LOG2           => NUM_REGS_LOG2,
         NUM_WRITE_PORTS         => NUM_WRITE_PORTS,
@@ -407,7 +407,7 @@ begin -- architecture
 
   -- Simulation only model of the block RAM based memory.
   sim_mem_gen: if not INST_SYNTH_MEM generate
-    sim_mem: entity rvex.core_gpRegs_sim
+    sim_mem: entity work.core_gpRegs_sim
       generic map (
         NUM_REGS_LOG2           => NUM_REGS_LOG2,
         NUM_WRITE_PORTS         => NUM_WRITE_PORTS,

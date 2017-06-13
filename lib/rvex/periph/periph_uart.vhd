@@ -49,8 +49,8 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.bus_pkg.all;
+library work;
+use work.bus_pkg.all;
 
 --=============================================================================
 -- This peripheral provides a debugging interface between one or more rvex
@@ -173,7 +173,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the UART
   -----------------------------------------------------------------------------
-  uart_inst: entity rvex.utils_uart
+  uart_inst: entity work.utils_uart
     generic map (
       F_CLK                     => F_CLK,
       F_BAUD                    => F_BAUD,
@@ -210,7 +210,7 @@ begin -- architecture
   -- This inserts and handles special control characters and escape sequences
   -- for them to switch between transmitting/receicing application data and
   -- debug packets.
-  uart_switch_inst: entity rvex.periph_uart_switch
+  uart_switch_inst: entity work.periph_uart_switch
     port map (
       
       -- System control.
@@ -250,7 +250,7 @@ begin -- architecture
   -- Instantiate the debug packet controller
   -----------------------------------------------------------------------------
   -- This handles CRC generation/verification and buffering of debug packets.
-  debug_packet_control_inst: entity rvex.periph_uart_packetControl
+  debug_packet_control_inst: entity work.periph_uart_packetControl
     port map (
       
       -- System control.
@@ -286,7 +286,7 @@ begin -- architecture
   -- Instantiate the debug packet handler
   -----------------------------------------------------------------------------
   -- This converts the incoming debug packets into bus accesses.
-  debug_packet_handler: entity rvex.periph_uart_packetHandler
+  debug_packet_handler: entity work.periph_uart_packetHandler
     port map (
       
       -- System control.
@@ -318,7 +318,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- This will interface between the slave bus interface which the application
   -- can access to transmit and receive bytes, and the UART stream switch.
-  bus_interface: entity rvex.periph_uart_busIface
+  bus_interface: entity work.periph_uart_busIface
     port map (
       
       -- System control.

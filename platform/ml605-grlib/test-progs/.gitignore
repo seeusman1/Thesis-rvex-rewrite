@@ -1,0 +1,8 @@
+*.s
+*.o
+*.a
+*.elf
+*.disas
+*.srec
+*.bin
+*.syms

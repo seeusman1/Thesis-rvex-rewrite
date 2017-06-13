@@ -49,13 +49,13 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.bus_addrConv_pkg.all;
-use rvex.core_pkg.all;
-use rvex.rvsys_standalone_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.bus_pkg.all;
+use work.bus_addrConv_pkg.all;
+use work.core_pkg.all;
+use work.rvsys_standalone_pkg.all;
 
 --=============================================================================
 -- This is the toplevel for a "standalone" rvex core. A standalone core has
@@ -286,7 +286,7 @@ begin -- architecture
   core_gen: if not CFG.cache_enable generate
     
     -- Instantiate the standalone core.
-    core: entity rvex.rvsys_standalone_core
+    core: entity work.rvsys_standalone_core
       generic map (
         CFG                     => CFG.core,
         CORE_ID                 => CORE_ID,
@@ -339,7 +339,7 @@ begin -- architecture
   cached_core_gen: if CFG.cache_enable generate
     
     -- Instantiate the cached system.
-    cached_core: entity rvex.rvsys_standalone_cachedCore
+    cached_core: entity work.rvsys_standalone_cachedCore
       generic map (
         CFG                     => CFG,
         CORE_ID                 => CORE_ID,
@@ -398,7 +398,7 @@ begin -- architecture
   -- This will be completely optimized away when the trace system is disabled
   -- in the core, because the bus cannot write to it, so nothing would be able
   -- to affect the state of the buffers.
-  trace_buffer: entity rvex.periph_trace
+  trace_buffer: entity work.periph_trace
     generic map (
       DEPTH_LOG2B               => CFG.traceDepthLog2B
     )
@@ -427,7 +427,7 @@ begin -- architecture
     
     -- Instantiate the debug bus demuxer for the case where the instruction
     -- memory is enabled.
-    debug_bus_demux_inst: entity rvex.bus_demux
+    debug_bus_demux_inst: entity work.bus_demux
       generic map (
         ADDRESS_MAP(0)            => CFG.debugBusMap_imem,
         ADDRESS_MAP(1)            => CFG.debugBusMap_dmem,
@@ -457,7 +457,7 @@ begin -- architecture
     
     -- Instantiate the debug bus demuxer for the case where the instruction
     -- memory is disabled.
-    debug_bus_demux_inst: entity rvex.bus_demux
+    debug_bus_demux_inst: entity work.bus_demux
       generic map (
         ADDRESS_MAP(0)            => CFG.debugBusMap_dmem,
         ADDRESS_MAP(1)            => CFG.debugBusMap_rvex,
@@ -492,7 +492,7 @@ begin -- architecture
     
     -- Instantiate the demuxing blocks.
     data_bus_demux_gen: for laneGroup in 0 to 2**CFG.core.numLaneGroupsLog2-1 generate
-      data_bus_demux_inst: entity rvex.bus_demux
+      data_bus_demux_inst: entity work.bus_demux
         generic map (
           ADDRESS_MAP(0)        => CFG.rvexDataMap_bus,
           ADDRESS_MAP(1)        => CFG.rvexDataMap_dmem
@@ -512,7 +512,7 @@ begin -- architecture
     
     -- Instantiate the arbiter to merge the requests from each lane group into
     -- a single bus.
-    data_bus_arbiter: entity rvex.bus_arbiter
+    data_bus_arbiter: entity work.bus_arbiter
       generic map (
         NUM_MASTERS             => 2**CFG.core.numLaneGroupsLog2
       )
@@ -548,7 +548,7 @@ begin -- architecture
   begin
     
     -- Arbiter for port A.
-    dmem_arbiter_a: entity rvex.bus_arbiter
+    dmem_arbiter_a: entity work.bus_arbiter
       generic map (
         NUM_MASTERS             => (EA - SA) + 2
       )
@@ -571,7 +571,7 @@ begin -- architecture
     debugDataMem_res <= arb2mst_a(0);
     
     -- Arbiter for port B.
-    dmem_arbiter_b: entity rvex.bus_arbiter
+    dmem_arbiter_b: entity work.bus_arbiter
       generic map (
         NUM_MASTERS             => (EB - SB) + 1
       )
@@ -586,7 +586,7 @@ begin -- architecture
       );
     
     -- Instantiate the memory itself.
-    dmem_ram: entity rvex.bus_ramBlock
+    dmem_ram: entity work.bus_ramBlock
       generic map (
         DEPTH_LOG2B             => CFG.dmemDepthLog2B,
         MEM_INIT                => MEM_INIT
@@ -667,7 +667,7 @@ begin -- architecture
     
     -- Instantiate the bus demux which routes debug bus accesses to the
     -- instruction memory to all blocks involved.
-    imem_debug_demux_inst: entity rvex.bus_demux
+    imem_debug_demux_inst: entity work.bus_demux
       generic map (
         ADDRESS_MAP             => DBG_ADDRESS_MAP,
         MUTUALLY_EXCLUSIVE      => false
@@ -689,7 +689,7 @@ begin -- architecture
     begin
       
       -- Arbiter for port A to switch between debug bus and rvex.
-      imem_arbiter_a: entity rvex.bus_arbiter
+      imem_arbiter_a: entity work.bus_arbiter
         generic map (
           NUM_MASTERS           => 2
         )
@@ -729,7 +729,7 @@ begin -- architecture
       
     -- Instantiate the memory itself.
     imem_ram_gen: for blk in 0 to NUM_BLOCKS-1 generate
-      imem_ram_inst: entity rvex.bus_ramBlock
+      imem_ram_inst: entity work.bus_ramBlock
         generic map (
           DEPTH_LOG2B           => CFG.imemDepthLog2B - INTERLEAVE_LOG2,
           MEM_INIT              => MEM_INIT,

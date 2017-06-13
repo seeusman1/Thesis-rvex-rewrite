@@ -49,7 +49,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
+library work;
 
 --=============================================================================
 -- This is a raw UART block with baud rate generator, optional receiver and
@@ -137,7 +137,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Generate the frequency generator
   -----------------------------------------------------------------------------
-  baud_gen_inst: entity rvex.utils_fracDiv
+  baud_gen_inst: entity work.utils_fracDiv
     generic map (
       F_CLK                     => F_CLK,
       F_DESIRED                 => F_BAUD * 8.0
@@ -157,7 +157,7 @@ begin -- architecture
   begin
     
     -- Instantiate the byte synchronization unit.
-    rx_byte_inst: entity rvex.utils_uart_rxByte
+    rx_byte_inst: entity work.utils_uart_rxByte
       port map (
         reset                   => reset,
         clk                     => clk,
@@ -207,7 +207,7 @@ begin -- architecture
     end process;
     
     -- Instantiate the byte synchronization unit.
-    tx_inst: entity rvex.utils_uart_tx
+    tx_inst: entity work.utils_uart_tx
       port map (
         reset                   => reset,
         clk                     => clk,

@@ -96,6 +96,14 @@ else ifneq ($(wildcard .svn/entries),)
   # subversion
   REVISION := $(subst :,-,$(shell svnversion -n))
   VCSTURD := .svn/entries
+else ifneq ($(wildcard ../../../version),)
+  # r-VEX release
+  REVISION := $(shell cat ../../../version)
+  VCSTURD := ../../../version
+else
+  # no revision information
+  REVISION := unknown
+  VCSTURD := 
 endif
 
 # .PHONY names all targets that aren't filenames

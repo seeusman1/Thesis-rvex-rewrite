@@ -27,6 +27,7 @@
 *.BIT
 *.tcl
 *.xwbt
+*.gise
 isim
 db
 incremental_db
@@ -39,6 +40,8 @@ webtalk_impact.xml
 pepExtractor.prj
 impact.xsl
 impact_impact.xwbt
+iseconfig
+SmartPreview
  
 #ignore OS noise
  

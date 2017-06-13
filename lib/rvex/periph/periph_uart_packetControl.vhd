@@ -49,9 +49,9 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
+library work;
 -- pragma translate_off
---use rvex.simUtils_pkg.all;
+--use work.simUtils_pkg.all;
 -- pragma translate_on
 
 --=============================================================================
@@ -184,7 +184,7 @@ begin -- architecture
   begin
     
     -- Instantiate the transmit packet buffer.
-    rx_packet_buffer_inst: entity rvex.periph_uart_packetBuffer
+    rx_packet_buffer_inst: entity work.periph_uart_packetBuffer
       port map (
         
         -- System control.
@@ -214,7 +214,7 @@ begin -- architecture
     pkhan2pkctrl_rxReady <= not pkhan2pkctrl_rxBusy;
     
     -- CRC generator for the transmitted packets.
-    rx_crc_inst: entity rvex.utils_crc
+    rx_crc_inst: entity work.utils_crc
       generic map (
         CRC_ORDER               => 8,
         POLYNOMIAL              => CRC_POLYNOMIAL
@@ -331,7 +331,7 @@ begin -- architecture
   begin
     
     -- Instantiate the transmit packet buffer.
-    tx_packet_buffer_inst: entity rvex.periph_uart_packetBuffer
+    tx_packet_buffer_inst: entity work.periph_uart_packetBuffer
       port map (
         
         -- System control.
@@ -361,7 +361,7 @@ begin -- architecture
     pkhan2pkctrl_txReady <= not pkhan2pkctrl_txBusy;
     
     -- CRC generator for the transmitted packets.
-    tx_crc_inst: entity rvex.utils_crc
+    tx_crc_inst: entity work.utils_crc
       generic map (
         CRC_ORDER               => 8,
         POLYNOMIAL              => CRC_POLYNOMIAL

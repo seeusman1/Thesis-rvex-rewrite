@@ -73,7 +73,7 @@ help: work
 	@echo "                      file used to rebuild the working directory from the grlib"
 	@echo "                      base project. This must be run if changes are made to the"
 	@echo "                      files in work before committing to git."
-	@cd examples && $(MAKE) --no-print-directory list-executables
+	@cd test-progs && $(MAKE) --no-print-directory list-executables
 	@echo " For convenience, you can also call the usual grlib makefile targets from this"
 	@echo " file, by prefixing with gr-. The targets are listed below."
 	@cd work && $(MAKE) --no-print-directory help | sed -e "s/make \([a-zA-Z0-9_-]*\)/ make gr-\1/"
@@ -121,7 +121,7 @@ update-%.patch: clean
 # Cleans all grlib and rvex compilation intermediate files.
 .PHONY: clean
 clean: clean-ex
-	-cd work && $(MAKE) distclean scripts-clean migclean pcieclean
+	-cd work && $(MAKE) distclean scripts-clean migclean
 	rm -f work/*_beh.prj
 	rm -f work/xilinx.log
 	rm -f work/timing.twr
@@ -157,7 +157,6 @@ sim-%: work compile-%
 		scripts-clean\
 		install-unimacro\
 		mig39\
-		pcie\
 		install-secureip\
 		compile_xilinx_verilog_lib\
 		compile.vsim\
@@ -184,7 +183,7 @@ synth: work
 	rm -f synth.patch
 	
 	# Synthesis.
-	cd work && $(MAKE) mig39 pcie planahead MAP_COST_TABLE=$(MAP_COST_TABLE)
+	cd work && $(MAKE) mig39 planahead MAP_COST_TABLE=$(MAP_COST_TABLE)
 	
 	# More version management.
 	touch work/xilinx.log
@@ -199,7 +198,6 @@ ise: work
 		scripts-clean\
 		migclean\
 		mig39\
-		pcie\
 		ise-launch
 
 
@@ -210,47 +208,50 @@ ise: work
 # Cleans rvex compilation intermediate files.
 .PHONY: clean-ex
 clean-ex:
-	cd examples && $(MAKE) clean
+	cd test-progs && $(MAKE) clean
 
-# Chains to the examples makefile to build the specified program and copy it to
-# the s-record file read by the micron DDR memory model.
+# Chains to the test-progs makefile to build the specified program and copy it
+# to the s-record file read by the micron DDR memory model.
 .PHONY: compile-%
 compile-%:
-	cd examples && $(MAKE) $(patsubst compile-%,copy-%,$@)
+	cd test-progs && $(MAKE) $(patsubst compile-%,copy-%,$@)
 
 # Make sure the rvex debugging tools are compiled and generate source script
 # for setting up the debugging environment.
 .PHONY: debug
 debug:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 	cat ../../tools/debug-interface/debug > debug
 	echo 'export RVD_OPT="-m$(shell pwd)/memory.map"' >> debug
 	@echo ""
 	@echo " Run \"source debug\" now..."
 	@echo ""
 
-# The following targets simply chain to the makefile in examples.
+# The following targets simply chain to the makefile in test-progs.
 .PHONY: upload-%
 upload-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: start-%
 start-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: run-%
 run-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: trace-%
 trace-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: gdb-%
 gdb-%:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
 .PHONY: server stop monitor monitor-nobuf
 server stop monitor monitor-nobuf:
-	cd examples && $(MAKE) $@
+	cd test-progs && $(MAKE) $@
 
+.PHONY: conformance
+conformance:
+	cd test-progs && $(MAKE) $@

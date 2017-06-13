@@ -1,0 +1,13 @@
+*.s
+*.o
+*.a
+*.elf
+*.disas
+*.srec
+*.bin
+*.rawtrace
+*.trace
+*.syms
+cache-runs
+simtestall
+simtrace-*

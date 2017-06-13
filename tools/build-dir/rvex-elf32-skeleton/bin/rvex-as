@@ -1,0 +1,72 @@
+#!/bin/bash
+
+#This script looks for VEXparse flags from the open64 compiler, and runs VEXparse on the input assembly file if necessary.
+#When calling VEXparse, it assumes the input file is the last argument (which is true if we're called from open64).
+#Without VEXparse, it should pass all arguments to the assembler transparantly.
+
+#location of VEXparse
+vexparse_loc=`dirname $0`/vexparse
+
+#real assembler
+ras="`dirname $0`/rvex-ras"
+
+vexparse_enabled=false
+vexparse_options=
+
+
+function strcmp()
+{
+  [ "$1" = "$2" ] && return 0
+  [ "${1}" '<' "${2}" ] > /dev/null && return 1
+  return 1
+}
+
+function strncmp()
+{
+  if [ -z "${3}" -o "${3}" -le "0" ]; then
+    return 0
+  fi
+
+  if [ ${3} -ge ${#1} -a ${3} -ge ${#2} ]; then
+    strcmp "$1" "$2"
+    return $?
+  else
+    s1=${1:0:$3}
+    s2=${2:0:$3}
+    strcmp $s1 $s2
+    return $?
+  fi
+}
+
+cflags=
+while [[ $# -gt 1 ]]
+do
+  if [ "$1" = "-VEXparse_enable" ]; then
+    vexparse_enabled=true
+  elif strncmp "$1" "-VEXparse-options:" 17; then
+    vexparse_options=${1:18}
+  else
+    cflags+=" $1"
+  fi
+  shift
+done
+
+if $vexparse_enabled ; then
+ if [ "$vexparse_options" != "" ]; then
+  echo -n "calling vexparse with options: " 
+  echo $vexparse_options
+  python3 $vexparse_loc/main.py $1 $vexparse_options -o $1s &&\
+  $ras $cflags $1s
+  rm -f $1s
+ else
+  echo "calling vexparse with default options --resched -O2 --borrow 1.0.3.2.5.4.7.6 --config FBFBFBFB --nmem 1" 
+  python3 $vexparse_loc/main.py $1 --resched -O2 --borrow 1.0.3.2.5.4.7.6 --config FBFBFBFB --nmem 1 -o $1s &&\
+  $ras $cflags $1s
+  rm -f $1s
+ fi
+else
+ echo "calling assembler directly (no VEXparse)"
+ $ras $cflags $1
+fi
+
+

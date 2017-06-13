@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# This script routes calls to the appropriate Open64 build based on the desired
+# issue width, set using --issue [2|4|8].
+
+# If arithmetic is attempted on the link register, enable this flag:
+# -CG:if_convert=0
+
+# Read command line arguments.
+cflags=
+issue=8
+while [[ $# -gt 0 ]]
+do
+    key="$1"
+    case $key in
+        --issue)
+            issue="$2"
+            shift 2
+        ;;
+        *)
+            cflags+=" $1"
+            shift
+        ;;
+    esac
+done
+
+# Check arguments and set default compiler flags for that issue width.
+case $issue in
+    2|4|8)
+        default_cflags="--no-deadcode --icache-opt=off -fno-dismissible-load -mno-auto-prefetch"
+    ;;
+    *)
+        echo "--issue must be 2, 4, or 8."
+        exit 1
+    ;;
+esac
+
+# Figure out where the compiler is located.
+scriptdir=$(dirname $(readlink -f $0))
+compiler="`dirname $scriptdir`/issue$issue/bin/`basename $0`"
+
+# Call the compiler.
+$compiler $default_cflags $cflags
+

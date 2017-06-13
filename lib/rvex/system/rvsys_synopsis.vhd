@@ -49,13 +49,13 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.core_pkg.all;
-use rvex.rvsys_standalone_pkg.all;
-use rvex.rvsys_synopsis_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.bus_pkg.all;
+use work.core_pkg.all;
+use work.rvsys_standalone_pkg.all;
+use work.rvsys_synopsis_pkg.all;
 
 --=============================================================================
 -- This unit wraps the rvex core, bridging between the raw data/instruction
@@ -172,7 +172,7 @@ begin -- architecture
     severity failure;
 
   -- Instantiate the standalone core.
-  core: entity rvex.rvsys_standalone_core
+  core: entity work.rvsys_standalone_core
     generic map (
       CFG                     => CFG.core
     )

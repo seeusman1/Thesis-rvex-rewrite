@@ -1,13 +1,13 @@
 
-TARGETS = reference-manual.pdf
+TARGETS = rvex-user-manual.pdf
 
 all: $(TARGETS)
 
 clean:
 	rm -f $(TARGETS)
 
-.PHONY: reference-manual.pdf
-reference-manual.pdf:
-	cd src/refman && $(MAKE) clean all
-	cp src/refman/refman.pdf reference-manual.pdf
-	cd src/refman && $(MAKE) clean
+.PHONY: rvex-user-manual.pdf
+rvex-user-manual.pdf:
+	cd src/userman && $(MAKE) clean all
+	cp src/userman/userman.pdf rvex-user-manual.pdf
+	cd src/userman && $(MAKE) clean

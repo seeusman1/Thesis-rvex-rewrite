@@ -48,13 +48,13 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.rvsys_standalone_pkg.all;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.bus_addrConv_pkg.all;
-use rvex.core_pkg.all;
-use rvex.cache_pkg.all;
+library work;
+use work.rvsys_standalone_pkg.all;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.bus_addrConv_pkg.all;
+use work.core_pkg.all;
+use work.cache_pkg.all;
 
 --=============================================================================
 -- This package contains the definition of the configuration for the synopsis

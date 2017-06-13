@@ -5,5 +5,8 @@ gcc
 simrvex
 vex-3.43
 vexparse
-rvex-elf32-32bit
+rvex-elf32
 newlib
+open64/2issue
+open64/4issue
+open64/8issue

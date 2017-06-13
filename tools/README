@@ -3,6 +3,8 @@ After checking out the rvex-rewrite repository, this directory will be mostly
 empty. The following things should be put here to get everything to work:
 
 '- .
+   |+ build-dir              >  Should already be present. Used for building the tools.
+   |
    |+ debug-interface        >  Should already be present. Contains rvd, rvsrv, pyrvd.
    |
    |- newlib                `.  newlib C library. Symlink to
@@ -30,10 +32,10 @@ empty. The following things should be put here to get everything to work:
    |     |+ lib              |  if you have the r-VEX share configured.
    |     '+ sbin            ,'
    |
-   |- rvex-elf32-32bit      `.
+   |- rvex-elf32      `.
    |  |+ bin                 |
    |  |+ include             |  r-VEX assembler. Symlink to
-   |  |+ lib                  > /shares/group/ce-rvex/tools/builds/rvex-elf32-32bit
+   |  |+ lib                  > /shares/group/ce-rvex/tools/builds/rvex-elf32
    |  |+ libexec             |  if you have the r-VEX share configured.
    |  |+ rvex-elf32          |
    |  |+ share               |

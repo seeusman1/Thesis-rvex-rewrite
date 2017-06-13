@@ -48,10 +48,10 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.bus_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.bus_pkg.all;
 
 --=============================================================================
 -- This is an I2C master/slave device with support for multi-master
@@ -158,7 +158,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Pin input glitch filters and output stages
   -----------------------------------------------------------------------------
-  sda_pin: entity rvex.periph_i2c_pin
+  sda_pin: entity work.periph_i2c_pin
     generic map (
       CLK_KHZ     => CLK_KHZ
     )
@@ -177,7 +177,7 @@ begin -- architecture
       ovr_oen     => ovr_sda_oen
     );
   
-  scl_pin: entity rvex.periph_i2c_pin
+  scl_pin: entity work.periph_i2c_pin
     generic map (
       CLK_KHZ     => CLK_KHZ
     )
@@ -199,7 +199,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Bit-level state machine
   -----------------------------------------------------------------------------
-  bit_state: entity rvex.periph_i2c_bit
+  bit_state: entity work.periph_i2c_bit
     port map (
       reset       => i2c_reset,
       clk         => clk,

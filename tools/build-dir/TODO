@@ -1,0 +1,4 @@
+
+ - make a common directory for open64 header files
+ - move compiler header files and libraries out of the newlib directory because they don't belong there
+ - figure out what the deal is with stddef.h (it should be a compiler-specific header file)

@@ -1,7 +1,7 @@
 
 # Toolchain setup.
 TOOLS = ../../../../tools
-GEN_EXAMPLES = ../../../../examples
+GEN_TEST_PROGS = ../../../../test-progs
 
 # Platform-specific executables.
 EXECUTABLES = div extReconf factorial
@@ -13,7 +13,7 @@ OBJECTS = rvex-tests.o
 ISSUE_WIDTH = 2
 LANECONFIG = 7B
 BUNDLE_ALIGN = 2
-DYNAMIC = false
+DYNAMIC = true-O1
 LIMMH_PREV = false
 
 # Recompiles the test case executables.
@@ -22,5 +22,5 @@ recompile:
 	$(MAKE) clean
 	$(MAKE) ucbqsort-fast.srec div.srec extReconf.srec factorial.srec
 
-# Include generic examples makefile.
-include $(GEN_EXAMPLES)/Makefile
+# Include generic test program makefile.
+include $(GEN_TEST_PROGS)/include.makefile

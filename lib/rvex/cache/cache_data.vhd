@@ -48,11 +48,11 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.core_pkg.all;
-use rvex.cache_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.bus_pkg.all;
+use work.core_pkg.all;
+use work.cache_pkg.all;
 
 --=============================================================================
 -- This entity represents the data cache portion of the reconfigurable cache
@@ -510,7 +510,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   cache_block_gen : for i in 0 to 2**RCFG.numLaneGroupsLog2-1 generate
     
-    cache_block_inst : entity rvex.cache_data_block
+    cache_block_inst : entity work.cache_data_block
       generic map (
         RCFG                      => RCFG,
         CCFG                      => CCFG

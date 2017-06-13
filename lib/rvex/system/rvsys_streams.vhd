@@ -49,12 +49,12 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.bus_pkg.all;
-use rvex.bus_addrConv_pkg.all;
-use rvex.core_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.bus_pkg.all;
+use work.bus_addrConv_pkg.all;
+use work.core_pkg.all;
 
 --=============================================================================
 -- This unit represents multiple loopback'd stream chains. See rvsys_stream
@@ -161,7 +161,7 @@ begin -- architecture
   stream_gen: for stream in 0 to NUM_STREAMS-1 generate
   begin
     
-    stream_x: entity rvex.rvsys_stream
+    stream_x: entity work.rvsys_stream
       generic map (
         CORE_CFG                => CORE_CFG,
         NUM_CORES               => NUM_CORES_PER_STREAM,
@@ -193,7 +193,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the debug bus demuxer
   -----------------------------------------------------------------------------
-  debug_stage_inst: entity rvex.bus_stage
+  debug_stage_inst: entity work.bus_stage
     port map (
       reset                   => reset_dbg,
       clk                     => clk_dbg,
@@ -204,7 +204,7 @@ begin -- architecture
       slv2stage               => dbg_res
     );  
   
-  debug_demux_inst: entity rvex.bus_demux
+  debug_demux_inst: entity work.bus_demux
     generic map (
       ADDRESS_MAP             => DBG_ADDRESS_MAP
     )

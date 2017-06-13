@@ -50,8 +50,8 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-library rvex;                                                                                        -- GENERATED --
-use rvex.common_pkg.all;
+library work;                                                                                        -- GENERATED --
+use work.common_pkg.all;
 
 --=============================================================================
 -- This package contains constants specifying the word addresses of the control

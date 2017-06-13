@@ -49,10 +49,10 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.bus_pkg.all;
+library work;
+use work.bus_pkg.all;
 -- pragma translate_off
-use rvex.simUtils_pkg.all;
+use work.simUtils_pkg.all;
 -- pragma translate_on
 
 -- pragma translate_off
@@ -241,7 +241,7 @@ begin -- architecture
 --=============================================================================
   
   -- Instantiate the RX FIFO.
-  rx_fifo: entity rvex.periph_uart_fifo
+  rx_fifo: entity work.periph_uart_fifo
     port map (
       
       -- System control.
@@ -261,7 +261,7 @@ begin -- architecture
     );
   
   -- Instantiate the TX FIFO.
-  tx_fifo: entity rvex.periph_uart_fifo
+  tx_fifo: entity work.periph_uart_fifo
     port map (
       
       -- System control.

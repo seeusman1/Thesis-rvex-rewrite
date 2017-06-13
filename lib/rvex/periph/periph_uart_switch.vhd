@@ -49,7 +49,7 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
+library work;
 
 --=============================================================================
 -- This is is part of the UART peripheral. It muxes and demuxes two UART

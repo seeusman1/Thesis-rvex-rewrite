@@ -49,11 +49,11 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 use IEEE.math_real.all;
 
-library rvex;
-use rvex.common_pkg.all;
-use rvex.utils_pkg.all;
-use rvex.simUtils_pkg.all;
-use rvex.bus_pkg.all;
+library work;
+use work.common_pkg.all;
+use work.utils_pkg.all;
+use work.simUtils_pkg.all;
+use work.bus_pkg.all;
 
 --=============================================================================
 -- Responds with randomized replies to incoming requests at randomized

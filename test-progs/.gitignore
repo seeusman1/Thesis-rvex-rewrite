@@ -1,0 +1,8 @@
+*.s
+*.o
+*.elf
+*.disas
+*.srec
+*.syms
+*.a
+simtestall

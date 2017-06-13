@@ -125,26 +125,34 @@
 \vskip 1em
 Jeroen van Straten, TU Delft \\[0.4cm]
 \today \\[0.4cm]
-Git revision: \codenodetok{\Revision} \\
+Version: \codenodetok{\Revision} \\
 Core version tag: \codenodetok{\input{coretag}}
 \vfill
 \end{titlepage}
 \cleardoublepage
 
 % Continue numbering after thesis.
-\pagenumbering{arabic}
-\setcounter{page}{3}
-\renewcommand*{\thepage}{C-\arabic{page}}
+%\pagenumbering{arabic}
+%\setcounter{page}{3}
+%\renewcommand*{\thepage}{C-\arabic{page}}
 
 % Mimic thesis headers.
+%\pagestyle{fancy}
+%\fancyhead[LE,RO]{\thepage}
+%\fancyhead[RE]{\textit{APPENDIX C. \rvex{} USER MANUAL}}
+%\fancyhead[LO]{\textit{\leftmark}}
+%\fancyfoot[L,C]{}
+%\fancyfoot[R]{{\scriptsize \color{gray} \textit{Rev. }\texttt{\Revision}\textit{, ctag }\texttt{\input{coretag}}}}
+%\setlength{\headheight}{14pt}
+
+% Normal headers.
 \pagestyle{fancy}
 \fancyhead[LE,RO]{\thepage}
-\fancyhead[RE]{\textit{APPENDIX C. \rvex{} USER MANUAL}}
+\fancyhead[RE]{\textit{\rvex{} USER MANUAL}}
 \fancyhead[LO]{\textit{\leftmark}}
 \fancyfoot[L,C]{}
 \fancyfoot[R]{{\scriptsize \color{gray} \textit{Rev. }\texttt{\Revision}\textit{, ctag }\texttt{\input{coretag}}}}
 \setlength{\headheight}{14pt}
-
 
 %-------------------------------------------------------------------------------
 % Table of contents
