@@ -2,28 +2,31 @@
 \register{RSC}{Requested software context}{0x260}
 %===============================================================================
 
-\emph{This register does not exist on context 0.} It is hardwired to
-\code{RSC}$n$ in hardware context 0, and represents the software context that
-should be loaded into our hardware context, if it is not already loaded. The
-encoding of the register is at the user's discretion, but it is intended that
-this points to a memory region that contains the to be loaded context.
-
-The contents of this register may also be written by hardware context 0 through
-\code{RSC}$n$, which is expected to run the scheduler. When this value does not
-equal the value in  \code{CSC} and context switching is enabled in \creg{CCR},
-the \trap{SOFT_CTXT_SWITCH} trap is caused. Refer to its documentation in
+This register is intended to hold an identifier for the software context that is 
+requested to be run on this hardware context. When this value does not equal the 
+value in \code{CSC} and context switching is enabled in \creg{CCR}, the 
+\trap{SOFT_CTXT_SWITCH} trap is caused. Refer to its documentation in 
 Section~\ref{sec:core-ug-traps} for more information.
+
+The reset value for this register is -1, which would normally indicate that no
+software context is loaded.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{RSC}
-\reset{11111111111111111111111111111111}
+\reset{--------------------------------}
 \declaration{}
 \declRegister{_r}{data}{X"FFFFFFFF"}
 \declRegister{_c0data}{data}{0}
 \declRegister{_c0mask}{data}{0}
 \implementation{}
 \begin{lstlisting}
-if (ctxt != 0) {
+if (ctxt == 0) {
+    
+    // Handle bus access.
+    _r = (_r & ~_wmask) | (_write & _wmask);
+    _read = _r;
+    
+} else {
     
     // Handle bus access. The request from context 0 is taken from _c0data and
     // _c0mask, which are driven by the RSCn implementation. For some reason,
@@ -38,9 +41,12 @@ if (ctxt != 0) {
 \register{CSC}{Current software context}{0x264}
 %===============================================================================
 
-\emph{This register does not exist on context 0.} It is hardwired to
-\code{CSC}$n$ in hardware context 0. The value in this register should be set
-to the value in \creg{RSC} by the \trap{SOFT_CTXT_SWITCH} trap.
+This register is intended to hold an identifier for the software context that is 
+currently running on this hardware context. When this value does not equal the 
+value in \code{RSC} and context switching is enabled in \creg{CCR}, the 
+\trap{SOFT_CTXT_SWITCH} trap is caused. For proper operation, the trap handler
+for this trap must set \code{CSC} to \code{RSC}. Refer to its documentation in 
+Section~\ref{sec:core-ug-traps} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{CSC}
@@ -50,16 +56,14 @@ to the value in \creg{RSC} by the \trap{SOFT_CTXT_SWITCH} trap.
 \declRegister{_neq}{bit}{0}
 \implementation{}
 \begin{lstlisting}
-if (ctxt != 0) {
-    
-    // Handle bus access.
-    _r = (_r & ~_wmask) | (_write & _wmask);
-    _read = _r;
-    
-    // Compare CSC with RSC and register the signal.
-    _neq = (bit)(cr_csc_csc_r != cr_rsc_rsc_r);
-    
-}
+
+// Handle bus access.
+_r = (_r & ~_wmask) | (_write & _wmask);
+_read = _r;
+
+// Compare CSC with RSC and register the signal.
+_neq = (bit)(cr_csc_csc_r != cr_rsc_rsc_r);
+
 \end{lstlisting} % Request a context switch when CSC != RSC and CCR.C is set:
 \connect{cxreg2cxplif_softCtxtSwitch}{_neq & cr_ccr_c_r}
 
@@ -69,8 +73,9 @@ if (ctxt != 0) {
 
 \emph{This register only exists on context 0, and only if the core is
 design-time configured to support hardware context \n{}.} This register is 
-hardwired to \creg{RSC} in hardware context \n{}. Refer to \creg{RSC} for more
-information.
+hardwired to \creg{RSC} in hardware context \n{}. This allows the scheduler
+(which is expected to be run on hardware context 0) to request a soft context
+switch preemptively. Refer to \creg{RSC} for more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{RSC\n{}}
@@ -93,8 +98,10 @@ if ((ctxt == 0) && (\n{} < (1 << CFG.numContextsLog2))) {
 
 \emph{This register only exists on context 0, and only if the core is
 design-time configured to support hardware context \n{}.} This register is 
-hardwired to \creg{CSC} in hardware context \n{}. Refer to \creg{CSC} for more
-information.
+hardwired to \creg{CSC} in hardware context \n{}. It allows the scheduler
+(which is expected to be run on context 0) to see which software context is
+running on the other hardware contexts. It is read-only. Refer to \creg{CSC} for
+more information.
 
 % - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 \field{31..0}{CSC\n{}}
