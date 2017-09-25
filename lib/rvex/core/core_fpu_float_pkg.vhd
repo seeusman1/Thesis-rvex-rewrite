@@ -22,9 +22,9 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-library rvex;
-use rvex.fpu_fixed_float_types.all;
-use rvex.fpu_fixed_pkg.all;
+library work;
+use work.fpu_fixed_float_types.all;
+use work.fpu_fixed_pkg.all;
 
 package fpu_float_pkg is
 -- generic (
