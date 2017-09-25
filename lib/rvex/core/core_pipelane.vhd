@@ -1431,7 +1431,7 @@ begin -- architecture
 
   -- Instantiate FPU add, if there should be one.
   fadd_gen: if HAS_FADD generate
-    fadd_inst: entity rvex.core_fpu_add
+    fadd_inst: entity work.core_fpu_add
       port map (
 
         -- System control
@@ -1459,7 +1459,7 @@ begin -- architecture
 
   -- Instantiate FPU compare, if there should be one.
   fcmp_gen: if HAS_FCMP generate
-    fcmp_inst: entity rvex.core_fpu_compare
+    fcmp_inst: entity work.core_fpu_compare
       port map (
 
         -- System control
@@ -1489,7 +1489,7 @@ begin -- architecture
 
   -- Instantiate FPU convert to int, if there should be one.
   fcfi_gen: if HAS_FCFI generate
-    fcfi_inst: entity rvex.core_fpu_convfi
+    fcfi_inst: entity work.core_fpu_convfi
       port map (
 
         -- System control
@@ -1516,7 +1516,7 @@ begin -- architecture
 
   -- Instantiate FPU convert to float, if there should be one.
   fcif_gen: if HAS_FCIF generate
-    fcif_inst: entity rvex.core_fpu_convif
+    fcif_inst: entity work.core_fpu_convif
       port map (
 
         -- System control
@@ -1543,7 +1543,7 @@ begin -- architecture
 
   -- Instantiate FPU multiply, if there should be one.
   fmul_gen: if HAS_FMUL generate
-    fmul_inst: entity rvex.core_fpu_mul
+    fmul_inst: entity work.core_fpu_mul
       port map (
 
         -- System control

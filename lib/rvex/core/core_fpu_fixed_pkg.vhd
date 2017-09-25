@@ -20,8 +20,8 @@ library IEEE;
 use IEEE.STD_LOGIC_1164.all;
 use IEEE.NUMERIC_STD.all;
 
-library rvex;
-use rvex.fpu_fixed_float_types.all;
+library work;
+use work.fpu_fixed_float_types.all;
 
 package fpu_fixed_pkg is
 -- generic (
