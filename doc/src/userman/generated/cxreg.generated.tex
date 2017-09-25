@@ -187,10 +187,9 @@ can only be set by entering a trap and cleared by executing \insn{RFI}, is that
 both of these mechanisms can be configured to do a full pipeline flush, which
 allows this flag to control whether address translation is enabled or disabled.
 \paragraph*{C field, bits 7..6}
-This register controls whether the context switch trap is enabled. It does not
-exist on hardware context 0. When the core is reset or the trap service routine
-is entered, the context switch trap is disabled. When \insn{RFI} is executed,
-the state is restored from \creg{SCCR}.
+This register controls whether the context switch trap is enabled. When the core
+is reset or the trap service routine is entered, the context switch trap is
+disabled. When \insn{RFI} is executed, the state is restored from \creg{SCCR}.
 
 When the context switch trap is enabled, this register reads as \code{01}. When
 it is disabled, it reads as \code{10}. Both the core and the debug bus can write
@@ -698,8 +697,9 @@ Section~\ref{sec:core-ug-reconf-saw} for more information.
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill Debug \ } & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \\
 \end{tabular}
 \normalsize\vskip 6pt
-\noindent Scratch pad registers. May be used at the discretion of the application and/or
-debug system.
+\noindent Scratch pad registers. May be used at the discretion of the software running on
+the processor. Newlib uses SCRP1 to store the pointer to the reentrancy
+structure.
 \subsubsection[CR\_RSC - Requested software context]{\code{CR_RSC} - Requested software context}
 \label{reg:RSC}
 \vskip -10 pt\relax\noindent\footnotesize
@@ -709,22 +709,19 @@ debug system.
 \cline{2-33}
 \multicolumn{1}{@{}l@{}|}{\footnotesize \texttt{0x260}} & \multicolumn{32}{@{}c@{}|}{\tiny RSC} & \hspace{0.6 mm} \normalsize\creg{RSC}\footnotesize \\
 \cline{2-33}
-\multicolumn{1}{@{}l@{}}{\scriptsize \hfill Reset \ } & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \multicolumn{1}{@{}c@{}}{\tiny1} & \\
+\multicolumn{1}{@{}l@{}}{\scriptsize \hfill Reset \ } & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \multicolumn{1}{@{}c@{}}{\tiny-} & \\
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill Core \ } & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \\
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill Debug \ } & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \\
 \end{tabular}
 \normalsize\vskip 6pt
-\noindent \emph{This register does not exist on context 0.} It is hardwired to
-\code{RSC}$n$ in hardware context 0, and represents the software context that
-should be loaded into our hardware context, if it is not already loaded. The
-encoding of the register is at the user's discretion, but it is intended that
-this points to a memory region that contains the to be loaded context.
-
-The contents of this register may also be written by hardware context 0 through
-\code{RSC}$n$, which is expected to run the scheduler. When this value does not
-equal the value in  \code{CSC} and context switching is enabled in \creg{CCR},
-the \trap{SOFT_CTXT_SWITCH} trap is caused. Refer to its documentation in
+\noindent This register is intended to hold an identifier for the software context that is
+requested to be run on this hardware context. When this value does not equal the
+value in \code{CSC} and context switching is enabled in \creg{CCR}, the
+\trap{SOFT_CTXT_SWITCH} trap is caused. Refer to its documentation in
 Section~\ref{sec:core-ug-traps} for more information.
+
+The reset value for this register is -1, which would normally indicate that no
+software context is loaded.
 \subsubsection[CR\_CSC - Current software context]{\code{CR_CSC} - Current software context}
 \label{reg:CSC}
 \vskip -10 pt\relax\noindent\footnotesize
@@ -739,9 +736,12 @@ Section~\ref{sec:core-ug-traps} for more information.
 \multicolumn{1}{@{}l@{}}{\scriptsize \hfill Debug \ } & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \multicolumn{1}{@{}c@{}}{\tiny\ding{51}} & \\
 \end{tabular}
 \normalsize\vskip 6pt
-\noindent \emph{This register does not exist on context 0.} It is hardwired to
-\code{CSC}$n$ in hardware context 0. The value in this register should be set
-to the value in \creg{RSC} by the \trap{SOFT_CTXT_SWITCH} trap.
+\noindent This register is intended to hold an identifier for the software context that is
+currently running on this hardware context. When this value does not equal the
+value in \code{RSC} and context switching is enabled in \creg{CCR}, the
+\trap{SOFT_CTXT_SWITCH} trap is caused. For proper operation, the trap handler
+for this trap must set \code{CSC} to \code{RSC}. Refer to its documentation in
+Section~\ref{sec:core-ug-traps} for more information.
 \subsubsection[CR\_RSCn - Requested swctxt on hwctxt n]{\code{CR_RSCn} - Requested swctxt on hwctxt $n$}
 \label{reg:RSC1}
 \label{reg:RSC2}
@@ -777,8 +777,9 @@ to the value in \creg{RSC} by the \trap{SOFT_CTXT_SWITCH} trap.
 \normalsize\vskip 6pt
 \noindent \emph{This register only exists on context 0, and only if the core is
 design-time configured to support hardware context $n$.} This register is
-hardwired to \creg{RSC} in hardware context $n$. Refer to \creg{RSC} for more
-information.
+hardwired to \creg{RSC} in hardware context $n$. This allows the scheduler
+(which is expected to be run on hardware context 0) to request a soft context
+switch preemptively. Refer to \creg{RSC} for more information.
 \subsubsection[CR\_CSCn - Current swctxt on hwctxt n]{\code{CR_CSCn} - Current swctxt on hwctxt $n$}
 \label{reg:CSC1}
 \label{reg:CSC2}
@@ -814,8 +815,10 @@ information.
 \normalsize\vskip 6pt
 \noindent \emph{This register only exists on context 0, and only if the core is
 design-time configured to support hardware context $n$.} This register is
-hardwired to \creg{CSC} in hardware context $n$. Refer to \creg{CSC} for more
-information.
+hardwired to \creg{CSC} in hardware context $n$. It allows the scheduler
+(which is expected to be run on context 0) to see which software context is
+running on the other hardware contexts. It is read-only. Refer to \creg{CSC} for
+more information.
 \subsubsection[CR\_CYC - Cycle counter]{\code{CR_CYC} - Cycle counter}
 \label{reg:CYC}
 \label{reg:CYCH}

@@ -127,10 +127,9 @@ _r = _v;
 %-------------------------------------------------------------------------------
 \field{7..6}{C}
 %-------------------------------------------------------------------------------
-This register controls whether the context switch trap is enabled. It does not 
-exist on hardware context 0. When the core is reset or the trap service routine 
-is entered, the context switch trap is disabled. When \insn{RFI} is executed, 
-the state is restored from \creg{SCCR}.
+This register controls whether the context switch trap is enabled. When the core
+is reset or the trap service routine is entered, the context switch trap is
+disabled. When \insn{RFI} is executed, the state is restored from \creg{SCCR}.
 
 When the context switch trap is enabled, this register reads as \code{01}. When 
 it is disabled, it reads as \code{10}. Both the core and the debug bus can write 
