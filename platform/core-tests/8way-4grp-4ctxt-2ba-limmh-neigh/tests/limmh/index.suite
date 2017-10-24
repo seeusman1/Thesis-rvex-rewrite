@@ -23,6 +23,9 @@ from-previous-pair-rfi.test
 -- assembler).
 limmh-unused.test
 
+-- This tests for a really weird long immediate forwarding bug...
+to-branch.test
+
 -- This tests the trap which is caused when two LIMMH syllables try to forward
 -- to the same lane.
 forwarding-conflict.test

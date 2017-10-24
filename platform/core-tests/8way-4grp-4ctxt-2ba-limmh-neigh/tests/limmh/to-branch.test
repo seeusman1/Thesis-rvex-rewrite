@@ -1,0 +1,46 @@
+name    Test invalid LIMMH not forwarding to BR
+
+-- Check configuration.
+config  genBundleSize       8
+config  bundleAlign         2
+config  memLaneRevIndex     1
+config  branchLaneRevIndex  0
+config  limmhFromNeighbor   1
+
+-- Initialize memories.
+init
+
+-- 0x000
+load    nop
+load    nop ;;
+
+-- 0x008
+load    nop
+load    goto 0x0FF0 ;;
+
+-- 0x010
+load    nop
+load    nop
+load    nop
+load    nop
+load    limmh 5, 0xDEADC0DE ;;
+load    add r0.0 = r0.0, 0xDEADC0DE
+
+at 0x1000
+load    stw 0[r0.0] = r0.0
+load    nop ;;
+
+-- 0x1008
+load    nop
+load    stop ;;
+
+at 0x2000
+load    nop
+load    stop ;;
+
+-- Run the test.
+reset
+write   dbg word CR_PH 0x00002000
+wait    100 write * 0 0 exclusive
+wait    100 idle 0
+

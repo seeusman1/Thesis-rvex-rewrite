@@ -2262,7 +2262,7 @@ begin -- architecture
     ---------------------------------------------------------------------------
     -- Forward control signals to the LIMMH routing unit.
     pl2limm_valid(S_LIMM)  <= s(S_LIMM).limmValid;
-    pl2limm_enable(S_LIMM) <= s(S_LIMM).dp.c.isLIMMH;
+    pl2limm_enable(S_LIMM) <= s(S_LIMM).limmValid and s(S_LIMM).dp.c.isLIMMH;
     pl2limm_target(S_LIMM) <= s(S_LIMM).syllable(25);
     pl2limm_data(S_LIMM)   <= s(S_LIMM).syllable(24 downto 2);
     
