@@ -6,6 +6,8 @@
 -- rely on.
 sanity.test
 
+my_test.test
+
 -- Test register files and forwarding. This also kind of tests ADD, CMPEQ,
 -- STBR, MOVTL and STW (link).
 regs/index.suite

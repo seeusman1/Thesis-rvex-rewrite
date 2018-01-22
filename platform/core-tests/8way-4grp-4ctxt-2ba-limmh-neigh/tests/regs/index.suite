@@ -4,7 +4,7 @@
 -- writes to r0.0 are properly ignored.
 gp-regs.test
 gp-forwarding.test
-gp-regs-gen.test
+--gp-regs-gen.test
 
 -- Test branch register file (requires CMPEQ and STBR).
 br-regs.test
