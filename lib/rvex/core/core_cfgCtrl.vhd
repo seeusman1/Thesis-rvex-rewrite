@@ -570,8 +570,9 @@ begin -- architecture
       end loop;
       
       -- Perform the +1 addition to get newPcAddVal_r.
-      newPcAddVal_r(lane) <= std_logic_vector(
-        addValMinusOne + to_unsigned(2**align, 32)
+      --newPcAddVal_r(lane) <= std_logic_vector(
+        --addValMinusOne + to_unsigned(2**align, 32)
+			newPcAddVal_r(lane) <= std_logic_vector(to_unsigned(8, 32) --testing
       );
       
     end loop;
@@ -714,8 +715,9 @@ begin -- architecture
           -- Determine the default PC add values.
           addValMinusOne := to_unsigned(lane * 2**SYLLABLE_SIZE_LOG2B, 32);
           addValMinusOne(cfg2pcAlignLog2(CFG)-1 downto 0) := (others => '0');
-          curPcAddVal_r(lane) <= std_logic_vector(
-            addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32)
+          --curPcAddVal_r(lane) <= std_logic_vector(
+            --addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32)
+			curPcAddVal_r(lane) <= std_logic_vector(to_unsigned (8, 32) --testing
           );
           
         end loop;
@@ -754,10 +756,20 @@ begin -- architecture
   begin
     for laneGroup in 0 to 2**CFG.numLaneGroupsLog2-1 loop
       contextBits := curConfiguration_r(laneGroup*4+2 downto laneGroup*4);
-      activeBit := not curConfiguration_r(laneGroup*4+3);
-      cfg2any_context(laneGroup) <= contextBits;
+
+		--testing
+     -- if curConfiguration_r(4*laneGroup+3) = '1' and curConfiguration_r(4*laneGroup) = '1' then
+		  activeBit := '1';
+	      cfg2any_context(laneGroup) <= "000"; --testing
+	  --else
+        --  activeBit := not curConfiguration_r(laneGroup*4+3);
+          --cfg2any_context(laneGroup) <= contextBits;
+
+	  --end if;
+
       cfg2any_active(laneGroup) <= activeBit;
       context := vect2uint(contextBits(CFG.numContextsLog2-1 downto 0));
+	--context := 0; --testing
       cfg2any_numGroupsLog2(laneGroup) <= curNumPipelaneGroupsLog2ForContext_r(context);
     end loop;
   end process;

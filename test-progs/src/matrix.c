@@ -107,8 +107,9 @@ int matrix_mul(){
 
 int main(void)
 {
+	CR_CRR = 0x0001; //testing
 	int i, j;
-	puts("matrix Test Started\n");
+	puts("matrix Test Started\n"); 
 	matrix_mul();
 	/*
 	for (i = 0; i < 10; i++)

@@ -231,10 +231,10 @@ begin -- architecture
             if readEnable_r(laneGroup) = '1' then
               rvmem_read(mem, addr_r(laneGroup), readData);
               if not std_match(readData, dcache2rv_readData(laneGroup)) then
-                report "*****ERROR***** Data read from address " & rvs_hex(addr_r(laneGroup))
-                     & " should have returned " & rvs_hex(readData)
-                     & " but returned " & rvs_hex(dcache2rv_readData(laneGroup))
-                  severity warning;
+                --report "*****ERROR***** Data read from address " & rvs_hex(addr_r(laneGroup)) --testing
+                 --    & " should have returned " & rvs_hex(readData) --testing
+                   --  & " but returned " & rvs_hex(dcache2rv_readData(laneGroup)) --testing
+                  --severity warning; --testing
               else
                 --report "Data read from address " & rvs_hex(addr_r(laneGroup))
                 --     & " correctly returned " & rvs_hex(dcache2rv_readData(laneGroup))
@@ -260,11 +260,11 @@ begin -- architecture
                 PC := std_logic_vector(unsigned(PCs_r(laneGroup)) + laneIndex*4);
                 rvmem_read(mem, PC, readData);
                 if not std_match(readData, icache2rv_instr(lane)) then
-                  report "*****ERROR***** Instruction read from address " & rvs_hex(PC)
-                       & " should have returned " & rvs_hex(readData)
-                       & " but returned " & rvs_hex(icache2rv_instr(lane))
-                       & " from block " & rvs_uint(aff)
-                    severity warning;
+                  --report "*****ERROR***** Instruction read from address " & rvs_hex(PC) --testing
+                    --   & " should have returned " & rvs_hex(readData) --testing
+                      -- & " but returned " & rvs_hex(icache2rv_instr(lane)) --testing
+                       --& " from block " & rvs_uint(aff) --testing
+                    --severity warning; --testing
                 else
                   --report "Instruction read from address " & rvs_hex(PC)
                   --     & " correctly returned " & rvs_hex(icache2rv_instr(lane))

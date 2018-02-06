@@ -1,0 +1,81 @@
+# //  ModelSim SE-64 10.2a Mar 15 2013 Linux 4.10.0-28-generic
+# //
+# //  Copyright 1991-2013 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  THIS WORK CONTAINS TRADE SECRET AND PROPRIETARY INFORMATION
+# //  WHICH IS THE PROPERTY OF MENTOR GRAPHICS CORPORATION OR ITS
+# //  LICENSORS AND IS SUBJECT TO LICENSE TERMS.
+# //
+# Loading project voter
+# Compile of tmr_voter.vhd was successful.
+# Compile of tmr_voter_tb.vhd was successful.
+# 2 compiles, 0 failed with no errors. 
+vsim -novopt work.tmr_voter_tb(test)
+# vsim -novopt work.tmr_voter_tb(test) 
+# Loading std.standard
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter_tb(test)
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.tmr_voter_tb(test)
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter(behavior)
+# Loading work.tmr_voter(behavior)
+add wave -position insertpoint sim:/tmr_voter_tb/*
+run 2ms
+# Compile of tmr_voter.vhd was successful.
+# Compile of tmr_voter_tb.vhd was successful.
+# 2 compiles, 0 failed with no errors. 
+vsim -novopt work.tmr_voter_tb(test)
+# vsim -novopt work.tmr_voter_tb(test) 
+# Loading std.standard
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter_tb(test)
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.tmr_voter_tb(test)
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter(behavior)
+# Loading work.tmr_voter(behavior)
+add wave -position insertpoint sim:/tmr_voter_tb/*
+run 2ms
+# Compile of tmr_voter.vhd was successful.
+# Compile of tmr_voter_tb.vhd was successful.
+# 2 compiles, 0 failed with no errors. 
+vsim -novopt work.tmr_voter_tb(test)
+# vsim -novopt work.tmr_voter_tb(test) 
+# Loading std.standard
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter_tb(test)
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.tmr_voter_tb(test)
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter(behavior)
+# Loading work.tmr_voter(behavior)
+add wave -position insertpoint sim:/tmr_voter_tb/*
+run 2 ms
+# Compile of tmr_voter.vhd was successful.
+# Compile of tmr_voter_tb.vhd was successful.
+# 2 compiles, 0 failed with no errors. 
+vsim -novopt work.tmr_voter_tb(test)
+# vsim -novopt work.tmr_voter_tb(test) 
+# Loading std.standard
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter_tb(test)
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.tmr_voter_tb(test)
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter(behavior)
+# Loading work.tmr_voter(behavior)
+add wave -position insertpoint sim:/tmr_voter_tb/*
+run 1ms
+# Compile of tmr_voter.vhd was successful.
+# Compile of tmr_voter_tb.vhd was successful.
+# 2 compiles, 0 failed with no errors. 
+vsim -novopt work.tmr_voter_tb(test)
+# vsim -novopt work.tmr_voter_tb(test) 
+# Loading std.standard
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter_tb(test)
+# Loading std.textio(body)
+# Loading ieee.std_logic_1164(body)
+# Loading work.tmr_voter_tb(test)
+# Refreshing /home/usman/thesis/rvex-rewrite/lib/rvex/core/test/work.tmr_voter(behavior)
+# Loading work.tmr_voter(behavior)
+add wave -position insertpoint sim:/tmr_voter_tb/*
+run 1ms
+quit

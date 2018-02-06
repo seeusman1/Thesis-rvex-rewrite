@@ -214,6 +214,7 @@ entity core_contextPipelaneIFace is
     -- any. We can commit this in the branch stage already, because it is
     -- guaranteed that there is no instruction valid in S_MEM while a trap is
     -- entered.
+
     br2cxplif_trapInfo          : in  trap_info_array(2**CFG.numLanesLog2-1 downto 0);
     br2cxplif_trapPoint         : in  rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
     
@@ -1009,10 +1010,12 @@ begin -- architecture
   begin
     
     -- Determine the context to use for this group.
-    ctxt <= vect2uint(cfg2any_context(laneGroup));
+     --ctxt <= vect2uint(cfg2any_context(laneGroup));
+	   ctxt <= vect2uint(cfg2any_context(0));--testing
     
     -- Determine whether this group is enabled at all.
-    active <= cfg2any_active(laneGroup);
+     --active <= cfg2any_active(laneGroup);
+	   active <= '1';--testing
     
     -- Generate all the muxes.
     irq_mux(laneGroup)                <= irq_ctxt(ctxt)                       when active = '1' else '0';

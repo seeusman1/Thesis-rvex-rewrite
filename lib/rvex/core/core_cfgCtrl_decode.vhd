@@ -236,6 +236,8 @@ begin -- architecture
         numPipelaneGroupsLog2ForContext <= (others =>
           uint2vect(CFG.numLaneGroupsLog2, 2));
         coupleMatrix <= (others => '1');
+	
+
         
         -- Start idle.
         busy_r <= '0';
@@ -271,11 +273,12 @@ begin -- architecture
           -- Update registers when we're busy. We always have something to
           -- update in the couple matrix, we only need to update context
           -- related registers when the current group ID maps to a context.
-          if currentGroupID(GROUP_ID_SIZE-1) = '0' then
+          if currentGroupID(GROUP_ID_SIZE-1) = '0' then	--testing (not changed yet) -- settings for contextEnable(contextID)
             contextID := vect2uint(currentGroupID(CFG.numContextsLog2-1 downto 0));
             
             -- Enable the context specified by the current group index.
-            contextEnable(contextID) <= '1';
+            --contextEnable(contextID) <= '1';
+			contextEnable <= "0001"; --testing
             
             -- Update the context control registers for the current group ID.
             lastPipelaneGroupForContext(contextID)(CFG.numLaneGroupsLog2-1 downto 0)
@@ -286,14 +289,16 @@ begin -- architecture
             
           end if;
           
-          -- Update the coupled vector.
+           --Update the coupled vector.
           for i in 0 to 2**CFG.numLaneGroupsLog2-1 loop
             if groupIDMatch(i) = '1' then
               coupleMatrix(
                 i*2**CFG.numLaneGroupsLog2 + 2**CFG.numLaneGroupsLog2-1
-                downto i*2**CFG.numLaneGroupsLog2) <= groupIDMatch;
+                downto i*2**CFG.numLaneGroupsLog2) <= groupIDMatch; 
             end if;
           end loop;
+			
+			--coupleMatrix <= X"8421";--testing
           
           -- Update the state. If the next group coming out of the subtractor
           -- is the highest indexed group again, we've finished decoding and
@@ -349,7 +354,15 @@ begin -- architecture
   group_id_gen: process (newConfiguration_r) is
   begin
     for i in 0 to 2**CFG.numLaneGroupsLog2-1 loop
-      if newConfiguration_r(4*i+3) = '1' then
+							  
+	--testing
+     -- if newConfiguration_r(4*i+3) = '1' and newConfiguration_r(4*i) = '1' then
+		--groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
+        --groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
+         -- std_logic_vector (to_unsigned(i,2)); --testing			   
+							   
+     -- elsif newConfiguration_r(4*i+3) = '1' then
+		if newConfiguration_r(4*i+3) = '1' then
         
         -- Lane disabled, set group ID to pipelane group index, with bit 3 set.
         groupIDs(i) <= "1" & uint2vect(i, GROUP_ID_SIZE-1);
@@ -358,9 +371,10 @@ begin -- architecture
         
         -- Lane enabled, set groupID to context.
         groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
-        groupIDs(i)(CFG.numContextsLog2-1 downto 0) <=
-          newConfiguration_r(4*i+CFG.numContextsLog2-1 downto 4*i);
-        
+        --groupIDs(i)(CFG.numContextsLog2-1 downto 0) <=
+          --newConfiguration_r(4*i+CFG.numContextsLog2-1 downto 4*i);
+        groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
+          std_logic_vector (to_unsigned(i,2)); --testing
       end if;
       
     end loop;

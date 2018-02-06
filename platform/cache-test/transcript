@@ -7,3 +7,10 @@
 # //  WHICH IS THE PROPERTY OF MENTOR GRAPHICS CORPORATION OR ITS
 # //  LICENSORS AND IS SUBJECT TO LICENSE TERMS.
 # //
+# Loading project voter
+# Compile of tmr_voter.vhd was successful.
+# Compile of tmr_voter_tb.vhd was successful.
+# Compile of tmr_InsDup.vhd failed with 1 errors.
+# Compile of core_pkg.vhd failed with 1 errors.
+# 4 compiles, 2 failed with 2 errors. 
+quit
