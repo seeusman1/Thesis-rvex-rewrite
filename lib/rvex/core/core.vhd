@@ -732,6 +732,13 @@ architecture Behavioral of core is
   signal pl2sim_op                    : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
   signal br2sim                       : rvex_string_builder_array(2**CFG.numLanesLog2-1 downto 0);
   -- pragma translate_on
+
+
+
+ --fault tolerance
+
+signal tmr_enable				: std_logic := '0'; --testing
+signal config_signal			: std_logic_vector (3 downto 0) := "1111"; --testing
     
 --=============================================================================
 begin -- architecture
@@ -916,7 +923,11 @@ begin -- architecture
       cxplif2cxreg_resuming_ack     => cxplif2cxreg_resuming_ack,
       
       -- Trace data.
-      pl2trace_data                 => pl2trace_data
+      pl2trace_data                 => pl2trace_data,
+		
+		--fault tolerance
+		tmr_enable => tmr_enable, --testing
+		config_signal => config_signal --testing
       
     );
   
@@ -1291,7 +1302,13 @@ begin -- architecture
       cfg2any_active                => cfg2any_active,
       cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
       cfg2any_laneIndex             => cfg2any_laneIndex,
-      cfg2any_pcAddVal              => cfg2any_pcAddVal
+      cfg2any_pcAddVal              => cfg2any_pcAddVal,
+		
+		
+		
+		--fault tolerance
+		tmr_enable => tmr_enable,--testing
+		config_signal => config_signal --testing
       
     );
   

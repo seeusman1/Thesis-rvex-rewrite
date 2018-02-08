@@ -121,7 +121,13 @@ entity core_cfgCtrl_decode is
     -- Diagonal block matrix of n*n size, where n is the number of pipelane
     -- groups. C_n,m is high when pipelane group n and m are coupled/share a
     -- context, or low when they don't.
-    coupleMatrix                : out std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0)
+    coupleMatrix                : out std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
+	  
+	  
+	  
+	  --fault tolerance
+	  tmr_enable				: out std_logic; --testing
+	  config_signal				: out std_logic_vector (3 downto 0) --testing
     
   );
 end core_cfgCtrl_decode;
@@ -236,6 +242,9 @@ begin -- architecture
         numPipelaneGroupsLog2ForContext <= (others =>
           uint2vect(CFG.numLaneGroupsLog2, 2));
         coupleMatrix <= (others => '1');
+							   
+		tmr_enable <= '0'; --testing
+		config_signal <= "1111"; --testing
 	
 
         
@@ -279,6 +288,8 @@ begin -- architecture
             -- Enable the context specified by the current group index.
             --contextEnable(contextID) <= '1';
 			contextEnable <= "0001"; --testing
+			
+
             
             -- Update the context control registers for the current group ID.
             lastPipelaneGroupForContext(contextID)(CFG.numLaneGroupsLog2-1 downto 0)
@@ -375,6 +386,11 @@ begin -- architecture
           --newConfiguration_r(4*i+CFG.numContextsLog2-1 downto 4*i);
         groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
           std_logic_vector (to_unsigned(i,2)); --testing
+							   
+							   
+		config_signal <= "1111"; --testing					   
+		tmr_enable  <= '1'; --testing
+		
       end if;
       
     end loop;

@@ -194,7 +194,15 @@ entity core_cfgCtrl is
     -- The amount which the branch unit residing in the indexed lane should
     -- add to the current PC to get PC_plusOne, should it be the active branch
     -- unit.
-    cfg2any_pcAddVal            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0)
+    cfg2any_pcAddVal            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+	  
+	  
+	  
+	  
+	  
+	  --fault tolerance
+	  tmr_enable				: out std_logic; --testing
+	  config_signal				: out std_logic_vector (3 downto 0) --testing
     
   );
 end core_cfgCtrl;
@@ -202,7 +210,7 @@ end core_cfgCtrl;
 --=============================================================================
 architecture Behavioral of core_cfgCtrl is
 --=============================================================================
-  
+
   -- Bitmask for the configuration control bits which are actually in use. Bits
   -- in this mask which are zero are considered to be reserved and must be set
   -- to zero in a request for it to be considered valid.
@@ -293,11 +301,18 @@ architecture Behavioral of core_cfgCtrl is
   signal curCoupleMatrix_r      : std_logic_vector(4**CFG.numLaneGroupsLog2-1 downto 0);
   signal curLaneIndex_r         : rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0);
   signal curPcAddVal_r          : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+
+
+
+
+ -- fault tolerance
+signal 	  tmr_en				    : std_logic := '0'; --testing
+signal	  config_sig				: std_logic_vector (3 downto 0) := "1111"; --testing
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
-  
+    --tmr_enable <= '0'; --testing
   -----------------------------------------------------------------------------
   -- Handle the wakeup system
   -----------------------------------------------------------------------------
@@ -481,7 +496,12 @@ begin -- architecture
       contextEnable             => newContextEnable_r,
       lastPipelaneGroupForContext => newLastPipelaneGroupForContext_r,
       numPipelaneGroupsLog2ForContext => newNumPipelaneGroupsLog2ForContext_r,
-      coupleMatrix              => newCoupleMatrix_r
+      coupleMatrix              => newCoupleMatrix_r,
+		
+		
+		--fault tolerance 
+		tmr_enable => tmr_en, --testing
+		config_signal => config_sig --testing
       
     );
   
@@ -490,7 +510,7 @@ begin -- architecture
   -- the lane index with some alignment based on CFG. Only the (small) +1 adder
   -- here is significant.
   pc_add_val_decoder: process (
-    newCoupleMatrix_r, newConfiguration_r, newNumPipelaneGroupsLog2ForContext_r
+    newCoupleMatrix_r, newConfiguration_r, newNumPipelaneGroupsLog2ForContext_r, tmr_en
   ) is
     
     -- Log2 of the size in bytes of an instruction for a lane group.
@@ -570,11 +590,12 @@ begin -- architecture
       end loop;
       
       -- Perform the +1 addition to get newPcAddVal_r.
-      --newPcAddVal_r(lane) <= std_logic_vector(
-        --addValMinusOne + to_unsigned(2**align, 32)
-			newPcAddVal_r(lane) <= std_logic_vector(to_unsigned(8, 32) --testing
-      );
-      
+    if tmr_en = '0' then  
+	newPcAddVal_r(lane) <= std_logic_vector(
+        addValMinusOne + to_unsigned(2**align, 32));
+		else	newPcAddVal_r(lane) <= std_logic_vector(to_unsigned(8, 32)); --testing
+		end if;
+            
     end loop;
     
   end process;
@@ -691,7 +712,7 @@ begin -- architecture
   end process;
   
   -- Generate the current configuration registers.
-  cur_config_regs: process (clk) is
+  cur_config_regs: process (clk, tmr_en) is
     variable addValMinusOne : unsigned(31 downto 0);
   begin
     if rising_edge(clk) then
@@ -715,10 +736,22 @@ begin -- architecture
           -- Determine the default PC add values.
           addValMinusOne := to_unsigned(lane * 2**SYLLABLE_SIZE_LOG2B, 32);
           addValMinusOne(cfg2pcAlignLog2(CFG)-1 downto 0) := (others => '0');
+		
+		--if tmr_en = '0' then 
           --curPcAddVal_r(lane) <= std_logic_vector(
-            --addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32)
-			curPcAddVal_r(lane) <= std_logic_vector(to_unsigned (8, 32) --testing
-          );
+            --addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32));
+			--else curPcAddVal_r(lane) <= std_logic_vector(to_unsigned (8, 32)); --testing
+		--end if;
+			
+			
+		if tmr_en = '1' then 
+          curPcAddVal_r(lane) <= std_logic_vector(to_unsigned (8, 32));
+			else curPcAddVal_r(lane) <= std_logic_vector(
+            addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32)); --testing
+		end if;	
+			
+			
+			
           
         end loop;
         
@@ -749,7 +782,7 @@ begin -- architecture
   
   -- Construct the vector containing the number of groups working together for
   -- each lane group and extract the contexts from the configuration vector.
-  num_groups_per_lane_gen: process (curConfiguration_r, curNumPipelaneGroupsLog2ForContext_r) is
+  num_groups_per_lane_gen: process (curConfiguration_r, curNumPipelaneGroupsLog2ForContext_r, tmr_en) is
     variable contextBits  : rvex_3bit_type;
     variable activeBit    : std_logic;
     variable context      : natural;
@@ -759,8 +792,22 @@ begin -- architecture
 
 		--testing
      -- if curConfiguration_r(4*laneGroup+3) = '1' and curConfiguration_r(4*laneGroup) = '1' then
-		  activeBit := '1';
-	      cfg2any_context(laneGroup) <= "000"; --testing
+		
+--		if tmr_en = '0' then	  
+--	    activeBit := not curConfiguration_r(laneGroup*4+3);
+--		else 
+--		activeBit := config_sig(laneGroup);
+--		end if;
+	      
+			  
+		if tmr_en = '0' then 	
+		   cfg2any_context(laneGroup) <= contextBits;
+	       activeBit := not curConfiguration_r(laneGroup*4+3);		
+	    else
+		cfg2any_context(laneGroup) <= "000"; --testing
+	    activeBit := config_sig(laneGroup);
+	    end if;
+-------
 	  --else
         --  activeBit := not curConfiguration_r(laneGroup*4+3);
           --cfg2any_context(laneGroup) <= contextBits;
@@ -785,5 +832,12 @@ begin -- architecture
     cfg2any_decouple(2**CFG.numLaneGroupsLog2-1) <= '1';
   end process;
   
+		
+--fault tolerance
+ tmr_enable <= tmr_en; --testing
+ config_signal <= config_sig; --testing
+		
+		
+		
 end Behavioral;
 

@@ -456,7 +456,14 @@ entity core_contextPipelaneIFace is
     -- While high, issued instructions should have the brkValid flag cleared,
     -- so breakpoints and step traps are ignored.
     cxreg2cxplif_resuming       : in  std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
-    cxplif2cxreg_resuming_ack   : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0)
+    cxplif2cxreg_resuming_ack   : out std_logic_vector(2**CFG.numContextsLog2-1 downto 0);
+	  
+	  
+	  
+	  
+	  --fault tolerance
+	  tmr_enable 			: in std_logic; --testing
+	  config_signal			: in std_logic_vector (3 downto 0) --testin
     
   );
 end core_contextPipelaneIFace;
@@ -1010,12 +1017,19 @@ begin -- architecture
   begin
     
     -- Determine the context to use for this group.
-     --ctxt <= vect2uint(cfg2any_context(laneGroup));
-	   ctxt <= vect2uint(cfg2any_context(0));--testing
-    
+     ctxt <= vect2uint(cfg2any_context(laneGroup)) when tmr_enable = '0' else
+	   vect2uint(cfg2any_context(0));--testing
+   
+	  
+	  
+	  
     -- Determine whether this group is enabled at all.
-     --active <= cfg2any_active(laneGroup);
-	   active <= '1';--testing
+     active <= cfg2any_active(laneGroup) when tmr_enable = '0' else
+	   config_signal(laneGroup);--testing
+	  
+
+	  
+	  
     
     -- Generate all the muxes.
     irq_mux(laneGroup)                <= irq_ctxt(ctxt)                       when active = '1' else '0';

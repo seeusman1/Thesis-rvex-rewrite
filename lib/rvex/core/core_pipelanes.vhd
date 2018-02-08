@@ -315,7 +315,17 @@ entity core_pipelanes is
     -- Raw trace data
     ---------------------------------------------------------------------------
     -- Trace data from pipelane to trace control unit.
-    pl2trace_data               : out pl2trace_data_array(2**CFG.numLanesLog2-1 downto 0)
+    pl2trace_data               : out pl2trace_data_array(2**CFG.numLanesLog2-1 downto 0);
+	  
+	  
+	  
+	  
+	  --fault tolerance
+	  tmr_enable				: in std_logic; --testing
+	  config_signal				: in std_logic_vector (3 downto 0) --testing
+	  
+	  
+	  
     
   );
 end core_pipelanes;
@@ -775,7 +785,13 @@ begin -- architecture
       cxreg2cxplif_brk                  => cxreg2cxplif_brk,
       cxreg2cxplif_stepping             => cxreg2cxplif_stepping,
       cxreg2cxplif_resuming             => cxreg2cxplif_resuming,
-      cxplif2cxreg_resuming_ack         => cxplif2cxreg_resuming_ack
+      cxplif2cxreg_resuming_ack         => cxplif2cxreg_resuming_ack,
+		
+		
+		
+		--fault tolerance
+		tmr_enable => tmr_enable, --testing
+		config_signal => config_signal --testing
       
     );
   
