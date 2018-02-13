@@ -46,4 +46,5 @@ core_trapRouting.vhd
 core_pipelanes.vhd
 core_instructionBuffer.vhd
 core_trace.vhd
+tmr_InsRep.vhd
 core.vhd

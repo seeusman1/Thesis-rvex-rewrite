@@ -739,6 +739,11 @@ architecture Behavioral of core is
 
 signal tmr_enable				: std_logic := '0'; --testing
 signal config_signal			: std_logic_vector (3 downto 0) := "1111"; --testing
+
+
+--TMR--signals for instruction replication--testing
+signal tmr2pl_instr				: rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+
     
 --=============================================================================
 begin -- architecture
@@ -966,6 +971,25 @@ begin -- architecture
     );
   
   -----------------------------------------------------------------------------
+  -- Instantiate the Instruction replication unit
+  -----------------------------------------------------------------------------
+	InsRep_inst: entity work.tmr_InsRep
+	  generic map(
+         CFG                         => CFG
+      )
+  	  port map (
+
+    	reset                       => reset_s, 
+    	clk                         => clk,
+	    clkEn                       => clkEn,
+		start_ft					=> tmr_enable,
+		config_signal				=> config_signal,
+	 	instr_in					=> imem2rv_instr,
+	 	instr_out					=> tmr2pl_instr
+	  );
+	  
+	  
+  -----------------------------------------------------------------------------
   -- Instantiate the instruction buffer
   -----------------------------------------------------------------------------
   ibuf_gen: if CFG.bundleAlignLog2 < CFG.numLanesLog2 generate
@@ -988,7 +1012,8 @@ begin -- architecture
         ibuf2imem_PCs               => rv2imem_PCs,
         ibuf2imem_fetch             => rv2imem_fetch,
         ibuf2imem_cancel            => rv2imem_cancel,
-        imem2ibuf_instr             => imem2rv_instr,
+        --imem2ibuf_instr             => imem2rv_instr,
+		imem2ibuf_instr             => tmr2pl_instr, -- signal coming from instruction replication unit --testing
         imem2ibuf_exception         => imem2ibuf_exception,
         
         -- Pipelane interface.
@@ -1009,7 +1034,8 @@ begin -- architecture
     rv2imem_PCs       <= cxplif2ibuf_fetchPCs;
     rv2imem_fetch     <= cxplif2ibuf_fetch;
     rv2imem_cancel    <= cxplif2ibuf_cancel;
-    ibuf2pl_instr     <= imem2rv_instr;
+    --ibuf2pl_instr     <= imem2rv_instr;
+	ibuf2pl_instr     <= tmr2pl_instr; -- signal coming from instruction replication unit --testing
     ibuf2pl_exception <= imem2ibuf_exception;
   end generate;
   
