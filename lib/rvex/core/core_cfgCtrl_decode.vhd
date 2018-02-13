@@ -126,8 +126,8 @@ entity core_cfgCtrl_decode is
 	  
 	  
 	  --fault tolerance
-	  tmr_enable				: out std_logic; --testing
-	  config_signal				: out std_logic_vector (3 downto 0) --testing
+	  tmr_enable				: out std_logic; --tmr activation signal --testing
+	  config_signal				: out std_logic_vector (3 downto 0) -- lane pairs to be included in tmr --testing
     
   );
 end core_cfgCtrl_decode;
@@ -243,8 +243,8 @@ begin -- architecture
           uint2vect(CFG.numLaneGroupsLog2, 2));
         coupleMatrix <= (others => '1');
 							   
-		tmr_enable <= '0'; --testing
-		config_signal <= "1111"; --testing
+		--tmr_enable <= '0'; --testing
+		--config_signal <= "1111"; --testing
 	
 
         
@@ -266,6 +266,9 @@ begin -- architecture
           numPipelaneGroupsLog2ForContext <= (others =>
             uint2vect(CFG.numLaneGroupsLog2, 2));
           coupleMatrix <= (others => '0');
+		 
+		 --tmr_enable <= '1'; --testing
+		-- config_signal <= "1111"; --testing
           
           -- Start decoding.
           busy_r <= '1';
@@ -388,8 +391,8 @@ begin -- architecture
           std_logic_vector (to_unsigned(i,2)); --testing
 							   
 							   
-		config_signal <= "1111"; --testing					   
-		tmr_enable  <= '1'; --testing
+		--config_signal <= "1111"; --testing					   
+		--tmr_enable  <= '1'; --testing
 		
       end if;
       
@@ -411,6 +414,25 @@ begin -- architecture
     end loop;
   end process;
   
+							   
+							   
+--TMR activation signal and lanepairs to be used in TMR --testing							   
+							   
+ Tmr_activation: process (newConfiguration_r) is
+	begin
+	 if newConfiguration_r(0) = '1' then --needs to be fixed later as per new config word
+		tmr_enable <= '1';
+		config_signal <= "0111";
+	else
+		tmr_enable <= '0';
+		config_signal <= "1111";
+	end if;
+	end process;
+							   
+							   
+							   
+							   
+							   
   -----------------------------------------------------------------------------
   -- Lanes per context and alignment detection
   -----------------------------------------------------------------------------

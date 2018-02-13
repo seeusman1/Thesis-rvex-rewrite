@@ -121,6 +121,11 @@ architecture Behavioral of core_cfgCtrl_tb is
   
   -- Counts the number of valid configurations.
   signal validConfigs                : unsigned(31 downto 0);
+
+
+ -- Fault Tolerance
+ signal tmr_enable_s				: std_logic;
+ signal config_signal_s				: std_logic_vector (3 downto 0);
   
 --=============================================================================
 begin
@@ -158,7 +163,9 @@ begin
       cfg2any_active              => cfg2any_active,
       cfg2any_lastGroupForCtxt    => cfg2any_lastGroupForCtxt,
       cfg2any_laneIndex           => cfg2any_laneIndex,
-      cfg2any_pcAddVal            => cfg2any_pcAddVal
+      cfg2any_pcAddVal            => cfg2any_pcAddVal,
+	  tmr_enable 				  => tmr_enable_s,
+	  config_signal				  => config_signal_s
     );
   
   -- Drive the configuration block signals low, so reconfiguration is instant.

@@ -198,8 +198,6 @@ entity core_cfgCtrl is
 	  
 	  
 	  
-	  
-	  
 	  --fault tolerance
 	  tmr_enable				: out std_logic; --testing
 	  config_signal				: out std_logic_vector (3 downto 0) --testing
@@ -306,8 +304,8 @@ architecture Behavioral of core_cfgCtrl is
 
 
  -- fault tolerance
-signal 	  tmr_en				    : std_logic := '0'; --testing
-signal	  config_sig				: std_logic_vector (3 downto 0) := "1111"; --testing
+signal 	  tmr_en				    : std_logic := '0'; -- lane pairs to be included in tmr --testing
+signal	  config_sig				: std_logic_vector (3 downto 0) := "1111"; -- lane pairs to be included in tmr --testing
   
 --=============================================================================
 begin -- architecture
@@ -500,8 +498,8 @@ begin -- architecture
 		
 		
 		--fault tolerance 
-		tmr_enable => tmr_en, --testing
-		config_signal => config_sig --testing
+		tmr_enable => tmr_en, 
+		config_signal => config_sig 
       
     );
   
@@ -712,7 +710,7 @@ begin -- architecture
   end process;
   
   -- Generate the current configuration registers.
-  cur_config_regs: process (clk, tmr_en) is
+  cur_config_regs: process (clk) is
     variable addValMinusOne : unsigned(31 downto 0);
   begin
     if rising_edge(clk) then
@@ -834,8 +832,8 @@ begin -- architecture
   
 		
 --fault tolerance
- tmr_enable <= tmr_en; --testing
- config_signal <= config_sig; --testing
+ tmr_enable <= tmr_en; --tmr activation signal --testing
+ config_signal <= config_sig; -- lane pairs to be included in tmr --testing
 		
 		
 		

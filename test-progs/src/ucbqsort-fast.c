@@ -25,8 +25,8 @@ int main()
 			return 1;
 		}
 	}
-	rvex_succeed("ucbqsort-fast: success\n");
-	//rvex_succeed("123\n");
+	//rvex_succeed("ucbqsort-fast: success\n");
+	rvex_succeed("123\n");
 	return 0;
 }
 static int (*qcmp) ();
