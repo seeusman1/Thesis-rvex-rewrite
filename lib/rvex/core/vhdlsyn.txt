@@ -48,3 +48,5 @@ core_instructionBuffer.vhd
 core_trace.vhd
 tmr_InsRep.vhd
 core.vhd
+tmr_voter.vhd
+tmr_nextpcvoter.vhd
