@@ -87,7 +87,7 @@ begin -- architecture
 				
 				
 	---------------------------------------------------------------------------
-    -- xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    -- internal signals assignment
     ---------------------------------------------------------------------------					
 	activelanes_selection: process(start, config_signal, cxplif2nextpcvoter_nextPC )
 		variable index	: integer	:= 0;
