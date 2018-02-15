@@ -14,7 +14,7 @@ use work.core_pkg.all;
 
 
 --=============================================================================
-entity tmr_nextpcvoter is
+entity tmr_pcvoter is
 --=============================================================================
 	
   generic (
@@ -40,29 +40,30 @@ entity tmr_nextpcvoter is
 	--signal representing active pipelane groups for fault tolerance mode
 	config_signal				: in std_logic_vector (3 downto 0);
 	  
-	--Program counter value from cxplif to PC voter
-    cxplif2nextpcvoter_nextPC    : in rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+	--Program counter value from br to cxplif
+    br2pcvoter_PC    			: in rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
 	  
-	--Program counter value from PC voter to cxreg
-    nextpcvoter2cxreg_nextPC      : out rvex_address_array(2**CFG.numContextsLog2-1 downto 0)
+	--Program counter value from PC voter to cxplif
+    pcvoter2cxplif_PC      		: out rvex_address_array(2**CFG.numLanesLog2-1 downto 0)
 	  
   );
 
-end entity tmr_nextpcvoter;
+end entity tmr_pcvoter;
 	
 
 --=============================================================================
-architecture structural of tmr_nextpcvoter is
+architecture structural of tmr_pcvoter is
 --=============================================================================
 	
 	
 	--add signals here
-	signal start								: std_logic := '0';
+	signal start					: std_logic := '0';
 	
-	signal cxplif2nextpcvoter_nextPC_s			: rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
-	signal cxplif2nextpcvoter_nextPC_s_temp		: rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+	signal br2pcvoter_PC_s			: rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+	signal br2pcvoter_PC_s_temp		: rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
 
-	signal cxplif2nextpcvoter_nextPC_s_result	: std_logic_vector (31 downto 0) := (others => '0');
+	signal br2pcvoter_PC_s_result1	: std_logic_vector (31 downto 0) := (others => '0');
+	signal br2pcvoter_PC_s_result2	: std_logic_vector (31 downto 0) := (others => '0');
 	
 	
 	
@@ -89,21 +90,22 @@ begin -- architecture
 	---------------------------------------------------------------------------
     -- internal signals assignment
     ---------------------------------------------------------------------------					
-	activelanes_selection: process(start, config_signal, cxplif2nextpcvoter_nextPC )
+	activelanes_selection: process(start, config_signal, br2pcvoter_PC)
 		variable index	: integer	:= 0;
 	begin
 				
 		if start = '0' then
-			cxplif2nextpcvoter_nextPC_s <= cxplif2nextpcvoter_nextPC;
-			cxplif2nextpcvoter_nextPC_s_temp <= (others => (others => '0'));
+			br2pcvoter_PC_s <= br2pcvoter_PC;
+			br2pcvoter_PC_s_temp <= (others => (others => '0'));
 			index := 0;
 		else
-			cxplif2nextpcvoter_nextPC_s <= (others => (others => '0'));
-			cxplif2nextpcvoter_nextPC_s_temp <= (others => (others => '0'));
+			br2pcvoter_PC_s <= (others => (others => '0'));
+			br2pcvoter_PC_s_temp <= (others => (others => '0'));
 		
 			for i in 0 to 3 loop
 				if config_signal(i) = '1' then
-					cxplif2nextpcvoter_nextPC_s_temp(index)	<= cxplif2nextpcvoter_nextPC(i);
+					br2pcvoter_PC_s_temp(2*index)	<= br2pcvoter_PC(2*i); 
+					br2pcvoter_PC_s_temp(2*index+1)	<= br2pcvoter_PC(2*i+1);
 					index := index + 1;
 				end if;
 			end loop;
@@ -112,37 +114,53 @@ begin -- architecture
 	end process;
 					
 	---------------------------------------------------------------------------
-    -- Next PC Majority voter bank between cxplif and cxreg
+    -- PC Majority voter bank between br and cxplif 
     ---------------------------------------------------------------------------				
 		
-	nextPCvoter: for i in 0 to 31 generate
-		ft_voter: entity work.tmr_voter
+	PCvoter1: for i in 0 to 31 generate
+		ft_voter_bank1: entity work.tmr_voter
 			port map (
-				input_1		=> cxplif2nextpcvoter_nextPC_s_temp(0)(i),
+				input_1		=> br2pcvoter_PC_s_temp(0)(i),
 				--input_1		=> '0',
-				input_2		=> cxplif2nextpcvoter_nextPC_s_temp(1)(i),
+				input_2		=> br2pcvoter_PC_s_temp(2)(i),
 				--input_2		=> '0',
-				input_3		=> cxplif2nextpcvoter_nextPC_s_temp(2)(i),
+				input_3		=> br2pcvoter_PC_s_temp(4)(i),
 				--input_3		=> '0',
-				output		=> cxplif2nextpcvoter_nextPC_s_result(i)
+				output		=> br2pcvoter_PC_s_result1(i)
 			);
 	end generate;
 	
+			
+	PCvoter2: for i in 0 to 31 generate
+		ft_voter_bank2: entity work.tmr_voter
+			port map (
+				input_1		=> br2pcvoter_PC_s_temp(1)(i),
+				--input_1		=> '0',
+				input_2		=> br2pcvoter_PC_s_temp(3)(i),
+				--input_2		=> '0',
+				input_3		=> br2pcvoter_PC_s_temp(5)(i),
+				--input_3		=> '0',
+				output		=> br2pcvoter_PC_s_result2(i)
+			);
+	end generate;		
+			
+	
 		
 	---------------------------------------------------------------------------
-    -- Recreate next_PC value after voter bank
+    -- Recreate PC value after voter bank
     ---------------------------------------------------------------------------			
 		
 		
-	nextpc_result: process (start, config_signal, cxplif2nextpcvoter_nextPC_s, cxplif2nextpcvoter_nextPC_s_result)	
+	nextpc_result: process (start, config_signal, br2pcvoter_PC_s, br2pcvoter_PC_s_result1, br2pcvoter_PC_s_result2)	
 	begin
 		if start = '0' then
-			nextpcvoter2cxreg_nextPC	<=	cxplif2nextpcvoter_nextPC_s;
+			pcvoter2cxplif_PC	<=	br2pcvoter_PC_s;
 		else
-			nextpcvoter2cxreg_nextPC	<=	(others => (others => '0'));
+			pcvoter2cxplif_PC	<=	(others => (others => '0'));
 		
 			for i in 0 to 3 loop
-				nextpcvoter2cxreg_nextPC(i)	<=	cxplif2nextpcvoter_nextPC_s_result;
+				pcvoter2cxplif_PC(2*i)		<=	br2pcvoter_PC_s_result1;
+				pcvoter2cxplif_PC(2*i+1)	<=	br2pcvoter_PC_s_result2;
 			end loop;
 		end if;
 	end process;

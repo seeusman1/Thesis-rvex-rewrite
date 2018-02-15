@@ -43,10 +43,11 @@ core_fpu_mul.vhd
 core_pipelane.vhd
 core_stopBitRouting.vhd
 core_trapRouting.vhd
+tmr_voter.vhd
+tmr_pcvoter.vhd
 core_pipelanes.vhd
 core_instructionBuffer.vhd
 core_trace.vhd
 tmr_InsRep.vhd
-core.vhd
-tmr_voter.vhd
 tmr_nextpcvoter.vhd
+core.vhd

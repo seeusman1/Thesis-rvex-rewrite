@@ -321,8 +321,8 @@ entity core_pipelanes is
 	  
 	  
 	  --fault tolerance
-	  tmr_enable				: in std_logic; --testing
-	  config_signal				: in std_logic_vector (3 downto 0) --testing
+	  tmr_enable				          : in std_logic; --testing
+	  config_signal				        : in std_logic_vector (3 downto 0) --testing
 	  
 	  
 	  
@@ -417,6 +417,11 @@ architecture Behavioral of core_pipelanes is
   signal trap2pl_trapPending        : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_disable            : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
   signal trap2pl_flush              : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
+
+
+	--TMR -- signals for PC voter
+  signal pcvoter2cxplif_PC		      : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+
   
 --=============================================================================
 begin -- architecture
@@ -685,7 +690,8 @@ begin -- architecture
       pl2cxplif_idle                    => pl2cxplif_idle,
       
       -- Pipelane interface: next operation routing.
-      br2cxplif_PC                      => br2cxplif_PC,
+      --br2cxplif_PC                      => br2cxplif_PC,
+      br2cxplif_PC                      => pcvoter2cxplif_PC, --testing
       cxplif2pl_PC                      => cxplif2pl_PC,
       br2cxplif_fetchPC                 => br2cxplif_fetchPC,
       br2cxplif_branch                  => br2cxplif_branch,
@@ -898,6 +904,33 @@ begin -- architecture
       
     );
   
+	  
+  -----------------------------------------------------------------------------
+  -- Instantiate the PC voter bank
+  -----------------------------------------------------------------------------
+	pcvoter_inst: entity work.tmr_pcvoter
+	  generic map(
+         CFG                         => CFG
+      )
+  	port map (
+
+         -- System control
+    	   reset                       => reset, 
+    	   clk                         => clk,
+	       clkEn                       => clkEn,
+      
+         -- fault tolerance activation signals
+		     start_ft					           => tmr_enable,
+		     config_signal				       => config_signal,
+      
+         --PC voter bank interface
+    	   br2pcvoter_PC   			       => br2cxplif_PC,
+    	   pcvoter2cxplif_PC    		   => pcvoter2cxplif_PC
+	  );
+	  
+	  
+	  
+	  
   -----------------------------------------------------------------------------
   -- Instantiate trap routing network
   -----------------------------------------------------------------------------
