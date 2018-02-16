@@ -371,12 +371,13 @@ begin -- architecture
 							  
 	--testing
      -- if newConfiguration_r(4*i+3) = '1' and newConfiguration_r(4*i) = '1' then
-		--groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
-        --groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
-         -- std_logic_vector (to_unsigned(i,2)); --testing			   
+		if newConfiguration_r (0) = '1' then
+		   groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
+           groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
+                  std_logic_vector (to_unsigned(i,2)); --testing			   
 							   
-     -- elsif newConfiguration_r(4*i+3) = '1' then
-		if newConfiguration_r(4*i+3) = '1' then
+      elsif newConfiguration_r(4*i+3) = '1' then
+		--if newConfiguration_r(4*i+3) = '1' then
         
         -- Lane disabled, set group ID to pipelane group index, with bit 3 set.
         groupIDs(i) <= "1" & uint2vect(i, GROUP_ID_SIZE-1);
@@ -385,10 +386,10 @@ begin -- architecture
         
         -- Lane enabled, set groupID to context.
         groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
-        --groupIDs(i)(CFG.numContextsLog2-1 downto 0) <=
-          --newConfiguration_r(4*i+CFG.numContextsLog2-1 downto 4*i);
-        groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
-          std_logic_vector (to_unsigned(i,2)); --testing
+        groupIDs(i)(CFG.numContextsLog2-1 downto 0) <=
+          newConfiguration_r(4*i+CFG.numContextsLog2-1 downto 4*i);
+        --groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
+          --std_logic_vector (to_unsigned(i,2)); --testing
 							   
 							   
 		--config_signal <= "1111"; --testing					   
