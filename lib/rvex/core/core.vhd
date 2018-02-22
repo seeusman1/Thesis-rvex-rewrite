@@ -735,17 +735,29 @@ architecture Behavioral of core is
 
 
 
- --fault tolerance
+  --fault tolerance
 
-signal tmr_enable				: std_logic := '0'; --testing
-signal config_signal			: std_logic_vector (3 downto 0) := "1111"; --testing
+  signal tmr_enable					  : std_logic := '0'; --testing
+  signal config_signal				  : std_logic_vector (3 downto 0) := "1111"; --testing
 
 
---TMR--signals for instruction replication--testing
-signal tmr2pl_instr				: rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+  --TMR--signals for instruction replication--testing
+  signal tmr2pl_instr				  : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
 
---TMR -- signals for Next PC voter
-signal nextpcvoter2cxreg_nPC		: rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+  --TMR -- signals for Next PC voter
+  signal nextpcvoter2cxreg_nPC		  : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+
+
+  --TMR -- signal for DMEM majority voter
+
+
+  signal rv2dmemvoter_addr            : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dmemvoter_readEnable      : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dmemvoter_writeData       : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dmemvoter_writeMask       : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal rv2dmemvoter_writeEnable     : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal dmem2dmemvoter_readData      : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+	
 
     
 --=============================================================================
@@ -873,14 +885,23 @@ begin -- architecture
       ibuf2pl_exception             => ibuf2pl_exception,
       
       -- Data memory interface.
-      dmsw2dmem_addr                => rv2dmem_addr,
-      dmsw2dmem_writeData           => rv2dmem_writeData,
-      dmsw2dmem_writeMask           => rv2dmem_writeMask,
-      dmsw2dmem_writeEnable         => rv2dmem_writeEnable,
-      dmsw2dmem_readEnable          => rv2dmem_readEnable,
-      dmem2dmsw_readData            => dmem2rv_readData,
-      dmem2dmsw_exception           => dmem2dmsw_exception,
-      
+      --dmsw2dmem_addr                => rv2dmem_addr, -- rv2dmemvoter_addr
+      --dmsw2dmem_writeData           => rv2dmem_writeData, -- rv2dmemvoter_writeData
+      --dmsw2dmem_writeMask           => rv2dmem_writeMask, -- rv2dmemvoter_writeMask
+      --dmsw2dmem_writeEnable         => rv2dmem_writeEnable, -- rv2dmemvoter_writeEnable
+      --dmsw2dmem_readEnable          => rv2dmem_readEnable, -- rv2dmemvoter_readEnable
+      --dmem2dmsw_readData            => dmem2rv_readData, -- dmem2dmemvoter_readData
+      --dmem2dmsw_exception           => dmem2dmsw_exception, 
+
+      -- Data memory interface. --testing
+      dmsw2dmem_addr                => rv2dmemvoter_addr,
+      dmsw2dmem_writeData           => rv2dmemvoter_writeData,
+      dmsw2dmem_writeMask           => rv2dmemvoter_writeMask,
+      dmsw2dmem_writeEnable         => rv2dmemvoter_writeEnable,
+      dmsw2dmem_readEnable          => rv2dmemvoter_readEnable,
+      dmem2dmsw_readData            => dmem2dmemvoter_readData,
+      dmem2dmsw_exception           => dmem2dmsw_exception, 		
+		
       -- Control register interface.
       dmsw2creg_addr                => dmsw2creg_addr,
       dmsw2creg_writeData           => dmsw2creg_writeData,
@@ -973,6 +994,49 @@ begin -- architecture
       
     );
   
+	  
+  -----------------------------------------------------------------------------
+  -- Instantiate the DMEM Majority voter bank
+  -----------------------------------------------------------------------------
+	dmemvoter_inst: entity work.tmr_dmemvoter
+	  generic map(
+         CFG                         => CFG
+      )
+  	  port map (
+
+    	reset                       => reset_s, 
+    	clk                         => clk,
+	    clkEn                       => clkEn,
+		start_ft					=> tmr_enable,
+		config_signal				=> config_signal,
+		  
+    ---------------------------------------------------------------------------
+    -- Signals that go into DMEM Majority voter
+    ---------------------------------------------------------------------------
+		  
+    rv2dmemvoter_addr                => rv2dmemvoter_addr,
+    rv2dmemvoter_readEnable          => rv2dmemvoter_readEnable,
+    rv2dmemvoter_writeData           => rv2dmemvoter_writeData,
+    rv2dmemvoter_writeMask           => rv2dmemvoter_writeMask,
+    rv2dmemvoter_writeEnable         => rv2dmemvoter_writeEnable,
+    dmem2dmemvoter_readData          => dmem2rv_readData,
+		  
+	---------------------------------------------------------------------------
+    -- Signals that come out of DMEM Majority voter
+    ---------------------------------------------------------------------------
+
+    dmemvoter2dmem_addr              => rv2dmem_addr,
+    dmemvoter2dmem_readEnable        => rv2dmem_readEnable,
+    dmemvoter2dmem_writeData         => rv2dmem_writeData,
+    dmemvoter2dmem_writeMask         => rv2dmem_writeMask,
+    dmemvoter2dmem_writeEnable       => rv2dmem_writeEnable,
+    dmemvoter2rv_readData            =>	dmem2dmemvoter_readData
+		  
+	  );	  
+	  
+	  
+	  
+	  
   -----------------------------------------------------------------------------
   -- Instantiate the Instruction replication unit
   -----------------------------------------------------------------------------
@@ -994,7 +1058,7 @@ begin -- architecture
 
 		
   -----------------------------------------------------------------------------
-  -- Instantiate the Next PC voter bank
+  -- Instantiate the Next PC Majority voter bank
   -----------------------------------------------------------------------------
 	nextpcvoter_inst: entity work.tmr_nextpcvoter
 	  generic map(
@@ -1192,7 +1256,7 @@ begin -- architecture
 
       -- Pipelane interface: program counter.
       --cxplif2cxreg_nextPC           => cxplif2cxreg_nextPC,
-      cxplif2cxreg_nextPC           => nextpcvoter2cxreg_nPC,
+      cxplif2cxreg_nextPC           => nextpcvoter2cxreg_nPC, --testing
 	  cxreg2cxplif_currentPC        => cxreg2cxplif_currentPC,
       cxreg2cxplif_overridePC       => cxreg2cxplif_overridePC,
       cxplif2cxreg_overridePC_ack   => cxplif2cxreg_overridePC_ack,

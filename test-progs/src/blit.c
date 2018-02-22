@@ -1,4 +1,5 @@
 #include "common.h"
+#include "rvex.h"
 unsigned long src[1024] =
 {
   0x00005678, 0x12340000, 0x02040608, 0x00000001,
@@ -81,6 +82,7 @@ void blit(unsigned long saddr, unsigned long daddr, unsigned long n)
 }
 int main()
 {
+  CR_CRR = 0x0001; 
   blit(17, 29, 1000 * 32);
   blit(29, 17, 1000 * 32);
   if (dst[0] != 291 || dst[4] != 1164411171 || dst[10] != 1080066048)

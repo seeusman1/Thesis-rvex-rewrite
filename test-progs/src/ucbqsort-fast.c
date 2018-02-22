@@ -16,7 +16,7 @@ int compare(char *n1, char *n2)
 int main()
 {
 	//CR_CRR = 0x9999;
-	CR_CRR = 0x0001; //testing
+	CR_CRR = 0x0001; 
 	int j;
 	QSORT((char *) SortArr, (int) 20, sizeof(unsigned char), compare);
 	for (j = 0; j < 20; j++) {
@@ -25,8 +25,10 @@ int main()
 			return 1;
 		}
 	}
+	//CR_CRR = 0x0000; 
 	rvex_succeed("ucbqsort-fast: success\n");
 	//rvex_succeed("123\n");
+
 	return 0;
 }
 static int (*qcmp) ();

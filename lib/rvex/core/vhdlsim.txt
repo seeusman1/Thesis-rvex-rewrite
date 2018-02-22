@@ -1,3 +1,4 @@
 core_listOpcodes_tb.vhd
 core_cfgCtrl_tb.vhd
 tmr_voter_tb.vhd
+tmr_dmemvoter_tb.vhd
