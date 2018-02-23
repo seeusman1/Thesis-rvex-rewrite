@@ -404,7 +404,7 @@ begin -- architecture
 		end process;			
 			
 			
-	--dmemvoter2dmem_addr				<=  rv2dmemvoter_addr;		
+	--dmemvoter2dmem_addr			  <=  rv2dmemvoter_addr;		
     --dmemvoter2dmem_readEnable       <=	rv2dmemvoter_readEnable;
     --dmemvoter2dmem_writeData        <=	rv2dmemvoter_writeData;
     --dmemvoter2dmem_writeMask        <=	rv2dmemvoter_writeMask;

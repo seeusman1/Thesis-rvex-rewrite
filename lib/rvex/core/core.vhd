@@ -743,6 +743,10 @@ architecture Behavioral of core is
 
   --TMR--signals for instruction replication--testing
   signal tmr2pl_instr				  : rvex_syllable_array(2**CFG.numLanesLog2-1 downto 0);
+  signal tmr2imem_PCs				  : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal tmr2imem_fetch				  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal tmr2imem_cancel			  : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal imem2tmr_exception			  : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
 
   --TMR -- signals for Next PC voter
   signal nextpcvoter2cxreg_nPC		  : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
@@ -1051,8 +1055,19 @@ begin -- architecture
 	    clkEn                       => clkEn,
 		start_ft					=> tmr_enable,
 		config_signal				=> config_signal,
-	 	instr_in					=> imem2rv_instr,
-	 	instr_out					=> tmr2pl_instr
+		
+		  
+		ibuf2tmr_PCs				=> tmr2imem_PCs,
+		ibuf2tmr_fetch  			=> tmr2imem_fetch,
+		ibuf2tmr_cancel				=> tmr2imem_cancel,
+	 	imem2tmr_instr				=> imem2rv_instr,
+		imem2tmr_exception			=> imem2ibuf_exception,
+		  
+		tmr2imem_PCs  				=> rv2imem_PCs,
+		tmr2imem_fetch				=> rv2imem_fetch,
+		tmr2imem_cancel				=> rv2imem_cancel,
+	 	tmr2ibuf_instr				=> tmr2pl_instr,
+		tmr2ibuf_exception			=> imem2tmr_exception
 	  );
 	  
 
@@ -1097,12 +1112,16 @@ begin -- architecture
         cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
         
         -- Instruction memory interface.
-        ibuf2imem_PCs               => rv2imem_PCs,
-        ibuf2imem_fetch             => rv2imem_fetch,
-        ibuf2imem_cancel            => rv2imem_cancel,
+        --ibuf2imem_PCs               => rv2imem_PCs,
+		ibuf2imem_PCs               => tmr2imem_PCs, --testing
+        --ibuf2imem_fetch             => rv2imem_fetch,
+		ibuf2imem_fetch             => tmr2imem_fetch, --testing
+        --ibuf2imem_cancel            => rv2imem_cancel,
+		ibuf2imem_cancel            => tmr2imem_cancel, --testing
         --imem2ibuf_instr             => imem2rv_instr,
 		imem2ibuf_instr             => tmr2pl_instr, -- signal coming from instruction replication unit --testing
-        imem2ibuf_exception         => imem2ibuf_exception,
+        --imem2ibuf_exception         => imem2ibuf_exception,
+		imem2ibuf_exception         => imem2tmr_exception,  
         
         -- Pipelane interface.
         cxplif2ibuf_PCs             => cxplif2ibuf_PCs,
@@ -1122,8 +1141,8 @@ begin -- architecture
     rv2imem_PCs       <= cxplif2ibuf_fetchPCs;
     rv2imem_fetch     <= cxplif2ibuf_fetch;
     rv2imem_cancel    <= cxplif2ibuf_cancel;
-    --ibuf2pl_instr     <= imem2rv_instr;
-	ibuf2pl_instr     <= tmr2pl_instr; -- signal coming from instruction replication unit --testing
+    ibuf2pl_instr     <= imem2rv_instr;
+	--ibuf2pl_instr     <= tmr2pl_instr; -- signal coming from instruction replication unit --testing
     ibuf2pl_exception <= imem2ibuf_exception;
   end generate;
   

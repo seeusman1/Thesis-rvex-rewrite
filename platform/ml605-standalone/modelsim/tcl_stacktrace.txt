@@ -1,0 +1,15 @@
+Fri Feb 23 18:39:09 CET 2018
+Trace back: can't read "_visible(-1)": no such element in array
+    while executing
+"if {$_visible($prevC) eq "show"} {
+						break
+					}"
+    (object "::.main_pane.objects.interior.cs.body.tree" method "::vsimwidgets::Hierarchy::_hdrMotion" body line 12)
+    invoked from within
+"::.main_pane.objects.interior.cs.body.tree _hdrMotion .main_pane.objects.interior.cs.body.tree.lwchildsite.clipper.canvas.sfchildsite.header2.button 5..."
+    (in namespace inscope "::vsimwidgets::Hierarchy" script line 1)
+    invoked from within
+"namespace inscope ::vsimwidgets::Hierarchy {::.main_pane.objects.interior.cs.body.tree _hdrMotion .main_pane.objects.interior.cs.body.tree.lwchildsite..."
+    (command bound to event)
+  <2:/mtitcl/tk8.5/bgerror.tcl:95: ::tkerror {can't read "_visible(-1)": no such element in array}
+  <1:eval:1: ::tk::dialog::error::bgerror {can't read "_visible(-1)": no such element in array}
