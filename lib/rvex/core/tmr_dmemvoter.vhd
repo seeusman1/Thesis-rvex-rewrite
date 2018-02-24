@@ -373,7 +373,7 @@ begin -- architecture
 		
 			--end loop;
 
-				dmemvoter2dmem_addr(0)		<=	rv2dmemvoter_addr_s_result;
+				dmemvoter2dmem_addr(0)			<=	rv2dmemvoter_addr_s_result;
 				dmemvoter2dmem_readEnable(0)	<= rv2dmemvoter_readEnable_s_result;	
 				dmemvoter2dmem_writeData(0)		<= rv2dmemvoter_writeData_s_result;
 				dmemvoter2dmem_writeMask(0) 	<= rv2dmemvoter_writeMask_s_result;

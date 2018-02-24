@@ -70,7 +70,25 @@ end entity tmr_InsRep;
 	--add intermediate signals here, if any
 	
 	signal start		: std_logic	:= '0';
-		
+
+	--signals for PCs
+	signal ibuf2tmr_PCs_s			: rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+	signal ibuf2tmr_PCs_temp		: rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+	signal ibuf2tmr_PCs_s_result	: std_logic_vector (31 downto 0) := (others => '0');
+
+	--signals for fetch
+	signal ibuf2tmr_fetch_s			: std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+	signal ibuf2tmr_fetch_temp		: std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+	signal ibuf2tmr_fetch_s_result	: std_logic := '0';
+
+
+	--signals for cancel
+	signal ibuf2tmr_cancel_s		: std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+	signal ibuf2tmr_cancel_temp		: std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+	signal ibuf2tmr_cancel_s_result	: std_logic := '0';
+
+
+
 		
 	begin
 		
@@ -91,7 +109,58 @@ end entity tmr_InsRep;
 		end if;
 	end process;
 				
+			
+	---------------------------------------------------------------------------
+    -- Internal signals assignment
+    ---------------------------------------------------------------------------					
+	activelanes_selection: process(start, config_signal, ibuf2tmr_PCs, ibuf2tmr_fetch, ibuf2tmr_cancel)
+		variable index	: integer	:= 0;
+	begin
+				
+		if start = '0' then
+			
+			--signals for PC
+			ibuf2tmr_PCs_s 				<= ibuf2tmr_PCs;
+			ibuf2tmr_PCs_temp  			<= (others => (others => '0'));
+
+			--signals for fetch
+			ibuf2tmr_fetch_s 			<= ibuf2tmr_fetch;
+			ibuf2tmr_fetch_temp  		<= (others => '0');
+			
+
+			--signals for cancel
+			ibuf2tmr_cancel_s 			<= ibuf2tmr_cancel;
+			ibuf2tmr_cancel_temp  		<= (others => '0');
+
+
+			--index to read only active lanegroups value in temp
+			index := 0;
+		else
+			ibuf2tmr_PCs_s 				<= (others => (others => '0'));
+			ibuf2tmr_PCs_temp  			<= (others => (others => '0'));
+
+			ibuf2tmr_fetch_s 			<= (others => '0');
+			ibuf2tmr_fetch_temp  		<= (others => '0');
+
+			ibuf2tmr_cancel_s 			<= (others => '0');
+			ibuf2tmr_cancel_temp  		<= (others => '0');
+
 		
+			for i in 0 to 3 loop
+				if config_signal(i) = '1' then
+					ibuf2tmr_PCs_temp(index)			<= ibuf2tmr_PCs(i);
+					ibuf2tmr_fetch_temp(index)			<= ibuf2tmr_fetch(i);
+					ibuf2tmr_cancel_temp(index)			<= ibuf2tmr_cancel(i);
+
+					index := index + 1;
+				end if;
+			end loop;
+			index	:= 0;
+		end if;
+	end process;			
+					
+			
+			
 	---------------------------------------------------------------------------
     -- Replication unit for Instruction read from IMEM
     ---------------------------------------------------------------------------			
@@ -137,7 +206,6 @@ end entity tmr_InsRep;
 							tmr2ibuf_exception (i) <= imem2tmr_exception(0);
 						else
 						-- for disabled core, exception is set to default value
-					    	--tmr2ibuf_exception (i) <= (others => '0');
 							 tmr2ibuf_exception (i)  <= ( active => '0',
     													  cause  => (others => '0'),
     													  arg    => (others => '0')
@@ -149,12 +217,97 @@ end entity tmr_InsRep;
 			end if;	
 		end process;				
 
+		
+	---------------------------------------------------------------------------
+    -- Majority voter bank for PC
+    ---------------------------------------------------------------------------				
+		
+	PC_voter: for i in 0 to 31 generate
+		pc_voter_bank: entity work.tmr_voter
+			port map (
+				input_1		=> ibuf2tmr_PCs_temp(0)(i),
+				--input_1		=> '0',
+				input_2		=> ibuf2tmr_PCs_temp(1)(i),
+				--input_2		=> '0',
+				input_3		=> ibuf2tmr_PCs_temp(2)(i),
+				--input_3		=> '0',
+				output		=> ibuf2tmr_PCs_s_result(i)
+			);
+	end generate;
+			
+
+	---------------------------------------------------------------------------
+    -- Majority voter bank fetch
+    ---------------------------------------------------------------------------				
+		
+		fetch_voter: entity work.tmr_voter
+			port map (
+				input_1		=> ibuf2tmr_fetch_temp(0),
+				--input_1		=> '0',
+				input_2		=> ibuf2tmr_fetch_temp(1),
+				--input_2		=> '0',
+				input_3		=> ibuf2tmr_fetch_temp(2),
+				--input_3		=> '0',
+				output		=> ibuf2tmr_fetch_s_result
+			);
+			
+			
+			
+	---------------------------------------------------------------------------
+    -- Majority voter bank for cancel
+    ---------------------------------------------------------------------------				
+		
+		cancel_voter: entity work.tmr_voter
+			port map (
+				input_1		=> ibuf2tmr_cancel_temp(0),
+				--input_1		=> '0',
+				input_2		=> ibuf2tmr_cancel_temp(1),
+				--input_2		=> '0',
+				input_3		=> ibuf2tmr_cancel_temp(2),
+				--input_3		=> '0',
+				output		=> ibuf2tmr_cancel_s_result
+			);
+			
+			
+			
+			
+	---------------------------------------------------------------------------
+    -- Recreate DMEM address value after voter bank
+    ---------------------------------------------------------------------------			
+		
+	addr_result: process (start, config_signal, ibuf2tmr_PCs_s, ibuf2tmr_PCs_s_result, ibuf2tmr_fetch_s, ibuf2tmr_fetch_s_result, ibuf2tmr_cancel_s, ibuf2tmr_cancel_s_result)	
+	begin
+		if start = '0' then
+			tmr2imem_PCs			<=	ibuf2tmr_PCs_s;
+			tmr2imem_fetch			<= ibuf2tmr_fetch_s;
+			tmr2imem_cancel			<= ibuf2tmr_cancel_s;
+
+		else
+			tmr2imem_PCs			<=	(others => (others => '0'));
+			tmr2imem_fetch			<= (others => '0');
+			tmr2imem_cancel			<= (others => '0');
+
+		
+			--for i in 0 to 3 loop
+			--	tmr2imem_PCs(i)		<=	ibuf2tmr_PCs_s_result;
+			--	tmr2imem_fetch(i)	<= ibuf2tmr_fetch_s_result;
+			--	tmr2imem_cancel(i)	<= ibuf2tmr_cancel_s_result;
+			--end loop;
+
+				tmr2imem_PCs(0)	  <=	ibuf2tmr_PCs_s_result;
+				tmr2imem_fetch(0)	  <= ibuf2tmr_fetch_s_result;
+				tmr2imem_cancel(0)  <= ibuf2tmr_cancel_s_result;
+
+
+
+		end if;
+	end process;				
 				
-				
-		tmr2imem_PCs       			<= ibuf2tmr_PCs;
-    	tmr2imem_fetch     			<= ibuf2tmr_fetch;
-    	tmr2imem_cancel    			<= ibuf2tmr_cancel;
-		--tmr2ibuf_instr					<= imem2tmr_instr;
+						
+		--tmr2imem_PCs       			<= ibuf2tmr_PCs;
+    	--tmr2imem_fetch     			<= ibuf2tmr_fetch;
+    	--tmr2imem_cancel    			<= ibuf2tmr_cancel;
+		--tmr2ibuf_instr				<= imem2tmr_instr;
 		--tmr2ibuf_exception			<= imem2tmr_exception;
 						
 	end structural;
