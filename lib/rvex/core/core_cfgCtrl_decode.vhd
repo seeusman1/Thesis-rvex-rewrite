@@ -259,6 +259,14 @@ begin -- architecture
           -- Store the new configuration for processing.
           newConfiguration_r <= newConfiguration_in;
           
+							   
+							   
+							   
+							   
+							   
+							   
+							   
+		
           -- Reset everything when we're starting to decode.
           contextEnable <= (others => '0');
           lastPipelaneGroupForContext <= (others =>
@@ -331,7 +339,17 @@ begin -- architecture
   -- Forward the new configuration and busy registers and error signal. Note
   -- the and gate in the error signal, ensuring that the error signal is only
   -- a one-cycle pulse.
-  newConfiguration_out <= newConfiguration_r;
+  --newConfiguration_out <= newConfiguration_r;
+  process (newConfiguration_r) is --testing
+  begin
+	if newConfiguration_r (0) = '1' then
+	  newConfiguration_out <= (others => '0');
+	else
+	  newConfiguration_out <= newConfiguration_r;
+	end if;
+  end process;
+							   
+							   
   error <= error_s and busy_r;
   busy <= busy_r;
   

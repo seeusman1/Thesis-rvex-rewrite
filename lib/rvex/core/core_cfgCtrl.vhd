@@ -588,11 +588,13 @@ begin -- architecture
       end loop;
       
       -- Perform the +1 addition to get newPcAddVal_r.
-    if tmr_en = '0' then  
+    --if tmr_en = '0' then  
 	newPcAddVal_r(lane) <= std_logic_vector(
         addValMinusOne + to_unsigned(2**align, 32));
-		else	newPcAddVal_r(lane) <= std_logic_vector(to_unsigned(8, 32)); --testing
-		end if;
+	--	else	newPcAddVal_r(lane) <= std_logic_vector(to_unsigned(8, 32)); --testing
+	--	end if;
+			
+	
             
     end loop;
     
@@ -735,19 +737,15 @@ begin -- architecture
           addValMinusOne := to_unsigned(lane * 2**SYLLABLE_SIZE_LOG2B, 32);
           addValMinusOne(cfg2pcAlignLog2(CFG)-1 downto 0) := (others => '0');
 		
-		--if tmr_en = '0' then 
-          --curPcAddVal_r(lane) <= std_logic_vector(
-            --addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32));
-			--else curPcAddVal_r(lane) <= std_logic_vector(to_unsigned (8, 32)); --testing
-		--end if;
+		
 			
-			
-		if tmr_en = '1' then 
-          curPcAddVal_r(lane) <= std_logic_vector(to_unsigned (8, 32));
-			else curPcAddVal_r(lane) <= std_logic_vector(
-            addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32)); --testing
-		end if;	
-			
+		--if tmr_en = '1' then 
+          --curPcAddVal_r(lane) <= std_logic_vector(to_unsigned (8, 32));
+			--else curPcAddVal_r(lane) <= std_logic_vector(
+            --addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32)); --testing
+		--end if;	
+		curPcAddVal_r(lane) <= std_logic_vector(
+            addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32));
 			
 			
           
@@ -798,23 +796,17 @@ begin -- architecture
 --		end if;
 	      
 			  
-		if tmr_en = '0' then 	
+		--if tmr_en = '0' then 	
 		   cfg2any_context(laneGroup) <= contextBits;
 	       activeBit := not curConfiguration_r(laneGroup*4+3);		
-	    else
-		cfg2any_context(laneGroup) <= "000"; --testing
-	    activeBit := config_sig(laneGroup);
-	    end if;
--------
-	  --else
-        --  activeBit := not curConfiguration_r(laneGroup*4+3);
-          --cfg2any_context(laneGroup) <= contextBits;
+	    --else
+		  --cfg2any_context(laneGroup) <= "000"; --testing
+	      --activeBit := config_sig(laneGroup);
+	    --end if;
 
-	  --end if;
 
       cfg2any_active(laneGroup) <= activeBit;
       context := vect2uint(contextBits(CFG.numContextsLog2-1 downto 0));
-	--context := 0; --testing
       cfg2any_numGroupsLog2(laneGroup) <= curNumPipelaneGroupsLog2ForContext_r(context);
     end loop;
   end process;
