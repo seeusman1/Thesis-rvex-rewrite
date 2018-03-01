@@ -218,7 +218,7 @@ package core_pkg is
     reg63isLink                 => false,
     cregStartAddress            => X"FFFFFC00",
     resetVectors                => (others => (others => '0')),
-    unifiedStall                => true, --testing
+    unifiedStall                => true, 
     gpRegImpl                   => RVEX_GPREG_IMPL_MEM,
     traceEnable                 => true,
     perfCountSize               => 4,

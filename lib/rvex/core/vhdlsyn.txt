@@ -51,4 +51,5 @@ core_trace.vhd
 tmr_InsRep.vhd
 tmr_nextpcvoter.vhd
 tmr_dmemvoter.vhd
+tmr_gpregvoter.vhd
 core.vhd

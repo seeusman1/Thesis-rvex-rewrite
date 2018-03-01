@@ -124,7 +124,7 @@ architecture structural of tmr_dmemvoter is
 	
 	--add signals here
 	signal start									: std_logic := '0';
-	signal start_array								: std_logic_vector (2 downto 0) := (others => '0');
+	signal start_array								: std_logic_vector (0 downto 0) := (others => '0');
 
 	-- internal signals for address
 	signal rv2dmemvoter_addr_s						: rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -181,16 +181,16 @@ begin -- architecture
 	begin
 		if rising_edge (clk) then
 			if (reset = '1') then
-				start_array(2) <= '0';
+				start_array(0) <= '0';
 			else
-				start_array(2) <= start_ft;
+				start_array(0) <= start_ft;
 			end if;
 				
 			  --start_array (4) <= start_array (5);
 			  --start_array (3) <= start_array(4);
 			  --start_array (2) <= start_array (3);
-			  start_array (1) <= start_array(2);
-			  start_array (0) <= start_array(1);
+			  --start_array (1) <= start_array(2);
+			  --start_array (0) <= start_array(1);
 
 		end if;
 	end process;
@@ -371,7 +371,6 @@ begin -- architecture
 		--		dmemvoter2dmem_writeMask(i) 	<= rv2dmemvoter_writeMask_s_result;
 		--		dmemvoter2dmem_writeEnable(i) 	<= rv2dmemvoter_writeEnable_s_result;
 		--		end if;
-		
 		--	end loop;
 
 				dmemvoter2dmem_addr(0)			<=	rv2dmemvoter_addr_s_result;

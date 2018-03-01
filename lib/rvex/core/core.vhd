@@ -754,7 +754,6 @@ architecture Behavioral of core is
 
   --TMR -- signal for DMEM majority voter
 
-
   signal rv2dmemvoter_addr            : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal rv2dmemvoter_readEnable      : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal rv2dmemvoter_writeData       : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
@@ -762,6 +761,12 @@ architecture Behavioral of core is
   signal rv2dmemvoter_writeEnable     : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal dmem2dmemvoter_readData      : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
 	
+
+  --TMR -- signals for GPREG majority voter
+
+  signal tmrvoter2gpreg_readPorts      : pl2gpreg_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
+  signal tmrvoter2pl_readPorts         : gpreg2pl_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
+  signal tmrvoter2gpreg_writePorts     : pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
 
     
 --=============================================================================
@@ -919,7 +924,8 @@ begin -- architecture
       
       -- Register file interface.
       pl2gpreg_readPorts            => pl2gpreg_readPorts,
-      gpreg2pl_readPorts            => gpreg2pl_readPorts,
+      --gpreg2pl_readPorts            => gpreg2pl_readPorts,
+	  gpreg2pl_readPorts 			=> tmrvoter2pl_readPorts, --testing
       pl2gpreg_writePorts           => pl2gpreg_writePorts,
       cxplif2cxreg_brWriteData      => cxplif2cxreg_brWriteData,
       cxplif2cxreg_brWriteEnable    => cxplif2cxreg_brWriteEnable,
@@ -984,9 +990,11 @@ begin -- architecture
       cfg2any_context               => cfg2any_context,
       
       -- Read and write ports.
-      pl2gpreg_readPorts            => pl2gpreg_readPorts,
+      --pl2gpreg_readPorts            => pl2gpreg_readPorts,
+	  pl2gpreg_readPorts            => tmrvoter2gpreg_readPorts, --testing
       gpreg2pl_readPorts            => gpreg2pl_readPorts,
-      pl2gpreg_writePorts           => pl2gpreg_writePorts,
+      --pl2gpreg_writePorts           => pl2gpreg_writePorts,
+	  pl2gpreg_writePorts           => tmrvoter2gpreg_writePorts,--testing
       
       -- Debug interface.
       creg2gpreg_claim              => creg2gpreg_claim,
@@ -998,6 +1006,42 @@ begin -- architecture
       
     );
   
+
+  -----------------------------------------------------------------------------
+  -- Instantiate the GPREG Majority voter bank
+  -----------------------------------------------------------------------------
+	gpregvoter_inst: entity work.tmr_gpregvoter
+	  generic map(
+         CFG                         => CFG
+      )
+  	  port map (
+
+    	reset                       => reset_s, 
+    	clk                         => clk,
+	    clkEn                       => clkEn,
+		start_ft					=> tmr_enable,
+		config_signal				=> config_signal,
+		  
+    ---------------------------------------------------------------------------
+    -- Signals that go into GPREG Majority voter
+    ---------------------------------------------------------------------------
+		  
+    pl2tmrvoter_readPorts          	=>  pl2gpreg_readPorts,
+    gpreg2tmrvoter_readPorts        =>  gpreg2pl_readPorts,
+    pl2tmrvoter_writePorts          =>  pl2gpreg_writePorts,
+		  
+	---------------------------------------------------------------------------
+    -- Signals that come out of GPREG Majority voter
+    ---------------------------------------------------------------------------
+
+	tmrvoter2gpreg_readPorts        =>  tmrvoter2gpreg_readPorts,
+    tmrvoter2pl_readPorts           =>  tmrvoter2pl_readPorts,
+    tmrvoter2gpreg_writePorts       =>  tmrvoter2gpreg_writePorts
+		  
+	  );	  
+	  
+	
+	  
 	  
   -----------------------------------------------------------------------------
   -- Instantiate the DMEM Majority voter bank
@@ -1238,7 +1282,7 @@ begin -- architecture
   end generate;
   
   -- Instantiate.
-  cxreg_inst: entity work.core_contextRegLogic
+  cxreg_inst: entity work.core_contextRegLogic --cxreg
     generic map (
       CFG                           => CFG
     )
@@ -1274,8 +1318,8 @@ begin -- architecture
       cxreg2cxplif_linkReadData     => cxreg2cxplif_linkReadData,
 
       -- Pipelane interface: program counter.
-      --cxplif2cxreg_nextPC           => cxplif2cxreg_nextPC,
-      cxplif2cxreg_nextPC           => nextpcvoter2cxreg_nPC, --testing
+      cxplif2cxreg_nextPC           => cxplif2cxreg_nextPC,
+      --cxplif2cxreg_nextPC           => nextpcvoter2cxreg_nPC, --testing for nextpcvoter
 	  cxreg2cxplif_currentPC        => cxreg2cxplif_currentPC,
       cxreg2cxplif_overridePC       => cxreg2cxplif_overridePC,
       cxplif2cxreg_overridePC_ack   => cxplif2cxreg_overridePC_ack,

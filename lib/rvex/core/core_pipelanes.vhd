@@ -690,8 +690,8 @@ begin -- architecture
       pl2cxplif_idle                    => pl2cxplif_idle,
       
       -- Pipelane interface: next operation routing.
-      --br2cxplif_PC                      => br2cxplif_PC,
-      br2cxplif_PC                      => pcvoter2cxplif_PC, --testing
+      br2cxplif_PC                      => br2cxplif_PC,
+      --br2cxplif_PC                      => pcvoter2cxplif_PC, --testing
       cxplif2pl_PC                      => cxplif2pl_PC,
       br2cxplif_fetchPC                 => br2cxplif_fetchPC,
       br2cxplif_branch                  => br2cxplif_branch,
