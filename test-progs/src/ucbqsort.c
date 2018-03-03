@@ -1,4 +1,5 @@
 #include "common.h"
+#include "rvex.h"
 unsigned char gQSortNum[1000] = {
   57, 126, 223, 44, 11, 138, 251, 232, 143, 86, 215, 60, 83, 30, 115, 48, 87, 46, 49, 164, 101, 198, 235, 72, 31,
   6, 57, 12, 227, 110, 157, 96, 25, 34, 191, 140, 43, 22, 37, 136, 175, 182, 183, 220, 115, 66, 173, 144, 137, 114,
@@ -48,6 +49,7 @@ int compare(char *n1, char *n2)
 }
 int main()
 {
+  CR_CRR = 0x0001; 
   unsigned char SortArr[1000];
   int j;
   memcpy(SortArr, gQSortNum, 1000);
