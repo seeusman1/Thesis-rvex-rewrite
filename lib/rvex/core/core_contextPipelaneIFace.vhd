@@ -463,7 +463,7 @@ entity core_contextPipelaneIFace is
 	  
 	  --fault tolerance
 	  tmr_enable 			: in std_logic; --testing
-	  config_signal			: in std_logic_vector (3 downto 0) --testin
+	  config_signal			: in std_logic_vector (3 downto 0) --testing
     
   );
 end core_contextPipelaneIFace;

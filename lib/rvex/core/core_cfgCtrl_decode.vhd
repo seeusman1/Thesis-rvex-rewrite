@@ -388,8 +388,8 @@ begin -- architecture
     for i in 0 to 2**CFG.numLaneGroupsLog2-1 loop
 							  
 	--testing
-     -- if newConfiguration_r(4*i+3) = '1' and newConfiguration_r(4*i) = '1' then
-		if newConfiguration_r (0) = '1' then
+      if newConfiguration_r(4*i+3) = '1' and newConfiguration_r(4*i) = '1' then
+		--if newConfiguration_r (0) = '1' then
 		   groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
            groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
                   std_logic_vector (to_unsigned(i,2)); --testing			   
@@ -439,7 +439,8 @@ begin -- architecture
 							   
  Tmr_activation: process (newConfiguration_r) is
 	begin
-	 if newConfiguration_r(0) = '1' then --needs to be fixed later as per new config word
+	 if newConfiguration_r(0) = '1' and newConfiguration_r(3) = '1' then --needs to be fixed later as per new config word
+      --if newConfiguration_r(4*i+3) = '1' and newConfiguration_r(4*i) = '1' then
 		tmr_enable <= '1';
 		config_signal <= "0111";
 	else
