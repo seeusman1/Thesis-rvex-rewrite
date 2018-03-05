@@ -768,6 +768,8 @@ architecture Behavioral of core is
   signal tmrvoter2pl_readPorts         : gpreg2pl_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
   signal tmrvoter2gpreg_writePorts     : pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
 
+  signal  test_signal						: std_logic_vector (3 downto 0); --testing
+
     
 --=============================================================================
 begin -- architecture
@@ -1036,7 +1038,8 @@ begin -- architecture
 
 	tmrvoter2gpreg_readPorts        =>  tmrvoter2gpreg_readPorts,
     tmrvoter2pl_readPorts           =>  tmrvoter2pl_readPorts,
-    tmrvoter2gpreg_writePorts       =>  tmrvoter2gpreg_writePorts
+    tmrvoter2gpreg_writePorts       =>  tmrvoter2gpreg_writePorts,
+	test_signal						=> test_signal --testing
 		  
 	  );	  
 	  
