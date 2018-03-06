@@ -304,8 +304,9 @@ architecture Behavioral of core_cfgCtrl is
 
 
  -- fault tolerance
-signal 	  tmr_en				    : std_logic := '0'; -- lane pairs to be included in tmr --testing
-signal	  config_sig				: std_logic_vector (3 downto 0) := "1111"; -- lane pairs to be included in tmr --testing
+  signal tmr_en				    : std_logic := '0'; --testing
+  signal config_sig				: std_logic_vector (3 downto 0) := "1111"; -- lane pairs to be included in tmr --testing
+  signal tmr_enable_driver		: std_logic := '0'; --testing
   
 --=============================================================================
 begin -- architecture
@@ -508,7 +509,7 @@ begin -- architecture
   -- the lane index with some alignment based on CFG. Only the (small) +1 adder
   -- here is significant.
   pc_add_val_decoder: process (
-    newCoupleMatrix_r, newConfiguration_r, newNumPipelaneGroupsLog2ForContext_r, tmr_en
+    newCoupleMatrix_r, newConfiguration_r, newNumPipelaneGroupsLog2ForContext_r
   ) is
     
     -- Log2 of the size in bytes of an instruction for a lane group.
@@ -761,7 +762,8 @@ begin -- architecture
         curCoupleMatrix_r <= newCoupleMatrix_r;
         curLaneIndex_r <= newLaneIndex_r;
         curPcAddVal_r <= newPcAddVal_r;
-        
+		tmr_enable_driver <= tmr_en;
+		
       end if;
     end if;
   end process;
@@ -775,10 +777,12 @@ begin -- architecture
   cfg2any_coupled <= curCoupleMatrix_r;
   cfg2any_laneIndex <= curLaneIndex_r;
   cfg2any_pcAddVal <= curPcAddVal_r;
+  tmr_enable <= tmr_enable_driver; --tmr activation signal --testing
+  config_signal <= config_sig; -- lane pairs to be included in tmr --testing
   
   -- Construct the vector containing the number of groups working together for
   -- each lane group and extract the contexts from the configuration vector.
-  num_groups_per_lane_gen: process (curConfiguration_r, curNumPipelaneGroupsLog2ForContext_r, tmr_en) is
+  num_groups_per_lane_gen: process (curConfiguration_r, curNumPipelaneGroupsLog2ForContext_r) is
     variable contextBits  : rvex_3bit_type;
     variable activeBit    : std_logic;
     variable context      : natural;
@@ -821,11 +825,6 @@ begin -- architecture
     end loop;
     cfg2any_decouple(2**CFG.numLaneGroupsLog2-1) <= '1';
   end process;
-  
-		
---fault tolerance
- tmr_enable <= tmr_en; --tmr activation signal --testing
- config_signal <= config_sig; -- lane pairs to be included in tmr --testing
 		
 		
 		
