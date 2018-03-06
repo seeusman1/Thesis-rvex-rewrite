@@ -63,9 +63,9 @@ entity tmr_gpregvoter is
     
     -- Write ports and forwarding information. There's one write port for each
     -- lane.
-    tmrvoter2gpreg_writePorts         : out  pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
+    tmrvoter2gpreg_writePorts         : out  pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0)
 	  
-	test_signal						  : out std_logic_vector (3 downto 0) --testing--just to observe signal in simulation
+	--test_signal						  : out std_logic_vector (3 downto 0) --testing--just to observe signal in simulation
 	  
   );
 
@@ -84,7 +84,7 @@ architecture structural of tmr_gpregvoter is
 	
 	--add signals here
 	signal start										: std_logic := '0';
-	signal start_array									: std_logic_vector (16 downto 0) := (others => '0');
+	signal start_array									: std_logic_vector (0 downto 0) := (others => '0');
 
 	-- internal signals for address
 	signal pl2tmrvoter_writePorts_s						: pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
@@ -103,21 +103,32 @@ begin -- architecture
 	---------------------------------------------------------------------------
     -- Adding Delay before GPREG voter starts after fault tolerance is requested
     ---------------------------------------------------------------------------					
-			
+
 	delay_regsiter: process (clk, start_ft)
 	begin
 		if rising_edge (clk) then
 			if (reset = '1') then
 				start_array <= (others => '0');
 			else
-				start_array(16) <= start_ft;
-			    start_array (15 downto 0) <= start_array (16 downto 1);
+				start_array(0) <= start_ft;
 			end if;
 				
 		end if;
-		
-
-		
+	end process;	
+-------------------------------------------------------			
+--	delay_regsiter: process (clk, start_ft)
+--	begin
+--		if rising_edge (clk) then
+--			if (reset = '1') then
+--				start_array <= (others => '0');
+--			else
+--				start_array(16) <= start_ft;
+--			    start_array (15 downto 0) <= start_array (16 downto 1);
+--			end if;
+--				
+--		end if;
+--	end process;
+-----------------------------------------------------			
 --	shift: process (r)
 --	begin
 --		for i in 0 to 15 loop
@@ -134,13 +145,10 @@ begin -- architecture
 --			end loop;
 --			start_array(0) <= d(0);
 --		end if;
+--	end process;
+-----------------------------------------------------			
 			
-			
-			
-	end process;
-			
-
-	test_signal <= start_array (3 downto 0); --testing--just to observe signal in simulation
+--	test_signal <= start_array (3 downto 0); --testing--just to observe signal in simulation
 	
 	---------------------------------------------------------------------------
     -- Internal signals assignment

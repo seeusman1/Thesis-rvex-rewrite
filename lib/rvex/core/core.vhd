@@ -1038,8 +1038,8 @@ begin -- architecture
 
 	tmrvoter2gpreg_readPorts        =>  tmrvoter2gpreg_readPorts,
     tmrvoter2pl_readPorts           =>  tmrvoter2pl_readPorts,
-    tmrvoter2gpreg_writePorts       =>  tmrvoter2gpreg_writePorts,
-	test_signal						=> test_signal --testing
+    tmrvoter2gpreg_writePorts       =>  tmrvoter2gpreg_writePorts
+	--test_signal						=> test_signal --testing
 		  
 	  );	  
 	  

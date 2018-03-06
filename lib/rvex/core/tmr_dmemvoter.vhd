@@ -185,12 +185,6 @@ begin -- architecture
 			else
 				start_array(0) <= start_ft;
 			end if;
-				
-			  --start_array (4) <= start_array (5);
-			  --start_array (3) <= start_array(4);
-			  --start_array (2) <= start_array (3);
-			  --start_array (1) <= start_array(2);
-			  --start_array (0) <= start_array(1);
 
 		end if;
 	end process;
