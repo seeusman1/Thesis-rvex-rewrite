@@ -318,14 +318,13 @@ entity core_pipelanes is
     pl2trace_data               : out pl2trace_data_array(2**CFG.numLanesLog2-1 downto 0);
 	  
 	  
-	  
-	  
-	  --fault tolerance
-	  tmr_enable				          : in std_logic; --testing
-	  config_signal				        : in std_logic_vector (3 downto 0) --testing
-	  
-	  
-	  
+    ---------------------------------------------------------------------------
+    -- Fault tolerance
+    --------------------------------------------------------------------------- 
+
+	 tmr_enable				 : in std_logic; --testing
+	 config_signal				 : in std_logic_vector (3 downto 0) --testing
+	   
     
   );
 end core_pipelanes;
@@ -690,8 +689,8 @@ begin -- architecture
       pl2cxplif_idle                    => pl2cxplif_idle,
       
       -- Pipelane interface: next operation routing.
-      br2cxplif_PC                      => br2cxplif_PC,
-      --br2cxplif_PC                      => pcvoter2cxplif_PC, --testing
+      --br2cxplif_PC                      => br2cxplif_PC,
+      br2cxplif_PC                      => pcvoter2cxplif_PC, --PC from majority voter
       cxplif2pl_PC                      => cxplif2pl_PC,
       br2cxplif_fetchPC                 => br2cxplif_fetchPC,
       br2cxplif_branch                  => br2cxplif_branch,
@@ -796,8 +795,8 @@ begin -- architecture
 		
 		
 		--fault tolerance
-		tmr_enable => tmr_enable, --testing
-		config_signal => config_signal --testing
+	  tmr_enable 						=> tmr_enable, --testing
+	  config_signal 					=> config_signal --testing
       
     );
   
