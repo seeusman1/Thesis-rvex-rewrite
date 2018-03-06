@@ -107,7 +107,7 @@ int matrix_mul(){
 
 int main(void)
 {
-	CR_CRR = 0x0001; //testing
+	CR_CRR = 0x8999; //testing
 	int i, j;
 	puts("matrix Test Started\n"); 
 	matrix_mul();

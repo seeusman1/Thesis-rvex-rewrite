@@ -21,14 +21,13 @@ void soma(int v[N])
 
 
 int main(void) {
-
+	CR_CRR = 0x8999;
 	int var[N],i;
 	puts("soma Test Started\n");
 
 	for(i = 0;i < N;i++){
 		var[i] = 1;
 	}
-
 	soma(var);
 	for(i = 0;i < N;i++){
 		if (var[i] != result[i])

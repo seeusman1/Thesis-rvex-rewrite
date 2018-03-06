@@ -1,4 +1,5 @@
 #include "common.h"
+#include "rvex.h"
 typedef struct
 {
   float real, imag;
@@ -441,6 +442,7 @@ int logsch(int ih, int nbh)
 }
 int main()
 {
+  CR_CRR = 0x8999;
   int xout[3];
   int i, j, f;
   static int compressed[100], result[100];

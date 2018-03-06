@@ -75,6 +75,7 @@ unsigned int fb_mem[(HSIZE*VSIZE)+1024];
 char strbuf[12];
 int main()
 {
+	//CR_CRR = 0x8999;
 	int i, x, y, filterX, filterY, inbufX, inbufY;
 	unsigned int* fb;
 	
