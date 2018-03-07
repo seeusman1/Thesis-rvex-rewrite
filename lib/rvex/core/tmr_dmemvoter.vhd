@@ -183,7 +183,7 @@ begin -- architecture
 			if (reset = '1') then
 				start_array(0) <= '0';
 			else
-				start_array(0) <= start_ft;
+  		        start_array(0) <= start_ft;
 			end if;
 
 		end if;

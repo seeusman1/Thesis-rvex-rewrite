@@ -258,14 +258,7 @@ begin -- architecture
           
           -- Store the new configuration for processing.
           newConfiguration_r <= newConfiguration_in;
-          
-							   
-							   
-							   
-							   
-							   
-							   
-							   
+          			   
 		
           -- Reset everything when we're starting to decode.
           contextEnable <= (others => '0');

@@ -98,17 +98,17 @@ end entity tmr_InsRep;
     -- update TMR mode activation signal at rising edge of clock signal
     ---------------------------------------------------------------------------	
 	
-	--stable_start: process(clk)
-	--begin
-	--	if rising_edge(clk) then
-	--		if (reset = '1') then
-	--			start <= '0';
-	--		else
-	--			start <= start_ft;
-	--		end if;
-	--	end if;
-	--end process;
-			start <= start_ft;	
+	stable_start: process(clk)
+	begin
+		if rising_edge(clk) then
+			if (reset = '1') then
+				start <= '0';
+			else
+				start <= start_ft;
+			end if;
+		end if;
+	end process;
+	  --start <= start_ft;	
 			
 	---------------------------------------------------------------------------
     -- Internal signals assignment

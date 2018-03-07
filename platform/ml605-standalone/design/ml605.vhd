@@ -132,7 +132,7 @@ architecture Behavioral of ml605 is
   );
   
   -- Core and standalone system configuration WITH cache.
-  --constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
+--  constant CFG                  : rvex_sa_generic_config_type := rvex_sa_cfg(
 --    core => rvex_cfg(
 --      numLanesLog2              => 3,
 --      numLaneGroupsLog2         => 2,

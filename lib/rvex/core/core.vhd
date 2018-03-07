@@ -749,7 +749,7 @@ architecture Behavioral of core is
   signal imem2tmr_exception			  : trap_info_array(2**CFG.numLaneGroupsLog2-1 downto 0);
 
   --TMR -- signals for Next PC voter
-  signal nextpcvoter2cxreg_nPC		  : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
+--  signal nextpcvoter2cxreg_nPC		  : rvex_address_array(2**CFG.numContextsLog2-1 downto 0);
 
 
   --TMR -- signal for DMEM majority voter
@@ -770,6 +770,8 @@ architecture Behavioral of core is
 
   signal  test_signal						: std_logic_vector (3 downto 0); --testing
 
+  signal  test_traphandle_o					: trap_info_array(2**CFG.numLanesLog2-1 downto 0); --testing
+  signal  test_traphandle_m					: trap_info_array(2**CFG.numLanesLog2-1 downto 0); --testing
     
 --=============================================================================
 begin -- architecture
@@ -968,7 +970,11 @@ begin -- architecture
 		
 		--fault tolerance
 		tmr_enable => tmr_enable, --testing
-		config_signal => config_signal --testing
+		config_signal => config_signal, --testing
+		
+		
+	 test_traphandle_o	=> test_traphandle_o, --testing
+     test_traphandle_m	=> test_traphandle_m --testing
       
     );
   
@@ -1122,20 +1128,20 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the Next PC Majority voter bank
   -----------------------------------------------------------------------------
-	nextpcvoter_inst: entity work.tmr_nextpcvoter
-	  generic map(
-         CFG                         => CFG
-      )
-  	  port map (
+--	nextpcvoter_inst: entity work.tmr_nextpcvoter
+--	  generic map(
+--         CFG                         => CFG
+--      )
+--  	  port map (
 
-    	reset                       => reset_s, 
-    	clk                         => clk,
-	    clkEn                       => clkEn,
-		start_ft					=> tmr_enable,
-		config_signal				=> config_signal,
-    	cxplif2nextpcvoter_nextPC   => cxplif2cxreg_nextPC,
-    	nextpcvoter2cxreg_nextPC    => nextpcvoter2cxreg_nPC
-	  );
+--    	reset                       => reset_s, 
+--    	clk                         => clk,
+--	    clkEn                       => clkEn,
+--		start_ft					=> tmr_enable,
+--		config_signal				=> config_signal,
+--    	cxplif2nextpcvoter_nextPC   => cxplif2cxreg_nextPC,
+--    	nextpcvoter2cxreg_nextPC    => nextpcvoter2cxreg_nPC
+--	  );
 	  		
 		
 

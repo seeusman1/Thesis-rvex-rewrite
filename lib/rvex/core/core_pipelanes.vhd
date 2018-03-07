@@ -323,7 +323,13 @@ entity core_pipelanes is
     --------------------------------------------------------------------------- 
 
 	 tmr_enable				 : in std_logic; --testing
-	 config_signal				 : in std_logic_vector (3 downto 0) --testing
+	 config_signal				 : in std_logic_vector (3 downto 0); --testing
+	  
+	  
+	  
+	 --testing 
+	 test_traphandle_o					: out trap_info_array(2**CFG.numLanesLog2-1 downto 0); --testing
+     test_traphandle_m					: out trap_info_array(2**CFG.numLanesLog2-1 downto 0) --testing
 	   
     
   );
@@ -420,6 +426,13 @@ architecture Behavioral of core_pipelanes is
 
 	--TMR -- signals for PC voter
   signal pcvoter2cxplif_PC		      : rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+
+  --TMR --signals for Trap voter
+   signal tmrvoter2trap_trap         : trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0);
+   signal tmrvoter2pl_trapToHandle   : trap_info_array(2**CFG.numLanesLog2-1 downto 0);
+   signal tmrvoter2pl_trapPending    : std_logic_vector(2**CFG.numLanesLog2-1 downto 0);
+   signal tmrvoter2pl_disable        : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
+   signal tmrvoter2pl_flush          : std_logic_stages_array(2**CFG.numLanesLog2-1 downto 0);
 
   
 --=============================================================================
@@ -627,11 +640,16 @@ begin -- architecture
         
         -- Trap routing interface.
         pl2trap_trap                      => pl2trap_trap(lane),
-        trap2pl_trapToHandle(S_TRAP)      => trap2pl_trapToHandle(lane),
-        trap2pl_trapPending(S_TRAP)       => trap2pl_trapPending(lane),
-        trap2pl_disable                   => trap2pl_disable(lane),
-        trap2pl_flush                     => trap2pl_flush(lane),
+        --trap2pl_trapToHandle(S_TRAP)      => trap2pl_trapToHandle(lane),
+		  trap2pl_trapToHandle(S_TRAP)      => tmrvoter2pl_trapToHandle(lane), --testing
+        --trap2pl_trapPending(S_TRAP)       => trap2pl_trapPending(lane),
+		  trap2pl_trapPending(S_TRAP)       => tmrvoter2pl_trapPending(lane), --testing
+        --trap2pl_disable                   => trap2pl_disable(lane),
+		  trap2pl_disable                   => tmrvoter2pl_disable(lane), --testing
+        --trap2pl_flush                     => trap2pl_flush(lane),
+		  trap2pl_flush                     => tmrvoter2pl_flush(lane), --testing
         
+		  
         -- Trace unit interface.
         pl2trace_data                     => pl2trace_data(lane)
         
@@ -928,8 +946,42 @@ begin -- architecture
 	  );
 	  
 	  
+  -----------------------------------------------------------------------------
+  -- Instantiate the Trap voter bank
+  -----------------------------------------------------------------------------
+	trapvoter_inst: entity work.tmr_trapvoter
+	  generic map(
+         CFG                         => CFG
+      )
+  	port map (
+
+           -- System control
+    	   reset                      		=> reset, 
+    	   clk                         		=> clk,
+	       clkEn                       		=> clkEn,
+      
+           -- fault tolerance activation signals
+		   start_ft					        => tmr_enable,
+		   config_signal				    => config_signal,
+      
+
+           -- Signals that go into Trap Majority voter
+           pl2tmrvoter_trap                  => pl2trap_trap,
+           trap2tmrvoter_trapToHandle        => trap2pl_trapToHandle,
+           trap2tmrvoter_trapPending         => trap2pl_trapPending,
+           trap2tmrvoter_disable             => trap2pl_disable,
+           trap2tmrvoter_flush               => trap2pl_flush,
+
+           -- Signals that come out of Trap Majority voter
+          tmrvoter2trap_trap                => tmrvoter2trap_trap,
+          tmrvoter2pl_trapToHandle          => tmrvoter2pl_trapToHandle,
+          tmrvoter2pl_trapPending           => tmrvoter2pl_trapPending,
+          tmrvoter2pl_disable               => tmrvoter2pl_disable,
+          tmrvoter2pl_flush                 => tmrvoter2pl_flush
+	  );	  
 	  
-	  
+	 test_traphandle_o		<=	trap2pl_trapToHandle;		
+     test_traphandle_m		<= 	tmrvoter2pl_trapToHandle;		
   -----------------------------------------------------------------------------
   -- Instantiate trap routing network
   -----------------------------------------------------------------------------
@@ -944,7 +996,8 @@ begin -- architecture
         cfg2any_coupled           => cfg2any_coupled,
         
         -- Pipelane interface.
-        pl2trap_trap              => pl2trap_trap,
+        --pl2trap_trap              => pl2trap_trap,
+		pl2trap_trap              => tmrvoter2trap_trap, --testing
         trap2pl_trapToHandle      => trap2pl_trapToHandle,
         trap2pl_trapPending       => trap2pl_trapPending,
         trap2pl_disable           => trap2pl_disable,
