@@ -328,8 +328,8 @@ entity core_pipelanes is
 	  
 	  
 	 --testing 
-	 test_traphandle_o					: out trap_info_array(2**CFG.numLanesLog2-1 downto 0); --testing
-     test_traphandle_m					: out trap_info_array(2**CFG.numLanesLog2-1 downto 0) --testing
+	 test_traphandle_o					: out trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0); --testing
+     test_traphandle_m					: out trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0) --testing
 	   
     
   );
@@ -980,8 +980,8 @@ begin -- architecture
           tmrvoter2pl_flush                 => tmrvoter2pl_flush
 	  );	  
 	  
-	 test_traphandle_o		<=	trap2pl_trapToHandle;		
-     test_traphandle_m		<= 	tmrvoter2pl_trapToHandle;		
+	 test_traphandle_o		<=	pl2trap_trap;		--testing
+     test_traphandle_m		<= 	tmrvoter2trap_trap;		--testing
   -----------------------------------------------------------------------------
   -- Instantiate trap routing network
   -----------------------------------------------------------------------------

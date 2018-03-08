@@ -770,8 +770,8 @@ architecture Behavioral of core is
 
   signal  test_signal						: std_logic_vector (3 downto 0); --testing
 
-  signal  test_traphandle_o					: trap_info_array(2**CFG.numLanesLog2-1 downto 0); --testing
-  signal  test_traphandle_m					: trap_info_array(2**CFG.numLanesLog2-1 downto 0); --testing
+  signal  test_traphandle_o					: trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0); --testing
+  signal  test_traphandle_m					: trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0); --testing
     
 --=============================================================================
 begin -- architecture
