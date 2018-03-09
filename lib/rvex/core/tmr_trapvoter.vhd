@@ -104,9 +104,9 @@ architecture structural of tmr_trapvoter is
 --=============================================================================
 	
 	constant zero_init				: trap_info_type := ( active => '0',
-														   				  cause => (others => '0'),
-														   				  arg => (others => '0')
-														  				);
+														  cause => (others => '0'),
+														  arg => (others => '0')
+														);
 	
 	
 	--add signals here

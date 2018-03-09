@@ -171,16 +171,18 @@ begin -- architecture
 
 			for i in 0 to 3 loop
 				if config_signal(i) = '1' then
+					
+					pl2tmrvoter_writePorts_temp(2*index)  					<= pl2tmrvoter_writePorts(2*i); 
+					--pl2tmrvoter_writePorts_temp(2*index).addr  				<= pl2tmrvoter_writePorts(2*i).addr; 
+					--pl2tmrvoter_writePorts_temp(2*index).data  				<= pl2tmrvoter_writePorts(2*i).data; 
+					--pl2tmrvoter_writePorts_temp(2*index).writeEnable  		<= pl2tmrvoter_writePorts(2*i).writeEnable; 
+					--pl2tmrvoter_writePorts_temp(2*index).forwardEnable  	<= pl2tmrvoter_writePorts(2*i).forwardEnable; 
 				
-					pl2tmrvoter_writePorts_temp(2*index).addr  				<= pl2tmrvoter_writePorts(2*i).addr; 
-					pl2tmrvoter_writePorts_temp(2*index).data  				<= pl2tmrvoter_writePorts(2*i).data; 
-					pl2tmrvoter_writePorts_temp(2*index).writeEnable  		<= pl2tmrvoter_writePorts(2*i).writeEnable; 
-					pl2tmrvoter_writePorts_temp(2*index).forwardEnable  	<= pl2tmrvoter_writePorts(2*i).forwardEnable; 
-				
-					pl2tmrvoter_writePorts_temp(2*index+1).addr  			<= pl2tmrvoter_writePorts(2*i+1).addr; 
-					pl2tmrvoter_writePorts_temp(2*index+1).data  			<= pl2tmrvoter_writePorts(2*i+1).data; 
-					pl2tmrvoter_writePorts_temp(2*index+1).writeEnable  	<= pl2tmrvoter_writePorts(2*i+1).writeEnable; 
-					pl2tmrvoter_writePorts_temp(2*index+1).forwardEnable  	<= pl2tmrvoter_writePorts(2*i+1).forwardEnable; 
+					pl2tmrvoter_writePorts_temp(2*index+1)  				<= pl2tmrvoter_writePorts(2*i+1);
+					--pl2tmrvoter_writePorts_temp(2*index+1).addr  			<= pl2tmrvoter_writePorts(2*i+1).addr; 
+					--pl2tmrvoter_writePorts_temp(2*index+1).data  			<= pl2tmrvoter_writePorts(2*i+1).data; 
+					--pl2tmrvoter_writePorts_temp(2*index+1).writeEnable  	<= pl2tmrvoter_writePorts(2*i+1).writeEnable; 
+					--pl2tmrvoter_writePorts_temp(2*index+1).forwardEnable  	<= pl2tmrvoter_writePorts(2*i+1).forwardEnable; 
 
 					index := index + 1;
 				end if;

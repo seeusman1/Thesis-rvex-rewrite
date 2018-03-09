@@ -768,10 +768,19 @@ architecture Behavioral of core is
   signal tmrvoter2pl_readPorts         : gpreg2pl_readPort_array(2*2**CFG.numLanesLog2-1 downto 0);
   signal tmrvoter2gpreg_writePorts     : pl2gpreg_writePort_array(2**CFG.numLanesLog2-1 downto 0);
 
-  signal  test_signal						: std_logic_vector (3 downto 0); --testing
+  signal  test_signal						: std_logic_vector (3 downto 0); --testing-- to be removed later
 
-  signal  test_traphandle_o					: trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0); --testing
-  signal  test_traphandle_m					: trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0); --testing
+  signal  test_traphandle_o					: trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0); --testing-- to be removed later
+  signal  test_traphandle_m					: trap_info_stages_array(2**CFG.numLanesLog2-1 downto 0); --testing-- to be removed later
+
+  --TMR -- signals for DMSW majority voter
+
+  signal tmrvoter2creg_addr               : rvex_address_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal tmrvoter2creg_writeData          : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal tmrvoter2creg_writeMask          : rvex_mask_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal tmrvoter2creg_writeEnable        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal tmrvoter2creg_readEnable         : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
+  signal tmrvoter2dmsw_readData           : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
     
 --=============================================================================
 begin -- architecture
@@ -921,8 +930,9 @@ begin -- architecture
       dmsw2creg_writeMask           => dmsw2creg_writeMask,
       dmsw2creg_writeEnable         => dmsw2creg_writeEnable,
       dmsw2creg_readEnable          => dmsw2creg_readEnable,
-      creg2dmsw_readData            => creg2dmsw_readData,
-      
+      --creg2dmsw_readData            => creg2dmsw_readData,
+      creg2dmsw_readData            => tmrvoter2dmsw_readData, --testing
+		
       -- Common memory interface.
       mem2pl_cacheStatus            => mem2rv_cacheStatus,
       
@@ -1091,7 +1101,47 @@ begin -- architecture
 		  
 	  );	  
 	  
-	  
+
+	  -----------------------------------------------------------------------------
+  -- Instantiate the DMSW Majority voter bank
+  -----------------------------------------------------------------------------
+	dmsmvoter_inst: entity work.tmr_dmswvoter
+	  generic map(
+         CFG                         => CFG
+      )
+  	  port map (
+
+    	reset                       => reset_s, 
+    	clk                         => clk,
+	    clkEn                       => clkEn,
+		start_ft					=> tmr_enable,
+		config_signal				=> config_signal,
+		  
+    ---------------------------------------------------------------------------
+    -- Signals that go into DMSW Majority voter
+    ---------------------------------------------------------------------------
+		  
+    dmsw2tmrvoter_addr              => dmsw2creg_addr,
+    dmsw2tmrvoter_writeEnable       => dmsw2creg_writeEnable,
+    dmsw2tmrvoter_writeMask         => dmsw2creg_writeMask,
+    dmsw2tmrvoter_writeData         => dmsw2creg_writeData,
+    dmsw2tmrvoter_readEnable        => dmsw2creg_readEnable,
+    creg2tmrvoter_readData          => creg2dmsw_readData,  
+		  
+	---------------------------------------------------------------------------
+    -- Signals that come out of DMSW Majority voter
+    ---------------------------------------------------------------------------
+
+    tmrvoter2creg_addr              => tmrvoter2creg_addr,
+    tmrvoter2creg_writeEnable       => tmrvoter2creg_writeEnable,
+    tmrvoter2creg_writeMask         => tmrvoter2creg_writeMask,
+    tmrvoter2creg_writeData         => tmrvoter2creg_writeData,
+    tmrvoter2creg_readEnable        => tmrvoter2creg_readEnable,
+    tmrvoter2dmsw_readData          => tmrvoter2dmsw_readData
+		
+	  );
+		
+		
 	  
 	  
   -----------------------------------------------------------------------------
@@ -1217,14 +1267,19 @@ begin -- architecture
       
       -- Decoded configuration signals.
       cfg2any_context               => cfg2any_context,
-      
+
       -- Core bus interfaces.
-      dmsw2creg_addr                => dmsw2creg_addr,
-      dmsw2creg_writeEnable         => dmsw2creg_writeEnable,
-      dmsw2creg_writeMask           => dmsw2creg_writeMask,
-      dmsw2creg_writeData           => dmsw2creg_writeData,
-      dmsw2creg_readEnable          => dmsw2creg_readEnable,
-      creg2dmsw_readData            => creg2dmsw_readData,
+      --dmsw2creg_addr                => dmsw2creg_addr,
+		dmsw2creg_addr                => tmrvoter2creg_addr, --testing
+      --dmsw2creg_writeEnable         => dmsw2creg_writeEnable,
+		dmsw2creg_writeEnable         => tmrvoter2creg_writeEnable, --testing
+      --dmsw2creg_writeMask           => dmsw2creg_writeMask,
+		dmsw2creg_writeMask           => tmrvoter2creg_writeMask, --testing
+      --dmsw2creg_writeData           => dmsw2creg_writeData,
+		dmsw2creg_writeData           => tmrvoter2creg_writeData, --testing
+      --dmsw2creg_readEnable          => dmsw2creg_readEnable,
+		dmsw2creg_readEnable          => tmrvoter2creg_readEnable, --testing
+        creg2dmsw_readData            => tmrvoter2dmsw_readData,
       
       -- Debug bus interface.
       dbg2creg_addr                 => dbg2rv_addr,

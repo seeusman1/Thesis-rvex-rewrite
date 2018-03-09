@@ -46,6 +46,7 @@ core_trapRouting.vhd
 tmr_voter.vhd
 tmr_pcvoter.vhd
 tmr_trapvoter.vhd
+tmr_dmswvoter.vhd
 core_pipelanes.vhd
 core_instructionBuffer.vhd
 core_trace.vhd

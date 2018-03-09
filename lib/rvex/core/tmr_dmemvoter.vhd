@@ -135,7 +135,7 @@ architecture structural of tmr_dmemvoter is
 	--internal signals for read enable
 	signal rv2dmemvoter_readEnable_s				: std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
 	signal rv2dmemvoter_readEnable_temp				: std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-	signal rv2dmemvoter_readEnable_s_result			: std_logic;
+	signal rv2dmemvoter_readEnable_s_result			: std_logic := '0';
 
 
 	--internal signals for write date
@@ -151,7 +151,7 @@ architecture structural of tmr_dmemvoter is
 	--internal signals for write enable
 	signal rv2dmemvoter_writeEnable_s				: std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
 	signal rv2dmemvoter_writeEnable_temp			: std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
-	signal rv2dmemvoter_writeEnable_s_result		: std_logic;
+	signal rv2dmemvoter_writeEnable_s_result		: std_logic := '0';
 	
 --=============================================================================
 begin -- architecture
