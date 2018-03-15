@@ -47,3 +47,5 @@ core_pipelanes.vhd
 core_instructionBuffer.vhd
 core_trace.vhd
 core.vhd
+ecc_encoder.vhd
+ecc_decoder.vhd

@@ -1,2 +1,5 @@
 core_listOpcodes_tb.vhd
 core_cfgCtrl_tb.vhd
+ecc_encoder_tb.vhd
+ecc_decoder_tb.vhd
+ecc_tb.vhd
