@@ -7,8 +7,8 @@
  entity ecc_encoder is
 	 port (
 	 	input			: in std_logic_vector (31 downto 0);
-	 	output	 		: out std_logic_Vector (37 downto 0);
-		parity_encoder	: out std_logic_vector (5 downto 0)
+	 	output	 		: out std_logic_vector (37 downto 0)
+		--parity_encoder	: out std_logic_vector (5 downto 0)
 	 );
  end ecc_encoder;
 	 
@@ -16,7 +16,7 @@
  architecture structural of ecc_encoder is
 	 
  	function bit32_encoder (
-			 input_data		: in std_logic_vector (32 downto 1))
+			 input_data				: in std_logic_vector (32 downto 1))
 		 	return std_logic_vector is
 	 		variable encoded_data	: std_logic_vector (37 downto 0);
 		begin
@@ -47,7 +47,7 @@
  begin	 
  
 	output 		   <= bit32_encoder(input);
-	parity_encoder <= bit32_encoder(input)(37 downto 32); -- for simulation only. remove later
+	--parity_encoder <= bit32_encoder(input)(37 downto 32); -- for simulation only. remove later
 				
 
  end structural;

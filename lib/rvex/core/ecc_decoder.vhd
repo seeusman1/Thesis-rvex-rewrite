@@ -6,17 +6,17 @@
 
  entity ecc_decoder is
 	 port (
-	 	input		: in std_logic_vector (37 downto 0);
-	 	output	 	: out std_logic_Vector (31 downto 0);
-		parity_decoder		: out std_logic_vector (5 downto 0) -- for simulation only. remove later
+	 	input				: in std_logic_vector (37 downto 0);
+	 	output	 			: out std_logic_vector (31 downto 0)
+		--parity_decoder		: out std_logic_vector (5 downto 0) -- for simulation only. remove later
 	 );
  end ecc_decoder;
 	 
  architecture structural of ecc_decoder is
-	 signal check_bits	: std_logic_vector (5 downto 0) := (others => '0');
+	 signal check_bits		: std_logic_vector (5 downto 0) := (others => '0');
 	 
   	function bit32_checkbits (
-	 		input_data		: in std_logic_vector (38 downto 1))
+	 		input_data			: in std_logic_vector (38 downto 1))
 	 		return std_logic_vector is
 	 		variable check_bits	: std_logic_vector (6 downto 1);
 
@@ -47,8 +47,7 @@
 	begin 
 	 
 		check_bits	<= 	 bit32_checkbits(input);
-		--parity_decoder <= bit32_checkbits(input);
-		parity_decoder <= check_bits; -- for simulation only. remove later
+		--parity_decoder <= check_bits; -- for simulation only. remove later
 	 
 		process (check_bits, input)
 	  	 variable corrupted_bit_index : integer;
