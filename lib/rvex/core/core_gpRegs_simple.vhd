@@ -93,14 +93,16 @@ entity core_gpRegs_simple is
     -- NUM_REGS_LOG2 bits of the addresses are used.
     writeEnable                 : in  std_logic_vector(NUM_WRITE_PORTS-1 downto 0);
     writeAddr                   : in  rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
-    writeData                   : in  rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+    --writeData                   : in  rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+	writeData                   : in  rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0); --testing ****************8
     
     ---------------------------------------------------------------------------
     -- Read ports
     ---------------------------------------------------------------------------
     -- Only the lower NUM_REGS_LOG2 bits of the address are used.
     readAddr                    : in  rvex_address_array(NUM_READ_PORTS-1 downto 0);
-    readData                    : out rvex_data_array(NUM_READ_PORTS-1 downto 0)
+    --readData                    : out rvex_data_array(NUM_READ_PORTS-1 downto 0)
+	readData                    : out rvex_encoded_data_array(NUM_READ_PORTS-1 downto 0) --testing **********
     
   );
 end core_gpRegs_simple;
@@ -110,8 +112,10 @@ end core_gpRegs_simple;
 architecture Behavioral of core_gpRegs_simple is
 --=============================================================================
     
-  signal registers : rvex_data_array(0 to 2**NUM_REGS_LOG2 -1) := (others => (
-    others => '0'));
+  --signal registers : rvex_data_array(0 to 2**NUM_REGS_LOG2 -1) := (others => (
+    --others => '0'));
+	signal registers : rvex_encoded_data_array(0 to 2**NUM_REGS_LOG2 -1) := (others => (
+    	others => '0')); --testing ******************
           
 --=============================================================================
 begin -- architecture

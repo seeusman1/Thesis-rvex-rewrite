@@ -17,8 +17,8 @@
 	 
  	function bit32_encoder (
 			 input_data				: in std_logic_vector (32 downto 1))
-		 	return std_logic_vector is
-	 		variable encoded_data	: std_logic_vector (37 downto 0);
+		 	 return std_logic_vector is
+	 		 variable encoded_data	: std_logic_vector (37 downto 0);
 		begin
 			encoded_data (31 downto 0) := input_data; --input data
 		
@@ -49,5 +49,4 @@
 	output 		   <= bit32_encoder(input);
 	--parity_encoder <= bit32_encoder(input)(37 downto 32); -- for simulation only. remove later
 				
-
  end structural;

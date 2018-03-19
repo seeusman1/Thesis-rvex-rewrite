@@ -93,7 +93,8 @@ entity core_gpRegs_mem is
     -- NUM_REGS_LOG2 bits of the addresses are used.
     writeEnable                 : in  std_logic_vector(NUM_WRITE_PORTS-1 downto 0);
     writeAddr                   : in  rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
-    writeData                   : in  rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+    --writeData                   : in  rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+	writeData                   : in  rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0);
     
     ---------------------------------------------------------------------------
     -- Read ports
@@ -101,7 +102,8 @@ entity core_gpRegs_mem is
     -- Only the lower NUM_REGS_LOG2 bits of the address are used.
     readEnable                  : in  std_logic_vector(NUM_READ_PORTS-1 downto 0);
     readAddr                    : in  rvex_address_array(NUM_READ_PORTS-1 downto 0);
-    readData                    : out rvex_data_array(NUM_READ_PORTS-1 downto 0)
+    --readData                    : out rvex_data_array(NUM_READ_PORTS-1 downto 0)
+	readData                    : out rvex_encoded_data_array(NUM_READ_PORTS-1 downto 0)
     
   );
 end core_gpRegs_mem;
@@ -124,13 +126,15 @@ begin -- architecture
   -- Generate register file using RAM blocks
   -----------------------------------------------------------------------------
   read_ports_gen: for readPort in 0 to NUM_READ_PORTS-1 generate
-    signal readData_int : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+    --signal readData_int : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+    signal readData_int : rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0); --testing ***********
     signal readAddr_r   : rvex_address_type;
   begin
     
     -- Generate a RAM block for each write port/read port pair.
     write_ports_gen: for writePort in 0 to NUM_WRITE_PORTS-1 generate
-      signal ram : rvex_data_array(0 to 2**NUM_REGS_LOG2-1);
+      --signal ram : rvex_data_array(0 to 2**NUM_REGS_LOG2-1);
+      signal ram : rvex_encoded_data_array(0 to 2**NUM_REGS_LOG2-1);
     begin
       
       -- Describe a RAM block.
@@ -169,7 +173,33 @@ begin -- architecture
     )));
     
   end generate;
-  
+
+								 
+								 
+  -----------------------------------------------------------------------------
+  -- Instantiate the ECC Encoder
+  -----------------------------------------------------------------------------
+--	encoder_inst: entity work.ecc_encoder
+--  	  port map (
+
+--    	input                       => reset_s, 
+--    	output                      => clk
+
+--	  );
+								 
+  -----------------------------------------------------------------------------
+  -- Instantiate the ECC Decoder
+  -----------------------------------------------------------------------------
+--	decoder_inst: entity work.ecc_decoder
+--  	  port map (
+
+--    	input                       => reset_s, 
+--    	output                      => clk
+
+--	  );
+	
+								 
+								 
   -----------------------------------------------------------------------------
   -- Generate last-write index logic for each register
   -----------------------------------------------------------------------------
