@@ -66,6 +66,7 @@ package common_pkg is
   subtype rvex_byte_type        is std_logic_vector( 7 downto  0); -- Any byte.
   subtype rvex_7byte_type       is std_logic_vector(55 downto  0); -- Group of 7 bytes, used for tags and counters.
   subtype rvex_encoded_data_type is std_logic_vector(37 downto  0); -- Any encoded data word.
+  subtype rvex_encoded_address_type is std_logic_vector(37 downto  0); -- Any encoded bus address.
   
   -- Array types for the above subtypes.
   type rvex_address_array       is array (natural range <>) of rvex_address_type;
@@ -75,6 +76,7 @@ package common_pkg is
   type rvex_byte_array          is array (natural range <>) of rvex_byte_type;
   type rvex_7byte_array         is array (natural range <>) of rvex_7byte_type;
   type rvex_encoded_data_array	is array (natural range <>) of rvex_encoded_data_type;
+  type rvex_encoded_address_array	is array (natural range <>) of rvex_encoded_address_type;
   
   -- Null array constants.
   constant RVEX_DATA_ARRAY_NULL : rvex_data_array(0 to -1) := (others => (others => '0'));

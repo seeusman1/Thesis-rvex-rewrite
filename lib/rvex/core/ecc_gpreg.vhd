@@ -45,15 +45,19 @@ entity ecc_gpreg is
     -- Signals that go into GPREG ECC encoder
     ---------------------------------------------------------------------------
     
-	writeData_raw	            : in rvex_data_array(2**CFG.numLanesLog2-1 downto 0);
+	writeData	            	: in rvex_data_array(2**CFG.numLanesLog2-1 downto 0);
     readData_encoded           	: in rvex_encoded_data_array(2*2**CFG.numLanesLog2-1 downto 0); --readData_comb
+	writeAddr					: in rvex_address_array(2**CFG.numLanesLog2-1 downto 0);
+	readAddr					: in rvex_address_array(2*2**CFG.numLanesLog2-1 downto 0);
 	  
 	---------------------------------------------------------------------------
     -- Signals that come out of GPREG ECC decoder
     ---------------------------------------------------------------------------
 
 	writeData_encoded	        : out rvex_encoded_data_array(2**CFG.numLanesLog2-1 downto 0);
-    readData_decoded           	: out rvex_data_array(2*2**CFG.numLanesLog2-1 downto 0) --readData_comb	  
+    readData_decoded           	: out rvex_data_array(2*2**CFG.numLanesLog2-1 downto 0); --readData_comb
+	writeAddr_encoded			: out rvex_encoded_address_array(2**CFG.numLanesLog2-1 downto 0);
+	readAddr_encoded			: out rvex_encoded_address_array(2*2**CFG.numLanesLog2-1 downto 0)
 	  
   );
 
@@ -86,19 +90,43 @@ begin -- architecture
 --	end process;			
 					
 	---------------------------------------------------------------------------
-    --  Encoder Bank
+    --  Encoder Bank for writeData
     ---------------------------------------------------------------------------				
 				
-		encoder_bank: for i in 0 to 2**CFG.numLanesLog2-1 generate
-			encoder_bit32: entity work.ecc_encoder
+		encoder_writedata_bank: for i in 0 to 2**CFG.numLanesLog2-1 generate
+			encoder_writedata_bit32: entity work.ecc_encoder
 				port map (
-					input		=> writeData_raw(i),
+					input		=> writeData(i),
 					output		=> writeData_encoded(i)
 				);
 		end generate;
-	
+
 	---------------------------------------------------------------------------
-    -- Decoder Bank
+    --  Encoder Bank for writeAddress
+    ---------------------------------------------------------------------------				
+				
+		encoder_writeadd_bank: for i in 0 to 2**CFG.numLanesLog2-1 generate
+			encoder_writeadd_bit32: entity work.ecc_encoder
+				port map (
+					input		=> writeAddr(i),
+					output		=> writeAddr_encoded(i)
+				);
+		end generate;
+				
+	---------------------------------------------------------------------------
+    --  Encoder Bank for readAddress
+    ---------------------------------------------------------------------------				
+				
+		encoder_readadd_bank: for i in 0 to 2*2**CFG.numLanesLog2-1 generate
+			encoder_readadd_bit32: entity work.ecc_encoder
+				port map (
+					input		=> readAddr(i),
+					output		=> readAddr_encoded(i)
+				);
+		end generate;
+				
+	---------------------------------------------------------------------------
+    -- Decoder Bank for readData
     ---------------------------------------------------------------------------				
 		
 		decoder_bank: for i in 0 to 2*2**CFG.numLanesLog2-1 generate
@@ -108,10 +136,6 @@ begin -- architecture
 					output		=> readData_decoded(i)
 				);
 		end generate;
-
-				
-	--writeData_encoded			<= "000000" & writeData_raw;
-	--readData_decoded			<= "000000" & readData_encoded;
 
 
 end structural;

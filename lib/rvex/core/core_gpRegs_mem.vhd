@@ -92,7 +92,7 @@ entity core_gpRegs_mem is
     -- Write enables are active high, and gated by clkEn. Only the lower
     -- NUM_REGS_LOG2 bits of the addresses are used.
     writeEnable                 : in  std_logic_vector(NUM_WRITE_PORTS-1 downto 0);
-    writeAddr                   : in  rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
+    writeAddr_encoded           : in  rvex_encoded_address_array(NUM_WRITE_PORTS-1 downto 0);
     --writeData                   : in  rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
 	writeData                   : in  rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0);
     
@@ -101,7 +101,7 @@ entity core_gpRegs_mem is
     ---------------------------------------------------------------------------
     -- Only the lower NUM_REGS_LOG2 bits of the address are used.
     readEnable                  : in  std_logic_vector(NUM_READ_PORTS-1 downto 0);
-    readAddr                    : in  rvex_address_array(NUM_READ_PORTS-1 downto 0);
+    readAddr_encoded            : in  rvex_encoded_address_array(NUM_READ_PORTS-1 downto 0);
     --readData                    : out rvex_data_array(NUM_READ_PORTS-1 downto 0)
 	readData                    : out rvex_encoded_data_array(NUM_READ_PORTS-1 downto 0)
     
@@ -117,6 +117,9 @@ architecture Behavioral of core_gpRegs_mem is
   subtype lastWrite_type is std_logic_vector(LAST_WRITE_SIZE-1 downto 0);
   type lastWrite_array is array (natural range <>) of lastWrite_type;
   signal lastWrite  : lastWrite_array(0 to 2**NUM_REGS_LOG2-1);
+								 
+  signal readAddr                    : rvex_address_array(NUM_READ_PORTS-1 downto 0);
+  signal writeAddr                   : rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -127,7 +130,7 @@ begin -- architecture
   -----------------------------------------------------------------------------
   read_ports_gen: for readPort in 0 to NUM_READ_PORTS-1 generate
     --signal readData_int : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
-    signal readData_int : rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0); --testing ***********
+    signal readData_int : rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0); 
     signal readAddr_r   : rvex_address_type;
   begin
     
@@ -176,27 +179,29 @@ begin -- architecture
 
 								 
 								 
-  -----------------------------------------------------------------------------
-  -- Instantiate the ECC Encoder
-  -----------------------------------------------------------------------------
---	encoder_inst: entity work.ecc_encoder
---  	  port map (
-
---    	input                       => reset_s, 
---    	output                      => clk
-
---	  );
+	---------------------------------------------------------------------------
+    -- Decoder Bank for readAddress
+    ---------------------------------------------------------------------------				
+		
+		decoder_readadd_bank: for i in 0 to NUM_READ_PORTS-1 generate
+			decoder_readadd_bit32: entity work.ecc_decoder
+				port map (
+					input		=> readAddr_encoded(i),
+					output		=> readAddr(i)
+				);
+		end generate;
 								 
-  -----------------------------------------------------------------------------
-  -- Instantiate the ECC Decoder
-  -----------------------------------------------------------------------------
---	decoder_inst: entity work.ecc_decoder
---  	  port map (
-
---    	input                       => reset_s, 
---    	output                      => clk
-
---	  );
+	---------------------------------------------------------------------------
+    -- Decoder Bank for writeAddress
+    ---------------------------------------------------------------------------				
+		
+		decoder_writeadd_bank: for i in 0 to NUM_WRITE_PORTS-1 generate
+			decoder_writeadd_bit32: entity work.ecc_decoder
+				port map (
+					input		=> writeAddr_encoded(i),
+					output		=> writeAddr(i)
+				);
+		end generate;
 	
 								 
 								 

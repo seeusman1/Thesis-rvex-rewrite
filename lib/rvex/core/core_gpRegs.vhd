@@ -154,18 +154,17 @@ architecture Behavioral of core_gpRegs is
   signal writeEnable              : std_logic_vector(NUM_WRITE_PORTS-1 downto 0);
   signal writeAddr                : rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
   signal writeData                : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
-  --signal writeData                : rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0); --testing **************************************
   signal readEnable               : std_logic_vector(NUM_READ_PORTS-1 downto 0);
   signal readAddr                 : rvex_address_array(NUM_READ_PORTS-1 downto 0);
-  --signal readData_comb            : rvex_data_array(NUM_READ_PORTS-1 downto 0);
-  signal readData_comb            : rvex_encoded_data_array(NUM_READ_PORTS-1 downto 0);  --testing ***************************************
+  signal readData_comb            : rvex_encoded_data_array(NUM_READ_PORTS-1 downto 0); 
   signal readData_reg             : rvex_data_array(NUM_READ_PORTS-1 downto 0);
-  --signal readData_reg             : rvex_encoded_data_array(NUM_READ_PORTS-1 downto 0);  --testing ***************************************
   signal readData                 : rvex_data_array(NUM_READ_PORTS-1 downto 0);
-  --signal readData                 : rvex_encoded_data_array(NUM_READ_PORTS-1 downto 0);  --testing ************************************
 
-  signal writeData_encoded        : rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0); --testing **************************************
-  signal readData_comb_decoded    : rvex_data_array(NUM_READ_PORTS-1 downto 0);  --testing ***************************************
+
+  signal writeData_encoded        : rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0); 
+  signal readData_comb_decoded    : rvex_data_array(NUM_READ_PORTS-1 downto 0);  
+  signal writeAddr_encoded        : rvex_encoded_address_array(NUM_WRITE_PORTS-1 downto 0); 
+  signal readAddr_encoded         : rvex_encoded_address_array(NUM_READ_PORTS-1 downto 0); 
 
 --=============================================================================
 begin -- architecture
@@ -244,12 +243,12 @@ begin -- architecture
       <= (
         
         -- Pipelane connection.
-        pl2gpreg_writePorts(writePort).data(S_WB) --testing***************************************
+        pl2gpreg_writePorts(writePort).data(S_WB) 
         
       ) when creg2gpreg_claim = '0' or writePort /= 0 else (
         
         -- Debug override connection.
-        creg2gpreg_writeData --testing***************************************
+        creg2gpreg_writeData 
         
       );
     
@@ -272,7 +271,7 @@ begin -- architecture
   
   -- Connect the debug override read data result to the read output of read
   -- port 1.
-  gpreg2creg_readData <= readData_comb_decoded(0); -- testing ********************
+  gpreg2creg_readData <= readData_comb_decoded(0); 
   
   -----------------------------------------------------------------------------
   -- Instantiate forwarding logic
@@ -375,12 +374,14 @@ begin -- architecture
         
         -- Write ports.
         writeEnable             => writeEnable,
-        writeAddr               => writeAddr,
+        --writeAddr               => writeAddr, 
+		writeAddr_encoded       => writeAddr_encoded, 
         writeData               => writeData_encoded,
         
         -- Read ports.
         readEnable              => readEnable,
-        readAddr                => readAddr,
+        --readAddr                => readAddr, readAddr_encoded
+        readAddr_encoded        => readAddr_encoded, 
         readData                => readData_comb
         
       );
@@ -402,11 +403,11 @@ begin -- architecture
         
         -- Write ports.
         writeEnable             => writeEnable,
-        writeAddr               => writeAddr,
+        writeAddr_encoded       => writeAddr_encoded,
         writeData               => writeData_encoded,
         
         -- Read ports.
-        readAddr                => readAddr,
+        readAddr_encoded        => readAddr_encoded,
         readData                => readData_comb
         
       );
@@ -429,11 +430,11 @@ begin -- architecture
         
         -- Write ports.
         writeEnable             => writeEnable,
-        writeAddr               => writeAddr,
+        writeAddr_encoded       => writeAddr_encoded,
         writeData               => writeData_encoded,
         
         -- Read ports.
-        readAddr                => readAddr,
+        readAddr_encoded        => readAddr_encoded,
         readData                => readData_comb
         
       );
@@ -456,7 +457,7 @@ begin -- architecture
         stall_r <= stall;
         for prt in 0 to 2*2**CFG.numLanesLog2-1 loop
           if stall_r(lane2group(prt / 2, CFG)) = '0' then
-            readData_reg(prt) <= readData_comb_decoded(prt); --testing **************************
+            readData_reg(prt) <= readData_comb_decoded(prt); 
           end if;
         end loop;
       end if;
@@ -465,7 +466,7 @@ begin -- architecture
   
   read_port_stall_mux_gen: for prt in 0 to 2*2**CFG.numLanesLog2-1 generate
     readData(prt)
-      <= readData_comb_decoded(prt) when stall_r(lane2group(prt / 2, CFG)) = '0' --testing ***********************************
+      <= readData_comb_decoded(prt) when stall_r(lane2group(prt / 2, CFG)) = '0' 
       else readData_reg(prt);
   end generate;
   
@@ -487,12 +488,16 @@ begin -- architecture
 		--config_signal				=> config_signal,
 		
 		  
-		writeData_raw				=> writeData,
+		writeData					=> writeData,
 		readData_encoded  			=> readData_comb,
+		writeAddr					=> writeAddr,
+		readAddr					=> readAddr,
 
 		  
 		writeData_encoded  			=> writeData_encoded,
-		readData_decoded			=> readData_comb_decoded
+		readData_decoded			=> readData_comb_decoded,
+		writeAddr_encoded			=> writeAddr_encoded,
+		readAddr_encoded			=> readAddr_encoded
 
 	  );
 	  
