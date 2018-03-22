@@ -566,29 +566,6 @@ architecture Behavioral of core_contextPipelaneIFace is
   -- Run flag for each context, taking the external run input and the BRK
   -- control bits into consideration.
   signal run_ctxt               : std_logic_vector  (2**CFG.numContextsLog2-1 downto 0);
-
-  -----------------------------------------------------------------------------
-  -- TMR signals
-  -----------------------------------------------------------------------------
-
-    signal cxplif2cfg_blockReconfig_s    : std_logic;
-    signal cxplif2rctrl_irqAck_s         : std_logic;
-    signal cxplif2rctrl_idle_s           : std_logic;
-    signal cxplif2cxreg_stall_s          : std_logic;
-    signal cxplif2cxreg_idle_s           : std_logic;
-    signal cxplif2cxreg_stop_s           : std_logic;
-    signal cxplif2cxreg_brWriteData_s    : rvex_brRegData_type; 
-    signal cxplif2cxreg_brWriteEnable_s  : rvex_brRegData_type; 
-    signal cxplif2cxreg_linkWriteData_s  : std_logic_vector(31 downto 0);
-    signal cxplif2cxreg_linkWriteEnable_s: std_logic;
-    signal cxplif2cxreg_nextPC_s         : std_logic_vector(31 downto 0);
-    signal cxplif2cxreg_overridePC_ack_s : std_logic;
-    signal cxplif2cxreg_trapInfo_s       : trap_info_type; 
-    signal cxplif2cxreg_trapPoint_s      : std_logic_vector(31 downto 0);
-    signal cxplif2cxreg_rfi_s            : std_logic;
-    signal cxplif2cxreg_exDbgTrapInfo_s  : trap_info_type;  
-    signal cxplif2cxreg_resuming_ack_s   : std_logic;
-
   
 --=============================================================================
 begin -- architecture
@@ -987,64 +964,24 @@ begin -- architecture
     laneGroup <= vect2uint(cfg2any_lastGroupForCtxt(ctxt));
     
     -- Generate all the muxes.
-
---    cxplif2cfg_blockReconfig(ctxt)      <= (blockReconfig_arb(laneGroup) and cfg2cxplif_active(ctxt));-- when (tmr_enable = '0' and ctxt = 0 ) else cxplif2cfg_blockReconfig_s;
---    cxplif2rctrl_irqAck(ctxt)           <= irqAck_arb(laneGroup) and cfg2cxplif_active(ctxt);
---    cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_active(ctxt);
---    cxplif2cxreg_stall(ctxt)            <= stall(laneGroup) or not cfg2cxplif_active(ctxt);
---    cxplif2cxreg_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_active(ctxt);
---    cxplif2cxreg_stop(ctxt)             <= stop_arb(laneGroup);
---    cxplif2cxreg_brWriteData(ctxt)      <= brLinkWritePort_arb(laneGroup).brData(S_SWB);
---    cxplif2cxreg_brWriteEnable(ctxt)    <= brLinkWritePort_arb(laneGroup).brWriteEnable(S_SWB);
---    cxplif2cxreg_linkWriteData(ctxt)    <= brLinkWritePort_arb(laneGroup).linkData(S_SWB);
---    cxplif2cxreg_linkWriteEnable(ctxt)  <= brLinkWritePort_arb(laneGroup).linkWriteEnable(S_SWB);
---    cxplif2cxreg_nextPC(ctxt)           <= PC_arb(laneGroup);
---    cxplif2cxreg_overridePC_ack(ctxt)   <= valid_arb(laneGroup);
---    cxplif2cxreg_trapInfo(ctxt)         <= trapInfo_arb(laneGroup);
---    cxplif2cxreg_trapPoint(ctxt)        <= trapPoint_arb(laneGroup);
---    cxplif2cxreg_rfi(ctxt)              <= rfi_arb(laneGroup);
---    cxplif2cxreg_exDbgTrapInfo(ctxt)    <= exDbgTrapInfo_arb(laneGroup);
---    cxplif2cxreg_resuming_ack(ctxt)     <= valid_arb(laneGroup);
-
-	
---pass values through majority voter
-
-    cxplif2cfg_blockReconfig(ctxt)      <= cxplif2cfg_blockReconfig_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else    --**ctxt should be FT ctxt. pass it from cfg**
-											(blockReconfig_arb(laneGroup) and cfg2cxplif_active(ctxt)); 						
-    cxplif2rctrl_irqAck(ctxt)           <= cxplif2rctrl_irqAck_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											(irqAck_arb(laneGroup) and cfg2cxplif_active(ctxt));
-    cxplif2rctrl_idle(ctxt)             <= cxplif2rctrl_idle_s 				when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											(idle_arb(laneGroup) or not cfg2cxplif_active(ctxt));
-    cxplif2cxreg_stall(ctxt)            <= cxplif2cxreg_stall_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											(stall(laneGroup) or not cfg2cxplif_active(ctxt));
-    cxplif2cxreg_idle(ctxt)             <= cxplif2cxreg_idle_s 				when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											(idle_arb(laneGroup) or not cfg2cxplif_active(ctxt));
-    cxplif2cxreg_stop(ctxt)             <= cxplif2cxreg_stop_s 				when (tmr_enable = '1' and ctxt = 0 )	else 
-											stop_arb(laneGroup);
-    cxplif2cxreg_brWriteData(ctxt)      <= cxplif2cxreg_brWriteData_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											brLinkWritePort_arb(laneGroup).brData(S_SWB);
-    cxplif2cxreg_brWriteEnable(ctxt)    <= cxplif2cxreg_brWriteEnable_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											brLinkWritePort_arb(laneGroup).brWriteEnable(S_SWB);
-    cxplif2cxreg_linkWriteData(ctxt)    <= cxplif2cxreg_linkWriteData_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											brLinkWritePort_arb(laneGroup).linkData(S_SWB);
-    cxplif2cxreg_linkWriteEnable(ctxt)  <= cxplif2cxreg_linkWriteEnable_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											brLinkWritePort_arb(laneGroup).linkWriteEnable(S_SWB);
-    cxplif2cxreg_nextPC(ctxt)           <= cxplif2cxreg_nextPC_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											PC_arb(laneGroup);
-    cxplif2cxreg_overridePC_ack(ctxt)   <= cxplif2cxreg_overridePC_ack_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											valid_arb(laneGroup);
-    cxplif2cxreg_trapInfo(ctxt)         <= cxplif2cxreg_trapInfo_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											trapInfo_arb(laneGroup);
-    cxplif2cxreg_trapPoint(ctxt)        <= cxplif2cxreg_trapPoint_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											trapPoint_arb(laneGroup);
-    cxplif2cxreg_rfi(ctxt)              <= cxplif2cxreg_rfi_s 				when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											rfi_arb(laneGroup);
-    cxplif2cxreg_exDbgTrapInfo(ctxt)    <= cxplif2cxreg_exDbgTrapInfo_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 	
-											exDbgTrapInfo_arb(laneGroup);
-    cxplif2cxreg_resuming_ack(ctxt)     <= cxplif2cxreg_resuming_ack_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else 
-											valid_arb(laneGroup);
-		
-		
+	--Add majority voter
+    cxplif2cfg_blockReconfig(ctxt)      <= blockReconfig_arb(laneGroup) and cfg2cxplif_active(ctxt);
+    cxplif2rctrl_irqAck(ctxt)           <= irqAck_arb(laneGroup) and cfg2cxplif_active(ctxt);
+    cxplif2rctrl_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_active(ctxt);
+    cxplif2cxreg_stall(ctxt)            <= stall(laneGroup) or not cfg2cxplif_active(ctxt);
+    cxplif2cxreg_idle(ctxt)             <= idle_arb(laneGroup) or not cfg2cxplif_active(ctxt);
+    cxplif2cxreg_stop(ctxt)             <= stop_arb(laneGroup);
+    cxplif2cxreg_brWriteData(ctxt)      <= brLinkWritePort_arb(laneGroup).brData(S_SWB);
+    cxplif2cxreg_brWriteEnable(ctxt)    <= brLinkWritePort_arb(laneGroup).brWriteEnable(S_SWB);
+    cxplif2cxreg_linkWriteData(ctxt)    <= brLinkWritePort_arb(laneGroup).linkData(S_SWB);
+    cxplif2cxreg_linkWriteEnable(ctxt)  <= brLinkWritePort_arb(laneGroup).linkWriteEnable(S_SWB);
+    cxplif2cxreg_nextPC(ctxt)           <= PC_arb(laneGroup);
+    cxplif2cxreg_overridePC_ack(ctxt)   <= valid_arb(laneGroup);
+    cxplif2cxreg_trapInfo(ctxt)         <= trapInfo_arb(laneGroup);
+    cxplif2cxreg_trapPoint(ctxt)        <= trapPoint_arb(laneGroup);
+    cxplif2cxreg_rfi(ctxt)              <= rfi_arb(laneGroup);
+    cxplif2cxreg_exDbgTrapInfo(ctxt)    <= exDbgTrapInfo_arb(laneGroup);
+    cxplif2cxreg_resuming_ack(ctxt)     <= valid_arb(laneGroup);
     
     -- While we're at it, combine the external run control and control register
     -- data where necessary for each context.
@@ -1198,68 +1135,6 @@ begin -- architecture
         );
     end generate;
   end generate;
-		  
-		  
-		  
-  -----------------------------------------------------------------------------
-  -- Instantiate the CXPLIF Majority voter bank
-  -----------------------------------------------------------------------------
-	cxplifvoter_inst: entity work.tmr_cxplifvoter
-	  generic map(
-         CFG                         => CFG
-      )
-  	  port map (
-
-    	reset                       => reset, 
-    	clk                         => clk,
-	    clkEn                       => clkEn,
-		start_ft					=> tmr_enable,
-		config_signal				=> config_signal,
-		  
-
-    -- Signals that go into CXPLIF Majority voter
-		  
-  	blockReconfig_arb  		=> blockReconfig_arb,    
- 	irqAck_arb             	=> irqAck_arb,
-  	idle_arb              	=> idle_arb,
-  	PC_arb                 	=> PC_arb,
-  	limmValid_arb          	=> limmValid_arb,
-  	valid_arb              	=> valid_arb,
-  	brkValid_arb           	=> brkValid_arb,
-  	invalUntilBR_arb       	=> invalUntilBR_arb,
-  	brLinkWritePort_arb    	=> brLinkWritePort_arb,
-  	trapInfo_arb           	=> trapInfo_arb,
-  	trapPoint_arb          	=> trapPoint_arb,
-  	exDbgTrapInfo_arb      	=> exDbgTrapInfo_arb,
-  	stop_arb               	=> stop_arb,
-  	rfi_arb               	=> rfi_arb,
-	  
-  	stall                  	=> stall,
-  	cfg2cxplif_active      	=> cfg2cxplif_active,
-		  
-
-    -- Signals that come out of CXPLIF Majority voter
-
-    cxplif2cfg_blockReconfig    => cxplif2cfg_blockReconfig_s,
-    cxplif2rctrl_irqAck         => cxplif2rctrl_irqAck_s,
-    cxplif2rctrl_idle           => cxplif2rctrl_idle_s,
-    cxplif2cxreg_stall          => cxplif2cxreg_stall_s,
-    cxplif2cxreg_idle           => cxplif2cxreg_idle_s,
-    cxplif2cxreg_stop           => cxplif2cxreg_stop_s,
-    cxplif2cxreg_brWriteData    => cxplif2cxreg_brWriteData_s,
-    cxplif2cxreg_brWriteEnable  => cxplif2cxreg_brWriteEnable_s,
-    cxplif2cxreg_linkWriteData  => cxplif2cxreg_linkWriteData_s,
-    cxplif2cxreg_linkWriteEnable=> cxplif2cxreg_linkWriteEnable_s,
-    cxplif2cxreg_nextPC         => cxplif2cxreg_nextPC_s,
-    cxplif2cxreg_overridePC_ack => cxplif2cxreg_overridePC_ack_s,
-    cxplif2cxreg_trapInfo       => cxplif2cxreg_trapInfo_s,
-    cxplif2cxreg_trapPoint      => cxplif2cxreg_trapPoint_s,
-    cxplif2cxreg_rfi            => cxplif2cxreg_rfi_s,
-    cxplif2cxreg_exDbgTrapInfo  => cxplif2cxreg_exDbgTrapInfo_s,
-    cxplif2cxreg_resuming_ack   => cxplif2cxreg_resuming_ack_s
-		  
-	  );	  
-	  		  
-		  
+  
 end Behavioral;
 

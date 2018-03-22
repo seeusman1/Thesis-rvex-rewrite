@@ -18,6 +18,8 @@ core_br.vhd
 core_cfgCtrl_decode.vhd
 core_cfgCtrl.vhd
 core_forward.vhd
+tmr_voter.vhd
+tmr_cxplifvoter.vhd
 core_contextPipelaneIFace.vhd
 core_contextRegLogic.vhd
 core_ctrlRegs_busSwitch.vhd
@@ -43,7 +45,6 @@ core_fpu_mul.vhd
 core_pipelane.vhd
 core_stopBitRouting.vhd
 core_trapRouting.vhd
-tmr_voter.vhd
 tmr_pcvoter.vhd
 tmr_trapvoter.vhd
 tmr_dmswvoter.vhd

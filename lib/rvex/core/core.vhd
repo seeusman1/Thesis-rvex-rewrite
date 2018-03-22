@@ -600,7 +600,7 @@ architecture Behavioral of core is
   -----------------------------------------------------------------------------
   -- Interconnect signals
   -----------------------------------------------------------------------------
-  -- For all the signals below: refer to the entity description of their source
+  -- For all the signals below: refer to the entity description of theitmrvoter2dmsw_readDatar source
   -- or destination block for documentation.
   
   -- Instruction buffer <-> pipelane (interface) signals.
@@ -1102,7 +1102,7 @@ begin -- architecture
 	  );	  
 	  
 
-	  -----------------------------------------------------------------------------
+  -----------------------------------------------------------------------------
   -- Instantiate the DMSW Majority voter bank
   -----------------------------------------------------------------------------
 	dmsmvoter_inst: entity work.tmr_dmswvoter
@@ -1279,7 +1279,7 @@ begin -- architecture
 		dmsw2creg_writeData           => tmrvoter2creg_writeData, --testing
       --dmsw2creg_readEnable          => dmsw2creg_readEnable,
 		dmsw2creg_readEnable          => tmrvoter2creg_readEnable, --testing
-        creg2dmsw_readData            => tmrvoter2dmsw_readData,
+        creg2dmsw_readData            => creg2dmsw_readData,--tmrvoter2dmsw_readData,
       
       -- Debug bus interface.
       dbg2creg_addr                 => dbg2rv_addr,
