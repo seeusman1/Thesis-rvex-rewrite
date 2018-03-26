@@ -467,6 +467,66 @@
       <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="100"/>
       <association xil_pn:name="Implementation" xil_pn:seqID="79"/>
     </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_encoder.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="99"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="99"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_decoder.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="100"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="100"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_gpreg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="101"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="101"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_opcodeFpu_pkg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="102"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="102"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_add.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="103"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="103"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_compare.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="104"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="104"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_convfi.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="105"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="105"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_convif.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="106"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="106"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_mul.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="107"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="107"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_fixed_pkg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="108"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="108"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_float_pkg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="109"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="109"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_types_pkg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="110"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="110"/>
+      <library xil_pn:name="rvex"/>
+    </file>
   </files>
 
   <properties>
@@ -754,7 +814,7 @@
     <property xil_pn:name="Starting Placer Cost Table (1-100) Map" xil_pn:value="1" xil_pn:valueState="default"/>
     <property xil_pn:name="Starting Placer Cost Table (1-100) Par" xil_pn:value="1" xil_pn:valueState="default"/>
     <property xil_pn:name="Synthesis Tool" xil_pn:value="XST (VHDL/Verilog)" xil_pn:valueState="default"/>
-    <property xil_pn:name="Target Board for Hardware Co-Simulation" xil_pn:value="ML605 (JTAG)" xil_pn:valueState="default"/>
+    <property xil_pn:name="Target Board for Hardware Co-Simulation" xil_pn:value="N/A" xil_pn:valueState="default"/>
     <property xil_pn:name="Target Simulator" xil_pn:value="Please Specify" xil_pn:valueState="default"/>
     <property xil_pn:name="Target UCF File Name" xil_pn:value="toplevel_uartTest_spartan3.ucf" xil_pn:valueState="non-default"/>
     <property xil_pn:name="Timing Mode Map" xil_pn:value="Performance Evaluation" xil_pn:valueState="default"/>
