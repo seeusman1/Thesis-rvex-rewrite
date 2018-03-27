@@ -152,7 +152,7 @@ begin -- architecture
 				
 	
 	---------------------------------------------------------------------------
-    -- Adding Delay before DME		trap2tmrvoter_disable_odd_voter: for i in S_FIRST to S_LTRP generateM voter starts after fault tolerance is requested
+    -- Adding Delay before TRAP voter starts after fault tolerance is requested
     ---------------------------------------------------------------------------					
 			
 	delay_regsiter: process (clk, start_ft)
@@ -561,22 +561,38 @@ begin -- architecture
 			for i in 0 to 3 loop
 				if config_signal(i) = '1' then
 					
-				tmrvoter2trap_trap(2*i)					<= pl2tmrvoter_trap_s_result_even;
-				tmrvoter2trap_trap(2*i+1)				<= pl2tmrvoter_trap_s_result_odd;
+					tmrvoter2trap_trap(2*i)					<= pl2tmrvoter_trap_s_result_even;
+					tmrvoter2trap_trap(2*i+1)				<= pl2tmrvoter_trap_s_result_odd;
 					
-				tmrvoter2pl_trapToHandle(2*i)			<=	trap2tmrvoter_trapToHandle_s_result_even;
-				tmrvoter2pl_trapToHandle(2*i+1)			<=	trap2tmrvoter_trapToHandle_s_result_odd;
+					tmrvoter2pl_trapToHandle(2*i)			<=	trap2tmrvoter_trapToHandle_s_result_even;
+					tmrvoter2pl_trapToHandle(2*i+1)			<=	trap2tmrvoter_trapToHandle_s_result_odd;
 
-				tmrvoter2pl_trapPending(2*i)			<=  trap2tmrvoter_trapPending_s_result_even;
-				tmrvoter2pl_trapPending(2*1+1)			<=  trap2tmrvoter_trapPending_s_result_odd;
+					tmrvoter2pl_trapPending(2*i)			<=  trap2tmrvoter_trapPending_s_result_even;
+					tmrvoter2pl_trapPending(2*1+1)			<=  trap2tmrvoter_trapPending_s_result_odd;
 
-				tmrvoter2pl_disable(2*i)				<= trap2tmrvoter_disable_s_result_even;
-				tmrvoter2pl_disable(2*i+1)				<= trap2tmrvoter_disable_s_result_odd;
+					tmrvoter2pl_disable(2*i)				<= trap2tmrvoter_disable_s_result_even;
+					tmrvoter2pl_disable(2*i+1)				<= trap2tmrvoter_disable_s_result_odd;
 
-				tmrvoter2pl_flush(2*i)					<= trap2tmrvoter_flush_s_result_even;
-				tmrvoter2pl_flush(2*i+1)				<= trap2tmrvoter_flush_s_result_odd;
+					tmrvoter2pl_flush(2*i)					<= trap2tmrvoter_flush_s_result_even;
+					tmrvoter2pl_flush(2*i+1)				<= trap2tmrvoter_flush_s_result_odd;
+				
+				else
+					tmrvoter2trap_trap(2*i)					<= pl2tmrvoter_trap(2*i);
+					tmrvoter2trap_trap(2*i+1)				<= pl2tmrvoter_trap(2*i+1);
+					
+					tmrvoter2pl_trapToHandle(2*i)			<=	trap2tmrvoter_trapToHandle(2*i);
+					tmrvoter2pl_trapToHandle(2*i+1)			<=	trap2tmrvoter_trapToHandle(2*i+1);
 
+					tmrvoter2pl_trapPending(2*i)			<=  trap2tmrvoter_trapPending(2*i);
+					tmrvoter2pl_trapPending(2*1+1)			<=  trap2tmrvoter_trapPending(2*i+1);
+
+					tmrvoter2pl_disable(2*i)				<= trap2tmrvoter_disable(2*i);
+					tmrvoter2pl_disable(2*i+1)				<= trap2tmrvoter_disable(2*i+1);
+
+					tmrvoter2pl_flush(2*i)					<= trap2tmrvoter_flush(2*i);
+					tmrvoter2pl_flush(2*i+1)				<= trap2tmrvoter_flush(2*i+1);
 				end if;
+					
 			end loop;
 					
 
