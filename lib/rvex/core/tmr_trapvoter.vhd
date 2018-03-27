@@ -10,7 +10,6 @@ use work.core_pkg.all;
 use work.core_intIface_pkg.all;
 use work.core_trap_pkg.all;
 use work.core_pipeline_pkg.all;
---use work.core_ctrlRegs_pkg.all;
 
 
 --=============================================================================

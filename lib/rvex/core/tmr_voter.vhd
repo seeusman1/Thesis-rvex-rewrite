@@ -1,3 +1,4 @@
+
 library ieee;
 use ieee.std_logic_1164.all;
 
@@ -14,7 +15,9 @@ entity tmr_voter is
 	);
 end tmr_voter;
 
+--=============================================================================
 architecture behavior of tmr_voter is
+--=============================================================================
 	
 	signal and_1_2		: std_logic;
   	signal and_2_3		: std_logic;
