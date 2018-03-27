@@ -151,7 +151,7 @@ begin -- architecture
     ---------------------------------------------------------------------------			
 		
 		
-	nextpc_result: process (start, config_signal, br2pcvoter_PC_s, br2pcvoter_PC_s_result_even, br2pcvoter_PC_s_result_odd)	
+	pc_result: process (start, config_signal, br2pcvoter_PC_s, br2pcvoter_PC_s_result_even, br2pcvoter_PC_s_result_odd)	
 	begin
 		if start = '0' then
 			pcvoter2cxplif_PC	<=	br2pcvoter_PC_s;
@@ -159,8 +159,13 @@ begin -- architecture
 			pcvoter2cxplif_PC	<=	(others => (others => '0'));
 		
 			for i in 0 to 3 loop
-				pcvoter2cxplif_PC(2*i)		<=	br2pcvoter_PC_s_result_even;
-				pcvoter2cxplif_PC(2*i+1)	<=	br2pcvoter_PC_s_result_odd;
+				if config_signal(i) = '1' then
+					pcvoter2cxplif_PC(2*i)		<=	br2pcvoter_PC_s_result_even;
+					pcvoter2cxplif_PC(2*i+1)	<=	br2pcvoter_PC_s_result_odd;
+				else
+					pcvoter2cxplif_PC(2*i)		<=	br2pcvoter_PC(2*i);
+					pcvoter2cxplif_PC(2*i+1)	<=	br2pcvoter_PC(2*i+1);					
+				end if;
 			end loop;
 		end if;
 	end process;
