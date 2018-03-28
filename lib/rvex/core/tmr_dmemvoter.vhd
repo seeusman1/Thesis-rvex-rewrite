@@ -7,10 +7,6 @@ library work;
 use work.common_pkg.all;
 use work.utils_pkg.all;
 use work.core_pkg.all;
---use work.core_intIface_pkg.all;
---use work.core_trap_pkg.all;
---use work.core_pipeline_pkg.all;
---use work.core_ctrlRegs_pkg.all;
 
 
 --=============================================================================
@@ -157,24 +153,9 @@ architecture structural of tmr_dmemvoter is
 begin -- architecture
 --=============================================================================
 		
+	
 	---------------------------------------------------------------------------
     -- update TMR mode activation signal at rising edge of clock signal
-    ---------------------------------------------------------------------------	
-	
-	--stable_start: process(clk)
-	--begin
-	--	if rising_edge(clk) then
-	--		if (reset = '1') then
-	--			start <= '0';
-	--		else
-	--			start <= start_ft;
-	--		end if;
-	--	end if;
---	end process;
-				
-	
-	---------------------------------------------------------------------------
-    -- Adding Delay before DMEM voter starts after fault tolerance is requested
     ---------------------------------------------------------------------------					
 			
 	delay_regsiter: process (clk, start_ft)
@@ -374,6 +355,19 @@ begin -- architecture
 				dmemvoter2dmem_writeEnable(0) 	<= rv2dmemvoter_writeEnable_s_result;
 
 
+			for i in 0 to 3 loop
+				if config_signal(i) = '0' then
+					dmemvoter2dmem_addr(i)			<=	rv2dmemvoter_addr(i);
+					dmemvoter2dmem_readEnable(i)	<= rv2dmemvoter_readEnable(i);	
+					dmemvoter2dmem_writeData(i)		<= rv2dmemvoter_writeData(i);
+					dmemvoter2dmem_writeMask(i) 	<= rv2dmemvoter_writeMask(i);
+					dmemvoter2dmem_writeEnable(i) 	<= rv2dmemvoter_writeEnable(i);
+				end if;
+			end loop;				
+
+				
+
+
 		end if;
 	end process;
 			
@@ -391,14 +385,14 @@ begin -- architecture
 						if config_signal(i) = '1' then
 							dmemvoter2rv_readData (i) <= dmem2dmemvoter_readData(0);
 						else
-					    	dmemvoter2rv_readData (i) <= (others => '0');
+					    	dmemvoter2rv_readData (i) <= dmem2dmemvoter_readData(i);
 						end if;
 					end loop;
 			end if;	
 		end process;			
 			
 			
-	--dmemvoter2dmem_addr			  <=  rv2dmemvoter_addr;		
+	--dmemvoter2dmem_addr			  <=  	rv2dmemvoter_addr;		
     --dmemvoter2dmem_readEnable       <=	rv2dmemvoter_readEnable;
     --dmemvoter2dmem_writeData        <=	rv2dmemvoter_writeData;
     --dmemvoter2dmem_writeMask        <=	rv2dmemvoter_writeMask;
