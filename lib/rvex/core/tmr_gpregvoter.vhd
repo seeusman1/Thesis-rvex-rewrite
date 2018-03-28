@@ -7,10 +7,7 @@ use work.common_pkg.all;
 use work.utils_pkg.all;
 use work.core_pkg.all;
 use work.core_intIface_pkg.all;
---use work.core_trap_pkg.all;
 use work.core_pipeline_pkg.all;
---use work.core_ctrlRegs_pkg.all;
-
 
 
 --=============================================================================
@@ -349,37 +346,37 @@ begin -- architecture
     -- Recreate GPREG signals value after voter bank
     ---------------------------------------------------------------------------			
 		
---	addr_result: process (start_array, config_signal, pl2tmrvoter_writePorts_s, pl2tmrvoter_writePorts_s_result_even, pl2tmrvoter_writePorts_s_result_odd, pl2tmrvoter_writePorts)	
---	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";
---		variable delay	: integer	:= 0;
---	begin
---		if start_array(0) = '0' then
---			tmrvoter2gpreg_writePorts					<=	pl2tmrvoter_writePorts_s;
---
---		else
---			--if delay > 2 then 
---				tmrvoter2gpreg_writePorts					<=	(others => zero_init);
---		
---				for i in 0 to 3 loop
---					if config_signal(i) = '1' then
---						if mask_signal(i) = '1' then
---							tmrvoter2gpreg_writePorts(2*i)			<=	pl2tmrvoter_writePorts_s_result_even;
---							tmrvoter2gpreg_writePorts(2*i+1)		<=	pl2tmrvoter_writePorts_s_result_odd;
---						else
---
---							tmrvoter2gpreg_writePorts(2*i)					<=	pl2tmrvoter_writePorts_s_result_even;
---							tmrvoter2gpreg_writePorts(2*i).writeEnable(S_WB)<=	'0';
---
---							tmrvoter2gpreg_writePorts(2*i+1)				<=	pl2tmrvoter_writePorts_s_result_odd;
---							tmrvoter2gpreg_writePorts(2*i+1).writeEnable(S_WB)	<=	'0';
---				
---						end if;
---					else
---						tmrvoter2gpreg_writePorts(2*i)		<=	zero_init;
---						tmrvoter2gpreg_writePorts(2*i+1)	<=	zero_init;
---					end if;
---		
---				end loop;
+	addr_result: process (start_array, config_signal, pl2tmrvoter_writePorts_s, pl2tmrvoter_writePorts_s_result_even, pl2tmrvoter_writePorts_s_result_odd, pl2tmrvoter_writePorts)	
+	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to gpreg after signals pass through majority voter
+		variable delay	: integer	:= 0;
+	begin
+		if start_array(0) = '0' then
+			tmrvoter2gpreg_writePorts					<=	pl2tmrvoter_writePorts_s;
+
+		else
+			--if delay > 2 then 
+				tmrvoter2gpreg_writePorts					<=	(others => zero_init);
+		
+				for i in 0 to 3 loop
+					if config_signal(i) = '1' then
+						if mask_signal(i) = '1' then
+							tmrvoter2gpreg_writePorts(2*i)			<=	pl2tmrvoter_writePorts_s_result_even;
+							tmrvoter2gpreg_writePorts(2*i+1)		<=	pl2tmrvoter_writePorts_s_result_odd;
+						else
+
+							tmrvoter2gpreg_writePorts(2*i)					<=	pl2tmrvoter_writePorts_s_result_even;
+							tmrvoter2gpreg_writePorts(2*i).writeEnable(S_WB)<=	'0';
+
+							tmrvoter2gpreg_writePorts(2*i+1)				<=	pl2tmrvoter_writePorts_s_result_odd;
+							tmrvoter2gpreg_writePorts(2*i+1).writeEnable(S_WB)	<=	'0';
+				
+						end if;
+					else
+						tmrvoter2gpreg_writePorts(2*i)		<=	pl2tmrvoter_writePorts(2*i);
+						tmrvoter2gpreg_writePorts(2*i+1)	<=	pl2tmrvoter_writePorts(2*i+1);
+					end if;
+		
+				end loop;
 		
 			--else 
 			--			tmrvoter2gpreg_writePorts		<= pl2tmrvoter_writePorts;
@@ -387,14 +384,14 @@ begin -- architecture
 			--end if;
 
 
---		end if;
---	end process;
+		end if;
+	end process;
 	
 	
 	
 	tmrvoter2gpreg_readPorts		<= pl2tmrvoter_readPorts;
 	tmrvoter2pl_readPorts			<= gpreg2tmrvoter_readPorts;
-	tmrvoter2gpreg_writePorts		<= pl2tmrvoter_writePorts;
+	--tmrvoter2gpreg_writePorts		<= pl2tmrvoter_writePorts;
 
 
 end structural;

@@ -159,9 +159,9 @@ begin
 			
 			
 	---------------------------------------------------------------------------
-    -- Replication unit for Instruction read from IMEM
+    -- Replication unit for Instruction read and exception from IMEM
     ---------------------------------------------------------------------------			
-	replicate_instr: process (start, reset, imem2tmr_instr, config_signal)
+	replicate_instr: process (start, reset, imem2tmr_instr, config_signal, imem2tmr_exception)
 		
 		begin
 			
@@ -172,6 +172,8 @@ begin
 						--if temp(i) = '1' then
 							tmr2ibuf_instr (2*i) 	<= imem2tmr_instr(0);
 							tmr2ibuf_instr (2*i+1)	<= imem2tmr_instr(1);
+					
+							tmr2ibuf_exception (i) <= imem2tmr_exception(0);							
 						else
 						-- NOP instruction for disabled core, NOP instruction's 29th and 30th bit is high
 					    --	tmr2ibuf_instr (2*i) <= (others => '0');
@@ -182,10 +184,13 @@ begin
 						--	tmr2ibuf_instr (2*i+1)(29) <= '1';
 							tmr2ibuf_instr (2*i) 	<= imem2tmr_instr(2*i);
 							tmr2ibuf_instr (2*i+1)  <= imem2tmr_instr(2*i+1);
+		
+						 	tmr2ibuf_exception(i) <= imem2tmr_exception(i);		
 						end if;
 					end loop;
 			else
 				tmr2ibuf_instr <= imem2tmr_instr;
+				tmr2ibuf_exception <= imem2tmr_exception;
 			end if;	
 		end process;
 				
@@ -193,29 +198,29 @@ begin
 	---------------------------------------------------------------------------
     -- Replication unit for exception from IMEM
     ---------------------------------------------------------------------------			
-	replicate_exception: process (start, reset, imem2tmr_exception, config_signal)
+--	replicate_exception: process (start, reset, imem2tmr_exception, config_signal)
 		
-		begin
+--		begin
 			
-			--if (start = '1' and reset = '0') then
-				if (start = '1') then
-					for i in 0 to 3 loop
-						if config_signal(i) = '1' then
-						--if temp(i) = '1' then
-							tmr2ibuf_exception (i) <= imem2tmr_exception(0);
-						else
-						-- for disabled core, exception is set to default value
-							 --tmr2ibuf_exception (i)  <= ( active => '0',
-    						--							  cause  => (others => '0'),
-    							--						  arg    => (others => '0')
-  									--					);
-						 	tmr2ibuf_exception(i) <= imem2tmr_exception(i);
-						end if;
-					end loop;
-			else
-				tmr2ibuf_exception <= imem2tmr_exception;
-			end if;	
-		end process;				
+--			--if (start = '1' and reset = '0') then
+--				if (start = '1') then
+--					for i in 0 to 3 loop
+--						if config_signal(i) = '1' then
+--						--if temp(i) = '1' then
+--							tmr2ibuf_exception (i) <= imem2tmr_exception(0);
+--						else
+--						-- for disabled core, exception is set to default value
+--							 --tmr2ibuf_exception (i)  <= ( active => '0',
+--    						--							  cause  => (others => '0'),
+--    							--						  arg    => (others => '0')
+--  									--					);
+--						 	tmr2ibuf_exception(i) <= imem2tmr_exception(i);
+--						end if;
+--					end loop;
+--			else
+--				tmr2ibuf_exception <= imem2tmr_exception;
+--			end if;	
+--		end process;				
 
 		
 	---------------------------------------------------------------------------
