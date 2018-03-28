@@ -7,10 +7,6 @@ library work;
 use work.common_pkg.all;
 use work.utils_pkg.all;
 use work.core_pkg.all;
---use work.core_intIface_pkg.all;
---use work.core_trap_pkg.all;
---use work.core_pipeline_pkg.all;
---use work.core_ctrlRegs_pkg.all;
 
 
 --=============================================================================
@@ -347,19 +343,27 @@ begin -- architecture
 		
 			for i in 0 to 3 loop
 				if config_signal(i) = '1' then
-				tmrvoter2creg_addr(i)			<=	dmsw2tmrvoter_addr_s_result;
+					tmrvoter2creg_addr(i)			<=	dmsw2tmrvoter_addr_s_result;
 				
-				--assert (dmsw2tmrvoter_addr(i) = dmsw2tmrvoter_addr_s_result)
-				--assert (dmsw2tmrvoter_addr(i) = X"00000000")
-				--		report "dmsw2tmrvoter_addr voter failed" severity note;
-				tmrvoter2creg_readEnable(i)		<= dmsw2tmrvoter_readEnable_s_result;
-				tmrvoter2creg_writeData(i)		<= dmsw2tmrvoter_writeData_s_result;
-				tmrvoter2creg_writeMask(i) 		<= dmsw2tmrvoter_writeMask_s_result;
-				tmrvoter2creg_writeEnable(i) 	<= dmsw2tmrvoter_writeEnable_s_result;
-				tmrvoter2dmsw_readData(i)		<= creg2tmrvoter_readData_s_result;
+					--assert (dmsw2tmrvoter_addr(i) = dmsw2tmrvoter_addr_s_result)
+					--assert (dmsw2tmrvoter_addr(i) = X"00000000")
+					--		report "dmsw2tmrvoter_addr voter failed" severity note;
+					tmrvoter2creg_readEnable(i)		<= dmsw2tmrvoter_readEnable_s_result;
+					tmrvoter2creg_writeData(i)		<= dmsw2tmrvoter_writeData_s_result;
+					tmrvoter2creg_writeMask(i) 		<= dmsw2tmrvoter_writeMask_s_result;
+					tmrvoter2creg_writeEnable(i) 	<= dmsw2tmrvoter_writeEnable_s_result;
+					tmrvoter2dmsw_readData(i)		<= creg2tmrvoter_readData_s_result;
+				else
+					tmrvoter2creg_addr(i)			<=	dmsw2tmrvoter_addr(i);
+					tmrvoter2creg_readEnable(i)		<= dmsw2tmrvoter_readEnable(i);
+					tmrvoter2creg_writeData(i)		<= dmsw2tmrvoter_writeData(i);
+					tmrvoter2creg_writeMask(i) 		<= dmsw2tmrvoter_writeMask(i);
+					tmrvoter2creg_writeEnable(i) 	<= dmsw2tmrvoter_writeEnable(i);
+					tmrvoter2dmsw_readData(i)		<= creg2tmrvoter_readData(i);					
 				end if;
-			end loop;
-		
+			end loop;				
+					
+					
 		--assert (dmsw2tmrvoter_writeEnable(0) = dmsw2tmrvoter_writeEnable_s_result)
 		--		report "dmsw2tmrvoter_writeEnable voter failed" severity note;
 		--assert (dmsw2tmrvoter_writeMask(0) = dmsw2tmrvoter_writeMask_s_result)
