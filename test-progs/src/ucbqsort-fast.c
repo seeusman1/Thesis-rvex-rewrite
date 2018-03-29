@@ -15,8 +15,8 @@ int compare(char *n1, char *n2)
 }
 int main()
 {
-	CR_CRR = 0x8999;
-	//CR_CRR = 0x0001; 
+	//CR_CRR = 0x8999;
+	////////////CR_CRR = 0x0001; 
 	int j;
 	QSORT((char *) SortArr, (int) 20, sizeof(unsigned char), compare);
 	for (j = 0; j < 20; j++) {
