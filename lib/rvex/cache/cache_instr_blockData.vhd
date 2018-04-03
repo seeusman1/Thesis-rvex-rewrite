@@ -103,7 +103,8 @@ architecture Behavioral of cache_instr_blockData is
   -- Cache data memory.
   type ram_data_type
     is array(0 to 2**CCFG.instrCacheLinesLog2-1)
-    of std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    --of std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+	of std_logic_vector(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 0);
   signal ram_data             : ram_data_type := (others => (others => 'X'));
   
   -- Hints for XST to implement the data memory in block RAMs.
@@ -112,6 +113,10 @@ architecture Behavioral of cache_instr_blockData is
   
   -- CPU address/PC signals.
   signal cpuOffset            : std_logic_vector(icacheOffsetSize(RCFG, CCFG)-1 downto 0);
+
+  
+  signal writeData_encoded		: std_logic_vector(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 0);
+  signal readData_encoded		: std_logic_vector(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -129,14 +134,21 @@ begin -- architecture
     if rising_edge(clk) then
       if enable = '1' then
         if writeEnable = '1' then
-          ram_data(to_integer(unsigned(cpuOffset))) <= writeData;
-          readData <= writeData;
+          ram_data(to_integer(unsigned(cpuOffset))) <= writeData_encoded;
+          readData_encoded <= writeData_encoded;
         else
-          readData <= ram_data(to_integer(unsigned(cpuOffset)));
+          readData_encoded <= ram_data(to_integer(unsigned(cpuOffset)));
         end if;
       end if;
     end if;
   end process;
-  
+													 
+													 
+  ecc_proc: process (readData_encoded,writeData) is
+  begin
+		readData			<= 	readData_encoded(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 48);
+		writeData_encoded	<=	writeData & X"000000000000";
+													 
+  end process;										 
 end Behavioral;
 
