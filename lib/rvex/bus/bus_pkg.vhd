@@ -52,6 +52,7 @@ library work;
 use work.common_pkg.all;
 use work.utils_pkg.all;
 
+
 --=============================================================================
 -- This package contains definitions to do with the bus system used within the
 -- rvex system.
@@ -164,6 +165,10 @@ package bus_pkg is
   -- Array types for the busses above.
   type bus_mst2slv_array is array (natural range <>) of bus_mst2slv_type;
   type bus_slv2mst_array is array (natural range <>) of bus_slv2mst_type;
+
+  -- for TMR								   
+  --type updateData_array is array (natural range <>) of std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+  type updateData_array is array (natural range <>) of std_logic_vector(255 downto 0);
   
   -- This function generates or modifies bus flags. Always use this function
   -- instead of assigning the bus flags directly to make code forward

@@ -1,3 +1,4 @@
+#include "rvex.h"
 unsigned char SortArr[20] = {
   57, 126, 223, 44, 11, 138, 251, 232, 143, 86, 215, 60, 83, 30, 115, 48, 87, 46, 49, 164
 };
@@ -13,6 +14,7 @@ int compare(char *n1, char *n2)
 }
 int main()
 {
+	//CR_CRR = 0x8999;
 	int j;
 	QSORT((char *) SortArr, (int) 20, sizeof(unsigned char), compare);
 	for (j = 0; j < 20; j++) {
@@ -21,6 +23,7 @@ int main()
 			return 1;
 		}
 	}
+	//CR_CRR = 0x8800;
 	rvex_succeed("ucbqsort-fast: success\n");
 	return 0;
 }
