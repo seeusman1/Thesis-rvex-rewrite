@@ -144,11 +144,33 @@ begin -- architecture
   end process;
 													 
 													 
-  ecc_proc: process (readData_encoded,writeData) is
-  begin
-		readData			<= 	readData_encoded(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 48);
-		writeData_encoded	<=	writeData & X"000000000000";
+--  ecc_proc: process (readData_encoded,writeData) is
+--  begin
+--		readData			<= 	readData_encoded(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 48);
+--		writeData_encoded	<=	writeData & X"000000000000";
 													 
-  end process;										 
+--  end process;		
+												   
+												   
+  ECC_encoderbank: for i in 7 downto 0 generate
+	ecc_encoder: entity work.ecc_encoder
+		port map (
+					input		=> writeData(32*i + 31 downto 32*i),
+					output		=> writeData_encoded(38*i + 37 downto 38*i)
+				);
+  end generate;		
+												   
+  ECC_decoderbank: for i in 7 downto 0 generate
+	ecc_decoder: entity work.ecc_decoder
+		port map (
+					input		=> readData_encoded(38*i + 37 downto 38*i),
+					output		=> readData(32*i + 31 downto 32*i)
+				);
+  end generate;	
+												   
+												   
+												   
+												   
+												   
 end Behavioral;
 
