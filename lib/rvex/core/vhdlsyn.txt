@@ -18,6 +18,7 @@ core_br.vhd
 core_cfgCtrl_decode.vhd
 core_cfgCtrl.vhd
 core_forward.vhd
+tmr_single_voter.vhd
 tmr_voter.vhd
 tmr_cxplifvoter.vhd
 core_contextPipelaneIFace.vhd

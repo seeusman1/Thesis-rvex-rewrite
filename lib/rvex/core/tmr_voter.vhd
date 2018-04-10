@@ -19,13 +19,34 @@ end tmr_voter;
 architecture behavior of tmr_voter is
 --=============================================================================
 	
-	signal and_1_2		: std_logic;
-  	signal and_2_3		: std_logic;
-  	signal and_1_3		: std_logic;
-  	signal rst			: std_logic;
+	signal outputs		: std_logic_vector(3 downto 1);
 
 begin
 	
-	output	<= (input_1 and input_2) or (input_2 and input_3) or (input_1 and input_3);
+	
+	first_stage_voters: for i in 1 to 3 generate
+		voter: entity work.tmr_single_voter
+			port map (
+				input_1		=> input_1,
+				--input_1		=> '0',
+				input_2		=> input_2,
+				--input_2		=> '0',
+				input_3		=> input_3,
+				--input_3		=> '0',
+				output		=> outputs(i)
+			);
+	end generate;	
+	
+	
+	second_stage_voter: entity work.tmr_single_voter
+		port map (
+				input_1		=> outputs(1),
+				--input_1		=> '0',
+				input_2		=> outputs(2),
+				--input_2		=> '0',
+				input_3		=> outputs(3),
+				--input_3		=> '0',
+				output		=> output
+		);
 
 end behavior;
