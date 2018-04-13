@@ -1,0 +1,213 @@
+iMPACT Version: 14.7
+
+iMPACT log file Started on Fri Apr 13 12:30:51 2018
+
+Welcome to iMPACT
+iMPACT Version: 14.7
+// *** BATCH CMD : setMode -bs
+GUI --- Auto connect to cable...
+// *** BATCH CMD : setCable -port auto
+AutoDetecting cable. Please wait.
+*** WARNING ***: When port is set to auto detect mode, cable speed is set todefault 6 MHz regardless of explicit arguments supplied for setting the baudrates
+PROGRESS_START - Starting Operation.
+If you are using the Platform Cable USB, please refer to the USB CableInstallation Guide (UG344) to install the libusb package.
+ Using windrvr6 driver.
+Connecting to cable (Usb Port - USB21).
+Checking cable driver.
+File version of /opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64/xusbdfwu.hex = 1030.
+File version of /usr/share/xusbdfwu.hex = 1030.
+ libusb-driver.so version: 2018-04-03 17:05:24.
+Cable connection failed.
+Connecting to cable (Parallel Port - parport0).
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ parport0: 
+ parport1: 
+ parport2: 
+ parport3: 
+ LPT1 Base Address set from env variable = 0.
+ LPT base address = 0000h.
+ LPT1 Ecp Address set from env variable = 400.
+ ECP base address = 0400h.
+LPT port is already in use. rc = FFFFFFFFh
+Cable connection failed.
+Connecting to cable (Parallel Port - parport1).
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ LPT2 Base Address set from env variable = 10.
+ LPT base address = 0010h.
+ LPT2 Ecp Address set from env variable = 410.
+ ECP base address = 0410h.
+LPT port is already in use. rc = FFFFFFFFh
+Cable connection failed.
+Connecting to cable (Parallel Port - parport2).
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ LPT3 Base Address set from env variable = 20.
+ LPT base address = 0020h.
+ LPT3 Ecp Address set from env variable = 420.
+ ECP base address = 0420h.
+LPT port is already in use. rc = FFFFFFFFh
+Cable connection failed.
+Connecting to cable (Parallel Port - parport3).
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ LPT4 Base Address set from env variable = 30.
+ LPT base address = 0030h.
+ LPT4 Ecp Address set from env variable = 430.
+ ECP base address = 0430h.
+LPT port is already in use. rc = FFFFFFFFh
+Cable connection failed.
+PROGRESS_END - End Operation.
+Elapsed time =      2 sec.
+Cable autodetection failed.
+WARNING:iMPACT:923 - Can not find cable, check cable setup !GUI --- Auto connect to cable...
+// *** BATCH CMD : setCable -port auto
+AutoDetecting cable. Please wait.
+*** WARNING ***: When port is set to auto detect mode, cable speed is set todefault 6 MHz regardless of explicit arguments supplied for setting the baudrates
+PROGRESS_START - Starting Operation.
+If you are using the Platform Cable USB, please refer to the USB CableInstallation Guide (UG344) to install the libusb package.
+ Using windrvr6 driver.
+Connecting to cable (Usb Port - USB21).
+Checking cable driver.
+File version of /opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64/xusbdfwu.hex = 1030.
+File version of /usr/share/xusbdfwu.hex = 1030.
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ Cable PID = 0008.
+ Max current requested during enumeration is 60 mA.
+write cmdbuffer failed FFFFFFFFFFFFFFF7.
+Loopback test failed. Sent character = 00, Received character = 00.
+Cable connection failed.
+Connecting to cable (Parallel Port - parport0).
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ LPT1 Base Address set from env variable = 0.
+ LPT base address = 0000h.
+ LPT1 Ecp Address set from env variable = 400.
+ ECP base address = 0400h.
+LPT port is already in use. rc = FFFFFFFFh
+Cable connection failed.
+Connecting to cable (Parallel Port - parport1).
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ LPT2 Base Address set from env variable = 10.
+ LPT base address = 0010h.
+ LPT2 Ecp Address set from env variable = 410.
+ ECP base address = 0410h.
+LPT port is already in use. rc = FFFFFFFFh
+Cable connection failed.
+Connecting to cable (Parallel Port - parport2).
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ LPT3 Base Address set from env variable = 20.
+ LPT base address = 0020h.
+ LPT3 Ecp Address set from env variable = 420.
+ ECP base address = 0420h.
+LPT port is already in use. rc = FFFFFFFFh
+Cable connection failed.
+Connecting to cable (Parallel Port - parport3).
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ LPT4 Base Address set from env variable = 30.
+ LPT base address = 0030h.
+ LPT4 Ecp Address set from env variable = 430.
+ ECP base address = 0430h.
+LPT port is already in use. rc = FFFFFFFFh
+Cable connection failed.
+PROGRESS_END - End Operation.
+Elapsed time =      1 sec.
+Cable autodetection failed.
+WARNING:iMPACT:923 - Can not find cable, check cable setup !GUI --- Auto connect to cable...
+// *** BATCH CMD : setCable -port auto
+AutoDetecting cable. Please wait.
+*** WARNING ***: When port is set to auto detect mode, cable speed is set todefault 6 MHz regardless of explicit arguments supplied for setting the baudrates
+PROGRESS_START - Starting Operation.
+If you are using the Platform Cable USB, please refer to the USB CableInstallation Guide (UG344) to install the libusb package.
+ Using windrvr6 driver.
+Connecting to cable (Usb Port - USB21).
+Checking cable driver.
+File version of /opt/Xilinx/14.7/ISE_DS/ISE/bin/lin64/xusbdfwu.hex = 1030.
+File version of /usr/share/xusbdfwu.hex = 1030.
+ libusb-driver.so version: 2018-04-03 17:05:24.
+ Cable PID = 0008.
+ Max current requested during enumeration is 74 mA.
+Type = 0x0004.
+ Cable Type = 3, Revision = 0.
+ Setting cable speed to 6 MHz.
+Cable connection established.
+Firmware version = 1028.
+File version of /opt/Xilinx/14.7/ISE_DS/ISE/data/xusb_xlp.hex = 1303.
+Firmware hex file version = 1303.
+Downloading /opt/Xilinx/14.7/ISE_DS/ISE/data/xusb_xlp.hex.
+Downloaded firmware version = 1303.
+PLD file version = 0012h.
+ PLD version = 0012h.
+PROGRESS_END - End Operation.
+Elapsed time =      0 sec.
+Type = 0x0004.
+ESN option: 000013EAA68C01.
+Attempting to identify devices in the boundary-scan chain configuration...
+INFO:iMPACT - Current time: 13-04-18 12:31
+// *** BATCH CMD : Identify -inferir 
+PROGRESS_START - Starting Operation.
+Identifying chain contents...'0': : Manufacturer's ID = Xilinx xc6vlx240t, Version : 4
+INFO:iMPACT:1777 - 
+   Reading /opt/Xilinx/14.7/ISE_DS/ISE/virtex6/data/xc6vlx240t.bsd...
+INFO:iMPACT:501 - '1': Added Device xc6vlx240t successfully.
+----------------------------------------------------------------------
+'1': : Manufacturer's ID = Xilinx xccace, Version : 0
+INFO:iMPACT:1777 - 
+   Reading /opt/Xilinx/14.7/ISE_DS/ISE/acecf/data/xccace.bsd...
+INFO:iMPACT:501 - '1': Added Device xccace successfully.
+----------------------------------------------------------------------
+done.
+PROGRESS_END - End Operation.
+Elapsed time =      1 sec.
+// *** BATCH CMD : identifyMPM 
+// *** BATCH CMD : assignFile -p 2 -file"/home/usman/Desktop/bit_streams/ml605-standalone-ecc.bit"
+'2': Loading file '/home/usman/Desktop/bit_streams/ml605-standalone-ecc.bit' ...
+done.
+INFO:iMPACT:2257 - Startup Clock has been changed to 'JtagClk' in the bitstream   stored in memory,
+   but the original bitstream file remains unchanged.
+UserID read from the bitstream file = 0xFFFFFFFF.
+----------------------------------------------------------------------
+INFO:iMPACT:501 - '2': Added Device xc6vlx240t successfully.
+----------------------------------------------------------------------
+INFO:iMPACT - Current time: 13-04-18 12:32
+// *** BATCH CMD : Program -p 2 
+Warning: Chain frequency (1000000) is less than the current cable speed(6000000).
+ Adjust to cable speed (1000000).
+Maximum TCK operating frequency for this device chain: 1000000.
+Validating chain...
+Boundary-scan chain validated successfully.
+2: Device Temperature: Current Reading:   29,21 C, Min. Reading:   24,78 C, Max.Reading:   29,70 C
+2: VCCINT Supply: Current Reading:   1,011 V, Min. Reading:   1,008 V, Max.Reading:   1,014 V
+2: VCCAUX Supply: Current Reading:   2,499 V, Min. Reading:   2,493 V, Max.Reading:   2,508 V
+PROGRESS_START - Starting Operation.
+'2': Programming device...
+ Match_cycle = NoWait.
+Match cycle: NoWait
+ LCK_cycle = NoWait.
+LCK cycle: NoWait
+done.
+INFO:iMPACT:2219 - Status register values:
+INFO:iMPACT - 0011 1111 1011 1110 0000 1000 0000 0000 
+INFO:iMPACT:579 - '2': Completed downloading bit file to device.
+INFO:iMPACT:188 - '2': Programming completed successfully.
+ Match_cycle = NoWait.
+Match cycle: NoWait
+ LCK_cycle = NoWait.
+LCK cycle: NoWait
+INFO:iMPACT - '2': Checking done pin....done.
+'2': Programmed successfully.
+PROGRESS_END - End Operation.
+Elapsed time =    149 sec.
+INFO:iMPACT - User_EnvOsname: 'Ubuntu'
+INFO:iMPACT - User_EnvOsrelease: 'Ubuntu 16.04.3 LTS'
+// *** BATCH CMD : setMode -bs
+INFO:iMPACT - Launching WebTalk, please refer to the webtalk log at   /home/usman/webtalk.log for details.
+INFO:iMPACT - Running wbtc successfully.
+// *** BATCH CMD : setMode -bs
+// *** BATCH CMD : deleteDevice -position 1
+----------------------------------------------------------------------
+// *** BATCH CMD : deleteDevice -position 1
+// *** BATCH CMD : setMode -bs
+// *** BATCH CMD : setMode -ss
+// *** BATCH CMD : setMode -sm
+// *** BATCH CMD : setMode -hw140
+// *** BATCH CMD : setMode -spi
+// *** BATCH CMD : setMode -acecf
+// *** BATCH CMD : setMode -acempm
+// *** BATCH CMD : setMode -pff
