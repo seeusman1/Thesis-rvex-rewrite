@@ -168,13 +168,29 @@ begin -- architecture
   end process;
 		
 		
-  ecc_proc: process (readData_encoded,writeData) is
-  begin
-	  	for i in 0 to 3 loop
-			readData(8*i + 7 downto 8*i)			<= 	readData_encoded(12*i+11 downto 12*i+4);
-			writeData_encoded(12*i+11 downto 12*i)	<=	writeData(8*i+7 downto 8*i) & "0000";
-		end loop;											 
-  end process;
+--  ecc_proc: process (readData_encoded,writeData) is
+--  begin
+--	  	for i in 0 to 3 loop
+--			readData(8*i + 7 downto 8*i)			<= 	readData_encoded(12*i+11 downto 12*i+4);
+--			writeData_encoded(12*i+11 downto 12*i)	<=	writeData(8*i+7 downto 8*i) & "0000";
+--		end loop;											 
+--  end process;
+		  
+  ECC_encoderbank: for i in 0 to 3 generate
+	ecc_encoder: entity work.ecc_encoder_8
+		port map (
+					input		=> writeData(8*i + 7  downto 8*i),
+					output		=> writeData_encoded(12*i + 11 downto 12*i)
+				);
+  end generate;		
+												   
+  ECC_decoderbank: for i in 0 to 3 generate
+	ecc_decoder: entity work.ecc_decoder_8
+		port map (
+					input		=> readData_encoded(12*i + 11 downto 12*i),
+					output		=> readData(8*i + 7 downto 8*i)
+				);
+  end generate;	
 		
 		
   

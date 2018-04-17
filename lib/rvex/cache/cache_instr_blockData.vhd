@@ -152,7 +152,7 @@ begin -- architecture
 --  end process;		
 												   
 												   
-  ECC_encoderbank: for i in 7 downto 0 generate
+  ECC_encoderbank: for i in 0 to 7 generate
 	ecc_encoder: entity work.ecc_encoder
 		port map (
 					input		=> writeData(32*i + 31 downto 32*i),
@@ -160,7 +160,7 @@ begin -- architecture
 				);
   end generate;		
 												   
-  ECC_decoderbank: for i in 7 downto 0 generate
+  ECC_decoderbank: for i in 0 to 7 generate
 	ecc_decoder: entity work.ecc_decoder
 		port map (
 					input		=> readData_encoded(38*i + 37 downto 38*i),
