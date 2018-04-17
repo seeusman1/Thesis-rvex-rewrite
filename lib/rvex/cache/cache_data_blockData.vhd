@@ -104,7 +104,8 @@ architecture Behavioral of cache_data_blockData is
   attribute ram_style         : string;
   
   -- Cache data memory.
-  subtype ram_data_type is rvex_data_array(0 to 2**CCFG.dataCacheLinesLog2-1);
+  --subtype ram_data_type is rvex_data_array(0 to 2**CCFG.dataCacheLinesLog2-1);
+  subtype ram_data_type is rvex_encoded_datacache_address_array(0 to 2**CCFG.dataCacheLinesLog2-1);
   signal ram_data             : ram_data_type := (others => (others => 'X'));
   
   -- Hints for XST to implement the data memory in block RAMs.
@@ -116,7 +117,11 @@ architecture Behavioral of cache_data_blockData is
   
   -- Individual write enable signals for each byte.
   signal byteWriteEnable      : rvex_mask_type;
-  
+
+
+  --Encoded signals
+  signal writeData_encoded	: rvex_encoded_datacache_address_type := (others => 'X');
+  signal readData_encoded	: rvex_encoded_datacache_address_type := (others => 'X');
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -142,19 +147,36 @@ begin -- architecture
       if enable = '1' then
         for i in 0 to 3 loop
           if byteWriteEnable(i) = '1' then
-            ram_data(to_integer(unsigned(cpuOffset)))(8*i+7 downto 8*i) <=
-              writeData(8*i+7 downto 8*i);
-            
-            readData(8*i+7 downto 8*i) <=
-              writeData(8*i+7 downto 8*i);
+            --ram_data(to_integer(unsigned(cpuOffset)))(8*i+7 downto 8*i) <=
+              --writeData(8*i+7 downto 8*i);
+            ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i) <=
+              writeData_encoded(12*i+11 downto 12*i);
+			
+            --readData(8*i+7 downto 8*i) <=
+              --writeData(8*i+7 downto 8*i);
+            readData_encoded(12*i+11 downto 12*i) <=
+              writeData_encoded(12*i+11 downto 12*i);
           else
-            readData(8*i+7 downto 8*i) <=
-              ram_data(to_integer(unsigned(cpuOffset)))(8*i+7 downto 8*i);
+            --readData(8*i+7 downto 8*i) <=
+              --ram_data(to_integer(unsigned(cpuOffset)))(8*i+7 downto 8*i);
+            readData_encoded(12*i+11 downto 12*i) <=
+              ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i);
           end if;
         end loop;
       end if;
     end if;
   end process;
+		
+		
+  ecc_proc: process (readData_encoded,writeData) is
+  begin
+	  	for i in 0 to 3 loop
+			readData(8*i + 7 downto 8*i)			<= 	readData_encoded(12*i+11 downto 12*i+4);
+			writeData_encoded(12*i+11 downto 12*i)	<=	writeData(8*i+7 downto 8*i) & "0000";
+		end loop;											 
+  end process;
+		
+		
   
 end Behavioral;
 
