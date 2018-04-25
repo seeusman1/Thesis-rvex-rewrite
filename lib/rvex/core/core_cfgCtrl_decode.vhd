@@ -335,7 +335,7 @@ begin -- architecture
   --newConfiguration_out <= newConfiguration_r;
   process (newConfiguration_r) is --testing
   begin
-	--if newConfiguration_r (0) = '1' then
+	----if newConfiguration_r (0) = '1' then
 	if newConfiguration_r(0) = '1' and newConfiguration_r(3) = '1' then
 	  newConfiguration_out <= X"00008000";--(others => '0');
 	else

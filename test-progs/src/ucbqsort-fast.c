@@ -15,17 +15,19 @@ int compare(char *n1, char *n2)
 }
 int main()
 {
-	CR_CRR = 0x8999;
-	////////////CR_CRR = 0x0001; 
+	CR_CRR = 0x8880;
+	QSORT((char *) SortArr, (int) 20, sizeof(unsigned char), compare);
+	CR_CRR = 0x8999; 
 	int j;
 	QSORT((char *) SortArr, (int) 20, sizeof(unsigned char), compare);
+	//CR_CRR = 0x8999;
 	for (j = 0; j < 20; j++) {
 		if (SortArr[j] != SortedArr[j]) {
 			rvex_fail("ucbqsort-fast: failed\n");
 			return 1;
 		}
-	}
-	//CR_CRR = 0x8800; 
+	} 
+	CR_CRR = 0x8880;
 	rvex_succeed("ucbqsort-fast: success\n");
 
 	return 0;

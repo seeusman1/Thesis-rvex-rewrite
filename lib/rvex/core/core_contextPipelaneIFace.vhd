@@ -1009,39 +1009,39 @@ begin -- architecture
 	
 --pass values through majority voter
 
-    cxplif2cfg_blockReconfig(ctxt)      <= cxplif2cfg_blockReconfig_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else    --**ctxt should be FT ctxt. pass it from cfg**
+    cxplif2cfg_blockReconfig(ctxt)      <= --cxplif2cfg_blockReconfig_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else    --**ctxt should be FT ctxt. pass it from cfg**
 											(blockReconfig_arb(laneGroup) and cfg2cxplif_active(ctxt)); 						
-    cxplif2rctrl_irqAck(ctxt)           <= cxplif2rctrl_irqAck_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2rctrl_irqAck(ctxt)           <= --cxplif2rctrl_irqAck_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											(irqAck_arb(laneGroup) and cfg2cxplif_active(ctxt));
-    cxplif2rctrl_idle(ctxt)             <= cxplif2rctrl_idle_s 				when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2rctrl_idle(ctxt)             <= --cxplif2rctrl_idle_s 				when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											(idle_arb(laneGroup) or not cfg2cxplif_active(ctxt));
-    cxplif2cxreg_stall(ctxt)            <= cxplif2cxreg_stall_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_stall(ctxt)            <= --cxplif2cxreg_stall_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											(stall(laneGroup) or not cfg2cxplif_active(ctxt));
-    cxplif2cxreg_idle(ctxt)             <= cxplif2cxreg_idle_s 				when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_idle(ctxt)             <= --cxplif2cxreg_idle_s 				when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											(idle_arb(laneGroup) or not cfg2cxplif_active(ctxt));
-    cxplif2cxreg_stop(ctxt)             <= cxplif2cxreg_stop_s 				when (tmr_enable = '1' and ctxt = 0 )	else 
+    cxplif2cxreg_stop(ctxt)             <= --cxplif2cxreg_stop_s 				when (tmr_enable = '1' and ctxt = 0 )	else 
 											stop_arb(laneGroup);
-    cxplif2cxreg_brWriteData(ctxt)      <= cxplif2cxreg_brWriteData_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_brWriteData(ctxt)      <= --cxplif2cxreg_brWriteData_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											brLinkWritePort_arb(laneGroup).brData(S_SWB);
-    cxplif2cxreg_brWriteEnable(ctxt)    <= cxplif2cxreg_brWriteEnable_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_brWriteEnable(ctxt)    <= --cxplif2cxreg_brWriteEnable_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											brLinkWritePort_arb(laneGroup).brWriteEnable(S_SWB);
-    cxplif2cxreg_linkWriteData(ctxt)    <= cxplif2cxreg_linkWriteData_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_linkWriteData(ctxt)    <= --cxplif2cxreg_linkWriteData_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											brLinkWritePort_arb(laneGroup).linkData(S_SWB);
-    cxplif2cxreg_linkWriteEnable(ctxt)  <= cxplif2cxreg_linkWriteEnable_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_linkWriteEnable(ctxt)  <= --cxplif2cxreg_linkWriteEnable_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											brLinkWritePort_arb(laneGroup).linkWriteEnable(S_SWB);
-    cxplif2cxreg_nextPC(ctxt)           <= cxplif2cxreg_nextPC_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_nextPC(ctxt)           <= --cxplif2cxreg_nextPC_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											PC_arb(laneGroup);
-    cxplif2cxreg_overridePC_ack(ctxt)   <= cxplif2cxreg_overridePC_ack_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_overridePC_ack(ctxt)   <= --cxplif2cxreg_overridePC_ack_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											valid_arb(laneGroup);
-    cxplif2cxreg_trapInfo(ctxt)         <= cxplif2cxreg_trapInfo_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_trapInfo(ctxt)         <= --cxplif2cxreg_trapInfo_s 			when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											trapInfo_arb(laneGroup);
-    cxplif2cxreg_trapPoint(ctxt)        <= cxplif2cxreg_trapPoint_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_trapPoint(ctxt)        <= --cxplif2cxreg_trapPoint_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											trapPoint_arb(laneGroup);
-    cxplif2cxreg_rfi(ctxt)              <= cxplif2cxreg_rfi_s 				when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_rfi(ctxt)              <= --cxplif2cxreg_rfi_s 				when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											rfi_arb(laneGroup);
-    cxplif2cxreg_exDbgTrapInfo(ctxt)    <= cxplif2cxreg_exDbgTrapInfo_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 	
+    cxplif2cxreg_exDbgTrapInfo(ctxt)    <= --cxplif2cxreg_exDbgTrapInfo_s 	when (tmr_enable = '1' and ctxt = 0 ) 	else 	
 											exDbgTrapInfo_arb(laneGroup);
-    cxplif2cxreg_resuming_ack(ctxt)     <= cxplif2cxreg_resuming_ack_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else 
+    cxplif2cxreg_resuming_ack(ctxt)     <= --cxplif2cxreg_resuming_ack_s 		when (tmr_enable = '1' and ctxt = 0 ) 	else 
 											valid_arb(laneGroup);
 		
 		
@@ -1082,7 +1082,7 @@ begin -- architecture
     
     -- Determine the context to use for this group.
      ctxt <= vect2uint(cfg2any_context(laneGroup)) when tmr_enable = '0' else
-	   vect2uint(cfg2any_context(0));--testing
+	   vect2uint(cfg2any_context(0));--testing -- fault tolerant context
    
 	  
 	  

@@ -1683,7 +1683,7 @@ begin -- architecture
       for lane in 0 to 2**CFG.numLanesLog2-1 loop
         
         -- Ignore lanes which aren't active.
-        if currentCfg(S_LAST)(lane2group(lane, CFG)*4+3) = '1' then
+        if currentCfg(S_LAST)(lane2group(lane, CFG)*4+3) = '1' and currentCfg(S_LAST)(lane2group(lane, CFG)*4) = '0' then
           prevContext := -1;
           next;
         end if;

@@ -509,7 +509,7 @@ begin -- architecture
   -- the lane index with some alignment based on CFG. Only the (small) +1 adder
   -- here is significant.
   pc_add_val_decoder: process (
-    newCoupleMatrix_r, newConfiguration_r, newNumPipelaneGroupsLog2ForContext_r
+    newCoupleMatrix_r, newConfiguration_r, newNumPipelaneGroupsLog2ForContext_r, tmr_en
   ) is
     
     -- Log2 of the size in bytes of an instruction for a lane group.
@@ -742,11 +742,12 @@ begin -- architecture
 			
 		--if tmr_en = '1' then 
           --curPcAddVal_r(lane) <= std_logic_vector(to_unsigned (8, 32));
-			--else curPcAddVal_r(lane) <= std_logic_vector(
-            --addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32)); --testing
+			--else 
+			curPcAddVal_r(lane) <= std_logic_vector(
+            addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32)); --testing
 		--end if;	
-		curPcAddVal_r(lane) <= std_logic_vector(
-            addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32));
+		--curPcAddVal_r(lane) <= std_logic_vector(
+            --addValMinusOne + to_unsigned(2**cfg2pcAlignLog2(CFG), 32));
 			
 			
           
@@ -782,7 +783,7 @@ begin -- architecture
   
   -- Construct the vector containing the number of groups working together for
   -- each lane group and extract the contexts from the configuration vector.
-  num_groups_per_lane_gen: process (curConfiguration_r, curNumPipelaneGroupsLog2ForContext_r) is
+  num_groups_per_lane_gen: process (curConfiguration_r, curNumPipelaneGroupsLog2ForContext_r, tmr_en) is
     variable contextBits  : rvex_3bit_type;
     variable activeBit    : std_logic;
     variable context      : natural;
@@ -793,20 +794,20 @@ begin -- architecture
 		--testing
      -- if curConfiguration_r(4*laneGroup+3) = '1' and curConfiguration_r(4*laneGroup) = '1' then
 		
---		if tmr_en = '0' then	  
---	    activeBit := not curConfiguration_r(laneGroup*4+3);
---		else 
---		activeBit := config_sig(laneGroup);
---		end if;
+		--if tmr_en = '0' then	  
+	    --activeBit := not curConfiguration_r(laneGroup*4+3);
+		--else 
+		--activeBit := config_sig(laneGroup);
+		--end if;
 	      
 			  
-		--if tmr_en = '0' then 	
+		if tmr_en = '0' then 	
 		   cfg2any_context(laneGroup) <= contextBits;
 	       activeBit := not curConfiguration_r(laneGroup*4+3);		
-	    --else
-		  --cfg2any_context(laneGroup) <= "000"; --testing
-	      --activeBit := config_sig(laneGroup);
-	    --end if;
+	    else
+		   cfg2any_context(laneGroup) <= "000"; --testing-- should be fault tolerant context
+	       activeBit := config_sig(laneGroup);
+	    end if;
 
 
       cfg2any_active(laneGroup) <= activeBit;
