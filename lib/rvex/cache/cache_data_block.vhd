@@ -102,7 +102,8 @@ entity cache_data_block is
     block2route_readEnable_r    : out std_logic;
     
     -- Data for write accesses.
-    route2block_writeData       : in  rvex_data_type;
+    --route2block_writeData       : in  rvex_data_type;
+	  route2block_writeData       : in  rvex_encoded_datacache_data_type; --encoded data
     
     -- Active high bytemask for writes.
     route2block_writeMask       : in  rvex_mask_type;
@@ -150,7 +151,8 @@ entity cache_data_block is
     
     -- Cache data output, valid when hit and readEnable were high in the
     -- previous cycle.
-    block2route_data            : out rvex_data_type;
+    --block2route_data            : out rvex_data_type;
+	  block2route_data            : out rvex_encoded_datacache_data_type; --encoded data
     
     -- Block reconfiguration signal from the cache. This is asserted when the
     -- block is busy.
@@ -210,7 +212,8 @@ architecture Behavioral of cache_data_block is
   -- command.
   signal cpuAddr_r            : rvex_address_type;
   signal readEnable_r         : std_logic;
-  signal writeData_r          : rvex_data_type;
+  --signal writeData_r          : rvex_data_type;
+  signal writeData_r          : rvex_encoded_datacache_data_type;
   signal writeMask_r          : rvex_mask_type;
   signal writeEnable_r        : std_logic;
   signal bypass_r             : std_logic;
@@ -284,13 +287,15 @@ architecture Behavioral of cache_data_block is
   signal update               : std_logic;
   
   -- New data for the currently addressed cache line.
-  signal updateData           : rvex_data_type;
+  --signal updateData           : rvex_data_type;
+  signal updateData           : rvex_encoded_datacache_data_type;
   
   -- Byte mask for writing to the currently addressed cache line.
   signal updateMask           : rvex_mask_type;
   
   -- Cache data output.
-  signal cacheReadData        : rvex_data_type;
+  --signal cacheReadData        : rvex_data_type;
+  signal cacheReadData        : rvex_encoded_datacache_data_type;
   
 --=============================================================================
 begin -- architecture
@@ -501,9 +506,9 @@ begin -- architecture
       -- CPU interface signals.
       addr                    => cpuAddr_r,
       readEnable              => readEnable_r,
-      readData                => block2route_data,
+      readData                => block2route_data, -- to be fixed at mainCtrl
       writeEnable             => writeEnable_r,
-      writeData               => writeData_r,
+      writeData               => writeData_r, -- to be fixed at mainCtrl
       writeMask               => writeMask_r,
       bypass                  => bypass_r,
       stall                   => route2block_stall,

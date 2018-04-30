@@ -97,13 +97,15 @@ entity cache_data_mainCtrl is
     readEnable                  : in  std_logic;
     
     -- CPU read data output. Valid when clkEnCPU is high and stall is low.
-    readData                    : out rvex_data_type;
+    --readData                    : out rvex_data_type;
+    readData                    : out rvex_encoded_datacache_data_type; --encoded data
     
     -- CPU write enable signal, delayed by one cycle to sync up with hit.
     writeEnable                 : in  std_logic;
     
     -- CPU write data, delayed by one cycle to sync up with hit.
-    writeData                   : in  rvex_data_type;
+    --writeData                   : in  rvex_data_type;
+    writeData                   : in  rvex_encoded_datacache_data_type; --encoded data
     
     -- CPU write data byte mask, delayed by one cycle to sync up with hit.
     writeMask                   : in  rvex_mask_type;
@@ -150,7 +152,8 @@ entity cache_data_mainCtrl is
     hit                         : in  std_logic;
     
     -- Data read from the cache memory.
-    cacheReadData               : in  rvex_data_type;
+    --cacheReadData               : in  rvex_data_type;
+	cacheReadData               : in  rvex_encoded_datacache_data_type;
     
     -- Signals that the updateData should be written to the addressed line
     -- in the cache data memory in accordance with updateMask, that the tag
@@ -158,7 +161,8 @@ entity cache_data_mainCtrl is
     update                      : out std_logic;
     
     -- Write data for the cache data memory.
-    updateData                  : out rvex_data_type;
+    --updateData                  : out rvex_data_type;
+	updateData                  : out rvex_encoded_datacache_data_type;
     
     -- Write data for the cache data memory.
     updateMask                  : out rvex_mask_type;
@@ -200,12 +204,14 @@ architecture Behavioral of cache_data_mainCtrl is
   -- Write buffer signals.
   signal writeBufEna            : std_logic;
   signal writeBufAddr           : rvex_address_type;
-  signal writeBufData           : rvex_data_type;
+  --signal writeBufData           : rvex_data_type;
+  signal writeBufData           : rvex_encoded_datacache_data_type;
   signal writeBufMask           : rvex_mask_type;
   
   -- Read data synchronization register signals.
   signal memSyncRegEna          : std_logic;
-  signal memSyncRegData         : rvex_data_type;
+  --signal memSyncRegData         : rvex_data_type;
+  signal memSyncRegData         : rvex_encoded_datacache_data_type;
   signal memSyncRegFault        : std_logic;
   
   -- Write accepted register. This is set when a write is started and reset
@@ -249,7 +255,7 @@ begin -- architecture
         memSyncRegData <= (others => '0');
         memSyncRegFault <= '0';
       elsif memSyncRegEna = '1' then
-        memSyncRegData <= busToCache.readData;
+        memSyncRegData <= busToCache.readData & X"0000"; --need encoder here
         memSyncRegFault <= busToCache.fault;
       end if;
       
@@ -319,7 +325,7 @@ begin -- architecture
     nextState <= state;
     cacheToBus <= BUS_MST2SLV_IDLE;
     cacheToBus.address <= addr;
-    cacheToBus.writeData <= writeData;
+    cacheToBus.writeData <= writeData(47 downto 16);
     cacheToBus.writeMask <= writeMask;
     update <= '0';
     updateData <= writeData;
@@ -346,7 +352,7 @@ begin -- architecture
         
         if (readEnable = '1' or writeEnable = '1') and bypass = '1' then
           
-          cacheToBus.writeData <= writeData;
+          cacheToBus.writeData <= writeData (47 downto 16);
           cacheToBus.writeMask <= writeMask;
           if clkEnCPU = '1' then
             cacheToBus.readEnable <= readEnable;
@@ -393,7 +399,7 @@ begin -- architecture
             -- Initiate write to the memory.
             if clkEnCPU = '1' then
               cacheToBus.writeEnable <= '1';
-              cacheToBus.writeData <= writeData;
+              cacheToBus.writeData <= writeData (47 downto 16);
               cacheToBus.writeMask <= writeMask;
               nextState <= STATE_WRITE;
             end if;
@@ -442,7 +448,7 @@ begin -- architecture
           -- Keep requesting the write, using the write buffer data.
           cacheToBus.address <= writeBufAddr;
           cacheToBus.writeEnable <= '1';
-          cacheToBus.writeData <= writeBufData;
+          cacheToBus.writeData <= writeBufData (47 downto 16);
           cacheToBus.writeMask <= writeBufMask;
           
         end if;
@@ -460,7 +466,7 @@ begin -- architecture
       when STATE_UPDATE_1 =>
         
         -- Prepare the update command and synchronization register data inputs.
-        updateData <= busToCache.readData;
+        updateData <= busToCache.readData & X"0000"; --need encoder here
         updateMask <= (others => '1');
         
         if clkEnBus = '1' and busToCache.ack = '1' then
@@ -522,7 +528,7 @@ begin -- architecture
           
           -- Keep requesting.
           cacheToBus.readEnable <= readEnable;
-          cacheToBus.writeData <= writeData;
+          cacheToBus.writeData <= writeData(47 downto 16);
           cacheToBus.writeMask <= writeMask;
           cacheToBus.writeEnable <= writeEnable;
           

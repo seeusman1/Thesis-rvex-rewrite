@@ -178,10 +178,26 @@ architecture Behavioral of cache is
   signal dcache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_status       : dcache_status_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+
+
+  -- ECC signal test
+  signal rv2dcache_writeData_encoded    : rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_readData_encoded     : rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
+	
+	rv2dcache_writeData_encoded(0)		<= rv2dcache_writeData(0) & X"0000";
+	rv2dcache_writeData_encoded(1)		<= rv2dcache_writeData(1) & X"0000";
+	rv2dcache_writeData_encoded(2)		<= rv2dcache_writeData(2) & X"0000";
+	rv2dcache_writeData_encoded(3)		<= rv2dcache_writeData(3) & X"0000";
+
+	dcache2rv_readData(0)		<= dcache2rv_readData_encoded(0)(47 downto 16);
+	dcache2rv_readData(1)		<= dcache2rv_readData_encoded(1)(47 downto 16);
+	dcache2rv_readData(2)		<= dcache2rv_readData_encoded(2)(47 downto 16);
+	dcache2rv_readData(3)		<= dcache2rv_readData_encoded(3)(47 downto 16); 
+
   
   -----------------------------------------------------------------------------
   -- Instantiate the instruction cache
@@ -249,11 +265,13 @@ begin -- architecture
       rv2dcache_stallOut        => rv2cache_stallOut,
       rv2dcache_addr            => rv2dcache_addr,
       rv2dcache_readEnable      => rv2dcache_readEnable,
-      rv2dcache_writeData       => rv2dcache_writeData,
+      --rv2dcache_writeData       => rv2dcache_writeData,
+	  rv2dcache_writeData       => rv2dcache_writeData_encoded,-- encoded data
       rv2dcache_writeMask       => rv2dcache_writeMask,
       rv2dcache_writeEnable     => rv2dcache_writeEnable,
       rv2dcache_bypass          => rv2dcache_bypass,
-      dcache2rv_readData        => dcache2rv_readData,
+      --dcache2rv_readData        => dcache2rv_readData,
+	  dcache2rv_readData        => dcache2rv_readData_encoded,-- encoded data
       dcache2rv_busFault        => dcache2rv_busFault,
       dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
       dcache2rv_status          => dcache2rv_status,

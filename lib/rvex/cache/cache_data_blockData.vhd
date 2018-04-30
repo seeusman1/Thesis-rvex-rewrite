@@ -81,13 +81,15 @@ entity cache_data_blockData is
     cpuAddr                     : in  rvex_address_type;
     
     -- Read data output.
-    readData                    : out rvex_data_type;
+    --readData                    : out rvex_data_type;
+	readData                    : out rvex_encoded_datacache_data_type;
     
     -- Active high write enable input.
     writeEnable                 : in  std_logic;
     
     -- Write data input.
-    writeData                   : in  rvex_data_type;
+    --writeData                   : in  rvex_data_type;
+	writeData                   : in  rvex_encoded_datacache_data_type;
     
     -- Write byte mask input.
     writeMask                   : in  rvex_mask_type
@@ -105,7 +107,7 @@ architecture Behavioral of cache_data_blockData is
   
   -- Cache data memory.
   --subtype ram_data_type is rvex_data_array(0 to 2**CCFG.dataCacheLinesLog2-1);
-  subtype ram_data_type is rvex_encoded_datacache_address_array(0 to 2**CCFG.dataCacheLinesLog2-1);
+  subtype ram_data_type is rvex_encoded_datacache_data_array(0 to 2**CCFG.dataCacheLinesLog2-1);
   signal ram_data             : ram_data_type := (others => (others => 'X'));
   
   -- Hints for XST to implement the data memory in block RAMs.
@@ -120,8 +122,8 @@ architecture Behavioral of cache_data_blockData is
 
 
   --Encoded signals
-  signal writeData_encoded	: rvex_encoded_datacache_address_type := (others => 'X');
-  signal readData_encoded	: rvex_encoded_datacache_address_type := (others => 'X');
+  signal writeData_encoded	: rvex_encoded_datacache_data_type := (others => 'X');
+  signal readData_encoded	: rvex_encoded_datacache_data_type := (others => 'X');
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -147,20 +149,25 @@ begin -- architecture
       if enable = '1' then
         for i in 0 to 3 loop
           if byteWriteEnable(i) = '1' then
-            --ram_data(to_integer(unsigned(cpuOffset)))(8*i+7 downto 8*i) <=
-              --writeData(8*i+7 downto 8*i);
-            ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i) <=
-              writeData_encoded(12*i+11 downto 12*i);
-			
-            --readData(8*i+7 downto 8*i) <=
-              --writeData(8*i+7 downto 8*i);
-            readData_encoded(12*i+11 downto 12*i) <=
-              writeData_encoded(12*i+11 downto 12*i);
+
+         --   ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i) <=
+         --     writeData_encoded(12*i+11 downto 12*i);
+            ram_data(to_integer(unsigned(cpuOffset)))(8*i+7+16 downto 8*i+16) <=
+              writeData_encoded(8*i+7+16 downto 8*i+16);
+            ram_data(to_integer(unsigned(cpuOffset)))(15 downto 0) <= (others => '0');
+
+         --   readData_encoded(12*i+11 downto 12*i) <=
+         --     writeData_encoded(12*i+11 downto 12*i);
+            readData_encoded(8*i+7+16 downto 8*i+16) <=
+              writeData_encoded(8*i+7+16 downto 8*i+16);
+		    readData_encoded(15 downto 0) <= (others => '0'); -- padded additional zeros
           else
-            --readData(8*i+7 downto 8*i) <=
-              --ram_data(to_integer(unsigned(cpuOffset)))(8*i+7 downto 8*i);
-            readData_encoded(12*i+11 downto 12*i) <=
-              ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i);
+
+         --   readData_encoded(12*i+11 downto 12*i) <=
+         --     ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i);
+            readData_encoded(8*i+7+16 downto 8*i+16) <=
+              ram_data(to_integer(unsigned(cpuOffset)))(8*i+7+16 downto 8*i+16);
+            readData_encoded(15 downto 0) <= (others => '0'); -- padded additional zeros
           end if;
         end loop;
       end if;
@@ -168,29 +175,27 @@ begin -- architecture
   end process;
 		
 		
---  ecc_proc: process (readData_encoded,writeData) is
---  begin
---	  	for i in 0 to 3 loop
---			readData(8*i + 7 downto 8*i)			<= 	readData_encoded(12*i+11 downto 12*i+4);
---			writeData_encoded(12*i+11 downto 12*i)	<=	writeData(8*i+7 downto 8*i) & "0000";
---		end loop;											 
---  end process;
 		  
-  ECC_encoderbank: for i in 0 to 3 generate
-	ecc_encoder: entity work.ecc_encoder_8
-		port map (
-					input		=> writeData(8*i + 7  downto 8*i),
-					output		=> writeData_encoded(12*i + 11 downto 12*i)
-				);
-  end generate;		
+--  ECC_encoderbank: for i in 0 to 3 generate
+--	ecc_encoder: entity work.ecc_encoder_8
+--		port map (
+--					input		=> writeData(8*i + 7  downto 8*i),
+--					output		=> writeData_encoded(12*i + 11 downto 12*i)
+--				);
+--  end generate;		
 												   
-  ECC_decoderbank: for i in 0 to 3 generate
-	ecc_decoder: entity work.ecc_decoder_8
-		port map (
-					input		=> readData_encoded(12*i + 11 downto 12*i),
-					output		=> readData(8*i + 7 downto 8*i)
-				);
-  end generate;	
+--  ECC_decoderbank: for i in 0 to 3 generate
+--	ecc_decoder: entity work.ecc_decoder_8
+--		port map (
+--					input		=> readData_encoded(12*i + 11 downto 12*i),
+--					output		=> readData(8*i + 7 downto 8*i)
+--				);
+--  end generate;	
+		
+		
+		
+ readData  <= readData_encoded;
+ writeData_encoded <= writeData;
 		
 		
   
