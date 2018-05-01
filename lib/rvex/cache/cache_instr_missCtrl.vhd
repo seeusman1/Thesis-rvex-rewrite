@@ -102,7 +102,8 @@ entity cache_instr_missCtrl is
     done                        : out std_logic;
     
     -- Cache line data output, valid when done is high.
-    line                        : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    --line                        : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    line                        : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
     
     -- This signal is high when the controller is busy, signalling that
     -- reconfiguration is not possible at this time.
@@ -153,12 +154,14 @@ architecture Behavioral of cache_instr_missCtrl is
   constant WAIT_STATE           : natural := ACCESSES_PER_LINE+1;
   
   -- Line buffer registers.
-  signal line_buffer            : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+  --signal line_buffer            : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+  signal line_buffer            : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line_buffer
   
   -- To get around a weird bug in XST, we need to provide some extra delay
   -- between the line buffer registers and the inputs of the block RAM, because
   -- it's having trouble doing this on its own to avoid hold violations.
-  signal line_buffer_d          : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+  --signal line_buffer_d          : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+  signal line_buffer_d          : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line_buffer_d
   attribute keep                : string;
   attribute keep of line_buffer_d : signal is "true";
   
@@ -321,8 +324,8 @@ begin -- architecture
     begin
       if rising_edge(clk) then
         if state = i + 1 then
-          line_buffer(32*i + 31 downto 32*i)
-            <= busToCache.readData;
+          line_buffer(38*i + 37 downto 38*i)
+            <= busToCache.readData & "000000"; --need encoder here
         end if;
       end if;
       
@@ -336,13 +339,13 @@ begin -- architecture
   
   -- Forward the cache line to the cache memory.
   line_buf_forward_a: if ACCESSES_PER_LINE > 1 generate
-    line(icacheLineWidth(RCFG, CCFG)-32-1 downto 0)
-      <= line_buffer_d(icacheLineWidth(RCFG, CCFG)-32-1 downto 0);
+    line(icacheLineWidth(RCFG, CCFG)+48-38-1 downto 0)
+      <= line_buffer_d(icacheLineWidth(RCFG, CCFG)+48-38-1 downto 0);
   end generate;
   
-  line(icacheLineWidth(RCFG, CCFG)-1 downto icacheLineWidth(RCFG, CCFG)-32) <=
-    busToCache.readData when state = WAIT_STATE - 1 else
-    line_buffer_d(icacheLineWidth(RCFG, CCFG)-1 downto icacheLineWidth(RCFG, CCFG)-32);
+  line(icacheLineWidth(RCFG, CCFG)+48-1 downto icacheLineWidth(RCFG, CCFG)+48-38) <=
+    busToCache.readData & "000000" when state = WAIT_STATE - 1 else --need encoder here
+    line_buffer_d(icacheLineWidth(RCFG, CCFG)+48-1 downto icacheLineWidth(RCFG, CCFG)+48-38);
     
 end Behavioral;
 

@@ -181,13 +181,17 @@ architecture Behavioral of cache is
 
 
   -- ECC signal test
+  --data cache
   signal rv2dcache_writeData_encoded    : rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_readData_encoded     : rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  --Inst. cache
+  signal icache2rv_instr_encoded        : rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
 	
+	-- for data cache
 	rv2dcache_writeData_encoded(0)		<= rv2dcache_writeData(0) & X"0000";
 	rv2dcache_writeData_encoded(1)		<= rv2dcache_writeData(1) & X"0000";
 	rv2dcache_writeData_encoded(2)		<= rv2dcache_writeData(2) & X"0000";
@@ -197,6 +201,16 @@ begin -- architecture
 	dcache2rv_readData(1)		<= dcache2rv_readData_encoded(1)(47 downto 16);
 	dcache2rv_readData(2)		<= dcache2rv_readData_encoded(2)(47 downto 16);
 	dcache2rv_readData(3)		<= dcache2rv_readData_encoded(3)(47 downto 16); 
+
+	--for Instruction cache
+    icache2rv_instr(0)			<= icache2rv_instr_encoded(0)(37 downto 6);
+    icache2rv_instr(1)			<= icache2rv_instr_encoded(1)(37 downto 6);
+    icache2rv_instr(2)			<= icache2rv_instr_encoded(2)(37 downto 6);
+    icache2rv_instr(3)			<= icache2rv_instr_encoded(3)(37 downto 6);
+    icache2rv_instr(4)			<= icache2rv_instr_encoded(4)(37 downto 6);
+    icache2rv_instr(5)			<= icache2rv_instr_encoded(5)(37 downto 6);
+    icache2rv_instr(6)			<= icache2rv_instr_encoded(6)(37 downto 6);
+    icache2rv_instr(7)			<= icache2rv_instr_encoded(7)(37 downto 6);
 
   
   -----------------------------------------------------------------------------
@@ -223,7 +237,8 @@ begin -- architecture
       rv2icache_PCs             => rv2icache_PCs,
       rv2icache_fetch           => rv2icache_fetch,
       rv2icache_cancel          => rv2icache_cancel,
-      icache2rv_instr           => icache2rv_instr,
+      --icache2rv_instr           => icache2rv_instr,
+	  icache2rv_instr           => icache2rv_instr_encoded, --encoded syllable
       icache2rv_affinity        => icache2rv_affinity,
       icache2rv_busFault        => icache2rv_busFault,
       icache2rv_status_access   => icache2rv_status_access,

@@ -103,7 +103,8 @@ entity cache_instr is
     rv2icache_PCs               : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2icache_fetch             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2icache_cancel            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+    --icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+	icache2rv_instr             : out rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
     icache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_affinity          : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_status_access     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -203,6 +204,7 @@ architecture Behavioral of cache_instr is
     
     -- Cache line data, valid when hit and readEnable are high.
     line                        : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    --line                        : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
     
     -- Block reconfiguration signal from the cache. This is asserted when any
     -- block is busy.
@@ -538,7 +540,7 @@ begin -- architecture
             LANE_GROUP_SIZE_BITS*offset + 32*laneIndex + 31
             downto
             LANE_GROUP_SIZE_BITS*offset + 32*laneIndex
-          );
+          ) & "000000";
       end loop;
     
     end loop;

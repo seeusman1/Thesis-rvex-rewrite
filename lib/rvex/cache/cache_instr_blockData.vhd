@@ -81,13 +81,15 @@ entity cache_instr_blockData is
     cpuAddr                   : in  rvex_address_type;
     
     -- Read data output.
-    readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    --readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+	readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded read data
     
     -- Active high write enable input.
     writeEnable               : in  std_logic;
     
     -- Write data input.
-    writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0)
+    --writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0)
+    writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0) --encoded writedata
     
   );
 end cache_instr_blockData;
@@ -144,31 +146,32 @@ begin -- architecture
   end process;
 													 
 													 
---  ecc_proc: process (readData_encoded,writeData) is
---  begin
---		readData			<= 	readData_encoded(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 48);
---		writeData_encoded	<=	writeData & X"000000000000";
-													 
---  end process;		
+----  ecc_proc: process (readData_encoded,writeData) is
+----  begin
+----		readData			<= 	readData_encoded(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 48);
+----		writeData_encoded	<=	writeData & X"000000000000";
+----													 
+----  end process;		
 												   
 												   
-  ECC_encoderbank: for i in 0 to 7 generate
-	ecc_encoder: entity work.ecc_encoder
-		port map (
-					input		=> writeData(32*i + 31 downto 32*i),
-					output		=> writeData_encoded(38*i + 37 downto 38*i)
-				);
-  end generate;		
+--  ECC_encoderbank: for i in 0 to 7 generate
+--	ecc_encoder: entity work.ecc_encoder
+--		port map (
+--					input		=> writeData(32*i + 31 downto 32*i),
+--					output		=> writeData_encoded(38*i + 37 downto 38*i)
+--				);
+--  end generate;		
 												   
-  ECC_decoderbank: for i in 0 to 7 generate
-	ecc_decoder: entity work.ecc_decoder
-		port map (
-					input		=> readData_encoded(38*i + 37 downto 38*i),
-					output		=> readData(32*i + 31 downto 32*i)
-				);
-  end generate;	
+--  ECC_decoderbank: for i in 0 to 7 generate
+--	ecc_decoder: entity work.ecc_decoder
+--		port map (
+--					input		=> readData_encoded(38*i + 37 downto 38*i),
+--					output		=> readData(32*i + 31 downto 32*i)
+--				);
+--  end generate;	
 												   
-												   
+	writeData_encoded <= writeData;
+	readData		  <= readData_encoded;
 												   
 												   
 												   
