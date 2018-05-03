@@ -118,8 +118,8 @@ entity cache_instr_block is
     route2block_stall           : in  std_logic;
     
     -- Cache line data, valid when hit and readEnable are high.
-    block2route_line            : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-    --block2route_line            : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
+    --block2route_line            : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    block2route_line            : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
 	  
     -- Block reconfiguration signal. This is asserted when any block is busy.
     block2route_blockReconfig   : out std_logic;    
@@ -154,6 +154,12 @@ entity cache_instr_block is
     
     -- Cache flush request signals for each instruction cache block.
     sc2icache_flush             : in  std_logic
+	  
+	  
+	  
+	  
+	--test
+	--block2route_line_temp_simtest            : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0) --encoded line
     
   );
 end cache_instr_block;
@@ -229,7 +235,8 @@ architecture Behavioral of cache_instr_block is
   signal updateData             : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0);
   --signal updateData_temp             : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
 
-  signal block2route_line_temp            : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
+--  signal block2route_line_temp            : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
+ -- signal block2route_line_temp_simtest            : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
 
   -----------------------------------------------------------------------------
   -- FT signals for triplication of entities
@@ -315,7 +322,7 @@ begin
       clk                       => clk,
       enable                    => clkEnCPUAndReadEnable,
       cpuAddr                   => cpuAddr,
-      readData                  => block2route_line_temp,
+      readData                  => block2route_line,--_temp,
       writeEnable               => update,
       writeData                 => updateData
     );
@@ -388,17 +395,18 @@ begin
 	  
 
 
-	block2route_line (31 downto 0) <= block2route_line_temp(37 downto 6);    
-	block2route_line (63 downto 32) <= block2route_line_temp(75 downto 44);   
-	block2route_line (95 downto 64) <= block2route_line_temp(113 downto 82);   
-	block2route_line (127 downto 96) <= block2route_line_temp(151 downto 120);  
-	block2route_line (159 downto 128) <= block2route_line_temp(189 downto 158);
-	block2route_line (191 downto 160) <= block2route_line_temp(227 downto 196);
-	block2route_line (223 downto 192) <= block2route_line_temp(265 downto 234);
-	block2route_line (255 downto 224) <= block2route_line_temp(303 downto 272);
+--	block2route_line (31 downto 0) <= block2route_line_temp(37 downto 6);    
+--	block2route_line (63 downto 32) <= block2route_line_temp(75 downto 44);   
+--	block2route_line (95 downto 64) <= block2route_line_temp(113 downto 82);   
+--	block2route_line (127 downto 96) <= block2route_line_temp(151 downto 120);  
+--	block2route_line (159 downto 128) <= block2route_line_temp(189 downto 158);
+--	block2route_line (191 downto 160) <= block2route_line_temp(227 downto 196);
+--	block2route_line (223 downto 192) <= block2route_line_temp(265 downto 234);
+--	block2route_line (255 downto 224) <= block2route_line_temp(303 downto 272);
 
 	
 --	block2route_line <= block2route_line_temp;
+--  block2route_line_temp_simtest <= block2route_line_temp;
 
 	  
 --  miss_controller0: entity work.cache_instr_missCtrl

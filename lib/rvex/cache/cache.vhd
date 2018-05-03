@@ -186,6 +186,8 @@ architecture Behavioral of cache is
   signal dcache2rv_readData_encoded     : rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
   --Inst. cache
   signal icache2rv_instr_encoded        : rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+
+  --signal icache2rv_instr_encoded_simtest        : rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -239,6 +241,7 @@ begin -- architecture
       rv2icache_cancel          => rv2icache_cancel,
       --icache2rv_instr           => icache2rv_instr,
 	  icache2rv_instr           => icache2rv_instr_encoded, --encoded syllable
+	  --icache2rv_instr_encoded_simtest =>icache2rv_instr_encoded_simtest,
       icache2rv_affinity        => icache2rv_affinity,
       icache2rv_busFault        => icache2rv_busFault,
       icache2rv_status_access   => icache2rv_status_access,
