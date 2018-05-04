@@ -224,6 +224,10 @@ architecture Behavioral of cache_data_mainCtrl is
   -- have this register.
   signal resumeAfterWrite       : std_logic;
   signal resumeAfterWrite_next  : std_logic;
+
+
+  --test
+ signal writeData_dec			: rvex_data_type;
   
 --=============================================================================
 begin -- architecture
@@ -255,7 +259,11 @@ begin -- architecture
         memSyncRegData <= (others => '0');
         memSyncRegFault <= '0';
       elsif memSyncRegEna = '1' then
-        memSyncRegData <= busToCache.readData & X"0000"; --need encoder here
+        --memSyncRegData <= busToCache.readData & X"0000"; --need encoder here
+		memSyncRegData(11 downto 0)  <= "0000" & busToCache.readData(7 downto 0); --need encoder here
+	  	memSyncRegData(23 downto 12) <= "0000" & busToCache.readData(15 downto 8); --need encoder here
+	  	memSyncRegData(35 downto 24) <= "0000" & busToCache.readData(23 downto 16); --need encoder here
+		memSyncRegData(47 downto 36) <= "0000" & busToCache.readData(31 downto 24); --need encoder here
         memSyncRegFault <= busToCache.fault;
       end if;
       
@@ -325,7 +333,8 @@ begin -- architecture
     nextState <= state;
     cacheToBus <= BUS_MST2SLV_IDLE;
     cacheToBus.address <= addr;
-    cacheToBus.writeData <= writeData(47 downto 16);
+    --cacheToBus.writeData <= writeData(47 downto 16); --need decoder here
+    cacheToBus.writeData <= writeData_dec; --need decoder here
     cacheToBus.writeMask <= writeMask;
     update <= '0';
     updateData <= writeData;
@@ -352,7 +361,8 @@ begin -- architecture
         
         if (readEnable = '1' or writeEnable = '1') and bypass = '1' then
           
-          cacheToBus.writeData <= writeData (47 downto 16);
+          --cacheToBus.writeData <= writeData (47 downto 16); --need decoder here
+		  cacheToBus.writeData <= writeData_dec; --need decoder here
           cacheToBus.writeMask <= writeMask;
           if clkEnCPU = '1' then
             cacheToBus.readEnable <= readEnable;
@@ -399,7 +409,8 @@ begin -- architecture
             -- Initiate write to the memory.
             if clkEnCPU = '1' then
               cacheToBus.writeEnable <= '1';
-              cacheToBus.writeData <= writeData (47 downto 16);
+              --cacheToBus.writeData <= writeData (47 downto 16); --need decoder here
+              cacheToBus.writeData <= writeData_dec; --need decoder here
               cacheToBus.writeMask <= writeMask;
               nextState <= STATE_WRITE;
             end if;
@@ -448,7 +459,11 @@ begin -- architecture
           -- Keep requesting the write, using the write buffer data.
           cacheToBus.address <= writeBufAddr;
           cacheToBus.writeEnable <= '1';
-          cacheToBus.writeData <= writeBufData (47 downto 16);
+          --cacheToBus.writeData <= writeBufData (47 downto 16); --need decoder here
+          cacheToBus.writeData(7 downto 0) <= writeBufData (7 downto 0); --need decoder here
+		  cacheToBus.writeData(15 downto 8) <= writeBufData (19 downto 12); --need decoder here
+		  cacheToBus.writeData(23 downto 16) <= writeBufData (31 downto 24); --need decoder here
+		  cacheToBus.writeData(31 downto 24) <= writeBufData (43 downto 36); --need decoder here
           cacheToBus.writeMask <= writeBufMask;
           
         end if;
@@ -466,7 +481,11 @@ begin -- architecture
       when STATE_UPDATE_1 =>
         
         -- Prepare the update command and synchronization register data inputs.
-        updateData <= busToCache.readData & X"0000"; --need encoder here
+        --updateData <= busToCache.readData & X"0000"; --need encoder here
+		updateData(11 downto 0) <= "0000" & busToCache.readData(7 downto 0); --need encoder here
+		updateData(23 downto 12) <= "0000" & busToCache.readData(15 downto 8); --need encoder here
+		updateData(35 downto 24) <= "0000" & busToCache.readData(23 downto 16); --need encoder here
+		updateData(47 downto 36) <= "0000" & busToCache.readData(31 downto 24); --need encoder here
         updateMask <= (others => '1');
         
         if clkEnBus = '1' and busToCache.ack = '1' then
@@ -528,7 +547,8 @@ begin -- architecture
           
           -- Keep requesting.
           cacheToBus.readEnable <= readEnable;
-          cacheToBus.writeData <= writeData(47 downto 16);
+          --cacheToBus.writeData <= writeData(47 downto 16); --need decoder here
+		  cacheToBus.writeData <= writeData_dec; --need decoder here
           cacheToBus.writeMask <= writeMask;
           cacheToBus.writeEnable <= writeEnable;
           
@@ -560,6 +580,15 @@ begin -- architecture
     end if;
     
   end process;
+		
+		
+	writeData_dec(7 downto 0)	<= writeData(7 downto 0);
+	writeData_dec(15 downto 8)	<= writeData(19 downto 12);
+	writeData_dec(23 downto 16)	<= writeData(31 downto 24);
+	writeData_dec(31 downto 24)	<= writeData(43 downto 36);
+		
+		
+		
   
 end Behavioral;
 

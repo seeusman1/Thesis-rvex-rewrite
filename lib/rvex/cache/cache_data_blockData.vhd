@@ -150,24 +150,24 @@ begin -- architecture
         for i in 0 to 3 loop
           if byteWriteEnable(i) = '1' then
 
-         --   ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i) <=
-         --     writeData_encoded(12*i+11 downto 12*i);
-            ram_data(to_integer(unsigned(cpuOffset)))(8*i+7+16 downto 8*i+16) <=
-              writeData_encoded(8*i+7+16 downto 8*i+16);
-            ram_data(to_integer(unsigned(cpuOffset)))(15 downto 0) <= (others => '0');
+            ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i) <=
+              writeData_encoded(12*i+11 downto 12*i);
+         --   ram_data(to_integer(unsigned(cpuOffset)))(8*i+7+16 downto 8*i+16) <=
+         --     writeData_encoded(8*i+7+16 downto 8*i+16);
+         --   ram_data(to_integer(unsigned(cpuOffset)))(15 downto 0) <= (others => '0');
 
-         --   readData_encoded(12*i+11 downto 12*i) <=
-         --     writeData_encoded(12*i+11 downto 12*i);
-            readData_encoded(8*i+7+16 downto 8*i+16) <=
-              writeData_encoded(8*i+7+16 downto 8*i+16);
-		    readData_encoded(15 downto 0) <= (others => '0'); -- padded additional zeros
+            readData_encoded(12*i+11 downto 12*i) <=
+              writeData_encoded(12*i+11 downto 12*i);
+         --   readData_encoded(8*i+7+16 downto 8*i+16) <=
+         --     writeData_encoded(8*i+7+16 downto 8*i+16);
+		 --   readData_encoded(15 downto 0) <= (others => '0'); -- padded additional zeros
           else
 
-         --   readData_encoded(12*i+11 downto 12*i) <=
-         --     ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i);
-            readData_encoded(8*i+7+16 downto 8*i+16) <=
-              ram_data(to_integer(unsigned(cpuOffset)))(8*i+7+16 downto 8*i+16);
-            readData_encoded(15 downto 0) <= (others => '0'); -- padded additional zeros
+            readData_encoded(12*i+11 downto 12*i) <=
+              ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i);
+         --   readData_encoded(8*i+7+16 downto 8*i+16) <=
+         --     ram_data(to_integer(unsigned(cpuOffset)))(8*i+7+16 downto 8*i+16);
+         --   readData_encoded(15 downto 0) <= (others => '0'); -- padded additional zeros
           end if;
         end loop;
       end if;

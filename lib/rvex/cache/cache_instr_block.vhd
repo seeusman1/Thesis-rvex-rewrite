@@ -370,27 +370,27 @@ begin
   -----------------------------------------------------------------------------
   -- Instantiate the miss resolution controller
   -----------------------------------------------------------------------------
-  miss_controller: entity work.cache_instr_missCtrl
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset,
-      clkEnCPU                  => clkEnCPU,
-      clkEnBus                  => clkEnBus,
-      stall                     => route2block_stall,
-      cpuAddr                   => cpuAddr_r,
-      updateEnable              => route2block_updateEnable,
-      done                      => update,
-      line                      => updateData,
-      --line                      => updateData_temp,
-      blockReconfig             => block2route_blockReconfig,
-      busFault                  => block2route_busFault,
-      cacheToBus                => icache2bus_bus,
-      busToCache                => bus2icache_bus
-    );
+--  miss_controller: entity work.cache_instr_missCtrl
+--    generic map (
+--      RCFG                      => RCFG,
+--      CCFG                      => CCFG
+--    )
+--    port map (
+--      clk                       => clk,
+--      reset                     => reset,
+--      clkEnCPU                  => clkEnCPU,
+--      clkEnBus                  => clkEnBus,
+--      stall                     => route2block_stall,
+--      cpuAddr                   => cpuAddr_r,
+--      updateEnable              => route2block_updateEnable,
+--      done                      => update,
+--      line                      => updateData,
+--      --line                      => updateData_temp,
+--      blockReconfig             => block2route_blockReconfig,
+--      busFault                  => block2route_busFault,
+--      cacheToBus                => icache2bus_bus,
+--      busToCache                => bus2icache_bus
+--    );
 	  
 	  
 
@@ -408,91 +408,96 @@ begin
 --	block2route_line <= block2route_line_temp;
 --  block2route_line_temp_simtest <= block2route_line_temp;
 
+
+  -----------------------------------------------------------------------------
+  -- Instantiate the miss resolution controller with TMR
+  -----------------------------------------------------------------------------
 	  
---  miss_controller0: entity work.cache_instr_missCtrl
---    generic map (
---      RCFG                      => RCFG,
---      CCFG                      => CCFG
---    )
---    port map (
---      clk                       => clk,
---      reset                     => reset,
---      clkEnCPU                  => clkEnCPU,
---      clkEnBus                  => clkEnBus,
---      stall                     => route2block_stall,
---      cpuAddr                   => cpuAddr_r,
---      updateEnable              => route2block_updateEnable,
---      done                      => update_mv(0),
---      line                      => updateData_mv(0),
---      blockReconfig             => block2route_blockReconfig_mv(0),
---      busFault                  => block2route_busFault_mv(0),
---      cacheToBus                => icache2bus_bus_mv(0),
---      busToCache                => bus2icache_bus
---    );
+	  
+  miss_controller0: entity work.cache_instr_missCtrl
+    generic map (
+      RCFG                      => RCFG,
+      CCFG                      => CCFG
+    )
+    port map (
+      clk                       => clk,
+      reset                     => reset,
+      clkEnCPU                  => clkEnCPU,
+      clkEnBus                  => clkEnBus,
+      stall                     => route2block_stall,
+      cpuAddr                   => cpuAddr_r,
+      updateEnable              => route2block_updateEnable,
+      done                      => update_mv(0),
+      line                      => updateData_mv(0),
+      blockReconfig             => block2route_blockReconfig_mv(0),
+      busFault                  => block2route_busFault_mv(0),
+      cacheToBus                => icache2bus_bus_mv(0),
+      busToCache                => bus2icache_bus
+    );
 	  
 
---  miss_controller1: entity work.cache_instr_missCtrl
---    generic map (
---      RCFG                      => RCFG,
---      CCFG                      => CCFG
---    )
---    port map (
---      clk                       => clk,
---      reset                     => reset,
---      clkEnCPU                  => clkEnCPU,
---      clkEnBus                  => clkEnBus,
---      stall                     => route2block_stall,
---      cpuAddr                   => cpuAddr_r,
---      updateEnable              => route2block_updateEnable,
---      done                      => update_mv(1),
---      line                      => updateData_mv(1),
---      blockReconfig             => block2route_blockReconfig_mv(1),
---      busFault                  => block2route_busFault_mv(1),
---      cacheToBus                => icache2bus_bus_mv(1),
---      busToCache                => bus2icache_bus
---    );
+  miss_controller1: entity work.cache_instr_missCtrl
+    generic map (
+      RCFG                      => RCFG,
+      CCFG                      => CCFG
+    )
+    port map (
+      clk                       => clk,
+      reset                     => reset,
+      clkEnCPU                  => clkEnCPU,
+      clkEnBus                  => clkEnBus,
+      stall                     => route2block_stall,
+      cpuAddr                   => cpuAddr_r,
+      updateEnable              => route2block_updateEnable,
+      done                      => update_mv(1),
+      line                      => updateData_mv(1),
+      blockReconfig             => block2route_blockReconfig_mv(1),
+      busFault                  => block2route_busFault_mv(1),
+      cacheToBus                => icache2bus_bus_mv(1),
+      busToCache                => bus2icache_bus
+    );
 	  
 	  
---  miss_controller2: entity work.cache_instr_missCtrl
---    generic map (
---      RCFG                      => RCFG,
---      CCFG                      => CCFG
---    )
---    port map (
---      clk                       => clk,
---      reset                     => reset,
---      clkEnCPU                  => clkEnCPU,
---      clkEnBus                  => clkEnBus,
---      stall                     => route2block_stall,
---      cpuAddr                   => cpuAddr_r,
---      updateEnable              => route2block_updateEnable,
---      done                      => update_mv(2),
---      line                      => updateData_mv(2),
---      blockReconfig             => block2route_blockReconfig_mv(2),
---      busFault                  => block2route_busFault_mv(2),
---      cacheToBus                => icache2bus_bus_mv(2),
---      busToCache                => bus2icache_bus
---    );
+  miss_controller2: entity work.cache_instr_missCtrl
+    generic map (
+      RCFG                      => RCFG,
+      CCFG                      => CCFG
+    )
+    port map (
+      clk                       => clk,
+      reset                     => reset,
+      clkEnCPU                  => clkEnCPU,
+      clkEnBus                  => clkEnBus,
+      stall                     => route2block_stall,
+      cpuAddr                   => cpuAddr_r,
+      updateEnable              => route2block_updateEnable,
+      done                      => update_mv(2),
+      line                      => updateData_mv(2),
+      blockReconfig             => block2route_blockReconfig_mv(2),
+      busFault                  => block2route_busFault_mv(2),
+      cacheToBus                => icache2bus_bus_mv(2),
+      busToCache                => bus2icache_bus
+    );
 	  
 	 
--- instr_missCtrl_voter: entity work.cache_instr_missCtrl_voter
+ instr_missCtrl_voter: entity work.cache_instr_missCtrl_voter
 	 
---	 port map (
+	 port map (
 		 
---    update_mv						=> update_mv,
---    updateData_mv					=> updateData_mv,
---    block2route_blockReconfig_mv	=> block2route_blockReconfig_mv,
---    block2route_busFault_mv			=> block2route_busFault_mv,
---    icache2bus_bus_mv				=> icache2bus_bus_mv,
+    update_mv						=> update_mv,
+    updateData_mv					=> updateData_mv,
+    block2route_blockReconfig_mv	=> block2route_blockReconfig_mv,
+    block2route_busFault_mv			=> block2route_busFault_mv,
+    icache2bus_bus_mv				=> icache2bus_bus_mv,
 	  
 	  
---	update							=> update,
---    updateData						=> updateData,
---    block2route_blockReconfig		=> block2route_blockReconfig,
---    block2route_busFault			=> block2route_busFault,
---    icache2bus_bus					=> icache2bus_bus
+	update							=> update,
+    updateData						=> updateData,
+    block2route_blockReconfig		=> block2route_blockReconfig,
+    block2route_busFault			=> block2route_busFault,
+    icache2bus_bus					=> icache2bus_bus
 		 
---	);
+	);
 	  
 	  
 	  

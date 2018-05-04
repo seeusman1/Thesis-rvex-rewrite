@@ -194,15 +194,39 @@ begin -- architecture
 --=============================================================================
 	
 	-- for data cache
-	rv2dcache_writeData_encoded(0)		<= rv2dcache_writeData(0) & X"0000";
-	rv2dcache_writeData_encoded(1)		<= rv2dcache_writeData(1) & X"0000";
-	rv2dcache_writeData_encoded(2)		<= rv2dcache_writeData(2) & X"0000";
-	rv2dcache_writeData_encoded(3)		<= rv2dcache_writeData(3) & X"0000";
+	rv2dcache_writeData_encoded(0)(11 downto 0)			<= "0000" & rv2dcache_writeData(0)(7 downto 0);
+	rv2dcache_writeData_encoded(0)(23 downto 12)		<= "0000" & rv2dcache_writeData(0)(15 downto 8);
+	rv2dcache_writeData_encoded(0)(35 downto 24)		<= "0000" & rv2dcache_writeData(0)(23 downto 16);
+	rv2dcache_writeData_encoded(0)(47 downto 36)		<= "0000" & rv2dcache_writeData(0)(31 downto 24);
+	rv2dcache_writeData_encoded(1)(11 downto 0)			<= "0000" & rv2dcache_writeData(1)(7 downto 0);
+	rv2dcache_writeData_encoded(1)(23 downto 12)		<= "0000" & rv2dcache_writeData(1)(15 downto 8);
+	rv2dcache_writeData_encoded(1)(35 downto 24)		<= "0000" & rv2dcache_writeData(1)(23 downto 16);
+	rv2dcache_writeData_encoded(1)(47 downto 36)		<= "0000" & rv2dcache_writeData(1)(31 downto 24);
+	rv2dcache_writeData_encoded(2)(11 downto 0)			<= "0000" & rv2dcache_writeData(2)(7 downto 0);
+	rv2dcache_writeData_encoded(2)(23 downto 12)		<= "0000" & rv2dcache_writeData(2)(15 downto 8);
+	rv2dcache_writeData_encoded(2)(35 downto 24)		<= "0000" & rv2dcache_writeData(2)(23 downto 16);
+	rv2dcache_writeData_encoded(2)(47 downto 36)		<= "0000" & rv2dcache_writeData(2)(31 downto 24);
+	rv2dcache_writeData_encoded(3)(11 downto 0)			<= "0000" & rv2dcache_writeData(3)(7 downto 0);
+	rv2dcache_writeData_encoded(3)(23 downto 12)		<= "0000" & rv2dcache_writeData(3)(15 downto 8);
+	rv2dcache_writeData_encoded(3)(35 downto 24)		<= "0000" & rv2dcache_writeData(3)(23 downto 16);
+	rv2dcache_writeData_encoded(3)(47 downto 36)		<= "0000" & rv2dcache_writeData(3)(31 downto 24);
 
-	dcache2rv_readData(0)		<= dcache2rv_readData_encoded(0)(47 downto 16);
-	dcache2rv_readData(1)		<= dcache2rv_readData_encoded(1)(47 downto 16);
-	dcache2rv_readData(2)		<= dcache2rv_readData_encoded(2)(47 downto 16);
-	dcache2rv_readData(3)		<= dcache2rv_readData_encoded(3)(47 downto 16); 
+	dcache2rv_readData(0)(7 downto 0)					<= dcache2rv_readData_encoded(0)(7 downto 0);
+	dcache2rv_readData(0)(15 downto 8)					<= dcache2rv_readData_encoded(0)(19 downto 12);
+	dcache2rv_readData(0)(23 downto 16)					<= dcache2rv_readData_encoded(0)(31 downto 24);
+	dcache2rv_readData(0)(31 downto 24)					<= dcache2rv_readData_encoded(0)(43 downto 36);
+	dcache2rv_readData(1)(7 downto 0)					<= dcache2rv_readData_encoded(1)(7 downto 0);
+	dcache2rv_readData(1)(15 downto 8)					<= dcache2rv_readData_encoded(1)(19 downto 12);
+	dcache2rv_readData(1)(23 downto 16)					<= dcache2rv_readData_encoded(1)(31 downto 24);
+	dcache2rv_readData(1)(31 downto 24)					<= dcache2rv_readData_encoded(1)(43 downto 36);
+	dcache2rv_readData(2)(7 downto 0)					<= dcache2rv_readData_encoded(2)(7 downto 0);
+	dcache2rv_readData(2)(15 downto 8)					<= dcache2rv_readData_encoded(2)(19 downto 12);
+	dcache2rv_readData(2)(23 downto 16)					<= dcache2rv_readData_encoded(2)(31 downto 24);
+	dcache2rv_readData(2)(31 downto 24)					<= dcache2rv_readData_encoded(2)(43 downto 36);
+	dcache2rv_readData(3)(7 downto 0)					<= dcache2rv_readData_encoded(3)(7 downto 0); 
+	dcache2rv_readData(3)(15 downto 8)					<= dcache2rv_readData_encoded(3)(19 downto 12);
+	dcache2rv_readData(3)(23 downto 16)					<= dcache2rv_readData_encoded(3)(31 downto 24);
+	dcache2rv_readData(3)(31 downto 24)					<= dcache2rv_readData_encoded(3)(43 downto 36);
 
 	--for Instruction cache
     icache2rv_instr(0)			<= icache2rv_instr_encoded(0)(37 downto 6);

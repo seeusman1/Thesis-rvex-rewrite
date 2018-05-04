@@ -380,7 +380,7 @@ begin -- architecture
         
         -- Read ports.
         readEnable              => readEnable,
-        --readAddr                => readAddr, readAddr_encoded
+        --readAddr                => readAddr, 
         readAddr_encoded        => readAddr_encoded, 
         readData                => readData_comb
         
