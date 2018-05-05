@@ -228,6 +228,8 @@ architecture Behavioral of cache_data_mainCtrl is
 
   --test
  signal writeData_dec			: rvex_data_type;
+ signal writeBufData_dec		: rvex_data_type;
+ signal readData_encoded		: rvex_encoded_datacache_data_type;
   
 --=============================================================================
 begin -- architecture
@@ -260,10 +262,11 @@ begin -- architecture
         memSyncRegFault <= '0';
       elsif memSyncRegEna = '1' then
         --memSyncRegData <= busToCache.readData & X"0000"; --need encoder here
-		memSyncRegData(11 downto 0)  <= "0000" & busToCache.readData(7 downto 0); --need encoder here
-	  	memSyncRegData(23 downto 12) <= "0000" & busToCache.readData(15 downto 8); --need encoder here
-	  	memSyncRegData(35 downto 24) <= "0000" & busToCache.readData(23 downto 16); --need encoder here
-		memSyncRegData(47 downto 36) <= "0000" & busToCache.readData(31 downto 24); --need encoder here
+		--memSyncRegData(11 downto 0)  <= "0000" & busToCache.readData(7 downto 0); --need encoder here
+	  	--memSyncRegData(23 downto 12) <= "0000" & busToCache.readData(15 downto 8); --need encoder here
+	  	--memSyncRegData(35 downto 24) <= "0000" & busToCache.readData(23 downto 16); --need encoder here
+		--memSyncRegData(47 downto 36) <= "0000" & busToCache.readData(31 downto 24); --need encoder here
+		memSyncRegData 		<= readData_encoded;
         memSyncRegFault <= busToCache.fault;
       end if;
       
@@ -459,11 +462,12 @@ begin -- architecture
           -- Keep requesting the write, using the write buffer data.
           cacheToBus.address <= writeBufAddr;
           cacheToBus.writeEnable <= '1';
-          --cacheToBus.writeData <= writeBufData (47 downto 16); --need decoder here
-          cacheToBus.writeData(7 downto 0) <= writeBufData (7 downto 0); --need decoder here
-		  cacheToBus.writeData(15 downto 8) <= writeBufData (19 downto 12); --need decoder here
-		  cacheToBus.writeData(23 downto 16) <= writeBufData (31 downto 24); --need decoder here
-		  cacheToBus.writeData(31 downto 24) <= writeBufData (43 downto 36); --need decoder here
+        --  cacheToBus.writeData <= writeBufData (47 downto 16); --need decoder here
+        --  cacheToBus.writeData(7 downto 0) <= writeBufData (7 downto 0); --need decoder here
+		--  cacheToBus.writeData(15 downto 8) <= writeBufData (19 downto 12); --need decoder here
+		--  cacheToBus.writeData(23 downto 16) <= writeBufData (31 downto 24); --need decoder here
+		--  cacheToBus.writeData(31 downto 24) <= writeBufData (43 downto 36); --need decoder here
+		  cacheToBus.writeData	<= writeBufData_dec;
           cacheToBus.writeMask <= writeBufMask;
           
         end if;
@@ -482,10 +486,15 @@ begin -- architecture
         
         -- Prepare the update command and synchronization register data inputs.
         --updateData <= busToCache.readData & X"0000"; --need encoder here
-		updateData(11 downto 0) <= "0000" & busToCache.readData(7 downto 0); --need encoder here
-		updateData(23 downto 12) <= "0000" & busToCache.readData(15 downto 8); --need encoder here
-		updateData(35 downto 24) <= "0000" & busToCache.readData(23 downto 16); --need encoder here
-		updateData(47 downto 36) <= "0000" & busToCache.readData(31 downto 24); --need encoder here
+		--updateData(11 downto 0) <= "0000" & busToCache.readData(7 downto 0); --need encoder here
+		--updateData(23 downto 12) <= "0000" & busToCache.readData(15 downto 8); --need encoder here
+		--updateData(35 downto 24) <= "0000" & busToCache.readData(23 downto 16); --need encoder here
+		--updateData(47 downto 36) <= "0000" & busToCache.readData(31 downto 24); --need encoder here
+		updateData(11 downto 0)  <= bit8_encoder(busToCache.readData(7 downto 0)); --need encoder here
+		updateData(23 downto 12) <= bit8_encoder(busToCache.readData(15 downto 8)); --need encoder here
+		updateData(35 downto 24) <= bit8_encoder(busToCache.readData(23 downto 16)); --need encoder here
+		updateData(47 downto 36) <= bit8_encoder(busToCache.readData(31 downto 24)); --need encoder here
+		--updateData		<= readData_encoded;
         updateMask <= (others => '1');
         
         if clkEnBus = '1' and busToCache.ack = '1' then
@@ -582,11 +591,39 @@ begin -- architecture
   end process;
 		
 		
-	writeData_dec(7 downto 0)	<= writeData(7 downto 0);
-	writeData_dec(15 downto 8)	<= writeData(19 downto 12);
-	writeData_dec(23 downto 16)	<= writeData(31 downto 24);
-	writeData_dec(31 downto 24)	<= writeData(43 downto 36);
+--	writeData_dec(7 downto 0)	<= writeData(7 downto 0);
+--	writeData_dec(15 downto 8)	<= writeData(19 downto 12);
+--	writeData_dec(23 downto 16)	<= writeData(31 downto 24);
+--	writeData_dec(31 downto 24)	<= writeData(43 downto 36);
 		
+  ECC_encoderbank1: for i in 0 to 3 generate
+	ecc_encoder1: entity work.ecc_encoder_8
+		port map (
+					input		=> busToCache.readData(8*i+7  downto 8*i),
+					output		=> readData_encoded(12*i+11 downto 12*i)
+				);
+  end generate;		
+					
+		
+  ECC_decoderbank2: for i in 0 to 3 generate
+	ecc_decoder2: entity work.ecc_decoder_8
+		port map (
+					input		=> writeData(12*i + 11 downto 12*i),
+					output		=> writeData_dec(8*i + 7 downto 8*i)
+				);
+  end generate;
+		
+  ECC_decoderbank: for i in 0 to 3 generate
+	ecc_decoder: entity work.ecc_decoder_8
+		port map (
+					input		=> writeBufData(12*i+11 downto 12*i),
+					output		=> writeBufData_dec(8*i+7 downto 8*i)
+				);
+  end generate;
+
+
+
+
 		
 		
   

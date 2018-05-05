@@ -155,6 +155,13 @@ package cache_pkg is
     RCFG                        : rvex_generic_config_type;
     CCFG                        : cache_generic_config_type
   ) return natural;
+
+
+  -- 8-bit Encoder
+ 	function bit8_encoder (
+			 input_data				: in std_logic_vector (8 downto 1))
+		 	 return std_logic_vector;-- is
+	 		 --variable encoded_data	: std_logic_vector (11 downto 0);
   
   -- Data cache block status record for performance counters/tracing.
   type dcache_status_type is record
@@ -292,5 +299,22 @@ package body cache_pkg is
   begin
     return rvex_address_type'length - dcacheTagLSB(RCFG, CCFG);
   end dcacheTagSize;
+									 
+									 
+ 	function bit8_encoder (
+			 input_data				: in std_logic_vector (8 downto 1))
+		 	 return std_logic_vector is
+	 		 variable encoded_data	: std_logic_vector (11 downto 0);
+		begin
+			encoded_data (7 downto 0) := input_data; --input data
+		
+			--parity bits
+			encoded_data (8) := input_data(1)  xor input_data(2)  xor input_data(4)  xor input_data(5)  xor input_data(7); --P1
+			encoded_data (9) := input_data(1)  xor input_data(3)  xor input_data(4)  xor input_data(6)  xor input_data(7); --P2
+			encoded_data (10) := input_data(2)  xor input_data(3)  xor input_data(4)  xor input_data(8); --P4
+			encoded_data (11) := input_data(5)  xor input_data(6)  xor input_data(7)  xor input_data(8); --P8
+		 
+	 		return std_logic_vector (encoded_data);
+		end;
   
 end cache_pkg;
