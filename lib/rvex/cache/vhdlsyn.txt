@@ -8,8 +8,6 @@ cache_data.vhd
 cache_instr_blockData.vhd
 cache_instr_blockTag.vhd
 cache_instr_blockValid.vhd
-tmr_voter.vhd
-cache_instr_missCtrl_voter.vhd
 cache_instr_missCtrl.vhd
 cache_instr_block.vhd
 cache_instr.vhd

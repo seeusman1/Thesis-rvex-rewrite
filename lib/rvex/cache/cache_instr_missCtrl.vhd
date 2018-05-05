@@ -325,7 +325,8 @@ begin -- architecture
       if rising_edge(clk) then
         if state = i + 1 then
           line_buffer(38*i + 37 downto 38*i)
-            <= busToCache.readData & "000000"; --need encoder here
+			--<= busToCache.readData & "000000"; --need hamming encoder here 
+            <= bit32_encoder(busToCache.readData);-- & "000000"; --32-bit hamming encoder 
         end if;
       end if;
       
@@ -344,7 +345,8 @@ begin -- architecture
   end generate;
   
   line(icacheLineWidth(RCFG, CCFG)+48-1 downto icacheLineWidth(RCFG, CCFG)+48-38) <=
-    busToCache.readData & "000000" when state = WAIT_STATE - 1 else --need encoder here
+    --busToCache.readData & "000000" when state = WAIT_STATE - 1 else --need hamming encoder here
+	bit32_encoder(busToCache.readData) when state = WAIT_STATE - 1 else --32-bit hamming encoder 
     line_buffer_d(icacheLineWidth(RCFG, CCFG)+48-1 downto icacheLineWidth(RCFG, CCFG)+48-38);
     
 end Behavioral;

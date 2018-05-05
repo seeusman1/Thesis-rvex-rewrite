@@ -212,7 +212,9 @@ begin -- architecture
 --	rv2dcache_writeData_encoded(3)(35 downto 24)		<= "0000" & rv2dcache_writeData(3)(23 downto 16);
 --	rv2dcache_writeData_encoded(3)(47 downto 36)		<= "0000" & rv2dcache_writeData(3)(31 downto 24);
 
-
+  -----------------------------------------------------------------------------
+  -- Hamming Encoder for Data
+  -----------------------------------------------------------------------------
 
   ECC_encoderbank: for j in 0 to 3 generate
 	  ECC_encoder:	for i in 0 to 3 generate
@@ -269,10 +271,13 @@ begin -- architecture
 --	dcache2rv_readData(3)(23 downto 16)					<= dcache2rv_readData_encoded(3)(31 downto 24);
 --	dcache2rv_readData(3)(31 downto 24)					<= dcache2rv_readData_encoded(3)(43 downto 36);
 
+  -----------------------------------------------------------------------------
+  -- Hamming Decoder for Data
+  -----------------------------------------------------------------------------
 
   ECC_decoderbank: for j in 0 to 3 generate
 	  ECC_decoder:	for i in 0 to 3 generate 
-		ecc_decoder0: entity work.ecc_decoder_8
+		ecc_decoder_inst: entity work.ecc_decoder_8
 			port map (
 					input		=> dcache2rv_readData_encoded(j)(12*i + 11 downto 12*i),
 					output		=> dcache2rv_readData(j)(8*i + 7 downto 8*i)
@@ -312,14 +317,26 @@ begin -- architecture
 
 	--for Instruction cache
     --decoding
-    icache2rv_instr(0)			<= icache2rv_instr_encoded(0)(37 downto 6);
-    icache2rv_instr(1)			<= icache2rv_instr_encoded(1)(37 downto 6);
-    icache2rv_instr(2)			<= icache2rv_instr_encoded(2)(37 downto 6);
-    icache2rv_instr(3)			<= icache2rv_instr_encoded(3)(37 downto 6);
-    icache2rv_instr(4)			<= icache2rv_instr_encoded(4)(37 downto 6);
-    icache2rv_instr(5)			<= icache2rv_instr_encoded(5)(37 downto 6);
-    icache2rv_instr(6)			<= icache2rv_instr_encoded(6)(37 downto 6);
-    icache2rv_instr(7)			<= icache2rv_instr_encoded(7)(37 downto 6);
+--    icache2rv_instr(0)			<= icache2rv_instr_encoded(0)(37 downto 6);
+--    icache2rv_instr(1)			<= icache2rv_instr_encoded(1)(37 downto 6);
+--    icache2rv_instr(2)			<= icache2rv_instr_encoded(2)(37 downto 6);
+--    icache2rv_instr(3)			<= icache2rv_instr_encoded(3)(37 downto 6);
+--    icache2rv_instr(4)			<= icache2rv_instr_encoded(4)(37 downto 6);
+--    icache2rv_instr(5)			<= icache2rv_instr_encoded(5)(37 downto 6);
+--    icache2rv_instr(6)			<= icache2rv_instr_encoded(6)(37 downto 6);
+--    icache2rv_instr(7)			<= icache2rv_instr_encoded(7)(37 downto 6);
+
+  -----------------------------------------------------------------------------
+  -- Hamming Decoder for instructions 
+  -----------------------------------------------------------------------------
+
+  ECC_decoderbank_instr: for i in 0 to 7 generate
+	ecc_decoder_instr: entity work.ecc_decoder
+		port map (
+					input		=> icache2rv_instr_encoded(i),
+					output		=> icache2rv_instr(i)
+				);
+  end generate;
 
   
   -----------------------------------------------------------------------------
