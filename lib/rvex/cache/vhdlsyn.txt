@@ -6,9 +6,13 @@ cache_data_mainCtrl.vhd
 cache_data_block.vhd
 cache_data.vhd
 cache_instr_blockData.vhd
+tmr_voter.vhd
 cache_instr_blockTag.vhd
+cache_instr_blockTag_voter.vhd
 cache_instr_blockValid.vhd
+cache_instr_blockValid_voter.vhd
 cache_instr_missCtrl.vhd
+cache_instr_missCtrl_voter.vhd
 cache_instr_block.vhd
 cache_instr.vhd
 cache.vhd
