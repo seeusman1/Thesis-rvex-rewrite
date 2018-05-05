@@ -81,6 +81,7 @@ package common_pkg is
   type rvex_encoded_address_array	is array (natural range <>) of rvex_encoded_address_type;
   type rvex_encoded_syllable_array is array (natural range <>) of rvex_encoded_syllable_type;
   type rvex_encoded_datacache_data_array is array (natural range <>) of rvex_encoded_datacache_data_type;
+  type two_bit_array			is array (natural range <>) of std_logic_vector(1 downto 0);
 
   
   -- Null array constants.

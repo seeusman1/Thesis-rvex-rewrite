@@ -13,32 +13,34 @@ library work;
 
 
 --=============================================================================
-entity cache_instr_blockTag_voter is
+entity cache_blockValid_voter is
 --=============================================================================
 	
 
 
   port	(
 	  
+	   
     ---------------------------------------------------------------------------
-    -- Signals that go into cache_instr_blockTag_voter
+    -- Signals that go into cache_blockValid_voter
     ---------------------------------------------------------------------------
-    cpuHit_mv					: in std_logic_vector (2 downto 0);
-	invalHit_mv					: in std_logic_vector (2 downto 0);
+    cpuValid_mv						: in std_logic_vector (2 downto 0);
 	  
 	---------------------------------------------------------------------------
-    -- Signals that come out of cache_instr_blockTag_voter
+    -- Signals that come out of cache_blockValid_voter
     ---------------------------------------------------------------------------
-	cpuHit						: out std_logic;
-	invalHit					: out std_logic
+	  
+	cpuValid						: out std_logic
+
+
 	  
   );
 
-end entity cache_instr_blockTag_voter;
+end entity cache_blockValid_voter;
 	
 
 --=============================================================================
-architecture structural of cache_instr_blockTag_voter is
+architecture structural of cache_blockValid_voter is
 --=============================================================================
 	
 	
@@ -48,35 +50,19 @@ begin -- architecture
 	
 					
 	---------------------------------------------------------------------------
-    -- PC Majority voter bank for cpuHit
+    -- PC Majority voter bank for update
     ---------------------------------------------------------------------------				
 				
-	cpuHit_voter: entity work.tmr_voter
+	cpuValid_voter: entity work.tmr_voter
 		port map (
-			input_1		=> cpuHit_mv(0),
+			input_1		=> cpuValid_mv(0),
 			--input_1		=> '0',
-			input_2		=> cpuHit_mv(1),
+			input_2		=> cpuValid_mv(1),
 			--input_2		=> '0',
-			input_3		=> cpuHit_mv(2),
+			input_3		=> cpuValid_mv(2),
 			--input_3		=> '0',
-			output		=> cpuHit
+			output		=> cpuValid
 			);
-		
-	---------------------------------------------------------------------------
-    -- PC Majority voter bank for invalHit
-    ---------------------------------------------------------------------------				
-				
-	invalHit_voter: entity work.tmr_voter
-		port map (
-			input_1		=> invalHit_mv(0),
-			--input_1		=> '0',
-			input_2		=> invalHit_mv(1),
-			--input_2		=> '0',
-			input_3		=> invalHit_mv(2),
-			--input_3		=> '0',
-			output		=> invalHit
-			);
-
 
 
 	

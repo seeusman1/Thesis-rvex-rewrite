@@ -408,7 +408,7 @@ begin
       invalHit                  => invalHit_mv(2)
     );
 	  
-  tag_ram_voter: entity work.cache_instr_blockTag_voter
+  tag_ram_voter: entity work.cache_blockTag_voter
 	port map (
 		 
     	cpuHit_mv				=> cpuHit_mv,	
@@ -501,7 +501,7 @@ begin
     );
 	  
 
-  valid_ram_voter: entity work.cache_instr_blockValid_voter
+  valid_ram_voter: entity work.cache_blockValid_voter
 	port map (
 		 
     	cpuValid_mv				=> cpuValid_mv,	  
