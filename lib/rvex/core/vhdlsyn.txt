@@ -15,11 +15,12 @@ core_asDisas_pkg.vhd
 core_alu.vhd
 core_brku.vhd
 core_br.vhd
+tmr_single_voter.vhd
+tmr_voter.vhd
+tmr_cfgCtrl_voter.vhd
 core_cfgCtrl_decode.vhd
 core_cfgCtrl.vhd
 core_forward.vhd
-tmr_single_voter.vhd
-tmr_voter.vhd
 tmr_cxplifvoter.vhd
 core_contextPipelaneIFace.vhd
 core_contextRegLogic.vhd

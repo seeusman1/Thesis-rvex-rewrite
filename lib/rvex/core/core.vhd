@@ -781,6 +781,27 @@ architecture Behavioral of core is
   signal tmrvoter2creg_writeEnable        : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal tmrvoter2creg_readEnable         : std_logic_vector(2**CFG.numLaneGroupsLog2-1 downto 0);
   signal tmrvoter2dmsw_readData           : rvex_data_array(2**CFG.numLaneGroupsLog2-1 downto 0);
+
+
+  --TMR -- signals for cfgCtrl_voter
+
+  signal cfg2cxreg_wakeupAck_mv           : std_logic_vector (2 downto 0);
+  signal cfg2gbreg_busy_mv                : std_logic_vector (2 downto 0); 
+  signal cfg2gbreg_error_mv               : std_logic_vector (2 downto 0); 
+  signal cfg2gbreg_requesterID_mv         : cfg2gbreg_requesterID_array (2 downto 0);
+  signal cfg2cxplif_active_mv             : cfg2cxplif_active_array(2 downto 0);
+  signal cfg2cxplif_requestReconfig_mv    : cfg2cxplif_requestReconfig_array(2 downto 0);
+  signal cfg2any_configWord_mv            : rvex_data_array (2 downto 0);
+  signal cfg2any_coupled_mv               : cfg2any_coupled_array(2 downto 0); 
+  signal cfg2any_decouple_mv              : cfg2any_decouple_array(2 downto 0);
+  signal cfg2any_numGroupsLog2_mv         : cfg2any_numGroupsLog2_array(2 downto 0); 
+  signal cfg2any_context_mv               : cfg2any_context_array(2 downto 0);
+  signal cfg2any_active_mv                : cfg2any_active_array(2 downto 0); 
+  signal cfg2any_lastGroupForCtxt_mv      : cfg2any_lastGroupForCtxt_array(2 downto 0);
+  signal cfg2any_laneIndex_mv             : cfg2any_laneIndex_array(2 downto 0);
+  signal cfg2any_pcAddVal_mv              : cfg2any_pcAddVal_array(2 downto 0);
+  signal tmr_enable_mv				      : std_logic_vector (2 downto 0); 
+  signal config_signal_mv			      : config_signal_array (2 downto 0); 
     
 --=============================================================================
 begin -- architecture
@@ -1501,7 +1522,68 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate configuration logic
   -----------------------------------------------------------------------------
-  cfg_inst: entity work.core_cfgCtrl
+--  cfg_inst: entity work.core_cfgCtrl
+--    generic map (
+--      CFG                           => CFG
+--    )
+--    port map (
+      
+--      -- System control.
+--      reset                         => reset_s,
+--      clk                           => clk,
+--      clkEn                         => clkEn,
+      
+--      -- Configuration request inputs.
+--      cxreg2cfg_requestData         => cxreg2cfg_requestData,
+--      cxreg2cfg_requestEnable       => cxreg2cfg_requestEnable,
+--      gbreg2cfg_requestData         => gbreg2cfg_requestData,
+--      gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
+--      cxreg2cfg_wakeupConfig        => cxreg2cfg_wakeupConfig,
+--      cxreg2cfg_wakeupEnable        => cxreg2cfg_wakeupEnable,
+--      cfg2cxreg_wakeupAck           => cfg2cxreg_wakeupAck,
+--      rctrl2cfg_irq_ct0             => rctrl2rv_irq(0),
+      
+--      -- Configuration status outputs.
+--      cfg2gbreg_busy                => cfg2gbreg_busy,
+--      cfg2gbreg_error               => cfg2gbreg_error,
+--      cfg2gbreg_requesterID         => cfg2gbreg_requesterID,
+      
+--      -- Branch unit interface (through context-pipelane interface).
+--      cfg2cxplif_active             => cfg2cxplif_active,
+--      cfg2cxplif_requestReconfig    => cfg2cxplif_requestReconfig,
+--      cxplif2cfg_blockReconfig      => cxplif2cfg_blockReconfig,
+      
+--      -- Memory interface.
+--      mem2cfg_blockReconfig         => mem2rv_blockReconfig,
+      
+--      -- Configuration control signals.
+--      cfg2any_configWord            => cfg2any_configWord,
+--      cfg2any_coupled               => cfg2any_coupled,
+--      cfg2any_decouple              => cfg2any_decouple,
+--      cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2,
+--      cfg2any_context               => cfg2any_context,
+--      cfg2any_active                => cfg2any_active,
+--      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
+--      cfg2any_laneIndex             => cfg2any_laneIndex,
+--      cfg2any_pcAddVal              => cfg2any_pcAddVal,
+		
+		
+		
+		--fault tolerance
+--		tmr_enable => tmr_enable,--testing
+--		config_signal => config_signal --testing
+      
+--    );
+--  
+--  -- Connect the external decouple signal to the decouple signal from the
+--  -- configuration logic.
+--  rv2mem_decouple <= cfg2any_decouple;
+  
+
+  -----------------------------------------------------------------------------
+  -- Instantiate configuration logic with TMR
+  -----------------------------------------------------------------------------
+  cfg_inst0: entity work.core_cfgCtrl
     generic map (
       CFG                           => CFG
     )
@@ -1519,45 +1601,209 @@ begin -- architecture
       gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
       cxreg2cfg_wakeupConfig        => cxreg2cfg_wakeupConfig,
       cxreg2cfg_wakeupEnable        => cxreg2cfg_wakeupEnable,
-      cfg2cxreg_wakeupAck           => cfg2cxreg_wakeupAck,
+      cfg2cxreg_wakeupAck           => cfg2cxreg_wakeupAck_mv(0),
       rctrl2cfg_irq_ct0             => rctrl2rv_irq(0),
       
       -- Configuration status outputs.
-      cfg2gbreg_busy                => cfg2gbreg_busy,
-      cfg2gbreg_error               => cfg2gbreg_error,
-      cfg2gbreg_requesterID         => cfg2gbreg_requesterID,
+      cfg2gbreg_busy                => cfg2gbreg_busy_mv(0),
+      cfg2gbreg_error               => cfg2gbreg_error_mv(0),
+      cfg2gbreg_requesterID         => cfg2gbreg_requesterID_mv(0),
       
       -- Branch unit interface (through context-pipelane interface).
-      cfg2cxplif_active             => cfg2cxplif_active,
-      cfg2cxplif_requestReconfig    => cfg2cxplif_requestReconfig,
+      cfg2cxplif_active             => cfg2cxplif_active_mv(0),
+      cfg2cxplif_requestReconfig    => cfg2cxplif_requestReconfig_mv(0),
       cxplif2cfg_blockReconfig      => cxplif2cfg_blockReconfig,
       
       -- Memory interface.
       mem2cfg_blockReconfig         => mem2rv_blockReconfig,
       
       -- Configuration control signals.
-      cfg2any_configWord            => cfg2any_configWord,
-      cfg2any_coupled               => cfg2any_coupled,
-      cfg2any_decouple              => cfg2any_decouple,
-      cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2,
-      cfg2any_context               => cfg2any_context,
-      cfg2any_active                => cfg2any_active,
-      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt,
-      cfg2any_laneIndex             => cfg2any_laneIndex,
-      cfg2any_pcAddVal              => cfg2any_pcAddVal,
+      cfg2any_configWord            => cfg2any_configWord_mv(0),
+      cfg2any_coupled               => cfg2any_coupled_mv(0),
+      cfg2any_decouple              => cfg2any_decouple_mv(0),
+      cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2_mv(0),
+      cfg2any_context               => cfg2any_context_mv(0),
+      cfg2any_active                => cfg2any_active_mv(0),
+      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt_mv(0),
+      cfg2any_laneIndex             => cfg2any_laneIndex_mv(0),
+      cfg2any_pcAddVal              => cfg2any_pcAddVal_mv(0),
 		
 		
 		
 		--fault tolerance
-		tmr_enable => tmr_enable,--testing
-		config_signal => config_signal --testing
+		tmr_enable => tmr_enable_mv(0),--testing
+		config_signal => config_signal_mv(0) --testing
       
     );
+  
+  
+
+  cfg_inst1: entity work.core_cfgCtrl
+    generic map (
+      CFG                           => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                         => reset_s,
+      clk                           => clk,
+      clkEn                         => clkEn,
+      
+      -- Configuration request inputs.
+      cxreg2cfg_requestData         => cxreg2cfg_requestData,
+      cxreg2cfg_requestEnable       => cxreg2cfg_requestEnable,
+      gbreg2cfg_requestData         => gbreg2cfg_requestData,
+      gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
+      cxreg2cfg_wakeupConfig        => cxreg2cfg_wakeupConfig,
+      cxreg2cfg_wakeupEnable        => cxreg2cfg_wakeupEnable,
+      cfg2cxreg_wakeupAck           => cfg2cxreg_wakeupAck_mv(1),
+      rctrl2cfg_irq_ct0             => rctrl2rv_irq(0),
+      
+      -- Configuration status outputs.
+      cfg2gbreg_busy                => cfg2gbreg_busy_mv(1),
+      cfg2gbreg_error               => cfg2gbreg_error_mv(1),
+      cfg2gbreg_requesterID         => cfg2gbreg_requesterID_mv(1),
+      
+      -- Branch unit interface (through context-pipelane interface).
+      cfg2cxplif_active             => cfg2cxplif_active_mv(1),
+      cfg2cxplif_requestReconfig    => cfg2cxplif_requestReconfig_mv(1),
+      cxplif2cfg_blockReconfig      => cxplif2cfg_blockReconfig,
+      
+      -- Memory interface.
+      mem2cfg_blockReconfig         => mem2rv_blockReconfig,
+      
+      -- Configuration control signals.
+      cfg2any_configWord            => cfg2any_configWord_mv(1),
+      cfg2any_coupled               => cfg2any_coupled_mv(1),
+      cfg2any_decouple              => cfg2any_decouple_mv(1),
+      cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2_mv(1),
+      cfg2any_context               => cfg2any_context_mv(1),
+      cfg2any_active                => cfg2any_active_mv(1),
+      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt_mv(1),
+      cfg2any_laneIndex             => cfg2any_laneIndex_mv(1),
+      cfg2any_pcAddVal              => cfg2any_pcAddVal_mv(1),
+		
+		
+		
+		--fault tolerance
+		tmr_enable => tmr_enable_mv(1),--testing
+		config_signal => config_signal_mv(1) --testing
+      
+    );
+
+
+
+  cfg_inst2: entity work.core_cfgCtrl
+    generic map (
+      CFG                           => CFG
+    )
+    port map (
+      
+      -- System control.
+      reset                         => reset_s,
+      clk                           => clk,
+      clkEn                         => clkEn,
+      
+      -- Configuration request inputs.
+      cxreg2cfg_requestData         => cxreg2cfg_requestData,
+      cxreg2cfg_requestEnable       => cxreg2cfg_requestEnable,
+      gbreg2cfg_requestData         => gbreg2cfg_requestData,
+      gbreg2cfg_requestEnable       => gbreg2cfg_requestEnable,
+      cxreg2cfg_wakeupConfig        => cxreg2cfg_wakeupConfig,
+      cxreg2cfg_wakeupEnable        => cxreg2cfg_wakeupEnable,
+      cfg2cxreg_wakeupAck           => cfg2cxreg_wakeupAck_mv(2),
+      rctrl2cfg_irq_ct0             => rctrl2rv_irq(0),
+      
+      -- Configuration status outputs.
+      cfg2gbreg_busy                => cfg2gbreg_busy_mv(2),
+      cfg2gbreg_error               => cfg2gbreg_error_mv(2),
+      cfg2gbreg_requesterID         => cfg2gbreg_requesterID_mv(2),
+      
+      -- Branch unit interface (through context-pipelane interface).
+      cfg2cxplif_active             => cfg2cxplif_active_mv(2),
+      cfg2cxplif_requestReconfig    => cfg2cxplif_requestReconfig_mv(2),
+      cxplif2cfg_blockReconfig      => cxplif2cfg_blockReconfig,
+      
+      -- Memory interface.
+      mem2cfg_blockReconfig         => mem2rv_blockReconfig,
+      
+      -- Configuration control signals.
+      cfg2any_configWord            => cfg2any_configWord_mv(2),
+      cfg2any_coupled               => cfg2any_coupled_mv(2),
+      cfg2any_decouple              => cfg2any_decouple_mv(2),
+      cfg2any_numGroupsLog2         => cfg2any_numGroupsLog2_mv(2),
+      cfg2any_context               => cfg2any_context_mv(2),
+      cfg2any_active                => cfg2any_active_mv(2),
+      cfg2any_lastGroupForCtxt      => cfg2any_lastGroupForCtxt_mv(2),
+      cfg2any_laneIndex             => cfg2any_laneIndex_mv(2),
+      cfg2any_pcAddVal              => cfg2any_pcAddVal_mv(2),
+		
+		
+		
+		--fault tolerance
+		tmr_enable => tmr_enable_mv(2),--testing
+		config_signal => config_signal_mv(2) --testing
+      
+    );
+	  
+  -----------------------------------------------------------------------------
+  -- Instantiate the core_cfgCtrl voter
+  -----------------------------------------------------------------------------
+	cfgCtrl_voter_inst: entity work.tmr_cfgCtrl_voter
+	  generic map(
+         CFG                         => CFG
+      )
+  	  port map (
+
+	cfg2cxreg_wakeupAck_mv         =>	cfg2cxreg_wakeupAck_mv,
+    cfg2gbreg_busy_mv              =>	cfg2gbreg_busy_mv,
+    cfg2gbreg_error_mv             =>	cfg2gbreg_error_mv,
+    cfg2gbreg_requesterID_mv       =>	cfg2gbreg_requesterID_mv,
+    cfg2cxplif_active_mv           =>	cfg2cxplif_active_mv,
+    cfg2cxplif_requestReconfig_mv  =>	cfg2cxplif_requestReconfig_mv,
+    cfg2any_configWord_mv          =>	cfg2any_configWord_mv,
+    cfg2any_coupled_mv             =>	cfg2any_coupled_mv,
+    cfg2any_decouple_mv            =>	cfg2any_decouple_mv,
+    cfg2any_numGroupsLog2_mv       =>	cfg2any_numGroupsLog2_mv,
+    cfg2any_context_mv             =>	cfg2any_context_mv,
+    cfg2any_active_mv              =>	cfg2any_active_mv,
+    cfg2any_lastGroupForCtxt_mv    =>	cfg2any_lastGroupForCtxt_mv,
+    cfg2any_laneIndex_mv           =>	cfg2any_laneIndex_mv,
+    cfg2any_pcAddVal_mv            =>	cfg2any_pcAddVal_mv,
+	tmr_enable_mv				   =>	tmr_enable_mv,
+	config_signal_mv			   =>	config_signal_mv,
+		  
+		  
+	cfg2cxreg_wakeupAck            =>	cfg2cxreg_wakeupAck,
+    cfg2gbreg_busy                 =>	cfg2gbreg_busy,
+    cfg2gbreg_error                =>	cfg2gbreg_error,
+    cfg2gbreg_requesterID          =>	cfg2gbreg_requesterID,
+    cfg2cxplif_active              =>	cfg2cxplif_active,
+    cfg2cxplif_requestReconfig     =>	cfg2cxplif_requestReconfig,
+    cfg2any_configWord             =>	cfg2any_configWord,
+    cfg2any_coupled                =>	cfg2any_coupled,
+    cfg2any_decouple               =>	cfg2any_decouple,
+    cfg2any_numGroupsLog2          =>	cfg2any_numGroupsLog2,
+    cfg2any_context                =>	cfg2any_context,
+    cfg2any_active                 =>	cfg2any_active,
+    cfg2any_lastGroupForCtxt       =>	cfg2any_lastGroupForCtxt,
+    cfg2any_laneIndex              =>	cfg2any_laneIndex,
+    cfg2any_pcAddVal               =>	cfg2any_pcAddVal,
+	tmr_enable					   =>	tmr_enable,
+	config_signal				   =>	config_signal
+	  );
+	  
+
   
   -- Connect the external decouple signal to the decouple signal from the
   -- configuration logic.
   rv2mem_decouple <= cfg2any_decouple;
   
+
+
+
+
+
   -----------------------------------------------------------------------------
   -- Instantiate trace control unit
   -----------------------------------------------------------------------------

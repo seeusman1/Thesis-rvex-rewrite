@@ -73,6 +73,29 @@ package common_pkg is
   type rvex_syllable_array      is array (natural range <>) of rvex_syllable_type;
   type rvex_byte_array          is array (natural range <>) of rvex_byte_type;
   type rvex_7byte_array         is array (natural range <>) of rvex_7byte_type;
+										  
+										  
+  -- Subtypes for cfgCtrl_voter
+--  subtype tmr_2bit_type        is std_logic_vector( 1 downto  0); -- Any 2-bit word, used for configuration control.
+-- subtype tmr_3bit_type        is std_logic_vector( 2 downto  0); -- Any 3-bit word, used for configuration control.
+--  subtype tmr_4bit_type        is std_logic_vector( 3 downto  0); -- Any 4-bit word, used for configuration control.
+  -- Array types for cfgCtrl_voter
+--  type tmr_2bit_array          is array (natural range <>) of tmr_2bit_type;
+--  type tmr_3bit_array          is array (natural range <>) of tmr_3bit_type;
+--  type tmr_4bit_array          is array (natural range <>) of tmr_4bit_type;
+
+--   type cfg2gbreg_requesterID_array       is array (natural range <>) of std_logic_vector(3 downto 0);
+--   type cfg2cxplif_active_array           is array (natural range <>) of std_logic_vector(3 downto 0);
+--   type cfg2cxplif_requestReconfig_array  is array (natural range <>) of std_logic_vector(3 downto 0);
+--   type cfg2any_coupled_array             is array (natural range <>) of std_logic_vector(15 downto 0);
+--   type cfg2any_decouple_array            is array (natural range <>) of std_logic_vector(3 downto 0);
+--   type cfg2any_numGroupsLog2_array       is array (natural range <>) of tmr_2bit_array(3 downto 0);
+--   type cfg2any_context_array             is array (natural range <>) of tmr_3bit_array(3 downto 0);
+--   type cfg2any_active_array              is array (natural range <>) of std_logic_vector(3 downto 0);
+--   type cfg2any_lastGroupForCtxt_array    is array (natural range <>) of tmr_3bit_array(3 downto 0);
+--   type cfg2any_laneIndex_array           is array (natural range <>) of tmr_4bit_array(7 downto 0);
+--   type cfg2any_pcAddVal_array            is array (natural range <>) of rvex_address_array(7 downto 0); 
+--   type config_signal_array				  is array (natural range <>) of std_logic_vector (3 downto 0) ;
   
   -- Null array constants.
   constant RVEX_DATA_ARRAY_NULL : rvex_data_array(0 to -1) := (others => (others => '0'));

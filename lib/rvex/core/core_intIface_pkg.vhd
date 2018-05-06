@@ -91,6 +91,21 @@ package core_intIface_pkg is
   type rvex_sylStatus_array     is array (natural range <>) of rvex_sylStatus_type;
   type rvex_limmh_array         is array (natural range <>) of rvex_limmh_type;
   type rvex_trap_array          is array (natural range <>) of rvex_trap_type;
+										  
+  -- Array types for cfgCtrl_voter
+
+   type cfg2gbreg_requesterID_array       is array (natural range <>) of std_logic_vector(3 downto 0);
+   type cfg2cxplif_active_array           is array (natural range <>) of std_logic_vector(3 downto 0);
+   type cfg2cxplif_requestReconfig_array  is array (natural range <>) of std_logic_vector(3 downto 0);
+   type cfg2any_coupled_array             is array (natural range <>) of std_logic_vector(15 downto 0);
+   type cfg2any_decouple_array            is array (natural range <>) of std_logic_vector(3 downto 0);
+   type cfg2any_numGroupsLog2_array       is array (natural range <>) of rvex_2bit_array(3 downto 0);
+   type cfg2any_context_array             is array (natural range <>) of rvex_3bit_array(3 downto 0);
+   type cfg2any_active_array              is array (natural range <>) of std_logic_vector(3 downto 0);
+   type cfg2any_lastGroupForCtxt_array    is array (natural range <>) of rvex_3bit_array(3 downto 0);
+   type cfg2any_laneIndex_array           is array (natural range <>) of rvex_4bit_array(7 downto 0);
+   type cfg2any_pcAddVal_array            is array (natural range <>) of rvex_address_array(7 downto 0); 
+   type config_signal_array				  is array (natural range <>) of std_logic_vector (3 downto 0) ;
   
   -----------------------------------------------------------------------------
   -- Constants which don't belong elsewhere
