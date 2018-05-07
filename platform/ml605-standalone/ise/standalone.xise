@@ -527,6 +527,16 @@
       <association xil_pn:name="Implementation" xil_pn:seqID="110"/>
       <library xil_pn:name="rvex"/>
     </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_encoder_8.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="140"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="140"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_decoder_8.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="141"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="141"/>
+      <library xil_pn:name="rvex"/>
+    </file>
   </files>
 
   <properties>
