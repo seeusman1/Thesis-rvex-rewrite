@@ -162,6 +162,7 @@ begin
     -- Replication unit for Instruction read and exception from IMEM
     ---------------------------------------------------------------------------			
 	replicate_instr: process (start, reset, imem2tmr_instr, config_signal, imem2tmr_exception)
+	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will read from Imem before signals pass through rep unit
 		
 		begin
 			
@@ -169,11 +170,14 @@ begin
 				if (start = '1') then
 					for i in 0 to 3 loop
 						if config_signal(i) = '1' then
-						--if temp(i) = '1' then
-							tmr2ibuf_instr (2*i) 	<= imem2tmr_instr(0);
-							tmr2ibuf_instr (2*i+1)	<= imem2tmr_instr(1);
+							for j in 0 to 3 loop
+								if mask_signal(j) = '1' then
+									tmr2ibuf_instr (2*i) 	<= imem2tmr_instr(2*j);
+									tmr2ibuf_instr (2*i+1)	<= imem2tmr_instr(2*j+1);
 					
-							tmr2ibuf_exception (i) <= imem2tmr_exception(0);							
+									tmr2ibuf_exception (i) <= imem2tmr_exception(j);
+								end if;
+							end loop;
 						else
 						-- NOP instruction for disabled core, NOP instruction's 29th and 30th bit is high
 					    --	tmr2ibuf_instr (2*i) <= (others => '0');
@@ -281,6 +285,7 @@ begin
     ---------------------------------------------------------------------------			
 		
 	addr_result: process (start, config_signal, ibuf2tmr_PCs_s, ibuf2tmr_PCs_s_result, ibuf2tmr_fetch_s, ibuf2tmr_fetch_s_result, ibuf2tmr_cancel_s, ibuf2tmr_cancel_s_result)	
+	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to Imem after signals pass through mv
 	begin
 		if start = '0' then
 			tmr2imem_PCs			<=	ibuf2tmr_PCs_s;
@@ -299,15 +304,21 @@ begin
 			--	tmr2imem_cancel(i)	<= ibuf2tmr_cancel_s_result;
 			--end loop;
 
-				tmr2imem_PCs(0)	  	<=	ibuf2tmr_PCs_s_result;
-				tmr2imem_fetch(0)	<= ibuf2tmr_fetch_s_result;
-				tmr2imem_cancel(0)  <= ibuf2tmr_cancel_s_result;
+			--	tmr2imem_PCs(0)	  	<=	ibuf2tmr_PCs_s_result;
+			--	tmr2imem_fetch(0)	<= ibuf2tmr_fetch_s_result;
+			--	tmr2imem_cancel(0)  <= ibuf2tmr_cancel_s_result;
 		
 			for i in 0 to 3 loop
 				if config_signal(i) = '0' then
 					tmr2imem_PCs(i)		<=	ibuf2tmr_PCs(i);
 					tmr2imem_fetch(i)	<= ibuf2tmr_fetch(i);
 					tmr2imem_cancel(i)	<= ibuf2tmr_cancel(i);
+				else
+					if mask_signal(i) = '1' then
+						tmr2imem_PCs(i)	  	<=	ibuf2tmr_PCs_s_result;
+						tmr2imem_fetch(i)	<= ibuf2tmr_fetch_s_result;
+						tmr2imem_cancel(i)  <= ibuf2tmr_cancel_s_result;
+					end if;
 				end if;
 			end loop;
 
