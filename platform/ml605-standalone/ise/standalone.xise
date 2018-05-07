@@ -527,6 +527,41 @@
       <association xil_pn:name="Implementation" xil_pn:seqID="110"/>
       <library xil_pn:name="rvex"/>
     </file>
+    <file xil_pn:name="../../../lib/rvex/cache/cache_instr_missCtrl_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="140"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="140"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/cache/cache_blockTag_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="141"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="141"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/cache/cache_blockValid_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="142"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="142"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/cache/tmr_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="143"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="143"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_decoder_8.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="144"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="144"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_encoder_8.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="145"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="145"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/cache/cache_data_missCtrl_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="146"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="146"/>
+      <library xil_pn:name="rvex"/>
+    </file>
   </files>
 
   <properties>

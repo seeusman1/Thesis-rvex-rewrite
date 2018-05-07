@@ -31,7 +31,7 @@ synthesized.ngd: synthesized.ngc constraints.ucf
 
 # Runs placer (map).
 mapped.ncd constraints.pcf: synthesized.ngd
-	map -p $(PART) -w $(shell cat opts-map.cfg) -o mapped.ncd synthesized.ngd constraints.pcf
+	map -detail -p $(PART) -w $(shell cat opts-map.cfg) -o mapped.ncd synthesized.ngd constraints.pcf
 
 # Runs router (par).
 routed.ncd: mapped.ncd constraints.pcf
