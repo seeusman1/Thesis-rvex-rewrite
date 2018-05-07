@@ -122,7 +122,11 @@ entity core_gpRegs is
     creg2gpreg_writeData        : in  rvex_data_type;
     
     -- Read data returned one cycle after the claim.
-    gpreg2creg_readData         : out rvex_data_type
+    gpreg2creg_readData         : out rvex_data_type;
+	  
+	-- Fault tolerant mode signals
+    tmr_enable					 : in std_logic;
+    config_signal				 : in std_logic_vector (3 downto 0)
     
   );
 end core_gpRegs;
@@ -159,6 +163,11 @@ architecture Behavioral of core_gpRegs is
   signal readData_comb            : rvex_data_array(NUM_READ_PORTS-1 downto 0);
   signal readData_reg             : rvex_data_array(NUM_READ_PORTS-1 downto 0);
   signal readData                 : rvex_data_array(NUM_READ_PORTS-1 downto 0);
+
+  --signals for GPReg voter
+  signal tmr_writeEnable          : std_logic_vector(NUM_WRITE_PORTS-1 downto 0);
+  signal tmr_writeAddr            : rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
+  signal tmr_writeData            : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
 
 --=============================================================================
 begin -- architecture
@@ -367,9 +376,12 @@ begin -- architecture
         clkEn                   => clkEn,
         
         -- Write ports.
-        writeEnable             => writeEnable,
-        writeAddr               => writeAddr,
-        writeData               => writeData,
+        --writeEnable             => writeEnable,
+        --writeAddr               => writeAddr,
+        --writeData               => writeData,
+        writeEnable             => tmr_writeEnable,
+        writeAddr               => tmr_writeAddr,
+        writeData               => tmr_writeData,
         
         -- Read ports.
         readEnable              => readEnable,
@@ -394,9 +406,12 @@ begin -- architecture
         clkEn                   => clkEn,
         
         -- Write ports.
-        writeEnable             => writeEnable,
-        writeAddr               => writeAddr,
-        writeData               => writeData,
+        --writeEnable             => writeEnable,
+        --writeAddr               => writeAddr,
+        --writeData               => writeData,
+        writeEnable             => tmr_writeEnable,
+        writeAddr               => tmr_writeAddr,
+        writeData               => tmr_writeData,
         
         -- Read ports.
         readAddr                => readAddr,
@@ -421,9 +436,12 @@ begin -- architecture
         clkEn                   => clkEn,
         
         -- Write ports.
-        writeEnable             => writeEnable,
-        writeAddr               => writeAddr,
-        writeData               => writeData,
+        --writeEnable             => writeEnable,
+        --writeAddr               => writeAddr,
+        --writeData               => writeData,
+        writeEnable             => tmr_writeEnable,
+        writeAddr               => tmr_writeAddr,
+        writeData               => tmr_writeData,
         
         -- Read ports.
         readAddr                => readAddr,
@@ -431,6 +449,43 @@ begin -- architecture
         
       );
   end generate;
+		
+		
+		
+		
+  -----------------------------------------------------------------------------
+  -- Instantiate the GPREG Majority voter bank
+  -----------------------------------------------------------------------------
+	gpregvoter1_inst: entity work.tmr_gpregvoter1
+	  generic map(
+        NUM_REGS_LOG2           => NUM_REGS_LOG2,
+        NUM_WRITE_PORTS         => NUM_WRITE_PORTS,
+        NUM_READ_PORTS          => NUM_READ_PORTS
+      )
+  	  port map (
+
+    	reset                       => reset, 
+    	clk                         => clk,
+	    clkEn                       => clkEn,
+		start_ft					=> tmr_enable,
+		config_signal				=> config_signal,
+		  
+
+    	-- Signals that go into GPREG Majority voter
+    	writeEnable          		=>  writeEnable,
+    	writeAddr       		 	=>  writeAddr,
+    	writeData          			=>  writeData,	  
+
+    	-- Signals that come out of GPREG Majority voter
+		tmr_writeEnable        		=>  tmr_writeEnable,
+    	tmr_writeAddr           	=>  tmr_writeAddr,
+    	tmr_writeData       		=>  tmr_writeData		  
+	  );	  
+	  
+	
+		
+		
+		
   
   -- The register file and forwarding system does not on its own respect
   -- stalls; it just always performs the request its given. For writes this is

@@ -951,16 +951,16 @@ begin -- architecture
       dmsw2creg_writeMask           => dmsw2creg_writeMask,
       dmsw2creg_writeEnable         => dmsw2creg_writeEnable,
       dmsw2creg_readEnable          => dmsw2creg_readEnable,
-      --creg2dmsw_readData            => creg2dmsw_readData,
-      creg2dmsw_readData            => tmrvoter2dmsw_readData, --testing
+      creg2dmsw_readData            => creg2dmsw_readData,
+      --creg2dmsw_readData            => tmrvoter2dmsw_readData, --FT if gpreg inst
 		
       -- Common memory interface.
       mem2pl_cacheStatus            => mem2rv_cacheStatus,
       
       -- Register file interface.
       pl2gpreg_readPorts            => pl2gpreg_readPorts,
-      --gpreg2pl_readPorts            => gpreg2pl_readPorts,
-	  gpreg2pl_readPorts 			=> tmrvoter2pl_readPorts, --testing
+      gpreg2pl_readPorts            => gpreg2pl_readPorts,
+	  --gpreg2pl_readPorts 			=> tmrvoter2pl_readPorts, --FT if gpreg inst
       pl2gpreg_writePorts           => pl2gpreg_writePorts,
       cxplif2cxreg_brWriteData      => cxplif2cxreg_brWriteData,
       cxplif2cxreg_brWriteEnable    => cxplif2cxreg_brWriteEnable,
@@ -1029,11 +1029,11 @@ begin -- architecture
       cfg2any_context               => cfg2any_context,
       
       -- Read and write ports.
-      --pl2gpreg_readPorts            => pl2gpreg_readPorts,
-	  pl2gpreg_readPorts            => tmrvoter2gpreg_readPorts, --testing
+      pl2gpreg_readPorts            => pl2gpreg_readPorts,
+	  --pl2gpreg_readPorts            => tmrvoter2gpreg_readPorts, --FT if gpreg inst
       gpreg2pl_readPorts            => gpreg2pl_readPorts,
-      --pl2gpreg_writePorts           => pl2gpreg_writePorts,
-	  pl2gpreg_writePorts           => tmrvoter2gpreg_writePorts,--testing
+      pl2gpreg_writePorts           => pl2gpreg_writePorts,
+	  --pl2gpreg_writePorts           => tmrvoter2gpreg_writePorts,--FT if gpreg inst
       
       -- Debug interface.
       creg2gpreg_claim              => creg2gpreg_claim,
@@ -1041,7 +1041,11 @@ begin -- architecture
       creg2gpreg_ctxt               => creg2gpreg_ctxt,
       creg2gpreg_writeEnable        => creg2gpreg_writeEnable,
       creg2gpreg_writeData          => creg2gpreg_writeData,
-      gpreg2creg_readData           => gpreg2creg_readData
+      gpreg2creg_readData           => gpreg2creg_readData,
+		
+	  -- signals for fault tolerance
+	  tmr_enable					=> tmr_enable,
+	  config_signal					=> config_signal
       
     );
   
@@ -1049,36 +1053,32 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the GPREG Majority voter bank
   -----------------------------------------------------------------------------
-	gpregvoter_inst: entity work.tmr_gpregvoter
-	  generic map(
-         CFG                         => CFG
-      )
-  	  port map (
+--	gpregvoter_inst: entity work.tmr_gpregvoter
+--	  generic map(
+--         CFG                         => CFG
+--      )
+--  	  port map (
 
-    	reset                       => reset_s, 
-    	clk                         => clk,
-	    clkEn                       => clkEn,
-		start_ft					=> tmr_enable,
-		config_signal				=> config_signal,
+--    	reset                       => reset_s, 
+--    	clk                         => clk,
+--	    clkEn                       => clkEn,
+--		start_ft					=> tmr_enable,
+--		config_signal				=> config_signal,
 		  
-    ---------------------------------------------------------------------------
-    -- Signals that go into GPREG Majority voter
-    ---------------------------------------------------------------------------
-		  
-    pl2tmrvoter_readPorts          	=>  pl2gpreg_readPorts,
-    gpreg2tmrvoter_readPorts        =>  gpreg2pl_readPorts,
-    pl2tmrvoter_writePorts          =>  pl2gpreg_writePorts,
-		  
-	---------------------------------------------------------------------------
-    -- Signals that come out of GPREG Majority voter
-    ---------------------------------------------------------------------------
 
-	tmrvoter2gpreg_readPorts        =>  tmrvoter2gpreg_readPorts,
-    tmrvoter2pl_readPorts           =>  tmrvoter2pl_readPorts,
-    tmrvoter2gpreg_writePorts       =>  tmrvoter2gpreg_writePorts
-	--test_signal						=> test_signal --testing
+--    -- Signals that go into GPREG Majority voter	  
+--    pl2tmrvoter_readPorts          	=>  pl2gpreg_readPorts,
+--    gpreg2tmrvoter_readPorts        =>  gpreg2pl_readPorts,
+--    pl2tmrvoter_writePorts          =>  pl2gpreg_writePorts,
 		  
-	  );	  
+
+--    -- Signals that come out of GPREG Majority voter
+--	tmrvoter2gpreg_readPorts        =>  tmrvoter2gpreg_readPorts,
+--    tmrvoter2pl_readPorts           =>  tmrvoter2pl_readPorts,
+--    tmrvoter2gpreg_writePorts       =>  tmrvoter2gpreg_writePorts
+--	--test_signal						=> test_signal --testing
+--		  
+--	  );	  
 	  
 	
 	  

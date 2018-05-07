@@ -32,6 +32,7 @@ core_globalRegLogic.vhd
 core_gpRegs_mem.vhd
 core_gpRegs_sim.vhd
 core_gpRegs_simple.vhd
+tmr_gpregvoter1.vhd
 core_gpRegs.vhd
 core_limmRouting.vhd
 core_memu.vhd
