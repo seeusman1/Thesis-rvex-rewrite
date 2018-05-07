@@ -385,14 +385,18 @@ begin -- architecture
     ---------------------------------------------------------------------------			
 
 	replicate_read_data: process (start_array, config_signal, dmem2dmemvoter_readData)
-		
+	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will read from Imem before signals pass through rep unit
 		begin
 			if (start_array(0) = '0') then
 				dmemvoter2rv_readData <= dmem2dmemvoter_readData;
 			else 
 					for i in 0 to 3 loop
 						if config_signal(i) = '1' then
-							dmemvoter2rv_readData (i) <= dmem2dmemvoter_readData(0);
+							for j in 0 to 3 loop
+								if mask_signal(j) = '1' then
+									dmemvoter2rv_readData (i) <= dmem2dmemvoter_readData(j);
+								end if;
+							end loop;
 						else
 					    	dmemvoter2rv_readData (i) <= dmem2dmemvoter_readData(i);
 						end if;
