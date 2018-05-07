@@ -324,6 +324,7 @@ begin -- architecture
 	addr_result: process (start_array, config_signal, rv2dmemvoter_addr_s, rv2dmemvoter_addr_s_result, rv2dmemvoter_readEnable_s, 
 						  	rv2dmemvoter_readEnable_s_result, rv2dmemvoter_writeData_s, rv2dmemvoter_writeData_s_result, 
 						  	rv2dmemvoter_writeMask_s, rv2dmemvoter_writeMask_s_result, rv2dmemvoter_writeEnable_s, rv2dmemvoter_writeEnable_s_result)	
+	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to dmem after signals pass through majority voter
 	begin
 		if start_array(0) = '0' then
 			dmemvoter2dmem_addr				<=	rv2dmemvoter_addr_s;
@@ -348,11 +349,11 @@ begin -- architecture
 		--		end if;
 		--	end loop;
 
-				dmemvoter2dmem_addr(0)			<=	rv2dmemvoter_addr_s_result;
-				dmemvoter2dmem_readEnable(0)	<= rv2dmemvoter_readEnable_s_result;	
-				dmemvoter2dmem_writeData(0)		<= rv2dmemvoter_writeData_s_result;
-				dmemvoter2dmem_writeMask(0) 	<= rv2dmemvoter_writeMask_s_result;
-				dmemvoter2dmem_writeEnable(0) 	<= rv2dmemvoter_writeEnable_s_result;
+		--		dmemvoter2dmem_addr(0)			<=	rv2dmemvoter_addr_s_result;
+		--		dmemvoter2dmem_readEnable(0)	<= rv2dmemvoter_readEnable_s_result;	
+		--		dmemvoter2dmem_writeData(0)		<= rv2dmemvoter_writeData_s_result;
+		--		dmemvoter2dmem_writeMask(0) 	<= rv2dmemvoter_writeMask_s_result;
+		--		dmemvoter2dmem_writeEnable(0) 	<= rv2dmemvoter_writeEnable_s_result;
 
 
 			for i in 0 to 3 loop
@@ -362,6 +363,14 @@ begin -- architecture
 					dmemvoter2dmem_writeData(i)		<= rv2dmemvoter_writeData(i);
 					dmemvoter2dmem_writeMask(i) 	<= rv2dmemvoter_writeMask(i);
 					dmemvoter2dmem_writeEnable(i) 	<= rv2dmemvoter_writeEnable(i);
+				else
+					if mask_signal(i) = '1' then
+						dmemvoter2dmem_addr(i)			<=	rv2dmemvoter_addr_s_result;
+						dmemvoter2dmem_readEnable(i)	<= rv2dmemvoter_readEnable_s_result;	
+						dmemvoter2dmem_writeData(i)		<= rv2dmemvoter_writeData_s_result;
+						dmemvoter2dmem_writeMask(i) 	<= rv2dmemvoter_writeMask_s_result;
+						dmemvoter2dmem_writeEnable(i) 	<= rv2dmemvoter_writeEnable_s_result;
+					end if;
 				end if;
 			end loop;				
 
