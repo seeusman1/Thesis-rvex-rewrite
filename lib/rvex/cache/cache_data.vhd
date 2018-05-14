@@ -149,11 +149,13 @@ entity cache_data is
     -- Data memory interface.
     rv2dcache_addr              : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_readEnable        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    rv2dcache_writeData         : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    --rv2dcache_writeData         : in  rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    rv2dcache_writeData         : in  rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0); --encoded data
     rv2dcache_writeMask         : in  rvex_mask_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_writeEnable       : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2dcache_bypass            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    dcache2rv_readData          : out rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    --dcache2rv_readData          : out rvex_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+    dcache2rv_readData          : out rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0); --encoded data
     dcache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     dcache2rv_ifaceFault        : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     
@@ -221,7 +223,8 @@ architecture Behavioral of cache_data is
     updateEnable                : std_logic;
     
     -- Data for write accesses.
-    writeData                   : rvex_data_type;
+    --writeData                   : rvex_data_type;
+	writeData                   : rvex_encoded_datacache_data_type; --encoded data
     
     -- Active high bytemask for writes.
     writeMask                   : rvex_mask_type;
@@ -298,7 +301,8 @@ architecture Behavioral of cache_data is
     
     -- Cache data output, valid when hit and readEnable were high in the
     -- previous cycle.
-    data                        : rvex_data_type;
+    --data                        : rvex_data_type;
+	data                       	  : rvex_encoded_datacache_data_type; --encoded data
     
     -- This goes high when a bus fault occurs while reading from the bus or
     -- while writing in bypass mode (writing without bypass mode cannot

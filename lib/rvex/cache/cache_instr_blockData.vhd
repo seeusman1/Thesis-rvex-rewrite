@@ -81,13 +81,15 @@ entity cache_instr_blockData is
     cpuAddr                   : in  rvex_address_type;
     
     -- Read data output.
-    readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    --readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+	readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded read data
     
     -- Active high write enable input.
     writeEnable               : in  std_logic;
     
     -- Write data input.
-    writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0)
+    --writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0)
+    writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0) --encoded writedata
     
   );
 end cache_instr_blockData;
@@ -103,7 +105,8 @@ architecture Behavioral of cache_instr_blockData is
   -- Cache data memory.
   type ram_data_type
     is array(0 to 2**CCFG.instrCacheLinesLog2-1)
-    of std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    --of std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+	of std_logic_vector(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 0);
   signal ram_data             : ram_data_type := (others => (others => 'X'));
   
   -- Hints for XST to implement the data memory in block RAMs.
@@ -112,6 +115,10 @@ architecture Behavioral of cache_instr_blockData is
   
   -- CPU address/PC signals.
   signal cpuOffset            : std_logic_vector(icacheOffsetSize(RCFG, CCFG)-1 downto 0);
+
+  
+  signal writeData_encoded		: std_logic_vector(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 0);
+  signal readData_encoded		: std_logic_vector(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -129,14 +136,44 @@ begin -- architecture
     if rising_edge(clk) then
       if enable = '1' then
         if writeEnable = '1' then
-          ram_data(to_integer(unsigned(cpuOffset))) <= writeData;
-          readData <= writeData;
+          ram_data(to_integer(unsigned(cpuOffset))) <= writeData_encoded;
+          readData_encoded <= writeData_encoded;
         else
-          readData <= ram_data(to_integer(unsigned(cpuOffset)));
+          readData_encoded <= ram_data(to_integer(unsigned(cpuOffset)));
         end if;
       end if;
     end if;
   end process;
-  
+													 
+													 
+----  ecc_proc: process (readData_encoded,writeData) is
+----  begin
+----		readData			<= 	readData_encoded(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 48);
+----		writeData_encoded	<=	writeData & X"000000000000";
+----													 
+----  end process;		
+												   
+												   
+--  ECC_encoderbank: for i in 0 to 7 generate
+--	ecc_encoder: entity work.ecc_encoder
+--		port map (
+--					input		=> writeData(32*i + 31 downto 32*i),
+--					output		=> writeData_encoded(38*i + 37 downto 38*i)
+--				);
+--  end generate;		
+												   
+--  ECC_decoderbank: for i in 0 to 7 generate
+--	ecc_decoder: entity work.ecc_decoder
+--		port map (
+--					input		=> readData_encoded(38*i + 37 downto 38*i),
+--					output		=> readData(32*i + 31 downto 32*i)
+--				);
+--  end generate;	
+												   
+	writeData_encoded <= writeData;
+	readData		  <= readData_encoded;
+												   
+												   
+												   
 end Behavioral;
 

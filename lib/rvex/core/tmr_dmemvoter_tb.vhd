@@ -83,7 +83,8 @@ architecture behavioral of tmr_dmemvoter_tb is
     perfCountSize               => 4,
     cachePerfCountEnable        => false,
     stallInactive               => true,
-    enablePowerLatches          => true
+    enablePowerLatches          => true,
+	ECC							=> true
   );
 
 

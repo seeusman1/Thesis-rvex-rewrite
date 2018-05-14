@@ -572,6 +572,101 @@
       <association xil_pn:name="Implementation" xil_pn:seqID="148"/>
       <library xil_pn:name="rvex"/>
     </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_encoder.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="99"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="99"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_decoder.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="100"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="100"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_gpreg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="101"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="101"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_opcodeFpu_pkg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="102"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="102"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_add.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="103"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="103"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_compare.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="104"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="104"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_convfi.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="105"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="105"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_convif.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="106"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="106"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_mul.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="107"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="107"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_fixed_pkg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="108"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="108"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_float_pkg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="109"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="109"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/core_fpu_types_pkg.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="110"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="110"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/cache/cache_instr_missCtrl_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="140"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="140"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/cache/cache_blockTag_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="141"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="141"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/cache/cache_blockValid_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="142"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="142"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/cache/tmr_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="143"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="143"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_decoder_8.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="144"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="144"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/core/ecc_encoder_8.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="145"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="145"/>
+      <library xil_pn:name="rvex"/>
+    </file>
+    <file xil_pn:name="../../../lib/rvex/cache/cache_data_missCtrl_voter.vhd" xil_pn:type="FILE_VHDL">
+      <association xil_pn:name="BehavioralSimulation" xil_pn:seqID="146"/>
+      <association xil_pn:name="Implementation" xil_pn:seqID="146"/>
+      <library xil_pn:name="rvex"/>
+    </file>
   </files>
 
   <properties>

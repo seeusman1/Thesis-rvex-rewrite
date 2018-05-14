@@ -2,3 +2,9 @@ core_listOpcodes_tb.vhd
 core_cfgCtrl_tb.vhd
 tmr_voter_tb.vhd
 tmr_dmemvoter_tb.vhd
+ecc_encoder_8_tb.vhd
+ecc_decoder_8_tb.vhd
+ecc_encoder_tb.vhd
+ecc_decoder_tb.vhd
+ecc_8_tb.vhd
+ecc_tb.vhd

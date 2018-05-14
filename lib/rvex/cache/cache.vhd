@@ -178,10 +178,166 @@ architecture Behavioral of cache is
   signal dcache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   signal dcache2rv_status       : dcache_status_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+
+
+  -- ECC signal test
+  --data cache
+  signal rv2dcache_writeData_encoded    : rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_readData_encoded     : rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  --Inst. cache
+  signal icache2rv_instr_encoded        : rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+
+  --signal icache2rv_instr_encoded_simtest        : rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
 --=============================================================================
+	
+	-- for data cache
+	--encoding
+--	rv2dcache_writeData_encoded(0)(11 downto 0)			<= "0000" & rv2dcache_writeData(0)(7 downto 0);
+--	rv2dcache_writeData_encoded(0)(23 downto 12)		<= "0000" & rv2dcache_writeData(0)(15 downto 8);
+--	rv2dcache_writeData_encoded(0)(35 downto 24)		<= "0000" & rv2dcache_writeData(0)(23 downto 16);
+--	rv2dcache_writeData_encoded(0)(47 downto 36)		<= "0000" & rv2dcache_writeData(0)(31 downto 24);
+--	rv2dcache_writeData_encoded(1)(11 downto 0)			<= "0000" & rv2dcache_writeData(1)(7 downto 0);
+--	rv2dcache_writeData_encoded(1)(23 downto 12)		<= "0000" & rv2dcache_writeData(1)(15 downto 8);
+--	rv2dcache_writeData_encoded(1)(35 downto 24)		<= "0000" & rv2dcache_writeData(1)(23 downto 16);
+--	rv2dcache_writeData_encoded(1)(47 downto 36)		<= "0000" & rv2dcache_writeData(1)(31 downto 24);
+--	rv2dcache_writeData_encoded(2)(11 downto 0)			<= "0000" & rv2dcache_writeData(2)(7 downto 0);
+--	rv2dcache_writeData_encoded(2)(23 downto 12)		<= "0000" & rv2dcache_writeData(2)(15 downto 8);
+--	rv2dcache_writeData_encoded(2)(35 downto 24)		<= "0000" & rv2dcache_writeData(2)(23 downto 16);
+--	rv2dcache_writeData_encoded(2)(47 downto 36)		<= "0000" & rv2dcache_writeData(2)(31 downto 24);
+--	rv2dcache_writeData_encoded(3)(11 downto 0)			<= "0000" & rv2dcache_writeData(3)(7 downto 0);
+--	rv2dcache_writeData_encoded(3)(23 downto 12)		<= "0000" & rv2dcache_writeData(3)(15 downto 8);
+--	rv2dcache_writeData_encoded(3)(35 downto 24)		<= "0000" & rv2dcache_writeData(3)(23 downto 16);
+--	rv2dcache_writeData_encoded(3)(47 downto 36)		<= "0000" & rv2dcache_writeData(3)(31 downto 24);
+
+  -----------------------------------------------------------------------------
+  -- Hamming Encoder for Data
+  -----------------------------------------------------------------------------
+
+  ECC_encoderbank: for j in 0 to 3 generate
+	  ECC_encoder:	for i in 0 to 3 generate
+		ecc_encoder_inst: entity work.ecc_encoder_8
+			port map (
+						input		=> rv2dcache_writeData(j)(8*i + 7  downto 8*i),
+						output		=> rv2dcache_writeData_encoded(j)(12*i + 11 downto 12*i)
+					);
+	  end generate;
+  end generate;
+		
+--  ECC_encoderbank1: for i in 0 to 3 generate
+--	ecc_encoder1: entity work.ecc_encoder_8
+--		port map (
+--					input		=> rv2dcache_writeData(1)(8*i + 7  downto 8*i),
+--					output		=> rv2dcache_writeData_encoded(1)(12*i + 11 downto 12*i)
+--				);
+--  end generate;
+
+--  ECC_encoderbank2: for i in 0 to 3 generate
+--	ecc_encoder2: entity work.ecc_encoder_8
+--		port map (
+--					input		=> rv2dcache_writeData(2)(8*i + 7  downto 8*i),
+--					output		=> rv2dcache_writeData_encoded(2)(12*i + 11 downto 12*i)
+--				);
+--  end generate;
+
+--  ECC_encoderbank3: for i in 0 to 3 generate
+--	ecc_encoder3: entity work.ecc_encoder_8
+--		port map (
+--					input		=> rv2dcache_writeData(3)(8*i + 7  downto 8*i),
+--					output		=> rv2dcache_writeData_encoded(3)(12*i + 11 downto 12*i)
+--				);
+--  end generate;
+
+
+
+
+	--decoding
+--	dcache2rv_readData(0)(7 downto 0)					<= dcache2rv_readData_encoded(0)(7 downto 0);
+--	dcache2rv_readData(0)(15 downto 8)					<= dcache2rv_readData_encoded(0)(19 downto 12);
+--	dcache2rv_readData(0)(23 downto 16)					<= dcache2rv_readData_encoded(0)(31 downto 24);
+--	dcache2rv_readData(0)(31 downto 24)					<= dcache2rv_readData_encoded(0)(43 downto 36);
+--	dcache2rv_readData(1)(7 downto 0)					<= dcache2rv_readData_encoded(1)(7 downto 0);
+--	dcache2rv_readData(1)(15 downto 8)					<= dcache2rv_readData_encoded(1)(19 downto 12);
+--	dcache2rv_readData(1)(23 downto 16)					<= dcache2rv_readData_encoded(1)(31 downto 24);
+--	dcache2rv_readData(1)(31 downto 24)					<= dcache2rv_readData_encoded(1)(43 downto 36);
+--	dcache2rv_readData(2)(7 downto 0)					<= dcache2rv_readData_encoded(2)(7 downto 0);
+--	dcache2rv_readData(2)(15 downto 8)					<= dcache2rv_readData_encoded(2)(19 downto 12);
+--	dcache2rv_readData(2)(23 downto 16)					<= dcache2rv_readData_encoded(2)(31 downto 24);
+--	dcache2rv_readData(2)(31 downto 24)					<= dcache2rv_readData_encoded(2)(43 downto 36);
+--	dcache2rv_readData(3)(7 downto 0)					<= dcache2rv_readData_encoded(3)(7 downto 0); 
+--	dcache2rv_readData(3)(15 downto 8)					<= dcache2rv_readData_encoded(3)(19 downto 12);
+--	dcache2rv_readData(3)(23 downto 16)					<= dcache2rv_readData_encoded(3)(31 downto 24);
+--	dcache2rv_readData(3)(31 downto 24)					<= dcache2rv_readData_encoded(3)(43 downto 36);
+
+  -----------------------------------------------------------------------------
+  -- Hamming Decoder for Data
+  -----------------------------------------------------------------------------
+
+  ECC_decoderbank: for j in 0 to 3 generate
+	  ECC_decoder:	for i in 0 to 3 generate 
+		ecc_decoder_inst: entity work.ecc_decoder_8
+			port map (
+					input		=> dcache2rv_readData_encoded(j)(12*i + 11 downto 12*i),
+					output		=> dcache2rv_readData(j)(8*i + 7 downto 8*i)
+			);
+	  end generate;
+  end generate;
+
+--  ECC_decoderbank1: for i in 0 to 3 generate
+--	ecc_decoder1: entity work.ecc_decoder_8
+--		port map (
+--					input		=> dcache2rv_readData_encoded(1)(12*i + 11 downto 12*i),
+--					output		=> dcache2rv_readData(1)(8*i + 7 downto 8*i)
+--				);
+--  end generate;
+
+--  ECC_decoderbank2: for i in 0 to 3 generate
+--	ecc_decoder2: entity work.ecc_decoder_8
+--		port map (
+--					input		=> dcache2rv_readData_encoded(2)(12*i + 11 downto 12*i),
+--					output		=> dcache2rv_readData(2)(8*i + 7 downto 8*i)
+--				);
+--  end generate;
+
+--  ECC_decoderbank3: for i in 0 to 3 generate
+--	ecc_decoder3: entity work.ecc_decoder_8
+--		port map (
+--					input		=> dcache2rv_readData_encoded(3)(12*i + 11 downto 12*i),
+--					output		=> dcache2rv_readData(3)(8*i + 7 downto 8*i)
+--				);
+--  end generate;
+
+
+
+
+
+
+
+	--for Instruction cache
+    --decoding
+--    icache2rv_instr(0)			<= icache2rv_instr_encoded(0)(37 downto 6);
+--    icache2rv_instr(1)			<= icache2rv_instr_encoded(1)(37 downto 6);
+--    icache2rv_instr(2)			<= icache2rv_instr_encoded(2)(37 downto 6);
+--    icache2rv_instr(3)			<= icache2rv_instr_encoded(3)(37 downto 6);
+--    icache2rv_instr(4)			<= icache2rv_instr_encoded(4)(37 downto 6);
+--    icache2rv_instr(5)			<= icache2rv_instr_encoded(5)(37 downto 6);
+--    icache2rv_instr(6)			<= icache2rv_instr_encoded(6)(37 downto 6);
+--    icache2rv_instr(7)			<= icache2rv_instr_encoded(7)(37 downto 6);
+
+  -----------------------------------------------------------------------------
+  -- Hamming Decoder for instructions 
+  -----------------------------------------------------------------------------
+
+  ECC_decoderbank_instr: for i in 0 to 7 generate
+	ecc_decoder_instr: entity work.ecc_decoder
+		port map (
+					input		=> icache2rv_instr_encoded(i),
+					output		=> icache2rv_instr(i)
+				);
+  end generate;
+
   
   -----------------------------------------------------------------------------
   -- Instantiate the instruction cache
@@ -207,7 +363,9 @@ begin -- architecture
       rv2icache_PCs             => rv2icache_PCs,
       rv2icache_fetch           => rv2icache_fetch,
       rv2icache_cancel          => rv2icache_cancel,
-      icache2rv_instr           => icache2rv_instr,
+      --icache2rv_instr           => icache2rv_instr,
+	  icache2rv_instr           => icache2rv_instr_encoded, --encoded syllable
+	  --icache2rv_instr_encoded_simtest =>icache2rv_instr_encoded_simtest,
       icache2rv_affinity        => icache2rv_affinity,
       icache2rv_busFault        => icache2rv_busFault,
       icache2rv_status_access   => icache2rv_status_access,
@@ -249,11 +407,13 @@ begin -- architecture
       rv2dcache_stallOut        => rv2cache_stallOut,
       rv2dcache_addr            => rv2dcache_addr,
       rv2dcache_readEnable      => rv2dcache_readEnable,
-      rv2dcache_writeData       => rv2dcache_writeData,
+      --rv2dcache_writeData       => rv2dcache_writeData,
+	  rv2dcache_writeData       => rv2dcache_writeData_encoded,-- encoded data
       rv2dcache_writeMask       => rv2dcache_writeMask,
       rv2dcache_writeEnable     => rv2dcache_writeEnable,
       rv2dcache_bypass          => rv2dcache_bypass,
-      dcache2rv_readData        => dcache2rv_readData,
+      --dcache2rv_readData        => dcache2rv_readData,
+	  dcache2rv_readData        => dcache2rv_readData_encoded,-- encoded data
       dcache2rv_busFault        => dcache2rv_busFault,
       dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
       dcache2rv_status          => dcache2rv_status,

@@ -261,6 +261,11 @@ architecture Behavioral of rvsys_standalone is
   -- Bus M:
   signal debugTrace_req         : bus_mst2slv_type;
   signal debugTrace_res         : bus_slv2mst_type;
+
+  signal dbg2status             : bus_mst2slv_type;
+  signal status2dbg             : bus_slv2mst_type;
+
+
   
   -- Trace data interconnect signals between the core and the trace buffer.
   signal rv2trsink_push         : std_logic;
@@ -462,6 +467,7 @@ begin -- architecture
         ADDRESS_MAP(0)            => CFG.debugBusMap_dmem,
         ADDRESS_MAP(1)            => CFG.debugBusMap_rvex,
         ADDRESS_MAP(2)            => CFG.debugBusMap_trace,
+        ADDRESS_MAP(3)            => addrRangeAndMap(match => "1100----------------------------"),
         MUTUALLY_EXCLUSIVE        => CFG.debugBusMap_mutex
       )
       port map (
@@ -473,9 +479,11 @@ begin -- architecture
         demux2slv(0)              => debugDataMem_req,
         demux2slv(1)              => debugRvex_req,
         demux2slv(2)              => debugTrace_req,
+        demux2slv(3)              => dbg2status,
         slv2demux(0)              => debugDataMem_res,
         slv2demux(1)              => debugRvex_res,
-        slv2demux(2)              => debugTrace_res
+        slv2demux(2)              => debugTrace_res,
+        slv2demux(3)              => status2dbg
       );
     
     -- Connect unused bus to idle.
@@ -759,6 +767,26 @@ begin -- architecture
     instrMem_res    <= (others => BUS_SLV2MST_IDLE);
   
   end generate;
+
+  process (clk) is
+  begin
+	  if rising_edge(clk) then
+		status2dbg <= BUS_SLV2MST_IDLE;
+		status2dbg.ack <= bus_requesting(dbg2status);
+	    
+	  	-- Handle writes
+	  	if dbg2status.writeEnable = '1' then
+			-- something based on dbg2status.writeData and dbg2status.address
+		end if;
+		
+		-- Handle reads
+	    case dbg2status.address(5 downto 2) is
+			when "0000" => status2dbg.readData <= X"00000003"; --(something you want to monitor);
+			-- Add more registers here if you need them ("0001", "0010" ...)
+			when others => null;
+		end case;
+	  end if;
+  end process;
   
 end Behavioral;
 

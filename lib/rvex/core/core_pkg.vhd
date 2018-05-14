@@ -189,6 +189,8 @@ package core_pkg is
     -- When enabled, latches are inserted in various places to prevent
     -- switching activity spent generating unused data.
     enablePowerLatches          : boolean;
+
+	ECC							: boolean;
     
   end record;
   
@@ -224,7 +226,8 @@ package core_pkg is
     perfCountSize               => 4,
     cachePerfCountEnable        => false,
     stallInactive               => true,
-    enablePowerLatches          => true
+    enablePowerLatches          => true,
+	ECC							=> true
   );
   
   -- Minimal rvex core configuration.
@@ -255,7 +258,8 @@ package core_pkg is
     perfCountSize               => 0,
     cachePerfCountEnable        => false,
     stallInactive               => false,
-    enablePowerLatches          => false
+    enablePowerLatches          => false,
+	ECC							=> false
   );
   
   -- Generates a configuration for the rvex core. None of the parameters are

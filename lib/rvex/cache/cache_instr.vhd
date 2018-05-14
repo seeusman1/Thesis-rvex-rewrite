@@ -103,7 +103,8 @@ entity cache_instr is
     rv2icache_PCs               : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2icache_fetch             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     rv2icache_cancel            : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-    icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+    --icache2rv_instr             : out rvex_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+	icache2rv_instr             : out rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
     icache2rv_busFault          : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_affinity          : out std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);
     icache2rv_status_access     : out std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -135,6 +136,12 @@ entity cache_instr is
     
     -- Cache flush request signals for each instruction cache block.
     sc2icache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0)
+	  
+	  
+	  
+	--test
+	  
+	--icache2rv_instr_encoded_simtest             : out rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0)
     
   );
 end cache_instr;
@@ -202,7 +209,8 @@ architecture Behavioral of cache_instr is
     PC_r                        : rvex_address_type;
     
     -- Cache line data, valid when hit and readEnable are high.
-    line                        : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    --line                        : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
+    line                        : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
     
     -- Block reconfiguration signal from the cache. This is asserted when any
     -- block is busy.
@@ -396,6 +404,7 @@ begin -- architecture
         route2block_cancel        => inNetwork(RCFG.numLaneGroupsLog2)(i).cancel,
         route2block_stall         => inNetwork(RCFG.numLaneGroupsLog2)(i).stall,
         block2route_line          => outNetwork(0)(i).line,
+		--block2route_line_temp_simtest          => outNetwork(0)(i).line2,
         block2route_blockReconfig => outNetwork(0)(i).blockReconfig,
         block2route_busFault      => outNetwork(0)(i).busFault,
         
@@ -519,7 +528,8 @@ begin -- architecture
     variable omd                    : outNetworkEdge_type;
     variable offset                 : natural range 0 to 2**RCFG.numLaneGroupsLog2-1;
     constant LANE_GROUP_SIZE_BLOG2  : natural := laneGroupInstrSizeBLog2(RCFG, CCFG);
-    constant LANE_GROUP_SIZE_BITS   : natural := 8 * 2**LANE_GROUP_SIZE_BLOG2;
+    constant LANE_GROUP_SIZE_BITS   : natural := 8 * 2**LANE_GROUP_SIZE_BLOG2 + 12;
+    --constant LANE_GROUP_SIZE_BITS_simtest   : natural := 8 * 2**LANE_GROUP_SIZE_BLOG2 + 12;
   begin
     for i in 0 to 2**RCFG.numLaneGroupsLog2-1 loop
       
@@ -535,10 +545,19 @@ begin -- architecture
       for laneIndex in 0 to 2**(RCFG.numLanesLog2 - RCFG.numLaneGroupsLog2)-1 loop
         icache2rv_instr(group2firstLane(i, RCFG) + laneIndex)
           <= omd.line(
-            LANE_GROUP_SIZE_BITS*offset + 32*laneIndex + 31
+            LANE_GROUP_SIZE_BITS*offset + 38*laneIndex + 37
             downto
-            LANE_GROUP_SIZE_BITS*offset + 32*laneIndex
-          );
+            LANE_GROUP_SIZE_BITS*offset + 38*laneIndex
+          );-- & "000000";
+
+       -- icache2rv_instr_encoded_simtest(group2firstLane(i, RCFG) + laneIndex)
+       --   <= omd.line2(
+       --     LANE_GROUP_SIZE_BITS_simtest*offset + 38*laneIndex + 37
+       --     downto
+       --     LANE_GROUP_SIZE_BITS_simtest*offset + 38*laneIndex
+       --   );-- & "000000";
+
+
       end loop;
     
     end loop;

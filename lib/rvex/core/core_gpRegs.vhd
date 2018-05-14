@@ -160,14 +160,21 @@ architecture Behavioral of core_gpRegs is
   signal writeData                : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
   signal readEnable               : std_logic_vector(NUM_READ_PORTS-1 downto 0);
   signal readAddr                 : rvex_address_array(NUM_READ_PORTS-1 downto 0);
-  signal readData_comb            : rvex_data_array(NUM_READ_PORTS-1 downto 0);
+  signal readData_comb            : rvex_encoded_data_array(NUM_READ_PORTS-1 downto 0); 
   signal readData_reg             : rvex_data_array(NUM_READ_PORTS-1 downto 0);
   signal readData                 : rvex_data_array(NUM_READ_PORTS-1 downto 0);
+
 
   --signals for GPReg voter
   signal tmr_writeEnable          : std_logic_vector(NUM_WRITE_PORTS-1 downto 0);
   signal tmr_writeAddr            : rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
   signal tmr_writeData            : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+
+  signal writeData_encoded        : rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0); 
+  signal readData_comb_decoded    : rvex_data_array(NUM_READ_PORTS-1 downto 0);  
+  signal writeAddr_encoded        : rvex_encoded_address_array(NUM_WRITE_PORTS-1 downto 0); 
+  signal readAddr_encoded         : rvex_encoded_address_array(NUM_READ_PORTS-1 downto 0); 
+
 
 --=============================================================================
 begin -- architecture
@@ -242,16 +249,16 @@ begin -- architecture
       );
     
     -- Connect write data.
-    writeData(writePort)
+    writeData(writePort) 
       <= (
         
         -- Pipelane connection.
-        pl2gpreg_writePorts(writePort).data(S_WB)
+        pl2gpreg_writePorts(writePort).data(S_WB) 
         
       ) when creg2gpreg_claim = '0' or writePort /= 0 else (
         
         -- Debug override connection.
-        creg2gpreg_writeData
+        creg2gpreg_writeData 
         
       );
     
@@ -274,7 +281,7 @@ begin -- architecture
   
   -- Connect the debug override read data result to the read output of read
   -- port 1.
-  gpreg2creg_readData <= readData_comb(0);
+  gpreg2creg_readData <= readData_comb_decoded(0); 
   
   -----------------------------------------------------------------------------
   -- Instantiate forwarding logic
@@ -336,8 +343,8 @@ begin -- architecture
           
           -- Register read connections.
           readAddress           => pl2gpreg_readPorts(readPort).addr(stage),
-          readDataIn            => readData(readPort),
-          readDataOut           => gpreg2pl_readPorts(readPort).data(stage),
+          readDataIn            => readData(readPort), 
+          readDataOut           => gpreg2pl_readPorts(readPort).data(stage), 
           readDataForwarded     => forwarded,
           
           -- Queued write signals.
@@ -376,16 +383,21 @@ begin -- architecture
         clkEn                   => clkEn,
         
         -- Write ports.
-        --writeEnable             => writeEnable,
-        --writeAddr               => writeAddr,
-        --writeData               => writeData,
-        writeEnable             => tmr_writeEnable,
-        writeAddr               => tmr_writeAddr,
-        writeData               => tmr_writeData,
+--<<<<<<< HEAD
+
+        --writeEnable             => tmr_writeEnable,
+        --writeAddr               => tmr_writeAddr,
+        --writeData               => tmr_writeData,
+--=======
+        writeEnable             => writeEnable, 
+		writeAddr_encoded       => writeAddr_encoded, 
+        writeData               => writeData_encoded,
+-->>>>>>> ECC_trip
         
         -- Read ports.
         readEnable              => readEnable,
-        readAddr                => readAddr,
+        --readAddr                => readAddr, 
+        readAddr_encoded        => readAddr_encoded, 
         readData                => readData_comb
         
       );
@@ -406,15 +418,19 @@ begin -- architecture
         clkEn                   => clkEn,
         
         -- Write ports.
-        --writeEnable             => writeEnable,
-        --writeAddr               => writeAddr,
-        --writeData               => writeData,
-        writeEnable             => tmr_writeEnable,
-        writeAddr               => tmr_writeAddr,
-        writeData               => tmr_writeData,
+--<<<<<<< HEAD
+
+        --writeEnable             => tmr_writeEnable,
+        --writeAddr               => tmr_writeAddr,
+        --writeData               => tmr_writeData,
+--=======
+        writeEnable             => writeEnable,
+        writeAddr_encoded       => writeAddr_encoded,
+        writeData               => writeData_encoded,
+-->>>>>>> ECC_trip
         
         -- Read ports.
-        readAddr                => readAddr,
+        readAddr_encoded        => readAddr_encoded,
         readData                => readData_comb
         
       );
@@ -436,15 +452,19 @@ begin -- architecture
         clkEn                   => clkEn,
         
         -- Write ports.
-        --writeEnable             => writeEnable,
-        --writeAddr               => writeAddr,
-        --writeData               => writeData,
-        writeEnable             => tmr_writeEnable,
-        writeAddr               => tmr_writeAddr,
-        writeData               => tmr_writeData,
+--<<<<<<< HEAD
+
+        --writeEnable             => tmr_writeEnable,
+        --writeAddr               => tmr_writeAddr,
+        --writeData               => tmr_writeData,
+--=======
+        writeEnable             => writeEnable,
+        writeAddr_encoded       => writeAddr_encoded,
+        writeData               => writeData_encoded,
+-->>>>>>> ECC_trip
         
         -- Read ports.
-        readAddr                => readAddr,
+        readAddr_encoded        => readAddr_encoded,
         readData                => readData_comb
         
       );
@@ -504,7 +524,7 @@ begin -- architecture
         stall_r <= stall;
         for prt in 0 to 2*2**CFG.numLanesLog2-1 loop
           if stall_r(lane2group(prt / 2, CFG)) = '0' then
-            readData_reg(prt) <= readData_comb(prt);
+            readData_reg(prt) <= readData_comb_decoded(prt); 
           end if;
         end loop;
       end if;
@@ -513,9 +533,41 @@ begin -- architecture
   
   read_port_stall_mux_gen: for prt in 0 to 2*2**CFG.numLanesLog2-1 generate
     readData(prt)
-      <= readData_comb(prt) when stall_r(lane2group(prt / 2, CFG)) = '0'
+      <= readData_comb_decoded(prt) when stall_r(lane2group(prt / 2, CFG)) = '0' 
       else readData_reg(prt);
   end generate;
   
-end Behavioral;
 
+
+  -----------------------------------------------------------------------------
+  -- Instantiate the ECC encoder and decoder
+  -----------------------------------------------------------------------------
+	ecc_gpreg_inst: entity work.ecc_gpreg
+	  generic map(
+         CFG                         => CFG
+      )
+  	  port map (
+
+    	reset                       => reset, 
+    	clk                         => clk,
+	    clkEn                       => clkEn,
+		--start_ft					=> tmr_enable,
+		--config_signal				=> config_signal,
+		
+		  
+		writeData					=> writeData,
+		readData_encoded  			=> readData_comb,
+		writeAddr					=> writeAddr,
+		readAddr					=> readAddr,
+
+		  
+		writeData_encoded  			=> writeData_encoded,
+		readData_decoded			=> readData_comb_decoded,
+		writeAddr_encoded			=> writeAddr_encoded,
+		readAddr_encoded			=> readAddr_encoded
+
+	  );
+	  
+		
+		
+end Behavioral;

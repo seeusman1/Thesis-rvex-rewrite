@@ -29,6 +29,11 @@ core_ctrlRegs_contextLaneSwitch.vhd
 core_ctrlRegs.vhd
 core_dmemSwitch.vhd
 core_globalRegLogic.vhd
+ecc_encoder_8.vhd
+ecc_decoder_8.vhd
+ecc_encoder.vhd
+ecc_decoder.vhd
+ecc_gpreg.vhd
 core_gpRegs_mem.vhd
 core_gpRegs_sim.vhd
 core_gpRegs_simple.vhd
