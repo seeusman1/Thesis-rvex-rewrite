@@ -167,8 +167,8 @@ architecture Behavioral of core_gpRegs is
 
   --signals for GPReg voter
   signal tmr_writeEnable          : std_logic_vector(NUM_WRITE_PORTS-1 downto 0);
-  signal tmr_writeAddr            : rvex_address_array(NUM_WRITE_PORTS-1 downto 0);
-  signal tmr_writeData            : rvex_data_array(NUM_WRITE_PORTS-1 downto 0);
+  signal tmr_ecc_writeAddr        : rvex_encoded_address_array(NUM_WRITE_PORTS-1 downto 0);
+  signal tmr_ecc_writeData        : rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0);
 
   signal writeData_encoded        : rvex_encoded_data_array(NUM_WRITE_PORTS-1 downto 0); 
   signal readData_comb_decoded    : rvex_data_array(NUM_READ_PORTS-1 downto 0);  
@@ -386,12 +386,12 @@ begin -- architecture
 --<<<<<<< HEAD
 
         --writeEnable             => tmr_writeEnable,
-        --writeAddr               => tmr_writeAddr,
-        --writeData               => tmr_writeData,
+        --writeAddr               => tmr_ecc_writeAddr,
+        --writeData               => tmr_ecc_writeData,
 --=======
         writeEnable             => writeEnable, 
-		writeAddr_encoded       => writeAddr_encoded, 
-        writeData               => writeData_encoded,
+		writeAddr_encoded       => tmr_ecc_writeAddr, 
+        writeData               => tmr_ecc_writeData,
 -->>>>>>> ECC_trip
         
         -- Read ports.
@@ -421,12 +421,12 @@ begin -- architecture
 --<<<<<<< HEAD
 
         --writeEnable             => tmr_writeEnable,
-        --writeAddr               => tmr_writeAddr,
-        --writeData               => tmr_writeData,
+        --writeAddr               => tmr_ecc_writeAddr,
+        --writeData               => tmr_ecc_writeData,
 --=======
         writeEnable             => writeEnable,
-        writeAddr_encoded       => writeAddr_encoded,
-        writeData               => writeData_encoded,
+        writeAddr_encoded       => tmr_ecc_writeAddr,
+        writeData               => tmr_ecc_writeData,
 -->>>>>>> ECC_trip
         
         -- Read ports.
@@ -455,12 +455,12 @@ begin -- architecture
 --<<<<<<< HEAD
 
         --writeEnable             => tmr_writeEnable,
-        --writeAddr               => tmr_writeAddr,
-        --writeData               => tmr_writeData,
+        --writeAddr               => tmr_ecc_writeAddr,
+        --writeData               => tmr_ecc_writeData,
 --=======
         writeEnable             => writeEnable,
-        writeAddr_encoded       => writeAddr_encoded,
-        writeData               => writeData_encoded,
+        writeAddr_encoded       => tmr_ecc_writeAddr,
+        writeData               => tmr_ecc_writeData,
 -->>>>>>> ECC_trip
         
         -- Read ports.
@@ -493,13 +493,13 @@ begin -- architecture
 
     	-- Signals that go into GPREG Majority voter
     	writeEnable          		=>  writeEnable,
-    	writeAddr       		 	=>  writeAddr,
-    	writeData          			=>  writeData,	  
+    	writeAddr_encoded  		 	=>  writeAddr_encoded, --writeAddr,
+    	writeData_encoded  			=>  writeData_encoded, --writeData,	  
 
     	-- Signals that come out of GPREG Majority voter
 		tmr_writeEnable        		=>  tmr_writeEnable,
-    	tmr_writeAddr           	=>  tmr_writeAddr,
-    	tmr_writeData       		=>  tmr_writeData		  
+    	tmr_enc_writeAddr           =>  tmr_ecc_writeAddr,
+    	tmr_enc_writeData       	=>  tmr_ecc_writeData		  
 	  );	  
 	  
 	
