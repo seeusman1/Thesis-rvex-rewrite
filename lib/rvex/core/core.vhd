@@ -519,7 +519,11 @@ entity core is
     
     -- When high while push is high, the trace unit is stalled. While stalled,
     -- push will stay high and data and end will remain stable.
-    trsink2rv_busy              : in  std_logic := '0'
+    trsink2rv_busy              : in  std_logic := '0';
+	  
+  -- Fault Tolerant signals for Caches
+	rv2cache_tmr_enable			: out std_logic;
+	rv2cache_config_signal		: out std_logic_vector (3 downto 0)
     
   );
 end core;
@@ -806,7 +810,7 @@ architecture Behavioral of core is
 --=============================================================================
 begin -- architecture
 --=============================================================================
-  
+
   -----------------------------------------------------------------------------
   -- Generate reset and stalling logic
   -----------------------------------------------------------------------------
@@ -928,12 +932,12 @@ begin -- architecture
       ibuf2pl_exception             => ibuf2pl_exception,
       
       -- Data memory interface.
-      --dmsw2dmem_addr                => rv2dmem_addr, -- rv2dmemvoter_addr
+      --dmsw2dmem_addr                => rv2dmem_addr, 		-- rv2dmemvoter_addr
       --dmsw2dmem_writeData           => rv2dmem_writeData, -- rv2dmemvoter_writeData
       --dmsw2dmem_writeMask           => rv2dmem_writeMask, -- rv2dmemvoter_writeMask
       --dmsw2dmem_writeEnable         => rv2dmem_writeEnable, -- rv2dmemvoter_writeEnable
       --dmsw2dmem_readEnable          => rv2dmem_readEnable, -- rv2dmemvoter_readEnable
-      --dmem2dmsw_readData            => dmem2rv_readData, -- dmem2dmemvoter_readData
+      --dmem2dmsw_readData            => dmem2rv_readData, 	-- dmem2dmemvoter_readData
       --dmem2dmsw_exception           => dmem2dmsw_exception, 
 
       -- Data memory interface. --testing
@@ -1214,7 +1218,12 @@ begin -- architecture
 --    	nextpcvoter2cxreg_nextPC    => nextpcvoter2cxreg_nPC
 --	  );
 	  		
+  -----------------------------------------------------------------------------
+  -- Fault Tolerant signals for Caches
+  -----------------------------------------------------------------------------
 		
+    rv2cache_tmr_enable			<= tmr_enable;
+    rv2cache_config_signal 		<= config_signal;
 
   -----------------------------------------------------------------------------
   -- Instantiate the instruction buffer
@@ -1799,11 +1808,6 @@ begin -- architecture
   -- configuration logic.
   rv2mem_decouple <= cfg2any_decouple;
   
-
-
-
-
-
   -----------------------------------------------------------------------------
   -- Instantiate trace control unit
   -----------------------------------------------------------------------------

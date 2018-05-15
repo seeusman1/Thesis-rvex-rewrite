@@ -253,6 +253,9 @@ architecture Behavioral of rvsys_standalone_cachedCore is
   signal dbg2rv_writeData       : rvex_data_type;
   signal rv2dbg_readData        : rvex_data_type;
   signal rv2dgb_ack             : std_logic;
+
+  signal rv2cache_tmr_enable	: std_logic;
+  signal rv2cache_config_signal : std_logic_vector (3 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -333,7 +336,10 @@ begin -- architecture
       rv2trsink_push            => rv2trsink_push,
       rv2trsink_data            => rv2trsink_data,
       rv2trsink_end             => rv2trsink_end,
-      trsink2rv_busy            => trsink2rv_busy
+      trsink2rv_busy            => trsink2rv_busy,
+		
+	  rv2cache_tmr_enable		=> rv2cache_tmr_enable,
+	  rv2cache_config_signal	=> rv2cache_config_signal
       
     );
   
@@ -399,7 +405,10 @@ begin -- architecture
       
       -- Status and control signals.
       sc2icache_flush           => sc2icache_flush,
-      sc2dcache_flush           => sc2dcache_flush
+      sc2dcache_flush           => sc2dcache_flush,
+		
+	  rv2cache_tmr_enable		=> rv2cache_tmr_enable,
+	  rv2cache_config_signal	=> rv2cache_config_signal
       
     );
   

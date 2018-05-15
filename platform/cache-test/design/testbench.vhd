@@ -79,6 +79,10 @@ architecture Behavioral of testbench is
   -- Arbited bus connected to the memory model.
   signal arb2mem_bus            : bus_mst2slv_type;
   signal mem2arb_bus            : bus_slv2mst_type;
+
+  -- Fault Tolerant signals for Caches
+  signal rv2cache_tmr_enable	: std_logic;
+  signal rv2cache_config_signal	: std_logic_vector (3 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -155,7 +159,10 @@ begin -- architecture
       dbg2rv_writeEnable        => dbg2rv_writeEnable,
       dbg2rv_writeMask          => dbg2rv_writeMask,
       dbg2rv_writeData          => dbg2rv_writeData,
-      rv2dbg_readData           => rv2dbg_readData
+      rv2dbg_readData           => rv2dbg_readData,
+		
+	  rv2cache_tmr_enable		=> rv2cache_tmr_enable,
+	  rv2cache_config_signal	=> rv2cache_config_signal
       
     );
   
@@ -338,7 +345,10 @@ begin -- architecture
       
       -- Bus master interface.
       cache2bus_bus             => cache2arb_bus,
-      bus2cache_bus             => arb2cache_bus
+      bus2cache_bus             => arb2cache_bus,
+		
+	  rv2cache_tmr_enable		=> rv2cache_tmr_enable,
+	  rv2cache_config_signal	=> rv2cache_config_signal
       
     );
   
