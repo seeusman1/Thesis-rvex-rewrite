@@ -1172,31 +1172,31 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the Instruction replication unit
   -----------------------------------------------------------------------------
-	InsRep_inst: entity work.tmr_InsRep
-	  generic map(
-         CFG                         => CFG
-      )
-  	  port map (
+--	InsRep_inst: entity work.tmr_InsRep
+--	  generic map(
+--         CFG                         => CFG
+--      )
+--  	  port map (
 
-    	reset                       => reset_s, 
-    	clk                         => clk,
-	    clkEn                       => clkEn,
-		start_ft					=> tmr_enable,
-		config_signal				=> config_signal,
+--    	reset                       => reset_s, 
+--    	clk                         => clk,
+--	    clkEn                       => clkEn,
+--		start_ft					=> tmr_enable,
+--		config_signal				=> config_signal,
 		
 		  
-		ibuf2tmr_PCs				=> tmr2imem_PCs,
-		ibuf2tmr_fetch  			=> tmr2imem_fetch,
-		ibuf2tmr_cancel				=> tmr2imem_cancel,
-	 	imem2tmr_instr				=> imem2rv_instr,
-		imem2tmr_exception			=> imem2ibuf_exception,
+--		ibuf2tmr_PCs				=> tmr2imem_PCs,
+--		ibuf2tmr_fetch  			=> tmr2imem_fetch,
+--		ibuf2tmr_cancel				=> tmr2imem_cancel,
+--	 	imem2tmr_instr				=> imem2rv_instr,
+--		imem2tmr_exception			=> imem2ibuf_exception,
 		  
-		tmr2imem_PCs  				=> rv2imem_PCs,
-		tmr2imem_fetch				=> rv2imem_fetch,
-		tmr2imem_cancel				=> rv2imem_cancel,
-	 	tmr2ibuf_instr				=> tmr2pl_instr,
-		tmr2ibuf_exception			=> imem2tmr_exception
-	  );
+--		tmr2imem_PCs  				=> rv2imem_PCs,
+--		tmr2imem_fetch				=> rv2imem_fetch,
+--		tmr2imem_cancel				=> rv2imem_cancel,
+--	 	tmr2ibuf_instr				=> tmr2pl_instr,
+--		tmr2ibuf_exception			=> imem2tmr_exception
+--	  );
 	  
 
 		
@@ -1245,16 +1245,16 @@ begin -- architecture
         cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
         
         -- Instruction memory interface.
-        --ibuf2imem_PCs               => rv2imem_PCs,
-		ibuf2imem_PCs               => tmr2imem_PCs, --testing
-        --ibuf2imem_fetch             => rv2imem_fetch,
-		ibuf2imem_fetch             => tmr2imem_fetch, --testing
-        --ibuf2imem_cancel            => rv2imem_cancel,
-		ibuf2imem_cancel            => tmr2imem_cancel, --testing
-        --imem2ibuf_instr             => imem2rv_instr,
-		imem2ibuf_instr             => tmr2pl_instr, -- signal coming from instruction replication unit --testing
-        --imem2ibuf_exception         => imem2ibuf_exception,
-		imem2ibuf_exception         => imem2tmr_exception,  
+        ibuf2imem_PCs               => rv2imem_PCs, 
+		--ibuf2imem_PCs               => tmr2imem_PCs, -- if tmr_InsRep is instantiated
+        ibuf2imem_fetch             => rv2imem_fetch,
+		--ibuf2imem_fetch             => tmr2imem_fetch, -- if tmr_InsRep is instantiated
+        ibuf2imem_cancel            => rv2imem_cancel,
+		--ibuf2imem_cancel            => tmr2imem_cancel, -- if tmr_InsRep is instantiated
+        imem2ibuf_instr             => imem2rv_instr,
+		--imem2ibuf_instr             => tmr2pl_instr, -- if tmr_InsRep is instantiated
+        imem2ibuf_exception         => imem2ibuf_exception,
+		--imem2ibuf_exception         => imem2tmr_exception,  -- if tmr_InsRep is instantiated
         
         -- Pipelane interface.
         cxplif2ibuf_PCs             => cxplif2ibuf_PCs,

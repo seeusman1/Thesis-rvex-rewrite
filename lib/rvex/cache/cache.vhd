@@ -158,7 +158,7 @@ entity cache is
     sc2dcache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
 	  
 	rv2cache_tmr_enable			: in std_logic;
-	rv2cache_config_signal		: out std_logic_vector (3 downto 0)
+	rv2cache_config_signal		: in std_logic_vector (3 downto 0)
     
   );
 end cache;
@@ -168,19 +168,19 @@ architecture Behavioral of cache is
 --=============================================================================
   
   -- Instruction cache signals.
-  signal icache2bus_bus         : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal bus2icache_bus         : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal icache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal icache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal icache2rv_status_access: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal icache2rv_status_miss  : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2bus_bus         		: bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal bus2icache_bus         		: bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_blockReconfig		: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_stallIn      		: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_status_access		: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal icache2rv_status_miss  		: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
   -- Data cache signals.
-  signal dcache2bus_bus         : bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal bus2dcache_bus         : bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal dcache2rv_blockReconfig: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal dcache2rv_stallIn      : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
-  signal dcache2rv_status       : dcache_status_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2bus_bus         		: bus_mst2slv_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal bus2dcache_bus         		: bus_slv2mst_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_blockReconfig		: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_stallIn      		: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  signal dcache2rv_status       		: dcache_status_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
 
 
   -- ECC signal test
@@ -191,6 +191,14 @@ architecture Behavioral of cache is
   signal icache2rv_instr_encoded        : rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
 
   --signal icache2rv_instr_encoded_simtest        : rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+
+  -- for TMR
+   signal icache2tmr_instr_encoded    	: rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
+   signal icache2tmr_busFault         	: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal icache2tmr_affinity         	: std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);  
+   signal tmr2icache_PCs               	: rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal tmr2icache_fetch             	: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal tmr2icache_cancel            	: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -232,12 +240,49 @@ begin -- architecture
   ECC_decoderbank_instr: for i in 0 to 7 generate
 	ecc_decoder_instr: entity work.ecc_decoder
 		port map (
-					input		=> icache2rv_instr_encoded(i),
+					input		=> icache2tmr_instr_encoded(i),
+					--input		=> icache2rv_instr_encoded(i),
 					output		=> icache2rv_instr(i)
 				);
   end generate;
 
-  
+
+		
+  -----------------------------------------------------------------------------
+  -- Instantiate the Majority Voter bank for Inst. Cache
+  -----------------------------------------------------------------------------
+	InsRep_inst: entity work.tmr_imemvoter
+	  generic map(
+         CFG                         => RCFG
+      )
+  	  port map (
+
+    	reset                   => reset, 
+    	clk                     => clk,
+	    clkEn                   => clkEnCPU,
+		start_ft				=> rv2cache_tmr_enable,
+		config_signal			=> rv2cache_config_signal,
+		
+		  
+		rv2tmr_PCs				=> rv2icache_PCs,
+		rv2tmr_fetch  			=> rv2icache_fetch,
+		rv2tmr_cancel			=> rv2icache_cancel,
+	 	icache2tmr_instr		=> icache2rv_instr_encoded, 
+		icache2tmr_busFault		=> icache2tmr_busFault, 
+		icache2tmr_affinity		=> icache2tmr_affinity, 
+		  
+		tmr2icache_PCs  		=> tmr2icache_PCs,
+		tmr2icache_fetch		=> tmr2icache_fetch,
+		tmr2icache_cancel		=> tmr2icache_cancel,
+	 	tmr2rv_instr			=> icache2tmr_instr_encoded,
+		tmr2rv_busFault			=> icache2rv_busFault,
+		tmr2rv_affinity			=> icache2rv_affinity 
+	  );
+	  
+
+		
+		
+		
   -----------------------------------------------------------------------------
   -- Instantiate the instruction cache
   -----------------------------------------------------------------------------
@@ -259,14 +304,17 @@ begin -- architecture
       icache2rv_blockReconfig   => icache2rv_blockReconfig,
       icache2rv_stallIn         => icache2rv_stallIn,
       rv2icache_stallOut        => rv2cache_stallOut,
-      rv2icache_PCs             => rv2icache_PCs,
-      rv2icache_fetch           => rv2icache_fetch,
-      rv2icache_cancel          => rv2icache_cancel,
-      --icache2rv_instr           => icache2rv_instr,
+      --rv2icache_PCs             => rv2icache_PCs,
+      rv2icache_PCs             => tmr2icache_PCs,
+      --rv2icache_fetch           => rv2icache_fetch,
+      rv2icache_fetch           => tmr2icache_fetch,
+      --rv2icache_cancel          => rv2icache_cancel,
+      rv2icache_cancel          => tmr2icache_cancel,
 	  icache2rv_instr           => icache2rv_instr_encoded, --encoded syllable
-	  --icache2rv_instr_encoded_simtest =>icache2rv_instr_encoded_simtest,
-      icache2rv_affinity        => icache2rv_affinity,
-      icache2rv_busFault        => icache2rv_busFault,
+      --icache2rv_affinity        => icache2rv_affinity,
+      icache2rv_affinity        => icache2tmr_affinity,
+      --icache2rv_busFault        => icache2rv_busFault,
+      icache2rv_busFault        => icache2tmr_busFault,
       icache2rv_status_access   => icache2rv_status_access,
       icache2rv_status_miss     => icache2rv_status_miss,
       
