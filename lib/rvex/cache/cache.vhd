@@ -192,13 +192,28 @@ architecture Behavioral of cache is
 
   --signal icache2rv_instr_encoded_simtest        : rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
 
-  -- for TMR
+  -- signals for icache tmr
    signal icache2tmr_instr_encoded    	: rvex_encoded_syllable_array(2**RCFG.numLanesLog2-1 downto 0);
    signal icache2tmr_busFault         	: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
    signal icache2tmr_affinity         	: std_logic_vector(2**RCFG.numLaneGroupsLog2*RCFG.numLaneGroupsLog2-1 downto 0);  
    signal tmr2icache_PCs               	: rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
    signal tmr2icache_fetch             	: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
    signal tmr2icache_cancel            	: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+
+  --signals for dcache tmr
+   signal tmr2dcache_addr				: rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal tmr2dcache_readEnable			: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal rv2tmr_writeData_encoded		: rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal tmr2dcache_writeMask			: rvex_mask_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal tmr2dcache_writeEnable		: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal dcache2tmr_readData_encoded	: rvex_encoded_datacache_data_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal tmr2dcache_bypass				: std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal dcache2tmr_busFault           : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+   signal dcache2tmr_ifaceFault         : std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
+  
+
+
+
   
 --=============================================================================
 begin -- architecture
@@ -226,7 +241,8 @@ begin -- architecture
 	  ECC_decoder:	for i in 0 to 3 generate 
 		ecc_decoder_inst: entity work.ecc_decoder_8
 			port map (
-					input		=> dcache2rv_readData_encoded(j)(12*i + 11 downto 12*i),
+					--input		=> dcache2rv_readData_encoded(j)(12*i + 11 downto 12*i),
+					input		=> dcache2tmr_readData_encoded(j)(12*i + 11 downto 12*i),
 					output		=> dcache2rv_readData(j)(8*i + 7 downto 8*i)
 			);
 	  end generate;
@@ -280,7 +296,47 @@ begin -- architecture
 	  );
 	  
 
-		
+  -----------------------------------------------------------------------------
+  -- Instantiate the DMEM Majority voter bank
+  -----------------------------------------------------------------------------
+	dmemvoter_inst: entity work.tmr_dmemvoter1
+	  generic map(
+         CFG                         => RCFG
+      )
+  	  port map (
+
+    	reset                       => reset, 
+    	clk                         => clk,
+	    clkEn                       => clkEnCPU,
+		start_ft					=> rv2cache_tmr_enable,
+		config_signal				=> rv2cache_config_signal,
+		  
+    -- Signals that go into DMEM Majority voter
+		  
+  		rv2tmr_addr					=> rv2dcache_addr,
+  		rv2tmr_readEnable			=> rv2dcache_readEnable,
+  		rv2tmr_writeData			=> rv2dcache_writeData_encoded,
+  		rv2tmr_writeMask			=> rv2dcache_writeMask,
+		rv2tmr_writeEnable			=> rv2dcache_writeEnable,
+		dcache2tmr_readData			=> dcache2rv_readData_encoded,
+  		rv2tmr_bypass				=> rv2dcache_bypass,
+		dcache2tmr_busFault			=> dcache2tmr_busFault,
+		dcache2tmr_ifaceFault		=> dcache2tmr_ifaceFault,
+		  
+    -- Signals that come out of DMEM Majority voter
+
+		tmr2dcache_addr            => tmr2dcache_addr,
+    	tmr2dcache_readEnable      => tmr2dcache_readEnable,
+    	tmr2dcache_writeData       => rv2tmr_writeData_encoded,
+    	tmr2dcache_writeMask       => tmr2dcache_writeMask,
+    	tmr2dcache_writeEnable     => tmr2dcache_writeEnable,
+    	tmr2rv_readData            =>	dcache2tmr_readData_encoded,
+    	tmr2dcache_bypass          => tmr2dcache_bypass,
+    	tmr2rv_busFault            =>   dcache2rv_busFault,
+    	tmr2rv_ifaceFault          =>   dcache2rv_ifaceFault
+		  
+	  );	  
+	  
 		
 		
   -----------------------------------------------------------------------------
@@ -352,17 +408,22 @@ begin -- architecture
       dcache2rv_blockReconfig   => dcache2rv_blockReconfig,
       dcache2rv_stallIn         => dcache2rv_stallIn,
       rv2dcache_stallOut        => rv2cache_stallOut,
-      rv2dcache_addr            => rv2dcache_addr,
-      rv2dcache_readEnable      => rv2dcache_readEnable,
-      --rv2dcache_writeData       => rv2dcache_writeData,
-	  rv2dcache_writeData       => rv2dcache_writeData_encoded,-- encoded data
-      rv2dcache_writeMask       => rv2dcache_writeMask,
-      rv2dcache_writeEnable     => rv2dcache_writeEnable,
-      rv2dcache_bypass          => rv2dcache_bypass,
-      --dcache2rv_readData        => dcache2rv_readData,
+      --rv2dcache_addr            => rv2dcache_addr,
+      rv2dcache_addr            => tmr2dcache_addr,
+      --rv2dcache_readEnable      => rv2dcache_readEnable,
+      rv2dcache_readEnable      => tmr2dcache_readEnable,
+	  rv2dcache_writeData       => rv2tmr_writeData_encoded,-- encoded data
+      --rv2dcache_writeMask       => rv2dcache_writeMask,
+      rv2dcache_writeMask       => tmr2dcache_writeMask,
+      --rv2dcache_writeEnable     => rv2dcache_writeEnable,
+      rv2dcache_writeEnable     => tmr2dcache_writeEnable,
+      --rv2dcache_bypass          => rv2dcache_bypass,
+      rv2dcache_bypass          => tmr2dcache_bypass,
 	  dcache2rv_readData        => dcache2rv_readData_encoded,-- encoded data
-      dcache2rv_busFault        => dcache2rv_busFault,
-      dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
+      --dcache2rv_busFault        => dcache2rv_busFault,
+      dcache2rv_busFault        => dcache2tmr_busFault,
+      --dcache2rv_ifaceFault      => dcache2rv_ifaceFault,
+      dcache2rv_ifaceFault      => dcache2tmr_ifaceFault,
       dcache2rv_status          => dcache2rv_status,
       
       -- Bus master interface.

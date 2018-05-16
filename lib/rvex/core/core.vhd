@@ -932,22 +932,22 @@ begin -- architecture
       ibuf2pl_exception             => ibuf2pl_exception,
       
       -- Data memory interface.
-      --dmsw2dmem_addr                => rv2dmem_addr, 		-- rv2dmemvoter_addr
-      --dmsw2dmem_writeData           => rv2dmem_writeData, -- rv2dmemvoter_writeData
-      --dmsw2dmem_writeMask           => rv2dmem_writeMask, -- rv2dmemvoter_writeMask
-      --dmsw2dmem_writeEnable         => rv2dmem_writeEnable, -- rv2dmemvoter_writeEnable
-      --dmsw2dmem_readEnable          => rv2dmem_readEnable, -- rv2dmemvoter_readEnable
-      --dmem2dmsw_readData            => dmem2rv_readData, 	-- dmem2dmemvoter_readData
-      --dmem2dmsw_exception           => dmem2dmsw_exception, 
+      dmsw2dmem_addr                => rv2dmem_addr, 		
+      dmsw2dmem_writeData           => rv2dmem_writeData, 
+      dmsw2dmem_writeMask           => rv2dmem_writeMask,
+      dmsw2dmem_writeEnable         => rv2dmem_writeEnable, 
+      dmsw2dmem_readEnable          => rv2dmem_readEnable, 
+      dmem2dmsw_readData            => dmem2rv_readData, 
+      dmem2dmsw_exception           => dmem2dmsw_exception, 
 
       -- Data memory interface. --testing
-      dmsw2dmem_addr                => rv2dmemvoter_addr,
-      dmsw2dmem_writeData           => rv2dmemvoter_writeData,
-      dmsw2dmem_writeMask           => rv2dmemvoter_writeMask,
-      dmsw2dmem_writeEnable         => rv2dmemvoter_writeEnable,
-      dmsw2dmem_readEnable          => rv2dmemvoter_readEnable,
-      dmem2dmsw_readData            => dmem2dmemvoter_readData,
-      dmem2dmsw_exception           => dmem2dmsw_exception, 		
+      --dmsw2dmem_addr                => rv2dmemvoter_addr, -- if dmemvoter is instantiated
+      --dmsw2dmem_writeData           => rv2dmemvoter_writeData, -- if dmemvoter is instantiated
+      --dmsw2dmem_writeMask           => rv2dmemvoter_writeMask, -- if dmemvoter is instantiated
+      --dmsw2dmem_writeEnable         => rv2dmemvoter_writeEnable, -- if dmemvoter is instantiated
+      --dmsw2dmem_readEnable          => rv2dmemvoter_readEnable, -- if dmemvoter is instantiated
+      --dmem2dmsw_readData            => dmem2dmemvoter_readData, -- if dmemvoter is instantiated
+      --dmem2dmsw_exception           => dmem2dmsw_exception, -- if dmemvoter is instantiated		
 		
       -- Control register interface.
       dmsw2creg_addr                => dmsw2creg_addr,
@@ -955,8 +955,8 @@ begin -- architecture
       dmsw2creg_writeMask           => dmsw2creg_writeMask,
       dmsw2creg_writeEnable         => dmsw2creg_writeEnable,
       dmsw2creg_readEnable          => dmsw2creg_readEnable,
-      creg2dmsw_readData            => creg2dmsw_readData,
-      --creg2dmsw_readData            => tmrvoter2dmsw_readData, --FT if gpreg inst
+      --creg2dmsw_readData            => creg2dmsw_readData,
+      creg2dmsw_readData            => tmrvoter2dmsw_readData, 
 		
       -- Common memory interface.
       mem2pl_cacheStatus            => mem2rv_cacheStatus,
@@ -964,7 +964,7 @@ begin -- architecture
       -- Register file interface.
       pl2gpreg_readPorts            => pl2gpreg_readPorts,
       gpreg2pl_readPorts            => gpreg2pl_readPorts,
-	  --gpreg2pl_readPorts 			=> tmrvoter2pl_readPorts, --FT if gpreg inst
+	  --gpreg2pl_readPorts 			=> tmrvoter2pl_readPorts, --FT if gpregvoter is inst.
       pl2gpreg_writePorts           => pl2gpreg_writePorts,
       cxplif2cxreg_brWriteData      => cxplif2cxreg_brWriteData,
       cxplif2cxreg_brWriteEnable    => cxplif2cxreg_brWriteEnable,
@@ -1034,10 +1034,10 @@ begin -- architecture
       
       -- Read and write ports.
       pl2gpreg_readPorts            => pl2gpreg_readPorts,
-	  --pl2gpreg_readPorts            => tmrvoter2gpreg_readPorts, --FT if gpreg inst
+	  --pl2gpreg_readPorts            => tmrvoter2gpreg_readPorts, --FT if gpregvoter is inst.
       gpreg2pl_readPorts            => gpreg2pl_readPorts,
       pl2gpreg_writePorts           => pl2gpreg_writePorts,
-	  --pl2gpreg_writePorts           => tmrvoter2gpreg_writePorts,--FT if gpreg inst
+	  --pl2gpreg_writePorts           => tmrvoter2gpreg_writePorts,--FT if gpregvoter is inst.
       
       -- Debug interface.
       creg2gpreg_claim              => creg2gpreg_claim,
@@ -1090,41 +1090,41 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the DMEM Majority voter bank
   -----------------------------------------------------------------------------
-	dmemvoter_inst: entity work.tmr_dmemvoter
-	  generic map(
-         CFG                         => CFG
-      )
-  	  port map (
+--	dmemvoter_inst: entity work.tmr_dmemvoter
+--	  generic map(
+--         CFG                         => CFG
+--      )
+--  	  port map (
 
-    	reset                       => reset_s, 
-    	clk                         => clk,
-	    clkEn                       => clkEn,
-		start_ft					=> tmr_enable,
-		config_signal				=> config_signal,
+--    	reset                       => reset_s, 
+--    	clk                         => clk,
+--	    clkEn                       => clkEn,
+--		start_ft					=> tmr_enable,
+--		config_signal				=> config_signal,
 		  
     ---------------------------------------------------------------------------
     -- Signals that go into DMEM Majority voter
     ---------------------------------------------------------------------------
 		  
-    rv2dmemvoter_addr                => rv2dmemvoter_addr,
-    rv2dmemvoter_readEnable          => rv2dmemvoter_readEnable,
-    rv2dmemvoter_writeData           => rv2dmemvoter_writeData,
-    rv2dmemvoter_writeMask           => rv2dmemvoter_writeMask,
-    rv2dmemvoter_writeEnable         => rv2dmemvoter_writeEnable,
-    dmem2dmemvoter_readData          => dmem2rv_readData,
+--    rv2dmemvoter_addr                => rv2dmemvoter_addr,
+--    rv2dmemvoter_readEnable          => rv2dmemvoter_readEnable,
+--    rv2dmemvoter_writeData           => rv2dmemvoter_writeData,
+--    rv2dmemvoter_writeMask           => rv2dmemvoter_writeMask,
+--    rv2dmemvoter_writeEnable         => rv2dmemvoter_writeEnable,
+--    dmem2dmemvoter_readData          => dmem2rv_readData,
 		  
 	---------------------------------------------------------------------------
     -- Signals that come out of DMEM Majority voter
     ---------------------------------------------------------------------------
 
-    dmemvoter2dmem_addr              => rv2dmem_addr,
-    dmemvoter2dmem_readEnable        => rv2dmem_readEnable,
-    dmemvoter2dmem_writeData         => rv2dmem_writeData,
-    dmemvoter2dmem_writeMask         => rv2dmem_writeMask,
-    dmemvoter2dmem_writeEnable       => rv2dmem_writeEnable,
-    dmemvoter2rv_readData            =>	dmem2dmemvoter_readData
+--    dmemvoter2dmem_addr              => rv2dmem_addr,
+--    dmemvoter2dmem_readEnable        => rv2dmem_readEnable,
+--    dmemvoter2dmem_writeData         => rv2dmem_writeData,
+--    dmemvoter2dmem_writeMask         => rv2dmem_writeMask,
+--    dmemvoter2dmem_writeEnable       => rv2dmem_writeEnable,
+--    dmemvoter2rv_readData            =>	dmem2dmemvoter_readData
 		  
-	  );	  
+--	  );	  
 	  
 
   -----------------------------------------------------------------------------

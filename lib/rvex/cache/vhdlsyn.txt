@@ -17,4 +17,5 @@ cache_instr_missCtrl_voter.vhd
 cache_instr_block.vhd
 cache_instr.vhd
 tmr_imemvoter.vhd
+tmr_dmemvoter1.vhd
 cache.vhd
