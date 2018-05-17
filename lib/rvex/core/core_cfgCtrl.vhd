@@ -199,8 +199,12 @@ entity core_cfgCtrl is
 	  
 	  
 	  --fault tolerance
-	  tmr_enable				: out std_logic; --testing
-	  config_signal				: out std_logic_vector (3 downto 0) --testing
+	  tmr_enable				: out std_logic; --Fault tolerance activation signal
+	  config_signal				: out std_logic_vector (3 downto 0); -- lane pairs to be included in TMR 
+	  FT_context				: out std_logic_vector(3 downto 0); -- context to be run in FT mode
+	  mask_signal				: out std_logic_vector(3 downto 0); -- which lanegroup among TMR lanegroups to access memories
+    
+    newConfiguration_simtest  : out rvex_data_type -- testing-- to be removed late
     
   );
 end core_cfgCtrl;
@@ -312,6 +316,7 @@ architecture Behavioral of core_cfgCtrl is
 begin -- architecture
 --=============================================================================
     --tmr_enable <= '0'; --testing
+
   -----------------------------------------------------------------------------
   -- Handle the wakeup system
   -----------------------------------------------------------------------------
@@ -365,12 +370,14 @@ begin -- architecture
   reconfigRequestError <= '0' when
     vect2unsigned(newConfiguration and not CONFIGURATION_MASK) = 0
     else reconfigRequest;
-  
+
   -- Generate the reconfigRequestOK signal.
   reconfigRequestOK <= '0' when
     (newConfiguration and CONFIGURATION_MASK) = (curConfiguration_r and CONFIGURATION_MASK)
     else (reconfigRequest and not reconfigRequestError);
+
   
+      
   -- Generate the priority encoder for the incoming requests.
   request_priority_encoder: process (
     cxreg2cfg_requestEnable, gbreg2cfg_requestEnable, wakeupActive
@@ -419,9 +426,9 @@ begin -- architecture
     else
       newConfiguration <= gbreg2cfg_requestData; -- From the debug bus.
     end if;
-    
+
   end process;
-  
+    newConfiguration_simtest <= newConfiguration_r; --testing
   -----------------------------------------------------------------------------
   -- Instantiate reconfiguration status registers
   -----------------------------------------------------------------------------
@@ -499,9 +506,10 @@ begin -- architecture
 		
 		
 		--fault tolerance 
-		tmr_enable => tmr_en, 
-		config_signal => config_sig 
-      
+		tmr_enable    => tmr_en, 
+		config_signal => config_sig,
+    FT_context    => FT_context,
+    mask_signal   => mask_signal
     );
   
   -- Determine newLaneIndex_r and newPcAddVal_r. We can trivially determine

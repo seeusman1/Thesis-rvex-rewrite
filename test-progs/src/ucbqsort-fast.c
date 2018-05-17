@@ -15,7 +15,9 @@ int compare(char *n1, char *n2)
 }
 int main()
 {
-	CR_CRR = 0x8999;
+	CR_CRR = 0x8309;
+	//CR_CRR = 0x8999;
+	//CR_CRR = 0x8800;
 	////////////CR_CRR = 0x0001; 
 
 	int j;

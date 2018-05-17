@@ -126,8 +126,10 @@ entity core_cfgCtrl_decode is
 	  
 	  
 	  --fault tolerance
-	  tmr_enable				: out std_logic; --tmr activation signal --testing
-	  config_signal				: out std_logic_vector (3 downto 0) -- lane pairs to be included in tmr --testing
+	  tmr_enable				: out std_logic; --Fault tolerance activation signal
+	  config_signal				: out std_logic_vector (3 downto 0); -- lane pairs to be included in TMR 
+	  FT_context				: out std_logic_vector(3 downto 0); -- context to be run in FT mode
+	  mask_signal				: out std_logic_vector(3 downto 0) -- which lanegroup among TMR lanegroups to access memories
     
   );
 end core_cfgCtrl_decode;
@@ -333,15 +335,65 @@ begin -- architecture
   -- the and gate in the error signal, ensuring that the error signal is only
   -- a one-cycle pulse.
   --newConfiguration_out <= newConfiguration_r;
-  process (newConfiguration_r) is --testing
-  begin
-	--if newConfiguration_r (0) = '1' then
-	if newConfiguration_r(0) = '1' and newConfiguration_r(3) = '1' then
-	  newConfiguration_out <= X"00008000";--(others => '0');
+							   
+--TMR activation signal and lanepairs to be used in TMR and config. signal						   
+							   
+-- Tmr_activation: process (newConfiguration_r) is
+--	begin
+--	 if newConfiguration_r(0) = '1' and newConfiguration_r(3) = '1' then 
+--		tmr_enable <= '1';
+--		config_signal <= "0111";
+--	    newConfiguration_out <= X"00008000";--(others => '0');
+--	else
+--		tmr_enable <= '0';
+--		config_signal <= "1111";
+--	    newConfiguration_out <= newConfiguration_r;
+--	end if;
+--	end process;
+			
+							   
+	--TMR activation signal and lanepairs to be used in TMR and config. signal
+							   
+ Tmr_activation: process (newConfiguration_r) is --8309 -> [non-TMR context, non-TMR lanepair, TMR context, FT indicator]
+	begin
+	 if newConfiguration_r(0) = '1' and newConfiguration_r(3) = '1' then 
+		tmr_enable <= '1';
+		FT_context <= newConfiguration_r (7 downto 4);
+	  	newConfiguration_out <= (others => '0');					   
+		case newConfiguration_r(11 downto 8) is
+			when "0000" => config_signal <= "1110";
+						   mask_signal	 <= "0010";
+						   newConfiguration_out(3 downto 0) <= newConfiguration_r (15 downto 12);
+						   newConfiguration_out(7 downto 4) <= newConfiguration_r (7 downto 4);
+						   newConfiguration_out(11 downto 8) <= newConfiguration_r (7 downto 4);
+						   newConfiguration_out(15 downto 12) <= newConfiguration_r (7 downto 4);
+			when "0001" => config_signal <= "1101";
+						   mask_signal	 <= "0001";
+						   newConfiguration_out(3 downto 0) <= newConfiguration_r (7 downto 4);
+						   newConfiguration_out(7 downto 4) <= newConfiguration_r (15 downto 12);
+						   newConfiguration_out(11 downto 8) <= newConfiguration_r (7 downto 4);
+						   newConfiguration_out(15 downto 12) <= newConfiguration_r (7 downto 4);
+			when "0010" => config_signal <= "1011";
+						   mask_signal 	 <= "0001";
+						   newConfiguration_out(3 downto 0) <= newConfiguration_r (7 downto 4);
+						   newConfiguration_out(7 downto 4) <= newConfiguration_r (7 downto 4);
+						   newConfiguration_out(11 downto 8) <= newConfiguration_r (15 downto 12);
+						   newConfiguration_out(15 downto 12) <= newConfiguration_r (7 downto 4);
+			when others => config_signal <= "0111";
+						   mask_signal	 <= "0001";		
+						   newConfiguration_out(3 downto 0) <= newConfiguration_r (7 downto 4);
+						   newConfiguration_out(7 downto 4) <= newConfiguration_r (7 downto 4);
+						   newConfiguration_out(11 downto 8) <= newConfiguration_r (7 downto 4);
+						   newConfiguration_out(15 downto 12) <= newConfiguration_r (15 downto 12);
+		end case;
+	  	--newConfiguration_out <= X"00008000";--(others => '0');
 	else
-	  newConfiguration_out <= newConfiguration_r;
+		tmr_enable <= '0';
+		config_signal <= "1111";
+		mask_signal	  <= "1111";
+	    newConfiguration_out <= newConfiguration_r;
 	end if;
-  end process;
+	end process;							   
 							   
 							   
   error <= error_s and busy_r;
@@ -379,37 +431,54 @@ begin -- architecture
   -- Generate the group IDs.
   group_id_gen: process (newConfiguration_r) is
   begin
-    for i in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+-----------------------------
+	if newConfiguration_r(3) = '1' and newConfiguration_r(0) = '1' then
+		    for i in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+				groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
+           			groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
+                  			std_logic_vector (to_unsigned(i,2)); --testing				   
+			end loop;
+	else
+		    for i in 0 to 2**CFG.numLaneGroupsLog2-1 loop
+      			if newConfiguration_r(4*i+3) = '1' then
+        		-- Lane disabled, set group ID to pipelane group index, with bit 3 set.
+        			groupIDs(i) <= "1" & uint2vect(i, GROUP_ID_SIZE-1);
+         
+      			else
+        
+        		-- Lane enabled, set groupID to context.
+        			groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
+        			groupIDs(i)(CFG.numContextsLog2-1 downto 0) <=
+          			newConfiguration_r(4*i+CFG.numContextsLog2-1 downto 4*i);	
+				end if;
+			end loop;
+		
+    end if;
+							   
+							   
+--------------------------------							   
+--    for i in 0 to 2**CFG.numLaneGroupsLog2-1 loop
 							  
 	--testing
-      if newConfiguration_r(4*i+3) = '1' and newConfiguration_r(4*i) = '1' then
-		--if newConfiguration_r (0) = '1' then
-		   groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
-           groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
-                  std_logic_vector (to_unsigned(i,2)); --testing			   
+--      if newConfiguration_r(4*i+3) = '1' and newConfiguration_r(4*i) = '1' then
+--		   groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
+--           groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
+--                  std_logic_vector (to_unsigned(i,2)); --testing			   
 							   
-      elsif newConfiguration_r(4*i+3) = '1' then
-		--if newConfiguration_r(4*i+3) = '1' then
-        
+--      elsif newConfiguration_r(4*i+3) = '1' then
         -- Lane disabled, set group ID to pipelane group index, with bit 3 set.
-        groupIDs(i) <= "1" & uint2vect(i, GROUP_ID_SIZE-1);
+--        groupIDs(i) <= "1" & uint2vect(i, GROUP_ID_SIZE-1);
          
-      else
+--      else
         
         -- Lane enabled, set groupID to context.
-        groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
-        groupIDs(i)(CFG.numContextsLog2-1 downto 0) <=
-          newConfiguration_r(4*i+CFG.numContextsLog2-1 downto 4*i);
-        --groupIDs(i)(CFG.numContextsLog2-1 downto 0) <= --testing
-          --std_logic_vector (to_unsigned(i,2)); --testing
-							   
-							   
-		--config_signal <= "1111"; --testing					   
-		--tmr_enable  <= '1'; --testing
+--        groupIDs(i)(GROUP_ID_SIZE-1 downto CFG.numContextsLog2) <= (others => '0');
+--        groupIDs(i)(CFG.numContextsLog2-1 downto 0) <=
+--          newConfiguration_r(4*i+CFG.numContextsLog2-1 downto 4*i);							   
 		
-      end if;
+--      end if;
       
-    end loop;
+--    end loop;
   end process;
   
   -- Generate the mux which selects the current group ID.
@@ -428,22 +497,7 @@ begin -- architecture
   end process;
   
 							   
-							   
---TMR activation signal and lanepairs to be used in TMR --testing							   
-							   
- Tmr_activation: process (newConfiguration_r) is
-	begin
-	 if newConfiguration_r(0) = '1' and newConfiguration_r(3) = '1' then --needs to be fixed later as per new config word
-      --if newConfiguration_r(4*i+3) = '1' and newConfiguration_r(4*i) = '1' then
-		tmr_enable <= '1';
-		config_signal <= "0111";
-	else
-		tmr_enable <= '0';
-		config_signal <= "1111";
-	end if;
-	end process;
-							   
-							   
+					   
 							   
 							   
 							   

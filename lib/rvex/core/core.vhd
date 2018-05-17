@@ -743,6 +743,7 @@ architecture Behavioral of core is
 
   signal tmr_enable					  : std_logic := '0'; --testing
   signal config_signal				  : std_logic_vector (3 downto 0) := "1111"; --testing
+  signal newConfiguration_simtest	  : rvex_data_array(2 downto 0);
 
 
   --TMR--signals for instruction replication--testing
@@ -1641,7 +1642,8 @@ begin -- architecture
 		
 		--fault tolerance
 		tmr_enable => tmr_enable_mv(0),--testing
-		config_signal => config_signal_mv(0) --testing
+		config_signal => config_signal_mv(0),--testing
+		newConfiguration_simtest =>newConfiguration_simtest(0)
       
     );
   
@@ -1696,7 +1698,8 @@ begin -- architecture
 		
 		--fault tolerance
 		tmr_enable => tmr_enable_mv(1),--testing
-		config_signal => config_signal_mv(1) --testing
+		config_signal => config_signal_mv(1),--testing
+		newConfiguration_simtest =>newConfiguration_simtest(1)
       
     );
 
@@ -1751,7 +1754,8 @@ begin -- architecture
 		
 		--fault tolerance
 		tmr_enable => tmr_enable_mv(2),--testing
-		config_signal => config_signal_mv(2) --testing
+		config_signal => config_signal_mv(2),--testing
+		newConfiguration_simtest =>newConfiguration_simtest(2)
       
     );
 	  
