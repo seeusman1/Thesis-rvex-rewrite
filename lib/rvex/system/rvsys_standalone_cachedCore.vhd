@@ -256,6 +256,7 @@ architecture Behavioral of rvsys_standalone_cachedCore is
 
   signal rv2cache_tmr_enable	: std_logic;
   signal rv2cache_config_signal : std_logic_vector (3 downto 0);
+  signal rv2cache_mask_signal : std_logic_vector (3 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -339,7 +340,8 @@ begin -- architecture
       trsink2rv_busy            => trsink2rv_busy,
 		
 	  rv2cache_tmr_enable		=> rv2cache_tmr_enable,
-	  rv2cache_config_signal	=> rv2cache_config_signal
+	  rv2cache_config_signal	=> rv2cache_config_signal,
+	  rv2cache_mask_signal		=> rv2cache_mask_signal
       
     );
   
@@ -408,7 +410,8 @@ begin -- architecture
       sc2dcache_flush           => sc2dcache_flush,
 		
 	  rv2cache_tmr_enable		=> rv2cache_tmr_enable,
-	  rv2cache_config_signal	=> rv2cache_config_signal
+	  rv2cache_config_signal	=> rv2cache_config_signal,
+	  rv2cache_mask_signal		=> rv2cache_mask_signal
       
     );
   

@@ -37,6 +37,9 @@ entity tmr_dmemvoter1 is
 	--signal representing active pipelane groups for fault tolerance mode
 	config_signal				: in std_logic_vector (3 downto 0); 
 	  
+	--signal representing which lanegroup among TMR will access caches
+	mask_signal					: in std_logic_vector (3 downto 0); 
+	  
 	  
     --rv2dcache_addr              : in  rvex_address_array(2**RCFG.numLaneGroupsLog2-1 downto 0);
     --rv2dcache_readEnable        : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0);
@@ -370,7 +373,7 @@ begin -- architecture
 	addr_result: process (start_array, config_signal, rv2tmr_addr_s, rv2tmr_addr_s_result, rv2tmr_readEnable_s, 
 						  	rv2tmr_readEnable_s_result, rv2tmr_writeData_s, rv2tmr_writeData_s_result, 
 						  	rv2tmr_writeMask_s, rv2tmr_writeMask_s_result, rv2tmr_writeEnable_s, rv2tmr_writeEnable_s_result, rv2tmr_bypass_s, rv2tmr_bypass_s_result)	
-	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to dmem after signals pass through majority voter
+	--variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to dmem after signals pass through majority voter
 	begin
 		if start_array(0) = '0' then
 			tmr2dcache_addr				<=	rv2tmr_addr_s;
@@ -419,7 +422,7 @@ begin -- architecture
     ---------------------------------------------------------------------------			
 
 	replicate_read_data: process (start_array, config_signal, dcache2tmr_readData, dcache2tmr_busFault, dcache2tmr_ifaceFault)
-	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will read from Imem before signals pass through rep unit
+	--variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will read from Imem before signals pass through rep unit
 		begin
 			if (start_array(0) = '0') then
 				tmr2rv_readData <= dcache2tmr_readData;

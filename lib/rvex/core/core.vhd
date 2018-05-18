@@ -523,7 +523,8 @@ entity core is
 	  
   -- Fault Tolerant signals for Caches
 	rv2cache_tmr_enable			: out std_logic;
-	rv2cache_config_signal		: out std_logic_vector (3 downto 0)
+	rv2cache_config_signal		: out std_logic_vector (3 downto 0);
+	rv2cache_mask_signal		: out std_logic_vector (3 downto 0)
     
   );
 end core;
@@ -1231,6 +1232,7 @@ begin -- architecture
 		
     rv2cache_tmr_enable			<= tmr_enable;
     rv2cache_config_signal 		<= config_signal;
+	rv2cache_mask_signal		<= mask_signal;
 
   -----------------------------------------------------------------------------
   -- Instantiate the instruction buffer

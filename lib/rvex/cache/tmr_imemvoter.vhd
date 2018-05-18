@@ -36,8 +36,11 @@ entity tmr_imemvoter is
 	 --Active high fault tolerance enable  
 	start_ft					: in std_logic;
 	  
-	  --signal representing active pipelane groups for fault tolerance mode
+	--signal representing active pipelane groups for fault tolerance mode
 	config_signal				: in std_logic_vector (3 downto 0);
+	  
+	--signal representing which lanegroup among TMR will access caches  
+	mask_signal					: in std_logic_vector (3 downto 0);
 	  
 	  
     -- Instruction memory interface.
@@ -174,7 +177,7 @@ begin
     -- Replication unit for Instruction read and exception from IMEM
     ---------------------------------------------------------------------------			
 	replicate_instr: process (start, reset, icache2tmr_instr, config_signal, icache2tmr_busFault, icache2tmr_affinity)
-	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will read from Imem before signals pass through rep unit
+	--variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will read from Imem before signals pass through rep unit
 		
 		begin
 			
@@ -268,7 +271,7 @@ begin
     ---------------------------------------------------------------------------			
 		
 	addr_result: process (start, config_signal, rv2tmr_PCs_s, rv2tmr_PCs_s_result, rv2tmr_fetch_s, rv2tmr_fetch_s_result, rv2tmr_cancel_s, rv2tmr_cancel_s_result)	
-	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to Imem after signals pass through mv
+	--variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to Imem after signals pass through mv
 	begin
 		if start = '0' then
 			tmr2icache_PCs			<=	rv2tmr_PCs_s;

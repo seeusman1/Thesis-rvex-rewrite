@@ -158,7 +158,8 @@ entity cache is
     sc2dcache_flush             : in  std_logic_vector(2**RCFG.numLaneGroupsLog2-1 downto 0) := (others => '0');
 	  
 	rv2cache_tmr_enable			: in std_logic;
-	rv2cache_config_signal		: in std_logic_vector (3 downto 0)
+	rv2cache_config_signal		: in std_logic_vector (3 downto 0);
+	rv2cache_mask_signal		: in std_logic_vector (3 downto 0)
     
   );
 end cache;
@@ -278,6 +279,7 @@ begin -- architecture
 	    clkEn                   => clkEnCPU,
 		start_ft				=> rv2cache_tmr_enable,
 		config_signal			=> rv2cache_config_signal,
+		mask_signal				=> rv2cache_mask_signal,
 		
 		  
 		rv2tmr_PCs				=> rv2icache_PCs,
@@ -310,6 +312,7 @@ begin -- architecture
 	    clkEn                       => clkEnCPU,
 		start_ft					=> rv2cache_tmr_enable,
 		config_signal				=> rv2cache_config_signal,
+		mask_signal					=> rv2cache_mask_signal,
 		  
     -- Signals that go into DMEM Majority voter
 		  
