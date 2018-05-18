@@ -1055,7 +1055,8 @@ begin -- architecture
 		
 	  -- signals for fault tolerance
 	  tmr_enable					=> tmr_enable,
-	  config_signal					=> config_signal
+	  config_signal					=> config_signal,
+	  mask_signal					=> mask_signal
       
     );
   

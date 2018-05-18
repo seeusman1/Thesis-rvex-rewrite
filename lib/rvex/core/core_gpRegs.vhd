@@ -126,7 +126,8 @@ entity core_gpRegs is
 	  
 	-- Fault tolerant mode signals
     tmr_enable					 : in std_logic;
-    config_signal				 : in std_logic_vector (3 downto 0)
+    config_signal				 : in std_logic_vector (3 downto 0);
+	mask_signal					 : in std_logic_vector (3 downto 0)
     
   );
 end core_gpRegs;
@@ -489,6 +490,7 @@ begin -- architecture
 	    clkEn                       => clkEn,
 		start_ft					=> tmr_enable,
 		config_signal				=> config_signal,
+		mask_signal					=> mask_signal,
 		  
 
     	-- Signals that go into GPREG Majority voter

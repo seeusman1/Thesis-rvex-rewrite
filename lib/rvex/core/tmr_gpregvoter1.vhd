@@ -43,6 +43,7 @@ entity tmr_gpregvoter1 is
 	  
 	--signal representing active pipelane groups for fault tolerance mode
 	config_signal				: in std_logic_vector (3 downto 0); 
+	mask_signal					: in std_logic_vector (3 downto 0);
 	   
 	  
 
@@ -290,7 +291,7 @@ begin -- architecture
 		
 	addr_result: process (start_array, config_signal, writeEnable,writeEnable_s, writeEnable_result_even, writeEnable_result_odd, writeAddr_encoded, 
 						  writeAddr_s, writeAddr_result_even, writeAddr_result_odd, writeData_encoded, writeData_s, writeData_result_even, writeData_result_odd)	
-	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to gpreg after signals pass through majority voter
+	--variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to gpreg after signals pass through majority voter
 	begin
 		if start_array(0) = '0' then
 			tmr_writeEnable			<=	writeEnable_s;
