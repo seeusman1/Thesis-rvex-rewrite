@@ -741,9 +741,11 @@ architecture Behavioral of core is
 
   --fault tolerance
 
-  signal tmr_enable					  : std_logic := '0'; --testing
-  signal config_signal				  : std_logic_vector (3 downto 0) := "1111"; --testing
-  signal newConfiguration_simtest	  : rvex_data_array(2 downto 0);
+  signal tmr_enable					  : std_logic := '0'; --Fault tolerance activation signal
+  signal config_signal				  : std_logic_vector (3 downto 0) := "1111"; -- lane pairs to be included in TMR
+  signal FT_context					  : std_logic_vector(3 downto 0); -- context to be run in FT mode
+  signal mask_signal				  : std_logic_vector(3 downto 0); -- which lanegroup among TMR lanegroups to access memories
+
 
 
   --TMR--signals for instruction replication--testing
@@ -806,8 +808,10 @@ architecture Behavioral of core is
   signal cfg2any_laneIndex_mv             : cfg2any_laneIndex_array(2 downto 0);
   signal cfg2any_pcAddVal_mv              : cfg2any_pcAddVal_array(2 downto 0);
   signal tmr_enable_mv				      : std_logic_vector (2 downto 0); 
-  signal config_signal_mv			      : config_signal_array (2 downto 0); 
-    
+  signal config_signal_mv			      : rvex_4bit_array (2 downto 0); 
+  signal FT_context_mv					  : rvex_4bit_array (2 downto 0);
+  signal mask_signal_mv					  : rvex_4bit_array (2 downto 0);
+	  
 --=============================================================================
 begin -- architecture
 --=============================================================================
@@ -1005,8 +1009,9 @@ begin -- architecture
       pl2trace_data                 => pl2trace_data,
 		
 		--fault tolerance
-		tmr_enable => tmr_enable, --testing
-		config_signal => config_signal, --testing
+	  tmr_enable 					=> tmr_enable, --testing
+	  config_signal 				=> config_signal, --testing
+	  FT_context					=> FT_context,
 		
 		
 	 test_traphandle_o	=> test_traphandle_o, --testing
@@ -1638,12 +1643,13 @@ begin -- architecture
       cfg2any_laneIndex             => cfg2any_laneIndex_mv(0),
       cfg2any_pcAddVal              => cfg2any_pcAddVal_mv(0),
 		
+	  --Fault toleranct mode signals
+	  tmr_enable 					=> tmr_enable_mv(0),--testing
+	  config_signal 				=> config_signal_mv(0),--testing
+	  FT_context					=> FT_context_mv(0),
+	  mask_signal					=> mask_signal_mv(0)
 		
-		
-		--fault tolerance
-		tmr_enable => tmr_enable_mv(0),--testing
-		config_signal => config_signal_mv(0),--testing
-		newConfiguration_simtest =>newConfiguration_simtest(0)
+
       
     );
   
@@ -1694,12 +1700,12 @@ begin -- architecture
       cfg2any_laneIndex             => cfg2any_laneIndex_mv(1),
       cfg2any_pcAddVal              => cfg2any_pcAddVal_mv(1),
 		
-		
-		
-		--fault tolerance
-		tmr_enable => tmr_enable_mv(1),--testing
-		config_signal => config_signal_mv(1),--testing
-		newConfiguration_simtest =>newConfiguration_simtest(1)
+	  --Fault toleranct mode signals
+	  tmr_enable 					=> tmr_enable_mv(1),--testing
+	  config_signal 				=> config_signal_mv(1),--testing
+	  FT_context					=> FT_context_mv(1),
+	  mask_signal					=> mask_signal_mv(1)
+
       
     );
 
@@ -1750,12 +1756,12 @@ begin -- architecture
       cfg2any_laneIndex             => cfg2any_laneIndex_mv(2),
       cfg2any_pcAddVal              => cfg2any_pcAddVal_mv(2),
 		
-		
-		
-		--fault tolerance
-		tmr_enable => tmr_enable_mv(2),--testing
-		config_signal => config_signal_mv(2),--testing
-		newConfiguration_simtest =>newConfiguration_simtest(2)
+		--Fault toleranct mode signals
+	  tmr_enable 					=> tmr_enable_mv(2),--testing
+	  config_signal 				=> config_signal_mv(2),--testing
+	  FT_context					=> FT_context_mv(2),
+	  mask_signal					=> mask_signal_mv(2)
+
       
     );
 	  
@@ -1785,6 +1791,8 @@ begin -- architecture
     cfg2any_pcAddVal_mv            =>	cfg2any_pcAddVal_mv,
 	tmr_enable_mv				   =>	tmr_enable_mv,
 	config_signal_mv			   =>	config_signal_mv,
+	FT_context_mv				   =>	FT_context_mv,
+	mask_signal_mv				   =>	mask_signal_mv,
 		  
 		  
 	cfg2cxreg_wakeupAck            =>	cfg2cxreg_wakeupAck,
@@ -1803,7 +1811,9 @@ begin -- architecture
     cfg2any_laneIndex              =>	cfg2any_laneIndex,
     cfg2any_pcAddVal               =>	cfg2any_pcAddVal,
 	tmr_enable					   =>	tmr_enable,
-	config_signal				   =>	config_signal
+	config_signal				   =>	config_signal,
+	FT_context					   =>	FT_context,
+	mask_signal					   =>	mask_signal
 	  );
 	  
 

@@ -43,7 +43,9 @@ entity tmr_cfgCtrl_voter is
     cfg2any_laneIndex_mv           : in cfg2any_laneIndex_array(2 downto 0);
     cfg2any_pcAddVal_mv            : in cfg2any_pcAddVal_array(2 downto 0);
 	tmr_enable_mv				   : in std_logic_vector (2 downto 0); 
-	config_signal_mv			   : in config_signal_array (2 downto 0); 
+	config_signal_mv			   : in rvex_4bit_array (2 downto 0); 
+	FT_context_mv				   : in rvex_4bit_array (2 downto 0);
+	mask_signal_mv				   : in rvex_4bit_array (2 downto 0);
 	  
 	  
 	  
@@ -84,9 +86,9 @@ entity tmr_cfgCtrl_voter is
     cfg2any_laneIndex           : out rvex_4bit_array(2**CFG.numLanesLog2-1 downto 0); 
     cfg2any_pcAddVal            : out rvex_address_array(2**CFG.numLanesLog2-1 downto 0); 
 	tmr_enable					: out std_logic; 
-	config_signal				: out std_logic_vector (3 downto 0) 
-	  
-	  
+	config_signal				: out std_logic_vector (3 downto 0);
+    FT_context					: out std_logic_vector(3 downto 0); 
+    mask_signal				    : out std_logic_vector(3 downto 0)
 	  
   );
 
@@ -428,7 +430,39 @@ begin -- architecture
 				);
 	end generate;
 		
-
+	---------------------------------------------------------------------------
+    -- PC Majority voter bank for FT_context
+    ---------------------------------------------------------------------------				
+		
+	FT_context_voterbank: for i in 0 to 3 generate
+			FT_context_voter: entity work.tmr_voter
+				port map (
+					input_1		=> FT_context_mv(0)(i),
+					--input_1		=> '0',
+					input_2		=> FT_context_mv(1)(i),
+					--input_2		=> '0',
+					input_3		=> FT_context_mv(2)(i),
+					--input_3		=> '0',
+					output		=> FT_context(i)
+				);
+	end generate;
+				
+	---------------------------------------------------------------------------
+    -- PC Majority voter bank for mask_signal
+    ---------------------------------------------------------------------------				
+		
+	mask_signal_voterbank: for i in 0 to 3 generate
+			mask_signal_voter: entity work.tmr_voter
+				port map (
+					input_1		=> mask_signal_mv(0)(i),
+					--input_1		=> '0',
+					input_2		=> mask_signal_mv(1)(i),
+					--input_2		=> '0',
+					input_3		=> mask_signal_mv(2)(i),
+					--input_3		=> '0',
+					output		=> mask_signal(i)
+				);
+	end generate;
 
 
 

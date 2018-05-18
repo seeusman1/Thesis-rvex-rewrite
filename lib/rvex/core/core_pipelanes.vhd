@@ -322,8 +322,9 @@ entity core_pipelanes is
     -- Fault tolerance
     --------------------------------------------------------------------------- 
 
-	 tmr_enable				 : in std_logic; --testing
-	 config_signal				 : in std_logic_vector (3 downto 0); --testing
+	 tmr_enable				 	: in std_logic; --testing
+	 config_signal				: in std_logic_vector (3 downto 0); --testing
+	 FT_context					: in std_logic_vector (3 downto 0);
 	  
 	  
 	  
@@ -814,7 +815,8 @@ begin -- architecture
 		
 		--fault tolerance
 	  tmr_enable 						=> tmr_enable, --testing
-	  config_signal 					=> config_signal --testing
+	  config_signal 					=> config_signal, --testing
+	  FT_context						=> FT_context
       
     );
   

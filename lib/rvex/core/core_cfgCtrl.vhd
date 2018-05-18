@@ -202,9 +202,9 @@ entity core_cfgCtrl is
 	  tmr_enable				: out std_logic; --Fault tolerance activation signal
 	  config_signal				: out std_logic_vector (3 downto 0); -- lane pairs to be included in TMR 
 	  FT_context				: out std_logic_vector(3 downto 0); -- context to be run in FT mode
-	  mask_signal				: out std_logic_vector(3 downto 0); -- which lanegroup among TMR lanegroups to access memories
+	  mask_signal				: out std_logic_vector(3 downto 0) -- which lanegroup among TMR lanegroups to access memories
     
-    newConfiguration_simtest  : out rvex_data_type -- testing-- to be removed late
+
     
   );
 end core_cfgCtrl;
@@ -428,7 +428,7 @@ begin -- architecture
     end if;
 
   end process;
-    newConfiguration_simtest <= newConfiguration_r; --testing
+
   -----------------------------------------------------------------------------
   -- Instantiate reconfiguration status registers
   -----------------------------------------------------------------------------
@@ -506,10 +506,10 @@ begin -- architecture
 		
 		
 		--fault tolerance 
-		tmr_enable    => tmr_en, 
-		config_signal => config_sig,
-    FT_context    => FT_context,
-    mask_signal   => mask_signal
+	  tmr_enable    => tmr_en, 
+	  config_signal => config_sig,
+      FT_context    => FT_context,
+      mask_signal   => mask_signal
     );
   
   -- Determine newLaneIndex_r and newPcAddVal_r. We can trivially determine
