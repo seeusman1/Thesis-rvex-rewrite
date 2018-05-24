@@ -17,11 +17,12 @@ int main()
 {
 	CR_CRR = 0x8309;
 	//CR_CRR = 0x8999;
-	//CR_CRR = 0x8800;
+	//CR_CRR = 0x0888;
 	////////////CR_CRR = 0x0001; 
 
 	int j;
 	QSORT((char *) SortArr, (int) 20, sizeof(unsigned char), compare);
+	CR_CRR = 0x8880;
 	for (j = 0; j < 20; j++) {
 		if (SortArr[j] != SortedArr[j]) {
 			rvex_fail("ucbqsort-fast: failed\n");

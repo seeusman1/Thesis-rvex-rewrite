@@ -49,11 +49,12 @@ int compare(char *n1, char *n2)
 }
 int main()
 {
-  CR_CRR = 0x8999;
+  CR_CRR = 0x8309;
   unsigned char SortArr[1000];
   int j;
   memcpy(SortArr, gQSortNum, 1000);
   QSORT((char *) SortArr, (int) 1000, sizeof(unsigned char), compare);
+  CR_CRR = 0x8880;
   for (j = 1; j < 1000; j++)
     {
       if (SortArr[j] < SortArr[j - 1])
