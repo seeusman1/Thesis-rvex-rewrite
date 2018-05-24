@@ -59,8 +59,4 @@ tmr_dmswvoter.vhd
 core_pipelanes.vhd
 core_instructionBuffer.vhd
 core_trace.vhd
-tmr_InsRep.vhd
-tmr_nextpcvoter.vhd
-tmr_dmemvoter.vhd
-tmr_gpregvoter.vhd
 core.vhd

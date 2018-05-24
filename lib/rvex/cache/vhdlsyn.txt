@@ -1,6 +1,5 @@
 cache_pkg.vhd
 cache_data_blockData.vhd
-tmr_voter.vhd
 cache_data_blockTag.vhd
 cache_blockTag_voter.vhd
 cache_data_blockValid.vhd
