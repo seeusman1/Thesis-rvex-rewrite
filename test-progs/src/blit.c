@@ -85,6 +85,7 @@ int main()
   CR_CRR = 0x8999;
   blit(17, 29, 1000 * 32);
   blit(29, 17, 1000 * 32);
+  CR_CRR = 0x8880;
   if (dst[0] != 291 || dst[4] != 1164411171 || dst[10] != 1080066048)
     {
       rvex_fail("blit: failed\n");

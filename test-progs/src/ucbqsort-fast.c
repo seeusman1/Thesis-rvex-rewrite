@@ -25,7 +25,7 @@ int main()
 			return 1;
 		}
 	}
-	//CR_CRR = 0x8800; 
+	CR_CRR = 0x8880; 
 	rvex_succeed("ucbqsort-fast: success\n");
 
 	return 0;
