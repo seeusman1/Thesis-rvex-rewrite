@@ -11,8 +11,8 @@ onerror {resume}
 radix hex
 
 # Add core status strings to simulation.
-#add wave                     -label rv2sim           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/rv2sim
-add wave                     -label rv2sim           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/rv2sim
+add wave                     -label rv2sim           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/core_gen/core/core/rv2sim
+#add wave                     -label rv2sim           sim:/ml605_tb/uut/rvex_standalone/rvex_inst/cached_core_gen/cached_core/core/rv2sim
 
 add wave -divider RIT        -label rit_timer        sim:/ml605_tb/uut/rvex_standalone/rit_block/rit_timer
 add wave                     -label rit_max          sim:/ml605_tb/uut/rvex_standalone/rit_block/rit_max 

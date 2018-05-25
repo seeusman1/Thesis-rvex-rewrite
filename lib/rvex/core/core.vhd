@@ -938,22 +938,22 @@ begin -- architecture
       ibuf2pl_exception             => ibuf2pl_exception,
       
       -- Data memory interface.
-      dmsw2dmem_addr                => rv2dmem_addr, 		
-      dmsw2dmem_writeData           => rv2dmem_writeData, 
-      dmsw2dmem_writeMask           => rv2dmem_writeMask,
-      dmsw2dmem_writeEnable         => rv2dmem_writeEnable, 
-      dmsw2dmem_readEnable          => rv2dmem_readEnable, 
-      dmem2dmsw_readData            => dmem2rv_readData, 
-      dmem2dmsw_exception           => dmem2dmsw_exception, 
+      --dmsw2dmem_addr                => rv2dmem_addr, 		
+      --dmsw2dmem_writeData           => rv2dmem_writeData, 
+      --dmsw2dmem_writeMask           => rv2dmem_writeMask,
+      --dmsw2dmem_writeEnable         => rv2dmem_writeEnable, 
+      --dmsw2dmem_readEnable          => rv2dmem_readEnable, 
+      --dmem2dmsw_readData            => dmem2rv_readData, 
+      --dmem2dmsw_exception           => dmem2dmsw_exception, 
 
       -- Data memory interface. --testing
-      --dmsw2dmem_addr                => rv2dmemvoter_addr, -- if dmemvoter is instantiated
-      --dmsw2dmem_writeData           => rv2dmemvoter_writeData, -- if dmemvoter is instantiated
-      --dmsw2dmem_writeMask           => rv2dmemvoter_writeMask, -- if dmemvoter is instantiated
-      --dmsw2dmem_writeEnable         => rv2dmemvoter_writeEnable, -- if dmemvoter is instantiated
-      --dmsw2dmem_readEnable          => rv2dmemvoter_readEnable, -- if dmemvoter is instantiated
-      --dmem2dmsw_readData            => dmem2dmemvoter_readData, -- if dmemvoter is instantiated
-      --dmem2dmsw_exception           => dmem2dmsw_exception, -- if dmemvoter is instantiated		
+      dmsw2dmem_addr                => rv2dmemvoter_addr, -- if dmemvoter is instantiated
+      dmsw2dmem_writeData           => rv2dmemvoter_writeData, -- if dmemvoter is instantiated
+      dmsw2dmem_writeMask           => rv2dmemvoter_writeMask, -- if dmemvoter is instantiated
+      dmsw2dmem_writeEnable         => rv2dmemvoter_writeEnable, -- if dmemvoter is instantiated
+      dmsw2dmem_readEnable          => rv2dmemvoter_readEnable, -- if dmemvoter is instantiated
+      dmem2dmsw_readData            => dmem2dmemvoter_readData, -- if dmemvoter is instantiated
+      dmem2dmsw_exception           => dmem2dmsw_exception, -- if dmemvoter is instantiated		
 		
       -- Control register interface.
       dmsw2creg_addr                => dmsw2creg_addr,
@@ -1098,41 +1098,38 @@ begin -- architecture
   -----------------------------------------------------------------------------
   -- Instantiate the DMEM Majority voter bank
   -----------------------------------------------------------------------------
---	dmemvoter_inst: entity work.tmr_dmemvoter
---	  generic map(
---         CFG                         => CFG
---      )
---  	  port map (
+	dmemvoter_inst: entity work.tmr_dmemvoter
+	  generic map(
+         CFG                         => CFG
+      )
+  	  port map (
 
---    	reset                       => reset_s, 
---    	clk                         => clk,
---	    clkEn                       => clkEn,
---		start_ft					=> tmr_enable,
---		config_signal				=> config_signal,
+    	reset                       => reset_s, 
+    	clk                         => clk,
+	    clkEn                       => clkEn,
+		start_ft					=> tmr_enable,
+		config_signal				=> config_signal,
+		mask_signal					=> mask_signal,
 		  
-    ---------------------------------------------------------------------------
-    -- Signals that go into DMEM Majority voter
-    ---------------------------------------------------------------------------
+
+    -- Signals that go into DMEM Majority voter  
+    rv2dmemvoter_addr                => rv2dmemvoter_addr,
+    rv2dmemvoter_readEnable          => rv2dmemvoter_readEnable,
+    rv2dmemvoter_writeData           => rv2dmemvoter_writeData,
+    rv2dmemvoter_writeMask           => rv2dmemvoter_writeMask,
+    rv2dmemvoter_writeEnable         => rv2dmemvoter_writeEnable,
+    dmem2dmemvoter_readData          => dmem2rv_readData,
 		  
---    rv2dmemvoter_addr                => rv2dmemvoter_addr,
---    rv2dmemvoter_readEnable          => rv2dmemvoter_readEnable,
---    rv2dmemvoter_writeData           => rv2dmemvoter_writeData,
---    rv2dmemvoter_writeMask           => rv2dmemvoter_writeMask,
---    rv2dmemvoter_writeEnable         => rv2dmemvoter_writeEnable,
---    dmem2dmemvoter_readData          => dmem2rv_readData,
-		  
-	---------------------------------------------------------------------------
+
     -- Signals that come out of DMEM Majority voter
-    ---------------------------------------------------------------------------
-
---    dmemvoter2dmem_addr              => rv2dmem_addr,
---    dmemvoter2dmem_readEnable        => rv2dmem_readEnable,
---    dmemvoter2dmem_writeData         => rv2dmem_writeData,
---    dmemvoter2dmem_writeMask         => rv2dmem_writeMask,
---    dmemvoter2dmem_writeEnable       => rv2dmem_writeEnable,
---    dmemvoter2rv_readData            =>	dmem2dmemvoter_readData
+    dmemvoter2dmem_addr              => rv2dmem_addr,
+    dmemvoter2dmem_readEnable        => rv2dmem_readEnable,
+    dmemvoter2dmem_writeData         => rv2dmem_writeData,
+    dmemvoter2dmem_writeMask         => rv2dmem_writeMask,
+    dmemvoter2dmem_writeEnable       => rv2dmem_writeEnable,
+    dmemvoter2rv_readData            =>	dmem2dmemvoter_readData
 		  
---	  );	  
+	  );	  
 	  
 
   -----------------------------------------------------------------------------
@@ -1150,10 +1147,8 @@ begin -- architecture
 		start_ft					=> tmr_enable,
 		config_signal				=> config_signal,
 		  
-    ---------------------------------------------------------------------------
-    -- Signals that go into DMSW Majority voter
-    ---------------------------------------------------------------------------
-		  
+
+    -- Signals that go into DMSW Majority voter	  
     dmsw2tmrvoter_addr              => dmsw2creg_addr,
     dmsw2tmrvoter_writeEnable       => dmsw2creg_writeEnable,
     dmsw2tmrvoter_writeMask         => dmsw2creg_writeMask,
@@ -1161,10 +1156,8 @@ begin -- architecture
     dmsw2tmrvoter_readEnable        => dmsw2creg_readEnable,
     creg2tmrvoter_readData          => creg2dmsw_readData,  
 		  
-	---------------------------------------------------------------------------
-    -- Signals that come out of DMSW Majority voter
-    ---------------------------------------------------------------------------
 
+    -- Signals that come out of DMSW Majority voter
     tmrvoter2creg_addr              => tmrvoter2creg_addr,
     tmrvoter2creg_writeEnable       => tmrvoter2creg_writeEnable,
     tmrvoter2creg_writeMask         => tmrvoter2creg_writeMask,
@@ -1178,33 +1171,35 @@ begin -- architecture
 	  
 	  
   -----------------------------------------------------------------------------
-  -- Instantiate the Instruction replication unit
+  -- Instantiate the Instruction replication unit / IMEM voter
   -----------------------------------------------------------------------------
---	InsRep_inst: entity work.tmr_InsRep
---	  generic map(
---         CFG                         => CFG
---      )
---  	  port map (
+	InsRep_inst: entity work.tmr_InsRep
+	  generic map(
+         CFG                         => CFG
+      )
+  	  port map (
 
---    	reset                       => reset_s, 
---    	clk                         => clk,
---	    clkEn                       => clkEn,
---		start_ft					=> tmr_enable,
---		config_signal				=> config_signal,
+    	reset                       => reset_s, 
+    	clk                         => clk,
+	    clkEn                       => clkEn,
+		start_ft					=> tmr_enable,
+		config_signal				=> config_signal,
+		mask_signal					=> mask_signal,
 		
+    	-- Signals that go into IMEM Majority voter		  
+		ibuf2tmr_PCs				=> tmr2imem_PCs,
+		ibuf2tmr_fetch  			=> tmr2imem_fetch,
+		ibuf2tmr_cancel				=> tmr2imem_cancel,
+	 	imem2tmr_instr				=> imem2rv_instr,
+		imem2tmr_exception			=> imem2ibuf_exception,
 		  
---		ibuf2tmr_PCs				=> tmr2imem_PCs,
---		ibuf2tmr_fetch  			=> tmr2imem_fetch,
---		ibuf2tmr_cancel				=> tmr2imem_cancel,
---	 	imem2tmr_instr				=> imem2rv_instr,
---		imem2tmr_exception			=> imem2ibuf_exception,
-		  
---		tmr2imem_PCs  				=> rv2imem_PCs,
---		tmr2imem_fetch				=> rv2imem_fetch,
---		tmr2imem_cancel				=> rv2imem_cancel,
---	 	tmr2ibuf_instr				=> tmr2pl_instr,
---		tmr2ibuf_exception			=> imem2tmr_exception
---	  );
+    	-- Signals that come out of IMEM Majority voter		  
+		tmr2imem_PCs  				=> rv2imem_PCs,
+		tmr2imem_fetch				=> rv2imem_fetch,
+		tmr2imem_cancel				=> rv2imem_cancel,
+	 	tmr2ibuf_instr				=> tmr2pl_instr,
+		tmr2ibuf_exception			=> imem2tmr_exception
+	  );
 	  
 
 		
@@ -1254,16 +1249,16 @@ begin -- architecture
         cfg2any_numGroupsLog2       => cfg2any_numGroupsLog2,
         
         -- Instruction memory interface.
-        ibuf2imem_PCs               => rv2imem_PCs, 
-		--ibuf2imem_PCs               => tmr2imem_PCs, -- if tmr_InsRep is instantiated
-        ibuf2imem_fetch             => rv2imem_fetch,
-		--ibuf2imem_fetch             => tmr2imem_fetch, -- if tmr_InsRep is instantiated
-        ibuf2imem_cancel            => rv2imem_cancel,
-		--ibuf2imem_cancel            => tmr2imem_cancel, -- if tmr_InsRep is instantiated
-        imem2ibuf_instr             => imem2rv_instr,
-		--imem2ibuf_instr             => tmr2pl_instr, -- if tmr_InsRep is instantiated
-        imem2ibuf_exception         => imem2ibuf_exception,
-		--imem2ibuf_exception         => imem2tmr_exception,  -- if tmr_InsRep is instantiated
+        --ibuf2imem_PCs               => rv2imem_PCs, 
+		ibuf2imem_PCs               => tmr2imem_PCs, -- if tmr_InsRep is instantiated
+        --ibuf2imem_fetch             => rv2imem_fetch,
+		ibuf2imem_fetch             => tmr2imem_fetch, -- if tmr_InsRep is instantiated
+        --ibuf2imem_cancel            => rv2imem_cancel,
+		ibuf2imem_cancel            => tmr2imem_cancel, -- if tmr_InsRep is instantiated
+        --imem2ibuf_instr             => imem2rv_instr,
+		imem2ibuf_instr             => tmr2pl_instr, -- if tmr_InsRep is instantiated
+        --imem2ibuf_exception         => imem2ibuf_exception,
+		imem2ibuf_exception         => imem2tmr_exception,  -- if tmr_InsRep is instantiated
         
         -- Pipelane interface.
         cxplif2ibuf_PCs             => cxplif2ibuf_PCs,

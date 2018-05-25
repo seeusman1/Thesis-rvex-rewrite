@@ -38,6 +38,9 @@ entity tmr_InsRep is
 	  --signal representing active pipelane groups for fault tolerance mode
 	config_signal				: in std_logic_vector (3 downto 0);
 	  
+	--signal representing which lanegroup among TMR will access memory  
+	mask_signal					: in std_logic_vector (3 downto 0);
+	  
 	---------------------------------------------------------------------------
     -- Signals that go into IMEM Majority voter
     ---------------------------------------------------------------------------  
@@ -105,7 +108,7 @@ begin
 			end if;
 		end if;
 	end process;
-	  --start <= start_ft;	
+--	  start <= start_ft;	
 			
 	---------------------------------------------------------------------------
     -- Internal signals assignment
@@ -162,7 +165,7 @@ begin
     -- Replication unit for Instruction read and exception from IMEM
     ---------------------------------------------------------------------------			
 	replicate_instr: process (start, reset, imem2tmr_instr, config_signal, imem2tmr_exception)
-	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will read from Imem before signals pass through rep unit
+	--variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will read from Imem before signals pass through rep unit
 		
 		begin
 			
@@ -179,13 +182,6 @@ begin
 								end if;
 							end loop;
 						else
-						-- NOP instruction for disabled core, NOP instruction's 29th and 30th bit is high
-					    --	tmr2ibuf_instr (2*i) <= (others => '0');
-						--	tmr2ibuf_instr (2*i)(30) <= '1';
-						--	tmr2ibuf_instr (2*i)(29) <= '1';
-						--	tmr2ibuf_instr (2*i+1) <= (others => '0');
-						--	tmr2ibuf_instr (2*i+1)(30) <= '1';
-						--	tmr2ibuf_instr (2*i+1)(29) <= '1';
 							tmr2ibuf_instr (2*i) 	<= imem2tmr_instr(2*i);
 							tmr2ibuf_instr (2*i+1)  <= imem2tmr_instr(2*i+1);
 		
@@ -197,34 +193,7 @@ begin
 				tmr2ibuf_exception <= imem2tmr_exception;
 			end if;	
 		end process;
-				
-				
-	---------------------------------------------------------------------------
-    -- Replication unit for exception from IMEM
-    ---------------------------------------------------------------------------			
---	replicate_exception: process (start, reset, imem2tmr_exception, config_signal)
-		
---		begin
-			
---			--if (start = '1' and reset = '0') then
---				if (start = '1') then
---					for i in 0 to 3 loop
---						if config_signal(i) = '1' then
---						--if temp(i) = '1' then
---							tmr2ibuf_exception (i) <= imem2tmr_exception(0);
---						else
---						-- for disabled core, exception is set to default value
---							 --tmr2ibuf_exception (i)  <= ( active => '0',
---    						--							  cause  => (others => '0'),
---    							--						  arg    => (others => '0')
---  									--					);
---						 	tmr2ibuf_exception(i) <= imem2tmr_exception(i);
---						end if;
---					end loop;
---			else
---				tmr2ibuf_exception <= imem2tmr_exception;
---			end if;	
---		end process;				
+							
 
 		
 	---------------------------------------------------------------------------
@@ -285,7 +254,7 @@ begin
     ---------------------------------------------------------------------------			
 		
 	addr_result: process (start, config_signal, ibuf2tmr_PCs_s, ibuf2tmr_PCs_s_result, ibuf2tmr_fetch_s, ibuf2tmr_fetch_s_result, ibuf2tmr_cancel_s, ibuf2tmr_cancel_s_result)	
-	variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to Imem after signals pass through mv
+	--variable mask_signal	: std_logic_vector (3 downto 0) := "0001";-- this signal tells which lanegroup will write to Imem after signals pass through mv
 	begin
 		if start = '0' then
 			tmr2imem_PCs			<=	ibuf2tmr_PCs_s;
@@ -297,16 +266,6 @@ begin
 			tmr2imem_fetch			<=	(others => '0');
 			tmr2imem_cancel			<=	(others => '0');
 
-		
-			--for i in 0 to 3 loop
-			--	tmr2imem_PCs(i)		<=	ibuf2tmr_PCs_s_result;
-			--	tmr2imem_fetch(i)	<= ibuf2tmr_fetch_s_result;
-			--	tmr2imem_cancel(i)	<= ibuf2tmr_cancel_s_result;
-			--end loop;
-
-			--	tmr2imem_PCs(0)	  	<=	ibuf2tmr_PCs_s_result;
-			--	tmr2imem_fetch(0)	<= ibuf2tmr_fetch_s_result;
-			--	tmr2imem_cancel(0)  <= ibuf2tmr_cancel_s_result;
 		
 			for i in 0 to 3 loop
 				if config_signal(i) = '0' then
@@ -328,11 +287,11 @@ begin
 	end process;				
 				
 						
-		--tmr2imem_PCs       			<= ibuf2tmr_PCs;
-    	--tmr2imem_fetch     			<= ibuf2tmr_fetch;
-    	--tmr2imem_cancel    			<= ibuf2tmr_cancel;
-		--tmr2ibuf_instr				<= imem2tmr_instr;
-		--tmr2ibuf_exception			<= imem2tmr_exception;
+--		tmr2imem_PCs       			<= ibuf2tmr_PCs;
+--    	tmr2imem_fetch     			<= ibuf2tmr_fetch;
+--    	tmr2imem_cancel    			<= ibuf2tmr_cancel;
+--		tmr2ibuf_instr				<= imem2tmr_instr;
+--		tmr2ibuf_exception			<= imem2tmr_exception;
 						
 end structural;
 						

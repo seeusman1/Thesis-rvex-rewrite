@@ -22,7 +22,7 @@ int main()
 
 	int j;
 	QSORT((char *) SortArr, (int) 20, sizeof(unsigned char), compare);
-	CR_CRR = 0x8880;
+	CR_CRR = 0x0000;
 	for (j = 0; j < 20; j++) {
 		if (SortArr[j] != SortedArr[j]) {
 			rvex_fail("ucbqsort-fast: failed\n");
