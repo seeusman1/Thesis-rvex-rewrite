@@ -271,6 +271,12 @@ architecture Behavioral of rvsys_standalone is
   signal rv2trsink_push         : std_logic;
   signal rv2trsink_data         : rvex_byte_type;
   signal trsink2rv_busy         : std_logic;
+
+	-- test... signals to read from debug bus
+  signal rv2cache_tmr_enable_out	: rvex_data_type;
+  signal rv2cache_config_signal_out	: rvex_data_type;
+  signal rv2cache_mask_signal_out	: rvex_data_type;
+
   
 --=============================================================================
 begin -- architecture
@@ -384,7 +390,12 @@ begin -- architecture
         -- Trace interface.
         rv2trsink_push          => rv2trsink_push,
         rv2trsink_data          => rv2trsink_data,
-        trsink2rv_busy          => trsink2rv_busy
+        trsink2rv_busy          => trsink2rv_busy,
+		  
+		-- test... signals to read from debug bus
+		rv2cache_tmr_enable_out		=> rv2cache_tmr_enable_out,
+		rv2cache_config_signal_out	=> rv2cache_config_signal_out,
+		rv2cache_mask_signal_out	=> rv2cache_mask_signal_out
         
       );
     
@@ -783,10 +794,12 @@ begin -- architecture
 	    case dbg2status.address(5 downto 2) is
 			when "0000" => status2dbg.readData <= X"00000003"; --(something you want to monitor);
 			-- Add more registers here if you need them ("0001", "0010" ...)
+			when "1010" => status2dbg.readData <= rv2cache_tmr_enable_out;
+			when "1011" => status2dbg.readData <= rv2cache_config_signal_out;
+			when "1100" => status2dbg.readData <= rv2cache_mask_signal_out;
 			when others => null;
 		end case;
 	  end if;
   end process;
   
 end Behavioral;
-

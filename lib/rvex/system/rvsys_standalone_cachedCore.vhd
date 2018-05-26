@@ -190,7 +190,14 @@ entity rvsys_standalone_cachedCore is
     
     -- When high while push is high, the trace unit is stalled. While stalled,
     -- push will stay high and data and end will remain stable.
-    trsink2rv_busy              : in  std_logic := '0'
+    trsink2rv_busy              : in  std_logic := '0';
+	  
+	  
+	  
+	-- test... signals to read from debug bus
+	rv2cache_tmr_enable_out		: out rvex_data_type;
+	rv2cache_config_signal_out	: out rvex_data_type;
+	rv2cache_mask_signal_out	: out rvex_data_type
     
   );
 end rvsys_standalone_cachedCore;
@@ -261,6 +268,7 @@ architecture Behavioral of rvsys_standalone_cachedCore is
 --=============================================================================
 begin -- architecture
 --=============================================================================
+	
   
   -- Check configuration.
   assert CFG.cache_enable
@@ -428,6 +436,16 @@ begin -- architecture
     and  (dbg2rv_writeMask(1) = '1')
     else (others => '0');
   
+	  
+  --test.. signals to read from debug bus
+	rv2cache_tmr_enable_out(31 downto 1)	<= (others => '0');
+	rv2cache_tmr_enable_out(0)				<= rv2cache_tmr_enable;
+	rv2cache_config_signal_out(31 downto 4)	<= (others => '0');
+	rv2cache_config_signal_out(3 downto 0)	<= rv2cache_config_signal;
+	rv2cache_mask_signal_out(31 downto 4)	<= (others => '0');
+	rv2cache_mask_signal_out(3 downto 0)	<= rv2cache_mask_signal;
+	  
+	  
   -----------------------------------------------------------------------------
   -- Arbitrate between the four busses coming from the cache.
   -----------------------------------------------------------------------------
