@@ -304,7 +304,7 @@ begin -- architecture
     -- PC Majority voter bank for WriteData
     ---------------------------------------------------------------------------				
 		
-	Write_Data_voter: for i in 0 to 47 generate
+	Write_Data_voter: for i in 0 to 51 generate
 		writedata_voter_bank: entity work.tmr_voter
 			port map (
 				input_1		=> rv2tmr_writeData_temp(0)(i),

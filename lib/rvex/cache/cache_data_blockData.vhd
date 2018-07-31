@@ -92,7 +92,10 @@ entity cache_data_blockData is
 	writeData                   : in  rvex_encoded_datacache_data_type;
     
     -- Write byte mask input.
-    writeMask                   : in  rvex_mask_type
+    writeMask                   : in  rvex_mask_type;
+	
+	-- Double Error Detection  
+	ded							: out std_logic
     
   );
 end cache_data_blockData;
@@ -119,6 +122,10 @@ architecture Behavioral of cache_data_blockData is
   
   -- Individual write enable signals for each byte.
   signal byteWriteEnable      : rvex_mask_type;
+
+  --
+  signal ded_array				: std_logic_vector(3 downto 0) := (others => '0');
+  --signal ded					: std_logic := '0';
 
 
   --Encoded signals
@@ -150,26 +157,28 @@ begin -- architecture
         for i in 0 to 3 loop
           if byteWriteEnable(i) = '1' then
 
-            ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i) <=
-              writeData_encoded(12*i+11 downto 12*i);
+            ram_data(to_integer(unsigned(cpuOffset)))(13*i+12 downto 13*i) <=
+              writeData_encoded(13*i+12 downto 13*i);
          --   ram_data(to_integer(unsigned(cpuOffset)))(8*i+7+16 downto 8*i+16) <=
          --     writeData_encoded(8*i+7+16 downto 8*i+16);
          --   ram_data(to_integer(unsigned(cpuOffset)))(15 downto 0) <= (others => '0');
 
-            readData_encoded(12*i+11 downto 12*i) <=
-              writeData_encoded(12*i+11 downto 12*i);
+            readData_encoded(13*i+12 downto 13*i) <=
+              writeData_encoded(13*i+12 downto 13*i);
          --   readData_encoded(8*i+7+16 downto 8*i+16) <=
          --     writeData_encoded(8*i+7+16 downto 8*i+16);
 		 --   readData_encoded(15 downto 0) <= (others => '0'); -- padded additional zeros
           else
 
-            readData_encoded(12*i+11 downto 12*i) <=
-              ram_data(to_integer(unsigned(cpuOffset)))(12*i+11 downto 12*i);
+            readData_encoded(13*i+12 downto 13*i) <=
+              ram_data(to_integer(unsigned(cpuOffset)))(13*i+12 downto 13*i);
          --   readData_encoded(8*i+7+16 downto 8*i+16) <=
          --     ram_data(to_integer(unsigned(cpuOffset)))(8*i+7+16 downto 8*i+16);
          --   readData_encoded(15 downto 0) <= (others => '0'); -- padded additional zeros
+		  ded_array(i)		<= bit8_ded(ram_data(to_integer(unsigned(cpuOffset)))(13*i+12 downto 13*i));
           end if;
         end loop;
+		ded <= ded_array(0) or ded_array(1) or ded_array(2) or ded_array(3);
       end if;
     end if;
   end process;

@@ -8,4 +8,6 @@ ecc_encoder_tb.vhd
 ecc_decoder_tb.vhd
 ecc_8_tb.vhd
 ecc_tb.vhd
+ecc_dec_tb.vhd
+ecc_8_tb_dec.vhd
 saboteur_tb.vhd

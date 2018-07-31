@@ -320,6 +320,8 @@ architecture Behavioral of cache_data_block is
   signal cpuHit_mv						: std_logic_vector (2 downto 0);
   signal invalHit_mv					: std_logic_vector (2 downto 0);
 
+ --Double Error Detection
+  signal ded								: std_logic;
   
 --=============================================================================
 begin -- architecture
@@ -369,7 +371,8 @@ begin -- architecture
   clkEnCPUAndAccess <= (readEnable or writeEnable) and clkEnCPU;
   
   -- Compute whether we have a hit and forward it up the hierarchy.
-  cpuHitValid <= cpuHit and cpuValid;
+  --cpuHitValid <= cpuHit and cpuValid;
+cpuHitValid <= cpuHit and cpuValid and  ded;
   block2route_hit <= cpuHitValid;
   
   -- Instantiate performance counter/trace status registers.
@@ -466,7 +469,8 @@ begin -- architecture
       readData                  => cacheReadData,
       writeEnable               => update,
       writeData                 => updateData,
-      writeMask                 => updateMask
+      writeMask                 => updateMask,
+	  ded						=> ded
     );
   
   -----------------------------------------------------------------------------

@@ -485,15 +485,18 @@ begin -- architecture
       when STATE_UPDATE_1 =>
         
         -- Prepare the update command and synchronization register data inputs.
-        --updateData <= busToCache.readData & X"0000"; --need encoder here
-		--updateData(11 downto 0) <= "0000" & busToCache.readData(7 downto 0); --need encoder here
-		--updateData(23 downto 12) <= "0000" & busToCache.readData(15 downto 8); --need encoder here
-		--updateData(35 downto 24) <= "0000" & busToCache.readData(23 downto 16); --need encoder here
-		--updateData(47 downto 36) <= "0000" & busToCache.readData(31 downto 24); --need encoder here
-		updateData(11 downto 0)  <= bit8_encoder(busToCache.readData(7 downto 0)); --need encoder here
-		updateData(23 downto 12) <= bit8_encoder(busToCache.readData(15 downto 8)); --need encoder here
-		updateData(35 downto 24) <= bit8_encoder(busToCache.readData(23 downto 16)); --need encoder here
-		updateData(47 downto 36) <= bit8_encoder(busToCache.readData(31 downto 24)); --need encoder here
+--		updateData(11 downto 0)  <= bit8_encoder(busToCache.readData(7 downto 0)); --need encoder here
+--		updateData(23 downto 12) <= bit8_encoder(busToCache.readData(15 downto 8)); --need encoder here
+--		updateData(35 downto 24) <= bit8_encoder(busToCache.readData(23 downto 16)); --need encoder here
+--		updateData(47 downto 36) <= bit8_encoder(busToCache.readData(31 downto 24)); --need encoder here
+				
+		updateData(12 downto 0)  <= bit8_encoder_dec(busToCache.readData(7 downto 0)); --need encoder here
+		updateData(25 downto 13) <= bit8_encoder_dec(busToCache.readData(15 downto 8)); --need encoder here
+		updateData(38 downto 26) <= bit8_encoder_dec(busToCache.readData(23 downto 16)); --need encoder here
+		updateData(51 downto 39) <= bit8_encoder_dec(busToCache.readData(31 downto 24)); --need encoder here
+								
+				
+				
 		--updateData		<= readData_encoded;
         updateMask <= (others => '1');
         
@@ -597,10 +600,10 @@ begin -- architecture
 --	writeData_dec(31 downto 24)	<= writeData(43 downto 36);
 		
   ECC_encoderbank1: for i in 0 to 3 generate
-	ecc_encoder1: entity work.ecc_encoder_8
+	ecc_encoder1: entity work.ecc_encoder_8_dec
 		port map (
 					input		=> busToCache.readData(8*i+7  downto 8*i),
-					output		=> readData_encoded(12*i+11 downto 12*i)
+					output		=> readData_encoded(13*i+12 downto 13*i)
 				);
   end generate;		
 					
@@ -608,7 +611,7 @@ begin -- architecture
   ECC_decoderbank2: for i in 0 to 3 generate
 	ecc_decoder2: entity work.ecc_decoder_8
 		port map (
-					input		=> writeData(12*i + 11 downto 12*i),
+					input		=> writeData(13*i + 11 downto 13*i),
 					output		=> writeData_dec(8*i + 7 downto 8*i)
 				);
   end generate;
@@ -616,7 +619,7 @@ begin -- architecture
   ECC_decoderbank: for i in 0 to 3 generate
 	ecc_decoder: entity work.ecc_decoder_8
 		port map (
-					input		=> writeBufData(12*i+11 downto 12*i),
+					input		=> writeBufData(13*i+11 downto 13*i),
 					output		=> writeBufData_dec(8*i+7 downto 8*i)
 				);
   end generate;

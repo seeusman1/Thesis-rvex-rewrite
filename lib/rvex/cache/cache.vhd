@@ -224,12 +224,22 @@ begin -- architecture
   -- Hamming Encoder for Data
   -----------------------------------------------------------------------------
 
+--  ECC_encoderbank: for j in 0 to 3 generate
+--	  ECC_encoder:	for i in 0 to 3 generate
+--		ecc_encoder_inst: entity work.ecc_encoder_8
+--			port map (
+--						input		=> rv2dcache_writeData(j)(8*i + 7  downto 8*i),
+--						output		=> rv2dcache_writeData_encoded(j)(12*i + 11 downto 12*i)
+--					);
+--	  end generate;
+--  end generate;
+	
   ECC_encoderbank: for j in 0 to 3 generate
 	  ECC_encoder:	for i in 0 to 3 generate
-		ecc_encoder_inst: entity work.ecc_encoder_8
+		ecc_encoder_inst: entity work.ecc_encoder_8_dec
 			port map (
 						input		=> rv2dcache_writeData(j)(8*i + 7  downto 8*i),
-						output		=> rv2dcache_writeData_encoded(j)(12*i + 11 downto 12*i)
+						output		=> rv2dcache_writeData_encoded(j)(13*i + 12 downto 13*i)
 					);
 	  end generate;
   end generate;
@@ -243,7 +253,7 @@ begin -- architecture
 		ecc_decoder_inst: entity work.ecc_decoder_8
 			port map (
 					--input		=> dcache2rv_readData_encoded(j)(12*i + 11 downto 12*i),
-					input		=> dcache2tmr_readData_encoded(j)(12*i + 11 downto 12*i),
+					input		=> dcache2tmr_readData_encoded(j)(13*i + 11 downto 13*i),
 					output		=> dcache2rv_readData(j)(8*i + 7 downto 8*i)
 			);
 	  end generate;

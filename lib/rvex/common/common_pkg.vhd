@@ -68,7 +68,7 @@ package common_pkg is
   subtype rvex_encoded_data_type is std_logic_vector(37 downto  0); -- Any encoded data word.
   subtype rvex_encoded_address_type is std_logic_vector(37 downto  0); -- Any encoded bus address.
   subtype rvex_encoded_syllable_type is std_logic_vector(37 downto  0); -- encoded syllable word.
-  subtype rvex_encoded_datacache_data_type is std_logic_vector (47 downto 0); -- Encoded data word for Data-Cache
+  subtype rvex_encoded_datacache_data_type is std_logic_vector (51 downto 0); -- Encoded data word for Data-Cache
   
   -- Array types for the above subtypes.
   type rvex_address_array       is array (natural range <>) of rvex_address_type;
