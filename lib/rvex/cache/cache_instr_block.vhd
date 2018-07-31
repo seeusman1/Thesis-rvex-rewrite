@@ -259,6 +259,9 @@ architecture Behavioral of cache_instr_block is
 	  -- signal for cache_instr_blockTag_voter
       signal cpuHit_mv						: std_logic_vector (2 downto 0);
 	  signal invalHit_mv					: std_logic_vector (2 downto 0);
+
+      -- Double Error Detection
+      signal ded							: std_logic;
   
 --=============================================================================
 begin
@@ -296,7 +299,8 @@ begin
   clkEnCPUAndReadEnable <= readEnable and clkEnCPU;
   
   -- Compute whether we have a hit and forward it up the hierarchy.
-  cpuHitValid <= cpuHit and cpuValid;
+  --cpuHitValid <= cpuHit and cpuValid;
+	cpuHitValid <= cpuHit and cpuValid and (not ded);
   block2route_hit <= cpuHitValid;
   
   -----------------------------------------------------------------------------
@@ -334,7 +338,8 @@ begin
       cpuAddr                   => cpuAddr,
       readData                  => block2route_line,--_temp,
       writeEnable               => update,
-      writeData                 => updateData
+      writeData                 => updateData,
+	  ded						=> ded
     );
   
   -----------------------------------------------------------------------------

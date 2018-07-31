@@ -89,7 +89,9 @@ entity cache_instr_blockData is
     
     -- Write data input.
     --writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0)
-    writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0) --encoded writedata
+    writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0); --encoded writedata
+	  
+	ded						  : out std_logic
     
   );
 end cache_instr_blockData;
@@ -140,17 +142,16 @@ begin -- architecture
         if writeEnable = '1' then
           ram_data(to_integer(unsigned(cpuOffset))) <= writeData_encoded;
           readData_encoded <= writeData_encoded;
+		  ded_array <= "00000000";
         else
           readData_encoded <= ram_data(to_integer(unsigned(cpuOffset)));
 													 
-		--  for j in 0 to 7 loop
-		--	ded_array(j) <= 								 
-													 
-													 
-													 
-		--  end loop;
+		  for j in 0 to 7 loop
+			ded_array(j) <= 	bit32_ded (ram_data(to_integer(unsigned(cpuOffset)))(39*j+38 downto 39*j));							 				 
+		  end loop;
 													 
         end if;
+		ded <= ded_array(0) or ded_array(1) or ded_array(2) or ded_array(3) or ded_array(4) or ded_array(5) or ded_array(6) or ded_array(7);
       end if;
     end if;
   end process;

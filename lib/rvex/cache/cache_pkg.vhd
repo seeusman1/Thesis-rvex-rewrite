@@ -448,7 +448,7 @@ package body cache_pkg is
 
 			if ((check_bits(4 downto 1) /= "0000") and (check_bits(5) = '0')) then
 				ded	:= '1';
-			elsif ((check_bits(4 downto 1) = "000000") and (check_bits(5) /= '0')) then
+			elsif ((check_bits(4 downto 1) = "0000") and (check_bits(5) /= '0')) then
 				ded := '1';
 			else
 				ded := '0';
