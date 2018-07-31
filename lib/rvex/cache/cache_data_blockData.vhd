@@ -159,15 +159,10 @@ begin -- architecture
 
             ram_data(to_integer(unsigned(cpuOffset)))(13*i+12 downto 13*i) <=
               writeData_encoded(13*i+12 downto 13*i);
-         --   ram_data(to_integer(unsigned(cpuOffset)))(8*i+7+16 downto 8*i+16) <=
-         --     writeData_encoded(8*i+7+16 downto 8*i+16);
-         --   ram_data(to_integer(unsigned(cpuOffset)))(15 downto 0) <= (others => '0');
 
             readData_encoded(13*i+12 downto 13*i) <=
               writeData_encoded(13*i+12 downto 13*i);
-         --   readData_encoded(8*i+7+16 downto 8*i+16) <=
-         --     writeData_encoded(8*i+7+16 downto 8*i+16);
-		 --   readData_encoded(15 downto 0) <= (others => '0'); -- padded additional zeros
+			ded_array(i) <= '0';
           else
 
             readData_encoded(13*i+12 downto 13*i) <=

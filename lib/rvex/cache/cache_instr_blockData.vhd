@@ -82,14 +82,14 @@ entity cache_instr_blockData is
     
     -- Read data output.
     --readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-	readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded read data
+	readData                  : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0); --encoded read data
     
     -- Active high write enable input.
     writeEnable               : in  std_logic;
     
     -- Write data input.
     --writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0)
-    writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0) --encoded writedata
+    writeData                 : in  std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0) --encoded writedata
     
   );
 end cache_instr_blockData;
@@ -106,7 +106,7 @@ architecture Behavioral of cache_instr_blockData is
   type ram_data_type
     is array(0 to 2**CCFG.instrCacheLinesLog2-1)
     --of std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-	of std_logic_vector(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 0);
+	of std_logic_vector(((rvex_syllable_type'length +7) * 2**RCFG.numLanesLog2)-1 downto 0);
   signal ram_data             : ram_data_type := (others => (others => 'X'));
   
   -- Hints for XST to implement the data memory in block RAMs.
@@ -117,8 +117,10 @@ architecture Behavioral of cache_instr_blockData is
   signal cpuOffset            : std_logic_vector(icacheOffsetSize(RCFG, CCFG)-1 downto 0);
 
   
-  signal writeData_encoded		: std_logic_vector(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 0);
-  signal readData_encoded		: std_logic_vector(((rvex_syllable_type'length +6) * 2**RCFG.numLanesLog2)-1 downto 0);
+  signal writeData_encoded		: std_logic_vector(((rvex_syllable_type'length +7) * 2**RCFG.numLanesLog2)-1 downto 0);
+  signal readData_encoded		: std_logic_vector(((rvex_syllable_type'length +7) * 2**RCFG.numLanesLog2)-1 downto 0);
+													 
+  signal ded_array				: std_logic_vector (7 downto 0);
   
 --=============================================================================
 begin -- architecture
@@ -140,6 +142,14 @@ begin -- architecture
           readData_encoded <= writeData_encoded;
         else
           readData_encoded <= ram_data(to_integer(unsigned(cpuOffset)));
+													 
+		--  for j in 0 to 7 loop
+		--	ded_array(j) <= 								 
+													 
+													 
+													 
+		--  end loop;
+													 
         end if;
       end if;
     end if;

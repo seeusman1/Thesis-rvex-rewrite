@@ -53,9 +53,9 @@
 							 input_data(7)  xor input_data(8) xor input_data(9)  xor input_data(10)  xor input_data(11)  xor input_data(12) xor
 							 input_data(13); --DEC
 
-			if ((check_bits(3 downto 0) /= "0000") and (check_bits(4) = '0')) then
+			if ((check_bits(4 downto 1) /= "0000") and (check_bits(5) = '0')) then
 				ded	:= '1';
-			elsif ((check_bits(3 downto 0) = "000000") and (check_bits(4) /= '0')) then
+			elsif ((check_bits(4 downto 1) = "000000") and (check_bits(5) /= '0')) then
 				ded := '1';
 			else
 				ded := '0';

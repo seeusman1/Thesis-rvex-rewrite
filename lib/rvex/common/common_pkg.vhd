@@ -67,7 +67,7 @@ package common_pkg is
   subtype rvex_7byte_type       is std_logic_vector(55 downto  0); -- Group of 7 bytes, used for tags and counters.
   subtype rvex_encoded_data_type is std_logic_vector(37 downto  0); -- Any encoded data word.
   subtype rvex_encoded_address_type is std_logic_vector(37 downto  0); -- Any encoded bus address.
-  subtype rvex_encoded_syllable_type is std_logic_vector(37 downto  0); -- encoded syllable word.
+  subtype rvex_encoded_syllable_type is std_logic_vector(38 downto  0); -- encoded syllable word.
   subtype rvex_encoded_datacache_data_type is std_logic_vector (51 downto 0); -- Encoded data word for Data-Cache
   
   -- Array types for the above subtypes.

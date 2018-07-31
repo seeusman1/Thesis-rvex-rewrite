@@ -55,7 +55,7 @@ entity cache_instr_missCtrl_voter is
 	  
 	update							: out std_logic;
     --updateData						: out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-    updateData						: out std_logic_vector(303 downto 0);
+    updateData						: out std_logic_vector(311 downto 0);
     block2route_blockReconfig		: out std_logic;
     block2route_busFault			: out std_logic;
     icache2bus_bus					: out bus_mst2slv_type
@@ -144,7 +144,7 @@ begin -- architecture
     -- PC Majority voter bank for updateData_mv
     ---------------------------------------------------------------------------				
 				
-	updateData_mv_voterbank: for i in 0 to 303 generate
+	updateData_mv_voterbank: for i in 0 to 311 generate
 		updateData_mv_voter: entity work.tmr_voter
 				port map (
 					input_1		=> updateData_mv(0)(i),

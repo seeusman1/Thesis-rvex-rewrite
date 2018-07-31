@@ -42,7 +42,7 @@
 		 			--parity_encoder 	=> parity_encoder
 		 			);
 	
-	 input_decoder 		<= output_encoder xor ("011" & X"000000000"); --corrupted two bits
+	 input_decoder 		<= output_encoder xor ("010" & X"000000000"); --corrupted two bits
 		 
 	 dut_dec	: ecc_decoder_dec port map (
 		 			input 			=> input_decoder,

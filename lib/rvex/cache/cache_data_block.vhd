@@ -371,8 +371,8 @@ begin -- architecture
   clkEnCPUAndAccess <= (readEnable or writeEnable) and clkEnCPU;
   
   -- Compute whether we have a hit and forward it up the hierarchy.
-  --cpuHitValid <= cpuHit and cpuValid;
-cpuHitValid <= cpuHit and cpuValid and  ded;
+--  cpuHitValid <= cpuHit and cpuValid;
+cpuHitValid <= cpuHit and cpuValid and (not ded);
   block2route_hit <= cpuHitValid;
   
   -- Instantiate performance counter/trace status registers.

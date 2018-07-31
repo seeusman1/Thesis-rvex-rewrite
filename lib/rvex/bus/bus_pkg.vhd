@@ -169,7 +169,7 @@ package bus_pkg is
   -- for TMR								   
   --type updateData_array is array (natural range <>) of std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
   --type updateData_array is array (natural range <>) of std_logic_vector(255 downto 0);
-  type updateData_array is array (natural range <>) of std_logic_vector(303 downto 0);
+  type updateData_array is array (natural range <>) of std_logic_vector(311 downto 0);
   
   -- This function generates or modifies bus flags. Always use this function
   -- instead of assigning the bus flags directly to make code forward

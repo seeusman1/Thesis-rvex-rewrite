@@ -267,7 +267,7 @@ begin -- architecture
   ECC_decoderbank_instr: for i in 0 to 7 generate
 	ecc_decoder_instr: entity work.ecc_decoder
 		port map (
-					input		=> icache2tmr_instr_encoded(i),
+					input		=> icache2tmr_instr_encoded(i)(37 downto 0),
 					--input		=> icache2rv_instr_encoded(i),
 					output		=> icache2rv_instr(i)
 				);

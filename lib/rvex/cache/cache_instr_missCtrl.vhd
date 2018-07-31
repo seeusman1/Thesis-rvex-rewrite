@@ -103,7 +103,7 @@ entity cache_instr_missCtrl is
     
     -- Cache line data output, valid when done is high.
     --line                        : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-    line                        : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
+    line                        : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0); --encoded line
     
     -- This signal is high when the controller is busy, signalling that
     -- reconfiguration is not possible at this time.
@@ -155,13 +155,13 @@ architecture Behavioral of cache_instr_missCtrl is
   
   -- Line buffer registers.
   --signal line_buffer            : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-  signal line_buffer            : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line_buffer
+  signal line_buffer            : std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0); --encoded line_buffer
   
   -- To get around a weird bug in XST, we need to provide some extra delay
   -- between the line buffer registers and the inputs of the block RAM, because
   -- it's having trouble doing this on its own to avoid hold violations.
   --signal line_buffer_d          : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-  signal line_buffer_d          : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line_buffer_d
+  signal line_buffer_d          : std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0); --encoded line_buffer_d
   attribute keep                : string;
   attribute keep of line_buffer_d : signal is "true";
   
@@ -324,9 +324,9 @@ begin -- architecture
     begin
       if rising_edge(clk) then
         if state = i + 1 then
-          line_buffer(38*i + 37 downto 38*i)
+          line_buffer(39*i + 38 downto 39*i)
 			--<= busToCache.readData & "000000"; --need hamming encoder here 
-            <= bit32_encoder(busToCache.readData);-- & "000000"; --32-bit hamming encoder 
+            <= bit32_encoder_dec(busToCache.readData);-- & "000000"; --32-bit hamming encoder 
         end if;
       end if;
       
@@ -340,14 +340,14 @@ begin -- architecture
   
   -- Forward the cache line to the cache memory.
   line_buf_forward_a: if ACCESSES_PER_LINE > 1 generate
-    line(icacheLineWidth(RCFG, CCFG)+48-38-1 downto 0)
-      <= line_buffer_d(icacheLineWidth(RCFG, CCFG)+48-38-1 downto 0);
+    line(icacheLineWidth(RCFG, CCFG)+56-39-1 downto 0)
+      <= line_buffer_d(icacheLineWidth(RCFG, CCFG)+56-39-1 downto 0);
   end generate;
   
-  line(icacheLineWidth(RCFG, CCFG)+48-1 downto icacheLineWidth(RCFG, CCFG)+48-38) <=
+  line(icacheLineWidth(RCFG, CCFG)+56-1 downto icacheLineWidth(RCFG, CCFG)+56-39) <=
     --busToCache.readData & "000000" when state = WAIT_STATE - 1 else --need hamming encoder here
-	bit32_encoder(busToCache.readData) when state = WAIT_STATE - 1 else --32-bit hamming encoder 
-    line_buffer_d(icacheLineWidth(RCFG, CCFG)+48-1 downto icacheLineWidth(RCFG, CCFG)+48-38);
+	bit32_encoder_dec(busToCache.readData) when state = WAIT_STATE - 1 else --32-bit hamming encoder 
+    line_buffer_d(icacheLineWidth(RCFG, CCFG)+56-1 downto icacheLineWidth(RCFG, CCFG)+56-39);
     
 end Behavioral;
 

@@ -119,7 +119,7 @@ entity cache_instr_block is
     
     -- Cache line data, valid when hit and readEnable are high.
     --block2route_line            : out std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-    block2route_line            : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
+    block2route_line            : out std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0); --encoded line
 	  
     -- Block reconfiguration signal. This is asserted when any block is busy.
     block2route_blockReconfig   : out std_logic;    
@@ -232,7 +232,7 @@ architecture Behavioral of cache_instr_block is
   
   -- New data for the currently addressed cache line.
   --signal updateData             : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-  signal updateData             : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0);
+  signal updateData             : std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0);
   --signal updateData_temp             : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
 
 --  signal block2route_line_temp            : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line

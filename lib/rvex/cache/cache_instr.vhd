@@ -210,7 +210,7 @@ architecture Behavioral of cache_instr is
     
     -- Cache line data, valid when hit and readEnable are high.
     --line                        : std_logic_vector(icacheLineWidth(RCFG, CCFG)-1 downto 0);
-    line                        : std_logic_vector(icacheLineWidth(RCFG, CCFG)+48-1 downto 0); --encoded line
+    line                        : std_logic_vector(icacheLineWidth(RCFG, CCFG)+56-1 downto 0); --encoded line
     
     -- Block reconfiguration signal from the cache. This is asserted when any
     -- block is busy.
@@ -528,7 +528,7 @@ begin -- architecture
     variable omd                    : outNetworkEdge_type;
     variable offset                 : natural range 0 to 2**RCFG.numLaneGroupsLog2-1;
     constant LANE_GROUP_SIZE_BLOG2  : natural := laneGroupInstrSizeBLog2(RCFG, CCFG);
-    constant LANE_GROUP_SIZE_BITS   : natural := 8 * 2**LANE_GROUP_SIZE_BLOG2 + 12;
+    constant LANE_GROUP_SIZE_BITS   : natural := 8 * 2**LANE_GROUP_SIZE_BLOG2 + 14;
     --constant LANE_GROUP_SIZE_BITS_simtest   : natural := 8 * 2**LANE_GROUP_SIZE_BLOG2 + 12;
   begin
     for i in 0 to 2**RCFG.numLaneGroupsLog2-1 loop
@@ -545,9 +545,9 @@ begin -- architecture
       for laneIndex in 0 to 2**(RCFG.numLanesLog2 - RCFG.numLaneGroupsLog2)-1 loop
         icache2rv_instr(group2firstLane(i, RCFG) + laneIndex)
           <= omd.line(
-            LANE_GROUP_SIZE_BITS*offset + 38*laneIndex + 37
+            LANE_GROUP_SIZE_BITS*offset + 39*laneIndex + 38
             downto
-            LANE_GROUP_SIZE_BITS*offset + 38*laneIndex
+            LANE_GROUP_SIZE_BITS*offset + 39*laneIndex
           );-- & "000000";
 
        -- icache2rv_instr_encoded_simtest(group2firstLane(i, RCFG) + laneIndex)
