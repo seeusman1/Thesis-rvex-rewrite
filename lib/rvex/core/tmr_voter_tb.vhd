@@ -14,26 +14,29 @@ architecture test of tmr_voter_tb is
 	signal	in_2		: std_logic	:='0';
 	signal	in_3		: std_logic	:='0';
 	signal	tmr_out		: std_logic;
+	signal error_corrected : std_logic := '0';
 
 
-	component tmr_voter is
+	component tmr_voter_modified is
 		port(
 		input_1		: in std_logic;
 		input_2		: in std_logic;
 		input_3		: in std_logic;
-		output		: out std_logic
+		output		: out std_logic;
+		error_corrected : out std_logic
 		);
-	end component tmr_voter;
+	end component tmr_voter_modified;
 
 
 
 begin
 
-	voter	: tmr_voter
-		port map( input_1 => in_1,
-			  input_2 	  => in_2,
-			  input_3 	  => in_3,
-			  output 	  => tmr_out		
+	voter	: tmr_voter_modified
+		port map( input_1 		=> in_1,
+			  input_2 	  		=> in_2,
+			  input_3 	  		=> in_3,
+			  output 	  		=> tmr_out,
+			  error_corrected	=> error_corrected
 		);
 	
 	
