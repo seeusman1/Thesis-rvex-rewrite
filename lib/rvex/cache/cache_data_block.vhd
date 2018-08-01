@@ -476,26 +476,7 @@ cpuHitValid <= cpuHit and cpuValid and (not ded);
   -----------------------------------------------------------------------------
   -- Instantiate cache tag storage and comparators
   -----------------------------------------------------------------------------
---  tag_ram: entity work.cache_data_blockTag
---    generic map (
---      RCFG                      => RCFG,
---      CCFG                      => CCFG
---    )
---    port map (
---      clk                       => clk,
---      enableCPU                 => clkEnCPUAndAccess,
---      enableBus                 => clkEnBus,
---      cpuAddr                   => cpuAddr,
---      cpuHit                    => cpuHit,
---      writeCpuTag               => update,
---      invalAddr                 => bus2dcache_invalAddr,
---      invalHit                  => invalHit
---    );
-	  
-  -----------------------------------------------------------------------------
-  -- Instantiate cache tag storage and comparators with TMR
-  -----------------------------------------------------------------------------
-  tag_ram0: entity work.cache_data_blockTag
+  tag_ram: entity work.cache_data_blockTag
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -505,82 +486,17 @@ cpuHitValid <= cpuHit and cpuValid and (not ded);
       enableCPU                 => clkEnCPUAndAccess,
       enableBus                 => clkEnBus,
       cpuAddr                   => cpuAddr,
-      cpuHit                    => cpuHit_mv(0),
+      cpuHit                    => cpuHit,
       writeCpuTag               => update,
       invalAddr                 => bus2dcache_invalAddr,
-      invalHit                  => invalHit_mv(0)
+      invalHit                  => invalHit
     );
-	  
-  tag_ram1: entity work.cache_data_blockTag
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      enableCPU                 => clkEnCPUAndAccess,
-      enableBus                 => clkEnBus,
-      cpuAddr                   => cpuAddr,
-      cpuHit                    => cpuHit_mv(1),
-      writeCpuTag               => update,
-      invalAddr                 => bus2dcache_invalAddr,
-      invalHit                  => invalHit_mv(1)
-    );
-	  
-  tag_ram2: entity work.cache_data_blockTag
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      enableCPU                 => clkEnCPUAndAccess,
-      enableBus                 => clkEnBus,
-      cpuAddr                   => cpuAddr,
-      cpuHit                    => cpuHit_mv(2),
-      writeCpuTag               => update,
-      invalAddr                 => bus2dcache_invalAddr,
-      invalHit                  => invalHit_mv(2)
-    );
-	  
-  tag_ram_voter: entity work.cache_blockTag_voter
-	port map (
-		 
-    	cpuHit_mv				=> cpuHit_mv,	
-		invalHit_mv				=> invalHit_mv,
-	  
-    	cpuHit					=> cpuHit,	
-		invalHit				=> invalHit 
-	);
-	  
 	  
   
   -----------------------------------------------------------------------------
   -- Instantiate cache line valid bit storage
   -----------------------------------------------------------------------------
---  valid_ram: entity work.cache_data_blockValid
---    generic map (
---      RCFG                      => RCFG,
---      CCFG                      => CCFG
---    )
---    port map (
---      clk                       => clk,
---      reset                     => reset,
---      enableCPU                 => clkEnCPUAndAccess,
---      enableBus                 => clkEnBus,
---      cpuAddr                   => cpuAddr,
---      cpuValid                  => cpuValid,
---      validate                  => update,
---      invalAddr                 => invalAddr_r,
---      invalidate                => invalidate,
---     flush                     => sc2dcache_flush
---    );
-	  
-	  
-  -----------------------------------------------------------------------------
-  -- Instantiate cache line valid bit storage with TMR
-  -----------------------------------------------------------------------------
-  valid_ram0: entity work.cache_data_blockValid
+  valid_ram: entity work.cache_data_blockValid
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -591,116 +507,21 @@ cpuHitValid <= cpuHit and cpuValid and (not ded);
       enableCPU                 => clkEnCPUAndAccess,
       enableBus                 => clkEnBus,
       cpuAddr                   => cpuAddr,
-      cpuValid                  => cpuValid_mv(0),
+      cpuValid                  => cpuValid,
       validate                  => update,
       invalAddr                 => invalAddr_r,
       invalidate                => invalidate,
-      flush                     => sc2dcache_flush
+     flush                     => sc2dcache_flush
     );
 	  
-  valid_ram1: entity work.cache_data_blockValid
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset,
-      enableCPU                 => clkEnCPUAndAccess,
-      enableBus                 => clkEnBus,
-      cpuAddr                   => cpuAddr,
-      cpuValid                  => cpuValid_mv(1),
-      validate                  => update,
-      invalAddr                 => invalAddr_r,
-      invalidate                => invalidate,
-      flush                     => sc2dcache_flush
-    );
 	  
-  valid_ram2: entity work.cache_data_blockValid
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset,
-      enableCPU                 => clkEnCPUAndAccess,
-      enableBus                 => clkEnBus,
-      cpuAddr                   => cpuAddr,
-      cpuValid                  => cpuValid_mv(2),
-      validate                  => update,
-      invalAddr                 => invalAddr_r,
-      invalidate                => invalidate,
-      flush                     => sc2dcache_flush
-    );
-	  
-  valid_ram_voter: entity work.cache_blockValid_voter
-	port map (
-		 
-    	cpuValid_mv				=> cpuValid_mv,	  
-	  
-		cpuValid				=> cpuValid	 
-	);
   
   -----------------------------------------------------------------------------
   -- Instantiate the controllers
   -----------------------------------------------------------------------------
---  -- This controller handles read misses and CPU writes to cache and the write
---  -- buffer.
---  main_controller: entity work.cache_data_mainCtrl
---    generic map (
---      RCFG                      => RCFG,
---      CCFG                      => CCFG
---    )
---    port map (
-      
---      -- System control.
---      clk                     => clk,
---      reset                   => reset,
---      clkEnCPU                => clkEnCPU,
---      clkEnBus                => clkEnBus,
-      
---      -- CPU interface signals.
---      addr                    => cpuAddr_r,
---      readEnable              => readEnable_r,
---      readData                => block2route_data, -- to be fixed at mainCtrl
---      writeEnable             => writeEnable_r,
---      writeData               => writeData_r, -- to be fixed at mainCtrl
---      writeMask               => writeMask_r,
---      bypass                  => bypass_r,
---      stall                   => route2block_stall,
---      blockReconfig           => block2route_blockReconfig,
---      writeOrBypassStall      => block2route_writeOrBypassStall,
---      busFault                => block2route_busFault,
-      
---      -- Mux control signals.
---      updateEnable            => route2block_updateEnable,
---      handleWrite             => route2block_handleWrite,
---      writePrio               => block2route_writePrio,
-      
---      -- Cache memory interface signals.
---      hit                     => cpuHitValid,
---      cacheReadData           => cacheReadData,
---      update                  => update,
---      updateData              => updateData,
---      updateMask              => updateMask,
-      
---      -- Main memory interface signals.
---      cacheToBus              => dcache2bus_bus,
---      busToCache              => bus2dcache_bus,
-      
---      -- Status signals.
---      servicedWrite           => servicedWrite,
---      writeBuffered           => writeBuffered
-      
---    );
-	  
-  -----------------------------------------------------------------------------
-  -- Instantiate the controllers with TMR
-  -----------------------------------------------------------------------------
   -- This controller handles read misses and CPU writes to cache and the write
   -- buffer.
-  main_controller0: entity work.cache_data_mainCtrl
+  main_controller: entity work.cache_data_mainCtrl
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -716,166 +537,39 @@ cpuHitValid <= cpuHit and cpuValid and (not ded);
       -- CPU interface signals.
       addr                    => cpuAddr_r,
       readEnable              => readEnable_r,
-      readData                => block2route_data_mv(0), 
+      readData                => block2route_data, -- to be fixed at mainCtrl
       writeEnable             => writeEnable_r,
-      writeData               => writeData_r, 
+      writeData               => writeData_r, -- to be fixed at mainCtrl
       writeMask               => writeMask_r,
       bypass                  => bypass_r,
       stall                   => route2block_stall,
-      blockReconfig           => block2route_blockReconfig_mv(0),
-      writeOrBypassStall      => block2route_writeOrBypassStall_mv(0),
-      busFault                => block2route_busFault_mv(0),
+      blockReconfig           => block2route_blockReconfig,
+      writeOrBypassStall      => block2route_writeOrBypassStall,
+      busFault                => block2route_busFault,
       
       -- Mux control signals.
       updateEnable            => route2block_updateEnable,
       handleWrite             => route2block_handleWrite,
-      writePrio               => block2route_writePrio_mv(0),
+      writePrio               => block2route_writePrio,
       
       -- Cache memory interface signals.
       hit                     => cpuHitValid,
       cacheReadData           => cacheReadData,
-      update                  => update_mv(0),
-      updateData              => updateData_mv(0),
-      updateMask              => updateMask_mv(0),
+      update                  => update,
+      updateData              => updateData,
+      updateMask              => updateMask,
       
       -- Main memory interface signals.
-      cacheToBus              => dcache2bus_bus_mv(0),
+      cacheToBus              => dcache2bus_bus,
       busToCache              => bus2dcache_bus,
       
       -- Status signals.
-      servicedWrite           => servicedWrite_mv(0),
-      writeBuffered           => writeBuffered_mv(0)
+      servicedWrite           => servicedWrite,
+      writeBuffered           => writeBuffered
       
     );
 	  
-  main_controller1: entity work.cache_data_mainCtrl
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      
-      -- System control.
-      clk                     => clk,
-      reset                   => reset,
-      clkEnCPU                => clkEnCPU,
-      clkEnBus                => clkEnBus,
-      
-      -- CPU interface signals.
-      addr                    => cpuAddr_r,
-      readEnable              => readEnable_r,
-      readData                => block2route_data_mv(1), 
-      writeEnable             => writeEnable_r,
-      writeData               => writeData_r, 
-      writeMask               => writeMask_r,
-      bypass                  => bypass_r,
-      stall                   => route2block_stall,
-      blockReconfig           => block2route_blockReconfig_mv(1),
-      writeOrBypassStall      => block2route_writeOrBypassStall_mv(1),
-      busFault                => block2route_busFault_mv(1),
-      
-      -- Mux control signals.
-      updateEnable            => route2block_updateEnable,
-      handleWrite             => route2block_handleWrite,
-      writePrio               => block2route_writePrio_mv(1),
-      
-      -- Cache memory interface signals.
-      hit                     => cpuHitValid,
-      cacheReadData           => cacheReadData,
-      update                  => update_mv(1),
-      updateData              => updateData_mv(1),
-      updateMask              => updateMask_mv(1),
-      
-      -- Main memory interface signals.
-      cacheToBus              => dcache2bus_bus_mv(1),
-      busToCache              => bus2dcache_bus,
-      
-      -- Status signals.
-      servicedWrite           => servicedWrite_mv(1),
-      writeBuffered           => writeBuffered_mv(1)
-      
-    );
-	  
-  main_controller2: entity work.cache_data_mainCtrl
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      
-      -- System control.
-      clk                     => clk,
-      reset                   => reset,
-      clkEnCPU                => clkEnCPU,
-      clkEnBus                => clkEnBus,
-      
-      -- CPU interface signals.
-      addr                    => cpuAddr_r,
-      readEnable              => readEnable_r,
-      readData                => block2route_data_mv(2), 
-      writeEnable             => writeEnable_r,
-      writeData               => writeData_r, 
-      writeMask               => writeMask_r,
-      bypass                  => bypass_r,
-      stall                   => route2block_stall,
-      blockReconfig           => block2route_blockReconfig_mv(2),
-      writeOrBypassStall      => block2route_writeOrBypassStall_mv(2),
-      busFault                => block2route_busFault_mv(2),
-      
-      -- Mux control signals.
-      updateEnable            => route2block_updateEnable,
-      handleWrite             => route2block_handleWrite,
-      writePrio               => block2route_writePrio_mv(2),
-      
-      -- Cache memory interface signals.
-      hit                     => cpuHitValid,
-      cacheReadData           => cacheReadData,
-      update                  => update_mv(2),
-      updateData              => updateData_mv(2),
-      updateMask              => updateMask_mv(2),
-      
-      -- Main memory interface signals.
-      cacheToBus              => dcache2bus_bus_mv(2),
-      busToCache              => bus2dcache_bus,
-      
-      -- Status signals.
-      servicedWrite           => servicedWrite_mv(2),
-      writeBuffered           => writeBuffered_mv(2)
-      
-    );
-	  
-	  
-	  
- data_missCtrl_voter: entity work.cache_data_missCtrl_voter
-	 
-	 port map (
-		 
-    readData_mv                  => block2route_data_mv,
-    blockReconfig_mv             => block2route_blockReconfig_mv,
-    writeOrBypassStall_mv        => block2route_writeOrBypassStall_mv,
-    busFault_mv                  => block2route_busFault_mv,
-	writePrio_mv                 => block2route_writePrio_mv,
-	update_mv                    => update_mv,
-	updateData_mv                => updateData_mv,
-    updateMask_mv                => updateMask_mv,
-    cacheToBus_mv                => dcache2bus_bus_mv, 
-    servicedWrite_mv             => servicedWrite_mv,
-    writeBuffered_mv             => writeBuffered_mv,
-	  
-	  
-    readData                    => block2route_data,
-    blockReconfig               => block2route_blockReconfig,
-    writeOrBypassStall          => block2route_writeOrBypassStall,
-    busFault                    => block2route_busFault,
-	writePrio                   => block2route_writePrio,
-	update                      => update,
-	updateData                  => updateData,
-    updateMask                  => updateMask,
-    cacheToBus                  => dcache2bus_bus,
-    servicedWrite               => servicedWrite,
-    writeBuffered               => writeBuffered
-		 
-	);
+
 	  
   
 end Behavioral;

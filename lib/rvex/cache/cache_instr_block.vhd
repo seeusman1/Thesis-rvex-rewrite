@@ -345,27 +345,7 @@ begin
   -----------------------------------------------------------------------------
   -- Instantiate cache tag storage and comparators
   -----------------------------------------------------------------------------
---  tag_ram: entity work.cache_instr_blockTag
---    generic map (
---      RCFG                      => RCFG,
---      CCFG                      => CCFG
---    )
---    port map (
---      clk                       => clk,
---      enableCPU                 => clkEnCPUAndReadEnable,
---      enableBus                 => clkEnBus,
---      cpuAddr                   => cpuAddr,
---      cpuHit                    => cpuHit,
---      writeCpuTag               => update,
---      invalAddr                 => bus2icache_invalAddr,
---      invalHit                  => invalHit
---    );
-	  
-	  
-  -----------------------------------------------------------------------------
-  -- Instantiate cache tag storage and comparators with TMR
-  -----------------------------------------------------------------------------
-  tag_ram0: entity work.cache_instr_blockTag
+  tag_ram: entity work.cache_instr_blockTag
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -375,83 +355,17 @@ begin
       enableCPU                 => clkEnCPUAndReadEnable,
       enableBus                 => clkEnBus,
       cpuAddr                   => cpuAddr,
-      cpuHit                    => cpuHit_mv(0),
+      cpuHit                    => cpuHit,
       writeCpuTag               => update,
       invalAddr                 => bus2icache_invalAddr,
-      invalHit                  => invalHit_mv(0)
+      invalHit                  => invalHit
     );
 	  
-  tag_ram1: entity work.cache_instr_blockTag
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      enableCPU                 => clkEnCPUAndReadEnable,
-      enableBus                 => clkEnBus,
-      cpuAddr                   => cpuAddr,
-      cpuHit                    => cpuHit_mv(1),
-      writeCpuTag               => update,
-      invalAddr                 => bus2icache_invalAddr,
-      invalHit                  => invalHit_mv(1)
-    );
-	 
-  tag_ram2: entity work.cache_instr_blockTag
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      enableCPU                 => clkEnCPUAndReadEnable,
-      enableBus                 => clkEnBus,
-      cpuAddr                   => cpuAddr,
-      cpuHit                    => cpuHit_mv(2),
-      writeCpuTag               => update,
-      invalAddr                 => bus2icache_invalAddr,
-      invalHit                  => invalHit_mv(2)
-    );
-	  
-  tag_ram_voter: entity work.cache_blockTag_voter
-	port map (
-		 
-    	cpuHit_mv				=> cpuHit_mv,	
-		invalHit_mv				=> invalHit_mv,
-	  
-    	cpuHit					=> cpuHit,	
-		invalHit				=> invalHit 
-	);
-	  
-	  
-
   
   -----------------------------------------------------------------------------
   -- Instantiate cache line valid bit storage
   -----------------------------------------------------------------------------
---  valid_ram: entity work.cache_instr_blockValid
---    generic map (
---      RCFG                      => RCFG,
---      CCFG                      => CCFG
---    )
---    port map (
---      clk                       => clk,
---      reset                     => reset,
---      enableCPU                 => clkEnCPUAndReadEnable,
---      enableBus                 => clkEnBus,
---      cpuAddr                   => cpuAddr,
---      cpuValid                  => cpuValid,
---      validate                  => update,
---      invalAddr                 => invalAddr_r,
---      invalidate                => invalidate,
---      flush                     => sc2icache_flush
---    );
-	  
-  -----------------------------------------------------------------------------
-  -- Instantiate cache line valid bit storage with TMR
-  -----------------------------------------------------------------------------
-	  
-  valid_ram0: entity work.cache_instr_blockValid
+  valid_ram: entity work.cache_instr_blockValid
     generic map (
       RCFG                      => RCFG,
       CCFG                      => CCFG
@@ -462,86 +376,37 @@ begin
       enableCPU                 => clkEnCPUAndReadEnable,
       enableBus                 => clkEnBus,
       cpuAddr                   => cpuAddr,
-      cpuValid                  => cpuValid_mv(0),
+      cpuValid                  => cpuValid,
       validate                  => update,
       invalAddr                 => invalAddr_r,
       invalidate                => invalidate,
       flush                     => sc2icache_flush
     );
-	  
-  valid_ram1: entity work.cache_instr_blockValid
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset,
-      enableCPU                 => clkEnCPUAndReadEnable,
-      enableBus                 => clkEnBus,
-      cpuAddr                   => cpuAddr,
-      cpuValid                  => cpuValid_mv(1),
-      validate                  => update,
-      invalAddr                 => invalAddr_r,
-      invalidate                => invalidate,
-      flush                     => sc2icache_flush
-    );
-	  
-  valid_ram2: entity work.cache_instr_blockValid
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset,
-      enableCPU                 => clkEnCPUAndReadEnable,
-      enableBus                 => clkEnBus,
-      cpuAddr                   => cpuAddr,
-      cpuValid                  => cpuValid_mv(2),
-      validate                  => update,
-      invalAddr                 => invalAddr_r,
-      invalidate                => invalidate,
-      flush                     => sc2icache_flush
-    );
-	  
-
-  valid_ram_voter: entity work.cache_blockValid_voter
-	port map (
-		 
-    	cpuValid_mv				=> cpuValid_mv,	  
-	  
-		cpuValid				=> cpuValid	 
-	);
-	  
-	  
-	  
-	  
   
   -----------------------------------------------------------------------------
   -- Instantiate the miss resolution controller
   -----------------------------------------------------------------------------
---  miss_controller: entity work.cache_instr_missCtrl
---    generic map (
---      RCFG                      => RCFG,
---      CCFG                      => CCFG
---    )
---    port map (
---      clk                       => clk,
---      reset                     => reset,
---      clkEnCPU                  => clkEnCPU,
---      clkEnBus                  => clkEnBus,
---      stall                     => route2block_stall,
---      cpuAddr                   => cpuAddr_r,
---      updateEnable              => route2block_updateEnable,
---      done                      => update,
---      line                      => updateData,
---      --line                      => updateData_temp,
---      blockReconfig             => block2route_blockReconfig,
---      busFault                  => block2route_busFault,
---      cacheToBus                => icache2bus_bus,
---      busToCache                => bus2icache_bus
---    );
+  miss_controller: entity work.cache_instr_missCtrl
+    generic map (
+      RCFG                      => RCFG,
+      CCFG                      => CCFG
+    )
+    port map (
+      clk                       => clk,
+      reset                     => reset,
+      clkEnCPU                  => clkEnCPU,
+      clkEnBus                  => clkEnBus,
+      stall                     => route2block_stall,
+      cpuAddr                   => cpuAddr_r,
+      updateEnable              => route2block_updateEnable,
+      done                      => update,
+      line                      => updateData,
+      --line                      => updateData_temp,
+      blockReconfig             => block2route_blockReconfig,
+      busFault                  => block2route_busFault,
+      cacheToBus                => icache2bus_bus,
+      busToCache                => bus2icache_bus
+    );
 	  
 	  
 
@@ -558,101 +423,6 @@ begin
 	
 --	block2route_line <= block2route_line_temp;
 --  block2route_line_temp_simtest <= block2route_line_temp;
-
-
-  -----------------------------------------------------------------------------
-  -- Instantiate the miss resolution controller with TMR
-  -----------------------------------------------------------------------------
-	  
-	  
-  miss_controller0: entity work.cache_instr_missCtrl
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset,
-      clkEnCPU                  => clkEnCPU,
-      clkEnBus                  => clkEnBus,
-      stall                     => route2block_stall,
-      cpuAddr                   => cpuAddr_r,
-      updateEnable              => route2block_updateEnable,
-      done                      => update_mv(0),
-      line                      => updateData_mv(0),
-      blockReconfig             => block2route_blockReconfig_mv(0),
-      busFault                  => block2route_busFault_mv(0),
-      cacheToBus                => icache2bus_bus_mv(0),
-      busToCache                => bus2icache_bus
-    );
-	  
-
-  miss_controller1: entity work.cache_instr_missCtrl
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset,
-      clkEnCPU                  => clkEnCPU,
-      clkEnBus                  => clkEnBus,
-      stall                     => route2block_stall,
-      cpuAddr                   => cpuAddr_r,
-      updateEnable              => route2block_updateEnable,
-      done                      => update_mv(1),
-      line                      => updateData_mv(1),
-      blockReconfig             => block2route_blockReconfig_mv(1),
-      busFault                  => block2route_busFault_mv(1),
-      cacheToBus                => icache2bus_bus_mv(1),
-      busToCache                => bus2icache_bus
-    );
-	  
-	  
-  miss_controller2: entity work.cache_instr_missCtrl
-    generic map (
-      RCFG                      => RCFG,
-      CCFG                      => CCFG
-    )
-    port map (
-      clk                       => clk,
-      reset                     => reset,
-      clkEnCPU                  => clkEnCPU,
-      clkEnBus                  => clkEnBus,
-      stall                     => route2block_stall,
-      cpuAddr                   => cpuAddr_r,
-      updateEnable              => route2block_updateEnable,
-      done                      => update_mv(2),
-      line                      => updateData_mv(2),
-      blockReconfig             => block2route_blockReconfig_mv(2),
-      busFault                  => block2route_busFault_mv(2),
-      cacheToBus                => icache2bus_bus_mv(2),
-      busToCache                => bus2icache_bus
-    );
-	  
-	 
- instr_missCtrl_voter: entity work.cache_instr_missCtrl_voter
-	 
-	 port map (
-		 
-    update_mv						=> update_mv,
-    updateData_mv					=> updateData_mv,
-    block2route_blockReconfig_mv	=> block2route_blockReconfig_mv,
-    block2route_busFault_mv			=> block2route_busFault_mv,
-    icache2bus_bus_mv				=> icache2bus_bus_mv,
-	  
-	  
-	update							=> update,
-    updateData						=> updateData,
-    block2route_blockReconfig		=> block2route_blockReconfig,
-    block2route_busFault			=> block2route_busFault,
-    icache2bus_bus					=> icache2bus_bus
-		 
-	);
-	  
-	  
-	  
-	  
 	  
   
 end Behavioral;
