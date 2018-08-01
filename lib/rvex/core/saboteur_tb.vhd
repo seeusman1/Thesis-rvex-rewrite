@@ -10,14 +10,17 @@ end saboteur_tb;
 architecture test of saboteur_tb is
 
 
-	constant Time_delta	: time	:= 100 ns;
+	constant Time_delta	: time	:= 20 ns;
 
 	
-	signal	reset		: std_logic	:='0';
-	signal	clk			: std_logic	:='0';
-	signal	start_ft	: std_logic	:='1';
-	signal	saboteur	: std_logic;
-	--signal count		: std_logic_vector(31 downto 0);
+	signal	reset			: std_logic	:='0';
+	signal	clk				: std_logic	:='0';
+	signal	start_ft		: std_logic	:='1';
+	--signal	saboteur	: std_logic;
+    signal input			: std_logic_vector(31 downto 0) := (others => '0');
+    signal mask_signal		: std_logic_vector(31 downto 0) := (others => '0');
+    signal saboteur_out		: std_logic_vector(31 downto 0);
+    signal fault_inserted 	: std_logic := '0';
 
 
 
@@ -30,15 +33,15 @@ begin
 		port map( reset 	=> reset,
 				 clk		=> clk,
 				 start_ft	=> start_ft,
-				 saboteur	=> saboteur
-				 --count1		=> count
+				 input		=> input,
+				 mask_signal => mask_signal,
+				 saboteur_out => saboteur_out,
+				 fault_inserted => fault_inserted
 		);
 	
 	
 	process is
 	begin
-		
-		
 	
 		clk <= not clk;
 
@@ -49,9 +52,14 @@ begin
 	process is
 	begin
 		
-		wait for 500 us;
-		start_ft	<= not start_ft;
+		wait for 10 ns;
+		--start_ft	<= not start_ft;
 		--reset	<= not reset;
+		
+	input <= X"AAAAAAAA" ;
+	mask_signal <= X"FFFFFFFF";
+		
+		
 	end process;
 
 end architecture test;
